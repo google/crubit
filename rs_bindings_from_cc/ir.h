@@ -16,6 +16,7 @@
 
 #include "base/logging.h"
 #include "third_party/absl/strings/cord.h"
+#include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {
 
@@ -34,6 +35,8 @@ class Type {
   explicit Type(absl::Cord rs_name) : rs_name_(std::move(rs_name)) {}
 
   const absl::Cord &RsName() const { return rs_name_; }
+
+  nlohmann::json ToJson() const;
 
  private:
   absl::Cord rs_name_;
@@ -56,6 +59,8 @@ class Identifier {
 
   const absl::Cord &Ident() const { return identifier_; }
 
+  nlohmann::json ToJson() const;
+
  private:
   absl::Cord identifier_;
 };
@@ -73,31 +78,18 @@ class FuncParam {
   const Type &ParamType() const { return type_; }
   const Identifier &Ident() const { return identifier_; }
 
+  nlohmann::json ToJson() const;
+
  private:
   Type type_;
   Identifier identifier_;
-};
-
-// All parameters of a function.
-//
-// Invariants:
-//     `params` can be empty.
-class FuncParams {
- public:
-  explicit FuncParams(std::vector<FuncParam> params)
-      : params_(std::move(params)) {}
-
-  const std::vector<FuncParam> &Params() const { return params_; }
-
- private:
-  std::vector<FuncParam> params_;
 };
 
 // A function involved in the bindings.
 class Func {
  public:
   explicit Func(Identifier identifier, absl::Cord mangled_name,
-                Type return_type, FuncParams params)
+                Type return_type, std::vector<FuncParam> params)
       : identifier_(std::move(identifier)),
         mangled_name_(std::move(mangled_name)),
         return_type_(std::move(return_type)),
@@ -107,13 +99,15 @@ class Func {
   const Type &ReturnType() const { return return_type_; }
   const Identifier &Ident() const { return identifier_; }
 
-  const FuncParams &Params() const { return params_; }
+  const std::vector<FuncParam> &Params() const { return params_; }
+
+  nlohmann::json ToJson() const;
 
  private:
   Identifier identifier_;
   absl::Cord mangled_name_;
   Type return_type_;
-  FuncParams params_;
+  std::vector<FuncParam> params_;
 };
 
 // A complete intermediate representation of bindings for publicly accessible
@@ -121,6 +115,8 @@ class Func {
 class IR {
  public:
   explicit IR(std::vector<Func> functions) : functions_(std::move(functions)) {}
+
+  nlohmann::json ToJson() const;
 
  private:
   std::vector<Func> functions_;
