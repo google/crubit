@@ -14,6 +14,8 @@
 #include "base/logging.h"
 #include "devtools/cymbal/common/clang_google3_tool.h"
 #include "rs_bindings_from_cc/ast_consumer_factory.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/rs_src_code_gen.h"
 #include "file/base/helpers.h"
 #include "file/base/options.h"
 #include "third_party/absl/flags/flag.h"
@@ -34,10 +36,8 @@ int main(int argc, char* argv[]) {
   auto cc_out = absl::GetFlag(FLAGS_cc_out);
   QCHECK(!cc_out.empty()) << "please specify --cc_out";
 
-  std::string rs_api;
-  std::string rs_api_impl;
-  rs_bindings_from_cc::AstConsumerFactory ast_consumer_factory(rs_api,
-                                                               rs_api_impl);
+  rs_bindings_from_cc::IR ir;
+  rs_bindings_from_cc::AstConsumerFactory ast_consumer_factory(ir);
   std::unique_ptr<clang::tooling::FrontendActionFactory> action_factory =
       clang::tooling::newFrontendActionFactory(&ast_consumer_factory);
 
@@ -46,6 +46,8 @@ int main(int argc, char* argv[]) {
       action_factory.get(), &clang::tooling::FrontendActionFactory::create));
 
   if (result == 0) {
+    std::string rs_api = rs_bindings_from_cc::GenerateRustApi(ir);
+    std::string rs_api_impl = "// No bindings implementation code was needed.";
     CHECK_OK(file::SetContents(rs_out, rs_api, file::Defaults()));
     CHECK_OK(file::SetContents(cc_out, rs_api_impl, file::Defaults()));
   }

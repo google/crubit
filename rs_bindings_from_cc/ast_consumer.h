@@ -5,21 +5,20 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 
-#include <string>
-
 #include "rs_bindings_from_cc/ast_visitor.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 
 namespace rs_bindings_from_cc {
 
-// Consumes the Clang AST of the header and creates Rust bindings.
+// Consumes the Clang AST of the header and generates the intermediate
+// representation (`IR`).
 class AstConsumer : public clang::ASTConsumer {
  public:
-  explicit AstConsumer(std::string &rs_api, std::string &rs_api_impl)
-      : ast_visitor_(AstVisitor(rs_api, rs_api_impl)) {}
+  explicit AstConsumer(IR &ir) : ast_visitor_(ir) {}
 
-  void HandleTranslationUnit(clang::ASTContext &) override;
+  void HandleTranslationUnit(clang::ASTContext &context) override;
 
  private:
   AstVisitor ast_visitor_;

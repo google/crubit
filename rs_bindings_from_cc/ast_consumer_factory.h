@@ -6,23 +6,21 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_FACTORY_H_
 
 #include <memory>
-#include <string>
 
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
 
 namespace rs_bindings_from_cc {
 
-// Creates an `ASTConsumer` that writes its outputs to `rs_api` and rs_api_impl`
-// parameters.
+// Creates an `ASTConsumer` that generates the intermediate representation
+// (`IR`) into the `ir` parameter.
 class AstConsumerFactory {
  public:
-  explicit AstConsumerFactory(std::string &rs_api, std::string &rs_api_impl)
-      : rs_api_(rs_api), rs_api_impl_(rs_api_impl) {}
+  explicit AstConsumerFactory(IR &ir) : ir_(ir) {}
   std::unique_ptr<clang::ASTConsumer> newASTConsumer();
 
  private:
-  std::string &rs_api_;
-  std::string &rs_api_impl_;
+  IR &ir_;
 };
 
 }  // namespace rs_bindings_from_cc

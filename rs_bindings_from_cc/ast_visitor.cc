@@ -4,22 +4,96 @@
 
 #include "rs_bindings_from_cc/ast_visitor.h"
 
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "base/logging.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "third_party/absl/container/flat_hash_set.h"
+#include "third_party/absl/strings/cord.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 
 namespace rs_bindings_from_cc {
 
 bool AstVisitor::TraverseDecl(clang::Decl* decl) {
-  Base::TraverseDecl(decl);
-  rs_api_ = "// rs api";
-  rs_api_impl_ = "// rs api impl";
+  if (seen_decls_.insert(decl->getCanonicalDecl()).second) {
+    return Base::TraverseDecl(decl);
+  }
+  return false;
+}
+
+bool AstVisitor::TraverseTranslationUnitDecl(
+    clang::TranslationUnitDecl* translation_unit_decl) {
+  mangler_.reset(translation_unit_decl->getASTContext().createMangleContext());
+  return Base::TraverseTranslationUnitDecl(translation_unit_decl);
+}
+
+bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
+  // TODO(hlopko): Skip decls from other headers
+  // TODO(hlopko): Generate thunks + C++ impls for inline functions
+  // TODO(hlopko): Handle lowercased snakecased conflicts
+  // TODO(hlopko): Convert primitive types (bool -> bool, int -> i64 (?) and
+  // so on)
+  // TODO(hlopko): Import return type properly
+  // TODO(hlopko): Import parameter types properly
+  // TODO(hlopko): Import clang doc comment
+  // TODO(hlopko): Handle member functions
+  // TODO(hlopko): Handle static member functions
+  // TODO(hlopko): Handle constructors/operators/special members
+  // TODO(hlopko): Handle destructors
+  // TODO(hlopko): Do not import deleted members
+  // TODO(hlopko): Handle function templates
+  // TODO(hlopko): Do not import private/protected members
+  // TODO(hlopko): Handle (?) variadic functions
+  // TODO(hlopko): Fail when exceptions enabled?
+  std::vector<FuncParam> params;
+  for (const clang::ParmVarDecl* param : function_decl->parameters()) {
+    params.emplace_back(ConvertType(param->getType()),
+                        GetTranslatedName(param));
+  }
+
+  ir_.Functions().emplace_back(
+      GetTranslatedName(function_decl), GetMangledName(function_decl),
+      ConvertType(function_decl->getReturnType()), params);
   return true;
 }
 
-bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* decl) {
-  decl->dump();
-  return true;
+Type AstVisitor::ConvertType(clang::QualType qual_type) const {
+  // TODO(hlopko): Handle all builtin types
+  // TODO(hlopko): Handle user-defined types
+  // TODO(hlopko): Handle user-defined types defined elsewhere (with fully
+  // qualified paths)
+  if (const clang::BuiltinType* builtin_type =
+          qual_type->getAs<clang::BuiltinType>()) {
+    if (builtin_type->isIntegerType()) {
+      // TODO(hlopko): look at the actual width of the type.
+      return Type(absl::Cord("i32"));
+    }
+    if (builtin_type->isVoidType()) {
+      return Type::Void();
+    }
+  }
+  LOG(FATAL) << "Unsupported type " << qual_type.getAsString() << "\n";
+}
+
+absl::Cord AstVisitor::GetMangledName(
+    const clang::NamedDecl* named_decl) const {
+  std::string name;
+  llvm::raw_string_ostream stream(name);
+  mangler_->mangleName(named_decl, stream);
+  stream.flush();
+  return absl::Cord(std::move(name));
+}
+
+Identifier AstVisitor::GetTranslatedName(
+    const clang::NamedDecl* named_decl) const {
+  // TODO(hlopko): handle the case where the name is not a simple identifier.
+  return Identifier(absl::Cord(named_decl->getName()));
 }
 
 }  // namespace rs_bindings_from_cc

@@ -95,6 +95,7 @@ fn gen_src_code(ir: IR) -> Result<String> {
         let mangled_name = &func.mangled_name;
         let ident = make_ident(&func.identifier.identifier);
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
+        // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
         let return_type_name = make_ident(&func.return_type.rs_name);
 
         let param_idents =

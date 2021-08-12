@@ -12,7 +12,7 @@
 namespace rs_bindings_from_cc {
 
 std::unique_ptr<clang::ASTConsumer> AstConsumerFactory::newASTConsumer() {
-  return std::make_unique<AstConsumer>(rs_api_, rs_api_impl_);
+  return std::make_unique<AstConsumer>(ir_);
 }
 
 }  // namespace rs_bindings_from_cc

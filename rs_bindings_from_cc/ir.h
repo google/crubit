@@ -34,6 +34,8 @@ class Type {
  public:
   explicit Type(absl::Cord rs_name) : rs_name_(std::move(rs_name)) {}
 
+  static Type Void() { return Type(absl::Cord("()")); }
+  bool IsVoid() const { return rs_name_ == "()"; }
   const absl::Cord &RsName() const { return rs_name_; }
 
   nlohmann::json ToJson() const;
@@ -114,9 +116,13 @@ class Func {
 // declarations of a single C++ library.
 class IR {
  public:
+  explicit IR() {}
   explicit IR(std::vector<Func> functions) : functions_(std::move(functions)) {}
 
   nlohmann::json ToJson() const;
+
+  const std::vector<Func> &Functions() const { return functions_; }
+  std::vector<Func> &Functions() { return functions_; }
 
  private:
   std::vector<Func> functions_;
