@@ -22,14 +22,21 @@ function test::rs_bindings_from_cc_cmd_line_api() {
 
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" 2>&1 | \
+      grep 'please specify at least one header in --public_headers' > /dev/null" \
+    "generator should show help message for --public_headers"
+
   local hdr="${TEST_TMPDIR}/hello_world.h"
   echo "int foo();" > "${hdr}"
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
-      --use_tool_args_for_compile \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
-      \"${hdr}\""
+      --public_headers=\"${hdr}\" 1>&2"
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
   EXPECT_FILE_NOT_EMPTY "${cc_out}"

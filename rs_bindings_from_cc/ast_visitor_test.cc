@@ -6,11 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "rs_bindings_from_cc/ast_consumer_factory.h"
+#include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/absl/strings/string_view.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Tooling/Tooling.h"
 
 namespace rs_bindings_from_cc {
@@ -22,12 +23,10 @@ using ::testing::SizeIs;
 IR ImportCode(const absl::string_view code,
               const std::vector<absl::string_view>& args) {
   IR ir;
-  AstConsumerFactory ast_consumer_factory(ir);
-  std::unique_ptr<clang::tooling::FrontendActionFactory> action_factory =
-      clang::tooling::newFrontendActionFactory(&ast_consumer_factory);
   std::vector<std::string> args_as_strings(args.begin(), args.end());
-  clang::tooling::runToolOnCodeWithArgs(action_factory->create(), code,
-                                        args_as_strings);
+  clang::tooling::runToolOnCodeWithArgs(
+      std::make_unique<rs_bindings_from_cc::FrontendAction>(ir), code,
+      args_as_strings);
   return ir;
 }
 
