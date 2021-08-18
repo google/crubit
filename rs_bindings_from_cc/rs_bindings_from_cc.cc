@@ -15,7 +15,7 @@
 #include "devtools/cymbal/common/clang_tool.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/rs_src_code_gen.h"
+#include "rs_bindings_from_cc/src_code_gen.h"
 #include "file/base/filesystem.h"
 #include "file/base/helpers.h"
 #include "file/base/options.h"

@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "rs_bindings_from_cc/rs_src_code_gen.h"
+#include "rs_bindings_from_cc/src_code_gen.h"
 
 #include <string>
 
@@ -17,7 +17,7 @@ namespace {
 
 using ::testing::StrEq;
 
-TEST(RsSrcGenTest, FFIIntegration) {
+TEST(SrcGenTest, FFIIntegration) {
   IR ir({Func(
       Identifier(absl::Cord("hello_world")), absl::Cord("$$mangled_name$$"),
       Type(absl::Cord("i32")),
