@@ -4,38 +4,16 @@
 
 #include "rs_bindings_from_cc/src_code_gen.h"
 
-#include <stddef.h>
-
 #include <string>
 
+#include "rs_bindings_from_cc/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {
 
-struct FfiU8SliceBox {
-  const char* ptr;
-  size_t size;
-};
-
-struct FfiU8Slice {
-  const char* ptr;
-  size_t size;
-};
-
-static FfiU8Slice MakeFfiU8Slice(absl::string_view s) {
-  FfiU8Slice result;
-  result.ptr = s.data();
-  result.size = s.size();
-  return result;
-}
-
 // This function is implemented in Rust.
 extern "C" FfiU8SliceBox GenerateRustApiImpl(FfiU8Slice);
-
-// This function is implemented in Rust.
-extern "C" void FreeFfiU8SliceBox(FfiU8SliceBox);
 
 std::string GenerateRustApi(const IR& ir) {
   std::string json = ir.ToJson().dump();

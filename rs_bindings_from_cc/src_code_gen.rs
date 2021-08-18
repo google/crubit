@@ -3,54 +3,15 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::Result;
+use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
 use quote::format_ident;
 use quote::quote;
-use std::boxed::Box;
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
-use std::slice;
 use syn::*;
-
-#[repr(C)]
-pub struct FfiU8Slice {
-    ptr: *const u8,
-    size: usize,
-}
-
-impl FfiU8Slice {
-    /// Borrows data pointed to by this `FfiU8Slice` as a slice.
-    fn as_slice(&self) -> &[u8] {
-        // Safety:
-        // Instances of `FfiU8Slice` are only created by FFI functions, which are unsafe themselves
-        // so it's their responsibility to maintain safety.
-        unsafe { slice::from_raw_parts(self.ptr, self.size) }
-    }
-}
-
-#[repr(C)]
-pub struct FfiU8SliceBox {
-    ptr: *const u8,
-    size: usize,
-}
-
-impl FfiU8SliceBox {
-    fn from_boxed_slice(bytes: Box<[u8]>) -> FfiU8SliceBox {
-        let slice = Box::leak(bytes);
-        FfiU8SliceBox { ptr: slice.as_mut_ptr(), size: slice.len() }
-    }
-
-    /// Consumes self and returns boxed slice.
-    fn into_boxed_slice(self) -> Box<[u8]> {
-        // Safety:
-        // Instances of `FfiU8SliceBox` are either created by `from_boxed_slice`, which is safe,
-        // or by FFI functions, which are unsafe themselves so it's their responsibility to maintain
-        // safety.
-        unsafe { Box::from_raw(slice::from_raw_parts_mut(self.ptr as *mut u8, self.size)) }
-    }
-}
 
 /// Deserializes IR from `json` and generates Rust bindings source code.
 ///
@@ -70,15 +31,6 @@ pub unsafe extern "C" fn GenerateRustApiImpl(json: FfiU8Slice) -> FfiU8SliceBox 
         let result = gen_rs_api(json.as_slice());
         // it is ok to abort with the error message here.
         FfiU8SliceBox::from_boxed_slice(result.unwrap().into_bytes().into_boxed_slice())
-    })
-    .unwrap_or_else(|_| process::abort())
-}
-
-/// Frees C-string allocated by Rust.
-#[no_mangle]
-pub unsafe extern "C" fn FreeFfiU8SliceBox(sb: FfiU8SliceBox) {
-    catch_unwind(|| {
-        let _ = sb.into_boxed_slice();
     })
     .unwrap_or_else(|_| process::abort())
 }
