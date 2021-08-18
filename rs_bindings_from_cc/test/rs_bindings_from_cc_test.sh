@@ -10,7 +10,7 @@ source module gbash_unit.sh
 # Find input files
 readonly RS_BINDINGS_FROM_CC="${RUNFILES}/rs_bindings_from_cc/rs_bindings_from_cc"
 
-function test::rs_bindings_from_cc_cmd_line_api() {
+function test::cmd_line_api() {
   EXPECT_FAIL "${RS_BINDINGS_FROM_CC}" "generator should return non-zero with no arguments"
   EXPECT_SUCCEED \
     "${RS_BINDINGS_FROM_CC} 2>&1 | grep 'please specify --rs_out' > /dev/null" \
@@ -40,6 +40,25 @@ function test::rs_bindings_from_cc_cmd_line_api() {
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
   EXPECT_FILE_NOT_EMPTY "${cc_out}"
+}
+
+function test::tool_returns_nonzero_on_invalid_input() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+
+  # Creating outputs so we can observe if the tool deletes them.
+  touch "${rs_out}" "${cc_out}"
+
+  local hdr="${TEST_TMPDIR}/hello_world.h"
+  echo "int foo(); But this is not C++;" > "${hdr}"
+  EXPECT_FAIL \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --public_headers=\"${hdr}\" 1>&2"
+
+  CHECK_FILE_NOT_EXISTS "${rs_out}"
+  CHECK_FILE_NOT_EXISTS "${cc_out}"
 }
 
 gbash::unit::main "$@"

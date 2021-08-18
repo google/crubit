@@ -16,6 +16,7 @@
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/rs_src_code_gen.h"
+#include "file/base/filesystem.h"
 #include "file/base/helpers.h"
 #include "file/base/options.h"
 #include "third_party/absl/container/flat_hash_map.h"
@@ -69,6 +70,8 @@ int main(int argc, char *argv[]) {
     CHECK_OK(file::SetContents(cc_out, rs_api_impl, file::Defaults()));
     return 0;
   } else {
+    CHECK_OK(file::Delete(rs_out, file::Defaults()));
+    CHECK_OK(file::Delete(cc_out, file::Defaults()));
     return 1;
   }
 }

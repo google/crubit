@@ -11,6 +11,13 @@
 namespace rs_bindings_from_cc {
 
 void AstConsumer::HandleTranslationUnit(clang::ASTContext &ast_context) {
+  if (ast_context.getDiagnostics().hasErrorOccurred()) {
+    // We do not need to process partially incorrect headers, we assume all
+    // input is valid C++. If there is an error Clang already printed it to
+    // stderr; the user will be informed about the cause of the failure.
+    // There is nothing more for us to do here.
+    return;
+  }
   ast_visitor_.TraverseDecl(ast_context.getTranslationUnitDecl());
 }
 

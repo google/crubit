@@ -35,6 +35,11 @@ TEST(AstVisitorTest, TestNoop) {
   EXPECT_THAT(ir.Functions(), IsEmpty());
 }
 
+TEST(AstVisitorTest, TestIREmptyOnInvalidInput) {
+  IR ir = ImportCode("int foo(); But this is not C++", {});
+  EXPECT_THAT(ir.Functions(), IsEmpty());
+}
+
 TEST(AstVisitorTest, TestImportFuncWithVoidReturnType) {
   IR ir = ImportCode("void Foo();", {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
