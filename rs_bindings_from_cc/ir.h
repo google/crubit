@@ -20,6 +20,21 @@
 
 namespace rs_bindings_from_cc {
 
+// A name of a public header of the C++ library.
+class HeaderName {
+ public:
+  explicit HeaderName(absl::Cord name) : name_(std::move(name)) {}
+
+  const absl::Cord &IncludePath() const { return name_; }
+
+  nlohmann::json ToJson() const;
+
+ private:
+  // Header pathname in the format suitable for a google3-relative quote
+  // include.
+  absl::Cord name_;
+};
+
 // A type involved in the bindings. It has the knowledge about how the type is
 // spelled in Rust and in C++ code.
 //
@@ -117,14 +132,22 @@ class Func {
 class IR {
  public:
   explicit IR() {}
-  explicit IR(std::vector<Func> functions) : functions_(std::move(functions)) {}
+  explicit IR(std::vector<HeaderName> used_headers, std::vector<Func> functions)
+      : used_headers_(std::move(used_headers)),
+        functions_(std::move(functions)) {}
 
   nlohmann::json ToJson() const;
+
+  const std::vector<HeaderName> &UsedHeaders() const { return used_headers_; }
+  std::vector<HeaderName> &UsedHeaders() { return used_headers_; }
 
   const std::vector<Func> &Functions() const { return functions_; }
   std::vector<Func> &Functions() { return functions_; }
 
  private:
+  // Collection of public headers that were used to construct the AST this `IR`
+  // is generated from.
+  std::vector<HeaderName> used_headers_;
   std::vector<Func> functions_;
 };
 

@@ -95,6 +95,7 @@ mod tests {
     #[test]
     fn test_gen_src_code() -> Result<()> {
         let ir = IR {
+            used_headers: vec![],
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
@@ -114,7 +115,8 @@ mod tests {
         let result = gen_src_code(ir)?;
         assert_eq!(
             result,
-            quote! {#[inline(always)]
+            quote! {
+                #[inline(always)]
                 pub fn add(a: i32, b: i32) -> i32 {
                     unsafe { crate::detail::__rust_thunk__add(a, b) }
                 }

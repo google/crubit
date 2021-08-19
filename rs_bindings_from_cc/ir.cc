@@ -12,6 +12,12 @@
 
 namespace rs_bindings_from_cc {
 
+nlohmann::json HeaderName::ToJson() const {
+  nlohmann::json result;
+  result["name"] = std::string(name_);
+  return result;
+}
+
 nlohmann::json Type::ToJson() const {
   nlohmann::json result;
   result["rs_name"] = std::string(rs_name_);
@@ -45,11 +51,18 @@ nlohmann::json Func::ToJson() const {
 }
 
 nlohmann::json IR::ToJson() const {
+  std::vector<nlohmann::json> used_headers;
+  for (const HeaderName& header : used_headers_) {
+    used_headers.push_back(header.ToJson());
+  }
+
   std::vector<nlohmann::json> functions;
   for (const Func& func : functions_) {
     functions.push_back(func.ToJson());
   }
+
   nlohmann::json result;
+  result["used_headers"] = used_headers;
   result["functions"] = functions;
   return result;
 }

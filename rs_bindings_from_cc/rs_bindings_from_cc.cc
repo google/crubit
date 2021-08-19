@@ -32,7 +32,8 @@ ABSL_FLAG(std::string, cc_out, "",
           "output path for the C++ source file with bindings implementation");
 ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "public headers of the cc_library this tool should generate bindings "
-          "for, in a format suitable for usage in #include \"\".");
+          "for, in a format suitable for usage in google3-relative quote "
+          "include (#include \"\").");
 
 constexpr absl::string_view kVirtualInputPath =
     "rs_bindings_from_cc_virtual_input.cc";
@@ -63,15 +64,16 @@ int main(int argc, char *argv[]) {
   rs_bindings_from_cc::IR ir;
   if (devtools::cymbal::RunToolWithClangFlagsOnCode(
           command_line, file_contents,
-          std::make_unique<rs_bindings_from_cc::FrontendAction>(ir))) {
+          std::make_unique<rs_bindings_from_cc::FrontendAction>(public_headers,
+                                                                ir))) {
     std::string rs_api = rs_bindings_from_cc::GenerateRustApi(ir);
     std::string rs_api_impl = "// No bindings implementation code was needed.";
     CHECK_OK(file::SetContents(rs_out, rs_api, file::Defaults()));
     CHECK_OK(file::SetContents(cc_out, rs_api_impl, file::Defaults()));
     return 0;
-  } else {
-    CHECK_OK(file::Delete(rs_out, file::Defaults()));
-    CHECK_OK(file::Delete(cc_out, file::Defaults()));
-    return 1;
   }
+
+  CHECK_OK(file::Delete(rs_out, file::Defaults()));
+  CHECK_OK(file::Delete(cc_out, file::Defaults()));
+  return 1;
 }

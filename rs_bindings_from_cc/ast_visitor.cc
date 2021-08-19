@@ -30,6 +30,20 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
 bool AstVisitor::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translation_unit_decl) {
   mangler_.reset(translation_unit_decl->getASTContext().createMangleContext());
+
+  // TODO(hlopko): Make the generated C++ code include-what-you-use clean.
+  // Currently we pass public headers of the library to the src_code_gen.
+  // Through those Clang has access to all declarations needed by the public API
+  // of the library. However the code violates IWYU - it will not directly
+  // include all the headers declaring names used in the generated source. This
+  // could be fixed by passing not only public headers of the library to the
+  // tool, but also all public headers of the direct dependencies of the
+  // library. This way if the library was IWYU clean, the generated code will be
+  // too.
+  for (const std::string& header : public_headers_) {
+    ir_.UsedHeaders().emplace_back(HeaderName(absl::Cord(header)));
+  }
+
   return Base::TraverseTranslationUnitDecl(translation_unit_decl);
 }
 

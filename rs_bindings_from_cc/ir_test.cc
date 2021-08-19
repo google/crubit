@@ -22,6 +22,7 @@ TEST(IrTest, TestTypeToJson) {
 TEST(IrTest, TestIR) {
   nlohmann::json expected = nlohmann::json::parse(
       R"j({
+            "used_headers": [{ "name": "foo/bar.h" }],
             "functions": [{
               "identifier": { "identifier": "hello_world" },
               "mangled_name": "#$mangled_name$#",
@@ -34,7 +35,8 @@ TEST(IrTest, TestIR) {
               ]
             }]
       })j");
-  EXPECT_EQ(IR({Func(Identifier(absl::Cord("hello_world")),
+  EXPECT_EQ(IR({HeaderName(absl::Cord("foo/bar.h"))},
+               {Func(Identifier(absl::Cord("hello_world")),
                      absl::Cord("#$mangled_name$#"), Type(absl::Cord("i32")),
                      {FuncParam(Type(absl::Cord("i32")),
                                 Identifier(absl::Cord("arg")))})})

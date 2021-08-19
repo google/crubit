@@ -18,10 +18,11 @@ namespace {
 using ::testing::StrEq;
 
 TEST(SrcGenTest, FFIIntegration) {
-  IR ir({Func(
-      Identifier(absl::Cord("hello_world")), absl::Cord("$$mangled_name$$"),
-      Type(absl::Cord("i32")),
-      {FuncParam(Type(absl::Cord("i32")), Identifier(absl::Cord("arg")))})});
+  IR ir({HeaderName(absl::Cord("foo/bar.h"))},
+        {Func(Identifier(absl::Cord("hello_world")),
+              absl::Cord("$$mangled_name$$"), Type(absl::Cord("i32")),
+              {FuncParam(Type(absl::Cord("i32")),
+                         Identifier(absl::Cord("arg")))})});
   std::string rs_api = GenerateRustApi(ir);
   EXPECT_THAT(
       rs_api,

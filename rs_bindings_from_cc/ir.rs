@@ -2,12 +2,19 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// Types and deserialization logic for IR. See docs in
+// `rs_bindings_from_cc/ir.h` for more information.
 use anyhow::Result;
 use serde::Deserialize;
 use std::io::Read;
 
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
     Ok(serde_json::from_reader(reader)?)
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct HeaderName {
+    pub name: String,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -37,6 +44,7 @@ pub struct Func {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IR {
+    pub used_headers: Vec<HeaderName>,
     pub functions: Vec<Func>,
 }
 
@@ -48,6 +56,7 @@ mod tests {
     fn test_deserializing() {
         let input = r#"
         {
+            "used_headers": [{ "name": "foo/bar.h" }],
             "functions": [
                 {
                     "identifier": { "identifier": "hello_world" },
@@ -65,6 +74,7 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
+            used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
             functions: vec![Func {
                 identifier: Identifier { identifier: "hello_world".to_string() },
                 mangled_name: "$$mangled_name$$".to_string(),
