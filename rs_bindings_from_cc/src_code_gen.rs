@@ -13,7 +13,14 @@ use std::panic::catch_unwind;
 use std::process;
 use syn::*;
 
-/// Deserializes IR from `json` and generates Rust bindings source code.
+/// FFI equivalent of `Bindings`.
+#[repr(C)]
+pub struct FfiBindings {
+    rs_api: FfiU8SliceBox,
+    rs_api_impl: FfiU8SliceBox,
+}
+
+/// Deserializes IR from `json` and generates bindings source code.
 ///
 /// This function panics on error.
 ///
@@ -26,24 +33,40 @@ use syn::*;
 ///      given size.
 ///    * function expects that param `json` doesn't change during the call.
 #[no_mangle]
-pub unsafe extern "C" fn GenerateRustApiImpl(json: FfiU8Slice) -> FfiU8SliceBox {
+pub unsafe extern "C" fn GenerateBindingsImpl(json: FfiU8Slice) -> FfiBindings {
     catch_unwind(|| {
-        let result = gen_rs_api(json.as_slice());
-        // it is ok to abort with the error message here.
-        FfiU8SliceBox::from_boxed_slice(result.unwrap().into_bytes().into_boxed_slice())
+        // It is ok to abort here.
+        let Bindings { rs_api, rs_api_impl } = generate_bindings(json.as_slice()).unwrap();
+
+        FfiBindings {
+            rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
+            rs_api_impl: FfiU8SliceBox::from_boxed_slice(
+                rs_api_impl.into_bytes().into_boxed_slice(),
+            ),
+        }
     })
     .unwrap_or_else(|_| process::abort())
 }
 
-fn gen_rs_api(json: &[u8]) -> Result<String> {
-    let ir = deserialize_ir(json)?;
-    Ok(gen_src_code(ir)?)
+/// Source code for generated bindings.
+struct Bindings {
+    // Rust source code.
+    rs_api: String,
+    // C++ source code.
+    rs_api_impl: String,
 }
 
-fn gen_src_code(ir: IR) -> Result<String> {
+fn generate_bindings(json: &[u8]) -> Result<Bindings> {
+    let ir = deserialize_ir(json)?;
+    let rs_api = generate_rs_api(&ir)?;
+    let rs_api_impl = generate_rs_api_impl(&ir)?;
+    Ok(Bindings { rs_api, rs_api_impl })
+}
+
+fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut thunks = vec![];
     let mut api_funcs = vec![];
-    for func in ir.functions {
+    for func in &ir.functions {
         let mangled_name = &func.mangled_name;
         let ident = make_ident(&func.identifier.identifier);
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
@@ -81,19 +104,24 @@ fn gen_src_code(ir: IR) -> Result<String> {
     Ok(result.to_string())
 }
 
+fn generate_rs_api_impl(_ir: &IR) -> Result<String> {
+    // TODO(hlopko): Generate C++ code when needed.
+    Ok("// No bindings implementation code was needed.".to_string())
+}
+
 fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::gen_src_code;
+    use super::*;
+
     use super::Result;
-    use ir::*;
     use quote::quote;
 
     #[test]
-    fn test_gen_src_code() -> Result<()> {
+    fn test_simple_function() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
             functions: vec![Func {
@@ -112,9 +140,8 @@ mod tests {
                 ],
             }],
         };
-        let result = gen_src_code(ir)?;
         assert_eq!(
-            result,
+            generate_rs_api(&ir)?,
             quote! {
                 #[inline(always)]
                 pub fn add(a: i32, b: i32) -> i32 {
@@ -130,6 +157,7 @@ mod tests {
             }
             .to_string()
         );
+        assert_eq!(generate_rs_api_impl(&ir)?, "// No bindings implementation code was needed.");
         Ok(())
     }
 }

@@ -11,8 +11,16 @@
 
 namespace rs_bindings_from_cc {
 
-// Generates Rust bindings source code from the given `IR`.
-std::string GenerateRustApi(const IR &ir);
+// Source code for generated bindings.
+struct Bindings {
+  // Rust source code.
+  std::string rs_api;
+  // C++ source code.
+  std::string rs_api_impl;
+};
+
+// Generates bindings from the given `IR`.
+Bindings GenerateBindings(const IR &ir);
 
 }  // namespace rs_bindings_from_cc
 

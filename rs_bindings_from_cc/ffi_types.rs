@@ -2,11 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use std::boxed::Box;
 use std::panic::catch_unwind;
 use std::process;
 use std::slice;
-
-use std::boxed::Box;
 
 /// Frees `FfiU8SliceBox` allocated by Rust.
 #[no_mangle]

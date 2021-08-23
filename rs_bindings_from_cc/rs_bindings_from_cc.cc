@@ -66,10 +66,10 @@ int main(int argc, char *argv[]) {
           command_line, file_contents,
           std::make_unique<rs_bindings_from_cc::FrontendAction>(public_headers,
                                                                 ir))) {
-    std::string rs_api = rs_bindings_from_cc::GenerateRustApi(ir);
-    std::string rs_api_impl = "// No bindings implementation code was needed.";
-    CHECK_OK(file::SetContents(rs_out, rs_api, file::Defaults()));
-    CHECK_OK(file::SetContents(cc_out, rs_api_impl, file::Defaults()));
+    rs_bindings_from_cc::Bindings bindings =
+        rs_bindings_from_cc::GenerateBindings(ir);
+    CHECK_OK(file::SetContents(rs_out, bindings.rs_api, file::Defaults()));
+    CHECK_OK(file::SetContents(cc_out, bindings.rs_api_impl, file::Defaults()));
     return 0;
   }
 

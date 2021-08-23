@@ -23,11 +23,11 @@ TEST(SrcGenTest, FFIIntegration) {
               absl::Cord("$$mangled_name$$"), Type(absl::Cord("i32")),
               {FuncParam(Type(absl::Cord("i32")),
                          Identifier(absl::Cord("arg")))})});
-  std::string rs_api = GenerateRustApi(ir);
+  Bindings bindings = GenerateBindings(ir);
   EXPECT_THAT(
-      rs_api,
+      bindings.rs_api,
       StrEq(
-          // TODO(hlopko): Run generated sources through rustfmt.
+          // TODO(hlopko): Run generated Rust sources through rustfmt.
           "# [inline (always)] "
           "pub fn hello_world (arg : i32) -> i32 { "
           "unsafe { crate :: detail :: __rust_thunk__hello_world (arg) } "
@@ -38,6 +38,11 @@ TEST(SrcGenTest, FFIIntegration) {
           "pub (crate) fn __rust_thunk__hello_world (arg : i32) -> i32 ; "
           "} "
           "}"));
+
+  EXPECT_THAT(
+      // TODO(hlopko): Run generated C++ sources through clang-format.
+      bindings.rs_api_impl,
+      StrEq("// No bindings implementation code was needed."));
 }
 
 }  // namespace

@@ -12,15 +12,40 @@
 
 namespace rs_bindings_from_cc {
 
-// This function is implemented in Rust.
-extern "C" FfiU8SliceBox GenerateRustApiImpl(FfiU8Slice);
+// FFI equivalent of `Bindings`.
+struct FfiBindings {
+  FfiU8SliceBox rs_api;
+  FfiU8SliceBox rs_api_impl;
+};
 
-std::string GenerateRustApi(const IR& ir) {
+// This function is implemented in Rust.
+extern "C" FfiBindings GenerateBindingsImpl(FfiU8Slice json);
+
+// Creates `Bindings` instance from copied data from `ffi_bindings`.
+static Bindings MakeBindingsFromFfiBindings(const FfiBindings &ffi_bindings) {
+  Bindings bindings;
+
+  const FfiU8SliceBox &rs_api = ffi_bindings.rs_api;
+  const FfiU8SliceBox &rs_api_impl = ffi_bindings.rs_api_impl;
+
+  bindings.rs_api = std::string(rs_api.ptr, rs_api.size);
+  bindings.rs_api_impl = std::string(rs_api_impl.ptr, rs_api_impl.size);
+
+  return bindings;
+}
+
+// Deallocates given `ffi_bindings` instance that was created in Rust.
+static void FreeFfiBindings(FfiBindings ffi_bindings) {
+  FreeFfiU8SliceBox(ffi_bindings.rs_api);
+  FreeFfiU8SliceBox(ffi_bindings.rs_api_impl);
+}
+
+Bindings GenerateBindings(const IR &ir) {
   std::string json = ir.ToJson().dump();
-  FfiU8SliceBox slice_box = GenerateRustApiImpl(MakeFfiU8Slice(json));
-  std::string rs_api(slice_box.ptr, slice_box.size);
-  FreeFfiU8SliceBox(slice_box);
-  return rs_api;
+  FfiBindings ffi_bindings = GenerateBindingsImpl(MakeFfiU8Slice(json));
+  Bindings bindings = MakeBindingsFromFfiBindings(ffi_bindings);
+  FreeFfiBindings(ffi_bindings);
+  return bindings;
 }
 
 }  // namespace rs_bindings_from_cc
