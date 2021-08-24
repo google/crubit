@@ -9,7 +9,6 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/strings/cord.h"
 
 namespace rs_bindings_from_cc {
 
@@ -18,12 +17,12 @@ namespace {
 using ::testing::StrEq;
 
 TEST(SrcGenTest, FFIIntegration) {
-  IR ir({HeaderName(absl::Cord("foo/bar.h"))},
-        {Func(Identifier(absl::Cord("hello_world")),
-              absl::Cord("$$mangled_name$$"),
-              Type(absl::Cord("i32"), absl::Cord("int")),
-              {FuncParam(Type(absl::Cord("i32"), absl::Cord("int")),
-                         Identifier(absl::Cord("arg")))},
+  IR ir({HeaderName(std::string("foo/bar.h"))},
+        {Func(Identifier(std::string("hello_world")),
+              std::string("$$mangled_name$$"),
+              Type(std::string("i32"), std::string("int")),
+              {FuncParam(Type(std::string("i32"), std::string("int")),
+                         Identifier(std::string("arg")))},
               /* is_inline= */ true)});
   Bindings bindings = GenerateBindings(ir);
   EXPECT_THAT(

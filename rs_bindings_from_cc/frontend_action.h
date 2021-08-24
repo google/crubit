@@ -6,9 +6,9 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_
 
 #include <memory>
-#include <string>
 
 #include "rs_bindings_from_cc/ir.h"
+#include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
@@ -20,14 +20,15 @@ namespace rs_bindings_from_cc {
 // (`IR`) into the `ir` parameter.
 class FrontendAction : public clang::ASTFrontendAction {
  public:
-  explicit FrontendAction(absl::Span<const std::string> public_headers, IR &ir)
-      : public_headers_(public_headers), ir_(ir) {}
+  explicit FrontendAction(
+      absl::Span<const absl::string_view> public_header_names, IR &ir)
+      : public_header_names_(public_header_names), ir_(ir) {}
 
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance &, llvm::StringRef) override;
 
  private:
-  absl::Span<const std::string> public_headers_;
+  absl::Span<const absl::string_view> public_header_names_;
   IR &ir_;
 };
 

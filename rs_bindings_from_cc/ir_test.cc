@@ -7,7 +7,6 @@
 #include <string>
 
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/strings/cord.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {
@@ -17,7 +16,7 @@ namespace {
 TEST(IrTest, TestTypeToJson) {
   nlohmann::json expected =
       nlohmann::json::parse(R"j({ "rs_name": "i32", "cc_name": "int" })j");
-  EXPECT_EQ(Type(absl::Cord("i32"), absl::Cord("int")).ToJson(), expected);
+  EXPECT_EQ(Type(std::string("i32"), std::string("int")).ToJson(), expected);
 }
 
 TEST(IrTest, TestIR) {
@@ -37,12 +36,12 @@ TEST(IrTest, TestIR) {
               "is_inline": false
             }]
       })j");
-  EXPECT_EQ(IR({HeaderName(absl::Cord("foo/bar.h"))},
-               {Func(Identifier(absl::Cord("hello_world")),
-                     absl::Cord("#$mangled_name$#"),
-                     Type(absl::Cord("i32"), absl::Cord("int")),
-                     {FuncParam(Type(absl::Cord("i32"), absl::Cord("int")),
-                                Identifier(absl::Cord("arg")))},
+  EXPECT_EQ(IR({HeaderName(std::string("foo/bar.h"))},
+               {Func(Identifier(std::string("hello_world")),
+                     std::string("#$mangled_name$#"),
+                     Type(std::string("i32"), std::string("int")),
+                     {FuncParam(Type(std::string("i32"), std::string("int")),
+                                Identifier(std::string("arg")))},
                      /* is_inline= */ false)})
                 .ToJson(),
             expected);

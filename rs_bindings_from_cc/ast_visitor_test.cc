@@ -53,7 +53,8 @@ IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
   IR ir;
   devtools::cymbal::RunToolWithClangFlagsOnCode(
       args_as_strings, file_contents,
-      std::make_unique<rs_bindings_from_cc::FrontendAction>(headers, ir));
+      std::make_unique<rs_bindings_from_cc::FrontendAction>(
+          std::vector<absl::string_view>(headers.begin(), headers.end()), ir));
   return ir;
 }
 

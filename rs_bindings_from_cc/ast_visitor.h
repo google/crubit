@@ -10,7 +10,7 @@
 
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_set.h"
-#include "third_party/absl/strings/cord.h"
+#include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -19,15 +19,16 @@
 
 namespace rs_bindings_from_cc {
 
-// Iterates over the AST created from `public_headers` (a collection of paths
-// in the format suitable for a google3-relative quote include) and creates
-// an intermediate representation of the import (`IR`).
+// Iterates over the AST created from `public_header_names` (a collection of
+// paths in the format suitable for a google3-relative quote include) and
+// creates an intermediate representation of the import (`IR`).
 class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  public:
   using Base = clang::RecursiveASTVisitor<AstVisitor>;
 
-  explicit AstVisitor(absl::Span<const std::string> public_headers, IR &ir)
-      : public_headers_(public_headers), ir_(ir) {}
+  explicit AstVisitor(absl::Span<const absl::string_view> public_header_names,
+                      IR &ir)
+      : public_header_names_(public_header_names), ir_(ir) {}
 
   // These functions are called by the base class while visiting the different
   // parts of the AST. The API follows the rules of the base class which is
@@ -39,11 +40,11 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   bool VisitFunctionDecl(clang::FunctionDecl *function_decl);
 
  private:
-  absl::Cord GetMangledName(const clang::NamedDecl *named_decl) const;
+  std::string GetMangledName(const clang::NamedDecl *named_decl) const;
   Identifier GetTranslatedName(const clang::NamedDecl *named_decl) const;
   Type ConvertType(clang::QualType qual_type) const;
 
-  absl::Span<const std::string> public_headers_;
+  absl::Span<const absl::string_view> public_header_names_;
   IR &ir_;
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_set<const clang::Decl *> seen_decls_;

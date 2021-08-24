@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "third_party/absl/strings/cord.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {

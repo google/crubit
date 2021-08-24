@@ -64,8 +64,10 @@ int main(int argc, char *argv[]) {
   rs_bindings_from_cc::IR ir;
   if (devtools::cymbal::RunToolWithClangFlagsOnCode(
           command_line, file_contents,
-          std::make_unique<rs_bindings_from_cc::FrontendAction>(public_headers,
-                                                                ir))) {
+          std::make_unique<rs_bindings_from_cc::FrontendAction>(
+              std::vector<absl::string_view>(public_headers.begin(),
+                                             public_headers.end()),
+              ir))) {
     rs_bindings_from_cc::Bindings bindings =
         rs_bindings_from_cc::GenerateBindings(ir);
     CHECK_OK(file::SetContents(rs_out, bindings.rs_api, file::Defaults()));

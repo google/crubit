@@ -6,13 +6,12 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "base/logging.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_set.h"
-#include "third_party/absl/strings/cord.h"
+#include "third_party/absl/strings/string_view.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -40,8 +39,8 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   // tool, but also all public headers of the direct dependencies of the
   // library. This way if the library was IWYU clean, the generated code will be
   // too.
-  for (const std::string& header : public_headers_) {
-    ir_.UsedHeaders().emplace_back(HeaderName(absl::Cord(header)));
+  for (const absl::string_view header_name : public_header_names_) {
+    ir_.UsedHeaders().emplace_back(HeaderName(std::string(header_name)));
   }
 
   return Base::TraverseTranslationUnitDecl(translation_unit_decl);
@@ -87,7 +86,7 @@ Type AstVisitor::ConvertType(clang::QualType qual_type) const {
           qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
       // TODO(hlopko): look at the actual width of the type.
-      return Type(absl::Cord("i32"), absl::Cord("int"));
+      return Type(std::string("i32"), std::string("int"));
     }
     if (builtin_type->isVoidType()) {
       return Type::Void();
@@ -96,19 +95,19 @@ Type AstVisitor::ConvertType(clang::QualType qual_type) const {
   LOG(FATAL) << "Unsupported type " << qual_type.getAsString() << "\n";
 }
 
-absl::Cord AstVisitor::GetMangledName(
+std::string AstVisitor::GetMangledName(
     const clang::NamedDecl* named_decl) const {
   std::string name;
   llvm::raw_string_ostream stream(name);
   mangler_->mangleName(named_decl, stream);
   stream.flush();
-  return absl::Cord(std::move(name));
+  return name;
 }
 
 Identifier AstVisitor::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
   // TODO(hlopko): handle the case where the name is not a simple identifier.
-  return Identifier(absl::Cord(named_decl->getName()));
+  return Identifier(std::string(named_decl->getName()));
 }
 
 }  // namespace rs_bindings_from_cc

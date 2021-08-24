@@ -11,11 +11,12 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "base/logging.h"
-#include "third_party/absl/strings/cord.h"
+#include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {
@@ -23,16 +24,16 @@ namespace rs_bindings_from_cc {
 // A name of a public header of the C++ library.
 class HeaderName {
  public:
-  explicit HeaderName(absl::Cord name) : name_(std::move(name)) {}
+  explicit HeaderName(std::string name) : name_(std::move(name)) {}
 
-  const absl::Cord &IncludePath() const { return name_; }
+  absl::string_view IncludePath() const { return name_; }
 
   nlohmann::json ToJson() const;
 
  private:
   // Header pathname in the format suitable for a google3-relative quote
   // include.
-  absl::Cord name_;
+  std::string name_;
 };
 
 // A type involved in the bindings. It has the knowledge about how the type is
@@ -47,19 +48,19 @@ class HeaderName {
 //     `cc_name` cannot be empty.
 class Type {
  public:
-  explicit Type(absl::Cord rs_name, absl::Cord cc_name)
+  explicit Type(std::string rs_name, std::string cc_name)
       : rs_name_(std::move(rs_name)), cc_name_(std::move(cc_name)) {}
 
-  static Type Void() { return Type(absl::Cord("()"), absl::Cord("void")); }
+  static Type Void() { return Type(std::string("()"), std::string("void")); }
   bool IsVoid() const { return rs_name_ == "()"; }
-  const absl::Cord &RsName() const { return rs_name_; }
-  const absl::Cord &CcName() const { return cc_name_; }
+  absl::string_view RsName() const { return rs_name_; }
+  absl::string_view CcName() const { return cc_name_; }
 
   nlohmann::json ToJson() const;
 
  private:
-  absl::Cord rs_name_;
-  absl::Cord cc_name_;
+  std::string rs_name_;
+  std::string cc_name_;
 };
 
 // An identifier involved in bindings.
@@ -72,17 +73,17 @@ class Type {
 //     `identifier` cannot be empty.
 class Identifier {
  public:
-  explicit Identifier(absl::Cord identifier)
+  explicit Identifier(std::string identifier)
       : identifier_(std::move(identifier)) {
     CHECK(!identifier_.empty()) << "Identifier name cannot be empty.";
   }
 
-  const absl::Cord &Ident() const { return identifier_; }
+  absl::string_view Ident() const { return identifier_; }
 
   nlohmann::json ToJson() const;
 
  private:
-  absl::Cord identifier_;
+  std::string identifier_;
 };
 
 // A function parameter.
@@ -108,7 +109,7 @@ class FuncParam {
 // A function involved in the bindings.
 class Func {
  public:
-  explicit Func(Identifier identifier, absl::Cord mangled_name,
+  explicit Func(Identifier identifier, std::string mangled_name,
                 Type return_type, std::vector<FuncParam> params, bool is_inline)
       : identifier_(std::move(identifier)),
         mangled_name_(std::move(mangled_name)),
@@ -116,7 +117,7 @@ class Func {
         params_(std::move(params)),
         is_inline_(is_inline) {}
 
-  const absl::Cord &MangledName() const { return mangled_name_; }
+  absl::string_view MangledName() const { return mangled_name_; }
   const Type &ReturnType() const { return return_type_; }
   const Identifier &Ident() const { return identifier_; }
 
@@ -127,7 +128,7 @@ class Func {
 
  private:
   Identifier identifier_;
-  absl::Cord mangled_name_;
+  std::string mangled_name_;
   Type return_type_;
   std::vector<FuncParam> params_;
   bool is_inline_;
