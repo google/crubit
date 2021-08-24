@@ -63,6 +63,23 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
+/// If we know the original C++ function is codegenned and already compatible with `extern "C"`
+/// calling convention we skip creating/calling the C++ thunk since we can call the original C++
+/// directly.
+fn can_skip_cc_thunk(func: &Func) -> bool {
+    // Inline functions may not be codegenned in the C++ library since Clang doesn't know if Rust
+    // calls the function or not. Therefore in order to make inline functions callable from Rust we
+    // need to generate a C++ file that defines a thunk that delegates to the original inline
+    // function. When compiled, Clang will emit code for this thunk and Rust code will call the
+    // thunk when the user wants to call the original inline function.
+    //
+    // This is not great runtime-performance-wise in regular builds (inline function will not be
+    // inlined, there will always be a function call), but it is correct. ThinLTO builds will be
+    // able to see through the thunk and inline code across the language boundary. For non-ThinLTO
+    // builds we plan to implement <internal link> which removes the runtime performance overhead.
+    !func.is_inline
+}
+
 fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut thunks = vec![];
     let mut api_funcs = vec![];
@@ -85,8 +102,14 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
             }
         });
 
+        let thunk_attr = if can_skip_cc_thunk(&func) {
+            quote! {#[link_name = #mangled_name]}
+        } else {
+            quote! {}
+        };
+
         thunks.push(quote! {
-            #[link_name = #mangled_name]
+            #thunk_attr
             pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
         });
     }
@@ -104,13 +127,50 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     Ok(result.to_string())
 }
 
-fn generate_rs_api_impl(_ir: &IR) -> Result<String> {
-    // TODO(hlopko): Generate C++ code when needed.
-    Ok("// No bindings implementation code was needed.".to_string())
-}
-
 fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
+}
+
+fn generate_rs_api_impl(ir: &IR) -> Result<String> {
+    // This function uses quote! to generate C++ source code out of convenience. This is a bold idea
+    // so we have to continously evaluate if it still makes sense or the cost of working around
+    // differences in Rust and C++ tokens is greather than the value added.
+    //
+    // See rs_bindings_from_cc/token_stream_printer.rs for a list
+    // of supported placeholders.
+    let mut thunks = vec![];
+    for func in &ir.functions {
+        if can_skip_cc_thunk(&func) {
+            continue;
+        }
+
+        let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
+        let ident = make_ident(&func.identifier.identifier);
+        let return_type_name = make_ident(&func.return_type.cc_name);
+
+        let param_idents =
+            func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
+
+        let param_types = func.params.iter().map(|p| make_ident(&p.type_.cc_name)).collect_vec();
+
+        thunks.push(quote! {
+            extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
+                return #ident( #( #param_idents ),* );
+            }
+        });
+    }
+
+    // In order to generate C++ thunk in all the cases Clang needs to be able to access declarations
+    // from public headers of the C++ library.
+    let includes = ir.used_headers.iter().map(|i| &i.name);
+
+    let result = quote! {
+        #( __HASH_TOKEN__ include #includes __NEWLINE__)*
+
+        #( #thunks )*
+    };
+
+    token_stream_printer::cc_tokens_to_string(result)
 }
 
 #[cfg(test)]
@@ -119,6 +179,7 @@ mod tests {
 
     use super::Result;
     use quote::quote;
+    use token_stream_printer::cc_tokens_to_string;
 
     #[test]
     fn test_simple_function() -> Result<()> {
@@ -127,17 +188,18 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
-                return_type: IRType { rs_name: "i32".to_string() },
+                return_type: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
                 params: vec![
                     FuncParam {
                         identifier: Identifier { identifier: "a".to_string() },
-                        type_: IRType { rs_name: "i32".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
                     },
                     FuncParam {
                         identifier: Identifier { identifier: "b".to_string() },
-                        type_: IRType { rs_name: "i32".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
                     },
                 ],
+                is_inline: false,
             }],
         };
         assert_eq!(
@@ -157,7 +219,62 @@ mod tests {
             }
             .to_string()
         );
-        assert_eq!(generate_rs_api_impl(&ir)?, "// No bindings implementation code was needed.");
+        assert_eq!(generate_rs_api_impl(&ir)?, "");
+        Ok(())
+    }
+
+    #[test]
+    fn test_inline_function() -> Result<()> {
+        let ir = IR {
+            used_headers: vec![
+                HeaderName { name: "foo/bar.h".to_string() },
+                HeaderName { name: "foo/baz.h".to_string() },
+            ],
+            functions: vec![Func {
+                identifier: Identifier { identifier: "add".to_string() },
+                mangled_name: "_Z3Addii".to_string(),
+                return_type: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                params: vec![
+                    FuncParam {
+                        identifier: Identifier { identifier: "a".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                    },
+                    FuncParam {
+                        identifier: Identifier { identifier: "b".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                    },
+                ],
+                is_inline: true,
+            }],
+        };
+
+        assert_eq!(
+            generate_rs_api(&ir)?,
+            quote! {#[inline(always)]
+                pub fn add(a: i32, b: i32) -> i32 {
+                    unsafe { crate::detail::__rust_thunk__add(a, b) }
+                }
+
+                mod detail {
+                    extern "C" {
+                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                    } // extern
+                } // mod detail
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            generate_rs_api_impl(&ir)?,
+            cc_tokens_to_string(quote! {
+                __HASH_TOKEN__ include "foo/bar.h" __NEWLINE__
+                __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__
+
+                extern "C" int __rust_thunk__add(int a, int b) {
+                    return add(a, b);
+                }
+            })?
+        );
         Ok(())
     }
 }

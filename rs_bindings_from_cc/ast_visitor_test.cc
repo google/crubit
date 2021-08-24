@@ -105,6 +105,22 @@ TEST(AstVisitorTest, TestImportTwoFuncsFromTwoHeaders) {
   EXPECT_EQ(bar.Ident().Ident(), "Bar");
 }
 
+TEST(AstVisitorTest, TestImportNonInlineFunc) {
+  IR ir = ImportCode({"void Foo() {}"}, {});
+  ASSERT_THAT(ir.Functions(), SizeIs(1));
+  Func func = ir.Functions()[0];
+  EXPECT_EQ(func.Ident().Ident(), "Foo");
+  EXPECT_FALSE(func.IsInline());
+}
+
+TEST(AstVisitorTest, TestImportInlineFunc) {
+  IR ir = ImportCode({"inline void Foo() {}"}, {});
+  ASSERT_THAT(ir.Functions(), SizeIs(1));
+  Func func = ir.Functions()[0];
+  EXPECT_EQ(func.Ident().Ident(), "Foo");
+  EXPECT_TRUE(func.IsInline());
+}
+
 TEST(AstVisitorTest, TestImportFuncJustOnce) {
   IR ir = ImportCode({"void Foo(); void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));

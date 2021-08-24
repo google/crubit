@@ -20,6 +20,7 @@ pub struct HeaderName {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IRType {
     pub rs_name: String,
+    pub cc_name: String,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -40,6 +41,7 @@ pub struct Func {
     pub mangled_name: String,
     pub return_type: IRType,
     pub params: Vec<FuncParam>,
+    pub is_inline: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -64,10 +66,11 @@ mod tests {
                     "params": [
                         {
                             "identifier": { "identifier": "arg" },
-                            "type": { "rs_name":"i32" }
+                            "type": { "rs_name":"i32", "cc_name": "int" }
                         }
                     ],
-                    "return_type": { "rs_name": "i32" }
+                    "return_type": { "rs_name": "i32", "cc_name": "int" },
+                    "is_inline": false
                 }
             ]
         }
@@ -78,11 +81,12 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "hello_world".to_string() },
                 mangled_name: "$$mangled_name$$".to_string(),
-                return_type: IRType { rs_name: "i32".to_string() },
+                return_type: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
                 params: vec![FuncParam {
-                    type_: IRType { rs_name: "i32".to_string() },
+                    type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
                     identifier: Identifier { identifier: "arg".to_string() },
                 }],
+                is_inline: false,
             }],
         };
         assert_eq!(ir, expected);

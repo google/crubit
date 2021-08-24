@@ -20,9 +20,11 @@ using ::testing::StrEq;
 TEST(SrcGenTest, FFIIntegration) {
   IR ir({HeaderName(absl::Cord("foo/bar.h"))},
         {Func(Identifier(absl::Cord("hello_world")),
-              absl::Cord("$$mangled_name$$"), Type(absl::Cord("i32")),
-              {FuncParam(Type(absl::Cord("i32")),
-                         Identifier(absl::Cord("arg")))})});
+              absl::Cord("$$mangled_name$$"),
+              Type(absl::Cord("i32"), absl::Cord("int")),
+              {FuncParam(Type(absl::Cord("i32"), absl::Cord("int")),
+                         Identifier(absl::Cord("arg")))},
+              /* is_inline= */ true)});
   Bindings bindings = GenerateBindings(ir);
   EXPECT_THAT(
       bindings.rs_api,
@@ -34,7 +36,6 @@ TEST(SrcGenTest, FFIIntegration) {
           "} "
           "mod detail { "
           "extern \"C\" { "
-          "# [link_name = \"$$mangled_name$$\"] "
           "pub (crate) fn __rust_thunk__hello_world (arg : i32) -> i32 ; "
           "} "
           "}"));
@@ -42,7 +43,12 @@ TEST(SrcGenTest, FFIIntegration) {
   EXPECT_THAT(
       // TODO(hlopko): Run generated C++ sources through clang-format.
       bindings.rs_api_impl,
-      StrEq("// No bindings implementation code was needed."));
+      StrEq(
+          // TODO(hlopko): Run generated C++ sources through clang-format.
+          "# include \"foo/bar.h\" \n "
+          "extern \"C\" int __rust_thunk__hello_world (int arg) { "
+          "return hello_world (arg) ; "
+          "}"));
 }
 
 }  // namespace

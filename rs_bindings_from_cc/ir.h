@@ -39,24 +39,27 @@ class HeaderName {
 // spelled in Rust and in C++ code.
 //
 // Examples:
-//     Type of C++'s `int32_t` will be `Type("i32")`.
-//     Type of C++'s `struct foo` will be `Type("Foo")`.
+//     Type of C++'s `int32_t` will be `Type("i32", "int")`.
+//     Type of C++'s `struct foo` will be `Type("Foo", "Foo")`.
 //
 // Conventions:
 //     `rs_name` cannot be empty.
-// TODO(hlopko): Add knowledge about the spelling of the C++ type.
+//     `cc_name` cannot be empty.
 class Type {
  public:
-  explicit Type(absl::Cord rs_name) : rs_name_(std::move(rs_name)) {}
+  explicit Type(absl::Cord rs_name, absl::Cord cc_name)
+      : rs_name_(std::move(rs_name)), cc_name_(std::move(cc_name)) {}
 
-  static Type Void() { return Type(absl::Cord("()")); }
+  static Type Void() { return Type(absl::Cord("()"), absl::Cord("void")); }
   bool IsVoid() const { return rs_name_ == "()"; }
   const absl::Cord &RsName() const { return rs_name_; }
+  const absl::Cord &CcName() const { return cc_name_; }
 
   nlohmann::json ToJson() const;
 
  private:
   absl::Cord rs_name_;
+  absl::Cord cc_name_;
 };
 
 // An identifier involved in bindings.
@@ -106,17 +109,19 @@ class FuncParam {
 class Func {
  public:
   explicit Func(Identifier identifier, absl::Cord mangled_name,
-                Type return_type, std::vector<FuncParam> params)
+                Type return_type, std::vector<FuncParam> params, bool is_inline)
       : identifier_(std::move(identifier)),
         mangled_name_(std::move(mangled_name)),
         return_type_(std::move(return_type)),
-        params_(std::move(params)) {}
+        params_(std::move(params)),
+        is_inline_(is_inline) {}
 
   const absl::Cord &MangledName() const { return mangled_name_; }
   const Type &ReturnType() const { return return_type_; }
   const Identifier &Ident() const { return identifier_; }
 
   const std::vector<FuncParam> &Params() const { return params_; }
+  bool IsInline() const { return is_inline_; }
 
   nlohmann::json ToJson() const;
 
@@ -125,6 +130,7 @@ class Func {
   absl::Cord mangled_name_;
   Type return_type_;
   std::vector<FuncParam> params_;
+  bool is_inline_;
 };
 
 // A complete intermediate representation of bindings for publicly accessible

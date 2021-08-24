@@ -21,6 +21,8 @@ nlohmann::json HeaderName::ToJson() const {
 nlohmann::json Type::ToJson() const {
   nlohmann::json result;
   result["rs_name"] = std::string(rs_name_);
+  result["cc_name"] = std::string(cc_name_);
+
   return result;
 }
 
@@ -47,6 +49,7 @@ nlohmann::json Func::ToJson() const {
   result["mangled_name"] = std::string(mangled_name_);
   result["return_type"] = return_type_.ToJson();
   result["params"] = params;
+  result["is_inline"] = is_inline_;
   return result;
 }
 

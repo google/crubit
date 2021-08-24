@@ -71,9 +71,10 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
                         GetTranslatedName(param));
   }
 
-  ir_.Functions().emplace_back(
-      GetTranslatedName(function_decl), GetMangledName(function_decl),
-      ConvertType(function_decl->getReturnType()), params);
+  ir_.Functions().emplace_back(GetTranslatedName(function_decl),
+                               GetMangledName(function_decl),
+                               ConvertType(function_decl->getReturnType()),
+                               params, function_decl->isInlined());
   return true;
 }
 
@@ -86,7 +87,7 @@ Type AstVisitor::ConvertType(clang::QualType qual_type) const {
           qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
       // TODO(hlopko): look at the actual width of the type.
-      return Type(absl::Cord("i32"));
+      return Type(absl::Cord("i32"), absl::Cord("int"));
     }
     if (builtin_type->isVoidType()) {
       return Type::Void();
