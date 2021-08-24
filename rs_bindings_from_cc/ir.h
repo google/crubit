@@ -96,8 +96,8 @@ class FuncParam {
   explicit FuncParam(Type type, Identifier identifier)
       : type_(std::move(type)), identifier_(std::move(identifier)) {}
 
-  const Type &ParamType() const { return type_; }
-  const Identifier &Ident() const { return identifier_; }
+  const Type& ParamType() const { return type_; }
+  const Identifier& Ident() const { return identifier_; }
 
   nlohmann::json ToJson() const;
 
@@ -118,10 +118,10 @@ class Func {
         is_inline_(is_inline) {}
 
   absl::string_view MangledName() const { return mangled_name_; }
-  const Type &ReturnType() const { return return_type_; }
-  const Identifier &Ident() const { return identifier_; }
+  const Type& ReturnType() const { return return_type_; }
+  const Identifier& Ident() const { return identifier_; }
 
-  const std::vector<FuncParam> &Params() const { return params_; }
+  const std::vector<FuncParam>& Params() const { return params_; }
   bool IsInline() const { return is_inline_; }
 
   nlohmann::json ToJson() const;
@@ -145,11 +145,11 @@ class IR {
 
   nlohmann::json ToJson() const;
 
-  const std::vector<HeaderName> &UsedHeaders() const { return used_headers_; }
-  std::vector<HeaderName> &UsedHeaders() { return used_headers_; }
+  const std::vector<HeaderName>& UsedHeaders() const { return used_headers_; }
+  std::vector<HeaderName>& UsedHeaders() { return used_headers_; }
 
-  const std::vector<Func> &Functions() const { return functions_; }
-  std::vector<Func> &Functions() { return functions_; }
+  const std::vector<Func>& Functions() const { return functions_; }
+  std::vector<Func>& Functions() { return functions_; }
 
  private:
   // Collection of public headers that were used to construct the AST this `IR`

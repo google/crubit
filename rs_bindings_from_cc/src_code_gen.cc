@@ -22,11 +22,11 @@ struct FfiBindings {
 extern "C" FfiBindings GenerateBindingsImpl(FfiU8Slice json);
 
 // Creates `Bindings` instance from copied data from `ffi_bindings`.
-static Bindings MakeBindingsFromFfiBindings(const FfiBindings &ffi_bindings) {
+static Bindings MakeBindingsFromFfiBindings(const FfiBindings& ffi_bindings) {
   Bindings bindings;
 
-  const FfiU8SliceBox &rs_api = ffi_bindings.rs_api;
-  const FfiU8SliceBox &rs_api_impl = ffi_bindings.rs_api_impl;
+  const FfiU8SliceBox& rs_api = ffi_bindings.rs_api;
+  const FfiU8SliceBox& rs_api_impl = ffi_bindings.rs_api_impl;
 
   bindings.rs_api = std::string(rs_api.ptr, rs_api.size);
   bindings.rs_api_impl = std::string(rs_api_impl.ptr, rs_api_impl.size);
@@ -40,7 +40,7 @@ static void FreeFfiBindings(FfiBindings ffi_bindings) {
   FreeFfiU8SliceBox(ffi_bindings.rs_api_impl);
 }
 
-Bindings GenerateBindings(const IR &ir) {
+Bindings GenerateBindings(const IR& ir) {
   std::string json = ir.ToJson().dump();
   FfiBindings ffi_bindings = GenerateBindingsImpl(MakeFfiU8Slice(json));
   Bindings bindings = MakeBindingsFromFfiBindings(ffi_bindings);

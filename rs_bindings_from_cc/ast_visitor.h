@@ -27,27 +27,27 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   using Base = clang::RecursiveASTVisitor<AstVisitor>;
 
   explicit AstVisitor(absl::Span<const absl::string_view> public_header_names,
-                      IR &ir)
+                      IR& ir)
       : public_header_names_(public_header_names), ir_(ir) {}
 
   // These functions are called by the base class while visiting the different
   // parts of the AST. The API follows the rules of the base class which is
   // responsible for the traversal of the AST.
   bool TraverseTranslationUnitDecl(
-      clang::TranslationUnitDecl *translation_unit_decl);
-  bool TraverseDecl(clang::Decl *decl);
+      clang::TranslationUnitDecl* translation_unit_decl);
+  bool TraverseDecl(clang::Decl* decl);
 
-  bool VisitFunctionDecl(clang::FunctionDecl *function_decl);
+  bool VisitFunctionDecl(clang::FunctionDecl* function_decl);
 
  private:
-  std::string GetMangledName(const clang::NamedDecl *named_decl) const;
-  Identifier GetTranslatedName(const clang::NamedDecl *named_decl) const;
+  std::string GetMangledName(const clang::NamedDecl* named_decl) const;
+  Identifier GetTranslatedName(const clang::NamedDecl* named_decl) const;
   Type ConvertType(clang::QualType qual_type) const;
 
   absl::Span<const absl::string_view> public_header_names_;
-  IR &ir_;
+  IR& ir_;
   std::unique_ptr<clang::MangleContext> mangler_;
-  absl::flat_hash_set<const clang::Decl *> seen_decls_;
+  absl::flat_hash_set<const clang::Decl*> seen_decls_;
 };  // class AstVisitor
 
 }  // namespace rs_bindings_from_cc

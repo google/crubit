@@ -13,7 +13,7 @@
 namespace rs_bindings_from_cc {
 
 std::unique_ptr<clang::ASTConsumer> FrontendAction::CreateASTConsumer(
-    clang::CompilerInstance &, llvm::StringRef) {
+    clang::CompilerInstance&, llvm::StringRef) {
   return std::make_unique<AstConsumer>(public_header_names_, ir_);
 }
 

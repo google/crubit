@@ -20,10 +20,10 @@ namespace rs_bindings_from_cc {
 class AstConsumer : public clang::ASTConsumer {
  public:
   explicit AstConsumer(absl::Span<const absl::string_view> public_header_names,
-                       IR &ir)
+                       IR& ir)
       : ast_visitor_(public_header_names, ir) {}
 
-  void HandleTranslationUnit(clang::ASTContext &context) override;
+  void HandleTranslationUnit(clang::ASTContext& context) override;
 
  private:
   AstVisitor ast_visitor_;

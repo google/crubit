@@ -21,15 +21,15 @@ namespace rs_bindings_from_cc {
 class FrontendAction : public clang::ASTFrontendAction {
  public:
   explicit FrontendAction(
-      absl::Span<const absl::string_view> public_header_names, IR &ir)
+      absl::Span<const absl::string_view> public_header_names, IR& ir)
       : public_header_names_(public_header_names), ir_(ir) {}
 
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
-      clang::CompilerInstance &, llvm::StringRef) override;
+      clang::CompilerInstance&, llvm::StringRef) override;
 
  private:
   absl::Span<const absl::string_view> public_header_names_;
-  IR &ir_;
+  IR& ir_;
 };
 
 }  // namespace rs_bindings_from_cc

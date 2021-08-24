@@ -38,7 +38,7 @@ ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
 constexpr absl::string_view kVirtualInputPath =
     "rs_bindings_from_cc_virtual_input.cc";
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
 
   auto rs_out = absl::GetFlag(FLAGS_rs_out);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   command_line.push_back(std::string(kVirtualInputPath));
 
   std::string virtual_input_file_content;
-  for (const std::string &header : public_headers) {
+  for (const std::string& header : public_headers) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
                               header);
   }

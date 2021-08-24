@@ -20,7 +20,7 @@ struct Bindings {
 };
 
 // Generates bindings from the given `IR`.
-Bindings GenerateBindings(const IR &ir);
+Bindings GenerateBindings(const IR& ir);
 
 }  // namespace rs_bindings_from_cc
 

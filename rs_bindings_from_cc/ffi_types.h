@@ -14,13 +14,13 @@ namespace rs_bindings_from_cc {
 // Owned, Rust-allocated byte array. Call `FreeFfiU8SliceBox` to
 // deallocate.
 struct FfiU8SliceBox {
-  const char *ptr;
+  const char* ptr;
   size_t size;
 };
 
 // Borrowed byte array.
 struct FfiU8Slice {
-  const char *ptr;
+  const char* ptr;
   size_t size;
 };
 
