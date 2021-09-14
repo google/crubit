@@ -48,7 +48,6 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   // TODO(hlopko): Skip decls from other headers
-  // TODO(hlopko): Generate thunks + C++ impls for inline functions
   // TODO(hlopko): Handle lowercased snakecased conflicts
   // TODO(hlopko): Convert primitive types (bool -> bool, int -> i64 (?) and
   // so on)
