@@ -23,7 +23,8 @@ TEST(SrcGenTest, FFIIntegration) {
               .return_type = Type{std::string("i32"), std::string("int")},
               .params = {FuncParam{Type{std::string("i32"), std::string("int")},
                                    Identifier(std::string("arg"))}},
-              .is_inline = true}});
+              .is_inline = true}},
+        /* records= */ {});
   Bindings bindings = GenerateBindings(ir);
   EXPECT_THAT(
       bindings.rs_api,

@@ -38,6 +38,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   bool TraverseDecl(clang::Decl* decl);
 
   bool VisitFunctionDecl(clang::FunctionDecl* function_decl);
+  bool VisitRecordDecl(clang::RecordDecl* record_decl);
 
  private:
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;

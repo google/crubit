@@ -16,6 +16,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 
 namespace rs_bindings_from_cc {
 
@@ -75,6 +76,34 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       .params = std::move(params),
       .is_inline = function_decl->isInlined(),
   });
+  return true;
+}
+
+bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
+  // TODO(hlopko): Check access control for members
+  // TODO(hlopko): Import nested types
+  // TODO(hlopko): Import methods
+  // TODO(hlopko): Import constructors
+  // TODO(hlopko): Import destructor
+  // TODO(hlopko): Import operators
+  // TODO(hlopko): Handle class template specializations
+  // TODO(hlopko): Handle partial class template specializations
+  // TODO(hlopko): Handle unions
+  // TODO(hlopko): Handle non-trivially movable types
+  // TODO(hlopko): Make trivially copyable types copyable in Rust too
+  // TODO(hlopko): Handle dependent types
+  // TODO(hlopko): Handle opaque types (for example types with a field we cannot
+  // yet import)
+  // TODO(hlopko): Handle named bitfields
+  // TODO(hlopko): Handle unnamed bitfields (used only for padding)
+  // TODO(hlopko): Collect and cross check field offsets in C++ and in Rust
+
+  std::vector<Field> fields;
+  for (const clang::FieldDecl* field_decl : record_decl->fields()) {
+    fields.emplace_back(GetTranslatedName(field_decl),
+                        ConvertType(field_decl->getType()));
+  }
+  ir_.Records().emplace_back(GetTranslatedName(record_decl), std::move(fields));
   return true;
 }
 

@@ -6,6 +6,7 @@ use anyhow::Result;
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
+use proc_macro2::TokenStream;
 use quote::format_ident;
 use quote::quote;
 use std::iter::Iterator;
@@ -80,6 +81,20 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
     !func.is_inline
 }
 
+/// Generate Rust source code for a given Record.
+fn generate_record(record: &Record) -> TokenStream {
+    let ident = make_ident(&record.identifier.identifier);
+    let field_idents =
+        record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
+    let field_types = record.fields.iter().map(|f| make_ident(&f.type_.rs_name)).collect_vec();
+    quote! {
+        #[repr(C)]
+        pub struct #ident {
+            #( pub #field_idents: #field_types, )*
+        }
+    }
+}
+
 fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut thunks = vec![];
     let mut api_funcs = vec![];
@@ -114,14 +129,25 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         });
     }
 
-    let result = quote! {
-        #( #api_funcs )*
+    let records = ir.records.iter().map(generate_record).collect_vec();
 
-        mod detail {
-            extern "C" {
-                #( #thunks )*
+    let mod_detail = if thunks.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            mod detail {
+                extern "C" {
+                    #( #thunks )*
+                }
             }
         }
+    };
+
+    let result = quote! {
+        #( #api_funcs )*
+        #( #records )*
+
+        #mod_detail
     };
 
     Ok(result.to_string())
@@ -175,9 +201,9 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use super::Result;
+    use super::{generate_rs_api, generate_rs_api_impl};
+    use ir::*;
     use quote::quote;
     use token_stream_printer::cc_tokens_to_string;
 
@@ -185,6 +211,7 @@ mod tests {
     fn test_simple_function() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
+            records: vec![],
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
@@ -226,6 +253,7 @@ mod tests {
     #[test]
     fn test_inline_function() -> Result<()> {
         let ir = IR {
+            records: vec![],
             used_headers: vec![
                 HeaderName { name: "foo/bar.h".to_string() },
                 HeaderName { name: "foo/baz.h".to_string() },
@@ -275,6 +303,40 @@ mod tests {
                 }
             })?
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_simple_struct() -> Result<()> {
+        let ir = IR {
+            used_headers: vec![],
+            records: vec![Record {
+                identifier: Identifier { identifier: "SomeStruct".to_string() },
+                fields: vec![
+                    Field {
+                        identifier: Identifier { identifier: "first_field".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                    },
+                    Field {
+                        identifier: Identifier { identifier: "second_field".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                    },
+                ],
+            }],
+            functions: vec![],
+        };
+        assert_eq!(
+            generate_rs_api(&ir)?,
+            quote! {
+                #[repr(C)]
+                pub struct SomeStruct {
+                    pub first_field: i32,
+                    pub second_field: i32,
+                }
+            }
+            .to_string()
+        );
+        assert_eq!(generate_rs_api_impl(&ir)?, "");
         Ok(())
     }
 }

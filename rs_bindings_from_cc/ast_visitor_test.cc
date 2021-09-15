@@ -145,5 +145,24 @@ TEST(AstVisitorTest, TestImportFuncParams) {
   EXPECT_EQ(func.params[1].identifier.Ident(), "b");
 }
 
+TEST(AstVisitorTest, TestImportStruct) {
+  IR ir = ImportCode(
+      {"struct SomeStruct { int first_field; int second_field; };"}, {});
+  EXPECT_THAT(ir.Functions(), SizeIs(0));
+  EXPECT_THAT(ir.Records(), SizeIs(1));
+
+  Record some_struct = ir.Records()[0];
+  EXPECT_THAT(some_struct.Fields(), SizeIs(2));
+  EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
+  Field first = some_struct.Fields()[0];
+  EXPECT_EQ(first.Ident().Ident(), "first_field");
+  EXPECT_EQ(first.FieldType().cc_name, "int");
+  EXPECT_EQ(first.FieldType().rs_name, "i32");
+  Field second = some_struct.Fields()[1];
+  EXPECT_EQ(second.Ident().Ident(), "second_field");
+  EXPECT_EQ(second.FieldType().cc_name, "int");
+  EXPECT_EQ(second.FieldType().rs_name, "i32");
+}
+
 }  // namespace
 }  // namespace rs_bindings_from_cc

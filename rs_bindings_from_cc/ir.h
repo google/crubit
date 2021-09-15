@@ -100,14 +100,46 @@ struct Func {
   bool is_inline;
 };
 
+// A field (non-static member variable) of a record.
+class Field {
+ public:
+  Field(Identifier identifier, Type type)
+      : identifier_(std::move(identifier)), type_(std::move(type)) {}
+
+  const Identifier& Ident() const { return identifier_; }
+  const Type& FieldType() const { return type_; }
+  nlohmann::json ToJson() const;
+
+ private:
+  Identifier identifier_;
+  Type type_;
+};
+
+// A record (struct, class, union).
+class Record {
+ public:
+  Record(Identifier identifier, std::vector<Field> fields)
+      : identifier_(std::move(identifier)), fields_(std::move(fields)) {}
+
+  const Identifier& Ident() const { return identifier_; }
+  const std::vector<Field>& Fields() const { return fields_; }
+  nlohmann::json ToJson() const;
+
+ private:
+  Identifier identifier_;
+  std::vector<Field> fields_;
+};
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 class IR {
  public:
   explicit IR() {}
-  explicit IR(std::vector<HeaderName> used_headers, std::vector<Func> functions)
+  explicit IR(std::vector<HeaderName> used_headers, std::vector<Func> functions,
+              std::vector<Record> records)
       : used_headers_(std::move(used_headers)),
-        functions_(std::move(functions)) {}
+        functions_(std::move(functions)),
+        records_(std::move(records)) {}
 
   nlohmann::json ToJson() const;
 
@@ -117,11 +149,15 @@ class IR {
   const std::vector<Func>& Functions() const { return functions_; }
   std::vector<Func>& Functions() { return functions_; }
 
+  const std::vector<Record>& Records() const { return records_; }
+  std::vector<Record>& Records() { return records_; }
+
  private:
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers_;
   std::vector<Func> functions_;
+  std::vector<Record> records_;
 };
 
 }  // namespace rs_bindings_from_cc

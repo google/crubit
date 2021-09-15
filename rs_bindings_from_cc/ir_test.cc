@@ -35,7 +35,22 @@ TEST(IrTest, TestIR) {
                 }
               ],
               "is_inline": false
-            }]
+            }],
+            "records": [
+              {
+                "identifier": {"identifier": "SomeStruct" },
+                "fields": [
+                  {
+                    "identifier": {"identifier": "first_field" },
+                    "type": {"rs_name": "i32", "cc_name": "int" }
+                  },
+                  {
+                    "identifier": {"identifier": "second_field" },
+                    "type": {"rs_name": "i32", "cc_name": "int" }
+                  }
+                ]
+              }
+            ]
       })j");
   EXPECT_EQ(
       IR({HeaderName(std::string("foo/bar.h"))},
@@ -45,7 +60,14 @@ TEST(IrTest, TestIR) {
              .return_type = Type{std::string("i32"), std::string("int")},
              .params = {FuncParam{Type{std::string("i32"), std::string("int")},
                                   Identifier(std::string("arg"))}},
-             .is_inline = false}})
+             .is_inline = false}},
+         {Record(Identifier(std::string("SomeStruct")),
+                 {
+                     Field(Identifier(std::string("first_field")),
+                           Type{std::string("i32"), std::string("int")}),
+                     Field(Identifier(std::string("second_field")),
+                           Type{std::string("i32"), std::string("int")}),
+                 })})
           .ToJson(),
       expected);
 }

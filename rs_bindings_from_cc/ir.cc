@@ -52,6 +52,26 @@ nlohmann::json Func::ToJson() const {
   return result;
 }
 
+nlohmann::json Field::ToJson() const {
+  nlohmann::json result;
+  result["type"] = type_.ToJson();
+  result["identifier"] = identifier_.ToJson();
+  return result;
+}
+
+nlohmann::json Record::ToJson() const {
+  std::vector<nlohmann::json> fields;
+  fields.reserve(fields_.size());
+  for (const Field& field : fields_) {
+    fields.push_back(field.ToJson());
+  }
+
+  nlohmann::json result;
+  result["identifier"] = identifier_.ToJson();
+  result["fields"] = std::move(fields);
+  return result;
+}
+
 nlohmann::json IR::ToJson() const {
   std::vector<nlohmann::json> used_headers;
   for (const HeaderName& header : used_headers_) {
@@ -63,9 +83,16 @@ nlohmann::json IR::ToJson() const {
     functions.push_back(func.ToJson());
   }
 
+  std::vector<nlohmann::json> records;
+  records.reserve(records_.size());
+  for (const Record& record : records_) {
+    records.push_back(record.ToJson());
+  }
+
   nlohmann::json result;
   result["used_headers"] = used_headers;
   result["functions"] = functions;
+  result["records"] = std::move(records);
   return result;
 }
 

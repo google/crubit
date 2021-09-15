@@ -45,9 +45,23 @@ pub struct Func {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Field {
+    pub identifier: Identifier,
+    #[serde(rename(deserialize = "type"))]
+    pub type_: IRType,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Record {
+    pub identifier: Identifier,
+    pub fields: Vec<Field>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IR {
     pub used_headers: Vec<HeaderName>,
     pub functions: Vec<Func>,
+    pub records: Vec<Record>,
 }
 
 #[cfg(test)]
@@ -72,6 +86,21 @@ mod tests {
                     "return_type": { "rs_name": "i32", "cc_name": "int" },
                     "is_inline": false
                 }
+            ],
+            "records": [
+                {
+                    "identifier": {"identifier": "Cons" },
+                    "fields": [
+                        {
+                            "identifier": {"identifier": "car" },
+                            "type": {"rs_name": "i32", "cc_name": "int" }
+                        },
+                        {
+                            "identifier": {"identifier": "cdr" },
+                            "type": {"rs_name": "i32", "cc_name": "int" }
+                        }
+                    ]
+                }
             ]
         }
         "#;
@@ -87,6 +116,19 @@ mod tests {
                     identifier: Identifier { identifier: "arg".to_string() },
                 }],
                 is_inline: false,
+            }],
+            records: vec![Record {
+                identifier: Identifier { identifier: "Cons".to_string() },
+                fields: vec![
+                    Field {
+                        identifier: Identifier { identifier: "car".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                    },
+                    Field {
+                        identifier: Identifier { identifier: "cdr".to_string() },
+                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                    },
+                ],
             }],
         };
         assert_eq!(ir, expected);
