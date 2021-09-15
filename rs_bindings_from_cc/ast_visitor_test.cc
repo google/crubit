@@ -136,12 +136,12 @@ TEST(AstVisitorTest, TestImportFuncParams) {
   Func func = ir.Functions()[0];
   EXPECT_EQ(func.identifier.Ident(), "Add");
   EXPECT_EQ(func.mangled_name, "_Z3Addii");
-  EXPECT_EQ(func.return_type.RsName(), "i32");
+  EXPECT_EQ(func.return_type.rs_name, "i32");
 
   EXPECT_THAT(func.params, SizeIs(2));
-  EXPECT_EQ(func.params[0].type.RsName(), "i32");
+  EXPECT_EQ(func.params[0].type.rs_name, "i32");
   EXPECT_EQ(func.params[0].identifier.Ident(), "a");
-  EXPECT_EQ(func.params[1].type.RsName(), "i32");
+  EXPECT_EQ(func.params[1].type.rs_name, "i32");
   EXPECT_EQ(func.params[1].identifier.Ident(), "b");
 }
 

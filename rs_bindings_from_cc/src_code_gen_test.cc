@@ -20,8 +20,8 @@ TEST(SrcGenTest, FFIIntegration) {
   IR ir({HeaderName(std::string("foo/bar.h"))},
         {Func{.identifier = Identifier(std::string("hello_world")),
               .mangled_name = std::string("$$mangled_name$$"),
-              .return_type = Type(std::string("i32"), std::string("int")),
-              .params = {FuncParam{Type(std::string("i32"), std::string("int")),
+              .return_type = Type{std::string("i32"), std::string("int")},
+              .params = {FuncParam{Type{std::string("i32"), std::string("int")},
                                    Identifier(std::string("arg"))}},
               .is_inline = true}});
   Bindings bindings = GenerateBindings(ir);

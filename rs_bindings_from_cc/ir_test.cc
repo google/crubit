@@ -16,7 +16,8 @@ namespace {
 TEST(IrTest, TestTypeToJson) {
   nlohmann::json expected =
       nlohmann::json::parse(R"j({ "rs_name": "i32", "cc_name": "int" })j");
-  EXPECT_EQ(Type(std::string("i32"), std::string("int")).ToJson(), expected);
+  auto type = Type{std::string("i32"), std::string("int")};
+  EXPECT_EQ(type.ToJson(), expected);
 }
 
 TEST(IrTest, TestIR) {
@@ -41,8 +42,8 @@ TEST(IrTest, TestIR) {
          {Func{
              .identifier = Identifier(std::string("hello_world")),
              .mangled_name = std::string("#$mangled_name$#"),
-             .return_type = Type(std::string("i32"), std::string("int")),
-             .params = {FuncParam{Type(std::string("i32"), std::string("int")),
+             .return_type = Type{std::string("i32"), std::string("int")},
+             .params = {FuncParam{Type{std::string("i32"), std::string("int")},
                                   Identifier(std::string("arg"))}},
              .is_inline = false}})
           .ToJson(),

@@ -19,8 +19,8 @@ nlohmann::json HeaderName::ToJson() const {
 
 nlohmann::json Type::ToJson() const {
   nlohmann::json result;
-  result["rs_name"] = std::string(rs_name_);
-  result["cc_name"] = std::string(cc_name_);
+  result["rs_name"] = std::string(rs_name);
+  result["cc_name"] = std::string(cc_name);
 
   return result;
 }

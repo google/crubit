@@ -87,7 +87,7 @@ Type AstVisitor::ConvertType(clang::QualType qual_type) const {
           qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
       // TODO(hlopko): look at the actual width of the type.
-      return Type(std::string("i32"), std::string("int"));
+      return Type{std::string("i32"), std::string("int")};
     }
     if (builtin_type->isVoidType()) {
       return Type::Void();

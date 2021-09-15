@@ -40,27 +40,18 @@ class HeaderName {
 // spelled in Rust and in C++ code.
 //
 // Examples:
-//     Type of C++'s `int32_t` will be `Type("i32", "int")`.
-//     Type of C++'s `struct foo` will be `Type("Foo", "Foo")`.
-//
-// Conventions:
-//     `rs_name` cannot be empty.
-//     `cc_name` cannot be empty.
-class Type {
- public:
-  explicit Type(std::string rs_name, std::string cc_name)
-      : rs_name_(std::move(rs_name)), cc_name_(std::move(cc_name)) {}
-
-  static Type Void() { return Type(std::string("()"), std::string("void")); }
-  bool IsVoid() const { return rs_name_ == "()"; }
-  absl::string_view RsName() const { return rs_name_; }
-  absl::string_view CcName() const { return cc_name_; }
+//     Type of C++'s `int32_t` will be `Type{"i32", "int"}`.
+//     Type of C++'s `struct Foo` will be `Type{"Foo", "Foo"}`.
+struct Type {
+  static Type Void() { return Type{std::string("()"), std::string("void")}; }
+  bool IsVoid() const { return rs_name == "()"; }
 
   nlohmann::json ToJson() const;
 
- private:
-  std::string rs_name_;
-  std::string cc_name_;
+  // The rust name of the type. For example, i32 or ().
+  std::string rs_name;
+  // The C++ name for the type. For example, int or void.
+  std::string cc_name;
 };
 
 // An identifier involved in bindings.
@@ -90,7 +81,7 @@ class Identifier {
 //
 // Examples:
 //    FuncParam of a C++ function `void Foo(int32_t a);` will be
-//    `FuncParam{.type=Type("i32", "int32_t"), .identifier=Identifier("foo"))`.
+//    `FuncParam{.type=Type{"i32", "int32_t"}, .identifier=Identifier("foo"))`.
 struct FuncParam {
   nlohmann::json ToJson() const;
 
