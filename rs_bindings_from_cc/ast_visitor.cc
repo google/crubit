@@ -65,8 +65,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   // TODO(hlopko): Fail when exceptions enabled?
   std::vector<FuncParam> params;
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
-    params.emplace_back(ConvertType(param->getType()),
-                        GetTranslatedName(param));
+    params.push_back({ConvertType(param->getType()), GetTranslatedName(param)});
   }
 
   ir_.Functions().emplace_back(GetTranslatedName(function_decl),

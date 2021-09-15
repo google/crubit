@@ -139,10 +139,10 @@ TEST(AstVisitorTest, TestImportFuncParams) {
   EXPECT_EQ(func.ReturnType().RsName(), "i32");
 
   EXPECT_THAT(func.Params(), SizeIs(2));
-  EXPECT_EQ(func.Params()[0].ParamType().RsName(), "i32");
-  EXPECT_EQ(func.Params()[0].Ident().Ident(), "a");
-  EXPECT_EQ(func.Params()[1].ParamType().RsName(), "i32");
-  EXPECT_EQ(func.Params()[1].Ident().Ident(), "b");
+  EXPECT_EQ(func.Params()[0].type.RsName(), "i32");
+  EXPECT_EQ(func.Params()[0].identifier.Ident(), "a");
+  EXPECT_EQ(func.Params()[1].type.RsName(), "i32");
+  EXPECT_EQ(func.Params()[1].identifier.Ident(), "b");
 }
 
 }  // namespace

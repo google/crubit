@@ -21,8 +21,8 @@ TEST(SrcGenTest, FFIIntegration) {
         {Func(Identifier(std::string("hello_world")),
               std::string("$$mangled_name$$"),
               Type(std::string("i32"), std::string("int")),
-              {FuncParam(Type(std::string("i32"), std::string("int")),
-                         Identifier(std::string("arg")))},
+              {FuncParam{Type(std::string("i32"), std::string("int")),
+                         Identifier(std::string("arg"))}},
               /* is_inline= */ true)});
   Bindings bindings = GenerateBindings(ir);
   EXPECT_THAT(

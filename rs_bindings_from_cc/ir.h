@@ -90,20 +90,12 @@ class Identifier {
 //
 // Examples:
 //    FuncParam of a C++ function `void Foo(int32_t a);` will be
-//    `FuncParam(Type("i32"), Identifier("foo"))`.
-class FuncParam {
- public:
-  explicit FuncParam(Type type, Identifier identifier)
-      : type_(std::move(type)), identifier_(std::move(identifier)) {}
-
-  const Type& ParamType() const { return type_; }
-  const Identifier& Ident() const { return identifier_; }
-
+//    `FuncParam{.type=Type("i32", "int32_t"), .identifier=Identifier("foo"))`.
+struct FuncParam {
   nlohmann::json ToJson() const;
 
- private:
-  Type type_;
-  Identifier identifier_;
+  Type type;
+  Identifier identifier;
 };
 
 // A function involved in the bindings.

@@ -33,8 +33,8 @@ nlohmann::json Identifier::ToJson() const {
 
 nlohmann::json FuncParam::ToJson() const {
   nlohmann::json result;
-  result["type"] = type_.ToJson();
-  result["identifier"] = identifier_.ToJson();
+  result["type"] = type.ToJson();
+  result["identifier"] = identifier.ToJson();
   return result;
 }
 
