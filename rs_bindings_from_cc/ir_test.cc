@@ -36,15 +36,17 @@ TEST(IrTest, TestIR) {
               "is_inline": false
             }]
       })j");
-  EXPECT_EQ(IR({HeaderName(std::string("foo/bar.h"))},
-               {Func(Identifier(std::string("hello_world")),
-                     std::string("#$mangled_name$#"),
-                     Type(std::string("i32"), std::string("int")),
-                     {FuncParam{Type(std::string("i32"), std::string("int")),
-                                Identifier(std::string("arg"))}},
-                     /* is_inline= */ false)})
-                .ToJson(),
-            expected);
+  EXPECT_EQ(
+      IR({HeaderName(std::string("foo/bar.h"))},
+         {Func{
+             .identifier = Identifier(std::string("hello_world")),
+             .mangled_name = std::string("#$mangled_name$#"),
+             .return_type = Type(std::string("i32"), std::string("int")),
+             .params = {FuncParam{Type(std::string("i32"), std::string("int")),
+                                  Identifier(std::string("arg"))}},
+             .is_inline = false}})
+          .ToJson(),
+      expected);
 }
 
 }  // namespace

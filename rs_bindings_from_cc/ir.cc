@@ -39,16 +39,16 @@ nlohmann::json FuncParam::ToJson() const {
 }
 
 nlohmann::json Func::ToJson() const {
-  std::vector<nlohmann::json> params;
-  for (const FuncParam& param : params_) {
-    params.push_back(param.ToJson());
+  std::vector<nlohmann::json> json_params;
+  for (const FuncParam& param : params) {
+    json_params.push_back(param.ToJson());
   }
   nlohmann::json result;
-  result["identifier"] = identifier_.ToJson();
-  result["mangled_name"] = std::string(mangled_name_);
-  result["return_type"] = return_type_.ToJson();
-  result["params"] = params;
-  result["is_inline"] = is_inline_;
+  result["identifier"] = identifier.ToJson();
+  result["mangled_name"] = std::string(mangled_name);
+  result["return_type"] = return_type.ToJson();
+  result["params"] = std::move(json_params);
+  result["is_inline"] = is_inline;
   return result;
 }
 

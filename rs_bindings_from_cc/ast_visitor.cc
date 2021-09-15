@@ -68,10 +68,13 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     params.push_back({ConvertType(param->getType()), GetTranslatedName(param)});
   }
 
-  ir_.Functions().emplace_back(GetTranslatedName(function_decl),
-                               GetMangledName(function_decl),
-                               ConvertType(function_decl->getReturnType()),
-                               params, function_decl->isInlined());
+  ir_.Functions().push_back(Func{
+      .identifier = GetTranslatedName(function_decl),
+      .mangled_name = GetMangledName(function_decl),
+      .return_type = ConvertType(function_decl->getReturnType()),
+      .params = std::move(params),
+      .is_inline = function_decl->isInlined(),
+  });
   return true;
 }
 

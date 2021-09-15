@@ -99,31 +99,14 @@ struct FuncParam {
 };
 
 // A function involved in the bindings.
-class Func {
- public:
-  explicit Func(Identifier identifier, std::string mangled_name,
-                Type return_type, std::vector<FuncParam> params, bool is_inline)
-      : identifier_(std::move(identifier)),
-        mangled_name_(std::move(mangled_name)),
-        return_type_(std::move(return_type)),
-        params_(std::move(params)),
-        is_inline_(is_inline) {}
-
-  absl::string_view MangledName() const { return mangled_name_; }
-  const Type& ReturnType() const { return return_type_; }
-  const Identifier& Ident() const { return identifier_; }
-
-  const std::vector<FuncParam>& Params() const { return params_; }
-  bool IsInline() const { return is_inline_; }
-
+struct Func {
   nlohmann::json ToJson() const;
 
- private:
-  Identifier identifier_;
-  std::string mangled_name_;
-  Type return_type_;
-  std::vector<FuncParam> params_;
-  bool is_inline_;
+  Identifier identifier;
+  std::string mangled_name;
+  Type return_type;
+  std::vector<FuncParam> params;
+  bool is_inline;
 };
 
 // A complete intermediate representation of bindings for publicly accessible

@@ -74,10 +74,10 @@ TEST(AstVisitorTest, TestImportFuncWithVoidReturnType) {
   IR ir = ImportCode({"void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
-  EXPECT_EQ(func.Ident().Ident(), "Foo");
-  EXPECT_EQ(func.MangledName(), "_Z3Foov");
-  EXPECT_TRUE(func.ReturnType().IsVoid());
-  EXPECT_THAT(func.Params(), IsEmpty());
+  EXPECT_EQ(func.identifier.Ident(), "Foo");
+  EXPECT_EQ(func.mangled_name, "_Z3Foov");
+  EXPECT_TRUE(func.return_type.IsVoid());
+  EXPECT_THAT(func.params, IsEmpty());
 }
 
 TEST(AstVisitorTest, TestImportTwoFuncs) {
@@ -85,48 +85,48 @@ TEST(AstVisitorTest, TestImportTwoFuncs) {
   ASSERT_THAT(ir.Functions(), SizeIs(2));
 
   Func foo = ir.Functions()[0];
-  EXPECT_EQ(foo.Ident().Ident(), "Foo");
-  EXPECT_EQ(foo.MangledName(), "_Z3Foov");
-  EXPECT_TRUE(foo.ReturnType().IsVoid());
-  EXPECT_THAT(foo.Params(), IsEmpty());
+  EXPECT_EQ(foo.identifier.Ident(), "Foo");
+  EXPECT_EQ(foo.mangled_name, "_Z3Foov");
+  EXPECT_TRUE(foo.return_type.IsVoid());
+  EXPECT_THAT(foo.params, IsEmpty());
 
   Func bar = ir.Functions()[1];
-  EXPECT_EQ(bar.Ident().Ident(), "Bar");
-  EXPECT_EQ(bar.MangledName(), "_Z3Barv");
-  EXPECT_TRUE(bar.ReturnType().IsVoid());
-  EXPECT_THAT(bar.Params(), IsEmpty());
+  EXPECT_EQ(bar.identifier.Ident(), "Bar");
+  EXPECT_EQ(bar.mangled_name, "_Z3Barv");
+  EXPECT_TRUE(bar.return_type.IsVoid());
+  EXPECT_THAT(bar.params, IsEmpty());
 }
 
 TEST(AstVisitorTest, TestImportTwoFuncsFromTwoHeaders) {
   IR ir = ImportCode({"void Foo();", "void Bar();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(2));
   Func foo = ir.Functions()[0];
-  EXPECT_EQ(foo.Ident().Ident(), "Foo");
+  EXPECT_EQ(foo.identifier.Ident(), "Foo");
   Func bar = ir.Functions()[1];
-  EXPECT_EQ(bar.Ident().Ident(), "Bar");
+  EXPECT_EQ(bar.identifier.Ident(), "Bar");
 }
 
 TEST(AstVisitorTest, TestImportNonInlineFunc) {
   IR ir = ImportCode({"void Foo() {}"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
-  EXPECT_EQ(func.Ident().Ident(), "Foo");
-  EXPECT_FALSE(func.IsInline());
+  EXPECT_EQ(func.identifier.Ident(), "Foo");
+  EXPECT_FALSE(func.is_inline);
 }
 
 TEST(AstVisitorTest, TestImportInlineFunc) {
   IR ir = ImportCode({"inline void Foo() {}"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
-  EXPECT_EQ(func.Ident().Ident(), "Foo");
-  EXPECT_TRUE(func.IsInline());
+  EXPECT_EQ(func.identifier.Ident(), "Foo");
+  EXPECT_TRUE(func.is_inline);
 }
 
 TEST(AstVisitorTest, TestImportFuncJustOnce) {
   IR ir = ImportCode({"void Foo(); void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
-  EXPECT_EQ(func.Ident().Ident(), "Foo");
+  EXPECT_EQ(func.identifier.Ident(), "Foo");
 }
 
 TEST(AstVisitorTest, TestImportFuncParams) {
@@ -134,15 +134,15 @@ TEST(AstVisitorTest, TestImportFuncParams) {
   EXPECT_THAT(ir.Functions(), SizeIs(1));
 
   Func func = ir.Functions()[0];
-  EXPECT_EQ(func.Ident().Ident(), "Add");
-  EXPECT_EQ(func.MangledName(), "_Z3Addii");
-  EXPECT_EQ(func.ReturnType().RsName(), "i32");
+  EXPECT_EQ(func.identifier.Ident(), "Add");
+  EXPECT_EQ(func.mangled_name, "_Z3Addii");
+  EXPECT_EQ(func.return_type.RsName(), "i32");
 
-  EXPECT_THAT(func.Params(), SizeIs(2));
-  EXPECT_EQ(func.Params()[0].type.RsName(), "i32");
-  EXPECT_EQ(func.Params()[0].identifier.Ident(), "a");
-  EXPECT_EQ(func.Params()[1].type.RsName(), "i32");
-  EXPECT_EQ(func.Params()[1].identifier.Ident(), "b");
+  EXPECT_THAT(func.params, SizeIs(2));
+  EXPECT_EQ(func.params[0].type.RsName(), "i32");
+  EXPECT_EQ(func.params[0].identifier.Ident(), "a");
+  EXPECT_EQ(func.params[1].type.RsName(), "i32");
+  EXPECT_EQ(func.params[1].identifier.Ident(), "b");
 }
 
 }  // namespace
