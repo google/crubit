@@ -54,8 +54,8 @@ nlohmann::json Func::ToJson() const {
 
 nlohmann::json Field::ToJson() const {
   nlohmann::json result;
-  result["type"] = type_.ToJson();
-  result["identifier"] = identifier_.ToJson();
+  result["type"] = type.ToJson();
+  result["identifier"] = identifier.ToJson();
   return result;
 }
 

@@ -101,18 +101,11 @@ struct Func {
 };
 
 // A field (non-static member variable) of a record.
-class Field {
- public:
-  Field(Identifier identifier, Type type)
-      : identifier_(std::move(identifier)), type_(std::move(type)) {}
-
-  const Identifier& Ident() const { return identifier_; }
-  const Type& FieldType() const { return type_; }
+struct Field {
   nlohmann::json ToJson() const;
 
- private:
-  Identifier identifier_;
-  Type type_;
+  Identifier identifier;
+  Type type;
 };
 
 // A record (struct, class, union).

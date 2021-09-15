@@ -155,13 +155,13 @@ TEST(AstVisitorTest, TestImportStruct) {
   EXPECT_THAT(some_struct.Fields(), SizeIs(2));
   EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
   Field first = some_struct.Fields()[0];
-  EXPECT_EQ(first.Ident().Ident(), "first_field");
-  EXPECT_EQ(first.FieldType().cc_name, "int");
-  EXPECT_EQ(first.FieldType().rs_name, "i32");
+  EXPECT_EQ(first.identifier.Ident(), "first_field");
+  EXPECT_EQ(first.type.cc_name, "int");
+  EXPECT_EQ(first.type.rs_name, "i32");
   Field second = some_struct.Fields()[1];
-  EXPECT_EQ(second.Ident().Ident(), "second_field");
-  EXPECT_EQ(second.FieldType().cc_name, "int");
-  EXPECT_EQ(second.FieldType().rs_name, "i32");
+  EXPECT_EQ(second.identifier.Ident(), "second_field");
+  EXPECT_EQ(second.type.cc_name, "int");
+  EXPECT_EQ(second.type.rs_name, "i32");
 }
 
 }  // namespace

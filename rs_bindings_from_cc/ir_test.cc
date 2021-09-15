@@ -63,10 +63,10 @@ TEST(IrTest, TestIR) {
              .is_inline = false}},
          {Record(Identifier(std::string("SomeStruct")),
                  {
-                     Field(Identifier(std::string("first_field")),
-                           Type{std::string("i32"), std::string("int")}),
-                     Field(Identifier(std::string("second_field")),
-                           Type{std::string("i32"), std::string("int")}),
+                     Field{.identifier = Identifier("first_field"),
+                           .type = Type{"i32", "int"}},
+                     Field{.identifier = Identifier("second_field"),
+                           .type = Type{"i32", "int"}},
                  })})
           .ToJson(),
       expected);

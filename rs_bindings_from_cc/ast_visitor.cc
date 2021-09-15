@@ -100,8 +100,8 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
 
   std::vector<Field> fields;
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    fields.emplace_back(GetTranslatedName(field_decl),
-                        ConvertType(field_decl->getType()));
+    fields.push_back({.identifier = GetTranslatedName(field_decl),
+                      .type = ConvertType(field_decl->getType())});
   }
   ir_.Records().emplace_back(GetTranslatedName(record_decl), std::move(fields));
   return true;
