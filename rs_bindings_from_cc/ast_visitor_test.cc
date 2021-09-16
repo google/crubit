@@ -70,7 +70,7 @@ TEST(AstVisitorTest, IREmptyOnInvalidInput) {
   EXPECT_THAT(ir.Functions(), IsEmpty());
 }
 
-TEST(AstVisitorTest, ImportFuncWithVoidReturnType) {
+TEST(AstVisitorTest, FuncWithVoidReturnType) {
   IR ir = ImportCode({"void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
@@ -80,7 +80,7 @@ TEST(AstVisitorTest, ImportFuncWithVoidReturnType) {
   EXPECT_THAT(func.params, IsEmpty());
 }
 
-TEST(AstVisitorTest, ImportTwoFuncs) {
+TEST(AstVisitorTest, TwoFuncs) {
   IR ir = ImportCode({"void Foo(); void Bar();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(2));
 
@@ -97,7 +97,7 @@ TEST(AstVisitorTest, ImportTwoFuncs) {
   EXPECT_THAT(bar.params, IsEmpty());
 }
 
-TEST(AstVisitorTest, ImportTwoFuncsFromTwoHeaders) {
+TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
   IR ir = ImportCode({"void Foo();", "void Bar();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(2));
   Func foo = ir.Functions()[0];
@@ -106,7 +106,7 @@ TEST(AstVisitorTest, ImportTwoFuncsFromTwoHeaders) {
   EXPECT_EQ(bar.identifier.Ident(), "Bar");
 }
 
-TEST(AstVisitorTest, ImportNonInlineFunc) {
+TEST(AstVisitorTest, NonInlineFunc) {
   IR ir = ImportCode({"void Foo() {}"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
@@ -114,7 +114,7 @@ TEST(AstVisitorTest, ImportNonInlineFunc) {
   EXPECT_FALSE(func.is_inline);
 }
 
-TEST(AstVisitorTest, ImportInlineFunc) {
+TEST(AstVisitorTest, InlineFunc) {
   IR ir = ImportCode({"inline void Foo() {}"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
@@ -122,14 +122,14 @@ TEST(AstVisitorTest, ImportInlineFunc) {
   EXPECT_TRUE(func.is_inline);
 }
 
-TEST(AstVisitorTest, ImportFuncJustOnce) {
+TEST(AstVisitorTest, FuncJustOnce) {
   IR ir = ImportCode({"void Foo(); void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
   EXPECT_EQ(func.identifier.Ident(), "Foo");
 }
 
-TEST(AstVisitorTest, ImportFuncParams) {
+TEST(AstVisitorTest, FuncParams) {
   IR ir = ImportCode({"int Add(int a, int b);"}, {});
   EXPECT_THAT(ir.Functions(), SizeIs(1));
 
@@ -145,7 +145,7 @@ TEST(AstVisitorTest, ImportFuncParams) {
   EXPECT_EQ(func.params[1].identifier.Ident(), "b");
 }
 
-TEST(AstVisitorTest, ImportStruct) {
+TEST(AstVisitorTest, Struct) {
   IR ir = ImportCode(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
   EXPECT_THAT(ir.Functions(), SizeIs(0));
