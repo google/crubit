@@ -61,7 +61,7 @@ IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
 TEST(AstVisitorTest, Noop) {
   IR ir = ImportCode({"// nothing interesting there."}, {});
   EXPECT_THAT(ir.Functions(), IsEmpty());
-  EXPECT_THAT(ir.UsedHeaders(), SizeIs(1));
+  ASSERT_THAT(ir.UsedHeaders(), SizeIs(1));
   EXPECT_EQ(ir.UsedHeaders()[0].IncludePath(), "test/testing_header_0.h");
 }
 
@@ -131,7 +131,7 @@ TEST(AstVisitorTest, FuncJustOnce) {
 
 TEST(AstVisitorTest, FuncParams) {
   IR ir = ImportCode({"int Add(int a, int b);"}, {});
-  EXPECT_THAT(ir.Functions(), SizeIs(1));
+  ASSERT_THAT(ir.Functions(), SizeIs(1));
 
   Func func = ir.Functions()[0];
   EXPECT_EQ(func.identifier.Ident(), "Add");
@@ -139,7 +139,7 @@ TEST(AstVisitorTest, FuncParams) {
   EXPECT_EQ(func.return_type.rs_name, "i32");
   EXPECT_THAT(func.return_type.type_params, IsEmpty());
 
-  EXPECT_THAT(func.params, SizeIs(2));
+  ASSERT_THAT(func.params, SizeIs(2));
   EXPECT_EQ(func.params[0].type.rs_name, "i32");
   EXPECT_THAT(func.params[0].type.type_params, IsEmpty());
   EXPECT_EQ(func.params[0].identifier.Ident(), "a");
@@ -173,16 +173,19 @@ TEST(AstVisitorTest, Struct) {
   IR ir = ImportCode(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
   EXPECT_THAT(ir.Functions(), SizeIs(0));
-  EXPECT_THAT(ir.Records(), SizeIs(1));
 
+  ASSERT_THAT(ir.Records(), SizeIs(1));
   Record some_struct = ir.Records()[0];
-  EXPECT_THAT(some_struct.Fields(), SizeIs(2));
+
   EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
+
+  ASSERT_THAT(some_struct.Fields(), SizeIs(2));
   Field first = some_struct.Fields()[0];
+  Field second = some_struct.Fields()[1];
+
   EXPECT_EQ(first.identifier.Ident(), "first_field");
   EXPECT_EQ(first.type.cc_name, "int");
   EXPECT_EQ(first.type.rs_name, "i32");
-  Field second = some_struct.Fields()[1];
   EXPECT_EQ(second.identifier.Ident(), "second_field");
   EXPECT_EQ(second.type.cc_name, "int");
   EXPECT_EQ(second.type.rs_name, "i32");
