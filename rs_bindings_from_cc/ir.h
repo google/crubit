@@ -127,9 +127,9 @@ class Record {
 // declarations of a single C++ library.
 class IR {
  public:
-  explicit IR() {}
-  explicit IR(std::vector<HeaderName> used_headers, std::vector<Func> functions,
-              std::vector<Record> records)
+  IR() {}
+  IR(std::vector<HeaderName> used_headers, std::vector<Func> functions,
+     std::vector<Record> records)
       : used_headers_(std::move(used_headers)),
         functions_(std::move(functions)),
         records_(std::move(records)) {}
