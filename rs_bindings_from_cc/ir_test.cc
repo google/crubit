@@ -13,14 +13,14 @@ namespace rs_bindings_from_cc {
 
 namespace {
 
-TEST(IrTest, TestTypeToJson) {
+TEST(IrTest, TypeToJson) {
   nlohmann::json expected =
       nlohmann::json::parse(R"j({ "rs_name": "i32", "cc_name": "int" })j");
   auto type = Type{std::string("i32"), std::string("int")};
   EXPECT_EQ(type.ToJson(), expected);
 }
 
-TEST(IrTest, TestIR) {
+TEST(IrTest, IR) {
   nlohmann::json expected = nlohmann::json::parse(
       R"j({
             "used_headers": [{ "name": "foo/bar.h" }],
