@@ -81,28 +81,28 @@ nlohmann::json Record::ToJson() const {
 }
 
 nlohmann::json IR::ToJson() const {
-  std::vector<nlohmann::json> used_headers;
-  used_headers.reserve(used_headers_.size());
-  for (const HeaderName& header : used_headers_) {
-    used_headers.push_back(header.ToJson());
+  std::vector<nlohmann::json> json_used_headers;
+  json_used_headers.reserve(used_headers.size());
+  for (const HeaderName& header : used_headers) {
+    json_used_headers.push_back(header.ToJson());
   }
 
-  std::vector<nlohmann::json> functions;
-  functions.reserve(functions_.size());
-  for (const Func& func : functions_) {
-    functions.push_back(func.ToJson());
+  std::vector<nlohmann::json> json_functions;
+  json_functions.reserve(functions.size());
+  for (const Func& func : functions) {
+    json_functions.push_back(func.ToJson());
   }
 
-  std::vector<nlohmann::json> records;
-  records.reserve(records_.size());
-  for (const Record& record : records_) {
-    records.push_back(record.ToJson());
+  std::vector<nlohmann::json> json_records;
+  json_records.reserve(records.size());
+  for (const Record& record : records) {
+    json_records.push_back(record.ToJson());
   }
 
   nlohmann::json result;
-  result["used_headers"] = std::move(used_headers);
-  result["functions"] = std::move(functions);
-  result["records"] = std::move(records);
+  result["used_headers"] = std::move(json_used_headers);
+  result["functions"] = std::move(json_functions);
+  result["records"] = std::move(json_records);
   return result;
 }
 

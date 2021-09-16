@@ -17,14 +17,16 @@ namespace {
 using ::testing::StrEq;
 
 TEST(SrcGenTest, FFIIntegration) {
-  IR ir({HeaderName(std::string("foo/bar.h"))},
-        {Func{.identifier = Identifier(std::string("hello_world")),
-              .mangled_name = std::string("$$mangled_name$$"),
-              .return_type = Type{std::string("i32"), std::string("int")},
-              .params = {FuncParam{Type{std::string("i32"), std::string("int")},
-                                   Identifier(std::string("arg"))}},
-              .is_inline = true}},
-        /* records= */ {});
+  IR ir = {
+      .used_headers = {HeaderName(std::string("foo/bar.h"))},
+      .functions = {Func{
+          .identifier = Identifier(std::string("hello_world")),
+          .mangled_name = std::string("$$mangled_name$$"),
+          .return_type = Type{std::string("i32"), std::string("int")},
+          .params = {FuncParam{Type{std::string("i32"), std::string("int")},
+                               Identifier(std::string("arg"))}},
+          .is_inline = true}},
+      .records = {}};
   Bindings bindings = GenerateBindings(ir);
   EXPECT_THAT(
       bindings.rs_api,

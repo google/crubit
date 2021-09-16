@@ -60,20 +60,20 @@ IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
 
 TEST(AstVisitorTest, Noop) {
   IR ir = ImportCode({"// nothing interesting there."}, {});
-  EXPECT_THAT(ir.Functions(), IsEmpty());
-  ASSERT_THAT(ir.UsedHeaders(), SizeIs(1));
-  EXPECT_EQ(ir.UsedHeaders()[0].IncludePath(), "test/testing_header_0.h");
+  EXPECT_THAT(ir.functions, IsEmpty());
+  ASSERT_THAT(ir.used_headers, SizeIs(1));
+  EXPECT_EQ(ir.used_headers[0].IncludePath(), "test/testing_header_0.h");
 }
 
 TEST(AstVisitorTest, IREmptyOnInvalidInput) {
   IR ir = ImportCode({"int foo(); But this is not C++"}, {});
-  EXPECT_THAT(ir.Functions(), IsEmpty());
+  EXPECT_THAT(ir.functions, IsEmpty());
 }
 
 TEST(AstVisitorTest, FuncWithVoidReturnType) {
   IR ir = ImportCode({"void Foo();"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(1));
-  Func func = ir.Functions()[0];
+  ASSERT_THAT(ir.functions, SizeIs(1));
+  Func func = ir.functions[0];
   EXPECT_EQ(func.identifier.Ident(), "Foo");
   EXPECT_EQ(func.mangled_name, "_Z3Foov");
   EXPECT_TRUE(func.return_type.IsVoid());
@@ -82,15 +82,15 @@ TEST(AstVisitorTest, FuncWithVoidReturnType) {
 
 TEST(AstVisitorTest, TwoFuncs) {
   IR ir = ImportCode({"void Foo(); void Bar();"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(2));
+  ASSERT_THAT(ir.functions, SizeIs(2));
 
-  Func foo = ir.Functions()[0];
+  Func foo = ir.functions[0];
   EXPECT_EQ(foo.identifier.Ident(), "Foo");
   EXPECT_EQ(foo.mangled_name, "_Z3Foov");
   EXPECT_TRUE(foo.return_type.IsVoid());
   EXPECT_THAT(foo.params, IsEmpty());
 
-  Func bar = ir.Functions()[1];
+  Func bar = ir.functions[1];
   EXPECT_EQ(bar.identifier.Ident(), "Bar");
   EXPECT_EQ(bar.mangled_name, "_Z3Barv");
   EXPECT_TRUE(bar.return_type.IsVoid());
@@ -99,41 +99,41 @@ TEST(AstVisitorTest, TwoFuncs) {
 
 TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
   IR ir = ImportCode({"void Foo();", "void Bar();"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(2));
-  Func foo = ir.Functions()[0];
+  ASSERT_THAT(ir.functions, SizeIs(2));
+  Func foo = ir.functions[0];
   EXPECT_EQ(foo.identifier.Ident(), "Foo");
-  Func bar = ir.Functions()[1];
+  Func bar = ir.functions[1];
   EXPECT_EQ(bar.identifier.Ident(), "Bar");
 }
 
 TEST(AstVisitorTest, NonInlineFunc) {
   IR ir = ImportCode({"void Foo() {}"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(1));
-  Func func = ir.Functions()[0];
+  ASSERT_THAT(ir.functions, SizeIs(1));
+  Func func = ir.functions[0];
   EXPECT_EQ(func.identifier.Ident(), "Foo");
   EXPECT_FALSE(func.is_inline);
 }
 
 TEST(AstVisitorTest, InlineFunc) {
   IR ir = ImportCode({"inline void Foo() {}"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(1));
-  Func func = ir.Functions()[0];
+  ASSERT_THAT(ir.functions, SizeIs(1));
+  Func func = ir.functions[0];
   EXPECT_EQ(func.identifier.Ident(), "Foo");
   EXPECT_TRUE(func.is_inline);
 }
 
 TEST(AstVisitorTest, FuncJustOnce) {
   IR ir = ImportCode({"void Foo(); void Foo();"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(1));
-  Func func = ir.Functions()[0];
+  ASSERT_THAT(ir.functions, SizeIs(1));
+  Func func = ir.functions[0];
   EXPECT_EQ(func.identifier.Ident(), "Foo");
 }
 
 TEST(AstVisitorTest, FuncParams) {
   IR ir = ImportCode({"int Add(int a, int b);"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(1));
+  ASSERT_THAT(ir.functions, SizeIs(1));
 
-  Func func = ir.Functions()[0];
+  Func func = ir.functions[0];
   EXPECT_EQ(func.identifier.Ident(), "Add");
   EXPECT_EQ(func.mangled_name, "_Z3Addii");
   EXPECT_EQ(func.return_type.rs_name, "i32");
@@ -150,9 +150,9 @@ TEST(AstVisitorTest, FuncParams) {
 
 TEST(AstVisitorTest, TestImportPointerFunc) {
   IR ir = ImportCode({"int* Foo(int* a);"}, {});
-  ASSERT_THAT(ir.Functions(), SizeIs(1));
+  ASSERT_THAT(ir.functions, SizeIs(1));
 
-  Func func = ir.Functions()[0];
+  Func func = ir.functions[0];
 
   ASSERT_THAT(func.params, SizeIs(1));
   Type return_type = func.return_type;
@@ -172,10 +172,10 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
 TEST(AstVisitorTest, Struct) {
   IR ir = ImportCode(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
-  EXPECT_THAT(ir.Functions(), SizeIs(0));
+  EXPECT_THAT(ir.functions, SizeIs(0));
 
-  ASSERT_THAT(ir.Records(), SizeIs(1));
-  Record some_struct = ir.Records()[0];
+  EXPECT_THAT(ir.records, SizeIs(1));
+  Record some_struct = ir.records[0];
 
   EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
 

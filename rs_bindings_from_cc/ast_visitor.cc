@@ -32,7 +32,7 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   mangler_.reset(translation_unit_decl->getASTContext().createMangleContext());
 
   for (const absl::string_view header_name : public_header_names_) {
-    ir_.UsedHeaders().emplace_back(HeaderName(std::string(header_name)));
+    ir_.used_headers.emplace_back(HeaderName(std::string(header_name)));
   }
 
   return Base::TraverseTranslationUnitDecl(translation_unit_decl);
@@ -44,7 +44,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     params.push_back({ConvertType(param->getType()), GetTranslatedName(param)});
   }
 
-  ir_.Functions().push_back(Func{
+  ir_.functions.push_back(Func{
       .identifier = GetTranslatedName(function_decl),
       .mangled_name = GetMangledName(function_decl),
       .return_type = ConvertType(function_decl->getReturnType()),
@@ -60,7 +60,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     fields.push_back({.identifier = GetTranslatedName(field_decl),
                       .type = ConvertType(field_decl->getType())});
   }
-  ir_.Records().emplace_back(GetTranslatedName(record_decl), std::move(fields));
+  ir_.records.emplace_back(GetTranslatedName(record_decl), std::move(fields));
   return true;
 }
 

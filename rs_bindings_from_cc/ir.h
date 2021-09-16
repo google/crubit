@@ -143,32 +143,14 @@ class Record {
 
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
-class IR {
- public:
-  IR() {}
-  IR(std::vector<HeaderName> used_headers, std::vector<Func> functions,
-     std::vector<Record> records)
-      : used_headers_(std::move(used_headers)),
-        functions_(std::move(functions)),
-        records_(std::move(records)) {}
-
+struct IR {
   nlohmann::json ToJson() const;
 
-  const std::vector<HeaderName>& UsedHeaders() const { return used_headers_; }
-  std::vector<HeaderName>& UsedHeaders() { return used_headers_; }
-
-  const std::vector<Func>& Functions() const { return functions_; }
-  std::vector<Func>& Functions() { return functions_; }
-
-  const std::vector<Record>& Records() const { return records_; }
-  std::vector<Record>& Records() { return records_; }
-
- private:
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
-  std::vector<HeaderName> used_headers_;
-  std::vector<Func> functions_;
-  std::vector<Record> records_;
+  std::vector<HeaderName> used_headers;
+  std::vector<Func> functions;
+  std::vector<Record> records;
 };
 
 }  // namespace rs_bindings_from_cc

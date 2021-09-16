@@ -59,24 +59,23 @@ TEST(IrTest, IR) {
               }
             ]
       })j");
-  EXPECT_EQ(
-      IR({HeaderName(std::string("foo/bar.h"))},
-         {Func{
-             .identifier = Identifier(std::string("hello_world")),
-             .mangled_name = std::string("#$mangled_name$#"),
-             .return_type = Type{std::string("i32"), std::string("int")},
-             .params = {FuncParam{Type{std::string("i32"), std::string("int")},
-                                  Identifier(std::string("arg"))}},
-             .is_inline = false}},
-         {Record(Identifier(std::string("SomeStruct")),
-                 {
-                     Field{.identifier = Identifier("first_field"),
-                           .type = Type{"i32", "int"}},
-                     Field{.identifier = Identifier("second_field"),
-                           .type = Type{"i32", "int"}},
-                 })})
-          .ToJson(),
-      expected);
+  IR ir = {
+      .used_headers = {HeaderName(std::string("foo/bar.h"))},
+      .functions = {Func{
+          .identifier = Identifier(std::string("hello_world")),
+          .mangled_name = std::string("#$mangled_name$#"),
+          .return_type = Type{std::string("i32"), std::string("int")},
+          .params = {FuncParam{Type{std::string("i32"), std::string("int")},
+                               Identifier(std::string("arg"))}},
+          .is_inline = false}},
+      .records = {Record(Identifier(std::string("SomeStruct")),
+                         {
+                             Field{.identifier = Identifier("first_field"),
+                                   .type = Type{"i32", "int"}},
+                             Field{.identifier = Identifier("second_field"),
+                                   .type = Type{"i32", "int"}},
+                         })}};
+  EXPECT_EQ(ir.ToJson(), expected);
 }
 
 }  // namespace
