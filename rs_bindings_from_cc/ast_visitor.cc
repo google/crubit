@@ -65,8 +65,12 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
 }
 
 Type AstVisitor::ConvertType(clang::QualType qual_type) const {
-  if (const clang::BuiltinType* builtin_type =
-          qual_type->getAs<clang::BuiltinType>()) {
+  if (const clang::PointerType* pointer_type =
+          qual_type->getAs<clang::PointerType>()) {
+    return Type::PointerTo(ConvertType(pointer_type->getPointeeType()));
+
+  } else if (const clang::BuiltinType* builtin_type =
+                 qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
       return Type{std::string("i32"), std::string("int")};
     }

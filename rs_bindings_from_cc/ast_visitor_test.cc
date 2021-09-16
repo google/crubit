@@ -137,12 +137,36 @@ TEST(AstVisitorTest, FuncParams) {
   EXPECT_EQ(func.identifier.Ident(), "Add");
   EXPECT_EQ(func.mangled_name, "_Z3Addii");
   EXPECT_EQ(func.return_type.rs_name, "i32");
+  EXPECT_THAT(func.return_type.type_params, IsEmpty());
 
   EXPECT_THAT(func.params, SizeIs(2));
   EXPECT_EQ(func.params[0].type.rs_name, "i32");
+  EXPECT_THAT(func.params[0].type.type_params, IsEmpty());
   EXPECT_EQ(func.params[0].identifier.Ident(), "a");
   EXPECT_EQ(func.params[1].type.rs_name, "i32");
+  EXPECT_THAT(func.params[1].type.type_params, IsEmpty());
   EXPECT_EQ(func.params[1].identifier.Ident(), "b");
+}
+
+TEST(AstVisitorTest, TestImportPointerFunc) {
+  IR ir = ImportCode({"int* Foo(int* a);"}, {});
+  ASSERT_THAT(ir.Functions(), SizeIs(1));
+
+  Func func = ir.Functions()[0];
+
+  ASSERT_THAT(func.params, SizeIs(1));
+  Type return_type = func.return_type;
+  Type param_type = func.params[0].type;
+
+  for (Type type : {return_type, param_type}) {
+    EXPECT_EQ(type.rs_name, "*mut");
+    EXPECT_EQ(type.cc_name, "*");
+    ASSERT_THAT(type.type_params, SizeIs(1));
+    const Type& pointee = type.type_params[0];
+    EXPECT_EQ(pointee.rs_name, "i32");
+    EXPECT_EQ(pointee.cc_name, "int");
+    EXPECT_THAT(pointee.type_params, IsEmpty());
+  }
 }
 
 TEST(AstVisitorTest, Struct) {

@@ -21,6 +21,11 @@
 
 namespace rs_bindings_from_cc {
 
+namespace internal {
+inline constexpr absl::string_view kRustPtrMut = "*mut";
+inline constexpr absl::string_view kCcPtrMut = "*";
+}  // namespace internal
+
 // A name of a public header of the C++ library.
 class HeaderName {
  public:
@@ -40,11 +45,20 @@ class HeaderName {
 // spelled in Rust and in C++ code.
 //
 // Examples:
-//     Type of C++'s `int32_t` will be `Type{"i32", "int"}`.
-//     Type of C++'s `struct Foo` will be `Type{"Foo", "Foo"}`.
+//     C++'s `int32_t` will be `Type{"i32", "int"}`.
+//     C++'s `struct Foo` will be `Type{"Foo", "Foo"}`.
+//     C++'s `int*` will be `Type{"*mut", "*", {Type{"i32", "int"}}}
 struct Type {
   static Type Void() { return Type{std::string("()"), std::string("void")}; }
   bool IsVoid() const { return rs_name == "()"; }
+
+  static Type PointerTo(Type pointee_type) {
+    // TODO(b/200016113): Decide how to handle const.
+    auto pointer_type = Type{std::string(internal::kRustPtrMut),
+                             std::string(internal::kCcPtrMut)};
+    pointer_type.type_params.push_back(std::move(pointee_type));
+    return pointer_type;
+  }
 
   nlohmann::json ToJson() const;
 
@@ -52,6 +66,10 @@ struct Type {
   std::string rs_name;
   // The C++ name for the type. For example, int or void.
   std::string cc_name;
+  // Type parameters for a generic type. Examples:
+  //   int* has a single type parameter, int.
+  //   tuple<int, float> has two type parameters, int and float.
+  std::vector<Type> type_params = {};
 };
 
 // An identifier involved in bindings.

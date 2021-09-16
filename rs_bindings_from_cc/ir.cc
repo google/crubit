@@ -19,8 +19,15 @@ nlohmann::json HeaderName::ToJson() const {
 
 nlohmann::json Type::ToJson() const {
   nlohmann::json result;
-  result["rs_name"] = std::string(rs_name);
-  result["cc_name"] = std::string(cc_name);
+
+  std::vector<nlohmann::json> json_params;
+  json_params.reserve(type_params.size());
+  for (const Type& param : type_params) {
+    json_params.push_back(param.ToJson());
+  }
+  result["rs_name"] = rs_name;
+  result["cc_name"] = cc_name;
+  result["type_params"] = std::move(json_params);
 
   return result;
 }

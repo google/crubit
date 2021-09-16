@@ -14,9 +14,16 @@ namespace rs_bindings_from_cc {
 namespace {
 
 TEST(IrTest, TypeToJson) {
-  nlohmann::json expected =
-      nlohmann::json::parse(R"j({ "rs_name": "i32", "cc_name": "int" })j");
-  auto type = Type{std::string("i32"), std::string("int")};
+  nlohmann::json expected = nlohmann::json::parse(R"j({
+      "rs_name": "CompoundRs",
+      "cc_name": "CompoundCc",
+      "type_params": [
+          { "rs_name": "i32", "cc_name": "int", "type_params": []}
+      ]
+  })j");
+  auto type = Type{.rs_name = "CompoundRs",
+                   .cc_name = "CompoundCc",
+                   .type_params = {Type{"i32", "int"}}};
   EXPECT_EQ(type.ToJson(), expected);
 }
 
@@ -27,11 +34,11 @@ TEST(IrTest, IR) {
             "functions": [{
               "identifier": { "identifier": "hello_world" },
               "mangled_name": "#$mangled_name$#",
-              "return_type": { "rs_name": "i32", "cc_name": "int" },
+              "return_type": { "rs_name": "i32", "cc_name": "int", "type_params": [] },
               "params": [
                 {
                   "identifier": {"identifier": "arg" },
-                  "type": { "rs_name": "i32", "cc_name": "int" }
+                  "type": { "rs_name": "i32", "cc_name": "int", "type_params": [] }
                 }
               ],
               "is_inline": false
@@ -42,11 +49,11 @@ TEST(IrTest, IR) {
                 "fields": [
                   {
                     "identifier": {"identifier": "first_field" },
-                    "type": {"rs_name": "i32", "cc_name": "int" }
+                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] }
                   },
                   {
                     "identifier": {"identifier": "second_field" },
-                    "type": {"rs_name": "i32", "cc_name": "int" }
+                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] }
                   }
                 ]
               }
