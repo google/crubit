@@ -32,7 +32,7 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   mangler_.reset(translation_unit_decl->getASTContext().createMangleContext());
 
   for (const absl::string_view header_name : public_header_names_) {
-    ir_.used_headers.emplace_back(HeaderName(std::string(header_name)));
+    ir_.used_headers.push_back(HeaderName(std::string(header_name)));
   }
 
   return Base::TraverseTranslationUnitDecl(translation_unit_decl);
@@ -60,7 +60,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     fields.push_back({.identifier = GetTranslatedName(field_decl),
                       .type = ConvertType(field_decl->getType())});
   }
-  ir_.records.emplace_back(GetTranslatedName(record_decl), std::move(fields));
+  ir_.records.push_back({GetTranslatedName(record_decl), std::move(fields)});
   return true;
 }
 
@@ -72,7 +72,7 @@ Type AstVisitor::ConvertType(clang::QualType qual_type) const {
   } else if (const clang::BuiltinType* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
-      return Type{std::string("i32"), std::string("int")};
+      return Type{"i32", "int"};
     }
     if (builtin_type->isVoidType()) {
       return Type::Void();

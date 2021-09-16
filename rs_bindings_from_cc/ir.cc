@@ -13,7 +13,7 @@ namespace rs_bindings_from_cc {
 
 nlohmann::json HeaderName::ToJson() const {
   nlohmann::json result;
-  result["name"] = std::string(name_);
+  result["name"] = name_;
   return result;
 }
 
@@ -34,7 +34,7 @@ nlohmann::json Type::ToJson() const {
 
 nlohmann::json Identifier::ToJson() const {
   nlohmann::json result;
-  result["identifier"] = std::string(identifier_);
+  result["identifier"] = identifier_;
   return result;
 }
 
@@ -53,7 +53,7 @@ nlohmann::json Func::ToJson() const {
   }
   nlohmann::json result;
   result["identifier"] = identifier.ToJson();
-  result["mangled_name"] = std::string(mangled_name);
+  result["mangled_name"] = mangled_name;
   result["return_type"] = return_type.ToJson();
   result["params"] = std::move(json_params);
   result["is_inline"] = is_inline;

@@ -49,7 +49,7 @@ class HeaderName {
 //     C++'s `struct Foo` will be `Type{"Foo", "Foo"}`.
 //     C++'s `int*` will be `Type{"*mut", "*", {Type{"i32", "int"}}}
 struct Type {
-  static Type Void() { return Type{std::string("()"), std::string("void")}; }
+  static Type Void() { return Type{"()", "void"}; }
   bool IsVoid() const { return rs_name == "()"; }
 
   static Type PointerTo(Type pointee_type) {

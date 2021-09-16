@@ -60,15 +60,14 @@ TEST(IrTest, IR) {
             ]
       })j");
   IR ir = {
-      .used_headers = {HeaderName(std::string("foo/bar.h"))},
+      .used_headers = {HeaderName("foo/bar.h")},
       .functions = {Func{
-          .identifier = Identifier(std::string("hello_world")),
-          .mangled_name = std::string("#$mangled_name$#"),
-          .return_type = Type{std::string("i32"), std::string("int")},
-          .params = {FuncParam{Type{std::string("i32"), std::string("int")},
-                               Identifier(std::string("arg"))}},
+          .identifier = Identifier("hello_world"),
+          .mangled_name = "#$mangled_name$#",
+          .return_type = Type{"i32", "int"},
+          .params = {FuncParam{Type{"i32", "int"}, Identifier("arg")}},
           .is_inline = false}},
-      .records = {Record(Identifier(std::string("SomeStruct")),
+      .records = {Record(Identifier("SomeStruct"),
                          {
                              Field{.identifier = Identifier("first_field"),
                                    .type = Type{"i32", "int"}},

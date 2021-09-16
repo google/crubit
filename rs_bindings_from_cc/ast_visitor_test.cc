@@ -40,15 +40,15 @@ IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
     file_contents.insert({filename, std::string(header_content)});
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
                               filename);
-    headers.emplace_back(std::move(filename));
+    headers.push_back(std::move(filename));
   }
 
   file_contents.insert(
       {std::string(kVirtualInputPath), virtual_input_file_content});
 
   std::vector<std::string> args_as_strings(args.begin(), args.end());
-  args_as_strings.emplace_back(std::string("--syntax-only"));
-  args_as_strings.emplace_back(std::string(kVirtualInputPath));
+  args_as_strings.push_back("--syntax-only");
+  args_as_strings.push_back(std::string(kVirtualInputPath));
 
   IR ir;
   devtools::cymbal::RunToolWithClangFlagsOnCode(
