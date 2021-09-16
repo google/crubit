@@ -58,19 +58,19 @@ IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
   return ir;
 }
 
-TEST(AstVisitorTest, TestNoop) {
+TEST(AstVisitorTest, Noop) {
   IR ir = ImportCode({"// nothing interesting there."}, {});
   EXPECT_THAT(ir.Functions(), IsEmpty());
   EXPECT_THAT(ir.UsedHeaders(), SizeIs(1));
   EXPECT_EQ(ir.UsedHeaders()[0].IncludePath(), "test/testing_header_0.h");
 }
 
-TEST(AstVisitorTest, TestIREmptyOnInvalidInput) {
+TEST(AstVisitorTest, IREmptyOnInvalidInput) {
   IR ir = ImportCode({"int foo(); But this is not C++"}, {});
   EXPECT_THAT(ir.Functions(), IsEmpty());
 }
 
-TEST(AstVisitorTest, TestImportFuncWithVoidReturnType) {
+TEST(AstVisitorTest, ImportFuncWithVoidReturnType) {
   IR ir = ImportCode({"void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
@@ -80,7 +80,7 @@ TEST(AstVisitorTest, TestImportFuncWithVoidReturnType) {
   EXPECT_THAT(func.params, IsEmpty());
 }
 
-TEST(AstVisitorTest, TestImportTwoFuncs) {
+TEST(AstVisitorTest, ImportTwoFuncs) {
   IR ir = ImportCode({"void Foo(); void Bar();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(2));
 
@@ -97,7 +97,7 @@ TEST(AstVisitorTest, TestImportTwoFuncs) {
   EXPECT_THAT(bar.params, IsEmpty());
 }
 
-TEST(AstVisitorTest, TestImportTwoFuncsFromTwoHeaders) {
+TEST(AstVisitorTest, ImportTwoFuncsFromTwoHeaders) {
   IR ir = ImportCode({"void Foo();", "void Bar();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(2));
   Func foo = ir.Functions()[0];
@@ -106,7 +106,7 @@ TEST(AstVisitorTest, TestImportTwoFuncsFromTwoHeaders) {
   EXPECT_EQ(bar.identifier.Ident(), "Bar");
 }
 
-TEST(AstVisitorTest, TestImportNonInlineFunc) {
+TEST(AstVisitorTest, ImportNonInlineFunc) {
   IR ir = ImportCode({"void Foo() {}"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
@@ -114,7 +114,7 @@ TEST(AstVisitorTest, TestImportNonInlineFunc) {
   EXPECT_FALSE(func.is_inline);
 }
 
-TEST(AstVisitorTest, TestImportInlineFunc) {
+TEST(AstVisitorTest, ImportInlineFunc) {
   IR ir = ImportCode({"inline void Foo() {}"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
@@ -122,14 +122,14 @@ TEST(AstVisitorTest, TestImportInlineFunc) {
   EXPECT_TRUE(func.is_inline);
 }
 
-TEST(AstVisitorTest, TestImportFuncJustOnce) {
+TEST(AstVisitorTest, ImportFuncJustOnce) {
   IR ir = ImportCode({"void Foo(); void Foo();"}, {});
   ASSERT_THAT(ir.Functions(), SizeIs(1));
   Func func = ir.Functions()[0];
   EXPECT_EQ(func.identifier.Ident(), "Foo");
 }
 
-TEST(AstVisitorTest, TestImportFuncParams) {
+TEST(AstVisitorTest, ImportFuncParams) {
   IR ir = ImportCode({"int Add(int a, int b);"}, {});
   EXPECT_THAT(ir.Functions(), SizeIs(1));
 
@@ -145,7 +145,7 @@ TEST(AstVisitorTest, TestImportFuncParams) {
   EXPECT_EQ(func.params[1].identifier.Ident(), "b");
 }
 
-TEST(AstVisitorTest, TestImportStruct) {
+TEST(AstVisitorTest, ImportStruct) {
   IR ir = ImportCode(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
   EXPECT_THAT(ir.Functions(), SizeIs(0));
