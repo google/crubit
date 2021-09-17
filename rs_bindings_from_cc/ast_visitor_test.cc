@@ -235,5 +235,78 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
   EXPECT_EQ(field0.access, kPrivate);
 }
 
+TEST(AstVisitorTest, IntegerTypes) {
+  auto ir = ImportCode({"#include <stdint.h>\n"
+                        "struct S { "
+                        "  char f0;"
+                        "  short f1;"
+                        "  int f2;"
+                        "  long f3;"
+                        "  unsigned char f4;"
+                        "  unsigned short f5;"
+                        "  unsigned int f6;"
+                        "  unsigned long f7;"
+                        "  signed char f8;"
+                        "  signed short f9;"
+                        "  signed int f10;"
+                        "  signed long f11;"
+                        "  int8_t f12;"
+                        "  int16_t f13;"
+                        "  int32_t f14;"
+                        "  int64_t f15;"
+                        "  uint8_t f16;"
+                        "  uint16_t f17;"
+                        "  uint32_t f18;"
+                        "  uint64_t f19;"
+                        "};"},
+                       {});
+  auto fields = ir.records[0].Fields();
+
+  EXPECT_EQ(fields[0].type.rs_name, "i8");
+  EXPECT_EQ(fields[0].type.cc_name, "char");
+  EXPECT_EQ(fields[1].type.rs_name, "i16");
+  EXPECT_EQ(fields[1].type.cc_name, "short");
+  EXPECT_EQ(fields[2].type.rs_name, "i32");
+  EXPECT_EQ(fields[2].type.cc_name, "int");
+  EXPECT_EQ(fields[3].type.rs_name, "i64");
+  EXPECT_EQ(fields[3].type.cc_name, "long");
+
+  EXPECT_EQ(fields[4].type.rs_name, "u8");
+  EXPECT_EQ(fields[4].type.cc_name, "unsigned char");
+  EXPECT_EQ(fields[5].type.rs_name, "u16");
+  EXPECT_EQ(fields[5].type.cc_name, "unsigned short");
+  EXPECT_EQ(fields[6].type.rs_name, "u32");
+  EXPECT_EQ(fields[6].type.cc_name, "unsigned int");
+  EXPECT_EQ(fields[7].type.rs_name, "u64");
+  EXPECT_EQ(fields[7].type.cc_name, "unsigned long");
+
+  EXPECT_EQ(fields[8].type.rs_name, "i8");
+  EXPECT_EQ(fields[8].type.cc_name, "signed char");
+  EXPECT_EQ(fields[9].type.rs_name, "i16");
+  EXPECT_EQ(fields[9].type.cc_name, "short");
+  EXPECT_EQ(fields[10].type.rs_name, "i32");
+  EXPECT_EQ(fields[10].type.cc_name, "int");
+  EXPECT_EQ(fields[11].type.rs_name, "i64");
+  EXPECT_EQ(fields[11].type.cc_name, "long");
+
+  EXPECT_EQ(fields[12].type.rs_name, "i8");
+  EXPECT_EQ(fields[12].type.cc_name, "int8_t");
+  EXPECT_EQ(fields[13].type.rs_name, "i16");
+  EXPECT_EQ(fields[13].type.cc_name, "int16_t");
+  EXPECT_EQ(fields[14].type.rs_name, "i32");
+  EXPECT_EQ(fields[14].type.cc_name, "int32_t");
+  EXPECT_EQ(fields[15].type.rs_name, "i64");
+  EXPECT_EQ(fields[15].type.cc_name, "int64_t");
+
+  EXPECT_EQ(fields[16].type.rs_name, "u8");
+  EXPECT_EQ(fields[16].type.cc_name, "uint8_t");
+  EXPECT_EQ(fields[17].type.rs_name, "u16");
+  EXPECT_EQ(fields[17].type.cc_name, "uint16_t");
+  EXPECT_EQ(fields[18].type.rs_name, "u32");
+  EXPECT_EQ(fields[18].type.cc_name, "uint32_t");
+  EXPECT_EQ(fields[19].type.rs_name, "u64");
+  EXPECT_EQ(fields[19].type.cc_name, "uint64_t");
+}
+
 }  // namespace
 }  // namespace rs_bindings_from_cc

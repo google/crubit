@@ -43,7 +43,8 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  private:
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
   Identifier GetTranslatedName(const clang::NamedDecl* named_decl) const;
-  Type ConvertType(clang::QualType qual_type) const;
+  std::optional<Type> ConvertType(clang::QualType qual_type,
+                                  const clang::ASTContext& ctx) const;
 
   absl::Span<const absl::string_view> public_header_names_;
   IR& ir_;

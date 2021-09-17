@@ -12,6 +12,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/strings/string_view.h"
+#include "third_party/absl/strings/substitute.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
@@ -26,7 +27,7 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
   if (seen_decls_.insert(decl->getCanonicalDecl()).second) {
     return Base::TraverseDecl(decl);
   }
-  return false;
+  return true;
 }
 
 bool AstVisitor::TraverseTranslationUnitDecl(
@@ -43,13 +44,24 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   std::vector<FuncParam> params;
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
-    params.push_back({ConvertType(param->getType()), GetTranslatedName(param)});
+    auto param_type =
+        ConvertType(param->getType(), function_decl->getASTContext());
+    if (!param_type.has_value()) {
+      // TODO(b/200239975):  Add diagnostics for declarations we can't import
+      return true;
+    }
+    params.push_back({*param_type, GetTranslatedName(param)});
   }
 
+  auto return_type = ConvertType(function_decl->getReturnType(),
+                                 function_decl->getASTContext());
+  if (!return_type.has_value()) {
+    return true;
+  }
   ir_.functions.push_back(Func{
       .identifier = GetTranslatedName(function_decl),
       .mangled_name = GetMangledName(function_decl),
-      .return_type = ConvertType(function_decl->getReturnType()),
+      .return_type = *return_type,
       .params = std::move(params),
       .is_inline = function_decl->isInlined(),
   });
@@ -83,33 +95,47 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     }
   }
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
+    auto type = ConvertType(field_decl->getType(), field_decl->getASTContext());
+    if (!type.has_value()) {
+      // TODO(b/200239975):  Add diagnostics for declarations we can't import
+      return true;
+    }
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {
       access = default_access;
     }
     fields.push_back({.identifier = GetTranslatedName(field_decl),
-                      .type = ConvertType(field_decl->getType()),
+                      .type = *type,
                       .access = TranslateAccessSpecifier(access)});
   }
   ir_.records.push_back({GetTranslatedName(record_decl), std::move(fields)});
   return true;
 }
 
-Type AstVisitor::ConvertType(clang::QualType qual_type) const {
+std::optional<Type> AstVisitor::ConvertType(
+    clang::QualType qual_type, const clang::ASTContext& ctx) const {
   if (const clang::PointerType* pointer_type =
           qual_type->getAs<clang::PointerType>()) {
-    return Type::PointerTo(ConvertType(pointer_type->getPointeeType()));
-
+    auto pointee_type = ConvertType(pointer_type->getPointeeType(), ctx);
+    if (pointee_type.has_value()) {
+      return Type::PointerTo(*pointee_type);
+    }
   } else if (const clang::BuiltinType* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
-      return Type{"i32", "int"};
+      auto size = ctx.getTypeSize(builtin_type);
+      if (size == 8 || size == 16 || size == 32 || size == 64) {
+        return Type{
+            absl::Substitute("$0$1",
+                             builtin_type->isSignedInteger() ? 'i' : 'u', size),
+            qual_type.getAsString()};
+      }
     }
     if (builtin_type->isVoidType()) {
       return Type::Void();
     }
   }
-  LOG(FATAL) << "Unsupported type " << qual_type.getAsString() << "\n";
+  return std::nullopt;
 }
 
 std::string AstVisitor::GetMangledName(
