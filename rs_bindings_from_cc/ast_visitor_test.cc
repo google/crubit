@@ -107,8 +107,32 @@ auto FieldsAre(const Args&... matchers) {
   return testing::Field(&Record::fields, ElementsAre(matchers...));
 }
 
+// Matches a Record that has the given size.
+MATCHER_P(RecordSizeIs, size, "") {
+  if (arg.size == size) return true;
+
+  *result_listener << "actual size: " << arg.size;
+  return false;
+}
+
+// Matches a Record that has the given alignment.
+MATCHER_P(AlignmentIs, alignment, "") {
+  if (arg.alignment == alignment) return true;
+
+  *result_listener << "actual alignment: " << arg.alignment;
+  return false;
+}
+
 // Matches a Field that has the given access specifier.
 MATCHER_P(AccessIs, access, "") { return arg.access == access; }
+
+// Matches a Field that has the given offset.
+MATCHER_P(OffsetIs, offset, "") {
+  if (arg.offset == offset) return true;
+
+  *result_listener << "actual offset: " << arg.offset;
+  return false;
+}
 
 // Matches a Field with a type that matches all given matchers.
 template <typename... Args>
@@ -227,12 +251,13 @@ TEST(AstVisitorTest, Struct) {
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
   EXPECT_THAT(ir.functions, IsEmpty());
 
-  EXPECT_THAT(
-      ir.records,
-      ElementsAre(AllOf(
-          IdentifierIs("SomeStruct"),
-          FieldsAre(AllOf(IdentifierIs("first_field"), FieldType(IsInt())),
-                    AllOf(IdentifierIs("second_field"), FieldType(IsInt()))))));
+  EXPECT_THAT(ir.records,
+              ElementsAre(AllOf(
+                  IdentifierIs("SomeStruct"), RecordSizeIs(8), AlignmentIs(4),
+                  FieldsAre(AllOf(IdentifierIs("first_field"),
+                                  FieldType(IsInt()), OffsetIs(0)),
+                            AllOf(IdentifierIs("second_field"),
+                                  FieldType(IsInt()), OffsetIs(32))))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {

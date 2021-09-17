@@ -146,6 +146,8 @@ struct Field {
   Identifier identifier;
   Type type;
   AccessSpecifier access;
+  // Field offset in bits.
+  uint64_t offset;
 };
 
 // A record (struct, class, union).
@@ -154,6 +156,9 @@ struct Record {
 
   Identifier identifier;
   std::vector<Field> fields;
+  // Size and alignment in bytes.
+  int64_t size;
+  int64_t alignment;
 };
 
 // A complete intermediate representation of bindings for publicly accessible

@@ -17,6 +17,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
@@ -97,6 +98,8 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       default_access = clang::AS_private;
     }
   }
+  const clang::ASTRecordLayout& layout =
+      record_decl->getASTContext().getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     auto type = ConvertType(field_decl->getType(), field_decl->getASTContext());
     if (!type.ok()) {
@@ -107,11 +110,16 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     if (access == clang::AS_none) {
       access = default_access;
     }
-    fields.push_back({.identifier = GetTranslatedName(field_decl),
-                      .type = *type,
-                      .access = TranslateAccessSpecifier(access)});
+    fields.push_back(
+        {.identifier = GetTranslatedName(field_decl),
+         .type = *type,
+         .access = TranslateAccessSpecifier(access),
+         .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
   }
-  ir_.records.push_back({GetTranslatedName(record_decl), std::move(fields)});
+  ir_.records.push_back({.identifier = GetTranslatedName(record_decl),
+                         .fields = std::move(fields),
+                         .size = layout.getSize().getQuantity(),
+                         .alignment = layout.getAlignment().getQuantity()});
   return true;
 }
 
