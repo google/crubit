@@ -298,26 +298,29 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
 TEST(AstVisitorTest, IntegerTypes) {
   auto ir = ImportCode({"#include <stdint.h>\n"
                         "struct S { "
-                        "  char f0;"
-                        "  short f1;"
-                        "  int f2;"
-                        "  long f3;"
-                        "  unsigned char f4;"
-                        "  unsigned short f5;"
-                        "  unsigned int f6;"
-                        "  unsigned long f7;"
-                        "  signed char f8;"
-                        "  signed short f9;"
-                        "  signed int f10;"
-                        "  signed long f11;"
-                        "  int8_t f12;"
-                        "  int16_t f13;"
-                        "  int32_t f14;"
-                        "  int64_t f15;"
-                        "  uint8_t f16;"
-                        "  uint16_t f17;"
-                        "  uint32_t f18;"
-                        "  uint64_t f19;"
+                        "  char c;"
+                        "  short s;"
+                        "  int i;"
+                        "  long l;"
+                        "  long long ll;"
+                        "  unsigned char uc;"
+                        "  unsigned short us;"
+                        "  unsigned int ui;"
+                        "  unsigned long ul;"
+                        "  unsigned long long ull;"
+                        "  signed char sc;"
+                        "  signed short ss;"
+                        "  signed int si;"
+                        "  signed long sl;"
+                        "  signed long long sll;"
+                        "  int8_t i8;"
+                        "  int16_t i16;"
+                        "  int32_t i32;"
+                        "  int64_t i64;"
+                        "  uint8_t u8;"
+                        "  uint16_t u16;"
+                        "  uint32_t u32;"
+                        "  uint64_t u64;"
                         "};"},
                        {});
 
@@ -327,16 +330,19 @@ TEST(AstVisitorTest, IntegerTypes) {
                   FieldType(RsNameIs("i16"), CcNameIs("short")),
                   FieldType(RsNameIs("i32"), CcNameIs("int")),
                   FieldType(RsNameIs("i64"), CcNameIs("long")),
+                  FieldType(RsNameIs("i64"), CcNameIs("long long")),
 
                   FieldType(RsNameIs("u8"), CcNameIs("unsigned char")),
                   FieldType(RsNameIs("u16"), CcNameIs("unsigned short")),
                   FieldType(RsNameIs("u32"), CcNameIs("unsigned int")),
                   FieldType(RsNameIs("u64"), CcNameIs("unsigned long")),
+                  FieldType(RsNameIs("u64"), CcNameIs("unsigned long long")),
 
                   FieldType(RsNameIs("i8"), CcNameIs("signed char")),
                   FieldType(RsNameIs("i16"), CcNameIs("short")),
                   FieldType(RsNameIs("i32"), CcNameIs("int")),
                   FieldType(RsNameIs("i64"), CcNameIs("long")),
+                  FieldType(RsNameIs("i64"), CcNameIs("long long")),
 
                   FieldType(RsNameIs("i8"), CcNameIs("int8_t")),
                   FieldType(RsNameIs("i16"), CcNameIs("int16_t")),
