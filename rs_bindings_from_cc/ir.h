@@ -118,12 +118,20 @@ struct Func {
   bool is_inline;
 };
 
+// Access specifier for a member or base class.
+enum AccessSpecifier {
+  kPublic,
+  kProtected,
+  kPrivate,
+};
+
 // A field (non-static member variable) of a record.
 struct Field {
   nlohmann::json ToJson() const;
 
   Identifier identifier;
   Type type;
+  AccessSpecifier access;
 };
 
 // A record (struct, class, union).

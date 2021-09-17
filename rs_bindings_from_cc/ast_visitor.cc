@@ -14,8 +14,10 @@
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 
 namespace rs_bindings_from_cc {
@@ -54,11 +56,40 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   return true;
 }
 
+static AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
+  switch (access) {
+    case clang::AS_public:
+      return kPublic;
+    case clang::AS_protected:
+      return kProtected;
+    case clang::AS_private:
+      return kPrivate;
+    case clang::AS_none:
+      // We should never be encoding a "none" access specifier in IR.
+      assert(false);
+      // We have to return something. Conservatively return private so we don't
+      // inadvertently make a private member variable accessible in Rust.
+      return kPrivate;
+  }
+}
+
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   std::vector<Field> fields;
+  clang::AccessSpecifier default_access = clang::AS_public;
+  if (const auto* cxx_record_decl =
+          clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
+    if (cxx_record_decl->isClass()) {
+      default_access = clang::AS_private;
+    }
+  }
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
+    clang::AccessSpecifier access = field_decl->getAccess();
+    if (access == clang::AS_none) {
+      access = default_access;
+    }
     fields.push_back({.identifier = GetTranslatedName(field_decl),
-                      .type = ConvertType(field_decl->getType())});
+                      .type = ConvertType(field_decl->getType()),
+                      .access = TranslateAccessSpecifier(access)});
   }
   ir_.records.push_back({GetTranslatedName(record_decl), std::move(fields)});
   return true;

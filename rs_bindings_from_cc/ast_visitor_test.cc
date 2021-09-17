@@ -191,5 +191,49 @@ TEST(AstVisitorTest, Struct) {
   EXPECT_EQ(second.type.rs_name, "i32");
 }
 
+TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
+  IR ir = ImportCode({R"(
+    struct SomeStruct {
+      int default_access_int;
+    public:
+      int public_int;
+    protected:
+      int protected_int;
+    private:
+      int private_int;
+    };
+
+    class SomeClass {
+      int default_access_int;
+    };
+  )"},
+                     {});
+  EXPECT_THAT(ir.functions, SizeIs(0));
+  ASSERT_THAT(ir.records, SizeIs(2));
+
+  Record some_struct = ir.records[0];
+  EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
+  ASSERT_THAT(some_struct.Fields(), SizeIs(4));
+  Field field0 = some_struct.Fields()[0];
+  EXPECT_EQ(field0.identifier.Ident(), "default_access_int");
+  EXPECT_EQ(field0.access, kPublic);
+  Field field1 = some_struct.Fields()[1];
+  EXPECT_EQ(field1.identifier.Ident(), "public_int");
+  EXPECT_EQ(field1.access, kPublic);
+  Field field2 = some_struct.Fields()[2];
+  EXPECT_EQ(field2.identifier.Ident(), "protected_int");
+  EXPECT_EQ(field2.access, kProtected);
+  Field field3 = some_struct.Fields()[3];
+  EXPECT_EQ(field3.identifier.Ident(), "private_int");
+  EXPECT_EQ(field3.access, kPrivate);
+
+  Record some_class = ir.records[1];
+  EXPECT_EQ(some_class.Ident().Ident(), "SomeClass");
+  ASSERT_THAT(some_class.Fields(), SizeIs(1));
+  field0 = some_class.Fields()[0];
+  EXPECT_EQ(field0.identifier.Ident(), "default_access_int");
+  EXPECT_EQ(field0.access, kPrivate);
+}
+
 }  // namespace
 }  // namespace rs_bindings_from_cc
