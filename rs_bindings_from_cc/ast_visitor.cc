@@ -23,6 +23,9 @@
 
 namespace rs_bindings_from_cc {
 
+constexpr std::string_view kTypeStatusPayloadUrl =
+    "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
+
 bool AstVisitor::TraverseDecl(clang::Decl* decl) {
   if (seen_decls_.insert(decl->getCanonicalDecl()).second) {
     return Base::TraverseDecl(decl);
@@ -46,7 +49,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
     auto param_type =
         ConvertType(param->getType(), function_decl->getASTContext());
-    if (!param_type.has_value()) {
+    if (!param_type.ok()) {
       // TODO(b/200239975):  Add diagnostics for declarations we can't import
       return true;
     }
@@ -55,7 +58,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
   auto return_type = ConvertType(function_decl->getReturnType(),
                                  function_decl->getASTContext());
-  if (!return_type.has_value()) {
+  if (!return_type.ok()) {
     return true;
   }
   ir_.functions.push_back(Func{
@@ -96,7 +99,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   }
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     auto type = ConvertType(field_decl->getType(), field_decl->getASTContext());
-    if (!type.has_value()) {
+    if (!type.ok()) {
       // TODO(b/200239975):  Add diagnostics for declarations we can't import
       return true;
     }
@@ -112,12 +115,14 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   return true;
 }
 
-std::optional<Type> AstVisitor::ConvertType(
+absl::StatusOr<Type> AstVisitor::ConvertType(
     clang::QualType qual_type, const clang::ASTContext& ctx) const {
+  std::string type_string = qual_type.getAsString();
+
   if (const clang::PointerType* pointer_type =
           qual_type->getAs<clang::PointerType>()) {
     auto pointee_type = ConvertType(pointer_type->getPointeeType(), ctx);
-    if (pointee_type.has_value()) {
+    if (pointee_type.ok()) {
       return Type::PointerTo(*pointee_type);
     }
   } else if (const clang::BuiltinType* builtin_type =
@@ -128,14 +133,17 @@ std::optional<Type> AstVisitor::ConvertType(
         return Type{
             absl::Substitute("$0$1",
                              builtin_type->isSignedInteger() ? 'i' : 'u', size),
-            qual_type.getAsString()};
+            type_string};
       }
     }
     if (builtin_type->isVoidType()) {
       return Type::Void();
     }
   }
-  return std::nullopt;
+  absl::Status error = absl::UnimplementedError(
+      absl::Substitute("Unsupported type '$0'", type_string));
+  error.SetPayload(kTypeStatusPayloadUrl, absl::Cord(type_string));
+  return error;
 }
 
 std::string AstVisitor::GetMangledName(

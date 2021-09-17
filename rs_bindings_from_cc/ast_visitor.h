@@ -10,6 +10,7 @@
 
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_set.h"
+#include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
@@ -43,8 +44,8 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  private:
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
   Identifier GetTranslatedName(const clang::NamedDecl* named_decl) const;
-  std::optional<Type> ConvertType(clang::QualType qual_type,
-                                  const clang::ASTContext& ctx) const;
+  absl::StatusOr<Type> ConvertType(clang::QualType qual_type,
+                                   const clang::ASTContext& ctx) const;
 
   absl::Span<const absl::string_view> public_header_names_;
   IR& ir_;
