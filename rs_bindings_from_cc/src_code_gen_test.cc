@@ -40,15 +40,11 @@ TEST(SrcGenTest, FFIIntegration) {
           "} "
           "}"));
 
-  EXPECT_THAT(
-      // TODO(hlopko): Run generated C++ sources through clang-format.
-      bindings.rs_api_impl,
-      StrEq(
-          // TODO(hlopko): Run generated C++ sources through clang-format.
-          "# include \"foo/bar.h\" \n "
-          "extern \"C\" int __rust_thunk__hello_world (int arg) { "
-          "return hello_world (arg) ; "
-          "}"));
+  EXPECT_THAT(bindings.rs_api_impl,
+              StrEq("#include \"foo/bar.h\"\n"
+                    "extern \"C\" int __rust_thunk__hello_world(int arg) { "
+                    "return hello_world(arg); "
+                    "}"));
 }
 
 }  // namespace

@@ -9,6 +9,7 @@
 #include "rs_bindings_from_cc/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/json/src/json.hpp"
+#include "third_party/llvm/llvm-project/clang/include/clang/Format/Format.h"
 
 namespace rs_bindings_from_cc {
 
@@ -29,7 +30,13 @@ static Bindings MakeBindingsFromFfiBindings(const FfiBindings& ffi_bindings) {
   const FfiU8SliceBox& rs_api_impl = ffi_bindings.rs_api_impl;
 
   bindings.rs_api = std::string(rs_api.ptr, rs_api.size);
-  bindings.rs_api_impl = std::string(rs_api_impl.ptr, rs_api_impl.size);
+
+  std::string impl{rs_api_impl.ptr, rs_api_impl.size};
+  bindings.rs_api_impl = *clang::tooling::applyAllReplacements(
+      impl,
+      clang::format::reformat(
+          clang::format::getGoogleStyle(clang::format::FormatStyle::LK_Cpp),
+          impl, clang::tooling::Range(0, impl.size()), "<stdin>"));
 
   return bindings;
 }
