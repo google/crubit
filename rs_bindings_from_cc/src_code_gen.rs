@@ -392,6 +392,7 @@ mod tests {
                             cc_name: "int".to_string(),
                             type_params: vec![],
                         },
+                        access: AccessSpecifier::Public,
                     },
                     Field {
                         identifier: Identifier { identifier: "second_field".to_string() },
@@ -400,6 +401,7 @@ mod tests {
                             cc_name: "int".to_string(),
                             type_params: vec![],
                         },
+                        access: AccessSpecifier::Public,
                     },
                 ],
             }],

@@ -45,11 +45,19 @@ pub struct Func {
     pub is_inline: bool,
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+pub enum AccessSpecifier {
+    Public,
+    Protected,
+    Private,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Field {
     pub identifier: Identifier,
     #[serde(rename(deserialize = "type"))]
     pub type_: IRType,
+    pub access: AccessSpecifier,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -90,17 +98,29 @@ mod tests {
             ],
             "records": [
                 {
-                    "identifier": {"identifier": "Cons" },
+                    "identifier": {"identifier": "SomeStruct" },
                     "fields": [
                         {
-                            "identifier": {"identifier": "car" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] }
+                            "identifier": {"identifier": "public_int" },
+                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "access": "Public"
                         },
                         {
-                            "identifier": {"identifier": "cdr" },
+                            "identifier": {"identifier": "protected_int" },
+                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "access": "Protected"
+                        },
+                        {
+                            "identifier": {"identifier": "private_int" },
+                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "access": "Private"
+                        },
+                        {
+                            "identifier": {"identifier": "ptr" },
                             "type": {"rs_name": "*mut", "cc_name": "*", "type_params": [
-                                {"rs_name": "Cons", "cc_name": "Cons", "type_params": []}
-                            ] }
+                                {"rs_name": "SomeStruct", "cc_name": "SomeStruct", "type_params": []}
+                            ] },
+                            "access": "Public"
                         }
                     ]
                 }
@@ -129,27 +149,47 @@ mod tests {
                 is_inline: false,
             }],
             records: vec![Record {
-                identifier: Identifier { identifier: "Cons".to_string() },
+                identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![
                     Field {
-                        identifier: Identifier { identifier: "car".to_string() },
+                        identifier: Identifier { identifier: "public_int".to_string() },
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
                             type_params: vec![],
                         },
+                        access: AccessSpecifier::Public,
                     },
                     Field {
-                        identifier: Identifier { identifier: "cdr".to_string() },
+                        identifier: Identifier { identifier: "protected_int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
+                        access: AccessSpecifier::Protected,
+                    },
+                    Field {
+                        identifier: Identifier { identifier: "private_int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
+                        access: AccessSpecifier::Private,
+                    },
+                    Field {
+                        identifier: Identifier { identifier: "ptr".to_string() },
                         type_: IRType {
                             rs_name: "*mut".to_string(),
                             cc_name: "*".to_string(),
                             type_params: vec![IRType {
-                                rs_name: "Cons".to_string(),
-                                cc_name: "Cons".to_string(),
+                                rs_name: "SomeStruct".to_string(),
+                                cc_name: "SomeStruct".to_string(),
                                 type_params: vec![],
                             }],
                         },
+                        access: AccessSpecifier::Public,
                     },
                 ],
             }],

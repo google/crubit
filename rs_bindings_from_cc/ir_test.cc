@@ -48,12 +48,19 @@ TEST(IrTest, IR) {
                 "identifier": {"identifier": "SomeStruct" },
                 "fields": [
                   {
-                    "identifier": {"identifier": "first_field" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] }
+                    "identifier": {"identifier": "public_int" },
+                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "access": "Public"
                   },
                   {
-                    "identifier": {"identifier": "second_field" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] }
+                    "identifier": {"identifier": "protected_int" },
+                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "access": "Protected"
+                  },
+                  {
+                    "identifier": {"identifier": "private_int" },
+                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "access": "Private"
                   }
                 ]
               }
@@ -69,10 +76,15 @@ TEST(IrTest, IR) {
           .is_inline = false}},
       .records = {Record(Identifier("SomeStruct"),
                          {
-                             Field{.identifier = Identifier("first_field"),
-                                   .type = Type{"i32", "int"}},
-                             Field{.identifier = Identifier("second_field"),
-                                   .type = Type{"i32", "int"}},
+                             Field{.identifier = Identifier("public_int"),
+                                   .type = Type{"i32", "int"},
+                                   .access = kPublic},
+                             Field{.identifier = Identifier("protected_int"),
+                                   .type = Type{"i32", "int"},
+                                   .access = kProtected},
+                             Field{.identifier = Identifier("private_int"),
+                                   .type = Type{"i32", "int"},
+                                   .access = kPrivate},
                          })}};
   EXPECT_EQ(ir.ToJson(), expected);
 }

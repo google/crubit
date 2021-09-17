@@ -60,10 +60,22 @@ nlohmann::json Func::ToJson() const {
   return result;
 }
 
+static std::string AccessToString(AccessSpecifier access) {
+  switch (access) {
+    case kPublic:
+      return "Public";
+    case kProtected:
+      return "Protected";
+    case kPrivate:
+      return "Private";
+  }
+}
+
 nlohmann::json Field::ToJson() const {
   nlohmann::json result;
   result["type"] = type.ToJson();
   result["identifier"] = identifier.ToJson();
+  result["access"] = AccessToString(access);
   return result;
 }
 
