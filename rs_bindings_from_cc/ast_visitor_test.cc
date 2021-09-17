@@ -177,11 +177,11 @@ TEST(AstVisitorTest, Struct) {
   EXPECT_THAT(ir.records, SizeIs(1));
   Record some_struct = ir.records[0];
 
-  EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
+  EXPECT_EQ(some_struct.identifier.Ident(), "SomeStruct");
 
-  ASSERT_THAT(some_struct.Fields(), SizeIs(2));
-  Field first = some_struct.Fields()[0];
-  Field second = some_struct.Fields()[1];
+  ASSERT_THAT(some_struct.fields, SizeIs(2));
+  Field first = some_struct.fields[0];
+  Field second = some_struct.fields[1];
 
   EXPECT_EQ(first.identifier.Ident(), "first_field");
   EXPECT_EQ(first.type.cc_name, "int");
@@ -212,25 +212,25 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
   ASSERT_THAT(ir.records, SizeIs(2));
 
   Record some_struct = ir.records[0];
-  EXPECT_EQ(some_struct.Ident().Ident(), "SomeStruct");
-  ASSERT_THAT(some_struct.Fields(), SizeIs(4));
-  Field field0 = some_struct.Fields()[0];
+  EXPECT_EQ(some_struct.identifier.Ident(), "SomeStruct");
+  ASSERT_THAT(some_struct.fields, SizeIs(4));
+  Field field0 = some_struct.fields[0];
   EXPECT_EQ(field0.identifier.Ident(), "default_access_int");
   EXPECT_EQ(field0.access, kPublic);
-  Field field1 = some_struct.Fields()[1];
+  Field field1 = some_struct.fields[1];
   EXPECT_EQ(field1.identifier.Ident(), "public_int");
   EXPECT_EQ(field1.access, kPublic);
-  Field field2 = some_struct.Fields()[2];
+  Field field2 = some_struct.fields[2];
   EXPECT_EQ(field2.identifier.Ident(), "protected_int");
   EXPECT_EQ(field2.access, kProtected);
-  Field field3 = some_struct.Fields()[3];
+  Field field3 = some_struct.fields[3];
   EXPECT_EQ(field3.identifier.Ident(), "private_int");
   EXPECT_EQ(field3.access, kPrivate);
 
   Record some_class = ir.records[1];
-  EXPECT_EQ(some_class.Ident().Ident(), "SomeClass");
-  ASSERT_THAT(some_class.Fields(), SizeIs(1));
-  field0 = some_class.Fields()[0];
+  EXPECT_EQ(some_class.identifier.Ident(), "SomeClass");
+  ASSERT_THAT(some_class.fields, SizeIs(1));
+  field0 = some_class.fields[0];
   EXPECT_EQ(field0.identifier.Ident(), "default_access_int");
   EXPECT_EQ(field0.access, kPrivate);
 }
@@ -260,7 +260,7 @@ TEST(AstVisitorTest, IntegerTypes) {
                         "  uint64_t f19;"
                         "};"},
                        {});
-  auto fields = ir.records[0].Fields();
+  auto fields = ir.records[0].fields;
 
   EXPECT_EQ(fields[0].type.rs_name, "i8");
   EXPECT_EQ(fields[0].type.cc_name, "char");

@@ -80,15 +80,15 @@ nlohmann::json Field::ToJson() const {
 }
 
 nlohmann::json Record::ToJson() const {
-  std::vector<nlohmann::json> fields;
-  fields.reserve(fields_.size());
-  for (const Field& field : fields_) {
-    fields.push_back(field.ToJson());
+  std::vector<nlohmann::json> json_fields;
+  json_fields.reserve(fields.size());
+  for (const Field& field : fields) {
+    json_fields.push_back(field.ToJson());
   }
 
   nlohmann::json result;
-  result["identifier"] = identifier_.ToJson();
-  result["fields"] = std::move(fields);
+  result["identifier"] = identifier.ToJson();
+  result["fields"] = std::move(json_fields);
   return result;
 }
 

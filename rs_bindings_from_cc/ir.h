@@ -135,18 +135,11 @@ struct Field {
 };
 
 // A record (struct, class, union).
-class Record {
- public:
-  Record(Identifier identifier, std::vector<Field> fields)
-      : identifier_(std::move(identifier)), fields_(std::move(fields)) {}
-
-  const Identifier& Ident() const { return identifier_; }
-  const std::vector<Field>& Fields() const { return fields_; }
+struct Record {
   nlohmann::json ToJson() const;
 
- private:
-  Identifier identifier_;
-  std::vector<Field> fields_;
+  Identifier identifier;
+  std::vector<Field> fields;
 };
 
 // A complete intermediate representation of bindings for publicly accessible

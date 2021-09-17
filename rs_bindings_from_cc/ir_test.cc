@@ -74,8 +74,8 @@ TEST(IrTest, IR) {
           .return_type = Type{"i32", "int"},
           .params = {FuncParam{Type{"i32", "int"}, Identifier("arg")}},
           .is_inline = false}},
-      .records = {Record(Identifier("SomeStruct"),
-                         {
+      .records = {Record{.identifier = Identifier("SomeStruct"),
+                         .fields = {
                              Field{.identifier = Identifier("public_int"),
                                    .type = Type{"i32", "int"},
                                    .access = kPublic},
@@ -85,7 +85,7 @@ TEST(IrTest, IR) {
                              Field{.identifier = Identifier("private_int"),
                                    .type = Type{"i32", "int"},
                                    .access = kPrivate},
-                         })}};
+                         }}}};
   EXPECT_EQ(ir.ToJson(), expected);
 }
 
