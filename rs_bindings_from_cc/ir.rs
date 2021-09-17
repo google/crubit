@@ -78,10 +78,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserializing() {
+    fn test_used_headers() {
         let input = r#"
         {
             "used_headers": [{ "name": "foo/bar.h" }],
+            "functions": [],
+            "records": []
+        }
+        "#;
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let expected = IR {
+            used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
+            functions: vec![],
+            records: vec![],
+        };
+        assert_eq!(ir, expected);
+    }
+
+    #[test]
+    fn test_functions() {
+        let input = r#"
+        {
+            "used_headers": [],
             "functions": [
                 {
                     "identifier": { "identifier": "hello_world" },
@@ -96,40 +114,12 @@ mod tests {
                     "is_inline": false
                 }
             ],
-            "records": [
-                {
-                    "identifier": {"identifier": "SomeStruct" },
-                    "fields": [
-                        {
-                            "identifier": {"identifier": "public_int" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
-                            "access": "Public"
-                        },
-                        {
-                            "identifier": {"identifier": "protected_int" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
-                            "access": "Protected"
-                        },
-                        {
-                            "identifier": {"identifier": "private_int" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
-                            "access": "Private"
-                        },
-                        {
-                            "identifier": {"identifier": "ptr" },
-                            "type": {"rs_name": "*mut", "cc_name": "*", "type_params": [
-                                {"rs_name": "SomeStruct", "cc_name": "SomeStruct", "type_params": []}
-                            ] },
-                            "access": "Public"
-                        }
-                    ]
-                }
-            ]
+            "records": []
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
+            used_headers: vec![],
             functions: vec![Func {
                 identifier: Identifier { identifier: "hello_world".to_string() },
                 mangled_name: "$$mangled_name$$".to_string(),
@@ -148,6 +138,45 @@ mod tests {
                 }],
                 is_inline: false,
             }],
+            records: vec![],
+        };
+        assert_eq!(ir, expected);
+    }
+
+    #[test]
+    fn test_member_access_specifiers() {
+        let input = r#"
+        {
+            "used_headers": [],
+            "functions": [],
+            "records": [
+                {
+                    "identifier": {"identifier": "SomeStruct" },
+                    "fields": [
+                        {
+                            "identifier": {"identifier": "public_int" },
+                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "access": "Public"
+                        },
+                        {
+                            "identifier": {"identifier": "protected_int" },
+                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "access": "Protected"
+                        },
+                        {
+                            "identifier": {"identifier": "private_int" },
+                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "access": "Private"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let expected = IR {
+            used_headers: vec![],
+            functions: vec![],
             records: vec![Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![
@@ -178,20 +207,53 @@ mod tests {
                         },
                         access: AccessSpecifier::Private,
                     },
-                    Field {
-                        identifier: Identifier { identifier: "ptr".to_string() },
-                        type_: IRType {
-                            rs_name: "*mut".to_string(),
-                            cc_name: "*".to_string(),
-                            type_params: vec![IRType {
-                                rs_name: "SomeStruct".to_string(),
-                                cc_name: "SomeStruct".to_string(),
-                                type_params: vec![],
-                            }],
-                        },
-                        access: AccessSpecifier::Public,
-                    },
                 ],
+            }],
+        };
+        assert_eq!(ir, expected);
+    }
+
+    #[test]
+    fn test_pointer_member_variable() {
+        let input = r#"
+        {
+            "used_headers": [],
+            "functions": [],
+            "records": [
+                {
+                    "identifier": {"identifier": "SomeStruct" },
+                    "fields": [
+                        {
+                            "identifier": {"identifier": "ptr" },
+                            "type": {"rs_name": "*mut", "cc_name": "*", "type_params": [
+                                {"rs_name": "SomeStruct", "cc_name": "SomeStruct", "type_params": []}
+                            ] },
+                            "access": "Public"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        let expected = IR {
+            used_headers: vec![],
+            functions: vec![],
+            records: vec![Record {
+                identifier: Identifier { identifier: "SomeStruct".to_string() },
+                fields: vec![Field {
+                    identifier: Identifier { identifier: "ptr".to_string() },
+                    type_: IRType {
+                        rs_name: "*mut".to_string(),
+                        cc_name: "*".to_string(),
+                        type_params: vec![IRType {
+                            rs_name: "SomeStruct".to_string(),
+                            cc_name: "SomeStruct".to_string(),
+                            type_params: vec![],
+                        }],
+                    },
+                    access: AccessSpecifier::Public,
+                }],
             }],
         };
         assert_eq!(ir, expected);
