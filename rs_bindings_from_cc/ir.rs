@@ -66,10 +66,13 @@ pub struct Record {
     pub fields: Vec<Field>,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IR {
+    #[serde(default)]
     pub used_headers: Vec<HeaderName>,
+    #[serde(default)]
     pub functions: Vec<Func>,
+    #[serde(default)]
     pub records: Vec<Record>,
 }
 
@@ -81,16 +84,13 @@ mod tests {
     fn test_used_headers() {
         let input = r#"
         {
-            "used_headers": [{ "name": "foo/bar.h" }],
-            "functions": [],
-            "records": []
+            "used_headers": [{ "name": "foo/bar.h" }]
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
             used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
-            functions: vec![],
-            records: vec![],
+            ..Default::default()
         };
         assert_eq!(ir, expected);
     }
@@ -99,7 +99,6 @@ mod tests {
     fn test_functions() {
         let input = r#"
         {
-            "used_headers": [],
             "functions": [
                 {
                     "identifier": { "identifier": "hello_world" },
@@ -113,13 +112,11 @@ mod tests {
                     "return_type": { "rs_name": "i32", "cc_name": "int", "type_params": [] },
                     "is_inline": false
                 }
-            ],
-            "records": []
+            ]
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            used_headers: vec![],
             functions: vec![Func {
                 identifier: Identifier { identifier: "hello_world".to_string() },
                 mangled_name: "$$mangled_name$$".to_string(),
@@ -138,7 +135,7 @@ mod tests {
                 }],
                 is_inline: false,
             }],
-            records: vec![],
+            ..Default::default()
         };
         assert_eq!(ir, expected);
     }
@@ -147,8 +144,6 @@ mod tests {
     fn test_member_access_specifiers() {
         let input = r#"
         {
-            "used_headers": [],
-            "functions": [],
             "records": [
                 {
                     "identifier": {"identifier": "SomeStruct" },
@@ -175,8 +170,6 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            used_headers: vec![],
-            functions: vec![],
             records: vec![Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![
@@ -209,6 +202,7 @@ mod tests {
                     },
                 ],
             }],
+            ..Default::default()
         };
         assert_eq!(ir, expected);
     }
@@ -217,8 +211,6 @@ mod tests {
     fn test_pointer_member_variable() {
         let input = r#"
         {
-            "used_headers": [],
-            "functions": [],
             "records": [
                 {
                     "identifier": {"identifier": "SomeStruct" },
@@ -237,8 +229,6 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            used_headers: vec![],
-            functions: vec![],
             records: vec![Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![Field {
@@ -255,6 +245,7 @@ mod tests {
                     access: AccessSpecifier::Public,
                 }],
             }],
+            ..Default::default()
         };
         assert_eq!(ir, expected);
     }
