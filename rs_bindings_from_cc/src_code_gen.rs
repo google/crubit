@@ -88,10 +88,21 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
     let field_types =
         record.fields.iter().map(|f| format_rs_type(&f.type_)).collect::<Result<Vec<_>>>()?;
+    let field_accesses = record
+        .fields
+        .iter()
+        .map(|f| {
+            if f.access == AccessSpecifier::Public {
+                quote! { pub }
+            } else {
+                quote! {}
+            }
+        })
+        .collect_vec();
     Ok(quote! {
         #[repr(C)]
         pub struct #ident {
-            #( pub #field_idents: #field_types, )*
+            #( #field_accesses #field_idents: #field_types, )*
         }
     })
 }
@@ -386,7 +397,7 @@ mod tests {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![
                     Field {
-                        identifier: Identifier { identifier: "first_field".to_string() },
+                        identifier: Identifier { identifier: "public_int".to_string() },
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
@@ -395,13 +406,22 @@ mod tests {
                         access: AccessSpecifier::Public,
                     },
                     Field {
-                        identifier: Identifier { identifier: "second_field".to_string() },
+                        identifier: Identifier { identifier: "protected_int".to_string() },
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
                             type_params: vec![],
                         },
-                        access: AccessSpecifier::Public,
+                        access: AccessSpecifier::Protected,
+                    },
+                    Field {
+                        identifier: Identifier { identifier: "private_int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
+                        access: AccessSpecifier::Private,
                     },
                 ],
             }],
@@ -412,8 +432,9 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct SomeStruct {
-                    pub first_field: i32,
-                    pub second_field: i32,
+                    pub public_int: i32,
+                    protected_int: i32,
+                    private_int: i32,
                 }
             }
             .to_string()
