@@ -77,6 +77,7 @@ nlohmann::json Field::ToJson() const {
   result["type"] = type.ToJson();
   result["identifier"] = identifier.ToJson();
   result["access"] = AccessToString(access);
+  result["offset"] = offset;
   return result;
 }
 
@@ -90,6 +91,8 @@ nlohmann::json Record::ToJson() const {
   nlohmann::json result;
   result["identifier"] = identifier.ToJson();
   result["fields"] = std::move(json_fields);
+  result["size"] = size;
+  result["alignment"] = alignment;
   return result;
 }
 

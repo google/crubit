@@ -59,12 +59,15 @@ pub struct Field {
     #[serde(rename(deserialize = "type"))]
     pub type_: IRType,
     pub access: AccessSpecifier,
+    pub offset: i64,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub identifier: Identifier,
     pub fields: Vec<Field>,
+    pub size: i64,
+    pub alignment: i64,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -154,19 +157,24 @@ mod tests {
                         {
                             "identifier": {"identifier": "public_int" },
                             "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-                            "access": "Public"
+                            "access": "Public",
+                            "offset": 0
                         },
                         {
                             "identifier": {"identifier": "protected_int" },
                             "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-                            "access": "Protected"
+                            "access": "Protected",
+                            "offset": 32
                         },
                         {
                             "identifier": {"identifier": "private_int" },
                             "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-                            "access": "Private"
+                            "access": "Private",
+                            "offset": 64
                         }
-                    ]
+                    ],
+                    "size": 12,
+                    "alignment": 4
                 }
             ]
         }
@@ -185,6 +193,7 @@ mod tests {
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Public,
+                        offset: 0,
                     },
                     Field {
                         identifier: Identifier { identifier: "protected_int".to_string() },
@@ -195,6 +204,7 @@ mod tests {
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Protected,
+                        offset: 32,
                     },
                     Field {
                         identifier: Identifier { identifier: "private_int".to_string() },
@@ -205,8 +215,11 @@ mod tests {
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Private,
+                        offset: 64,
                     },
                 ],
+                size: 12,
+                alignment: 4,
             }],
             ..Default::default()
         };
@@ -226,9 +239,12 @@ mod tests {
                             "type": {"rs_name": "*mut", "cc_name": "*", "cc_const": false, "type_params": [
                                 {"rs_name": "SomeStruct", "cc_name": "SomeStruct", "cc_const": false, "type_params": []}
                             ] },
-                            "access": "Public"
+                            "access": "Public",
+                            "offset": 0
                         }
-                    ]
+                    ],
+                    "size": 8,
+                    "alignment": 8
                 }
             ]
         }
@@ -251,7 +267,10 @@ mod tests {
                         }],
                     },
                     access: AccessSpecifier::Public,
+                    offset: 0,
                 }],
+                size: 8,
+                alignment: 8,
             }],
             ..Default::default()
         };

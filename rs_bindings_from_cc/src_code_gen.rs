@@ -421,6 +421,7 @@ mod tests {
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Public,
+                        offset: 0,
                     },
                     Field {
                         identifier: Identifier { identifier: "protected_int".to_string() },
@@ -431,6 +432,7 @@ mod tests {
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Protected,
+                        offset: 32,
                     },
                     Field {
                         identifier: Identifier { identifier: "private_int".to_string() },
@@ -441,8 +443,11 @@ mod tests {
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Private,
+                        offset: 64,
                     },
                 ],
+                size: 12,
+                alignment: 4,
             }],
             functions: vec![],
         };

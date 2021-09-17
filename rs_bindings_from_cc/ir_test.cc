@@ -51,42 +51,58 @@ TEST(IrTest, IR) {
                   {
                     "identifier": {"identifier": "public_int" },
                     "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-                    "access": "Public"
+                    "access": "Public",
+                    "offset": 0
                   },
                   {
                     "identifier": {"identifier": "protected_int" },
                     "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-                    "access": "Protected"
+                    "access": "Protected",
+                    "offset": 32
                   },
                   {
                     "identifier": {"identifier": "private_int" },
                     "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-                    "access": "Private"
+                    "access": "Private",
+                    "offset": 64
                   }
-                ]
+                ],
+                "size": 12,
+                "alignment": 4
               }
             ]
       })j");
-  IR ir = {
-      .used_headers = {HeaderName("foo/bar.h")},
-      .functions = {Func{
-          .identifier = Identifier("hello_world"),
-          .mangled_name = "#$mangled_name$#",
-          .return_type = Type{"i32", "int"},
-          .params = {FuncParam{Type{"i32", "int"}, Identifier("arg")}},
-          .is_inline = false}},
-      .records = {Record{.identifier = Identifier("SomeStruct"),
-                         .fields = {
-                             Field{.identifier = Identifier("public_int"),
-                                   .type = Type{"i32", "int"},
-                                   .access = kPublic},
-                             Field{.identifier = Identifier("protected_int"),
-                                   .type = Type{"i32", "int"},
-                                   .access = kProtected},
-                             Field{.identifier = Identifier("private_int"),
-                                   .type = Type{"i32", "int"},
-                                   .access = kPrivate},
-                         }}}};
+  IR
+      ir =
+          {
+              .used_headers = {HeaderName("foo/bar.h")},
+              .functions = {Func{
+                  .identifier = Identifier("hello_world"),
+                  .mangled_name = "#$mangled_name$#",
+                  .return_type = Type{"i32", "int"},
+                  .params = {FuncParam{Type{"i32", "int"}, Identifier("arg")}},
+                  .is_inline = false}},
+              .records = {Record{.identifier = Identifier("SomeStruct"),
+                                 .fields =
+                                     {
+                                         Field{.identifier =
+                                                   Identifier("public_int"),
+                                               .type = Type{"i32", "int"},
+                                               .access = kPublic,
+                                               .offset = 0},
+                                         Field{.identifier = Identifier(
+                                                   "protected_int"),
+                                               .type = Type{"i32", "int"},
+                                               .access = kProtected,
+                                               .offset = 32},
+                                         Field{.identifier = Identifier(
+                                                   "private_int"),
+                                               .type = Type{"i32", "int"},
+                                               .access = kPrivate,
+                                               .offset = 64},
+                                     },
+                                 .size = 12,
+                                 .alignment = 4}}};
   EXPECT_EQ(ir.ToJson(), expected);
 }
 
