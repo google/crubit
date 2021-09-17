@@ -21,8 +21,55 @@
 namespace rs_bindings_from_cc {
 namespace {
 
+using ::testing::AllOf;
+using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::Not;
+using ::testing::Property;
 using ::testing::SizeIs;
+
+// Matches an IR node that has the given identifier.
+MATCHER_P(IdentifierIs, identifier, "") {
+  if (arg.identifier.Ident() == identifier) return true;
+
+  *result_listener << "actual identifier: '" << arg.identifier.Ident() << "'";
+  return false;
+}
+
+// Matches a Func that has the given mangled name.
+MATCHER_P(MangledNameIs, mangled_name, "") {
+  if (arg.mangled_name == mangled_name) return true;
+
+  *result_listener << "actual mangled name: '" << arg.mangled_name << "'";
+  return false;
+}
+
+// Matches a Func that has a return type matching `matcher`.
+template <typename Matcher>
+auto ReturnType(const Matcher& matcher) {
+  return testing::Field(&Func::return_type, matcher);
+}
+
+// Matches a Func that has parameters matching `matchers`.
+template <typename... Args>
+auto ParamsAre(const Args&... matchers) {
+  return testing::Field(&Func::params, ElementsAre(matchers...));
+}
+
+// Matches a Func that is inline.
+MATCHER(IsInline, "") { return arg.is_inline; }
+
+// Matches a type that is void.
+MATCHER(IsVoid, "") { return arg.IsVoid(); }
+
+// Matches a Record that has fields matching `matchers`.
+template <typename... Args>
+auto FieldsAre(const Args&... matchers) {
+  return testing::Field(&Record::fields, ElementsAre(matchers...));
+}
+
+// Matches a Field that has the given access specifier.
+MATCHER_P(AccessIs, access, "") { return arg.access == access; }
 
 constexpr absl::string_view kVirtualInputPath =
     "ast_visitor_test_virtual_input.cc";
@@ -61,8 +108,9 @@ IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
 TEST(AstVisitorTest, Noop) {
   IR ir = ImportCode({"// nothing interesting there."}, {});
   EXPECT_THAT(ir.functions, IsEmpty());
-  ASSERT_THAT(ir.used_headers, SizeIs(1));
-  EXPECT_EQ(ir.used_headers[0].IncludePath(), "test/testing_header_0.h");
+  EXPECT_THAT(ir.used_headers,
+              ElementsAre(Property(&HeaderName::IncludePath,
+                                   "test/testing_header_0.h")));
 }
 
 TEST(AstVisitorTest, IREmptyOnInvalidInput) {
@@ -72,61 +120,41 @@ TEST(AstVisitorTest, IREmptyOnInvalidInput) {
 
 TEST(AstVisitorTest, FuncWithVoidReturnType) {
   IR ir = ImportCode({"void Foo();"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(1));
-  Func func = ir.functions[0];
-  EXPECT_EQ(func.identifier.Ident(), "Foo");
-  EXPECT_EQ(func.mangled_name, "_Z3Foov");
-  EXPECT_TRUE(func.return_type.IsVoid());
-  EXPECT_THAT(func.params, IsEmpty());
+  EXPECT_THAT(ir.functions,
+              ElementsAre(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                                ReturnType(IsVoid()), ParamsAre())));
 }
 
 TEST(AstVisitorTest, TwoFuncs) {
   IR ir = ImportCode({"void Foo(); void Bar();"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(2));
-
-  Func foo = ir.functions[0];
-  EXPECT_EQ(foo.identifier.Ident(), "Foo");
-  EXPECT_EQ(foo.mangled_name, "_Z3Foov");
-  EXPECT_TRUE(foo.return_type.IsVoid());
-  EXPECT_THAT(foo.params, IsEmpty());
-
-  Func bar = ir.functions[1];
-  EXPECT_EQ(bar.identifier.Ident(), "Bar");
-  EXPECT_EQ(bar.mangled_name, "_Z3Barv");
-  EXPECT_TRUE(bar.return_type.IsVoid());
-  EXPECT_THAT(bar.params, IsEmpty());
+  EXPECT_THAT(ir.functions,
+              ElementsAre(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                                ReturnType(IsVoid()), ParamsAre()),
+                          AllOf(IdentifierIs("Bar"), MangledNameIs("_Z3Barv"),
+                                ReturnType(IsVoid()), ParamsAre())));
 }
 
 TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
   IR ir = ImportCode({"void Foo();", "void Bar();"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(2));
-  Func foo = ir.functions[0];
-  EXPECT_EQ(foo.identifier.Ident(), "Foo");
-  Func bar = ir.functions[1];
-  EXPECT_EQ(bar.identifier.Ident(), "Bar");
+  EXPECT_THAT(ir.functions,
+              ElementsAre(IdentifierIs("Foo"), IdentifierIs("Bar")));
 }
 
 TEST(AstVisitorTest, NonInlineFunc) {
   IR ir = ImportCode({"void Foo() {}"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(1));
-  Func func = ir.functions[0];
-  EXPECT_EQ(func.identifier.Ident(), "Foo");
-  EXPECT_FALSE(func.is_inline);
+  EXPECT_THAT(ir.functions,
+              ElementsAre(AllOf(IdentifierIs("Foo"), Not(IsInline()))));
 }
 
 TEST(AstVisitorTest, InlineFunc) {
   IR ir = ImportCode({"inline void Foo() {}"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(1));
-  Func func = ir.functions[0];
-  EXPECT_EQ(func.identifier.Ident(), "Foo");
-  EXPECT_TRUE(func.is_inline);
+  EXPECT_THAT(ir.functions,
+              ElementsAre(AllOf(IdentifierIs("Foo"), IsInline())));
 }
 
 TEST(AstVisitorTest, FuncJustOnce) {
   IR ir = ImportCode({"void Foo(); void Foo();"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(1));
-  Func func = ir.functions[0];
-  EXPECT_EQ(func.identifier.Ident(), "Foo");
+  EXPECT_THAT(ir.functions, ElementsAre(AllOf(IdentifierIs("Foo"))));
 }
 
 TEST(AstVisitorTest, FuncParams) {
@@ -172,7 +200,7 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
 TEST(AstVisitorTest, Struct) {
   IR ir = ImportCode(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
-  EXPECT_THAT(ir.functions, SizeIs(0));
+  EXPECT_THAT(ir.functions, IsEmpty());
 
   EXPECT_THAT(ir.records, SizeIs(1));
   Record some_struct = ir.records[0];
@@ -208,31 +236,22 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
     };
   )"},
                      {});
-  EXPECT_THAT(ir.functions, SizeIs(0));
-  ASSERT_THAT(ir.records, SizeIs(2));
 
-  Record some_struct = ir.records[0];
-  EXPECT_EQ(some_struct.identifier.Ident(), "SomeStruct");
-  ASSERT_THAT(some_struct.fields, SizeIs(4));
-  Field field0 = some_struct.fields[0];
-  EXPECT_EQ(field0.identifier.Ident(), "default_access_int");
-  EXPECT_EQ(field0.access, kPublic);
-  Field field1 = some_struct.fields[1];
-  EXPECT_EQ(field1.identifier.Ident(), "public_int");
-  EXPECT_EQ(field1.access, kPublic);
-  Field field2 = some_struct.fields[2];
-  EXPECT_EQ(field2.identifier.Ident(), "protected_int");
-  EXPECT_EQ(field2.access, kProtected);
-  Field field3 = some_struct.fields[3];
-  EXPECT_EQ(field3.identifier.Ident(), "private_int");
-  EXPECT_EQ(field3.access, kPrivate);
+  EXPECT_THAT(ir.functions, IsEmpty());
 
-  Record some_class = ir.records[1];
-  EXPECT_EQ(some_class.identifier.Ident(), "SomeClass");
-  ASSERT_THAT(some_class.fields, SizeIs(1));
-  field0 = some_class.fields[0];
-  EXPECT_EQ(field0.identifier.Ident(), "default_access_int");
-  EXPECT_EQ(field0.access, kPrivate);
+  EXPECT_THAT(
+      ir.records,
+      ElementsAre(
+          AllOf(
+              IdentifierIs("SomeStruct"),
+              FieldsAre(
+                  AllOf(IdentifierIs("default_access_int"), AccessIs(kPublic)),
+                  AllOf(IdentifierIs("public_int"), AccessIs(kPublic)),
+                  AllOf(IdentifierIs("protected_int"), AccessIs(kProtected)),
+                  AllOf(IdentifierIs("private_int"), AccessIs(kPrivate)))),
+          AllOf(IdentifierIs("SomeClass"),
+                FieldsAre(AllOf(IdentifierIs("default_access_int"),
+                                AccessIs(kPrivate))))));
 }
 
 TEST(AstVisitorTest, IntegerTypes) {
