@@ -137,6 +137,7 @@ absl::StatusOr<Type> AstVisitor::ConvertType(
   } else if (const clang::BuiltinType* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
+      // TODO(forster): This includes enums, which is incorrect.
       auto size = ctx.getTypeSize(builtin_type);
       if (size == 8 || size == 16 || size == 32 || size == 64) {
         type =
