@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -82,17 +82,18 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 }
 
 /// Generate Rust source code for a given Record.
-fn generate_record(record: &Record) -> TokenStream {
+fn generate_record(record: &Record) -> Result<TokenStream> {
     let ident = make_ident(&record.identifier.identifier);
     let field_idents =
         record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
-    let field_types = record.fields.iter().map(|f| make_ident(&f.type_.rs_name)).collect_vec();
-    quote! {
+    let field_types =
+        record.fields.iter().map(|f| format_rs_type(&f.type_)).collect::<Result<Vec<_>>>()?;
+    Ok(quote! {
         #[repr(C)]
         pub struct #ident {
             #( pub #field_idents: #field_types, )*
         }
-    }
+    })
 }
 
 fn generate_rs_api(ir: &IR) -> Result<String> {
@@ -103,12 +104,13 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         let ident = make_ident(&func.identifier.identifier);
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
         // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
-        let return_type_name = make_ident(&func.return_type.rs_name);
+        let return_type_name = format_rs_type(&func.return_type)?;
 
         let param_idents =
             func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
 
-        let param_types = func.params.iter().map(|p| make_ident(&p.type_.rs_name)).collect_vec();
+        let param_types =
+            func.params.iter().map(|p| format_rs_type(&p.type_)).collect::<Result<Vec<_>>>()?;
 
         api_funcs.push(quote! {
             #[inline(always)]
@@ -129,7 +131,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         });
     }
 
-    let records = ir.records.iter().map(generate_record).collect_vec();
+    let records = ir.records.iter().map(generate_record).collect::<Result<Vec<_>>>()?;
 
     let mod_detail = if thunks.is_empty() {
         quote! {}
@@ -157,6 +159,51 @@ fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
+fn format_rs_type(ty: &ir::IRType) -> Result<TokenStream> {
+    match ty.rs_name.as_str() {
+        "*mut" => {
+            if ty.type_params.len() != 1 {
+                return Err(anyhow!(
+                    "Invalid pointer type (need exactly 1 type parameter): {:?}",
+                    ty
+                ));
+            }
+            let nested_type = format_rs_type(&ty.type_params[0])?;
+            Ok(quote! {*mut #nested_type})
+        }
+        ident => {
+            if ty.type_params.len() > 0 {
+                return Err(anyhow!("Type not yet supported: {:?}", ty));
+            }
+            let ident = make_ident(ident);
+            Ok(quote! {#ident})
+        }
+    }
+}
+
+fn format_cc_type(ty: &ir::IRType) -> Result<TokenStream> {
+    match ty.cc_name.as_str() {
+        "*" => {
+            if ty.type_params.len() != 1 {
+                return Err(anyhow!(
+                    "Invalid pointer type (need exactly 1 type parameter): {:?}",
+                    ty
+                ));
+            }
+            assert_eq!(ty.type_params.len(), 1);
+            let nested_type = format_cc_type(&ty.type_params[0])?;
+            Ok(quote! {#nested_type *})
+        }
+        ident => {
+            if ty.type_params.len() > 0 {
+                return Err(anyhow!("Type not yet supported: {:?}", ty));
+            }
+            let ident = make_ident(ident);
+            Ok(quote! {#ident})
+        }
+    }
+}
+
 fn generate_rs_api_impl(ir: &IR) -> Result<String> {
     // This function uses quote! to generate C++ source code out of convenience. This is a bold idea
     // so we have to continously evaluate if it still makes sense or the cost of working around
@@ -172,12 +219,13 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
         let ident = make_ident(&func.identifier.identifier);
-        let return_type_name = make_ident(&func.return_type.cc_name);
+        let return_type_name = format_cc_type(&func.return_type)?;
 
         let param_idents =
             func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
 
-        let param_types = func.params.iter().map(|p| make_ident(&p.type_.cc_name)).collect_vec();
+        let param_types =
+            func.params.iter().map(|p| format_cc_type(&p.type_)).collect::<Result<Vec<_>>>()?;
 
         thunks.push(quote! {
             extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
@@ -215,15 +263,27 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
-                return_type: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                return_type: IRType {
+                    rs_name: "i32".to_string(),
+                    cc_name: "int".to_string(),
+                    type_params: vec![],
+                },
                 params: vec![
                     FuncParam {
                         identifier: Identifier { identifier: "a".to_string() },
-                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
                     },
                     FuncParam {
                         identifier: Identifier { identifier: "b".to_string() },
-                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
                     },
                 ],
                 is_inline: false,
@@ -261,15 +321,27 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
-                return_type: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                return_type: IRType {
+                    rs_name: "i32".to_string(),
+                    cc_name: "int".to_string(),
+                    type_params: vec![],
+                },
                 params: vec![
                     FuncParam {
                         identifier: Identifier { identifier: "a".to_string() },
-                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
                     },
                     FuncParam {
                         identifier: Identifier { identifier: "b".to_string() },
-                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
                     },
                 ],
                 is_inline: true,
@@ -315,11 +387,19 @@ mod tests {
                 fields: vec![
                     Field {
                         identifier: Identifier { identifier: "first_field".to_string() },
-                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
                     },
                     Field {
                         identifier: Identifier { identifier: "second_field".to_string() },
-                        type_: IRType { rs_name: "i32".to_string(), cc_name: "int".to_string() },
+                        type_: IRType {
+                            rs_name: "i32".to_string(),
+                            cc_name: "int".to_string(),
+                            type_params: vec![],
+                        },
                     },
                 ],
             }],
@@ -333,6 +413,63 @@ mod tests {
                     pub first_field: i32,
                     pub second_field: i32,
                 }
+            }
+            .to_string()
+        );
+        assert_eq!(generate_rs_api_impl(&ir)?, "");
+        Ok(())
+    }
+
+    #[test]
+    fn test_ptr_func() -> Result<()> {
+        let ir = IR {
+            used_headers: vec![],
+            records: vec![],
+            functions: vec![Func {
+                identifier: Identifier { identifier: "Deref".to_string() },
+                mangled_name: "_Z5DerefPPi".to_string(),
+                return_type: IRType {
+                    rs_name: "*mut".to_string(),
+                    cc_name: "*".to_string(),
+                    type_params: vec![IRType {
+                        rs_name: "i32".to_string(),
+                        cc_name: "int".to_string(),
+                        type_params: vec![],
+                    }],
+                },
+                params: vec![FuncParam {
+                    identifier: Identifier { identifier: "p".to_string() },
+                    type_: IRType {
+                        rs_name: "*mut".to_string(),
+                        cc_name: "*".to_string(),
+                        type_params: vec![IRType {
+                            rs_name: "*mut".to_string(),
+                            cc_name: "*".to_string(),
+                            type_params: vec![IRType {
+                                rs_name: "i32".to_string(),
+                                cc_name: "int".to_string(),
+                                type_params: vec![],
+                            }],
+                        }],
+                    },
+                }],
+                is_inline: false,
+            }],
+        };
+        assert_eq!(
+            generate_rs_api(&ir)?,
+            quote! {
+                #[inline(always)]
+                pub fn Deref(p: *mut *mut i32) -> *mut i32 {
+                    unsafe { crate::detail::__rust_thunk__Deref(p) }
+                }
+
+                mod detail {
+                    extern "C" {
+                        #[link_name = "_Z5DerefPPi"]
+                        pub(crate) fn __rust_thunk__Deref(p: *mut *mut i32) -> *mut i32;
+                    } // extern
+                } // mod detail
             }
             .to_string()
         );
