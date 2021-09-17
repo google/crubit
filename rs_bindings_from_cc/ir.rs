@@ -21,6 +21,7 @@ pub struct HeaderName {
 pub struct IRType {
     pub rs_name: String,
     pub cc_name: String,
+    pub cc_const: bool,
     pub type_params: Vec<IRType>,
 }
 
@@ -106,10 +107,10 @@ mod tests {
                     "params": [
                         {
                             "identifier": { "identifier": "arg" },
-                            "type": { "rs_name":"i32", "cc_name": "int", "type_params": [] }
+                            "type": { "rs_name":"i32", "cc_name": "int", "cc_const": false, "type_params": [] }
                         }
                     ],
-                    "return_type": { "rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "return_type": { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                     "is_inline": false
                 }
             ]
@@ -123,12 +124,14 @@ mod tests {
                 return_type: IRType {
                     rs_name: "i32".to_string(),
                     cc_name: "int".to_string(),
+                    cc_const: false,
                     type_params: vec![],
                 },
                 params: vec![FuncParam {
                     type_: IRType {
                         rs_name: "i32".to_string(),
                         cc_name: "int".to_string(),
+                        cc_const: false,
                         type_params: vec![],
                     },
                     identifier: Identifier { identifier: "arg".to_string() },
@@ -150,17 +153,17 @@ mod tests {
                     "fields": [
                         {
                             "identifier": {"identifier": "public_int" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                             "access": "Public"
                         },
                         {
                             "identifier": {"identifier": "protected_int" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                             "access": "Protected"
                         },
                         {
                             "identifier": {"identifier": "private_int" },
-                            "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                            "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                             "access": "Private"
                         }
                     ]
@@ -178,6 +181,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Public,
@@ -187,6 +191,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Protected,
@@ -196,6 +201,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Private,
@@ -217,8 +223,8 @@ mod tests {
                     "fields": [
                         {
                             "identifier": {"identifier": "ptr" },
-                            "type": {"rs_name": "*mut", "cc_name": "*", "type_params": [
-                                {"rs_name": "SomeStruct", "cc_name": "SomeStruct", "type_params": []}
+                            "type": {"rs_name": "*mut", "cc_name": "*", "cc_const": false, "type_params": [
+                                {"rs_name": "SomeStruct", "cc_name": "SomeStruct", "cc_const": false, "type_params": []}
                             ] },
                             "access": "Public"
                         }
@@ -236,9 +242,11 @@ mod tests {
                     type_: IRType {
                         rs_name: "*mut".to_string(),
                         cc_name: "*".to_string(),
+                        cc_const: false,
                         type_params: vec![IRType {
                             rs_name: "SomeStruct".to_string(),
                             cc_name: "SomeStruct".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         }],
                     },

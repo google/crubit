@@ -12,6 +12,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -23,7 +24,8 @@ namespace rs_bindings_from_cc {
 
 namespace internal {
 inline constexpr absl::string_view kRustPtrMut = "*mut";
-inline constexpr absl::string_view kCcPtrMut = "*";
+inline constexpr absl::string_view kRustPtrConst = "*const";
+inline constexpr absl::string_view kCcPtr = "*";
 }  // namespace internal
 
 // A name of a public header of the C++ library.
@@ -53,9 +55,10 @@ struct Type {
   bool IsVoid() const { return rs_name == "()"; }
 
   static Type PointerTo(Type pointee_type) {
-    // TODO(b/200016113): Decide how to handle const.
-    auto pointer_type = Type{std::string(internal::kRustPtrMut),
-                             std::string(internal::kCcPtrMut)};
+    absl::string_view rs_name =
+        pointee_type.cc_const ? internal::kRustPtrConst : internal::kRustPtrMut;
+    auto pointer_type = Type{.rs_name = std::string(rs_name),
+                             .cc_name = std::string(internal::kCcPtr)};
     pointer_type.type_params.push_back(std::move(pointee_type));
     return pointer_type;
   }
@@ -64,8 +67,19 @@ struct Type {
 
   // The rust name of the type. For example, i32 or ().
   std::string rs_name;
+
   // The C++ name for the type. For example, int or void.
   std::string cc_name;
+
+  // The C++ const-qualification for the type.
+  //
+  // Note: there are two types for which cv-qualification does not apply:
+  // references and functions. So strictly speaking, much as the current type
+  // structure allows for you to make a nonsensical `*<T, U>` or `*<>`, it also
+  // allows for a nonsensical cv-qualified reference type of function type
+  // (when we add those).
+  bool cc_const = false;
+
   // Type parameters for a generic type. Examples:
   //   int* has a single type parameter, int.
   //   tuple<int, float> has two type parameters, int and float.

@@ -171,8 +171,13 @@ fn make_ident(ident: &str) -> Ident {
 }
 
 fn format_rs_type(ty: &ir::IRType) -> Result<TokenStream> {
-    match ty.rs_name.as_str() {
-        "*mut" => {
+    let ptr_fragment = match ty.rs_name.as_str() {
+        "*mut" => Some(quote! {*mut}),
+        "*const" => Some(quote! {*const}),
+        _ => None,
+    };
+    match ptr_fragment {
+        Some(ptr_fragment) => {
             if ty.type_params.len() != 1 {
                 return Err(anyhow!(
                     "Invalid pointer type (need exactly 1 type parameter): {:?}",
@@ -180,19 +185,24 @@ fn format_rs_type(ty: &ir::IRType) -> Result<TokenStream> {
                 ));
             }
             let nested_type = format_rs_type(&ty.type_params[0])?;
-            Ok(quote! {*mut #nested_type})
+            Ok(quote! {#ptr_fragment #nested_type})
         }
-        ident => {
+        None => {
             if ty.type_params.len() > 0 {
                 return Err(anyhow!("Type not yet supported: {:?}", ty));
             }
-            let ident = make_ident(ident);
+            let ident = make_ident(&ty.rs_name);
             Ok(quote! {#ident})
         }
     }
 }
 
 fn format_cc_type(ty: &ir::IRType) -> Result<TokenStream> {
+    let const_fragment = if ty.cc_const {
+        quote! {const}
+    } else {
+        quote! {}
+    };
     match ty.cc_name.as_str() {
         "*" => {
             if ty.type_params.len() != 1 {
@@ -203,14 +213,14 @@ fn format_cc_type(ty: &ir::IRType) -> Result<TokenStream> {
             }
             assert_eq!(ty.type_params.len(), 1);
             let nested_type = format_cc_type(&ty.type_params[0])?;
-            Ok(quote! {#nested_type *})
+            Ok(quote! {#nested_type * #const_fragment})
         }
         ident => {
             if ty.type_params.len() > 0 {
                 return Err(anyhow!("Type not yet supported: {:?}", ty));
             }
             let ident = make_ident(ident);
-            Ok(quote! {#ident})
+            Ok(quote! {#ident #const_fragment})
         }
     }
 }
@@ -277,6 +287,7 @@ mod tests {
                 return_type: IRType {
                     rs_name: "i32".to_string(),
                     cc_name: "int".to_string(),
+                    cc_const: false,
                     type_params: vec![],
                 },
                 params: vec![
@@ -285,6 +296,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                     },
@@ -293,6 +305,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                     },
@@ -335,6 +348,7 @@ mod tests {
                 return_type: IRType {
                     rs_name: "i32".to_string(),
                     cc_name: "int".to_string(),
+                    cc_const: false,
                     type_params: vec![],
                 },
                 params: vec![
@@ -343,6 +357,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                     },
@@ -351,6 +366,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                     },
@@ -401,6 +417,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Public,
@@ -410,6 +427,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Protected,
@@ -419,6 +437,7 @@ mod tests {
                         type_: IRType {
                             rs_name: "i32".to_string(),
                             cc_name: "int".to_string(),
+                            cc_const: false,
                             type_params: vec![],
                         },
                         access: AccessSpecifier::Private,
@@ -450,53 +469,65 @@ mod tests {
             records: vec![],
             functions: vec![Func {
                 identifier: Identifier { identifier: "Deref".to_string() },
-                mangled_name: "_Z5DerefPPi".to_string(),
+                mangled_name: "_Z5DerefPKPi".to_string(),
                 return_type: IRType {
                     rs_name: "*mut".to_string(),
                     cc_name: "*".to_string(),
+                    cc_const: false,
                     type_params: vec![IRType {
                         rs_name: "i32".to_string(),
                         cc_name: "int".to_string(),
+                        cc_const: false,
                         type_params: vec![],
                     }],
                 },
                 params: vec![FuncParam {
                     identifier: Identifier { identifier: "p".to_string() },
                     type_: IRType {
-                        rs_name: "*mut".to_string(),
+                        rs_name: "*const".to_string(),
                         cc_name: "*".to_string(),
+                        cc_const: false,
                         type_params: vec![IRType {
                             rs_name: "*mut".to_string(),
                             cc_name: "*".to_string(),
+                            cc_const: true,
                             type_params: vec![IRType {
                                 rs_name: "i32".to_string(),
                                 cc_name: "int".to_string(),
+                                cc_const: false,
                                 type_params: vec![],
                             }],
                         }],
                     },
                 }],
-                is_inline: false,
+                is_inline: true,
             }],
         };
         assert_eq!(
             generate_rs_api(&ir)?,
             quote! {
                 #[inline(always)]
-                pub fn Deref(p: *mut *mut i32) -> *mut i32 {
+                pub fn Deref(p: *const *mut i32) -> *mut i32 {
                     unsafe { crate::detail::__rust_thunk__Deref(p) }
                 }
 
                 mod detail {
                     extern "C" {
-                        #[link_name = "_Z5DerefPPi"]
-                        pub(crate) fn __rust_thunk__Deref(p: *mut *mut i32) -> *mut i32;
+                        pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
                     } // extern
                 } // mod detail
             }
             .to_string()
         );
-        assert_eq!(generate_rs_api_impl(&ir)?, "");
+
+        assert_eq!(
+            generate_rs_api_impl(&ir)?,
+            cc_tokens_to_string(quote! {
+                extern "C" int* __rust_thunk__Deref(int* const * p) {
+                    return Deref(p);
+                }
+            })?
+        );
         Ok(())
     }
 }

@@ -27,6 +27,7 @@ nlohmann::json Type::ToJson() const {
   }
   result["rs_name"] = rs_name;
   result["cc_name"] = cc_name;
+  result["cc_const"] = cc_const;
   result["type_params"] = std::move(json_params);
 
   return result;

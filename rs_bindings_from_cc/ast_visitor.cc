@@ -117,33 +117,43 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
 
 absl::StatusOr<Type> AstVisitor::ConvertType(
     clang::QualType qual_type, const clang::ASTContext& ctx) const {
+  std::optional<Type> type = std::nullopt;
   std::string type_string = qual_type.getAsString();
 
   if (const clang::PointerType* pointer_type =
           qual_type->getAs<clang::PointerType>()) {
     auto pointee_type = ConvertType(pointer_type->getPointeeType(), ctx);
     if (pointee_type.ok()) {
-      return Type::PointerTo(*pointee_type);
+      type = Type::PointerTo(*pointee_type);
     }
   } else if (const clang::BuiltinType* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     if (builtin_type->isIntegerType()) {
       auto size = ctx.getTypeSize(builtin_type);
       if (size == 8 || size == 16 || size == 32 || size == 64) {
-        return Type{
-            absl::Substitute("$0$1",
-                             builtin_type->isSignedInteger() ? 'i' : 'u', size),
-            type_string};
+        type =
+            Type{absl::Substitute(
+                     "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
+                 type_string};
       }
-    }
-    if (builtin_type->isVoidType()) {
-      return Type::Void();
+    } else if (builtin_type->isVoidType()) {
+      type = Type::Void();
     }
   }
-  absl::Status error = absl::UnimplementedError(
-      absl::Substitute("Unsupported type '$0'", type_string));
-  error.SetPayload(kTypeStatusPayloadUrl, absl::Cord(type_string));
-  return error;
+
+  if (!type.has_value()) {
+    absl::Status error = absl::UnimplementedError(
+        absl::Substitute("Unsupported type '$0'", type_string));
+    error.SetPayload(kTypeStatusPayloadUrl, absl::Cord(type_string));
+    return error;
+  }
+
+  // Add cv-qualification.
+  type->cc_const = qual_type.isConstQualified();
+  // Not doing volatile for now -- note that volatile pointers do not exist in
+  // Rust, though volatile reads/writes still do.
+
+  return *std::move(type);
 }
 
 std::string AstVisitor::GetMangledName(

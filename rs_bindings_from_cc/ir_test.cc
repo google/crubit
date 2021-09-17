@@ -17,8 +17,9 @@ TEST(IrTest, TypeToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
       "rs_name": "CompoundRs",
       "cc_name": "CompoundCc",
+      "cc_const": false,
       "type_params": [
-          { "rs_name": "i32", "cc_name": "int", "type_params": []}
+          { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": []}
       ]
   })j");
   auto type = Type{.rs_name = "CompoundRs",
@@ -34,11 +35,11 @@ TEST(IrTest, IR) {
             "functions": [{
               "identifier": { "identifier": "hello_world" },
               "mangled_name": "#$mangled_name$#",
-              "return_type": { "rs_name": "i32", "cc_name": "int", "type_params": [] },
+              "return_type": { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
               "params": [
                 {
                   "identifier": {"identifier": "arg" },
-                  "type": { "rs_name": "i32", "cc_name": "int", "type_params": [] }
+                  "type": { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] }
                 }
               ],
               "is_inline": false
@@ -49,17 +50,17 @@ TEST(IrTest, IR) {
                 "fields": [
                   {
                     "identifier": {"identifier": "public_int" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                     "access": "Public"
                   },
                   {
                     "identifier": {"identifier": "protected_int" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                     "access": "Protected"
                   },
                   {
                     "identifier": {"identifier": "private_int" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "type_params": [] },
+                    "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
                     "access": "Private"
                   }
                 ]
