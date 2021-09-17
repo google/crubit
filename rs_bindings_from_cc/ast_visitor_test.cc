@@ -59,8 +59,47 @@ auto ParamsAre(const Args&... matchers) {
 // Matches a Func that is inline.
 MATCHER(IsInline, "") { return arg.is_inline; }
 
+// Matches a FuncParam with a type that matches all given matchers.
+template <typename... Args>
+auto ParamType(const Args&... matchers) {
+  return testing::Field(&FuncParam::type, AllOf(matchers...));
+}
+
+// Matches a Type that has the given Rust name.
+MATCHER_P(RsNameIs, rs_name, "") {
+  if (arg.rs_name == rs_name) return true;
+
+  *result_listener << "actual rs_name: '" << arg.rs_name << "'";
+  return false;
+}
+
+// Matches a Type that has the given C++ name.
+MATCHER_P(CcNameIs, cc_name, "") {
+  if (arg.cc_name == cc_name) return true;
+
+  *result_listener << "actual cc_name: '" << arg.cc_name << "'";
+  return false;
+}
+
+// Matches a type that has type parameters matching `matchers`.
+template <typename... Args>
+auto TypeParamsAre(const Args&... matchers) {
+  return testing::Field(&Type::type_params, ElementsAre(matchers...));
+}
+
 // Matches a type that is void.
 MATCHER(IsVoid, "") { return arg.IsVoid(); }
+
+// Matches an integer type.
+auto IsInt() {
+  return AllOf(RsNameIs("i32"), CcNameIs("int"), TypeParamsAre());
+}
+
+// Matches a type that is a pointer to a type matching `matcher`.
+template <typename Matcher>
+auto PointsTo(const Matcher& matcher) {
+  return AllOf(RsNameIs("*mut"), CcNameIs("*"), TypeParamsAre(matcher));
+}
 
 // Matches a Record that has fields matching `matchers`.
 template <typename... Args>
@@ -70,6 +109,12 @@ auto FieldsAre(const Args&... matchers) {
 
 // Matches a Field that has the given access specifier.
 MATCHER_P(AccessIs, access, "") { return arg.access == access; }
+
+// Matches a Field with a type that matches all given matchers.
+template <typename... Args>
+auto FieldType(const Args&... matchers) {
+  return testing::Field(&Field::type, AllOf(matchers...));
+}
 
 constexpr absl::string_view kVirtualInputPath =
     "ast_visitor_test_virtual_input.cc";
@@ -161,40 +206,20 @@ TEST(AstVisitorTest, FuncParams) {
   IR ir = ImportCode({"int Add(int a, int b);"}, {});
   ASSERT_THAT(ir.functions, SizeIs(1));
 
-  Func func = ir.functions[0];
-  EXPECT_EQ(func.identifier.Ident(), "Add");
-  EXPECT_EQ(func.mangled_name, "_Z3Addii");
-  EXPECT_EQ(func.return_type.rs_name, "i32");
-  EXPECT_THAT(func.return_type.type_params, IsEmpty());
-
-  ASSERT_THAT(func.params, SizeIs(2));
-  EXPECT_EQ(func.params[0].type.rs_name, "i32");
-  EXPECT_THAT(func.params[0].type.type_params, IsEmpty());
-  EXPECT_EQ(func.params[0].identifier.Ident(), "a");
-  EXPECT_EQ(func.params[1].type.rs_name, "i32");
-  EXPECT_THAT(func.params[1].type.type_params, IsEmpty());
-  EXPECT_EQ(func.params[1].identifier.Ident(), "b");
+  EXPECT_THAT(
+      ir.functions,
+      ElementsAre(AllOf(
+          IdentifierIs("Add"), MangledNameIs("_Z3Addii"), ReturnType(IsInt()),
+          ParamsAre(AllOf(ParamType(IsInt()), IdentifierIs("a")),
+                    AllOf(ParamType(IsInt()), IdentifierIs("b"))))));
 }
 
 TEST(AstVisitorTest, TestImportPointerFunc) {
   IR ir = ImportCode({"int* Foo(int* a);"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(1));
 
-  Func func = ir.functions[0];
-
-  ASSERT_THAT(func.params, SizeIs(1));
-  Type return_type = func.return_type;
-  Type param_type = func.params[0].type;
-
-  for (Type type : {return_type, param_type}) {
-    EXPECT_EQ(type.rs_name, "*mut");
-    EXPECT_EQ(type.cc_name, "*");
-    ASSERT_THAT(type.type_params, SizeIs(1));
-    const Type& pointee = type.type_params[0];
-    EXPECT_EQ(pointee.rs_name, "i32");
-    EXPECT_EQ(pointee.cc_name, "int");
-    EXPECT_THAT(pointee.type_params, IsEmpty());
-  }
+  EXPECT_THAT(ir.functions,
+              ElementsAre(AllOf(ReturnType(PointsTo(IsInt())),
+                                ParamsAre(ParamType(PointsTo(IsInt()))))));
 }
 
 TEST(AstVisitorTest, Struct) {
@@ -202,21 +227,12 @@ TEST(AstVisitorTest, Struct) {
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
   EXPECT_THAT(ir.functions, IsEmpty());
 
-  EXPECT_THAT(ir.records, SizeIs(1));
-  Record some_struct = ir.records[0];
-
-  EXPECT_EQ(some_struct.identifier.Ident(), "SomeStruct");
-
-  ASSERT_THAT(some_struct.fields, SizeIs(2));
-  Field first = some_struct.fields[0];
-  Field second = some_struct.fields[1];
-
-  EXPECT_EQ(first.identifier.Ident(), "first_field");
-  EXPECT_EQ(first.type.cc_name, "int");
-  EXPECT_EQ(first.type.rs_name, "i32");
-  EXPECT_EQ(second.identifier.Ident(), "second_field");
-  EXPECT_EQ(second.type.cc_name, "int");
-  EXPECT_EQ(second.type.rs_name, "i32");
+  EXPECT_THAT(
+      ir.records,
+      ElementsAre(AllOf(
+          IdentifierIs("SomeStruct"),
+          FieldsAre(AllOf(IdentifierIs("first_field"), FieldType(IsInt())),
+                    AllOf(IdentifierIs("second_field"), FieldType(IsInt()))))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
@@ -279,52 +295,33 @@ TEST(AstVisitorTest, IntegerTypes) {
                         "  uint64_t f19;"
                         "};"},
                        {});
-  auto fields = ir.records[0].fields;
 
-  EXPECT_EQ(fields[0].type.rs_name, "i8");
-  EXPECT_EQ(fields[0].type.cc_name, "char");
-  EXPECT_EQ(fields[1].type.rs_name, "i16");
-  EXPECT_EQ(fields[1].type.cc_name, "short");
-  EXPECT_EQ(fields[2].type.rs_name, "i32");
-  EXPECT_EQ(fields[2].type.cc_name, "int");
-  EXPECT_EQ(fields[3].type.rs_name, "i64");
-  EXPECT_EQ(fields[3].type.cc_name, "long");
+  EXPECT_THAT(ir.records,
+              ElementsAre(FieldsAre(
+                  FieldType(RsNameIs("i8"), CcNameIs("char")),
+                  FieldType(RsNameIs("i16"), CcNameIs("short")),
+                  FieldType(RsNameIs("i32"), CcNameIs("int")),
+                  FieldType(RsNameIs("i64"), CcNameIs("long")),
 
-  EXPECT_EQ(fields[4].type.rs_name, "u8");
-  EXPECT_EQ(fields[4].type.cc_name, "unsigned char");
-  EXPECT_EQ(fields[5].type.rs_name, "u16");
-  EXPECT_EQ(fields[5].type.cc_name, "unsigned short");
-  EXPECT_EQ(fields[6].type.rs_name, "u32");
-  EXPECT_EQ(fields[6].type.cc_name, "unsigned int");
-  EXPECT_EQ(fields[7].type.rs_name, "u64");
-  EXPECT_EQ(fields[7].type.cc_name, "unsigned long");
+                  FieldType(RsNameIs("u8"), CcNameIs("unsigned char")),
+                  FieldType(RsNameIs("u16"), CcNameIs("unsigned short")),
+                  FieldType(RsNameIs("u32"), CcNameIs("unsigned int")),
+                  FieldType(RsNameIs("u64"), CcNameIs("unsigned long")),
 
-  EXPECT_EQ(fields[8].type.rs_name, "i8");
-  EXPECT_EQ(fields[8].type.cc_name, "signed char");
-  EXPECT_EQ(fields[9].type.rs_name, "i16");
-  EXPECT_EQ(fields[9].type.cc_name, "short");
-  EXPECT_EQ(fields[10].type.rs_name, "i32");
-  EXPECT_EQ(fields[10].type.cc_name, "int");
-  EXPECT_EQ(fields[11].type.rs_name, "i64");
-  EXPECT_EQ(fields[11].type.cc_name, "long");
+                  FieldType(RsNameIs("i8"), CcNameIs("signed char")),
+                  FieldType(RsNameIs("i16"), CcNameIs("short")),
+                  FieldType(RsNameIs("i32"), CcNameIs("int")),
+                  FieldType(RsNameIs("i64"), CcNameIs("long")),
 
-  EXPECT_EQ(fields[12].type.rs_name, "i8");
-  EXPECT_EQ(fields[12].type.cc_name, "int8_t");
-  EXPECT_EQ(fields[13].type.rs_name, "i16");
-  EXPECT_EQ(fields[13].type.cc_name, "int16_t");
-  EXPECT_EQ(fields[14].type.rs_name, "i32");
-  EXPECT_EQ(fields[14].type.cc_name, "int32_t");
-  EXPECT_EQ(fields[15].type.rs_name, "i64");
-  EXPECT_EQ(fields[15].type.cc_name, "int64_t");
+                  FieldType(RsNameIs("i8"), CcNameIs("int8_t")),
+                  FieldType(RsNameIs("i16"), CcNameIs("int16_t")),
+                  FieldType(RsNameIs("i32"), CcNameIs("int32_t")),
+                  FieldType(RsNameIs("i64"), CcNameIs("int64_t")),
 
-  EXPECT_EQ(fields[16].type.rs_name, "u8");
-  EXPECT_EQ(fields[16].type.cc_name, "uint8_t");
-  EXPECT_EQ(fields[17].type.rs_name, "u16");
-  EXPECT_EQ(fields[17].type.cc_name, "uint16_t");
-  EXPECT_EQ(fields[18].type.rs_name, "u32");
-  EXPECT_EQ(fields[18].type.cc_name, "uint32_t");
-  EXPECT_EQ(fields[19].type.rs_name, "u64");
-  EXPECT_EQ(fields[19].type.cc_name, "uint64_t");
+                  FieldType(RsNameIs("u8"), CcNameIs("uint8_t")),
+                  FieldType(RsNameIs("u16"), CcNameIs("uint16_t")),
+                  FieldType(RsNameIs("u32"), CcNameIs("uint32_t")),
+                  FieldType(RsNameIs("u64"), CcNameIs("uint64_t")))));
 }
 
 }  // namespace
