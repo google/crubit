@@ -136,17 +136,29 @@ absl::StatusOr<Type> AstVisitor::ConvertType(
     }
   } else if (const clang::BuiltinType* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
-    if (builtin_type->isIntegerType()) {
-      // TODO(forster): This includes enums, which is incorrect.
-      auto size = ctx.getTypeSize(builtin_type);
-      if (size == 8 || size == 16 || size == 32 || size == 64) {
-        type =
-            Type{absl::Substitute(
-                     "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
-                 type_string};
-      }
-    } else if (builtin_type->isVoidType()) {
-      type = Type::Void();
+    switch (builtin_type->getKind()) {
+      case clang::BuiltinType::Bool:
+        type = {"bool", "bool"};
+        break;
+      case clang::BuiltinType::Float:
+        type = {"float", "float"};
+        break;
+      case clang::BuiltinType::Double:
+        type = {"double", "double"};
+        break;
+      case clang::BuiltinType::Void:
+        type = Type::Void();
+        break;
+      default:
+        if (builtin_type->isIntegerType()) {
+          auto size = ctx.getTypeSize(builtin_type);
+          if (size == 8 || size == 16 || size == 32 || size == 64) {
+            type = Type{
+                absl::Substitute(
+                    "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
+                type_string};
+          }
+        }
     }
   }
 

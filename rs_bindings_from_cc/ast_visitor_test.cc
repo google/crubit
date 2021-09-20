@@ -298,61 +298,86 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
 TEST(AstVisitorTest, IntegerTypes) {
   auto ir = ImportCode({"#include <stdint.h>\n"
                         "struct S { "
+                        "  bool b;"
+
                         "  char c;"
+                        "  unsigned char uc;"
+                        "  signed char sc;"
+                        "  char16_t c16;"
+                        "  char32_t c32;"
+                        "  wchar_t wc;"
+
                         "  short s;"
                         "  int i;"
                         "  long l;"
                         "  long long ll;"
-                        "  unsigned char uc;"
+
                         "  unsigned short us;"
                         "  unsigned int ui;"
                         "  unsigned long ul;"
                         "  unsigned long long ull;"
-                        "  signed char sc;"
+
                         "  signed short ss;"
                         "  signed int si;"
                         "  signed long sl;"
                         "  signed long long sll;"
+
                         "  int8_t i8;"
                         "  int16_t i16;"
                         "  int32_t i32;"
                         "  int64_t i64;"
+
                         "  uint8_t u8;"
                         "  uint16_t u16;"
                         "  uint32_t u32;"
                         "  uint64_t u64;"
+
+                        "  float f;"
+                        "  double d;"
                         "};"},
                        {});
 
-  EXPECT_THAT(ir.records,
-              ElementsAre(FieldsAre(
-                  FieldType(RsNameIs("i8"), CcNameIs("char")),
-                  FieldType(RsNameIs("i16"), CcNameIs("short")),
-                  FieldType(RsNameIs("i32"), CcNameIs("int")),
-                  FieldType(RsNameIs("i64"), CcNameIs("long")),
-                  FieldType(RsNameIs("i64"), CcNameIs("long long")),
+  EXPECT_THAT(
+      ir.records,
+      ElementsAre(FieldsAre(
+          FieldType(RsNameIs("bool"), CcNameIs("bool")),
 
-                  FieldType(RsNameIs("u8"), CcNameIs("unsigned char")),
-                  FieldType(RsNameIs("u16"), CcNameIs("unsigned short")),
-                  FieldType(RsNameIs("u32"), CcNameIs("unsigned int")),
-                  FieldType(RsNameIs("u64"), CcNameIs("unsigned long")),
-                  FieldType(RsNameIs("u64"), CcNameIs("unsigned long long")),
+          FieldType(RsNameIs("i8"), CcNameIs("char")),
+          FieldType(RsNameIs("u8"), CcNameIs("unsigned char")),
+          FieldType(RsNameIs("i8"), CcNameIs("signed char")),
+          FieldType(RsNameIs("u16"), CcNameIs("char16_t")),
+          // We cannot map C++ char32_t or wchar_t to Rust char,
+          // because Rust requires that chars are valid UTF scalar values.
+          FieldType(RsNameIs("u32"), CcNameIs("char32_t")),
+          FieldType(RsNameIs("i32"), CcNameIs("wchar_t")),
 
-                  FieldType(RsNameIs("i8"), CcNameIs("signed char")),
-                  FieldType(RsNameIs("i16"), CcNameIs("short")),
-                  FieldType(RsNameIs("i32"), CcNameIs("int")),
-                  FieldType(RsNameIs("i64"), CcNameIs("long")),
-                  FieldType(RsNameIs("i64"), CcNameIs("long long")),
+          FieldType(RsNameIs("i16"), CcNameIs("short")),
+          FieldType(RsNameIs("i32"), CcNameIs("int")),
+          FieldType(RsNameIs("i64"), CcNameIs("long")),
+          FieldType(RsNameIs("i64"), CcNameIs("long long")),
 
-                  FieldType(RsNameIs("i8"), CcNameIs("int8_t")),
-                  FieldType(RsNameIs("i16"), CcNameIs("int16_t")),
-                  FieldType(RsNameIs("i32"), CcNameIs("int32_t")),
-                  FieldType(RsNameIs("i64"), CcNameIs("int64_t")),
+          FieldType(RsNameIs("u16"), CcNameIs("unsigned short")),
+          FieldType(RsNameIs("u32"), CcNameIs("unsigned int")),
+          FieldType(RsNameIs("u64"), CcNameIs("unsigned long")),
+          FieldType(RsNameIs("u64"), CcNameIs("unsigned long long")),
 
-                  FieldType(RsNameIs("u8"), CcNameIs("uint8_t")),
-                  FieldType(RsNameIs("u16"), CcNameIs("uint16_t")),
-                  FieldType(RsNameIs("u32"), CcNameIs("uint32_t")),
-                  FieldType(RsNameIs("u64"), CcNameIs("uint64_t")))));
+          FieldType(RsNameIs("i16"), CcNameIs("short")),
+          FieldType(RsNameIs("i32"), CcNameIs("int")),
+          FieldType(RsNameIs("i64"), CcNameIs("long")),
+          FieldType(RsNameIs("i64"), CcNameIs("long long")),
+
+          FieldType(RsNameIs("i8"), CcNameIs("int8_t")),
+          FieldType(RsNameIs("i16"), CcNameIs("int16_t")),
+          FieldType(RsNameIs("i32"), CcNameIs("int32_t")),
+          FieldType(RsNameIs("i64"), CcNameIs("int64_t")),
+
+          FieldType(RsNameIs("u8"), CcNameIs("uint8_t")),
+          FieldType(RsNameIs("u16"), CcNameIs("uint16_t")),
+          FieldType(RsNameIs("u32"), CcNameIs("uint32_t")),
+          FieldType(RsNameIs("u64"), CcNameIs("uint64_t")),
+
+          FieldType(RsNameIs("float"), CcNameIs("float")),
+          FieldType(RsNameIs("double"), CcNameIs("double")))));
 }
 
 }  // namespace
