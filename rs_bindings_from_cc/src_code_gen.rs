@@ -99,11 +99,16 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
             }
         })
         .collect_vec();
+    let size = record.size;
+    let alignment = record.alignment;
     Ok(quote! {
         #[repr(C)]
         pub struct #ident {
             #( #field_accesses #field_idents: #field_types, )*
         }
+
+        const_assert_eq!(std::mem::size_of::<#ident>(), #size);
+        const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
     })
 }
 
@@ -156,7 +161,17 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         }
     };
 
+    let imports = if records.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+          use static_assertions::const_assert_eq;
+        }
+    };
+
     let result = quote! {
+        #imports
+
         #( #api_funcs )*
         #( #records )*
 
@@ -454,12 +469,17 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             quote! {
+                use static_assertions::const_assert_eq;
+
                 #[repr(C)]
                 pub struct SomeStruct {
                     pub public_int: i32,
                     protected_int: i32,
                     private_int: i32,
                 }
+
+                const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
+                const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
             }
             .to_string()
         );

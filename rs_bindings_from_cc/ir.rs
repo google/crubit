@@ -66,8 +66,8 @@ pub struct Field {
 pub struct Record {
     pub identifier: Identifier,
     pub fields: Vec<Field>,
-    pub size: i64,
-    pub alignment: i64,
+    pub size: usize,
+    pub alignment: usize,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
