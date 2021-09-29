@@ -8,6 +8,10 @@ use proc_macro2::TokenTree;
 
 use std::fmt::Write;
 
+fn is_ident_or_literal(tt: &TokenTree) -> bool {
+    matches!(tt, TokenTree::Ident(_) | TokenTree::Literal(_))
+}
+
 /// Produces C++ source code out of the token stream.
 ///
 /// Notable features:
@@ -19,18 +23,26 @@ use std::fmt::Write;
 ///  `__NEWLINE__` to insert a newline character.
 pub fn cc_tokens_to_string(tokens: TokenStream) -> Result<String> {
     let mut result = "".to_string();
-    let mut first = true;
+    let mut last = None;
     for tt in tokens.into_iter() {
-        if !first {
-            write!(result, " ")?;
+        // Insert spaces between tokens only when they are needed to separate
+        // identifiers or literals from each other. We don't currently check for
+        // the "special" identifiers __NEWLINE__ or __HASH_TOKEN__, so these are
+        // also separated by spaces, but this is harmless.
+        if let Some(last_tt) = last {
+            if is_ident_or_literal(&last_tt) && is_ident_or_literal(&tt) {
+                write!(result, " ")?;
+            }
         }
-        first = false;
+
         match tt {
             TokenTree::Ident(ref tt) if tt == "__NEWLINE__" => writeln!(result)?,
             TokenTree::Ident(ref tt) if tt == "__HASH_TOKEN__" => write!(result, "#")?,
 
             _ => write!(result, "{}", tt)?,
         }
+
+        last = Some(tt);
     }
     Ok(result)
 }
@@ -51,7 +63,24 @@ mod tests {
             fn bar(&self) {}
           }
         };
-        assert_eq!(cc_tokens_to_string(token_stream.clone())?, token_stream.to_string());
+        assert_eq!(
+            cc_tokens_to_string(token_stream.clone())?,
+            "struct Foo{ }impl Bar for Foo{ fn bar (& self) { } }"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_space_idents_and_literals() -> Result<()> {
+        let token_stream = quote! { foo 42 bar 23 };
+        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "foo 42 bar 23");
+        Ok(())
+    }
+
+    #[test]
+    fn test_dont_space_punctuation() -> Result<()> {
+        let token_stream = quote! { foo+42+bar+23 };
+        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "foo+42+bar+23");
         Ok(())
     }
 
@@ -66,6 +95,13 @@ mod tests {
     fn test_hash_token() -> Result<()> {
         let token_stream = quote! { a __HASH_TOKEN__ b };
         assert_eq!(cc_tokens_to_string(token_stream.clone())?, "a # b");
+        Ok(())
+    }
+
+    #[test]
+    fn test_include_standard_header() -> Result<()> {
+        let token_stream = quote! { __HASH_TOKEN__ include <cstddef> };
+        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "# include<cstddef>");
         Ok(())
     }
 }
