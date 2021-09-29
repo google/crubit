@@ -73,11 +73,10 @@ struct Type {
 
   // The C++ const-qualification for the type.
   //
-  // Note: there are two types for which cv-qualification does not apply:
-  // references and functions. So strictly speaking, much as the current type
-  // structure allows for you to make a nonsensical `*<T, U>` or `*<>`, it also
-  // allows for a nonsensical cv-qualified reference type of function type
-  // (when we add those).
+  // Note: there are two types for which cv-qualification does not do anything:
+  // references and functions. if `T` is either a function type like `void()`,
+  // or a reference type like `int&`, then `T`, `const T`, and `volatile T` are
+  // all the same type in C++.
   bool cc_const = false;
 
   // Type parameters for a generic type. Examples:
