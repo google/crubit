@@ -17,18 +17,40 @@ nlohmann::json HeaderName::ToJson() const {
   return result;
 }
 
-nlohmann::json Type::ToJson() const {
+nlohmann::json RsType::ToJson() const {
   nlohmann::json result;
 
   std::vector<nlohmann::json> json_params;
   json_params.reserve(type_params.size());
-  for (const Type& param : type_params) {
+  for (const RsType& param : type_params) {
     json_params.push_back(param.ToJson());
   }
-  result["rs_name"] = rs_name;
-  result["cc_name"] = cc_name;
-  result["cc_const"] = cc_const;
+  result["name"] = name;
   result["type_params"] = std::move(json_params);
+
+  return result;
+}
+
+nlohmann::json CcType::ToJson() const {
+  nlohmann::json result;
+
+  std::vector<nlohmann::json> json_params;
+  json_params.reserve(type_params.size());
+  for (const CcType& param : type_params) {
+    json_params.push_back(param.ToJson());
+  }
+  result["name"] = name;
+  result["is_const"] = is_const;
+  result["type_params"] = std::move(json_params);
+
+  return result;
+}
+
+nlohmann::json MappedType::ToJson() const {
+  nlohmann::json result;
+
+  result["rs_type"] = rs_type.ToJson();
+  result["cc_type"] = cc_type.ToJson();
 
   return result;
 }

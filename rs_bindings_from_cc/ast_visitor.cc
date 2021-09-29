@@ -123,40 +123,40 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   return true;
 }
 
-absl::StatusOr<Type> AstVisitor::ConvertType(
+absl::StatusOr<MappedType> AstVisitor::ConvertType(
     clang::QualType qual_type, const clang::ASTContext& ctx) const {
-  std::optional<Type> type = std::nullopt;
+  std::optional<MappedType> type = std::nullopt;
   std::string type_string = qual_type.getAsString();
 
   if (const clang::PointerType* pointer_type =
           qual_type->getAs<clang::PointerType>()) {
     auto pointee_type = ConvertType(pointer_type->getPointeeType(), ctx);
     if (pointee_type.ok()) {
-      type = Type::PointerTo(*pointee_type);
+      type = MappedType::PointerTo(*pointee_type);
     }
   } else if (const clang::BuiltinType* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
-        type = {"bool", "bool"};
+        type = MappedType::Simple("bool", "bool");
         break;
       case clang::BuiltinType::Float:
-        type = {"float", "float"};
+        type = MappedType::Simple("float", "float");
         break;
       case clang::BuiltinType::Double:
-        type = {"double", "double"};
+        type = MappedType::Simple("double", "double");
         break;
       case clang::BuiltinType::Void:
-        type = Type::Void();
+        type = MappedType::Void();
         break;
       default:
         if (builtin_type->isIntegerType()) {
           auto size = ctx.getTypeSize(builtin_type);
           if (size == 8 || size == 16 || size == 32 || size == 64) {
-            type = Type{
+            type = MappedType::Simple(
                 absl::Substitute(
                     "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
-                type_string};
+                type_string);
           }
         }
     }
@@ -170,7 +170,7 @@ absl::StatusOr<Type> AstVisitor::ConvertType(
   }
 
   // Add cv-qualification.
-  type->cc_const = qual_type.isConstQualified();
+  type->cc_type.is_const = qual_type.isConstQualified();
   // Not doing volatile for now -- note that volatile pointers do not exist in
   // Rust, though volatile reads/writes still do.
 

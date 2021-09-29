@@ -43,33 +43,12 @@ class HeaderName {
   std::string name_;
 };
 
-// A type involved in the bindings. It has the knowledge about how the type is
-// spelled in Rust and in C++ code.
-//
-// Examples:
-//     C++'s `int32_t` will be `Type{"i32", "int"}`.
-//     C++'s `struct Foo` will be `Type{"Foo", "Foo"}`.
-//     C++'s `int*` will be `Type{"*mut", "*", {Type{"i32", "int"}}}
-struct Type {
-  static Type Void() { return Type{"()", "void"}; }
-  bool IsVoid() const { return rs_name == "()"; }
-
-  static Type PointerTo(Type pointee_type) {
-    absl::string_view rs_name =
-        pointee_type.cc_const ? internal::kRustPtrConst : internal::kRustPtrMut;
-    auto pointer_type = Type{.rs_name = std::string(rs_name),
-                             .cc_name = std::string(internal::kCcPtr)};
-    pointer_type.type_params.push_back(std::move(pointee_type));
-    return pointer_type;
-  }
-
+// A C++ type involved in the bindings. It has the knowledge of how the type
+// is spelled in C++.
+struct CcType {
   nlohmann::json ToJson() const;
-
-  // The rust name of the type. For example, i32 or ().
-  std::string rs_name;
-
-  // The C++ name for the type. For example, int or void.
-  std::string cc_name;
+  // The name of the type. For example, int or void.
+  std::string name;
 
   // The C++ const-qualification for the type.
   //
@@ -77,12 +56,62 @@ struct Type {
   // references and functions. if `T` is either a function type like `void()`,
   // or a reference type like `int&`, then `T`, `const T`, and `volatile T` are
   // all the same type in C++.
-  bool cc_const = false;
+  bool is_const = false;
 
   // Type parameters for a generic type. Examples:
+  //   int has no type parameters.
   //   int* has a single type parameter, int.
   //   tuple<int, float> has two type parameters, int and float.
-  std::vector<Type> type_params = {};
+  std::vector<CcType> type_params = {};
+};
+
+// A Rust type involved in the bindings. It has the knowledge of how the type
+// is spelled in Rust.
+struct RsType {
+  nlohmann::json ToJson() const;
+
+  // The name of the type. For example, i32 or ().
+  std::string name;
+
+  // Type parameters for a generic type. Examples:
+  //   i32 has no type parameters.
+  //   *mut i32 has a single type parameter, i32.
+  //   (i32, f32) has two type parameters, i32 and f32.
+  std::vector<RsType> type_params = {};
+};
+
+// A type involved in the bindings. The rs_type and cc_type will be treated
+// as interchangeable during bindings, and so should share the same layout.
+//
+// For example: a C++ pointer may be a usize in Rust, rather than a pointer, but
+// should almost certainly not be a u8, because u8 and pointers are sized and
+// aligned differently.
+struct MappedType {
+  static MappedType Void() { return Simple("()", "void"); }
+
+  /// Returns the MappedType for a non-templated/generic, non-cv-qualified type.
+  /// For example, Void() is Simple("()", "void").
+  static MappedType Simple(std::string rs_name, std::string cc_name) {
+    return MappedType{RsType{rs_name}, CcType{cc_name}};
+  }
+
+  static MappedType PointerTo(MappedType pointee_type) {
+    absl::string_view rs_name = pointee_type.cc_type.is_const
+                                    ? internal::kRustPtrConst
+                                    : internal::kRustPtrMut;
+    auto pointer_type =
+        Simple(std::string(rs_name), std::string(internal::kCcPtr));
+    pointer_type.rs_type.type_params.push_back(std::move(pointee_type.rs_type));
+    pointer_type.cc_type.type_params.push_back(std::move(pointee_type.cc_type));
+    return pointer_type;
+  }
+
+  bool IsVoid() const { return rs_type.name == "()"; }
+
+  nlohmann::json ToJson() const;
+
+  RsType rs_type;
+  CcType cc_type;
 };
 
 // An identifier involved in bindings.
@@ -116,7 +145,7 @@ class Identifier {
 struct FuncParam {
   nlohmann::json ToJson() const;
 
-  Type type;
+  MappedType type;
   Identifier identifier;
 };
 
@@ -126,7 +155,7 @@ struct Func {
 
   Identifier identifier;
   std::string mangled_name;
-  Type return_type;
+  MappedType return_type;
   std::vector<FuncParam> params;
   bool is_inline;
 };
@@ -143,7 +172,7 @@ struct Field {
   nlohmann::json ToJson() const;
 
   Identifier identifier;
-  Type type;
+  MappedType type;
   AccessSpecifier access;
   // Field offset in bits.
   uint64_t offset;

@@ -15,16 +15,22 @@ namespace {
 
 TEST(IrTest, TypeToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
-      "rs_name": "CompoundRs",
-      "cc_name": "CompoundCc",
-      "cc_const": false,
-      "type_params": [
-          { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": []}
-      ]
+      "rs_type": {
+          "name": "CompoundRs",
+          "type_params": [{"name": "i32", "type_params": []}]
+      },
+      "cc_type": {
+          "name": "CompoundCc",
+          "is_const": false,
+          "type_params": [
+              {"is_const": false, "name": "int", "type_params": []}
+          ]
+      }
   })j");
-  auto type = Type{.rs_name = "CompoundRs",
-                   .cc_name = "CompoundCc",
-                   .type_params = {Type{"i32", "int"}}};
+  auto type = MappedType{.rs_type = RsType{"CompoundRs", {RsType{"i32"}}},
+                         .cc_type = CcType{.name = "CompoundCc",
+                                           .is_const = false,
+                                           .type_params = {CcType{"int"}}}};
   EXPECT_EQ(type.ToJson(), expected);
 }
 
@@ -33,36 +39,69 @@ TEST(IrTest, IR) {
       R"j({
             "used_headers": [{ "name": "foo/bar.h" }],
             "functions": [{
-              "identifier": { "identifier": "hello_world" },
-              "mangled_name": "#$mangled_name$#",
-              "return_type": { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
-              "params": [
-                {
-                  "identifier": {"identifier": "arg" },
-                  "type": { "rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] }
-                }
-              ],
-              "is_inline": false
+                "identifier": { "identifier": "hello_world" },
+                "mangled_name": "#$mangled_name$#",
+                "return_type": {
+                    "rs_type": { "name": "i32", "type_params": [] },
+                    "cc_type": {
+                        "is_const": false,
+                        "name": "int",
+                        "type_params": []
+                    }
+                },
+                "params": [{
+                    "identifier": { "identifier": "arg" },
+                    "type": {
+                        "rs_type": { "name": "i32", "type_params": [] },
+                        "cc_type": {
+                            "is_const": false,
+                            "name": "int",
+                            "type_params": []
+                        }
+                    }
+                }],
+                "is_inline": false
             }],
             "records": [
               {
-                "identifier": {"identifier": "SomeStruct" },
+                "identifier": { "identifier": "SomeStruct" },
                 "fields": [
                   {
-                    "identifier": {"identifier": "public_int" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
+                    "identifier": { "identifier": "public_int" },
+                    "type": {
+                        "rs_type": { "name": "i32", "type_params": [] },
+                        "cc_type": {
+                            "is_const": false,
+                            "name": "int",
+                            "type_params": []
+                        }
+                    },
                     "access": "Public",
                     "offset": 0
                   },
                   {
-                    "identifier": {"identifier": "protected_int" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
+                    "identifier": { "identifier": "protected_int" },
+                    "type": {
+                        "rs_type": { "name": "i32", "type_params": [] },
+                        "cc_type": {
+                            "is_const": false,
+                            "name": "int",
+                            "type_params": []
+                        }
+                    },
                     "access": "Protected",
                     "offset": 32
                   },
                   {
-                    "identifier": {"identifier": "private_int" },
-                    "type": {"rs_name": "i32", "cc_name": "int", "cc_const": false, "type_params": [] },
+                    "identifier": { "identifier": "private_int" },
+                    "type": {
+                        "rs_type": { "name": "i32", "type_params": [] },
+                        "cc_type": {
+                            "is_const": false,
+                            "name": "int",
+                            "type_params": []
+                        }
+                    },
                     "access": "Private",
                     "offset": 64
                   }
@@ -71,38 +110,34 @@ TEST(IrTest, IR) {
                 "alignment": 4
               }
             ]
-      })j");
-  IR
-      ir =
-          {
-              .used_headers = {HeaderName("foo/bar.h")},
-              .functions = {Func{
-                  .identifier = Identifier("hello_world"),
-                  .mangled_name = "#$mangled_name$#",
-                  .return_type = Type{"i32", "int"},
-                  .params = {FuncParam{Type{"i32", "int"}, Identifier("arg")}},
-                  .is_inline = false}},
-              .records = {Record{.identifier = Identifier("SomeStruct"),
-                                 .fields =
-                                     {
-                                         Field{.identifier =
-                                                   Identifier("public_int"),
-                                               .type = Type{"i32", "int"},
-                                               .access = kPublic,
-                                               .offset = 0},
-                                         Field{.identifier = Identifier(
-                                                   "protected_int"),
-                                               .type = Type{"i32", "int"},
-                                               .access = kProtected,
-                                               .offset = 32},
-                                         Field{.identifier = Identifier(
-                                                   "private_int"),
-                                               .type = Type{"i32", "int"},
-                                               .access = kPrivate,
-                                               .offset = 64},
-                                     },
-                                 .size = 12,
-                                 .alignment = 4}}};
+        })j");
+  IR ir = {
+      .used_headers = {HeaderName("foo/bar.h")},
+      .functions = {Func{.identifier = Identifier("hello_world"),
+                         .mangled_name = "#$mangled_name$#",
+                         .return_type = MappedType::Simple("i32", "int"),
+                         .params = {FuncParam{MappedType::Simple("i32", "int"),
+                                              Identifier("arg")}},
+                         .is_inline = false}},
+      .records = {Record{.identifier = Identifier("SomeStruct"),
+                         .fields =
+                             {
+                                 Field{.identifier = Identifier("public_int"),
+                                       .type = MappedType::Simple("i32", "int"),
+                                       .access = kPublic,
+                                       .offset = 0},
+                                 Field{
+                                     .identifier = Identifier("protected_int"),
+                                     .type = MappedType::Simple("i32", "int"),
+                                     .access = kProtected,
+                                     .offset = 32},
+                                 Field{.identifier = Identifier("private_int"),
+                                       .type = MappedType::Simple("i32", "int"),
+                                       .access = kPrivate,
+                                       .offset = 64},
+                             },
+                         .size = 12,
+                         .alignment = 4}}};
   EXPECT_EQ(ir.ToJson(), expected);
 }
 

@@ -86,8 +86,11 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
     let ident = make_ident(&record.identifier.identifier);
     let field_idents =
         record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
-    let field_types =
-        record.fields.iter().map(|f| format_rs_type(&f.type_)).collect::<Result<Vec<_>>>()?;
+    let field_types = record
+        .fields
+        .iter()
+        .map(|f| format_rs_type(&f.type_.rs_type))
+        .collect::<Result<Vec<_>>>()?;
     let field_accesses = record
         .fields
         .iter()
@@ -120,13 +123,16 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         let ident = make_ident(&func.identifier.identifier);
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
         // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
-        let return_type_name = format_rs_type(&func.return_type)?;
+        let return_type_name = format_rs_type(&func.return_type.rs_type)?;
 
         let param_idents =
             func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
 
-        let param_types =
-            func.params.iter().map(|p| format_rs_type(&p.type_)).collect::<Result<Vec<_>>>()?;
+        let param_types = func
+            .params
+            .iter()
+            .map(|p| format_rs_type(&p.type_.rs_type))
+            .collect::<Result<Vec<_>>>()?;
 
         api_funcs.push(quote! {
             #[inline(always)]
@@ -185,8 +191,8 @@ fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
-fn format_rs_type(ty: &ir::IRType) -> Result<TokenStream> {
-    let ptr_fragment = match ty.rs_name.as_str() {
+fn format_rs_type(ty: &ir::RsType) -> Result<TokenStream> {
+    let ptr_fragment = match ty.name.as_str() {
         "*mut" => Some(quote! {*mut}),
         "*const" => Some(quote! {*const}),
         _ => None,
@@ -206,19 +212,19 @@ fn format_rs_type(ty: &ir::IRType) -> Result<TokenStream> {
             if ty.type_params.len() > 0 {
                 return Err(anyhow!("Type not yet supported: {:?}", ty));
             }
-            let ident = make_ident(&ty.rs_name);
+            let ident = make_ident(&ty.name);
             Ok(quote! {#ident})
         }
     }
 }
 
-fn format_cc_type(ty: &ir::IRType) -> Result<TokenStream> {
-    let const_fragment = if ty.cc_const {
+fn format_cc_type(ty: &ir::CcType) -> Result<TokenStream> {
+    let const_fragment = if ty.is_const {
         quote! {const}
     } else {
         quote! {}
     };
-    match ty.cc_name.as_str() {
+    match ty.name.as_str() {
         "*" => {
             if ty.type_params.len() != 1 {
                 return Err(anyhow!(
@@ -255,13 +261,16 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
         let ident = make_ident(&func.identifier.identifier);
-        let return_type_name = format_cc_type(&func.return_type)?;
+        let return_type_name = format_cc_type(&func.return_type.cc_type)?;
 
         let param_idents =
             func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
 
-        let param_types =
-            func.params.iter().map(|p| format_cc_type(&p.type_)).collect::<Result<Vec<_>>>()?;
+        let param_types = func
+            .params
+            .iter()
+            .map(|p| format_cc_type(&p.type_.cc_type))
+            .collect::<Result<Vec<_>>>()?;
 
         thunks.push(quote! {
             extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
@@ -299,29 +308,35 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
-                return_type: IRType {
-                    rs_name: "i32".to_string(),
-                    cc_name: "int".to_string(),
-                    cc_const: false,
-                    type_params: vec![],
+                return_type: MappedType {
+                    rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                    cc_type: CcType {
+                        name: "int".to_string(),
+                        is_const: false,
+                        type_params: vec![],
+                    },
                 },
                 params: vec![
                     FuncParam {
                         identifier: Identifier { identifier: "a".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                     },
                     FuncParam {
                         identifier: Identifier { identifier: "b".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                     },
                 ],
@@ -360,29 +375,35 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
-                return_type: IRType {
-                    rs_name: "i32".to_string(),
-                    cc_name: "int".to_string(),
-                    cc_const: false,
-                    type_params: vec![],
+                return_type: MappedType {
+                    rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                    cc_type: CcType {
+                        name: "int".to_string(),
+                        is_const: false,
+                        type_params: vec![],
+                    },
                 },
                 params: vec![
                     FuncParam {
                         identifier: Identifier { identifier: "a".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                     },
                     FuncParam {
                         identifier: Identifier { identifier: "b".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                     },
                 ],
@@ -429,33 +450,39 @@ mod tests {
                 fields: vec![
                     Field {
                         identifier: Identifier { identifier: "public_int".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                         access: AccessSpecifier::Public,
                         offset: 0,
                     },
                     Field {
                         identifier: Identifier { identifier: "protected_int".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                         access: AccessSpecifier::Protected,
                         offset: 32,
                     },
                     Field {
                         identifier: Identifier { identifier: "private_int".to_string() },
-                        type_: IRType {
-                            rs_name: "i32".to_string(),
-                            cc_name: "int".to_string(),
-                            cc_const: false,
-                            type_params: vec![],
+                        type_: MappedType {
+                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            cc_type: CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            },
                         },
                         access: AccessSpecifier::Private,
                         offset: 64,
@@ -495,34 +522,47 @@ mod tests {
             functions: vec![Func {
                 identifier: Identifier { identifier: "Deref".to_string() },
                 mangled_name: "_Z5DerefPKPi".to_string(),
-                return_type: IRType {
-                    rs_name: "*mut".to_string(),
-                    cc_name: "*".to_string(),
-                    cc_const: false,
-                    type_params: vec![IRType {
-                        rs_name: "i32".to_string(),
-                        cc_name: "int".to_string(),
-                        cc_const: false,
-                        type_params: vec![],
-                    }],
+                return_type: MappedType {
+                    rs_type: RsType {
+                        name: "*mut".to_string(),
+                        type_params: vec![RsType { name: "i32".to_string(), type_params: vec![] }],
+                    },
+                    cc_type: CcType {
+                        name: "*".to_string(),
+                        is_const: false,
+                        type_params: vec![CcType {
+                            name: "int".to_string(),
+                            is_const: false,
+                            type_params: vec![],
+                        }],
+                    },
                 },
                 params: vec![FuncParam {
                     identifier: Identifier { identifier: "p".to_string() },
-                    type_: IRType {
-                        rs_name: "*const".to_string(),
-                        cc_name: "*".to_string(),
-                        cc_const: false,
-                        type_params: vec![IRType {
-                            rs_name: "*mut".to_string(),
-                            cc_name: "*".to_string(),
-                            cc_const: true,
-                            type_params: vec![IRType {
-                                rs_name: "i32".to_string(),
-                                cc_name: "int".to_string(),
-                                cc_const: false,
-                                type_params: vec![],
+                    type_: MappedType {
+                        rs_type: RsType {
+                            name: "*const".to_string(),
+                            type_params: vec![RsType {
+                                name: "*mut".to_string(),
+                                type_params: vec![RsType {
+                                    name: "i32".to_string(),
+                                    type_params: vec![],
+                                }],
                             }],
-                        }],
+                        },
+                        cc_type: CcType {
+                            name: "*".to_string(),
+                            is_const: false,
+                            type_params: vec![CcType {
+                                name: "*".to_string(),
+                                is_const: true,
+                                type_params: vec![CcType {
+                                    name: "int".to_string(),
+                                    is_const: false,
+                                    type_params: vec![],
+                                }],
+                            }],
+                        },
                     },
                 }],
                 is_inline: true,

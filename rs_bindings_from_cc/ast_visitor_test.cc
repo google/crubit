@@ -65,40 +65,70 @@ auto ParamType(const Args&... matchers) {
   return testing::Field(&FuncParam::type, AllOf(matchers...));
 }
 
-// Matches a Type that has the given Rust name.
-MATCHER_P(RsNameIs, rs_name, "") {
-  if (arg.rs_name == rs_name) return true;
+// Matches a RsType or CcType that has the given name.
+MATCHER_P(NameIs, name, "") {
+  if (arg.name == name) return true;
 
-  *result_listener << "actual rs_name: '" << arg.rs_name << "'";
+  *result_listener << "actual name: '" << arg.name << "'";
   return false;
 }
 
-// Matches a Type that has the given C++ name.
-MATCHER_P(CcNameIs, cc_name, "") {
-  if (arg.cc_name == cc_name) return true;
-
-  *result_listener << "actual cc_name: '" << arg.cc_name << "'";
-  return false;
-}
-
-// Matches a type that has type parameters matching `matchers`.
+// Matches a MappedType with a CcType that matches all given matchers.
 template <typename... Args>
-auto TypeParamsAre(const Args&... matchers) {
-  return testing::Field(&Type::type_params, ElementsAre(matchers...));
+auto CcTypeIs(const Args&... matchers) {
+  return testing::Field(&MappedType::cc_type, AllOf(matchers...));
 }
 
-// Matches a type that is void.
+// Matches a MappedType with a RsType that matches all given matchers.
+template <typename... Args>
+auto RsTypeIs(const Args&... matchers) {
+  return testing::Field(&MappedType::rs_type, AllOf(matchers...));
+}
+
+// Matches an RsType that has Rust type parameters matching `matchers`.
+template <typename... Args>
+auto RsTypeParamsAre(const Args&... matchers) {
+  return testing::Field(&RsType::type_params, ElementsAre(matchers...));
+}
+
+// Matches a CcType that has Rust type parameters matching `matchers`.
+template <typename... Args>
+auto CcTypeParamsAre(const Args&... matchers) {
+  return testing::Field(&CcType::type_params, ElementsAre(matchers...));
+}
+
+auto IsCcInt() { return AllOf(NameIs("int"), CcTypeParamsAre()); }
+
+auto IsRsInt() { return AllOf(NameIs("i32"), RsTypeParamsAre()); }
+
+// Matches a CcType that is a pointer to a type matching `matcher`.
+template <typename Matcher>
+auto CcPointsTo(const Matcher& matcher) {
+  return AllOf(NameIs("*"), CcTypeParamsAre(matcher));
+}
+
+// Matches an RsType that is a pointer to a type matching `matcher`.
+template <typename Matcher>
+auto RsPointsTo(const Matcher& matcher) {
+  return AllOf(NameIs("*mut"), RsTypeParamsAre(matcher));
+}
+
+// Matches a MappedType that is void.
 MATCHER(IsVoid, "") { return arg.IsVoid(); }
 
-// Matches an integer type.
-auto IsInt() {
-  return AllOf(RsNameIs("i32"), CcNameIs("int"), TypeParamsAre());
+// Matches a MappedType that is an integer.
+auto IsInt() { return AllOf(CcTypeIs(IsCcInt()), RsTypeIs(IsRsInt())); }
+
+// Matches a MappedType that is a pointer to integer.
+auto IsIntPtr() {
+  return AllOf(CcTypeIs(CcPointsTo(IsCcInt())),
+               RsTypeIs(RsPointsTo(IsRsInt())));
 }
 
-// Matches a type that is a pointer to a type matching `matcher`.
-template <typename Matcher>
-auto PointsTo(const Matcher& matcher) {
-  return AllOf(RsNameIs("*mut"), CcNameIs("*"), TypeParamsAre(matcher));
+// Matches a MappedType for cc and rs types with no type parameters.
+auto IsSimpleType(absl::string_view rs_name, absl::string_view cc_name) {
+  return AllOf(CcTypeIs(NameIs(cc_name), CcTypeParamsAre()),
+               RsTypeIs(NameIs(rs_name), RsTypeParamsAre()));
 }
 
 // Matches a Record that has fields matching `matchers`.
@@ -242,8 +272,8 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
   IR ir = ImportCode({"int* Foo(int* a);"}, {});
 
   EXPECT_THAT(ir.functions,
-              ElementsAre(AllOf(ReturnType(PointsTo(IsInt())),
-                                ParamsAre(ParamType(PointsTo(IsInt()))))));
+              ElementsAre(AllOf(ReturnType(IsIntPtr()),
+                                ParamsAre(ParamType(IsIntPtr())))));
 }
 
 TEST(AstVisitorTest, Struct) {
@@ -340,44 +370,44 @@ TEST(AstVisitorTest, IntegerTypes) {
   EXPECT_THAT(
       ir.records,
       ElementsAre(FieldsAre(
-          FieldType(RsNameIs("bool"), CcNameIs("bool")),
+          FieldType(IsSimpleType("bool", "bool")),
 
-          FieldType(RsNameIs("i8"), CcNameIs("char")),
-          FieldType(RsNameIs("u8"), CcNameIs("unsigned char")),
-          FieldType(RsNameIs("i8"), CcNameIs("signed char")),
-          FieldType(RsNameIs("u16"), CcNameIs("char16_t")),
+          FieldType(IsSimpleType("i8", "char")),
+          FieldType(IsSimpleType("u8", "unsigned char")),
+          FieldType(IsSimpleType("i8", "signed char")),
+          FieldType(IsSimpleType("u16", "char16_t")),
           // We cannot map C++ char32_t or wchar_t to Rust char,
           // because Rust requires that chars are valid UTF scalar values.
-          FieldType(RsNameIs("u32"), CcNameIs("char32_t")),
-          FieldType(RsNameIs("i32"), CcNameIs("wchar_t")),
+          FieldType(IsSimpleType("u32", "char32_t")),
+          FieldType(IsSimpleType("i32", "wchar_t")),
 
-          FieldType(RsNameIs("i16"), CcNameIs("short")),
-          FieldType(RsNameIs("i32"), CcNameIs("int")),
-          FieldType(RsNameIs("i64"), CcNameIs("long")),
-          FieldType(RsNameIs("i64"), CcNameIs("long long")),
+          FieldType(IsSimpleType("i16", "short")),
+          FieldType(IsSimpleType("i32", "int")),
+          FieldType(IsSimpleType("i64", "long")),
+          FieldType(IsSimpleType("i64", "long long")),
 
-          FieldType(RsNameIs("u16"), CcNameIs("unsigned short")),
-          FieldType(RsNameIs("u32"), CcNameIs("unsigned int")),
-          FieldType(RsNameIs("u64"), CcNameIs("unsigned long")),
-          FieldType(RsNameIs("u64"), CcNameIs("unsigned long long")),
+          FieldType(IsSimpleType("u16", "unsigned short")),
+          FieldType(IsSimpleType("u32", "unsigned int")),
+          FieldType(IsSimpleType("u64", "unsigned long")),
+          FieldType(IsSimpleType("u64", "unsigned long long")),
 
-          FieldType(RsNameIs("i16"), CcNameIs("short")),
-          FieldType(RsNameIs("i32"), CcNameIs("int")),
-          FieldType(RsNameIs("i64"), CcNameIs("long")),
-          FieldType(RsNameIs("i64"), CcNameIs("long long")),
+          FieldType(IsSimpleType("i16", "short")),
+          FieldType(IsSimpleType("i32", "int")),
+          FieldType(IsSimpleType("i64", "long")),
+          FieldType(IsSimpleType("i64", "long long")),
 
-          FieldType(RsNameIs("i8"), CcNameIs("int8_t")),
-          FieldType(RsNameIs("i16"), CcNameIs("int16_t")),
-          FieldType(RsNameIs("i32"), CcNameIs("int32_t")),
-          FieldType(RsNameIs("i64"), CcNameIs("int64_t")),
+          FieldType(IsSimpleType("i8", "int8_t")),
+          FieldType(IsSimpleType("i16", "int16_t")),
+          FieldType(IsSimpleType("i32", "int32_t")),
+          FieldType(IsSimpleType("i64", "int64_t")),
 
-          FieldType(RsNameIs("u8"), CcNameIs("uint8_t")),
-          FieldType(RsNameIs("u16"), CcNameIs("uint16_t")),
-          FieldType(RsNameIs("u32"), CcNameIs("uint32_t")),
-          FieldType(RsNameIs("u64"), CcNameIs("uint64_t")),
+          FieldType(IsSimpleType("u8", "uint8_t")),
+          FieldType(IsSimpleType("u16", "uint16_t")),
+          FieldType(IsSimpleType("u32", "uint32_t")),
+          FieldType(IsSimpleType("u64", "uint64_t")),
 
-          FieldType(RsNameIs("float"), CcNameIs("float")),
-          FieldType(RsNameIs("double"), CcNameIs("double")))));
+          FieldType(IsSimpleType("float", "float")),
+          FieldType(IsSimpleType("double", "double")))));
 }
 
 }  // namespace
