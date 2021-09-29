@@ -85,13 +85,13 @@ auto RsTypeIs(const Args&... matchers) {
   return testing::Field(&MappedType::rs_type, AllOf(matchers...));
 }
 
-// Matches an RsType that has Rust type parameters matching `matchers`.
+// Matches an RsType that has type parameters matching `matchers`.
 template <typename... Args>
 auto RsTypeParamsAre(const Args&... matchers) {
   return testing::Field(&RsType::type_params, ElementsAre(matchers...));
 }
 
-// Matches a CcType that has Rust type parameters matching `matchers`.
+// Matches a CcType that has type parameters matching `matchers`.
 template <typename... Args>
 auto CcTypeParamsAre(const Args&... matchers) {
   return testing::Field(&CcType::type_params, ElementsAre(matchers...));
