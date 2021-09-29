@@ -70,7 +70,7 @@ pub struct Field {
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
     pub access: AccessSpecifier,
-    pub offset: i64,
+    pub offset: usize,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

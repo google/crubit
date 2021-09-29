@@ -6,13 +6,12 @@ use anyhow::{anyhow, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
-use syn::*;
 
 /// FFI equivalent of `Bindings`.
 #[repr(C)]
@@ -246,6 +245,26 @@ fn format_cc_type(ty: &ir::CcType) -> Result<TokenStream> {
     }
 }
 
+fn cc_struct_layout_assertion(record: &Record) -> TokenStream {
+    let record_ident = make_ident(&record.identifier.identifier);
+    let size = Literal::usize_unsuffixed(record.size);
+    let alignment = Literal::usize_unsuffixed(record.alignment);
+    let field_assertions = record.fields.iter().map(|field| {
+        let field_ident = make_ident(&field.identifier.identifier);
+        let offset = Literal::usize_unsuffixed(field.offset);
+        // The IR contains the offset in bits, while C++'s offsetof()
+        // returns the offset in bytes, so we need to convert.
+        quote! {
+            static_assert(offsetof(#record_ident, #field_ident) * 8 == #offset);
+        }
+    });
+    quote! {
+        static_assert(sizeof(#record_ident) == #size);
+        static_assert(alignof(#record_ident) == #alignment);
+        #( #field_assertions )*
+    }
+}
+
 fn generate_rs_api_impl(ir: &IR) -> Result<String> {
     // This function uses quote! to generate C++ source code out of convenience. This is a bold idea
     // so we have to continously evaluate if it still makes sense or the cost of working around
@@ -279,14 +298,21 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
         });
     }
 
+    let layout_assertions = ir.records.iter().map(cc_struct_layout_assertion);
+
+    let standard_headers = if ir.records.is_empty() { vec![] } else { vec![make_ident("cstddef")] };
+
     // In order to generate C++ thunk in all the cases Clang needs to be able to access declarations
     // from public headers of the C++ library.
     let includes = ir.used_headers.iter().map(|i| &i.name);
 
     let result = quote! {
+        #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
         #( __HASH_TOKEN__ include #includes __NEWLINE__)*
 
         #( #thunks )*
+
+        #( #layout_assertions )*
     };
 
     token_stream_printer::cc_tokens_to_string(result)
@@ -510,7 +536,17 @@ mod tests {
             }
             .to_string()
         );
-        assert_eq!(generate_rs_api_impl(&ir)?, "");
+        assert_eq!(
+            generate_rs_api_impl(&ir)?,
+            cc_tokens_to_string(quote! {
+                __HASH_TOKEN__ include <cstddef> __NEWLINE__
+                static_assert(sizeof(SomeStruct) == 12);
+                static_assert(alignof(SomeStruct) == 4);
+                static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
+                static_assert(offsetof(SomeStruct, protected_int) * 8 == 32);
+                static_assert(offsetof(SomeStruct, private_int) * 8 == 64);
+            })?
+        );
         Ok(())
     }
 
