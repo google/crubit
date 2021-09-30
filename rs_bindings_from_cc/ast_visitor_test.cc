@@ -329,6 +329,8 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
 
 TEST(AstVisitorTest, IntegerTypes) {
   auto ir = ImportCode({"#include <stdint.h>\n"
+                        "#include <stddef.h>\n"
+
                         "struct S { "
                         "  bool b;"
 
@@ -363,6 +365,11 @@ TEST(AstVisitorTest, IntegerTypes) {
                         "  uint16_t u16;"
                         "  uint32_t u32;"
                         "  uint64_t u64;"
+
+                        "  size_t st;",
+                        "  ptrdiff_t pt;"
+                        "  intptr_t ip;"
+                        "  uintptr_t up;"
 
                         "  float f;"
                         "  double d;"
@@ -407,6 +414,11 @@ TEST(AstVisitorTest, IntegerTypes) {
           FieldType(IsSimpleType("u16", "uint16_t")),
           FieldType(IsSimpleType("u32", "uint32_t")),
           FieldType(IsSimpleType("u64", "uint64_t")),
+
+          FieldType(IsSimpleType("isize", "size_t")),
+          FieldType(IsSimpleType("usize", "ptrdiff_t")),
+          FieldType(IsSimpleType("isize", "intptr_t")),
+          FieldType(IsSimpleType("usize", "uintptr_t")),
 
           FieldType(IsSimpleType("float", "float")),
           FieldType(IsSimpleType("double", "double")))));

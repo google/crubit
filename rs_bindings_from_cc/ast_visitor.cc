@@ -152,7 +152,13 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
       default:
         if (builtin_type->isIntegerType()) {
           auto size = ctx.getTypeSize(builtin_type);
-          if (size == 8 || size == 16 || size == 32 || size == 64) {
+          if (size == 64 &&
+              (type_string == "size_t" || type_string == "intptr_t")) {
+            type = MappedType::Simple("isize", type_string);
+          } else if (size == 64 && (type_string == "ptrdiff_t" ||
+                                    type_string == "uintptr_t")) {
+            type = MappedType::Simple("usize", type_string);
+          } else if (size == 8 || size == 16 || size == 32 || size == 64) {
             type = MappedType::Simple(
                 absl::Substitute(
                     "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
