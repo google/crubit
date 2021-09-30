@@ -47,13 +47,13 @@ MATCHER_P(MangledNameIs, mangled_name, "") {
 // Matches a Func that has a return type matching `matcher`.
 template <typename Matcher>
 auto ReturnType(const Matcher& matcher) {
-  return testing::Field(&Func::return_type, matcher);
+  return testing::Field("return_type", &Func::return_type, matcher);
 }
 
 // Matches a Func that has parameters matching `matchers`.
 template <typename... Args>
 auto ParamsAre(const Args&... matchers) {
-  return testing::Field(&Func::params, ElementsAre(matchers...));
+  return testing::Field("params", &Func::params, ElementsAre(matchers...));
 }
 
 // Matches a Func that is inline.
@@ -62,7 +62,7 @@ MATCHER(IsInline, "") { return arg.is_inline; }
 // Matches a FuncParam with a type that matches all given matchers.
 template <typename... Args>
 auto ParamType(const Args&... matchers) {
-  return testing::Field(&FuncParam::type, AllOf(matchers...));
+  return testing::Field("type", &FuncParam::type, AllOf(matchers...));
 }
 
 // Matches a RsType or CcType that has the given name.
@@ -76,25 +76,27 @@ MATCHER_P(NameIs, name, "") {
 // Matches a MappedType with a CcType that matches all given matchers.
 template <typename... Args>
 auto CcTypeIs(const Args&... matchers) {
-  return testing::Field(&MappedType::cc_type, AllOf(matchers...));
+  return testing::Field("cc_type", &MappedType::cc_type, AllOf(matchers...));
 }
 
 // Matches a MappedType with a RsType that matches all given matchers.
 template <typename... Args>
 auto RsTypeIs(const Args&... matchers) {
-  return testing::Field(&MappedType::rs_type, AllOf(matchers...));
+  return testing::Field("rs_type", &MappedType::rs_type, AllOf(matchers...));
 }
 
 // Matches an RsType that has type parameters matching `matchers`.
 template <typename... Args>
 auto RsTypeParamsAre(const Args&... matchers) {
-  return testing::Field(&RsType::type_params, ElementsAre(matchers...));
+  return testing::Field("type_params", &RsType::type_params,
+                        ElementsAre(matchers...));
 }
 
 // Matches a CcType that has type parameters matching `matchers`.
 template <typename... Args>
 auto CcTypeParamsAre(const Args&... matchers) {
-  return testing::Field(&CcType::type_params, ElementsAre(matchers...));
+  return testing::Field("type_params", &CcType::type_params,
+                        ElementsAre(matchers...));
 }
 
 auto IsCcInt() { return AllOf(NameIs("int"), CcTypeParamsAre()); }
@@ -134,7 +136,7 @@ auto IsSimpleType(absl::string_view rs_name, absl::string_view cc_name) {
 // Matches a Record that has fields matching `matchers`.
 template <typename... Args>
 auto FieldsAre(const Args&... matchers) {
-  return testing::Field(&Record::fields, ElementsAre(matchers...));
+  return testing::Field("fields", &Record::fields, ElementsAre(matchers...));
 }
 
 // Matches a Record that has the given size.
@@ -167,7 +169,7 @@ MATCHER_P(OffsetIs, offset, "") {
 // Matches a Field with a type that matches all given matchers.
 template <typename... Args>
 auto FieldType(const Args&... matchers) {
-  return testing::Field(&Field::type, AllOf(matchers...));
+  return testing::Field("type", &Field::type, AllOf(matchers...));
 }
 
 constexpr absl::string_view kVirtualInputPath =
