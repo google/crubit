@@ -119,7 +119,8 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   ir_.records.push_back({.identifier = GetTranslatedName(record_decl),
                          .fields = std::move(fields),
                          .size = layout.getSize().getQuantity(),
-                         .alignment = layout.getAlignment().getQuantity()});
+                         .alignment = layout.getAlignment().getQuantity(),
+                         .is_trivial_abi = record_decl->canPassInRegisters()});
   return true;
 }
 

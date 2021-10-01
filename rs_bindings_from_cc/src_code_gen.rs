@@ -516,6 +516,7 @@ mod tests {
                 ],
                 size: 12,
                 alignment: 4,
+                is_trivial_abi: true,
             }],
             functions: vec![],
         };

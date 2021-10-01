@@ -79,6 +79,7 @@ pub struct Record {
     pub fields: Vec<Field>,
     pub size: usize,
     pub alignment: usize,
+    pub is_trivial_abi: bool,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -204,7 +205,8 @@ mod tests {
                         }
                     ],
                     "size": 12,
-                    "alignment": 4
+                    "alignment": 4,
+                    "is_trivial_abi": true
                 }
             ]
         }
@@ -256,6 +258,7 @@ mod tests {
                 ],
                 size: 12,
                 alignment: 4,
+                is_trivial_abi: true,
             }],
             ..Default::default()
         };
@@ -285,7 +288,8 @@ mod tests {
                         }
                     ],
                     "size": 8,
-                    "alignment": 8
+                    "alignment": 8,
+                    "is_trivial_abi": true
                 }
             ]
         }
@@ -319,6 +323,7 @@ mod tests {
                 }],
                 size: 8,
                 alignment: 8,
+                is_trivial_abi: true,
             }],
             ..Default::default()
         };

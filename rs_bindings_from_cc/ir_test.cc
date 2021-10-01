@@ -107,7 +107,8 @@ TEST(IrTest, IR) {
                   }
                 ],
                 "size": 12,
-                "alignment": 4
+                "alignment": 4,
+                "is_trivial_abi": true
               }
             ]
         })j");
@@ -137,7 +138,8 @@ TEST(IrTest, IR) {
                                        .offset = 64},
                              },
                          .size = 12,
-                         .alignment = 4}}};
+                         .alignment = 4,
+                         .is_trivial_abi = true}}};
   EXPECT_EQ(ir.ToJson(), expected);
 }
 

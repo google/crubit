@@ -187,6 +187,16 @@ struct Record {
   // Size and alignment in bytes.
   int64_t size;
   int64_t alignment;
+
+  // Whether this type is passed by value as if it were a trivial type (the same
+  // as it would be if it were a struct in C).
+  //
+  // This can be either due to language rules (it *is* a trivial type), or due
+  // to the usage of a Clang attribute that forces trivial for calls:
+  //
+  //  * https://eel.is/c++draft/class.temporary#3
+  //  * https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
+  bool is_trivial_abi = false;
 };
 
 // A complete intermediate representation of bindings for publicly accessible

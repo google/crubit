@@ -115,6 +115,7 @@ nlohmann::json Record::ToJson() const {
   result["fields"] = std::move(json_fields);
   result["size"] = size;
   result["alignment"] = alignment;
+  result["is_trivial_abi"] = is_trivial_abi;
   return result;
 }
 
