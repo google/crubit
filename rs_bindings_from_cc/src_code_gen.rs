@@ -103,6 +103,15 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         .collect_vec();
     let size = record.size;
     let alignment = record.alignment;
+    let field_assertions =
+        record.fields.iter().zip(field_idents.iter()).map(|(field, field_ident)| {
+            let offset = field.offset;
+            quote! {
+                // The IR contains the offset in bits, while offset_of!()
+                // returns the offset in bytes, so we need to convert.
+                const_assert_eq!(offset_of!(#ident, #field_ident) * 8, #offset);
+            }
+        });
     Ok(quote! {
         #[repr(C)]
         pub struct #ident {
@@ -111,6 +120,7 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
 
         const_assert_eq!(std::mem::size_of::<#ident>(), #size);
         const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
+        #( #field_assertions )*
     })
 }
 
@@ -169,8 +179,15 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let imports = if records.is_empty() {
         quote! {}
     } else {
+        // TODO(mboehme): For the time being, we're using unstable features to
+        // be able to use offset_of!() in static assertions. This is fine for a
+        // prototype, but longer-term we want to either get those features
+        // stabilized or find an alternative. For more details, see
+        // b/200120034#comment15
         quote! {
-          use static_assertions::const_assert_eq;
+            #![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+            use memoffset_unstable_const::offset_of;
+            use static_assertions::const_assert_eq;
         }
     };
 
@@ -523,6 +540,8 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             quote! {
+                #![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+                use memoffset_unstable_const::offset_of;
                 use static_assertions::const_assert_eq;
 
                 #[repr(C)]
@@ -534,6 +553,9 @@ mod tests {
 
                 const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
                 const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
+                const_assert_eq!(offset_of!(SomeStruct, public_int) * 8, 0usize);
+                const_assert_eq!(offset_of!(SomeStruct, protected_int) * 8, 32usize);
+                const_assert_eq!(offset_of!(SomeStruct, private_int) * 8, 64usize);
             }
             .to_string()
         );
