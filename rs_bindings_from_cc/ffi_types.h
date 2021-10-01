@@ -24,9 +24,19 @@ struct FfiU8Slice {
   size_t size;
 };
 
+// Returns an `FfiU8Slice` referencing the same data as `s`.
 FfiU8Slice MakeFfiU8Slice(absl::string_view s);
 
-// This function is implemented in Rust.
+// Returns a `string_view` referencing the same data as `ffi_u8_slice`.
+absl::string_view StringViewFromFfiU8Slice(FfiU8Slice ffi_u8_slice);
+
+// Returns an `FfiU8SliceBox` containing a copy of the data in `ffi_u8_slice`.
+// The returned `FfiU8SliceBox` must be freed by calling `FreeFfiU8SliceBox()`.
+// Implemented in Rust.
+extern "C" FfiU8SliceBox AllocFfiU8SliceBox(FfiU8Slice ffi_u8_slice);
+
+// Frees the memory associated with an `FfiU8SliceBox`.
+// Implemented in Rust.
 extern "C" void FreeFfiU8SliceBox(FfiU8SliceBox);
 
 }  // namespace rs_bindings_from_cc

@@ -7,6 +7,13 @@ use std::panic::catch_unwind;
 use std::process;
 use std::slice;
 
+/// Returns an `FfiU8SliceBox` containing a copy of the data in `ffi_u8_slice`.
+/// The returned `FfiU8SliceBox` must be freed by calling `FreeFfiU8SliceBox()`.
+#[no_mangle]
+pub unsafe extern "C" fn AllocFfiU8SliceBox(input: FfiU8Slice) -> FfiU8SliceBox {
+    FfiU8SliceBox::from_boxed_slice(Box::<[u8]>::from(input.as_slice()))
+}
+
 /// Frees `FfiU8SliceBox` allocated by Rust.
 #[no_mangle]
 pub unsafe extern "C" fn FreeFfiU8SliceBox(sb: FfiU8SliceBox) {
@@ -23,6 +30,11 @@ pub struct FfiU8Slice {
 }
 
 impl FfiU8Slice {
+    /// Returns an FfiU8Slice pointing to the data of `slice`.
+    pub fn from_slice(slice: &[u8]) -> FfiU8Slice {
+        FfiU8Slice { ptr: slice.as_ptr(), size: slice.len() }
+    }
+
     /// Borrows data pointed to by this `FfiU8Slice` as a slice.
     pub fn as_slice(&self) -> &[u8] {
         // Safety:
