@@ -30,16 +30,15 @@ TEST(SrcGenTest, FFIIntegration) {
   EXPECT_THAT(
       bindings.rs_api,
       StrEq(
-          // TODO(hlopko): Run generated Rust sources through rustfmt.
-          "# [inline (always)] "
-          "pub fn hello_world (arg : i32) -> i32 { "
-          "unsafe { crate :: detail :: __rust_thunk__hello_world (arg) } "
-          "} "
-          "mod detail { "
-          "extern \"C\" { "
-          "pub (crate) fn __rust_thunk__hello_world (arg : i32) -> i32 ; "
-          "} "
-          "}"));
+          "#[inline(always)]\n"
+          "pub fn hello_world(arg: i32) -> i32 {\n"
+          "    unsafe { crate::detail::__rust_thunk__hello_world(arg) }\n"
+          "}\n"
+          "mod detail {\n"
+          "    extern \"C\" {\n"
+          "        pub(crate) fn __rust_thunk__hello_world(arg: i32) -> i32;\n"
+          "    }\n"
+          "}\n"));
 
   EXPECT_THAT(bindings.rs_api_impl,
               StrEq("#include \"foo/bar.h\"\n"

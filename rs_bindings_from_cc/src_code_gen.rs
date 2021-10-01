@@ -9,9 +9,11 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
+use std::io::Write;
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
+use std::process::{Command, Stdio};
 
 /// FFI equivalent of `Bindings`.
 #[repr(C)]
@@ -200,7 +202,28 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         #mod_detail
     };
 
-    Ok(result.to_string())
+    Ok(rustfmt(result.to_string())?)
+}
+
+fn rustfmt(input: String) -> Result<String> {
+    // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is fixed.
+    // TODO(forster): Add way to specify a configuration file.
+
+    let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
+
+    let mut child = Command::new(rustfmt)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect(&format!("Failed to spawn rustfmt at '{}'", rustfmt));
+
+    let mut stdin = child.stdin.take().expect("Failed to open rustfmt stdin");
+    std::thread::spawn(move || {
+        stdin.write_all(input.as_bytes()).expect("Failed to write to rustfmt stdin");
+    });
+    let output = child.wait_with_output().expect("Failed to read rustfmt stdout");
+
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
 fn make_ident(ident: &str) -> Ident {
@@ -337,6 +360,8 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
+    use crate::rustfmt;
+
     use super::Result;
     use super::{generate_rs_api, generate_rs_api_impl};
     use ir::*;
@@ -388,20 +413,22 @@ mod tests {
         };
         assert_eq!(
             generate_rs_api(&ir)?,
-            quote! {
-                #[inline(always)]
-                pub fn add(a: i32, b: i32) -> i32 {
-                    unsafe { crate::detail::__rust_thunk__add(a, b) }
-                }
+            rustfmt(
+                quote! {
+                    #[inline(always)]
+                    pub fn add(a: i32, b: i32) -> i32 {
+                        unsafe { crate::detail::__rust_thunk__add(a, b) }
+                    }
 
-                mod detail {
-                    extern "C" {
-                        #[link_name = "_Z3Addii"]
-                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
-                    } // extern
-                } // mod detail
-            }
-            .to_string()
+                    mod detail {
+                        extern "C" {
+                            #[link_name = "_Z3Addii"]
+                            pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                        } // extern
+                    } // mod detail
+                }
+                .to_string()
+            )?
         );
         assert_eq!(generate_rs_api_impl(&ir)?, "");
         Ok(())
@@ -456,18 +483,20 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            quote! {#[inline(always)]
-                pub fn add(a: i32, b: i32) -> i32 {
-                    unsafe { crate::detail::__rust_thunk__add(a, b) }
-                }
+            rustfmt(
+                quote! {#[inline(always)]
+                    pub fn add(a: i32, b: i32) -> i32 {
+                        unsafe { crate::detail::__rust_thunk__add(a, b) }
+                    }
 
-                mod detail {
-                    extern "C" {
-                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
-                    } // extern
-                } // mod detail
-            }
-            .to_string()
+                    mod detail {
+                        extern "C" {
+                            pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                        } // extern
+                    } // mod detail
+                }
+                .to_string()
+            )?
         );
 
         assert_eq!(
@@ -539,25 +568,27 @@ mod tests {
         };
         assert_eq!(
             generate_rs_api(&ir)?,
-            quote! {
-                #![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
-                use memoffset_unstable_const::offset_of;
-                use static_assertions::const_assert_eq;
+            rustfmt(
+                quote! {
+                    #![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+                    use memoffset_unstable_const::offset_of;
+                    use static_assertions::const_assert_eq;
 
-                #[repr(C)]
-                pub struct SomeStruct {
-                    pub public_int: i32,
-                    protected_int: i32,
-                    private_int: i32,
+                    #[repr(C)]
+                    pub struct SomeStruct {
+                        pub public_int: i32,
+                        protected_int: i32,
+                        private_int: i32,
+                    }
+
+                    const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
+                    const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
+                    const_assert_eq!(offset_of!(SomeStruct, public_int) * 8, 0usize);
+                    const_assert_eq!(offset_of!(SomeStruct, protected_int) * 8, 32usize);
+                    const_assert_eq!(offset_of!(SomeStruct, private_int) * 8, 64usize);
                 }
-
-                const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
-                const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
-                const_assert_eq!(offset_of!(SomeStruct, public_int) * 8, 0usize);
-                const_assert_eq!(offset_of!(SomeStruct, protected_int) * 8, 32usize);
-                const_assert_eq!(offset_of!(SomeStruct, private_int) * 8, 64usize);
-            }
-            .to_string()
+                .to_string()
+            )?
         );
         assert_eq!(
             generate_rs_api_impl(&ir)?,
@@ -629,19 +660,21 @@ mod tests {
         };
         assert_eq!(
             generate_rs_api(&ir)?,
-            quote! {
-                #[inline(always)]
-                pub fn Deref(p: *const *mut i32) -> *mut i32 {
-                    unsafe { crate::detail::__rust_thunk__Deref(p) }
-                }
+            rustfmt(
+                quote! {
+                    #[inline(always)]
+                    pub fn Deref(p: *const *mut i32) -> *mut i32 {
+                        unsafe { crate::detail::__rust_thunk__Deref(p) }
+                    }
 
-                mod detail {
-                    extern "C" {
-                        pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
-                    } // extern
-                } // mod detail
-            }
-            .to_string()
+                    mod detail {
+                        extern "C" {
+                            pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
+                        } // extern
+                    } // mod detail
+                }
+                .to_string()
+            )?
         );
 
         assert_eq!(
