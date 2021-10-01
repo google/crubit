@@ -330,8 +330,8 @@ TEST(AstVisitorTest, IntegerTypes) {
                       "  uint32_t u32;"
                       "  uint64_t u64;"
 
-                      "  size_t st;",
                       "  ptrdiff_t pt;"
+                      "  size_t st;",
                       "  intptr_t ip;"
                       "  uintptr_t up;"
 
@@ -379,8 +379,8 @@ TEST(AstVisitorTest, IntegerTypes) {
           FieldType(IsSimpleType("u32", "uint32_t")),
           FieldType(IsSimpleType("u64", "uint64_t")),
 
-          FieldType(IsSimpleType("isize", "size_t")),
-          FieldType(IsSimpleType("usize", "ptrdiff_t")),
+          FieldType(IsSimpleType("isize", "ptrdiff_t")),
+          FieldType(IsSimpleType("usize", "size_t")),
           FieldType(IsSimpleType("isize", "intptr_t")),
           FieldType(IsSimpleType("usize", "uintptr_t")),
 

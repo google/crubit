@@ -43,8 +43,8 @@ struct FieldTypeTestStruct {
   uint32_t uint32_t_field;
   uint64_t uint64_t_field;
 
-  size_t size_t_field;
   ptrdiff_t ptrdiff_t_field;
+  size_t size_t_field;
   intptr_t intptr_t_field;
   uintptr_t uintptr_t_field;
 

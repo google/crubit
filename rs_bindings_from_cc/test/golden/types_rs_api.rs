@@ -34,8 +34,8 @@ pub struct FieldTypeTestStruct {
     pub uint16_t_field: u16,
     pub uint32_t_field: u32,
     pub uint64_t_field: u64,
-    pub size_t_field: isize,
-    pub ptrdiff_t_field: usize,
+    pub ptrdiff_t_field: isize,
+    pub size_t_field: usize,
     pub intptr_t_field: isize,
     pub uintptr_t_field: usize,
     pub float_field: f32,
@@ -112,11 +112,11 @@ const_assert_eq!(
     offset_of!(FieldTypeTestStruct, uint64_t_field) * 8,
     896usize
 );
-const_assert_eq!(offset_of!(FieldTypeTestStruct, size_t_field) * 8, 960usize);
 const_assert_eq!(
     offset_of!(FieldTypeTestStruct, ptrdiff_t_field) * 8,
-    1024usize
+    960usize
 );
+const_assert_eq!(offset_of!(FieldTypeTestStruct, size_t_field) * 8, 1024usize);
 const_assert_eq!(
     offset_of!(FieldTypeTestStruct, intptr_t_field) * 8,
     1088usize
