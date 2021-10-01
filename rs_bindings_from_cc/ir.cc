@@ -74,13 +74,16 @@ nlohmann::json Func::ToJson() const {
   for (const FuncParam& param : params) {
     json_params.push_back(param.ToJson());
   }
-  nlohmann::json result;
-  result["identifier"] = identifier.ToJson();
-  result["mangled_name"] = mangled_name;
-  result["return_type"] = return_type.ToJson();
-  result["params"] = std::move(json_params);
-  result["is_inline"] = is_inline;
-  return result;
+  nlohmann::json func;
+  func["identifier"] = identifier.ToJson();
+  func["mangled_name"] = mangled_name;
+  func["return_type"] = return_type.ToJson();
+  func["params"] = std::move(json_params);
+  func["is_inline"] = is_inline;
+
+  nlohmann::json item;
+  item["Func"] = std::move(func);
+  return item;
 }
 
 static std::string AccessToString(AccessSpecifier access) {
@@ -110,13 +113,16 @@ nlohmann::json Record::ToJson() const {
     json_fields.push_back(field.ToJson());
   }
 
-  nlohmann::json result;
-  result["identifier"] = identifier.ToJson();
-  result["fields"] = std::move(json_fields);
-  result["size"] = size;
-  result["alignment"] = alignment;
-  result["is_trivial_abi"] = is_trivial_abi;
-  return result;
+  nlohmann::json record;
+  record["identifier"] = identifier.ToJson();
+  record["fields"] = std::move(json_fields);
+  record["size"] = size;
+  record["alignment"] = alignment;
+  record["is_trivial_abi"] = is_trivial_abi;
+
+  nlohmann::json item;
+  item["Record"] = std::move(record);
+  return item;
 }
 
 nlohmann::json IR::ToJson() const {
@@ -126,22 +132,15 @@ nlohmann::json IR::ToJson() const {
     json_used_headers.push_back(header.ToJson());
   }
 
-  std::vector<nlohmann::json> json_functions;
-  json_functions.reserve(functions.size());
-  for (const Func& func : functions) {
-    json_functions.push_back(func.ToJson());
-  }
-
-  std::vector<nlohmann::json> json_records;
-  json_records.reserve(records.size());
-  for (const Record& record : records) {
-    json_records.push_back(record.ToJson());
+  std::vector<nlohmann::json> json_items;
+  json_items.reserve(items.size());
+  for (const auto& item : items) {
+    std::visit([&](auto&& item) { json_items.push_back(item.ToJson()); }, item);
   }
 
   nlohmann::json result;
   result["used_headers"] = std::move(json_used_headers);
-  result["functions"] = std::move(json_functions);
-  result["records"] = std::move(json_records);
+  result["items"] = std::move(json_items);
   return result;
 }
 

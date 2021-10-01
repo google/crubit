@@ -130,7 +130,7 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
 fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut thunks = vec![];
     let mut api_funcs = vec![];
-    for func in &ir.functions {
+    for func in ir.functions() {
         let mangled_name = &func.mangled_name;
         let ident = make_ident(&func.identifier.identifier);
         let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
@@ -165,7 +165,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         });
     }
 
-    let records = ir.records.iter().map(generate_record).collect::<Result<Vec<_>>>()?;
+    let records = ir.records().map(generate_record).collect::<Result<Vec<_>>>()?;
 
     let mod_detail = if thunks.is_empty() {
         quote! {}
@@ -320,7 +320,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
     // See rs_bindings_from_cc/token_stream_printer.rs for a list
     // of supported placeholders.
     let mut thunks = vec![];
-    for func in &ir.functions {
+    for func in ir.functions() {
         if can_skip_cc_thunk(&func) {
             continue;
         }
@@ -345,9 +345,10 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
         });
     }
 
-    let layout_assertions = ir.records.iter().map(cc_struct_layout_assertion);
+    let layout_assertions = ir.records().map(cc_struct_layout_assertion);
 
-    let standard_headers = if ir.records.is_empty() { vec![] } else { vec![make_ident("cstddef")] };
+    let standard_headers =
+        if ir.records().next().is_none() { vec![] } else { vec![make_ident("cstddef")] };
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to access declarations
     // from public headers of the C++ library.
@@ -379,8 +380,7 @@ mod tests {
     fn test_simple_function() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
-            records: vec![],
-            functions: vec![Func {
+            items: vec![Item::Func(Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
                 return_type: MappedType {
@@ -416,7 +416,7 @@ mod tests {
                     },
                 ],
                 is_inline: false,
-            }],
+            })],
         };
         assert_eq!(
             generate_rs_api(&ir)?,
@@ -444,12 +444,11 @@ mod tests {
     #[test]
     fn test_inline_function() -> Result<()> {
         let ir = IR {
-            records: vec![],
             used_headers: vec![
                 HeaderName { name: "foo/bar.h".to_string() },
                 HeaderName { name: "foo/baz.h".to_string() },
             ],
-            functions: vec![Func {
+            items: vec![Item::Func(Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
                 return_type: MappedType {
@@ -485,7 +484,7 @@ mod tests {
                     },
                 ],
                 is_inline: true,
-            }],
+            })],
         };
 
         assert_eq!(
@@ -524,7 +523,7 @@ mod tests {
     fn test_simple_struct() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
-            records: vec![Record {
+            items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![
                     Field {
@@ -570,8 +569,7 @@ mod tests {
                 size: 12,
                 alignment: 4,
                 is_trivial_abi: true,
-            }],
-            functions: vec![],
+            })],
         };
         assert_eq!(
             generate_rs_api(&ir)?,
@@ -615,8 +613,7 @@ mod tests {
     fn test_ptr_func() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
-            records: vec![],
-            functions: vec![Func {
+            items: vec![Item::Func(Func {
                 identifier: Identifier { identifier: "Deref".to_string() },
                 mangled_name: "_Z5DerefPKPi".to_string(),
                 return_type: MappedType {
@@ -663,7 +660,7 @@ mod tests {
                     },
                 }],
                 is_inline: true,
-            }],
+            })],
         };
         assert_eq!(
             generate_rs_api(&ir)?,

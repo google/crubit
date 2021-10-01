@@ -25,6 +25,7 @@ using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Property;
 using ::testing::SizeIs;
+using ::testing::VariantWith;
 
 // Matches an IR node that has the given identifier.
 MATCHER_P(IdentifierIs, identifier, "") {
@@ -172,7 +173,7 @@ auto FieldType(const Args&... matchers) {
 
 TEST(AstVisitorTest, Noop) {
   IR ir = IrFromCc({"// nothing interesting there."}, {});
-  EXPECT_THAT(ir.functions, IsEmpty());
+  EXPECT_THAT(ir.items, IsEmpty());
   EXPECT_THAT(ir.used_headers,
               ElementsAre(Property(&HeaderName::IncludePath,
                                    "test/testing_header_0.h")));
@@ -180,80 +181,83 @@ TEST(AstVisitorTest, Noop) {
 
 TEST(AstVisitorTest, IREmptyOnInvalidInput) {
   IR ir = IrFromCc({"int foo(); But this is not C++"}, {});
-  EXPECT_THAT(ir.functions, IsEmpty());
+  EXPECT_THAT(ir.items, IsEmpty());
 }
 
 TEST(AstVisitorTest, FuncWithVoidReturnType) {
   IR ir = IrFromCc({"void Foo();"}, {});
-  EXPECT_THAT(ir.functions,
-              ElementsAre(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
-                                ReturnType(IsVoid()), ParamsAre())));
+  EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(
+                            AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                                  ReturnType(IsVoid()), ParamsAre()))));
 }
 
 TEST(AstVisitorTest, TwoFuncs) {
   IR ir = IrFromCc({"void Foo(); void Bar();"}, {});
-  EXPECT_THAT(ir.functions,
-              ElementsAre(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
-                                ReturnType(IsVoid()), ParamsAre()),
-                          AllOf(IdentifierIs("Bar"), MangledNameIs("_Z3Barv"),
-                                ReturnType(IsVoid()), ParamsAre())));
+  EXPECT_THAT(
+      ir.items,
+      ElementsAre(
+          VariantWith<Func>(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                                  ReturnType(IsVoid()), ParamsAre())),
+          VariantWith<Func>(AllOf(IdentifierIs("Bar"), MangledNameIs("_Z3Barv"),
+                                  ReturnType(IsVoid()), ParamsAre()))));
 }
 
 TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
   IR ir = IrFromCc({"void Foo();", "void Bar();"}, {});
-  EXPECT_THAT(ir.functions,
-              ElementsAre(IdentifierIs("Foo"), IdentifierIs("Bar")));
+  EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
+                                    VariantWith<Func>(IdentifierIs("Bar"))));
 }
 
 TEST(AstVisitorTest, NonInlineFunc) {
   IR ir = IrFromCc({"void Foo() {}"}, {});
-  EXPECT_THAT(ir.functions,
-              ElementsAre(AllOf(IdentifierIs("Foo"), Not(IsInline()))));
+  EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(
+                            AllOf(IdentifierIs("Foo"), Not(IsInline())))));
 }
 
 TEST(AstVisitorTest, InlineFunc) {
   IR ir = IrFromCc({"inline void Foo() {}"}, {});
-  EXPECT_THAT(ir.functions,
-              ElementsAre(AllOf(IdentifierIs("Foo"), IsInline())));
+  EXPECT_THAT(
+      ir.items,
+      ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
 TEST(AstVisitorTest, FuncJustOnce) {
   IR ir = IrFromCc({"void Foo(); void Foo();"}, {});
-  EXPECT_THAT(ir.functions, ElementsAre(AllOf(IdentifierIs("Foo"))));
+  EXPECT_THAT(ir.items,
+              ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
 TEST(AstVisitorTest, FuncParams) {
   IR ir = IrFromCc({"int Add(int a, int b);"}, {});
-  ASSERT_THAT(ir.functions, SizeIs(1));
+  ASSERT_THAT(ir.items, SizeIs(1));
 
   EXPECT_THAT(
-      ir.functions,
-      ElementsAre(AllOf(
+      ir.items,
+      ElementsAre(VariantWith<Func>(AllOf(
           IdentifierIs("Add"), MangledNameIs("_Z3Addii"), ReturnType(IsInt()),
           ParamsAre(AllOf(ParamType(IsInt()), IdentifierIs("a")),
-                    AllOf(ParamType(IsInt()), IdentifierIs("b"))))));
+                    AllOf(ParamType(IsInt()), IdentifierIs("b")))))));
 }
 
 TEST(AstVisitorTest, TestImportPointerFunc) {
   IR ir = IrFromCc({"int* Foo(int* a);"}, {});
 
-  EXPECT_THAT(ir.functions,
-              ElementsAre(AllOf(ReturnType(IsIntPtr()),
-                                ParamsAre(ParamType(IsIntPtr())))));
+  EXPECT_THAT(ir.items,
+              ElementsAre(VariantWith<Func>(AllOf(
+                  ReturnType(IsIntPtr()), ParamsAre(ParamType(IsIntPtr()))))));
 }
 
 TEST(AstVisitorTest, Struct) {
   IR ir = IrFromCc(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
-  EXPECT_THAT(ir.functions, IsEmpty());
 
-  EXPECT_THAT(ir.records,
-              ElementsAre(AllOf(
+  EXPECT_THAT(ir.items,
+              ElementsAre(VariantWith<Record>(AllOf(
                   IdentifierIs("SomeStruct"), RecordSizeIs(8), AlignmentIs(4),
                   FieldsAre(AllOf(IdentifierIs("first_field"),
                                   FieldType(IsInt()), OffsetIs(0)),
                             AllOf(IdentifierIs("second_field"),
-                                  FieldType(IsInt()), OffsetIs(32))))));
+                                  FieldType(IsInt()), OffsetIs(32)))))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
@@ -274,21 +278,20 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
   )"},
                    {});
 
-  EXPECT_THAT(ir.functions, IsEmpty());
-
   EXPECT_THAT(
-      ir.records,
+      ir.items,
       ElementsAre(
-          AllOf(
+          VariantWith<Record>(AllOf(
               IdentifierIs("SomeStruct"),
               FieldsAre(
                   AllOf(IdentifierIs("default_access_int"), AccessIs(kPublic)),
                   AllOf(IdentifierIs("public_int"), AccessIs(kPublic)),
                   AllOf(IdentifierIs("protected_int"), AccessIs(kProtected)),
-                  AllOf(IdentifierIs("private_int"), AccessIs(kPrivate)))),
-          AllOf(IdentifierIs("SomeClass"),
-                FieldsAre(AllOf(IdentifierIs("default_access_int"),
-                                AccessIs(kPrivate))))));
+                  AllOf(IdentifierIs("private_int"), AccessIs(kPrivate))))),
+          VariantWith<Record>(
+              AllOf(IdentifierIs("SomeClass"),
+                    FieldsAre(AllOf(IdentifierIs("default_access_int"),
+                                    AccessIs(kPrivate)))))));
 }
 
 TEST(AstVisitorTest, IntegerTypes) {
@@ -341,8 +344,8 @@ TEST(AstVisitorTest, IntegerTypes) {
                      {});
 
   EXPECT_THAT(
-      ir.records,
-      ElementsAre(FieldsAre(
+      ir.items,
+      ElementsAre(VariantWith<Record>(FieldsAre(
           FieldType(IsSimpleType("bool", "bool")),
 
           FieldType(IsSimpleType("i8", "char")),
@@ -385,7 +388,7 @@ TEST(AstVisitorTest, IntegerTypes) {
           FieldType(IsSimpleType("usize", "uintptr_t")),
 
           FieldType(IsSimpleType("f32", "float")),
-          FieldType(IsSimpleType("f64", "double")))));
+          FieldType(IsSimpleType("f64", "double"))))));
 }
 
 }  // namespace

@@ -62,7 +62,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   if (!return_type.ok()) {
     return true;
   }
-  ir_.functions.push_back(Func{
+  ir_.items.push_back(Func{
       .identifier = GetTranslatedName(function_decl),
       .mangled_name = GetMangledName(function_decl),
       .return_type = *return_type,
@@ -116,11 +116,12 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
   }
-  ir_.records.push_back({.identifier = GetTranslatedName(record_decl),
-                         .fields = std::move(fields),
-                         .size = layout.getSize().getQuantity(),
-                         .alignment = layout.getAlignment().getQuantity(),
-                         .is_trivial_abi = record_decl->canPassInRegisters()});
+  ir_.items.push_back(
+      Record{.identifier = GetTranslatedName(record_decl),
+             .fields = std::move(fields),
+             .size = layout.getSize().getQuantity(),
+             .alignment = layout.getAlignment().getQuantity(),
+             .is_trivial_abi = record_decl->canPassInRegisters()});
   return true;
 }
 

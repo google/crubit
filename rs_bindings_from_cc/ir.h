@@ -207,8 +207,7 @@ struct IR {
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers;
-  std::vector<Func> functions;
-  std::vector<Record> records;
+  std::vector<std::variant<Func, Record>> items;
 };
 
 }  // namespace rs_bindings_from_cc

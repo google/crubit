@@ -82,14 +82,34 @@ pub struct Record {
     pub is_trivial_abi: bool,
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub enum Item {
+    Func(Func),
+    Record(Record),
+}
+
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IR {
     #[serde(default)]
     pub used_headers: Vec<HeaderName>,
     #[serde(default)]
-    pub functions: Vec<Func>,
-    #[serde(default)]
-    pub records: Vec<Record>,
+    pub items: Vec<Item>,
+}
+
+impl IR {
+    pub fn functions(&self) -> impl Iterator<Item = &Func> {
+        self.items.iter().filter_map(|item| match item {
+            Item::Func(func) => Some(func),
+            _ => None,
+        })
+    }
+
+    pub fn records(&self) -> impl Iterator<Item = &Record> {
+        self.items.iter().filter_map(|item| match item {
+            Item::Record(func) => Some(func),
+            _ => None,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -115,8 +135,8 @@ mod tests {
     fn test_functions() {
         let input = r#"
         {
-            "functions": [
-                {
+            "items": [
+                { "Func" : {
                     "identifier": { "identifier": "hello_world" },
                     "mangled_name": "$$mangled_name$$",
                     "params": [
@@ -133,13 +153,13 @@ mod tests {
                         "cc_type": {"name": "int", "is_const": false, "type_params": []}
                     },
                     "is_inline": false
-                }
+                }}
             ]
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            functions: vec![Func {
+            items: vec![Item::Func(Func {
                 identifier: Identifier { identifier: "hello_world".to_string() },
                 mangled_name: "$$mangled_name$$".to_string(),
                 return_type: MappedType {
@@ -162,7 +182,7 @@ mod tests {
                     identifier: Identifier { identifier: "arg".to_string() },
                 }],
                 is_inline: false,
-            }],
+            })],
             ..Default::default()
         };
         assert_eq!(ir, expected);
@@ -172,8 +192,8 @@ mod tests {
     fn test_member_access_specifiers() {
         let input = r#"
         {
-            "records": [
-                {
+            "items": [
+                { "Record" : {
                     "identifier": {"identifier": "SomeStruct" },
                     "fields": [
                         {
@@ -207,13 +227,13 @@ mod tests {
                     "size": 12,
                     "alignment": 4,
                     "is_trivial_abi": true
-                }
+                }}
             ]
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            records: vec![Record {
+            items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![
                     Field {
@@ -259,7 +279,7 @@ mod tests {
                 size: 12,
                 alignment: 4,
                 is_trivial_abi: true,
-            }],
+            })],
             ..Default::default()
         };
         assert_eq!(ir, expected);
@@ -269,8 +289,8 @@ mod tests {
     fn test_pointer_member_variable() {
         let input = r#"
         {
-            "records": [
-                {
+            "items": [
+                { "Record": {
                     "identifier": {"identifier": "SomeStruct" },
                     "fields": [
                         {
@@ -290,13 +310,13 @@ mod tests {
                     "size": 8,
                     "alignment": 8,
                     "is_trivial_abi": true
-                }
+                }}
             ]
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
-            records: vec![Record {
+            items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 fields: vec![Field {
                     identifier: Identifier { identifier: "ptr".to_string() },
@@ -324,7 +344,7 @@ mod tests {
                 size: 8,
                 alignment: 8,
                 is_trivial_abi: true,
-            }],
+            })],
             ..Default::default()
         };
         assert_eq!(ir, expected);
