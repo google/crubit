@@ -7,16 +7,14 @@
 #include <utility>
 #include <vector>
 
-#include "devtools/cymbal/common/clang_tool.h"
-#include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_from_cc.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/absl/types/span.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
 
 namespace rs_bindings_from_cc {
 namespace {
@@ -172,42 +170,8 @@ auto FieldType(const Args&... matchers) {
   return testing::Field("type", &Field::type, AllOf(matchers...));
 }
 
-constexpr absl::string_view kVirtualInputPath =
-    "ast_visitor_test_virtual_input.cc";
-
-IR ImportCode(absl::Span<const absl::string_view> header_files_contents,
-              const std::vector<absl::string_view>& args) {
-  std::vector<std::string> headers;
-  absl::flat_hash_map<std::string, std::string> file_contents;
-  std::string virtual_input_file_content;
-
-  int counter = 0;
-  for (const absl::string_view header_content : header_files_contents) {
-    std::string filename(
-        absl::Substitute("test/testing_header_$0.h", counter++));
-    file_contents.insert({filename, std::string(header_content)});
-    absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
-                              filename);
-    headers.push_back(std::move(filename));
-  }
-
-  file_contents.insert(
-      {std::string(kVirtualInputPath), virtual_input_file_content});
-
-  std::vector<std::string> args_as_strings(args.begin(), args.end());
-  args_as_strings.push_back("--syntax-only");
-  args_as_strings.push_back(std::string(kVirtualInputPath));
-
-  IR ir;
-  devtools::cymbal::RunToolWithClangFlagsOnCode(
-      args_as_strings, file_contents,
-      std::make_unique<rs_bindings_from_cc::FrontendAction>(
-          std::vector<absl::string_view>(headers.begin(), headers.end()), ir));
-  return ir;
-}
-
 TEST(AstVisitorTest, Noop) {
-  IR ir = ImportCode({"// nothing interesting there."}, {});
+  IR ir = IrFromCc({"// nothing interesting there."}, {});
   EXPECT_THAT(ir.functions, IsEmpty());
   EXPECT_THAT(ir.used_headers,
               ElementsAre(Property(&HeaderName::IncludePath,
@@ -215,19 +179,19 @@ TEST(AstVisitorTest, Noop) {
 }
 
 TEST(AstVisitorTest, IREmptyOnInvalidInput) {
-  IR ir = ImportCode({"int foo(); But this is not C++"}, {});
+  IR ir = IrFromCc({"int foo(); But this is not C++"}, {});
   EXPECT_THAT(ir.functions, IsEmpty());
 }
 
 TEST(AstVisitorTest, FuncWithVoidReturnType) {
-  IR ir = ImportCode({"void Foo();"}, {});
+  IR ir = IrFromCc({"void Foo();"}, {});
   EXPECT_THAT(ir.functions,
               ElementsAre(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
                                 ReturnType(IsVoid()), ParamsAre())));
 }
 
 TEST(AstVisitorTest, TwoFuncs) {
-  IR ir = ImportCode({"void Foo(); void Bar();"}, {});
+  IR ir = IrFromCc({"void Foo(); void Bar();"}, {});
   EXPECT_THAT(ir.functions,
               ElementsAre(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
                                 ReturnType(IsVoid()), ParamsAre()),
@@ -236,30 +200,30 @@ TEST(AstVisitorTest, TwoFuncs) {
 }
 
 TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
-  IR ir = ImportCode({"void Foo();", "void Bar();"}, {});
+  IR ir = IrFromCc({"void Foo();", "void Bar();"}, {});
   EXPECT_THAT(ir.functions,
               ElementsAre(IdentifierIs("Foo"), IdentifierIs("Bar")));
 }
 
 TEST(AstVisitorTest, NonInlineFunc) {
-  IR ir = ImportCode({"void Foo() {}"}, {});
+  IR ir = IrFromCc({"void Foo() {}"}, {});
   EXPECT_THAT(ir.functions,
               ElementsAre(AllOf(IdentifierIs("Foo"), Not(IsInline()))));
 }
 
 TEST(AstVisitorTest, InlineFunc) {
-  IR ir = ImportCode({"inline void Foo() {}"}, {});
+  IR ir = IrFromCc({"inline void Foo() {}"}, {});
   EXPECT_THAT(ir.functions,
               ElementsAre(AllOf(IdentifierIs("Foo"), IsInline())));
 }
 
 TEST(AstVisitorTest, FuncJustOnce) {
-  IR ir = ImportCode({"void Foo(); void Foo();"}, {});
+  IR ir = IrFromCc({"void Foo(); void Foo();"}, {});
   EXPECT_THAT(ir.functions, ElementsAre(AllOf(IdentifierIs("Foo"))));
 }
 
 TEST(AstVisitorTest, FuncParams) {
-  IR ir = ImportCode({"int Add(int a, int b);"}, {});
+  IR ir = IrFromCc({"int Add(int a, int b);"}, {});
   ASSERT_THAT(ir.functions, SizeIs(1));
 
   EXPECT_THAT(
@@ -271,7 +235,7 @@ TEST(AstVisitorTest, FuncParams) {
 }
 
 TEST(AstVisitorTest, TestImportPointerFunc) {
-  IR ir = ImportCode({"int* Foo(int* a);"}, {});
+  IR ir = IrFromCc({"int* Foo(int* a);"}, {});
 
   EXPECT_THAT(ir.functions,
               ElementsAre(AllOf(ReturnType(IsIntPtr()),
@@ -279,7 +243,7 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
 }
 
 TEST(AstVisitorTest, Struct) {
-  IR ir = ImportCode(
+  IR ir = IrFromCc(
       {"struct SomeStruct { int first_field; int second_field; };"}, {});
   EXPECT_THAT(ir.functions, IsEmpty());
 
@@ -293,7 +257,7 @@ TEST(AstVisitorTest, Struct) {
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
-  IR ir = ImportCode({R"(
+  IR ir = IrFromCc({R"(
     struct SomeStruct {
       int default_access_int;
     public:
@@ -308,7 +272,7 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
       int default_access_int;
     };
   )"},
-                     {});
+                   {});
 
   EXPECT_THAT(ir.functions, IsEmpty());
 
@@ -328,53 +292,53 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
 }
 
 TEST(AstVisitorTest, IntegerTypes) {
-  auto ir = ImportCode({"#include <stdint.h>\n"
-                        "#include <stddef.h>\n"
+  auto ir = IrFromCc({"#include <stdint.h>\n"
+                      "#include <stddef.h>\n"
 
-                        "struct S { "
-                        "  bool b;"
+                      "struct S { "
+                      "  bool b;"
 
-                        "  char c;"
-                        "  unsigned char uc;"
-                        "  signed char sc;"
-                        "  char16_t c16;"
-                        "  char32_t c32;"
-                        "  wchar_t wc;"
+                      "  char c;"
+                      "  unsigned char uc;"
+                      "  signed char sc;"
+                      "  char16_t c16;"
+                      "  char32_t c32;"
+                      "  wchar_t wc;"
 
-                        "  short s;"
-                        "  int i;"
-                        "  long l;"
-                        "  long long ll;"
+                      "  short s;"
+                      "  int i;"
+                      "  long l;"
+                      "  long long ll;"
 
-                        "  unsigned short us;"
-                        "  unsigned int ui;"
-                        "  unsigned long ul;"
-                        "  unsigned long long ull;"
+                      "  unsigned short us;"
+                      "  unsigned int ui;"
+                      "  unsigned long ul;"
+                      "  unsigned long long ull;"
 
-                        "  signed short ss;"
-                        "  signed int si;"
-                        "  signed long sl;"
-                        "  signed long long sll;"
+                      "  signed short ss;"
+                      "  signed int si;"
+                      "  signed long sl;"
+                      "  signed long long sll;"
 
-                        "  int8_t i8;"
-                        "  int16_t i16;"
-                        "  int32_t i32;"
-                        "  int64_t i64;"
+                      "  int8_t i8;"
+                      "  int16_t i16;"
+                      "  int32_t i32;"
+                      "  int64_t i64;"
 
-                        "  uint8_t u8;"
-                        "  uint16_t u16;"
-                        "  uint32_t u32;"
-                        "  uint64_t u64;"
+                      "  uint8_t u8;"
+                      "  uint16_t u16;"
+                      "  uint32_t u32;"
+                      "  uint64_t u64;"
 
-                        "  size_t st;",
-                        "  ptrdiff_t pt;"
-                        "  intptr_t ip;"
-                        "  uintptr_t up;"
+                      "  size_t st;",
+                      "  ptrdiff_t pt;"
+                      "  intptr_t ip;"
+                      "  uintptr_t up;"
 
-                        "  float f;"
-                        "  double d;"
-                        "};"},
-                       {});
+                      "  float f;"
+                      "  double d;"
+                      "};"},
+                     {});
 
   EXPECT_THAT(
       ir.records,
