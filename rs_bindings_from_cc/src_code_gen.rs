@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use anyhow::bail;
 use anyhow::{anyhow, Result};
 use ffi_types::*;
 use ir::*;
@@ -207,11 +208,12 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
 
 fn rustfmt(input: String) -> Result<String> {
     // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is fixed.
-    // TODO(forster): Add way to specify a configuration file.
 
     let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
 
     let mut child = Command::new(rustfmt)
+        // TODO(forster): Add a way to specify this as a command line parameter.
+        .args(&["--config-path", "external/rustfmt/rustfmt.toml"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -222,6 +224,11 @@ fn rustfmt(input: String) -> Result<String> {
         stdin.write_all(input.as_bytes()).expect("Failed to write to rustfmt stdin");
     });
     let output = child.wait_with_output().expect("Failed to read rustfmt stdout");
+
+    if !output.status.success() {
+        // The rustfmt error message has already been printed to stderr.
+        bail!("Unable to format output with rustfmt");
+    }
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
