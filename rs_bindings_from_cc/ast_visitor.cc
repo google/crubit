@@ -142,10 +142,10 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
         type = MappedType::Simple("bool", "bool");
         break;
       case clang::BuiltinType::Float:
-        type = MappedType::Simple("float", "float");
+        type = MappedType::Simple("f32", "float");
         break;
       case clang::BuiltinType::Double:
-        type = MappedType::Simple("double", "double");
+        type = MappedType::Simple("f64", "double");
         break;
       case clang::BuiltinType::Void:
         type = MappedType::Void();

@@ -384,8 +384,8 @@ TEST(AstVisitorTest, IntegerTypes) {
           FieldType(IsSimpleType("isize", "intptr_t")),
           FieldType(IsSimpleType("usize", "uintptr_t")),
 
-          FieldType(IsSimpleType("float", "float")),
-          FieldType(IsSimpleType("double", "double")))));
+          FieldType(IsSimpleType("f32", "float")),
+          FieldType(IsSimpleType("f64", "double")))));
 }
 
 }  // namespace
