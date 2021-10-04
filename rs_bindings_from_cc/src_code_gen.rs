@@ -83,7 +83,44 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
     !func.is_inline
 }
 
-/// Generate Rust source code for a given Record.
+/// Generates Rust source code for a given `Func`.
+///
+/// Returns the generated function and the thunk as a tuple.
+fn generate_func(func: &Func) -> Result<(TokenStream, TokenStream)> {
+    let mangled_name = &func.mangled_name;
+    let ident = make_ident(&func.identifier.identifier);
+    let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
+    // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
+    let return_type_name = format_rs_type(&func.return_type.rs_type)?;
+
+    let param_idents =
+        func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
+
+    let param_types =
+        func.params.iter().map(|p| format_rs_type(&p.type_.rs_type)).collect::<Result<Vec<_>>>()?;
+
+    let api_func = quote! {
+        #[inline(always)]
+        pub fn #ident( #( #param_idents: #param_types ),* ) -> #return_type_name {
+            unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
+        }
+    };
+
+    let thunk_attr = if can_skip_cc_thunk(func) {
+        quote! {#[link_name = #mangled_name]}
+    } else {
+        quote! {}
+    };
+
+    let thunk = quote! {
+        #thunk_attr
+        pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
+    };
+
+    Ok((api_func, thunk))
+}
+
+/// Generates Rust source code for a given `Record`.
 fn generate_record(record: &Record) -> Result<TokenStream> {
     let ident = make_ident(&record.identifier.identifier);
     let field_idents =
@@ -128,44 +165,24 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
 }
 
 fn generate_rs_api(ir: &IR) -> Result<String> {
+    let mut items = vec![];
     let mut thunks = vec![];
-    let mut api_funcs = vec![];
-    for func in ir.functions() {
-        let mangled_name = &func.mangled_name;
-        let ident = make_ident(&func.identifier.identifier);
-        let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
-        // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
-        let return_type_name = format_rs_type(&func.return_type.rs_type)?;
 
-        let param_idents =
-            func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
+    let mut generate_imports = false;
 
-        let param_types = func
-            .params
-            .iter()
-            .map(|p| format_rs_type(&p.type_.rs_type))
-            .collect::<Result<Vec<_>>>()?;
-
-        api_funcs.push(quote! {
-            #[inline(always)]
-            pub fn #ident( #( #param_idents: #param_types ),* ) -> #return_type_name {
-                unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
+    for item in &ir.items {
+        match item {
+            Item::Func(func) => {
+                let (api_func, thunk) = generate_func(func)?;
+                items.push(api_func);
+                thunks.push(thunk);
             }
-        });
-
-        let thunk_attr = if can_skip_cc_thunk(&func) {
-            quote! {#[link_name = #mangled_name]}
-        } else {
-            quote! {}
-        };
-
-        thunks.push(quote! {
-            #thunk_attr
-            pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
-        });
+            Item::Record(record) => {
+                items.push(generate_record(record)?);
+                generate_imports = true;
+            }
+        }
     }
-
-    let records = ir.records().map(generate_record).collect::<Result<Vec<_>>>()?;
 
     let mod_detail = if thunks.is_empty() {
         quote! {}
@@ -179,9 +196,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         }
     };
 
-    let imports = if records.is_empty() {
-        quote! {}
-    } else {
+    let imports = if generate_imports {
         // TODO(mboehme): For the time being, we're using unstable features to
         // be able to use offset_of!() in static assertions. This is fine for a
         // prototype, but longer-term we want to either get those features
@@ -192,13 +207,14 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
             use memoffset_unstable_const::offset_of;
             use static_assertions::const_assert_eq;
         }
+    } else {
+        quote! {}
     };
 
     let result = quote! {
         #imports
 
-        #( #api_funcs )*
-        #( #records )*
+        #( #items )*
 
         #mod_detail
     };
@@ -372,6 +388,7 @@ mod tests {
 
     use super::Result;
     use super::{generate_rs_api, generate_rs_api_impl};
+    use anyhow::anyhow;
     use ir::*;
     use quote::quote;
     use token_stream_printer::cc_tokens_to_string;
@@ -689,6 +706,38 @@ mod tests {
                 }
             })?
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_item_order() -> Result<()> {
+        let ir = IR {
+            used_headers: vec![],
+            items: vec![
+                ir_testing::func("first_func"),
+                ir_testing::record("FirstStruct"),
+                ir_testing::func("second_func"),
+                ir_testing::record("SecondStruct"),
+            ],
+        };
+
+        let rs_api = generate_rs_api(&ir)?;
+
+        let idx = |s: &str| rs_api.find(s).ok_or(anyhow!("'{}' missing", s));
+
+        let f1 = idx("fn first_func")?;
+        let f2 = idx("fn second_func")?;
+        let s1 = idx("struct FirstStruct")?;
+        let s2 = idx("struct SecondStruct")?;
+        let t1 = idx("fn __rust_thunk__first_func")?;
+        let t2 = idx("fn __rust_thunk__second_func")?;
+
+        assert!(f1 < s1);
+        assert!(s1 < f2);
+        assert!(f2 < s2);
+        assert!(s2 < t1);
+        assert!(t1 < t2);
+
         Ok(())
     }
 }
