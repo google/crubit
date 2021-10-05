@@ -143,6 +143,9 @@ nlohmann::json Record::ToJson() const {
 
   nlohmann::json record;
   record["identifier"] = identifier.ToJson();
+  if (doc_comment) {
+    record["doc_comment"] = *doc_comment;
+  }
   record["fields"] = std::move(json_fields);
   record["size"] = size;
   record["alignment"] = alignment;

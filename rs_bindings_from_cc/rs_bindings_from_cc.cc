@@ -50,6 +50,9 @@ int main(int argc, char* argv[]) {
       << "please specify at least one header in --public_headers";
 
   std::vector<std::string> command_line(argv, argv + argc);
+  // Needed, so that we can copy over non-doc comments that are used as
+  // documention.
+  command_line.push_back("-fparse-all-comments");
   command_line.push_back(std::string(kVirtualInputPath));
 
   std::string virtual_input_file_content;

@@ -17,8 +17,10 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 
@@ -100,6 +102,15 @@ static AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
 }
 
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
+  clang::ASTContext& ctx = record_decl->getASTContext();
+
+  clang::SourceManager& sm = ctx.getSourceManager();
+  clang::RawComment* raw_comment = ctx.getRawCommentForDeclNoCache(record_decl);
+  std::optional<std::string> doc_comment;
+  if (raw_comment != nullptr) {
+    doc_comment = raw_comment->getFormattedText(sm, sm.getDiagnostics());
+  }
+
   std::vector<Field> fields;
   clang::AccessSpecifier default_access = clang::AS_public;
   // The definition is always rewritten, but default access to `kPublic` in case
@@ -169,10 +180,9 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       }
     }
   }
-  const clang::ASTRecordLayout& layout =
-      record_decl->getASTContext().getASTRecordLayout(record_decl);
+  const clang::ASTRecordLayout& layout = ctx.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    auto type = ConvertType(field_decl->getType(), field_decl->getASTContext());
+    auto type = ConvertType(field_decl->getType(), ctx);
     if (!type.ok()) {
       // TODO(b/200239975):  Add diagnostics for declarations we can't import
       return true;
@@ -198,6 +208,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   }
   ir_.items.push_back(
       Record{.identifier = *record_name,
+             .doc_comment = doc_comment,
              .fields = std::move(fields),
              .size = layout.getSize().getQuantity(),
              .alignment = layout.getAlignment().getQuantity(),

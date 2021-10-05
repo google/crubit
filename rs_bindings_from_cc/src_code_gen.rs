@@ -123,6 +123,13 @@ fn generate_func(func: &Func) -> Result<(TokenStream, TokenStream)> {
 /// Generates Rust source code for a given `Record`.
 fn generate_record(record: &Record) -> Result<TokenStream> {
     let ident = make_ident(&record.identifier.identifier);
+    let doc_comment = match &record.doc_comment {
+        Some(text) => {
+            let doc = format!(" {}", text.replace("\n", "\n "));
+            quote! {#[doc=#doc]}
+        }
+        None => quote! {},
+    };
     let field_idents =
         record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
     let field_types = record
@@ -153,6 +160,7 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
             }
         });
     Ok(quote! {
+        #doc_comment
         #[repr(C)]
         pub struct #ident {
             #( #field_accesses #field_idents: #field_types, )*
@@ -229,7 +237,10 @@ fn rustfmt(input: String) -> Result<String> {
 
     let mut child = Command::new(rustfmt)
         // TODO(forster): Add a way to specify this as a command line parameter.
-        .args(&["--config-path", "external/rustfmt/rustfmt.toml"])
+        .args(&[
+            "--config-path=external/rustfmt/rustfmt.toml",
+            "--config=normalize_doc_attributes=true",
+        ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
@@ -390,7 +401,9 @@ mod tests {
     use super::{generate_rs_api, generate_rs_api_impl};
     use anyhow::anyhow;
     use ir::*;
-    use ir_testing::{ir_func, ir_id, ir_int, ir_int_param, ir_items, ir_record};
+    use ir_testing::{
+        ir_func, ir_id, ir_int, ir_int_param, ir_items, ir_public_trivial_special, ir_record,
+    };
     use quote::quote;
     use token_stream_printer::cc_tokens_to_string;
 
@@ -478,6 +491,7 @@ mod tests {
     fn test_simple_struct() -> Result<()> {
         let ir = ir_items(vec![Item::Record(Record {
             identifier: ir_id("SomeStruct"),
+            doc_comment: None,
             fields: vec![
                 Field {
                     identifier: ir_id("public_int"),
@@ -500,20 +514,12 @@ mod tests {
             ],
             size: 12,
             alignment: 4,
-            move_constructor: SpecialMemberFunc {
-                definition: SpecialMemberDefinition::Trivial,
-                access: AccessSpecifier::Public,
-            },
-            copy_constructor: SpecialMemberFunc {
-                definition: SpecialMemberDefinition::Trivial,
-                access: AccessSpecifier::Public,
-            },
-            destructor: SpecialMemberFunc {
-                definition: SpecialMemberDefinition::Trivial,
-                access: AccessSpecifier::Public,
-            },
+            copy_constructor: ir_public_trivial_special(),
+            move_constructor: ir_public_trivial_special(),
+            destructor: ir_public_trivial_special(),
             is_trivial_abi: true,
         })]);
+
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(
@@ -657,6 +663,30 @@ mod tests {
         assert!(f2 < s2);
         assert!(s2 < t1);
         assert!(t1 < t2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_doc_comment() -> Result<()> {
+        let ir = IR {
+            used_headers: vec![],
+            items: vec![Item::Record(Record {
+                identifier: ir_id("SomeStruct"),
+                doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
+                alignment: 0,
+                size: 0,
+                fields: vec![],
+                copy_constructor: ir_public_trivial_special(),
+                move_constructor: ir_public_trivial_special(),
+                destructor: ir_public_trivial_special(),
+                is_trivial_abi: true,
+            })],
+        };
+
+        generate_rs_api(&ir)?
+            .find("/// Doc Comment\n///\n///  * with bullet\n")
+            .expect("doc comment missing");
 
         Ok(())
     }

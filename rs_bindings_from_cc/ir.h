@@ -234,6 +234,7 @@ struct Record {
   nlohmann::json ToJson() const;
 
   Identifier identifier;
+  std::optional<std::string> doc_comment;
   std::vector<Field> fields;
   // Size and alignment in bytes.
   int64_t size;

@@ -2,7 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use ir::{self, CcType, Func, FuncParam, Identifier, Item, MappedType, Record, RsType, IR};
+use ir::{
+    self, CcType, Func, FuncParam, Identifier, Item, MappedType, Record, RsType, SpecialMemberFunc,
+    IR,
+};
 
 /// Creates an identifier
 pub fn ir_id(name: &str) -> Identifier {
@@ -33,20 +36,24 @@ pub fn ir_func(name: &str) -> Item {
     })
 }
 
-/// Creates a simple `Item::Record` with a given name.
-pub fn ir_record(name: &str) -> Item {
-    let public_trivial_special = ir::SpecialMemberFunc {
+pub fn ir_public_trivial_special() -> SpecialMemberFunc {
+    SpecialMemberFunc {
         definition: ir::SpecialMemberDefinition::Trivial,
         access: ir::AccessSpecifier::Public,
-    };
+    }
+}
+
+/// Creates a simple `Item::Record` with a given name.
+pub fn ir_record(name: &str) -> Item {
     Item::Record(Record {
         identifier: ir_id(name),
+        doc_comment: None,
         alignment: 0,
         size: 0,
         fields: vec![],
-        copy_constructor: public_trivial_special.clone(),
-        move_constructor: public_trivial_special.clone(),
-        destructor: public_trivial_special.clone(),
+        copy_constructor: ir_public_trivial_special(),
+        move_constructor: ir_public_trivial_special(),
+        destructor: ir_public_trivial_special(),
         is_trivial_abi: true,
     })
 }

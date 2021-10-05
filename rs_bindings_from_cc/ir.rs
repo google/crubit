@@ -89,6 +89,7 @@ pub struct SpecialMemberFunc {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub identifier: Identifier,
+    pub doc_comment: Option<String>,
     pub fields: Vec<Field>,
     pub size: usize,
     pub alignment: usize,
@@ -263,6 +264,7 @@ mod tests {
         let expected = IR {
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
+                doc_comment: None,
                 fields: vec![
                     Field {
                         identifier: Identifier { identifier: "public_int".to_string() },
@@ -370,6 +372,7 @@ mod tests {
         let expected = IR {
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
+                doc_comment: None,
                 fields: vec![Field {
                     identifier: Identifier { identifier: "ptr".to_string() },
                     type_: MappedType {

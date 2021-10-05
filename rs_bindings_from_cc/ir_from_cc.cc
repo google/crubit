@@ -35,6 +35,9 @@ IR IrFromCc(absl::Span<const absl::string_view> header_files_contents,
 
   std::vector<std::string> args_as_strings(args.begin(), args.end());
   args_as_strings.push_back("--syntax-only");
+  // Needed, so that we can copy over non-doc comments that are used as
+  // documention.
+  args_as_strings.push_back("-fparse-all-comments");
   args_as_strings.push_back(std::string(kVirtualInputPath));
 
   IR ir;
