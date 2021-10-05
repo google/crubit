@@ -183,6 +183,9 @@ auto Destructor(const Args&... matchers) {
   return testing::Field("destructor", &Record::destructor, AllOf(matchers...));
 }
 
+// Matches a Record which is trivial for calls.
+MATCHER(IsTrivialAbi, "") { return arg.is_trivial_abi; }
+
 // Matches a SpecialMemberFunc that has the given definition.
 MATCHER_P(DefinitionIs, definition, "") { return arg.definition == definition; }
 
@@ -460,6 +463,34 @@ TEST(AstVisitorTest, PrivateDestructor) {
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items,
               Each(VariantWith<Record>(Destructor(AccessIs(kPrivate)))));
+}
+
+TEST(AstVisitorTest, TrivialAbi) {
+  absl::string_view file = R"cc(
+    struct Empty {};
+    struct Defaulted {
+      Defaulted(const Defaulted&) = default;
+    };
+    struct [[clang::trivial_abi]] Nontrivial {
+      Nontrivial(const Nontrivial&) {}
+    };
+  )cc";
+  IR ir = IrFromCc({file}, {});
+
+  EXPECT_THAT(ir.items, SizeIs(3));
+  EXPECT_THAT(ir.items, Each(VariantWith<Record>(IsTrivialAbi())));
+}
+
+TEST(AstVisitorTest, NotTrivialAbi) {
+  absl::string_view file = R"cc(
+    struct Nontrivial {
+      Nontrivial(const Nontrivial&) {}
+    };
+  )cc";
+  IR ir = IrFromCc({file}, {});
+
+  EXPECT_THAT(ir.items, SizeIs(1));
+  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Not(IsTrivialAbi()))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
