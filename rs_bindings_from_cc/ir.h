@@ -43,6 +43,10 @@ class HeaderName {
   std::string name_;
 };
 
+inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
+  return o << h.ToJson();
+}
+
 // A C++ type involved in the bindings. It has the knowledge of how the type
 // is spelled in C++.
 struct CcType {
@@ -80,6 +84,10 @@ struct RsType {
   std::vector<RsType> type_params = {};
 };
 
+inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
+  return o << type.ToJson();
+}
+
 // A type involved in the bindings. The rs_type and cc_type will be treated
 // as interchangeable during bindings, and so should share the same layout.
 //
@@ -114,6 +122,10 @@ struct MappedType {
   CcType cc_type;
 };
 
+inline std::ostream& operator<<(std::ostream& o, const MappedType& type) {
+  return o << type.ToJson();
+}
+
 // An identifier involved in bindings.
 //
 // Examples:
@@ -137,6 +149,10 @@ class Identifier {
   std::string identifier_;
 };
 
+inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
+  return o << id.Ident();
+}
+
 // A function parameter.
 //
 // Examples:
@@ -149,6 +165,10 @@ struct FuncParam {
   Identifier identifier;
 };
 
+inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {
+  return o << param.ToJson();
+}
+
 // A function involved in the bindings.
 struct Func {
   nlohmann::json ToJson() const;
@@ -160,12 +180,18 @@ struct Func {
   bool is_inline;
 };
 
+inline std::ostream& operator<<(std::ostream& o, const Func& f) {
+  return o << f.ToJson();
+}
+
 // Access specifier for a member or base class.
 enum AccessSpecifier {
   kPublic,
   kProtected,
   kPrivate,
 };
+
+std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access);
 
 // A field (non-static member variable) of a record.
 struct Field {
@@ -177,6 +203,10 @@ struct Field {
   // Field offset in bits.
   uint64_t offset;
 };
+
+inline std::ostream& operator<<(std::ostream& o, const Field& f) {
+  return o << f.ToJson();
+}
 
 // A record (struct, class, union).
 struct Record {
@@ -199,6 +229,10 @@ struct Record {
   bool is_trivial_abi = false;
 };
 
+inline std::ostream& operator<<(std::ostream& o, const Record& r) {
+  return o << r.ToJson();
+}
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
@@ -209,6 +243,10 @@ struct IR {
   std::vector<HeaderName> used_headers;
   std::vector<std::variant<Func, Record>> items;
 };
+
+inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
+  return o << ir.ToJson();
+}
 
 }  // namespace rs_bindings_from_cc
 

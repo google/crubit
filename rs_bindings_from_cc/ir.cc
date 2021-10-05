@@ -97,6 +97,10 @@ static std::string AccessToString(AccessSpecifier access) {
   }
 }
 
+std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access) {
+  return o << AccessToString(access);
+}
+
 nlohmann::json Field::ToJson() const {
   nlohmann::json result;
   result["type"] = type.ToJson();
