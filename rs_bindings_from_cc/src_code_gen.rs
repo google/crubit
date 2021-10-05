@@ -390,51 +390,19 @@ mod tests {
     use super::{generate_rs_api, generate_rs_api_impl};
     use anyhow::anyhow;
     use ir::*;
+    use ir_testing::{ir_func, ir_id, ir_int, ir_int_param, ir_items, ir_record};
     use quote::quote;
     use token_stream_printer::cc_tokens_to_string;
 
     #[test]
     fn test_simple_function() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![],
-            items: vec![Item::Func(Func {
-                identifier: Identifier { identifier: "add".to_string() },
-                mangled_name: "_Z3Addii".to_string(),
-                return_type: MappedType {
-                    rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                    cc_type: CcType {
-                        name: "int".to_string(),
-                        is_const: false,
-                        type_params: vec![],
-                    },
-                },
-                params: vec![
-                    FuncParam {
-                        identifier: Identifier { identifier: "a".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                    },
-                    FuncParam {
-                        identifier: Identifier { identifier: "b".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                    },
-                ],
-                is_inline: false,
-            })],
-        };
+        let ir = ir_items(vec![Item::Func(Func {
+            identifier: ir_id("add"),
+            mangled_name: "_Z3Addii".to_string(),
+            return_type: ir_int(),
+            params: vec![ir_int_param("a"), ir_int_param("b")],
+            is_inline: false,
+        })]);
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(
@@ -468,38 +436,8 @@ mod tests {
             items: vec![Item::Func(Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
-                return_type: MappedType {
-                    rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                    cc_type: CcType {
-                        name: "int".to_string(),
-                        is_const: false,
-                        type_params: vec![],
-                    },
-                },
-                params: vec![
-                    FuncParam {
-                        identifier: Identifier { identifier: "a".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                    },
-                    FuncParam {
-                        identifier: Identifier { identifier: "b".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                    },
-                ],
+                return_type: ir_int(),
+                params: vec![ir_int_param("a"), ir_int_param("b")],
                 is_inline: true,
             })],
         };
@@ -538,56 +476,32 @@ mod tests {
 
     #[test]
     fn test_simple_struct() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![],
-            items: vec![Item::Record(Record {
-                identifier: Identifier { identifier: "SomeStruct".to_string() },
-                fields: vec![
-                    Field {
-                        identifier: Identifier { identifier: "public_int".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                        access: AccessSpecifier::Public,
-                        offset: 0,
-                    },
-                    Field {
-                        identifier: Identifier { identifier: "protected_int".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                        access: AccessSpecifier::Protected,
-                        offset: 32,
-                    },
-                    Field {
-                        identifier: Identifier { identifier: "private_int".to_string() },
-                        type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                            cc_type: CcType {
-                                name: "int".to_string(),
-                                is_const: false,
-                                type_params: vec![],
-                            },
-                        },
-                        access: AccessSpecifier::Private,
-                        offset: 64,
-                    },
-                ],
-                size: 12,
-                alignment: 4,
-                is_trivial_abi: true,
-            })],
-        };
+        let ir = ir_items(vec![Item::Record(Record {
+            identifier: ir_id("SomeStruct"),
+            fields: vec![
+                Field {
+                    identifier: ir_id("public_int"),
+                    type_: ir_int(),
+                    access: AccessSpecifier::Public,
+                    offset: 0,
+                },
+                Field {
+                    identifier: ir_id("protected_int"),
+                    type_: ir_int(),
+                    access: AccessSpecifier::Protected,
+                    offset: 32,
+                },
+                Field {
+                    identifier: ir_id("private_int"),
+                    type_: ir_int(),
+                    access: AccessSpecifier::Private,
+                    offset: 64,
+                },
+            ],
+            size: 12,
+            alignment: 4,
+            is_trivial_abi: true,
+        })]);
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(
@@ -628,57 +542,54 @@ mod tests {
 
     #[test]
     fn test_ptr_func() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![],
-            items: vec![Item::Func(Func {
-                identifier: Identifier { identifier: "Deref".to_string() },
-                mangled_name: "_Z5DerefPKPi".to_string(),
-                return_type: MappedType {
+        let ir = ir_items(vec![Item::Func(Func {
+            identifier: Identifier { identifier: "Deref".to_string() },
+            mangled_name: "_Z5DerefPKPi".to_string(),
+            return_type: MappedType {
+                rs_type: RsType {
+                    name: "*mut".to_string(),
+                    type_params: vec![RsType { name: "i32".to_string(), type_params: vec![] }],
+                },
+                cc_type: CcType {
+                    name: "*".to_string(),
+                    is_const: false,
+                    type_params: vec![CcType {
+                        name: "int".to_string(),
+                        is_const: false,
+                        type_params: vec![],
+                    }],
+                },
+            },
+            params: vec![FuncParam {
+                identifier: Identifier { identifier: "p".to_string() },
+                type_: MappedType {
                     rs_type: RsType {
-                        name: "*mut".to_string(),
-                        type_params: vec![RsType { name: "i32".to_string(), type_params: vec![] }],
+                        name: "*const".to_string(),
+                        type_params: vec![RsType {
+                            name: "*mut".to_string(),
+                            type_params: vec![RsType {
+                                name: "i32".to_string(),
+                                type_params: vec![],
+                            }],
+                        }],
                     },
                     cc_type: CcType {
                         name: "*".to_string(),
                         is_const: false,
                         type_params: vec![CcType {
-                            name: "int".to_string(),
-                            is_const: false,
-                            type_params: vec![],
+                            name: "*".to_string(),
+                            is_const: true,
+                            type_params: vec![CcType {
+                                name: "int".to_string(),
+                                is_const: false,
+                                type_params: vec![],
+                            }],
                         }],
                     },
                 },
-                params: vec![FuncParam {
-                    identifier: Identifier { identifier: "p".to_string() },
-                    type_: MappedType {
-                        rs_type: RsType {
-                            name: "*const".to_string(),
-                            type_params: vec![RsType {
-                                name: "*mut".to_string(),
-                                type_params: vec![RsType {
-                                    name: "i32".to_string(),
-                                    type_params: vec![],
-                                }],
-                            }],
-                        },
-                        cc_type: CcType {
-                            name: "*".to_string(),
-                            is_const: false,
-                            type_params: vec![CcType {
-                                name: "*".to_string(),
-                                is_const: true,
-                                type_params: vec![CcType {
-                                    name: "int".to_string(),
-                                    is_const: false,
-                                    type_params: vec![],
-                                }],
-                            }],
-                        },
-                    },
-                }],
-                is_inline: true,
-            })],
-        };
+            }],
+            is_inline: true,
+        })]);
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(
@@ -711,15 +622,12 @@ mod tests {
 
     #[test]
     fn test_item_order() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![],
-            items: vec![
-                ir_testing::func("first_func"),
-                ir_testing::record("FirstStruct"),
-                ir_testing::func("second_func"),
-                ir_testing::record("SecondStruct"),
-            ],
-        };
+        let ir = ir_items(vec![
+            ir_func("first_func"),
+            ir_record("FirstStruct"),
+            ir_func("second_func"),
+            ir_record("SecondStruct"),
+        ]);
 
         let rs_api = generate_rs_api(&ir)?;
 
