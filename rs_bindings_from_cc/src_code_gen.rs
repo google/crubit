@@ -500,6 +500,18 @@ mod tests {
             ],
             size: 12,
             alignment: 4,
+            move_constructor: SpecialMemberFunc {
+                definition: SpecialMemberDefinition::Trivial,
+                access: AccessSpecifier::Public,
+            },
+            copy_constructor: SpecialMemberFunc {
+                definition: SpecialMemberDefinition::Trivial,
+                access: AccessSpecifier::Public,
+            },
+            destructor: SpecialMemberFunc {
+                definition: SpecialMemberDefinition::Trivial,
+                access: AccessSpecifier::Public,
+            },
             is_trivial_abi: true,
         })]);
         assert_eq!(

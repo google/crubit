@@ -74,11 +74,27 @@ pub struct Field {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub enum SpecialMemberDefinition {
+    Trivial,
+    Nontrivial,
+    Deleted,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct SpecialMemberFunc {
+    pub definition: SpecialMemberDefinition,
+    pub access: AccessSpecifier,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub identifier: Identifier,
     pub fields: Vec<Field>,
     pub size: usize,
     pub alignment: usize,
+    pub copy_constructor: SpecialMemberFunc,
+    pub move_constructor: SpecialMemberFunc,
+    pub destructor: SpecialMemberFunc,
     pub is_trivial_abi: bool,
 }
 
@@ -226,6 +242,18 @@ mod tests {
                     ],
                     "size": 12,
                     "alignment": 4,
+                    "copy_constructor": {
+                        "definition": "Nontrivial",
+                        "access": "Private"
+                    },
+                    "move_constructor": {
+                        "definition": "Deleted",
+                        "access": "Protected"
+                    },
+                    "destructor": {
+                        "definition": "Trivial",
+                        "access": "Public"
+                    },
                     "is_trivial_abi": true
                 }}
             ]
@@ -278,6 +306,18 @@ mod tests {
                 ],
                 size: 12,
                 alignment: 4,
+                copy_constructor: SpecialMemberFunc {
+                    definition: SpecialMemberDefinition::Nontrivial,
+                    access: AccessSpecifier::Private,
+                },
+                move_constructor: SpecialMemberFunc {
+                    definition: SpecialMemberDefinition::Deleted,
+                    access: AccessSpecifier::Protected,
+                },
+                destructor: SpecialMemberFunc {
+                    definition: SpecialMemberDefinition::Trivial,
+                    access: AccessSpecifier::Public,
+                },
                 is_trivial_abi: true,
             })],
             ..Default::default()
@@ -309,6 +349,18 @@ mod tests {
                     ],
                     "size": 8,
                     "alignment": 8,
+                    "copy_constructor": {
+                        "definition": "Trivial",
+                        "access": "Public"
+                    },
+                    "move_constructor": {
+                        "definition": "Trivial",
+                        "access": "Public"
+                    },
+                    "destructor": {
+                        "definition": "Trivial",
+                        "access": "Public"
+                    },
                     "is_trivial_abi": true
                 }}
             ]
@@ -343,6 +395,18 @@ mod tests {
                 }],
                 size: 8,
                 alignment: 8,
+                move_constructor: SpecialMemberFunc {
+                    definition: SpecialMemberDefinition::Trivial,
+                    access: AccessSpecifier::Public,
+                },
+                copy_constructor: SpecialMemberFunc {
+                    definition: SpecialMemberDefinition::Trivial,
+                    access: AccessSpecifier::Public,
+                },
+                destructor: SpecialMemberFunc {
+                    definition: SpecialMemberDefinition::Trivial,
+                    access: AccessSpecifier::Public,
+                },
                 is_trivial_abi: true,
             })],
             ..Default::default()
