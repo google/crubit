@@ -168,6 +168,12 @@ auto MoveConstructor(const Args&... matchers) {
                         AllOf(matchers...));
 }
 
+// Matches a Record with a destructor that matches all given matchers.
+template <typename... Args>
+auto Destructor(const Args&... matchers) {
+  return testing::Field("destructor", &Record::destructor, AllOf(matchers...));
+}
+
 // Matches a SpecialMemberFunc that has the given definition.
 MATCHER_P(DefinitionIs, definition, "") { return arg.definition == definition; }
 
@@ -390,6 +396,61 @@ TEST(AstVisitorTest, PrivateMoveConstructor) {
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items,
               Each(VariantWith<Record>(MoveConstructor(AccessIs(kPrivate)))));
+}
+
+TEST(AstVisitorTest, TrivialDestructor) {
+  absl::string_view file =
+      "struct Implicit {};\n"
+      "struct Defaulted { ~Defaulted() = default; };\n";
+  IR ir = IrFromCc({file}, {});
+
+  EXPECT_THAT(ir.items, SizeIs(2));
+  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
+                            SpecialMemberFunc::Definition::kTrivial)))));
+}
+
+TEST(AstVisitorTest, NontrivialDestructor) {
+  absl::string_view file = "struct Defined { ~Defined();};\n";
+  // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
+  // TODO(b/202113881): "struct MemberDefaulted { ~MemberDefaulted() = default;
+  // Defined x; };\n"
+  IR ir = IrFromCc({file}, {});
+  EXPECT_THAT(ir.items, SizeIs(1));
+  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
+                            SpecialMemberFunc::Definition::kNontrivial)))));
+}
+
+TEST(AstVisitorTest, DeletedDestructor) {
+  absl::string_view file = "struct Deleted { ~Deleted() = delete;};\n";
+  // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
+  IR ir = IrFromCc({file}, {});
+
+  EXPECT_THAT(ir.items, SizeIs(1));
+  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
+                            SpecialMemberFunc::Definition::kDeleted)))));
+}
+
+TEST(AstVisitorTest, PublicDestructor) {
+  absl::string_view file =
+      "class Implicit {};\n"
+      "struct Defaulted { ~Defaulted() = default; };\n"
+      "class Section { public: ~Section() = default; };\n";
+  IR ir = IrFromCc({file}, {});
+
+  EXPECT_THAT(ir.items, SizeIs(3));
+  EXPECT_THAT(ir.items,
+              Each(VariantWith<Record>(Destructor(AccessIs(kPublic)))));
+}
+
+TEST(AstVisitorTest, PrivateDestructor) {
+  absl::string_view file =
+      "class Defaulted { ~Defaulted() = default; };\n"
+      "struct Section { private: ~Section() = default; };\n";
+  IR ir = IrFromCc({file}, {});
+
+  EXPECT_THAT(ir.items, SizeIs(2));
+  EXPECT_THAT(ir.items,
+              Each(VariantWith<Record>(Destructor(AccessIs(kPrivate)))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {

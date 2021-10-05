@@ -116,6 +116,10 @@ TEST(IrTest, IR) {
                         "definition": "Deleted",
                         "access": "Protected"
                     },
+                    "destructor": {
+                        "definition": "Trivial",
+                        "access": "Public"
+                    },
                     "is_trivial_abi": true
                 }}
             ]
@@ -162,6 +166,11 @@ TEST(IrTest, IR) {
                                    .definition =
                                        SpecialMemberFunc::Definition::kDeleted,
                                    .access = kProtected},
+                           .destructor =
+                               SpecialMemberFunc{
+                                   .definition =
+                                       SpecialMemberFunc::Definition::kTrivial,
+                                   .access = kPublic},
                            .is_trivial_abi = true}}};
   EXPECT_EQ(ir.ToJson(), expected);
 }

@@ -148,6 +148,7 @@ nlohmann::json Record::ToJson() const {
   record["alignment"] = alignment;
   record["copy_constructor"] = copy_constructor.ToJson();
   record["move_constructor"] = move_constructor.ToJson();
+  record["destructor"] = destructor.ToJson();
   record["is_trivial_abi"] = is_trivial_abi;
 
   nlohmann::json item;

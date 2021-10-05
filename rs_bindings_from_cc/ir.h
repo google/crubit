@@ -242,6 +242,7 @@ struct Record {
   // Special member functions.
   SpecialMemberFunc copy_constructor = {};
   SpecialMemberFunc move_constructor = {};
+  SpecialMemberFunc destructor = {};
 
   // Whether this type is passed by value as if it were a trivial type (the same
   // as it would be if it were a struct in C).

@@ -43,7 +43,11 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
  private:
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
-  Identifier GetTranslatedName(const clang::NamedDecl* named_decl) const;
+  // Gets the identifier naming the symbol.
+  // Returns nullopt for things with non-identifier names, such as the
+  // destructor.
+  std::optional<Identifier> GetTranslatedName(
+      const clang::NamedDecl* named_decl) const;
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type,
                                          const clang::ASTContext& ctx) const;
 

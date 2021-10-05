@@ -54,7 +54,12 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       // TODO(b/200239975):  Add diagnostics for declarations we can't import
       return true;
     }
-    params.push_back({*param_type, GetTranslatedName(param)});
+    std::optional<Identifier> param_name = GetTranslatedName(param);
+    if (!param_name.has_value()) {
+      // TODO(b/200239975):  Add diagnostics for declarations we can't import
+      return true;
+    }
+    params.push_back({*param_type, *std::move(param_name)});
   }
 
   auto return_type = ConvertType(function_decl->getReturnType(),
@@ -62,8 +67,13 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   if (!return_type.ok()) {
     return true;
   }
+  std::optional<Identifier> translated_name = GetTranslatedName(function_decl);
+  if (!translated_name.has_value()) {
+    // For example, the destructor.
+    return true;
+  }
   ir_.items.push_back(Func{
-      .identifier = GetTranslatedName(function_decl),
+      .identifier = *translated_name,
       .mangled_name = GetMangledName(function_decl),
       .return_type = *return_type,
       .params = std::move(params),
@@ -102,6 +112,10 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       .definition = SpecialMemberFunc::Definition::kTrivial,
       .access = kPublic,
   };
+  SpecialMemberFunc dtor = {
+      .definition = SpecialMemberFunc::Definition::kTrivial,
+      .access = kPublic,
+  };
   if (const auto* cxx_record_decl =
           clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
     if (cxx_record_decl->isClass()) {
@@ -128,6 +142,12 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
     }
 
+    if (cxx_record_decl->hasTrivialDestructor()) {
+      dtor.definition = SpecialMemberFunc::Definition::kTrivial;
+    } else {
+      dtor.definition = SpecialMemberFunc::Definition::kNontrivial;
+    }
+
     for (clang::CXXConstructorDecl* ctor_decl : cxx_record_decl->ctors()) {
       if (ctor_decl->isCopyConstructor()) {
         copy_ctor.access = TranslateAccessSpecifier(ctor_decl->getAccess());
@@ -139,6 +159,13 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
         if (ctor_decl->isDeleted()) {
           move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
         }
+      }
+    }
+    clang::CXXDestructorDecl* dtor_decl = cxx_record_decl->getDestructor();
+    if (dtor_decl != nullptr) {
+      dtor.access = TranslateAccessSpecifier(dtor_decl->getAccess());
+      if (dtor_decl->isDeleted()) {
+        dtor.definition = SpecialMemberFunc::Definition::kDeleted;
       }
     }
   }
@@ -154,19 +181,29 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     if (access == clang::AS_none) {
       access = default_access;
     }
+
+    std::optional<Identifier> field_name = GetTranslatedName(field_decl);
+    if (!field_name.has_value()) {
+      return true;
+    }
     fields.push_back(
-        {.identifier = GetTranslatedName(field_decl),
+        {.identifier = *std::move(field_name),
          .type = *type,
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
   }
+  std::optional<Identifier> record_name = GetTranslatedName(record_decl);
+  if (!record_name.has_value()) {
+    return true;
+  }
   ir_.items.push_back(
-      Record{.identifier = GetTranslatedName(record_decl),
+      Record{.identifier = *record_name,
              .fields = std::move(fields),
              .size = layout.getSize().getQuantity(),
              .alignment = layout.getAlignment().getQuantity(),
              .copy_constructor = copy_ctor,
              .move_constructor = move_ctor,
+             .destructor = dtor,
              .is_trivial_abi = record_decl->canPassInRegisters()});
   return true;
 }
@@ -240,9 +277,13 @@ std::string AstVisitor::GetMangledName(
   return name;
 }
 
-Identifier AstVisitor::GetTranslatedName(
+std::optional<Identifier> AstVisitor::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
-  return Identifier(std::string(named_decl->getName()));
+  clang::IdentifierInfo* id = named_decl->getIdentifier();
+  if (id == nullptr) {
+    return std::nullopt;
+  }
+  return Identifier(std::string(id->getName()));
 }
 
 }  // namespace rs_bindings_from_cc
