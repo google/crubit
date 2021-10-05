@@ -208,6 +208,27 @@ inline std::ostream& operator<<(std::ostream& o, const Field& f) {
   return o << f.ToJson();
 }
 
+/// Information about special member functions.
+struct SpecialMemberFunc {
+  enum class Definition : char {
+    kTrivial,
+    kNontrivial,
+    kDeleted,
+  };
+
+  nlohmann::json ToJson() const;
+
+  Definition definition = Definition::kTrivial;
+  AccessSpecifier access = AccessSpecifier::kPublic;
+};
+
+std::ostream& operator<<(std::ostream& o,
+                         const SpecialMemberFunc::Definition& definition);
+
+inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
+  return o << f.ToJson();
+}
+
 // A record (struct, class, union).
 struct Record {
   nlohmann::json ToJson() const;
@@ -217,6 +238,10 @@ struct Record {
   // Size and alignment in bytes.
   int64_t size;
   int64_t alignment;
+
+  // Special member functions.
+  SpecialMemberFunc copy_constructor = {};
+  SpecialMemberFunc move_constructor = {};
 
   // Whether this type is passed by value as if it were a trivial type (the same
   // as it would be if it were a struct in C).

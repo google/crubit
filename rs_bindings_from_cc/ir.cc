@@ -110,6 +110,30 @@ nlohmann::json Field::ToJson() const {
   return result;
 }
 
+static std::string SpecialMemberDefinitionToString(
+    SpecialMemberFunc::Definition def) {
+  switch (def) {
+    case SpecialMemberFunc::Definition::kTrivial:
+      return "Trivial";
+    case SpecialMemberFunc::Definition::kNontrivial:
+      return "Nontrivial";
+    case SpecialMemberFunc::Definition::kDeleted:
+      return "Deleted";
+  }
+}
+
+std::ostream& operator<<(std::ostream& o,
+                         const SpecialMemberFunc::Definition& definition) {
+  return o << SpecialMemberDefinitionToString(definition);
+}
+
+nlohmann::json SpecialMemberFunc::ToJson() const {
+  nlohmann::json result;
+  result["definition"] = SpecialMemberDefinitionToString(definition);
+  result["access"] = AccessToString(access);
+  return result;
+}
+
 nlohmann::json Record::ToJson() const {
   std::vector<nlohmann::json> json_fields;
   json_fields.reserve(fields.size());
@@ -122,6 +146,8 @@ nlohmann::json Record::ToJson() const {
   record["fields"] = std::move(json_fields);
   record["size"] = size;
   record["alignment"] = alignment;
+  record["copy_constructor"] = copy_constructor.ToJson();
+  record["move_constructor"] = move_constructor.ToJson();
   record["is_trivial_abi"] = is_trivial_abi;
 
   nlohmann::json item;

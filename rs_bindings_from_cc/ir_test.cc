@@ -108,6 +108,14 @@ TEST(IrTest, IR) {
                     ],
                     "size": 12,
                     "alignment": 4,
+                    "copy_constructor": {
+                        "definition": "Nontrivial",
+                        "access": "Private"
+                    },
+                    "move_constructor": {
+                        "definition": "Deleted",
+                        "access": "Protected"
+                    },
                     "is_trivial_abi": true
                 }}
             ]
@@ -144,6 +152,16 @@ TEST(IrTest, IR) {
                                },
                            .size = 12,
                            .alignment = 4,
+                           .copy_constructor =
+                               SpecialMemberFunc{
+                                   .definition = SpecialMemberFunc::Definition::
+                                       kNontrivial,
+                                   .access = kPrivate},
+                           .move_constructor =
+                               SpecialMemberFunc{
+                                   .definition =
+                                       SpecialMemberFunc::Definition::kDeleted,
+                                   .access = kProtected},
                            .is_trivial_abi = true}}};
   EXPECT_EQ(ir.ToJson(), expected);
 }

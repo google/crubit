@@ -92,10 +92,54 @@ static AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   std::vector<Field> fields;
   clang::AccessSpecifier default_access = clang::AS_public;
+  // The definition is always rewritten, but default access to `kPublic` in case
+  // it is implicitly defined.
+  SpecialMemberFunc copy_ctor = {
+      .definition = SpecialMemberFunc::Definition::kTrivial,
+      .access = kPublic,
+  };
+  SpecialMemberFunc move_ctor = {
+      .definition = SpecialMemberFunc::Definition::kTrivial,
+      .access = kPublic,
+  };
   if (const auto* cxx_record_decl =
           clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
     if (cxx_record_decl->isClass()) {
       default_access = clang::AS_private;
+    }
+
+    if (cxx_record_decl->hasTrivialCopyConstructor()) {
+      copy_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
+    } else if (cxx_record_decl->hasNonTrivialCopyConstructor()) {
+      copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivial;
+    } else {
+      // I don't think the copy ctor can be implicitly deleted, but just in
+      // case...
+      copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+    }
+
+    if (cxx_record_decl->hasTrivialMoveConstructor()) {
+      move_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
+    } else if (cxx_record_decl->hasNonTrivialMoveConstructor()) {
+      move_ctor.definition = SpecialMemberFunc::Definition::kNontrivial;
+    } else {
+      // The move constructor can be **implicitly deleted** (and so not subject
+      // to the below loop over ctors), e.g. by the presence by a copy ctor.
+      move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+    }
+
+    for (clang::CXXConstructorDecl* ctor_decl : cxx_record_decl->ctors()) {
+      if (ctor_decl->isCopyConstructor()) {
+        copy_ctor.access = TranslateAccessSpecifier(ctor_decl->getAccess());
+        if (ctor_decl->isDeleted()) {
+          copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+        }
+      } else if (ctor_decl->isMoveConstructor()) {
+        move_ctor.access = TranslateAccessSpecifier(ctor_decl->getAccess());
+        if (ctor_decl->isDeleted()) {
+          move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+        }
+      }
     }
   }
   const clang::ASTRecordLayout& layout =
@@ -121,6 +165,8 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
              .fields = std::move(fields),
              .size = layout.getSize().getQuantity(),
              .alignment = layout.getAlignment().getQuantity(),
+             .copy_constructor = copy_ctor,
+             .move_constructor = move_ctor,
              .is_trivial_abi = record_decl->canPassInRegisters()});
   return true;
 }
