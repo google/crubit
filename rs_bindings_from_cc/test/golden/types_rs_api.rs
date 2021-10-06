@@ -5,6 +5,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::const_assert_eq;
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,

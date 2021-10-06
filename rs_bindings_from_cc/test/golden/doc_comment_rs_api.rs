@@ -8,6 +8,7 @@ use static_assertions::const_assert_eq;
 /// Doc comment
 ///
 ///  * with three slashes
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentSlashes {
     pub i: i32,
@@ -18,6 +19,7 @@ const_assert_eq!(offset_of!(DocCommentSlashes, i) * 8, 0usize);
 /// Doc comment
 ///
 ///  * with slashes and bang
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentBang {
     pub i: i32,
@@ -28,6 +30,7 @@ const_assert_eq!(offset_of!(DocCommentBang, i) * 8, 0usize);
 /// Multiline comment
 ///
 ///  with two stars
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MultilineCommentTwoStars {
     pub i: i32,
@@ -38,6 +41,7 @@ const_assert_eq!(offset_of!(MultilineCommentTwoStars, i) * 8, 0usize);
 /// Line comment
 ///
 ///  * with two slashes
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct LineComment {
     pub i: i32,
@@ -48,6 +52,7 @@ const_assert_eq!(offset_of!(LineComment, i) * 8, 0usize);
 /// Multiline comment
 ///
 ///  with one star
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MultilineOneStar {
     pub i: i32,

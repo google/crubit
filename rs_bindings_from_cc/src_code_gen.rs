@@ -159,8 +159,11 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
                 const_assert_eq!(offset_of!(#ident, #field_ident) * 8, #offset);
             }
         });
+
+    let derives = generate_copy_derives(record);
     Ok(quote! {
         #doc_comment
+        #[derive( #(#derives),* )]
         #[repr(C)]
         pub struct #ident {
             #( #field_accesses #field_idents: #field_types, )*
@@ -170,6 +173,18 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
         #( #field_assertions )*
     })
+}
+
+fn generate_copy_derives(record: &Record) -> Vec<Ident> {
+    if record.is_trivial_abi
+        && record.copy_constructor.access == ir::AccessSpecifier::Public
+        && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
+    {
+        // TODO(b/202258760): Make `Copy` inclusion configurable.
+        vec![make_ident("Clone"), make_ident("Copy")]
+    } else {
+        vec![]
+    }
 }
 
 fn generate_rs_api(ir: &IR) -> Result<String> {
@@ -398,7 +413,7 @@ mod tests {
     use crate::rustfmt;
 
     use super::Result;
-    use super::{generate_rs_api, generate_rs_api_impl};
+    use super::{generate_copy_derives, generate_rs_api, generate_rs_api_impl};
     use anyhow::anyhow;
     use ir::*;
     use ir_testing::{
@@ -528,6 +543,7 @@ mod tests {
                     use memoffset_unstable_const::offset_of;
                     use static_assertions::const_assert_eq;
 
+                    #[derive(Clone, Copy)]
                     #[repr(C)]
                     pub struct SomeStruct {
                         pub public_int: i32,
@@ -556,6 +572,49 @@ mod tests {
             })?
         );
         Ok(())
+    }
+
+    fn unwrapped_ir_record(name: &str) -> Record {
+        match ir_record(name) {
+            Item::Record(r) => r,
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_copy_derives() {
+        let record = unwrapped_ir_record("S");
+        assert_eq!(generate_copy_derives(&record), &["Clone", "Copy"]);
+    }
+
+    #[test]
+    fn test_copy_derives_not_is_trivial_abi() {
+        let mut record = unwrapped_ir_record("S");
+        record.is_trivial_abi = false;
+        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+    }
+
+    #[test]
+    fn test_copy_derives_ctor_nonpublic() {
+        let mut record = unwrapped_ir_record("S");
+        for access in [ir::AccessSpecifier::Protected, ir::AccessSpecifier::Private] {
+            record.copy_constructor.access = access;
+            assert_eq!(generate_copy_derives(&record), &[""; 0]);
+        }
+    }
+
+    #[test]
+    fn test_copy_derives_ctor_deleted() {
+        let mut record = unwrapped_ir_record("S");
+        record.copy_constructor.definition = ir::SpecialMemberDefinition::Deleted;
+        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+    }
+
+    #[test]
+    fn test_copy_derives_ctor_nontrivial() {
+        let mut record = unwrapped_ir_record("S");
+        record.copy_constructor.definition = ir::SpecialMemberDefinition::Nontrivial;
+        assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 
     #[test]
