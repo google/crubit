@@ -12,14 +12,14 @@ For convenience, `:test_wrapper` is a shell script that passes all Clang command
 line flags from the current Blaze C++ toolchain:
 
 ```
-bazel run //rs_bindings_from_cc:test_wrapper -- hello_world.h
+bazel run //rs_bindings_from_cc:test_wrapper -- --public_headers=hello_world.h
 ```
 
 or:
 
 ```
 bazel build //rs_bindings_from_cc:test_wrapper
-bazel-bin/rs_bindings_from_cc/test_wrapper hello_world.h
+bazel-bin/rs_bindings_from_cc/test_wrapper --public_headers=hello_world.h
 ```
 
 ## Testing
