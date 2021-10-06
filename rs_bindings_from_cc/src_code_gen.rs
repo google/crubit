@@ -161,6 +161,11 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         });
 
     let derives = generate_copy_derives(record);
+    let unpin_impl = if record.is_trivial_abi {
+        quote! {}
+    } else {
+        quote! {impl !Unpin for #ident {}}
+    };
     Ok(quote! {
         #doc_comment
         #[derive( #(#derives),* )]
@@ -172,6 +177,8 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         const_assert_eq!(std::mem::size_of::<#ident>(), #size);
         const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
         #( #field_assertions )*
+
+        #unpin_impl
     })
 }
 
@@ -191,7 +198,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut items = vec![];
     let mut thunks = vec![];
 
-    let mut generate_imports = false;
+    let mut has_record = false;
 
     for item in &ir.items {
         match item {
@@ -202,7 +209,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
             }
             Item::Record(record) => {
                 items.push(generate_record(record)?);
-                generate_imports = true;
+                has_record = true;
             }
         }
     }
@@ -219,14 +226,21 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         }
     };
 
-    let imports = if generate_imports {
+    let imports = if has_record {
+        // Unstable features:
+        //
+        // negative_impls: Necessary for universal initialization due to Rust's coherence rules:
+        // PhantomPinned isn't enough to prove to Rust that a blanket impl that requires Unpin
+        // doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
+        //
+        // const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref:
         // TODO(mboehme): For the time being, we're using unstable features to
         // be able to use offset_of!() in static assertions. This is fine for a
         // prototype, but longer-term we want to either get those features
         // stabilized or find an alternative. For more details, see
         // b/200120034#comment15
         quote! {
-            #![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+            #![feature(negative_impls, const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
             use memoffset_unstable_const::offset_of;
             use static_assertions::const_assert_eq;
         }
@@ -539,7 +553,7 @@ mod tests {
             generate_rs_api(&ir)?,
             rustfmt(
                 quote! {
-                    #![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+                    #![feature(negative_impls, const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
                     use memoffset_unstable_const::offset_of;
                     use static_assertions::const_assert_eq;
 
