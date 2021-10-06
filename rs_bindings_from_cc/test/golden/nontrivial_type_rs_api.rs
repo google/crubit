@@ -5,7 +5,6 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::const_assert_eq;
-#[derive()]
 #[repr(C)]
 pub struct Nontrivial {
     pub field: i32,

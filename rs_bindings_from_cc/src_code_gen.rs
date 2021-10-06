@@ -161,6 +161,11 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         });
 
     let derives = generate_copy_derives(record);
+    let derives = if derives.is_empty() {
+        quote! {}
+    } else {
+        quote! {#[derive( #(#derives),* )]}
+    };
     let unpin_impl = if record.is_trivial_abi {
         quote! {}
     } else {
@@ -168,7 +173,7 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
     };
     Ok(quote! {
         #doc_comment
-        #[derive( #(#derives),* )]
+        #derives
         #[repr(C)]
         pub struct #ident {
             #( #field_accesses #field_idents: #field_types, )*
