@@ -1,4 +1,4 @@
-#![feature(negative_impls, const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+#![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref)]
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception

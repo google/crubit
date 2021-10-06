@@ -10,6 +10,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
+use std::collections::BTreeSet;
 use std::io::Write;
 use std::iter::Iterator;
 use std::panic::catch_unwind;
@@ -66,6 +67,30 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
+/// Source code with attached information about how to modify the parent crate.
+///
+/// For example, the snippet `vec![].into_raw_parts()` is not valid unless the `vec_into_raw_parts`
+/// feature is enabled. So such a snippet should be represented as:
+///
+/// ```
+/// RsSnippet {
+///   features: btree_set!["vec_into_raw_parts"],
+///   tokens: quote!{vec![].into_raw_parts()},
+/// }
+/// ```
+struct RsSnippet {
+    /// Rust feature flags used by this snippet.
+    features: BTreeSet<Ident>,
+    /// The snippet itself, as a token stream.
+    tokens: TokenStream,
+}
+
+impl From<TokenStream> for RsSnippet {
+    fn from(tokens: TokenStream) -> Self {
+        RsSnippet { features: BTreeSet::new(), tokens }
+    }
+}
+
 /// If we know the original C++ function is codegenned and already compatible with `extern "C"`
 /// calling convention we skip creating/calling the C++ thunk since we can call the original C++
 /// directly.
@@ -86,7 +111,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 /// Generates Rust source code for a given `Func`.
 ///
 /// Returns the generated function and the thunk as a tuple.
-fn generate_func(func: &Func) -> Result<(TokenStream, TokenStream)> {
+fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
     let ident = make_ident(&func.identifier.identifier);
     let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
@@ -117,11 +142,11 @@ fn generate_func(func: &Func) -> Result<(TokenStream, TokenStream)> {
         pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
     };
 
-    Ok((api_func, thunk))
+    Ok((api_func.into(), thunk.into()))
 }
 
 /// Generates Rust source code for a given `Record`.
-fn generate_record(record: &Record) -> Result<TokenStream> {
+fn generate_record(record: &Record) -> Result<RsSnippet> {
     let ident = make_ident(&record.identifier.identifier);
     let doc_comment = match &record.doc_comment {
         Some(text) => {
@@ -159,6 +184,16 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
                 const_assert_eq!(offset_of!(#ident, #field_ident) * 8, #offset);
             }
         });
+    let mut features = BTreeSet::new();
+
+    // TODO(mboehme): For the time being, we're using unstable features to
+    // be able to use offset_of!() in static assertions. This is fine for a
+    // prototype, but longer-term we want to either get those features
+    // stabilized or find an alternative. For more details, see
+    // b/200120034#comment15
+    features.insert(make_ident("const_ptr_offset_from"));
+    features.insert(make_ident("const_maybe_uninit_as_ptr"));
+    features.insert(make_ident("const_raw_ptr_deref"));
 
     let derives = generate_copy_derives(record);
     let derives = if derives.is_empty() {
@@ -166,12 +201,18 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
     } else {
         quote! {#[derive( #(#derives),* )]}
     };
-    let unpin_impl = if record.is_trivial_abi {
-        quote! {}
+    let unpin_impl;
+    if record.is_trivial_abi {
+        unpin_impl = quote! {};
     } else {
-        quote! {impl !Unpin for #ident {}}
-    };
-    Ok(quote! {
+        // negative_impls are necessary for universal initialization due to Rust's coherence rules:
+        // PhantomPinned isn't enough to prove to Rust that a blanket impl that requires Unpin
+        // doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
+        features.insert(make_ident("negative_impls"));
+        unpin_impl = quote! {impl !Unpin for #ident {}};
+    }
+
+    let tokens = quote! {
         #doc_comment
         #derives
         #[repr(C)]
@@ -184,7 +225,9 @@ fn generate_record(record: &Record) -> Result<TokenStream> {
         #( #field_assertions )*
 
         #unpin_impl
-    })
+    };
+
+    Ok(RsSnippet { features, tokens })
 }
 
 fn generate_copy_derives(record: &Record) -> Vec<Ident> {
@@ -203,17 +246,24 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut items = vec![];
     let mut thunks = vec![];
 
+    // TODO(jeanpierreda): Delete has_record, either in favor of using RsSnippet, or not having uses.
+    // See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
     let mut has_record = false;
+    let mut features = BTreeSet::new();
 
     for item in &ir.items {
         match item {
             Item::Func(func) => {
-                let (api_func, thunk) = generate_func(func)?;
-                items.push(api_func);
-                thunks.push(thunk);
+                let (snippet, thunk) = generate_func(func)?;
+                features.extend(snippet.features);
+                features.extend(thunk.features);
+                items.push(snippet.tokens);
+                thunks.push(thunk.tokens);
             }
             Item::Record(record) => {
-                items.push(generate_record(record)?);
+                let snippet = generate_record(record)?;
+                features.extend(snippet.features);
+                items.push(snippet.tokens);
                 has_record = true;
             }
         }
@@ -232,20 +282,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     };
 
     let imports = if has_record {
-        // Unstable features:
-        //
-        // negative_impls: Necessary for universal initialization due to Rust's coherence rules:
-        // PhantomPinned isn't enough to prove to Rust that a blanket impl that requires Unpin
-        // doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
-        //
-        // const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref:
-        // TODO(mboehme): For the time being, we're using unstable features to
-        // be able to use offset_of!() in static assertions. This is fine for a
-        // prototype, but longer-term we want to either get those features
-        // stabilized or find an alternative. For more details, see
-        // b/200120034#comment15
         quote! {
-            #![feature(negative_impls, const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
             use memoffset_unstable_const::offset_of;
             use static_assertions::const_assert_eq;
         }
@@ -253,7 +290,16 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         quote! {}
     };
 
+    let features = if features.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            #![feature( #(#features),* )]
+        }
+    };
+
     let result = quote! {
+        #features
         #imports
 
         #( #items )*
@@ -558,7 +604,7 @@ mod tests {
             generate_rs_api(&ir)?,
             rustfmt(
                 quote! {
-                    #![feature(negative_impls, const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref)]
+                    #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref)]
                     use memoffset_unstable_const::offset_of;
                     use static_assertions::const_assert_eq;
 
