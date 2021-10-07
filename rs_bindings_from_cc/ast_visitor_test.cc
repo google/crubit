@@ -262,18 +262,6 @@ TEST(AstVisitorTest, FuncJustOnce) {
               ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
-TEST(AstVisitorTest, FuncParams) {
-  IR ir = IrFromCc({"int Add(int a, int b);"}, {});
-  ASSERT_THAT(ir.items, SizeIs(1));
-
-  EXPECT_THAT(
-      ir.items,
-      ElementsAre(VariantWith<Func>(AllOf(
-          IdentifierIs("Add"), MangledNameIs("_Z3Addii"), ReturnType(IsInt()),
-          ParamsAre(AllOf(ParamType(IsInt()), IdentifierIs("a")),
-                    AllOf(ParamType(IsInt()), IdentifierIs("b")))))));
-}
-
 TEST(AstVisitorTest, TestImportPointerFunc) {
   IR ir = IrFromCc({"int* Foo(int* a);"}, {});
 

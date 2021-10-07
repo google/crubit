@@ -150,63 +150,6 @@ mod tests {
     }
 
     #[test]
-    fn test_functions() {
-        let input = r#"
-        {
-            "items": [
-                { "Func" : {
-                    "identifier": { "identifier": "hello_world" },
-                    "mangled_name": "$$mangled_name$$",
-                    "params": [
-                        {
-                            "identifier": { "identifier": "arg" },
-                            "type": {
-                                "rs_type": {"name": "i32", "type_params": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_params": []}
-                            }
-                        }
-                    ],
-                    "return_type": {
-                        "rs_type": {"name": "i32", "type_params": []},
-                        "cc_type": {"name": "int", "is_const": false, "type_params": []}
-                    },
-                    "is_inline": false
-                }}
-            ]
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = IR {
-            items: vec![Item::Func(Func {
-                identifier: Identifier { identifier: "hello_world".to_string() },
-                mangled_name: "$$mangled_name$$".to_string(),
-                return_type: MappedType {
-                    rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                    cc_type: CcType {
-                        name: "int".to_string(),
-                        is_const: false,
-                        type_params: vec![],
-                    },
-                },
-                params: vec![FuncParam {
-                    type_: MappedType {
-                        rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
-                        cc_type: CcType {
-                            name: "int".to_string(),
-                            is_const: false,
-                            type_params: vec![],
-                        },
-                    },
-                    identifier: Identifier { identifier: "arg".to_string() },
-                }],
-                is_inline: false,
-            })],
-            ..Default::default()
-        };
-        assert_eq!(ir, expected);
-    }
-
-    #[test]
     fn test_member_access_specifiers() {
         let input = r#"
         {
