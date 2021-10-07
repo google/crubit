@@ -612,59 +612,5 @@ TEST(AstVisitorTest, IntegerTypes) {
           FieldType(IsSimpleType("f64", "double"))))));
 }
 
-TEST(AstVisitorTest, DocComment) {
-  IR ir = IrFromCc({R"(
-    /// Doc comment
-    ///
-    ///  * with three slashes
-    struct DocCommentSlashes {};
-
-    //! Doc comment
-    //!
-    //!  * with slashes and bang
-    struct DocCommentBang {};
-
-    /** Multiline comment
-
-         * with two stars */
-    struct MultilineCommentTwoStars {};
-
-    // Line comment
-    //
-    //  * with two slashes
-    struct LineComment {};
-
-    /* Multiline comment
-
-        * with one star */
-    struct MultilineOneStar {};
-    )"},
-                   {});
-
-  EXPECT_THAT(
-      ir.items,
-      ElementsAre(VariantWith<Record>(AllOf(
-                      IdentifierIs("DocCommentSlashes"),
-                      DocCommentIs("Doc comment\n\n * with three slashes"))),
-                  VariantWith<Record>(AllOf(
-                      IdentifierIs("DocCommentBang"),
-                      DocCommentIs("Doc comment\n\n * with slashes and bang"))),
-                  // TODO(forster): The bullet point is not retained in this
-                  // case. Instead we get the space at the end. Not sure if this
-                  // can be fixed easily...
-                  VariantWith<Record>(AllOf(
-                      IdentifierIs("MultilineCommentTwoStars"),
-                      DocCommentIs("Multiline comment\n\n with two stars "))),
-                  VariantWith<Record>(AllOf(
-                      IdentifierIs("LineComment"),
-                      DocCommentIs("Line comment\n\n * with two slashes"))),
-                  // TODO(forster): The bullet point is not retained in this
-                  // case. Instead we get the space at the end. Not sure if this
-                  // can be fixed easily...
-                  VariantWith<Record>(AllOf(
-                      IdentifierIs("MultilineOneStar"),
-                      DocCommentIs("Multiline comment\n\n with one star ")))));
-}
-
 }  // namespace
 }  // namespace rs_bindings_from_cc
