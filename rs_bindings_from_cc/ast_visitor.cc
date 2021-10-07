@@ -76,6 +76,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   }
   ir_.items.push_back(Func{
       .identifier = *translated_name,
+      .doc_comment = GetComment(function_decl),
       .mangled_name = GetMangledName(function_decl),
       .return_type = *return_type,
       .params = std::move(params),
@@ -214,6 +215,10 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
 
 std::optional<std::string> AstVisitor::GetComment(
     const clang::Decl* decl) const {
+  // This does currently not distinguish between different types of comments.
+  // In general it is not possible in C++ to reliably only extract doc comments.
+  // This is going to be a heuristic that needs to be tuned over time.
+
   clang::ASTContext& ctx = decl->getASTContext();
   clang::SourceManager& sm = ctx.getSourceManager();
   clang::RawComment* raw_comment = ctx.getRawCommentForDeclNoCache(decl);

@@ -114,6 +114,7 @@ fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
     let ident = make_ident(&func.identifier.identifier);
     let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
+    let doc_comment = generate_doc_comment(&func.doc_comment);
     // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
     let return_type_name = format_rs_type(&func.return_type.rs_type)?;
 
@@ -124,6 +125,7 @@ fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
         func.params.iter().map(|p| format_rs_type(&p.type_.rs_type)).collect::<Result<Vec<_>>>()?;
 
     let api_func = quote! {
+        #doc_comment
         #[inline(always)]
         pub fn #ident( #( #param_idents: #param_types ),* ) -> #return_type_name {
             unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
@@ -499,6 +501,7 @@ mod tests {
         let ir = ir_items(vec![Item::Func(Func {
             identifier: ir_id("add"),
             mangled_name: "_Z3Addii".to_string(),
+            doc_comment: None,
             return_type: ir_int(),
             params: vec![ir_int_param("a"), ir_int_param("b")],
             is_inline: false,
@@ -536,6 +539,7 @@ mod tests {
             items: vec![Item::Func(Func {
                 identifier: Identifier { identifier: "add".to_string() },
                 mangled_name: "_Z3Addii".to_string(),
+                doc_comment: None,
                 return_type: ir_int(),
                 params: vec![ir_int_param("a"), ir_int_param("b")],
                 is_inline: true,
@@ -697,6 +701,7 @@ mod tests {
         let ir = ir_items(vec![Item::Func(Func {
             identifier: Identifier { identifier: "Deref".to_string() },
             mangled_name: "_Z5DerefPKPi".to_string(),
+            doc_comment: None,
             return_type: MappedType {
                 rs_type: RsType {
                     name: "*mut".to_string(),
@@ -802,7 +807,29 @@ mod tests {
     }
 
     #[test]
-    fn test_doc_comment() -> Result<()> {
+    fn test_doc_comment_func() -> Result<()> {
+        let ir = IR {
+            used_headers: vec![],
+            items: vec![Item::Func(Func {
+                identifier: ir_id("func"),
+                mangled_name: "foo".to_string(),
+                doc_comment: Some("Doc Comment".to_string()),
+                return_type: ir_int(),
+                is_inline: true,
+                params: vec![],
+            })],
+        };
+
+        assert!(
+            generate_rs_api(&ir)?.contains("/// Doc Comment\n#[inline(always)]\npub fn func"),
+            "func doc comment missing"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_doc_comment_record() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
             items: vec![Item::Record(Record {

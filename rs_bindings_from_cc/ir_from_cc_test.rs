@@ -40,6 +40,7 @@ fn test_function() {
             items: vec![Item::Func(Func {
                 identifier: ir_id("Add"),
                 mangled_name: "_Z3Addii".to_string(),
+                doc_comment: None,
                 return_type: ir_int(),
                 params: vec![ir_int_param("a"), ir_int_param("b")],
                 is_inline: false,

@@ -76,6 +76,9 @@ nlohmann::json Func::ToJson() const {
   }
   nlohmann::json func;
   func["identifier"] = identifier.ToJson();
+  if (doc_comment) {
+    func["doc_comment"] = *doc_comment;
+  }
   func["mangled_name"] = mangled_name;
   func["return_type"] = return_type.ToJson();
   func["params"] = std::move(json_params);

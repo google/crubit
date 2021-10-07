@@ -45,4 +45,7 @@ struct MultilineOneStar {
   int i;
 };
 
+/// A function
+inline int foo() { return 42; }
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_

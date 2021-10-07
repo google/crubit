@@ -52,6 +52,7 @@ pub struct FuncParam {
 pub struct Func {
     pub identifier: Identifier,
     pub mangled_name: String,
+    pub doc_comment: Option<String>,
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
     pub is_inline: bool,

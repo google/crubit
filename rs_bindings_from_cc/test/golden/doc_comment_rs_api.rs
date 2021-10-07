@@ -65,3 +65,13 @@ pub struct MultilineOneStar {
 const_assert_eq!(std::mem::size_of::<MultilineOneStar>(), 4usize);
 const_assert_eq!(std::mem::align_of::<MultilineOneStar>(), 4usize);
 const_assert_eq!(offset_of!(MultilineOneStar, i) * 8, 0usize);
+/// A function
+#[inline(always)]
+pub fn foo() -> i32 {
+    unsafe { crate::detail::__rust_thunk__foo() }
+}
+mod detail {
+    extern "C" {
+        pub(crate) fn __rust_thunk__foo() -> i32;
+    }
+}

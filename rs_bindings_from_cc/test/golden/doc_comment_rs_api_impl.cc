@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
+extern "C" int __rust_thunk__foo() { return foo(); }
 static_assert(sizeof(DocCommentSlashes) == 4);
 static_assert(alignof(DocCommentSlashes) == 4);
 static_assert(offsetof(DocCommentSlashes, i) * 8 == 0);

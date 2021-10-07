@@ -174,6 +174,7 @@ struct Func {
   nlohmann::json ToJson() const;
 
   Identifier identifier;
+  std::optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
   std::vector<FuncParam> params;
