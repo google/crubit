@@ -103,8 +103,12 @@ std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access) {
 
 nlohmann::json Field::ToJson() const {
   nlohmann::json result;
-  result["type"] = type.ToJson();
+
   result["identifier"] = identifier.ToJson();
+  if (doc_comment) {
+    result["doc_comment"] = *doc_comment;
+  }
+  result["type"] = type.ToJson();
   result["access"] = AccessToString(access);
   result["offset"] = offset;
   return result;

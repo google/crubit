@@ -48,6 +48,8 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   // destructor.
   std::optional<Identifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const;
+  // Gets the doc comment of the declaration.
+  std::optional<std::string> GetComment(const clang::Decl* decl) const;
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type,
                                          const clang::ASTContext& ctx) const;
 

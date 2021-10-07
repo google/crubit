@@ -11,6 +11,7 @@ use static_assertions::const_assert_eq;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentSlashes {
+    /// A field
     pub i: i32,
 }
 const_assert_eq!(std::mem::size_of::<DocCommentSlashes>(), 4usize);
@@ -22,6 +23,7 @@ const_assert_eq!(offset_of!(DocCommentSlashes, i) * 8, 0usize);
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentBang {
+    /// A field
     pub i: i32,
 }
 const_assert_eq!(std::mem::size_of::<DocCommentBang>(), 4usize);
@@ -33,6 +35,7 @@ const_assert_eq!(offset_of!(DocCommentBang, i) * 8, 0usize);
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MultilineCommentTwoStars {
+    /// A field
     pub i: i32,
 }
 const_assert_eq!(std::mem::size_of::<MultilineCommentTwoStars>(), 4usize);
@@ -44,6 +47,7 @@ const_assert_eq!(offset_of!(MultilineCommentTwoStars, i) * 8, 0usize);
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct LineComment {
+    /// A field
     pub i: i32,
 }
 const_assert_eq!(std::mem::size_of::<LineComment>(), 4usize);
@@ -55,6 +59,7 @@ const_assert_eq!(offset_of!(LineComment, i) * 8, 0usize);
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MultilineOneStar {
+    /// A field
     pub i: i32,
 }
 const_assert_eq!(std::mem::size_of::<MultilineOneStar>(), 4usize);

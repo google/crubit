@@ -198,6 +198,7 @@ struct Field {
   nlohmann::json ToJson() const;
 
   Identifier identifier;
+  std::optional<std::string> doc_comment;
   MappedType type;
   AccessSpecifier access;
   // Field offset in bits.

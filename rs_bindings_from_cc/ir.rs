@@ -67,6 +67,7 @@ pub enum AccessSpecifier {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Field {
     pub identifier: Identifier,
+    pub doc_comment: Option<String>,
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
     pub access: AccessSpecifier,
@@ -268,6 +269,7 @@ mod tests {
                 fields: vec![
                     Field {
                         identifier: Identifier { identifier: "public_int".to_string() },
+                        doc_comment: None,
                         type_: MappedType {
                             rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
                             cc_type: CcType {
@@ -281,6 +283,7 @@ mod tests {
                     },
                     Field {
                         identifier: Identifier { identifier: "protected_int".to_string() },
+                        doc_comment: None,
                         type_: MappedType {
                             rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
                             cc_type: CcType {
@@ -294,6 +297,7 @@ mod tests {
                     },
                     Field {
                         identifier: Identifier { identifier: "private_int".to_string() },
+                        doc_comment: None,
                         type_: MappedType {
                             rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
                             cc_type: CcType {
@@ -375,6 +379,7 @@ mod tests {
                 doc_comment: None,
                 fields: vec![Field {
                     identifier: Identifier { identifier: "ptr".to_string() },
+                    doc_comment: None,
                     type_: MappedType {
                         rs_type: RsType {
                             name: "*mut".to_string(),

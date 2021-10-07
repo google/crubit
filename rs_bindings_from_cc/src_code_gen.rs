@@ -2,8 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::bail;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -145,18 +144,23 @@ fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     Ok((api_func.into(), thunk.into()))
 }
 
-/// Generates Rust source code for a given `Record`.
-fn generate_record(record: &Record) -> Result<RsSnippet> {
-    let ident = make_ident(&record.identifier.identifier);
-    let doc_comment = match &record.doc_comment {
+fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
+    match comment {
         Some(text) => {
             let doc = format!(" {}", text.replace("\n", "\n "));
             quote! {#[doc=#doc]}
         }
         None => quote! {},
-    };
+    }
+}
+/// Generates Rust source code for a given `Record`.
+fn generate_record(record: &Record) -> Result<RsSnippet> {
+    let ident = make_ident(&record.identifier.identifier);
+    let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
         record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
+    let field_doc_coments =
+        record.fields.iter().map(|f| generate_doc_comment(&f.doc_comment)).collect_vec();
     let field_types = record
         .fields
         .iter()
@@ -217,7 +221,7 @@ fn generate_record(record: &Record) -> Result<RsSnippet> {
         #derives
         #[repr(C)]
         pub struct #ident {
-            #( #field_accesses #field_idents: #field_types, )*
+            #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
         }
 
         const_assert_eq!(std::mem::size_of::<#ident>(), #size);
@@ -578,18 +582,21 @@ mod tests {
             fields: vec![
                 Field {
                     identifier: ir_id("public_int"),
+                    doc_comment: None,
                     type_: ir_int(),
                     access: AccessSpecifier::Public,
                     offset: 0,
                 },
                 Field {
                     identifier: ir_id("protected_int"),
+                    doc_comment: None,
                     type_: ir_int(),
                     access: AccessSpecifier::Protected,
                     offset: 32,
                 },
                 Field {
                     identifier: ir_id("private_int"),
+                    doc_comment: None,
                     type_: ir_int(),
                     access: AccessSpecifier::Private,
                     offset: 64,
@@ -803,7 +810,13 @@ mod tests {
                 doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
                 alignment: 0,
                 size: 0,
-                fields: vec![],
+                fields: vec![Field {
+                    identifier: ir_id("field"),
+                    doc_comment: Some("Field doc".to_string()),
+                    type_: ir_int(),
+                    access: AccessSpecifier::Public,
+                    offset: 0,
+                }],
                 copy_constructor: ir_public_trivial_special(),
                 move_constructor: ir_public_trivial_special(),
                 destructor: ir_public_trivial_special(),
@@ -811,9 +824,12 @@ mod tests {
             })],
         };
 
-        generate_rs_api(&ir)?
-            .find("/// Doc Comment\n///\n///  * with bullet\n")
-            .expect("doc comment missing");
+        let rs_api = generate_rs_api(&ir)?;
+        assert!(
+            rs_api.contains("/// Doc Comment\n///\n///  * with bullet\n"),
+            "struct doc comment missing"
+        );
+        assert!(rs_api.contains("/// Field doc\n"), "field doc comment missing");
 
         Ok(())
     }

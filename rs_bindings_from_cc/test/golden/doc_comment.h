@@ -9,6 +9,7 @@
 ///
 ///  * with three slashes
 struct DocCommentSlashes {
+  /// A field
   int i;
 };
 
@@ -16,6 +17,7 @@ struct DocCommentSlashes {
 //!
 //!  * with slashes and bang
 struct DocCommentBang {
+  //! A field
   int i;
 };
 
@@ -23,6 +25,7 @@ struct DocCommentBang {
 
      * with two stars */
 struct MultilineCommentTwoStars {
+  /** A field */
   int i;
 };
 
@@ -30,6 +33,7 @@ struct MultilineCommentTwoStars {
 //
 //  * with two slashes
 struct LineComment {
+  // A field
   int i;
 };
 
@@ -37,6 +41,7 @@ struct LineComment {
 
     * with one star */
 struct MultilineOneStar {
+  /* A field */
   int i;
 };
 

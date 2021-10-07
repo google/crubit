@@ -102,15 +102,6 @@ static AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
 }
 
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
-  clang::ASTContext& ctx = record_decl->getASTContext();
-
-  clang::SourceManager& sm = ctx.getSourceManager();
-  clang::RawComment* raw_comment = ctx.getRawCommentForDeclNoCache(record_decl);
-  std::optional<std::string> doc_comment;
-  if (raw_comment != nullptr) {
-    doc_comment = raw_comment->getFormattedText(sm, sm.getDiagnostics());
-  }
-
   std::vector<Field> fields;
   clang::AccessSpecifier default_access = clang::AS_public;
   // The definition is always rewritten, but default access to `kPublic` in case
@@ -180,6 +171,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       }
     }
   }
+  clang::ASTContext& ctx = record_decl->getASTContext();
   const clang::ASTRecordLayout& layout = ctx.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     auto type = ConvertType(field_decl->getType(), ctx);
@@ -198,6 +190,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     }
     fields.push_back(
         {.identifier = *std::move(field_name),
+         .doc_comment = GetComment(field_decl),
          .type = *type,
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
@@ -208,7 +201,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   }
   ir_.items.push_back(
       Record{.identifier = *record_name,
-             .doc_comment = doc_comment,
+             .doc_comment = GetComment(record_decl),
              .fields = std::move(fields),
              .size = layout.getSize().getQuantity(),
              .alignment = layout.getAlignment().getQuantity(),
@@ -217,6 +210,19 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
              .destructor = dtor,
              .is_trivial_abi = record_decl->canPassInRegisters()});
   return true;
+}
+
+std::optional<std::string> AstVisitor::GetComment(
+    const clang::Decl* decl) const {
+  clang::ASTContext& ctx = decl->getASTContext();
+  clang::SourceManager& sm = ctx.getSourceManager();
+  clang::RawComment* raw_comment = ctx.getRawCommentForDeclNoCache(decl);
+
+  if (raw_comment == nullptr) {
+    return {};
+  } else {
+    return raw_comment->getFormattedText(sm, sm.getDiagnostics());
+  }
 }
 
 absl::StatusOr<MappedType> AstVisitor::ConvertType(
