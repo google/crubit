@@ -42,7 +42,7 @@ TEST(SrcGenTest, FFIIntegration) {
               StrEq("#include \"foo/bar.h\"\n"
                     "extern \"C\" int __rust_thunk__hello_world(int arg) { "
                     "return hello_world(arg); "
-                    "}"));
+                    "}\n"));
 }
 
 }  // namespace

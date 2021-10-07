@@ -468,6 +468,9 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
         #( #thunks )*
 
         #( #layout_assertions )*
+
+        // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
+        __NEWLINE__
     };
 
     token_stream_printer::cc_tokens_to_string(result)
@@ -515,7 +518,7 @@ mod tests {
                 .to_string()
             )?
         );
-        assert_eq!(generate_rs_api_impl(&ir)?, "");
+        assert_eq!(generate_rs_api_impl(&ir)?, "\n");
         Ok(())
     }
 
@@ -554,7 +557,7 @@ mod tests {
         );
 
         assert_eq!(
-            generate_rs_api_impl(&ir)?,
+            generate_rs_api_impl(&ir)?.trim(),
             cc_tokens_to_string(quote! {
                 __HASH_TOKEN__ include "foo/bar.h" __NEWLINE__
                 __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__
@@ -626,7 +629,7 @@ mod tests {
             )?
         );
         assert_eq!(
-            generate_rs_api_impl(&ir)?,
+            generate_rs_api_impl(&ir)?.trim(),
             cc_tokens_to_string(quote! {
                 __HASH_TOKEN__ include <cstddef> __NEWLINE__
                 static_assert(sizeof(SomeStruct) == 12);
@@ -752,7 +755,7 @@ mod tests {
         );
 
         assert_eq!(
-            generate_rs_api_impl(&ir)?,
+            generate_rs_api_impl(&ir)?.trim(),
             cc_tokens_to_string(quote! {
                 extern "C" int* __rust_thunk__Deref(int* const * p) {
                     return Deref(p);
