@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  CHECK_OK(file::Delete(rs_out, file::Defaults()));
-  CHECK_OK(file::Delete(cc_out, file::Defaults()));
+  file::Delete(rs_out, file::Defaults()).IgnoreError();
+  file::Delete(cc_out, file::Defaults()).IgnoreError();
   return 1;
 }
