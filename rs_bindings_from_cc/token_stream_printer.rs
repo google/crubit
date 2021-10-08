@@ -21,7 +21,7 @@ fn is_ident_or_literal(tt: &TokenTree) -> bool {
 /// * Rust tokenizer ignores newlines as they are not significant for Rust. For C++ they are (for
 ///  example there needs to be a newline after `#include "foo/bar.h"`). Use the placeholder
 ///  `__NEWLINE__` to insert a newline character.
-pub fn cc_tokens_to_string(tokens: TokenStream) -> Result<String> {
+pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
     let mut result = "".to_string();
     let mut last = None;
     for tt in tokens.into_iter() {
@@ -64,7 +64,7 @@ mod tests {
           }
         };
         assert_eq!(
-            cc_tokens_to_string(token_stream.clone())?,
+            tokens_to_string(token_stream.clone())?,
             "struct Foo{ }impl Bar for Foo{ fn bar (& self) { } }"
         );
         Ok(())
@@ -73,35 +73,35 @@ mod tests {
     #[test]
     fn test_space_idents_and_literals() -> Result<()> {
         let token_stream = quote! { foo 42 bar 23 };
-        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "foo 42 bar 23");
+        assert_eq!(tokens_to_string(token_stream.clone())?, "foo 42 bar 23");
         Ok(())
     }
 
     #[test]
     fn test_dont_space_punctuation() -> Result<()> {
         let token_stream = quote! { foo+42+bar+23 };
-        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "foo+42+bar+23");
+        assert_eq!(tokens_to_string(token_stream.clone())?, "foo+42+bar+23");
         Ok(())
     }
 
     #[test]
     fn test_newline_token() -> Result<()> {
         let token_stream = quote! { a __NEWLINE__ b };
-        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "a \n b");
+        assert_eq!(tokens_to_string(token_stream.clone())?, "a \n b");
         Ok(())
     }
 
     #[test]
     fn test_hash_token() -> Result<()> {
         let token_stream = quote! { a __HASH_TOKEN__ b };
-        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "a # b");
+        assert_eq!(tokens_to_string(token_stream.clone())?, "a # b");
         Ok(())
     }
 
     #[test]
     fn test_include_standard_header() -> Result<()> {
         let token_stream = quote! { __HASH_TOKEN__ include <cstddef> };
-        assert_eq!(cc_tokens_to_string(token_stream.clone())?, "# include<cstddef>");
+        assert_eq!(tokens_to_string(token_stream.clone())?, "# include<cstddef>");
         Ok(())
     }
 }

@@ -3,13 +3,17 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+
 use memoffset_unstable_const::offset_of;
 use static_assertions::const_assert_eq;
+
 #[repr(C)]
 pub struct Nontrivial {
     pub field: i32,
 }
+
+impl !Unpin for Nontrivial {}
+
 const_assert_eq!(std::mem::size_of::<Nontrivial>(), 4usize);
 const_assert_eq!(std::mem::align_of::<Nontrivial>(), 4usize);
 const_assert_eq!(offset_of!(Nontrivial, field) * 8, 0usize);
-impl !Unpin for Nontrivial {}

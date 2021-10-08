@@ -155,8 +155,8 @@ fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
         None => quote! {},
     }
 }
-/// Generates Rust source code for a given `Record`.
-fn generate_record(record: &Record) -> Result<RsSnippet> {
+/// Generates Rust source code for a given `Record` and associated assertions as a tuple.
+fn generate_record(record: &Record) -> Result<(RsSnippet, RsSnippet)> {
     let ident = make_ident(&record.identifier.identifier);
     let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
@@ -190,16 +190,17 @@ fn generate_record(record: &Record) -> Result<RsSnippet> {
                 const_assert_eq!(offset_of!(#ident, #field_ident) * 8, #offset);
             }
         });
-    let mut features = BTreeSet::new();
+    let mut record_features = BTreeSet::new();
+    let mut assertion_features = BTreeSet::new();
 
     // TODO(mboehme): For the time being, we're using unstable features to
     // be able to use offset_of!() in static assertions. This is fine for a
     // prototype, but longer-term we want to either get those features
     // stabilized or find an alternative. For more details, see
     // b/200120034#comment15
-    features.insert(make_ident("const_ptr_offset_from"));
-    features.insert(make_ident("const_maybe_uninit_as_ptr"));
-    features.insert(make_ident("const_raw_ptr_deref"));
+    assertion_features.insert(make_ident("const_ptr_offset_from"));
+    assertion_features.insert(make_ident("const_maybe_uninit_as_ptr"));
+    assertion_features.insert(make_ident("const_raw_ptr_deref"));
 
     let derives = generate_copy_derives(record);
     let derives = if derives.is_empty() {
@@ -214,11 +215,14 @@ fn generate_record(record: &Record) -> Result<RsSnippet> {
         // negative_impls are necessary for universal initialization due to Rust's coherence rules:
         // PhantomPinned isn't enough to prove to Rust that a blanket impl that requires Unpin
         // doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
-        features.insert(make_ident("negative_impls"));
-        unpin_impl = quote! {impl !Unpin for #ident {}};
+        record_features.insert(make_ident("negative_impls"));
+        unpin_impl = quote! {
+            __NEWLINE__  __NEWLINE__
+            impl !Unpin for #ident {}
+        };
     }
 
-    let tokens = quote! {
+    let record_tokens = quote! {
         #doc_comment
         #derives
         #[repr(C)]
@@ -226,14 +230,19 @@ fn generate_record(record: &Record) -> Result<RsSnippet> {
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
         }
 
-        const_assert_eq!(std::mem::size_of::<#ident>(), #size);
-        const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
-        #( #field_assertions )*
-
         #unpin_impl
     };
 
-    Ok(RsSnippet { features, tokens })
+    let assertion_tokens = quote! {
+        const_assert_eq!(std::mem::size_of::<#ident>(), #size);
+        const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
+        #( #field_assertions )*
+    };
+
+    Ok((
+        RsSnippet { features: record_features, tokens: record_tokens },
+        RsSnippet { features: assertion_features, tokens: assertion_tokens },
+    ))
 }
 
 fn generate_copy_derives(record: &Record) -> Vec<Ident> {
@@ -251,6 +260,7 @@ fn generate_copy_derives(record: &Record) -> Vec<Ident> {
 fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut items = vec![];
     let mut thunks = vec![];
+    let mut assertions = vec![];
 
     // TODO(jeanpierreda): Delete has_record, either in favor of using RsSnippet, or not having uses.
     // See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
@@ -267,9 +277,11 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
                 thunks.push(thunk.tokens);
             }
             Item::Record(record) => {
-                let snippet = generate_record(record)?;
+                let (snippet, assertions_snippet) = generate_record(record)?;
                 features.extend(snippet.features);
+                features.extend(assertions_snippet.features);
                 items.push(snippet.tokens);
+                assertions.push(assertions_snippet.tokens);
                 has_record = true;
             }
         }
@@ -305,15 +317,17 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     };
 
     let result = quote! {
-        #features
-        #imports
+        #features __NEWLINE__ __NEWLINE__
+        #imports __NEWLINE__ __NEWLINE__
 
-        #( #items )*
+        #( #items __NEWLINE__ __NEWLINE__ )*
 
-        #mod_detail
+        #mod_detail __NEWLINE__ __NEWLINE__
+
+         #( #assertions __NEWLINE__ __NEWLINE__ )*
     };
 
-    Ok(rustfmt(result.to_string())?)
+    rustfmt(token_stream_printer::tokens_to_string(result)?)
 }
 
 fn rustfmt(input: String) -> Result<String> {
@@ -469,17 +483,17 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
     let result = quote! {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
-        #( __HASH_TOKEN__ include #includes __NEWLINE__)*
+        #( __HASH_TOKEN__ include #includes __NEWLINE__)* __NEWLINE__
 
-        #( #thunks )*
+        #( #thunks )* __NEWLINE__ __NEWLINE__
 
-        #( #layout_assertions )*
+        #( #layout_assertions __NEWLINE__ __NEWLINE__ )*
 
         // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
         __NEWLINE__
     };
 
-    token_stream_printer::cc_tokens_to_string(result)
+    token_stream_printer::tokens_to_string(result)
 }
 
 #[cfg(test)]
@@ -494,7 +508,7 @@ mod tests {
         ir_func, ir_id, ir_int, ir_int_param, ir_items, ir_public_trivial_special, ir_record,
     };
     use quote::quote;
-    use token_stream_printer::cc_tokens_to_string;
+    use token_stream_printer::tokens_to_string;
 
     #[test]
     fn test_simple_function() -> Result<()> {
@@ -508,24 +522,25 @@ mod tests {
         })]);
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(
-                quote! {
-                    #[inline(always)]
-                    pub fn add(a: i32, b: i32) -> i32 {
-                        unsafe { crate::detail::__rust_thunk__add(a, b) }
-                    }
+            rustfmt(tokens_to_string(quote! {
+                #[inline(always)]
+                pub fn add(a: i32, b: i32) -> i32 {
+                    unsafe { crate::detail::__rust_thunk__add(a, b) }
+                } __NEWLINE__ __NEWLINE__
 
-                    mod detail {
-                        extern "C" {
-                            #[link_name = "_Z3Addii"]
-                            pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
-                        } // extern
-                    } // mod detail
-                }
-                .to_string()
-            )?
+                mod detail {
+                    extern "C" {
+                        #[link_name = "_Z3Addii"]
+                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                    } // extern
+                } // mod detail
+            })?)?
         );
-        assert_eq!(generate_rs_api_impl(&ir)?, "\n");
+
+        let rs_api = generate_rs_api_impl(&ir)?;
+        assert_eq!(rs_api.trim(), "");
+        assert!(rs_api.ends_with("\n"));
+
         Ok(())
     }
 
@@ -548,27 +563,25 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(
-                quote! {#[inline(always)]
-                    pub fn add(a: i32, b: i32) -> i32 {
-                        unsafe { crate::detail::__rust_thunk__add(a, b) }
-                    }
+            rustfmt(tokens_to_string(quote! {
+                #[inline(always)]
+                pub fn add(a: i32, b: i32) -> i32 {
+                    unsafe { crate::detail::__rust_thunk__add(a, b) }
+                } __NEWLINE__ __NEWLINE__
 
-                    mod detail {
-                        extern "C" {
-                            pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
-                        } // extern
-                    } // mod detail
-                }
-                .to_string()
-            )?
+                mod detail {
+                    extern "C" {
+                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                    } // extern
+                } // mod detail
+            })?)?
         );
 
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
-            cc_tokens_to_string(quote! {
+            tokens_to_string(quote! {
                 __HASH_TOKEN__ include "foo/bar.h" __NEWLINE__
-                __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__
+                __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__ __NEWLINE__
 
                 extern "C" int __rust_thunk__add(int a, int b) {
                     return add(a, b);
@@ -616,33 +629,31 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(
-                quote! {
-                    #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref)]
-                    use memoffset_unstable_const::offset_of;
-                    use static_assertions::const_assert_eq;
+            rustfmt(tokens_to_string(quote! {
+                #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref)] __NEWLINE__ __NEWLINE__
 
-                    #[derive(Clone, Copy)]
-                    #[repr(C)]
-                    pub struct SomeStruct {
-                        pub public_int: i32,
-                        protected_int: i32,
-                        private_int: i32,
-                    }
+                use memoffset_unstable_const::offset_of;
+                use static_assertions::const_assert_eq; __NEWLINE__ __NEWLINE__
 
-                    const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
-                    const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
-                    const_assert_eq!(offset_of!(SomeStruct, public_int) * 8, 0usize);
-                    const_assert_eq!(offset_of!(SomeStruct, protected_int) * 8, 32usize);
-                    const_assert_eq!(offset_of!(SomeStruct, private_int) * 8, 64usize);
-                }
-                .to_string()
-            )?
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub struct SomeStruct {
+                    pub public_int: i32,
+                    protected_int: i32,
+                    private_int: i32,
+                } __NEWLINE__ __NEWLINE__
+
+                const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
+                const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
+                const_assert_eq!(offset_of!(SomeStruct, public_int) * 8, 0usize);
+                const_assert_eq!(offset_of!(SomeStruct, protected_int) * 8, 32usize);
+                const_assert_eq!(offset_of!(SomeStruct, private_int) * 8, 64usize);
+            })?)?
         );
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
-            cc_tokens_to_string(quote! {
-                __HASH_TOKEN__ include <cstddef> __NEWLINE__
+            tokens_to_string(quote! {
+                __HASH_TOKEN__ include <cstddef> __NEWLINE__ __NEWLINE__ __NEWLINE__ __NEWLINE__
                 static_assert(sizeof(SomeStruct) == 12);
                 static_assert(alignof(SomeStruct) == 4);
                 static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
@@ -749,26 +760,23 @@ mod tests {
         })]);
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(
-                quote! {
-                    #[inline(always)]
-                    pub fn Deref(p: *const *mut i32) -> *mut i32 {
-                        unsafe { crate::detail::__rust_thunk__Deref(p) }
-                    }
+            rustfmt(tokens_to_string(quote! {
+                #[inline(always)]
+                pub fn Deref(p: *const *mut i32) -> *mut i32 {
+                    unsafe { crate::detail::__rust_thunk__Deref(p) }
+                } __NEWLINE__ __NEWLINE__
 
-                    mod detail {
-                        extern "C" {
-                            pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
-                        } // extern
-                    } // mod detail
-                }
-                .to_string()
-            )?
+                mod detail {
+                    extern "C" {
+                        pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
+                    } // extern
+                } // mod detail
+            })?)?
         );
 
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
-            cc_tokens_to_string(quote! {
+            tokens_to_string(quote! {
                 extern "C" int* __rust_thunk__Deref(int* const * p) {
                     return Deref(p);
                 }

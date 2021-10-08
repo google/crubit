@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include "rs_bindings_from_cc/test/golden/nontrivial_type.h"
+
 static_assert(sizeof(Nontrivial) == 4);
 static_assert(alignof(Nontrivial) == 4);
 static_assert(offsetof(Nontrivial, field) * 8 == 0);

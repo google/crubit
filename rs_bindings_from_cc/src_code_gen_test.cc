@@ -32,6 +32,7 @@ TEST(SrcGenTest, FFIIntegration) {
           "pub fn hello_world(arg: i32) -> i32 {\n"
           "    unsafe { crate::detail::__rust_thunk__hello_world(arg) }\n"
           "}\n"
+          "\n"
           "mod detail {\n"
           "    extern \"C\" {\n"
           "        pub(crate) fn __rust_thunk__hello_world(arg: i32) -> i32;\n"
@@ -40,6 +41,7 @@ TEST(SrcGenTest, FFIIntegration) {
 
   EXPECT_THAT(bindings.rs_api_impl,
               StrEq("#include \"foo/bar.h\"\n"
+                    "\n"
                     "extern \"C\" int __rust_thunk__hello_world(int arg) { "
                     "return hello_world(arg); "
                     "}\n"));

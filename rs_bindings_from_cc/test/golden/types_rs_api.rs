@@ -3,8 +3,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+
 use memoffset_unstable_const::offset_of;
 use static_assertions::const_assert_eq;
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FieldTypeTestStruct {
@@ -42,6 +44,7 @@ pub struct FieldTypeTestStruct {
     pub float_field: f32,
     pub double_field: f64,
 }
+
 const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 168usize);
 const_assert_eq!(std::mem::align_of::<FieldTypeTestStruct>(), 8usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, bool_field) * 8, 0usize);
