@@ -30,6 +30,9 @@ ABSL_FLAG(std::string, rs_out, "",
           "output path for the Rust source file with bindings");
 ABSL_FLAG(std::string, cc_out, "",
           "output path for the C++ source file with bindings implementation");
+ABSL_FLAG(std::string, ir_out, "",
+          "(optional) output path for the JSON IR. If not present, the JSON IR "
+          "will not be dumped.");
 ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "public headers of the cc_library this tool should generate bindings "
           "for, in a format suitable for usage in google3-relative quote "
@@ -48,6 +51,8 @@ int main(int argc, char* argv[]) {
   auto public_headers = absl::GetFlag(FLAGS_public_headers);
   QCHECK(!public_headers.empty())
       << "please specify at least one header in --public_headers";
+
+  auto ir_out = absl::GetFlag(FLAGS_ir_out);  // Optional.
 
   std::vector<std::string> command_line(argv, argv + argc);
   // Needed, so that we can copy over non-doc comments that are used as
@@ -71,6 +76,10 @@ int main(int argc, char* argv[]) {
               std::vector<absl::string_view>(public_headers.begin(),
                                              public_headers.end()),
               ir))) {
+    if (!ir_out.empty()) {
+      CHECK_OK(file::SetContents(ir_out, ir.ToJson().dump(/*indent=*/2),
+                                 file::Defaults()));
+    }
     rs_bindings_from_cc::Bindings bindings =
         rs_bindings_from_cc::GenerateBindings(ir);
     CHECK_OK(file::SetContents(rs_out, bindings.rs_api, file::Defaults()));
@@ -80,5 +89,8 @@ int main(int argc, char* argv[]) {
 
   file::Delete(rs_out, file::Defaults()).IgnoreError();
   file::Delete(cc_out, file::Defaults()).IgnoreError();
+  if (!ir_out.empty()) {
+    file::Delete(ir_out, file::Defaults()).IgnoreError();
+  }
   return 1;
 }
