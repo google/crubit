@@ -5,6 +5,10 @@
 #include <cstddef>
 #include "rs_bindings_from_cc/test/golden/types.h"
 
+extern "C" void __rust_thunk__VoidReturningFunction() {
+  return VoidReturningFunction();
+}
+
 static_assert(sizeof(FieldTypeTestStruct) == 168);
 static_assert(alignof(FieldTypeTestStruct) == 8);
 static_assert(offsetof(FieldTypeTestStruct, bool_field) * 8 == 0);

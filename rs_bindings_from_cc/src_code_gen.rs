@@ -385,8 +385,13 @@ fn format_rs_type(ty: &ir::RsType) -> Result<TokenStream> {
             if ty.type_params.len() > 0 {
                 return Err(anyhow!("Type not yet supported: {:?}", ty));
             }
-            let ident = make_ident(&ty.name);
-            Ok(quote! {#ident})
+            match ty.name.as_str() {
+                "()" => Ok(quote! {()}),
+                name => {
+                    let ident = make_ident(name);
+                    Ok(quote! {#ident})
+                }
+            }
         }
     }
 }

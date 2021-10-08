@@ -52,4 +52,6 @@ struct FieldTypeTestStruct {
   double double_field;
 };
 
+inline void VoidReturningFunction() {}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_

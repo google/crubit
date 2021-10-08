@@ -45,6 +45,17 @@ pub struct FieldTypeTestStruct {
     pub double_field: f64,
 }
 
+#[inline(always)]
+pub fn VoidReturningFunction() -> () {
+    unsafe { crate::detail::__rust_thunk__VoidReturningFunction() }
+}
+
+mod detail {
+    extern "C" {
+        pub(crate) fn __rust_thunk__VoidReturningFunction() -> ();
+    }
+}
+
 const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 168usize);
 const_assert_eq!(std::mem::align_of::<FieldTypeTestStruct>(), 8usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, bool_field) * 8, 0usize);
