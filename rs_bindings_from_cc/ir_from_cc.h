@@ -8,13 +8,24 @@
 #include <vector>
 
 #include "rs_bindings_from_cc/ir.h"
+#include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
 
 namespace rs_bindings_from_cc {
 
-IR IrFromCc(absl::Span<const absl::string_view> header_files_contents,
-            const std::vector<absl::string_view>& args);
+/// Parses C++ source code into IR.
+///
+/// Parameters:
+/// * `header_file_contents`: textual C++ source code to be parsed directly
+/// * `header_names`: names of headers to include from the file system before
+///    the textual source
+/// * `args`: additional command line arguments for Clang
+///
+absl::StatusOr<IR> IrFromCc(
+    absl::Span<const absl::string_view> header_files_contents,
+    absl::Span<const absl::string_view> header_names = {},
+    absl::Span<const absl::string_view> args = {});
 
 }  // namespace rs_bindings_from_cc
 

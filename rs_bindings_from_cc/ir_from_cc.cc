@@ -12,11 +12,13 @@
 namespace rs_bindings_from_cc {
 
 static constexpr absl::string_view kVirtualInputPath =
-    "ast_visitor_test_virtual_input.cc";
+    "ir_from_cc_virtual_input.cc";
 
-IR IrFromCc(absl::Span<const absl::string_view> header_files_contents,
-            const std::vector<absl::string_view>& args) {
-  std::vector<std::string> headers;
+absl::StatusOr<IR> IrFromCc(
+    absl::Span<const absl::string_view> header_files_contents,
+    absl::Span<const absl::string_view> header_names,
+    absl::Span<const absl::string_view> args) {
+  std::vector<std::string> headers{header_names.begin(), header_names.end()};
   absl::flat_hash_map<std::string, std::string> file_contents;
   std::string virtual_input_file_content;
 
@@ -25,27 +27,39 @@ IR IrFromCc(absl::Span<const absl::string_view> header_files_contents,
     std::string filename(
         absl::Substitute("test/testing_header_$0.h", counter++));
     file_contents.insert({filename, std::string(header_content)});
-    absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
-                              filename);
     headers.push_back(std::move(filename));
   }
 
+  for (const std::string& filename : headers) {
+    absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
+                              filename);
+  }
   file_contents.insert(
       {std::string(kVirtualInputPath), virtual_input_file_content});
 
-  std::vector<std::string> args_as_strings(args.begin(), args.end());
-  args_as_strings.push_back("--syntax-only");
-  // Needed, so that we can copy over non-doc comments that are used as
-  // documention.
-  args_as_strings.push_back("-fparse-all-comments");
+  std::vector<std::string> args_as_strings{
+      // This includes the path of the binary that we're pretending to be.
+      // TODO(forster): Find out where to point this. Should we use the
+      // production crosstool for this? See
+      // http://google3/devtools/cymbal/common/clang_tool.cc;l=171;rcl=385188113
+      "clang",
+      // We only need the AST.
+      "-fsyntax-only",
+      // Parse non-doc comments that are used as documention.
+      "-fparse-all-comments"};
+  args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
   args_as_strings.push_back(std::string(kVirtualInputPath));
 
-  IR ir;
-  devtools::cymbal::RunToolWithClangFlagsOnCode(
-      args_as_strings, file_contents,
-      std::make_unique<rs_bindings_from_cc::FrontendAction>(
-          std::vector<absl::string_view>(headers.begin(), headers.end()), ir));
-  return ir;
+  if (IR ir; devtools::cymbal::RunToolWithClangFlagsOnCode(
+          args_as_strings, file_contents,
+          std::make_unique<FrontendAction>(
+              std::vector<absl::string_view>(headers.begin(), headers.end()),
+              ir))) {
+    return ir;
+  } else {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Could not compile header contents");
+  }
 }
 
 }  // namespace rs_bindings_from_cc

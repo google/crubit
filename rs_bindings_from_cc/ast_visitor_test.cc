@@ -26,6 +26,7 @@ using ::testing::Not;
 using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::VariantWith;
+using ::testing::status::StatusIs;
 
 // Matches an IR node that has the given identifier.
 MATCHER_P(IdentifierIs, identifier, "") {
@@ -207,27 +208,28 @@ auto FieldType(const Args&... matchers) {
 }
 
 TEST(AstVisitorTest, Noop) {
-  IR ir = IrFromCc({"// nothing interesting there."}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"// nothing interesting there."}));
+
   EXPECT_THAT(ir.items, IsEmpty());
   EXPECT_THAT(ir.used_headers,
               ElementsAre(Property(&HeaderName::IncludePath,
                                    "test/testing_header_0.h")));
 }
 
-TEST(AstVisitorTest, IREmptyOnInvalidInput) {
-  IR ir = IrFromCc({"int foo(); But this is not C++"}, {});
-  EXPECT_THAT(ir.items, IsEmpty());
+TEST(AstVisitorTest, ErrorOnInvalidInput) {
+  ASSERT_THAT(IrFromCc({"int foo(); But this is not C++"}),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(AstVisitorTest, FuncWithVoidReturnType) {
-  IR ir = IrFromCc({"void Foo();"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo();"}));
   EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(
                             AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
                                   ReturnType(IsVoid()), ParamsAre()))));
 }
 
 TEST(AstVisitorTest, TwoFuncs) {
-  IR ir = IrFromCc({"void Foo(); void Bar();"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); void Bar();"}));
   EXPECT_THAT(
       ir.items,
       ElementsAre(
@@ -238,32 +240,32 @@ TEST(AstVisitorTest, TwoFuncs) {
 }
 
 TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
-  IR ir = IrFromCc({"void Foo();", "void Bar();"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo();", "void Bar();"}));
   EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
                                     VariantWith<Func>(IdentifierIs("Bar"))));
 }
 
 TEST(AstVisitorTest, NonInlineFunc) {
-  IR ir = IrFromCc({"void Foo() {}"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo() {}"}));
   EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(
                             AllOf(IdentifierIs("Foo"), Not(IsInline())))));
 }
 
 TEST(AstVisitorTest, InlineFunc) {
-  IR ir = IrFromCc({"inline void Foo() {}"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"inline void Foo() {}"}));
   EXPECT_THAT(
       ir.items,
       ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
 TEST(AstVisitorTest, FuncJustOnce) {
-  IR ir = IrFromCc({"void Foo(); void Foo();"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"void Foo(); void Foo();"}));
   EXPECT_THAT(ir.items,
               ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
 TEST(AstVisitorTest, TestImportPointerFunc) {
-  IR ir = IrFromCc({"int* Foo(int* a);"}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({"int* Foo(int* a);"}));
 
   EXPECT_THAT(ir.items,
               ElementsAre(VariantWith<Func>(AllOf(
@@ -271,8 +273,9 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
 }
 
 TEST(AstVisitorTest, Struct) {
-  IR ir = IrFromCc(
-      {"struct SomeStruct { int first_field; int second_field; };"}, {});
+  ASSERT_OK_AND_ASSIGN(
+      IR ir,
+      IrFromCc({"struct SomeStruct { int first_field; int second_field; };"}));
 
   EXPECT_THAT(ir.items,
               ElementsAre(VariantWith<Record>(AllOf(
@@ -287,7 +290,7 @@ TEST(AstVisitorTest, TrivialCopyConstructor) {
   absl::string_view file =
       "struct Implicit {};\n"
       "struct Defaulted { Defaulted(const Defaulted&) = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(CopyConstructor(DefinitionIs(
@@ -299,7 +302,7 @@ TEST(AstVisitorTest, NontrivialCopyConstructor) {
   // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
   // TODO(b/202113881): "struct MemberDefaulted { MemberDefaulted(const
   // MemberDefaulted&) = default; Defined x; };\n"
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   EXPECT_THAT(ir.items, SizeIs(1));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(CopyConstructor(DefinitionIs(
                             SpecialMemberFunc::Definition::kNontrivial)))));
@@ -310,7 +313,7 @@ TEST(AstVisitorTest, DeletedCopyConstructor) {
       "struct Deleted { Deleted(const Deleted&) = delete;};\n"
       // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
       "struct DeletedByCtorDef { DeletedByCtorDef(DeletedByCtorDef&&) {} };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(CopyConstructor(DefinitionIs(
@@ -322,7 +325,7 @@ TEST(AstVisitorTest, PublicCopyConstructor) {
       "class Implicit {};\n"
       "struct Defaulted { Defaulted(const Defaulted&) = default; };\n"
       "class Section { public: Section(const Section&) = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(3));
   EXPECT_THAT(ir.items,
@@ -333,7 +336,7 @@ TEST(AstVisitorTest, PrivateCopyConstructor) {
   absl::string_view file =
       "class Defaulted { Defaulted(const Defaulted&) = default; };\n"
       "struct Section { private: Section(const Section&) = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items,
@@ -344,7 +347,7 @@ TEST(AstVisitorTest, TrivialMoveConstructor) {
   absl::string_view file =
       "struct Implicit {};\n"
       "struct Defaulted { Defaulted(Defaulted&&) = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(MoveConstructor(DefinitionIs(
@@ -356,7 +359,7 @@ TEST(AstVisitorTest, NontrivialMoveConstructor) {
   // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
   // TODO(b/202113881): "struct MemberDefaulted { MemberDefaulted(
   // MemberDefaulted&&) = default; Defined x; };\n"
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   EXPECT_THAT(ir.items, SizeIs(1));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(MoveConstructor(DefinitionIs(
                             SpecialMemberFunc::Definition::kNontrivial)))));
@@ -368,7 +371,7 @@ TEST(AstVisitorTest, DeletedMoveConstructor) {
       // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
       "struct SuppressedByCtorDef {"
       " SuppressedByCtorDef(const SuppressedByCtorDef&) {}};\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(MoveConstructor(DefinitionIs(
@@ -380,7 +383,7 @@ TEST(AstVisitorTest, PublicMoveConstructor) {
       "class Implicit {};\n"
       "struct Defaulted { Defaulted(Defaulted&&) = default; };\n"
       "class Section { public: Section(Section&&) = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(3));
   EXPECT_THAT(ir.items,
@@ -391,7 +394,7 @@ TEST(AstVisitorTest, PrivateMoveConstructor) {
   absl::string_view file =
       "class Defaulted { Defaulted(Defaulted&&) = default; };\n"
       "struct Section { private: Section(Section&&) = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items,
@@ -402,7 +405,7 @@ TEST(AstVisitorTest, TrivialDestructor) {
   absl::string_view file =
       "struct Implicit {};\n"
       "struct Defaulted { ~Defaulted() = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
@@ -414,7 +417,7 @@ TEST(AstVisitorTest, NontrivialDestructor) {
   // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
   // TODO(b/202113881): "struct MemberDefaulted { ~MemberDefaulted() = default;
   // Defined x; };\n"
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   EXPECT_THAT(ir.items, SizeIs(1));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
                             SpecialMemberFunc::Definition::kNontrivial)))));
@@ -423,7 +426,7 @@ TEST(AstVisitorTest, NontrivialDestructor) {
 TEST(AstVisitorTest, DeletedDestructor) {
   absl::string_view file = "struct Deleted { ~Deleted() = delete;};\n";
   // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(1));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
@@ -435,7 +438,7 @@ TEST(AstVisitorTest, PublicDestructor) {
       "class Implicit {};\n"
       "struct Defaulted { ~Defaulted() = default; };\n"
       "class Section { public: ~Section() = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(3));
   EXPECT_THAT(ir.items,
@@ -446,7 +449,7 @@ TEST(AstVisitorTest, PrivateDestructor) {
   absl::string_view file =
       "class Defaulted { ~Defaulted() = default; };\n"
       "struct Section { private: ~Section() = default; };\n";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(2));
   EXPECT_THAT(ir.items,
@@ -463,7 +466,7 @@ TEST(AstVisitorTest, TrivialAbi) {
       Nontrivial(const Nontrivial&) {}
     };
   )cc";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(3));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(IsTrivialAbi())));
@@ -475,14 +478,14 @@ TEST(AstVisitorTest, NotTrivialAbi) {
       Nontrivial(const Nontrivial&) {}
     };
   )cc";
-  IR ir = IrFromCc({file}, {});
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   EXPECT_THAT(ir.items, SizeIs(1));
   EXPECT_THAT(ir.items, Each(VariantWith<Record>(Not(IsTrivialAbi()))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
-  IR ir = IrFromCc({R"(
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({R"(
     struct SomeStruct {
       int default_access_int;
     public:
@@ -496,8 +499,7 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
     class SomeClass {
       int default_access_int;
     };
-  )"},
-                   {});
+  )"}));
 
   EXPECT_THAT(
       ir.items,

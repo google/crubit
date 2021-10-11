@@ -15,6 +15,7 @@
 #include "devtools/cymbal/common/clang_tool.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
 #include "file/base/filesystem.h"
 #include "file/base/helpers.h"
@@ -38,9 +39,6 @@ ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "for, in a format suitable for usage in google3-relative quote "
           "include (#include \"\").");
 
-constexpr absl::string_view kVirtualInputPath =
-    "rs_bindings_from_cc_virtual_input.cc";
-
 int main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
 
@@ -54,34 +52,20 @@ int main(int argc, char* argv[]) {
 
   auto ir_out = absl::GetFlag(FLAGS_ir_out);  // Optional.
 
-  std::vector<std::string> command_line(argv, argv + argc);
-  // Needed, so that we can copy over non-doc comments that are used as
-  // documention.
-  command_line.push_back("-fparse-all-comments");
-  command_line.push_back(std::string(kVirtualInputPath));
-
-  std::string virtual_input_file_content;
-  for (const std::string& header : public_headers) {
-    absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
-                              header);
-  }
-
-  absl::flat_hash_map<std::string, std::string> file_contents{
-      {std::string(kVirtualInputPath), virtual_input_file_content}};
-
-  rs_bindings_from_cc::IR ir;
-  if (devtools::cymbal::RunToolWithClangFlagsOnCode(
-          command_line, file_contents,
-          std::make_unique<rs_bindings_from_cc::FrontendAction>(
+  if (absl::StatusOr<rs_bindings_from_cc::IR> ir =
+          rs_bindings_from_cc::IrFromCc(
+              {},
               std::vector<absl::string_view>(public_headers.begin(),
                                              public_headers.end()),
-              ir))) {
+
+              std::vector<absl::string_view>(argv, argv + argc));
+      ir.ok()) {
     if (!ir_out.empty()) {
-      CHECK_OK(file::SetContents(ir_out, ir.ToJson().dump(/*indent=*/2),
+      CHECK_OK(file::SetContents(ir_out, ir->ToJson().dump(/*indent=*/2),
                                  file::Defaults()));
     }
     rs_bindings_from_cc::Bindings bindings =
-        rs_bindings_from_cc::GenerateBindings(ir);
+        rs_bindings_from_cc::GenerateBindings(*ir);
     CHECK_OK(file::SetContents(rs_out, bindings.rs_api, file::Defaults()));
     CHECK_OK(file::SetContents(cc_out, bindings.rs_api_impl, file::Defaults()));
     return 0;
