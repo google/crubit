@@ -39,7 +39,8 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
 
 bool AstVisitor::TraverseTranslationUnitDecl(
     clang::TranslationUnitDecl* translation_unit_decl) {
-  mangler_.reset(translation_unit_decl->getASTContext().createMangleContext());
+  ctx_ = &translation_unit_decl->getASTContext();
+  mangler_.reset(ctx_->createMangleContext());
 
   for (const absl::string_view header_name : public_header_names_) {
     ir_.used_headers.push_back(HeaderName(std::string(header_name)));
@@ -48,33 +49,18 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   return Base::TraverseTranslationUnitDecl(translation_unit_decl);
 }
 
-SourceLoc ConvertSourceLoc(const clang::SourceManager& sm,
-                           clang::SourceLocation loc) {
-  auto filename = sm.getFileEntryForID(sm.getFileID(loc))->getName();
-  if (filename.startswith("./")) {
-    filename = filename.substr(2);
-  }
-
-  return SourceLoc{.filename = filename.str(),
-                   .line = sm.getSpellingLineNumber(loc),
-                   .column = sm.getSpellingColumnNumber(loc)};
-}
-
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
-  auto& sm = function_decl->getASTContext().getSourceManager();
-
   std::vector<FuncParam> params;
   bool success = true;
 
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
-    auto param_type =
-        ConvertType(param->getType(), function_decl->getASTContext());
+    auto param_type = ConvertType(param->getType());
     if (!param_type.ok()) {
       ir_.items.push_back(UnsupportedItem{
           .name = function_decl->getQualifiedNameAsString(),
           .message = absl::Substitute("Parameter type '$0' is not supported",
                                       param->getType().getAsString()),
-          .source_loc = ConvertSourceLoc(sm, param->getBeginLoc())});
+          .source_loc = ConvertSourceLoc(param->getBeginLoc())});
       success = false;
       continue;
     }
@@ -83,15 +69,14 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       ir_.items.push_back(UnsupportedItem{
           .name = function_decl->getQualifiedNameAsString(),
           .message = "Empty parameter names are not supported",
-          .source_loc = ConvertSourceLoc(sm, param->getBeginLoc())});
+          .source_loc = ConvertSourceLoc(param->getBeginLoc())});
       success = false;
       continue;
     }
     params.push_back({*param_type, *std::move(param_name)});
   }
 
-  auto return_type = ConvertType(function_decl->getReturnType(),
-                                 function_decl->getASTContext());
+  auto return_type = ConvertType(function_decl->getReturnType());
   if (!return_type.ok()) {
     ir_.items.push_back(UnsupportedItem{
         .name = function_decl->getQualifiedNameAsString(),
@@ -99,7 +84,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
             absl::Substitute("Return type '$0' is not supported",
                              function_decl->getReturnType().getAsString()),
         .source_loc = ConvertSourceLoc(
-            sm, function_decl->getReturnTypeSourceRange().getBegin())});
+            function_decl->getReturnTypeSourceRange().getBegin())});
     success = false;
   }
   std::optional<Identifier> translated_name = GetTranslatedName(function_decl);
@@ -205,10 +190,9 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       }
     }
   }
-  clang::ASTContext& ctx = record_decl->getASTContext();
-  const clang::ASTRecordLayout& layout = ctx.getASTRecordLayout(record_decl);
+  const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    auto type = ConvertType(field_decl->getType(), ctx);
+    auto type = ConvertType(field_decl->getType());
     if (!type.ok()) {
       // TODO(b/200239975):  Add diagnostics for declarations we can't import
       return true;
@@ -252,9 +236,8 @@ std::optional<std::string> AstVisitor::GetComment(
   // In general it is not possible in C++ to reliably only extract doc comments.
   // This is going to be a heuristic that needs to be tuned over time.
 
-  clang::ASTContext& ctx = decl->getASTContext();
-  clang::SourceManager& sm = ctx.getSourceManager();
-  clang::RawComment* raw_comment = ctx.getRawCommentForDeclNoCache(decl);
+  clang::SourceManager& sm = ctx_->getSourceManager();
+  clang::RawComment* raw_comment = ctx_->getRawCommentForDeclNoCache(decl);
 
   if (raw_comment == nullptr) {
     return {};
@@ -263,14 +246,27 @@ std::optional<std::string> AstVisitor::GetComment(
   }
 }
 
+SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceLocation loc) const {
+  auto& sm = ctx_->getSourceManager();
+
+  auto filename = sm.getFileEntryForID(sm.getFileID(loc))->getName();
+  if (filename.startswith("./")) {
+    filename = filename.substr(2);
+  }
+
+  return SourceLoc{.filename = filename.str(),
+                   .line = sm.getSpellingLineNumber(loc),
+                   .column = sm.getSpellingColumnNumber(loc)};
+}
+
 absl::StatusOr<MappedType> AstVisitor::ConvertType(
-    clang::QualType qual_type, const clang::ASTContext& ctx) const {
+    clang::QualType qual_type) const {
   std::optional<MappedType> type = std::nullopt;
   std::string type_string = qual_type.getAsString();
 
   if (const clang::PointerType* pointer_type =
           qual_type->getAs<clang::PointerType>()) {
-    auto pointee_type = ConvertType(pointer_type->getPointeeType(), ctx);
+    auto pointee_type = ConvertType(pointer_type->getPointeeType());
     if (pointee_type.ok()) {
       type = MappedType::PointerTo(*pointee_type);
     }
@@ -291,7 +287,7 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
         break;
       default:
         if (builtin_type->isIntegerType()) {
-          auto size = ctx.getTypeSize(builtin_type);
+          auto size = ctx_->getTypeSize(builtin_type);
           if (size == 64 &&
               (type_string == "ptrdiff_t" || type_string == "intptr_t")) {
             type = MappedType::Simple("isize", type_string);

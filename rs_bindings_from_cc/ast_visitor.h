@@ -13,6 +13,7 @@
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecursiveASTVisitor.h"
@@ -29,7 +30,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
   explicit AstVisitor(absl::Span<const absl::string_view> public_header_names,
                       IR& ir)
-      : public_header_names_(public_header_names), ir_(ir) {}
+      : public_header_names_(public_header_names), ir_(ir), ctx_(nullptr) {}
 
   // These functions are called by the base class while visiting the different
   // parts of the AST. The API follows the rules of the base class which is
@@ -50,11 +51,12 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
       const clang::NamedDecl* named_decl) const;
   // Gets the doc comment of the declaration.
   std::optional<std::string> GetComment(const clang::Decl* decl) const;
-  absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type,
-                                         const clang::ASTContext& ctx) const;
+  SourceLoc ConvertSourceLoc(clang::SourceLocation loc) const;
+  absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
 
   absl::Span<const absl::string_view> public_header_names_;
   IR& ir_;
+  clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_set<const clang::Decl*> seen_decls_;
 };  // class AstVisitor
