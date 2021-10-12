@@ -20,9 +20,11 @@ namespace rs_bindings_from_cc {
 namespace {
 
 using ::testing::AllOf;
+using ::testing::Each;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::Not;
+using ::testing::Pointee;
 using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::VariantWith;
@@ -292,9 +294,10 @@ TEST(AstVisitorTest, TrivialCopyConstructor) {
       "struct Defaulted { Defaulted(const Defaulted&) = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(CopyConstructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kTrivial)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kTrivial)))));
 }
 
 TEST(AstVisitorTest, NontrivialCopyConstructor) {
@@ -303,9 +306,11 @@ TEST(AstVisitorTest, NontrivialCopyConstructor) {
   // TODO(b/202113881): "struct MemberDefaulted { MemberDefaulted(const
   // MemberDefaulted&) = default; Defined x; };\n"
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-  EXPECT_THAT(ir.items, SizeIs(1));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(CopyConstructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kNontrivial)))));
+
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kNontrivial)))));
 }
 
 TEST(AstVisitorTest, DeletedCopyConstructor) {
@@ -315,9 +320,10 @@ TEST(AstVisitorTest, DeletedCopyConstructor) {
       "struct DeletedByCtorDef { DeletedByCtorDef(DeletedByCtorDef&&) {} };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(CopyConstructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kDeleted)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kDeleted)))));
 }
 
 TEST(AstVisitorTest, PublicCopyConstructor) {
@@ -327,9 +333,9 @@ TEST(AstVisitorTest, PublicCopyConstructor) {
       "class Section { public: Section(const Section&) = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(3));
-  EXPECT_THAT(ir.items,
-              Each(VariantWith<Record>(CopyConstructor(AccessIs(kPublic)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(3));
+  EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPublic)))));
 }
 
 TEST(AstVisitorTest, PrivateCopyConstructor) {
@@ -338,9 +344,9 @@ TEST(AstVisitorTest, PrivateCopyConstructor) {
       "struct Section { private: Section(const Section&) = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items,
-              Each(VariantWith<Record>(CopyConstructor(AccessIs(kPrivate)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPrivate)))));
 }
 
 TEST(AstVisitorTest, TrivialMoveConstructor) {
@@ -349,9 +355,10 @@ TEST(AstVisitorTest, TrivialMoveConstructor) {
       "struct Defaulted { Defaulted(Defaulted&&) = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(MoveConstructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kTrivial)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kTrivial)))));
 }
 
 TEST(AstVisitorTest, NontrivialMoveConstructor) {
@@ -360,9 +367,11 @@ TEST(AstVisitorTest, NontrivialMoveConstructor) {
   // TODO(b/202113881): "struct MemberDefaulted { MemberDefaulted(
   // MemberDefaulted&&) = default; Defined x; };\n"
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-  EXPECT_THAT(ir.items, SizeIs(1));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(MoveConstructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kNontrivial)))));
+
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kNontrivial)))));
 }
 
 TEST(AstVisitorTest, DeletedMoveConstructor) {
@@ -373,9 +382,10 @@ TEST(AstVisitorTest, DeletedMoveConstructor) {
       " SuppressedByCtorDef(const SuppressedByCtorDef&) {}};\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(MoveConstructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kDeleted)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kDeleted)))));
 }
 
 TEST(AstVisitorTest, PublicMoveConstructor) {
@@ -385,9 +395,9 @@ TEST(AstVisitorTest, PublicMoveConstructor) {
       "class Section { public: Section(Section&&) = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(3));
-  EXPECT_THAT(ir.items,
-              Each(VariantWith<Record>(MoveConstructor(AccessIs(kPublic)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(3));
+  EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPublic)))));
 }
 
 TEST(AstVisitorTest, PrivateMoveConstructor) {
@@ -396,9 +406,9 @@ TEST(AstVisitorTest, PrivateMoveConstructor) {
       "struct Section { private: Section(Section&&) = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items,
-              Each(VariantWith<Record>(MoveConstructor(AccessIs(kPrivate)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPrivate)))));
 }
 
 TEST(AstVisitorTest, TrivialDestructor) {
@@ -468,8 +478,9 @@ TEST(AstVisitorTest, TrivialAbi) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(3));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(IsTrivialAbi())));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(3));
+  EXPECT_THAT(records, Each(Pointee(IsTrivialAbi())));
 }
 
 TEST(AstVisitorTest, NotTrivialAbi) {
@@ -480,8 +491,9 @@ TEST(AstVisitorTest, NotTrivialAbi) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(1));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Not(IsTrivialAbi()))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
 }
 
 TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {

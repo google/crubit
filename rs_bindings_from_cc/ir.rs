@@ -102,9 +102,16 @@ pub struct Record {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct UnsupportedItem {
+    pub name: String,
+    pub message: String,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
     Func(Func),
     Record(Record),
+    UnsupportedItem(UnsupportedItem),
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]

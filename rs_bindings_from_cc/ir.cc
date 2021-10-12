@@ -166,6 +166,16 @@ nlohmann::json Record::ToJson() const {
   return item;
 }
 
+nlohmann::json UnsupportedItem::ToJson() const {
+  nlohmann::json unsupported;
+  unsupported["name"] = name;
+  unsupported["message"] = message;
+
+  nlohmann::json item;
+  item["UnsupportedItem"] = std::move(unsupported);
+  return item;
+}
+
 nlohmann::json IR::ToJson() const {
   std::vector<nlohmann::json> json_used_headers;
   json_used_headers.reserve(used_headers.size());

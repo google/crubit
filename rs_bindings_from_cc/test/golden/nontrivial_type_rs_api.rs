@@ -14,6 +14,9 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
+// Error while generating bindings for item 'Nontrivial::Nontrivial':
+// Parameter type 'struct Nontrivial &&' is not supported
+
 const_assert_eq!(std::mem::size_of::<Nontrivial>(), 4usize);
 const_assert_eq!(std::mem::align_of::<Nontrivial>(), 4usize);
 const_assert_eq!(offset_of!(Nontrivial, field) * 8, 0usize);

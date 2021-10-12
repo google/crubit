@@ -257,6 +257,13 @@ fn generate_copy_derives(record: &Record) -> Vec<Ident> {
     }
 }
 
+/// Generates Rust source code for a given `UnsupportedItem`.
+fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
+    let message =
+        format!("Error while generating bindings for item '{}':\n{}", &item.name, &item.message);
+    Ok(quote! { __COMMENT__ #message })
+}
+
 fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut items = vec![];
     let mut thunks = vec![];
@@ -284,6 +291,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
                 assertions.push(assertions_snippet.tokens);
                 has_record = true;
             }
+            Item::UnsupportedItem(unsupported) => items.push(generate_unsupported(unsupported)?),
         }
     }
 
@@ -336,10 +344,15 @@ fn rustfmt(input: String) -> Result<String> {
     let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
 
     let mut child = Command::new(rustfmt)
-        // TODO(forster): Add a way to specify this as a command line parameter.
         .args(&[
+            // TODO(forster): Add a way to specify this as a command line parameter.
             "--config-path=external/rustfmt/rustfmt.toml",
+            // We are representing doc comments as attributes in the token stream and use rustfmt
+            // to unpack them again.
             "--config=normalize_doc_attributes=true",
+            // We don't want rustfmt to reflow C++ doc comments, so we turn off wrapping globally
+            // and reflow generated comments manually.
+            "--config=wrap_comments=false",
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

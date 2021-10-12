@@ -262,15 +262,45 @@ inline std::ostream& operator<<(std::ostream& o, const Record& r) {
   return o << r.ToJson();
 }
 
+// A placeholder for an item that we can't generate bindings for (yet)
+struct UnsupportedItem {
+  nlohmann::json ToJson() const;
+
+  // TODO(forster): We could show the original declaration in the generated
+  // message (potentially also for successfully imported items).
+
+  // Qualified name of the item for which we couldn't generate bindings
+  std::string name;
+
+  // Explanation of why we couldn't generate bindings
+  // TODO(forster): We should support multiple reasons per unsupported item.
+  std::string message;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
+  return o << r.ToJson();
+}
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
   nlohmann::json ToJson() const;
 
+  template <typename T>
+  std::vector<T*> get_items_if() {
+    std::vector<T*> filtered_items;
+    for (auto& item : items) {
+      if (auto* filtered_item = std::get_if<T>(&item)) {
+        filtered_items.push_back(filtered_item);
+      }
+    }
+    return filtered_items;
+  }
+
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers;
-  std::vector<std::variant<Func, Record>> items;
+  std::vector<std::variant<Func, Record, UnsupportedItem>> items;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {

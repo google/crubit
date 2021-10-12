@@ -49,17 +49,27 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   std::vector<FuncParam> params;
+  bool success = true;
+
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
     auto param_type =
         ConvertType(param->getType(), function_decl->getASTContext());
     if (!param_type.ok()) {
-      // TODO(b/200239975):  Add diagnostics for declarations we can't import
-      return true;
+      ir_.items.push_back(UnsupportedItem{
+          .name = function_decl->getQualifiedNameAsString(),
+          .message = absl::Substitute("Parameter type '$0' is not supported",
+                                      param->getType().getAsString())});
+      success = false;
+      continue;
     }
     std::optional<Identifier> param_name = GetTranslatedName(param);
     if (!param_name.has_value()) {
-      // TODO(b/200239975):  Add diagnostics for declarations we can't import
-      return true;
+      ir_.items.push_back(UnsupportedItem{
+          .name = function_decl->getQualifiedNameAsString(),
+          .message = "Empty parameter names are not supported",
+      });
+      success = false;
+      continue;
     }
     params.push_back({*param_type, *std::move(param_name)});
   }
@@ -67,21 +77,26 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   auto return_type = ConvertType(function_decl->getReturnType(),
                                  function_decl->getASTContext());
   if (!return_type.ok()) {
-    return true;
+    ir_.items.push_back(UnsupportedItem{
+        .name = function_decl->getQualifiedNameAsString(),
+        .message =
+            absl::Substitute("Return type '$0' is not supported",
+                             function_decl->getReturnType().getAsString())});
+    success = false;
   }
   std::optional<Identifier> translated_name = GetTranslatedName(function_decl);
-  if (!translated_name.has_value()) {
-    // For example, the destructor.
-    return true;
+  // For example, the destructor doesn't have a name.
+  if (success && translated_name.has_value()) {
+    ir_.items.push_back(Func{
+        .identifier = *translated_name,
+        .doc_comment = GetComment(function_decl),
+        .mangled_name = GetMangledName(function_decl),
+        .return_type = *return_type,
+        .params = std::move(params),
+        .is_inline = function_decl->isInlined(),
+    });
   }
-  ir_.items.push_back(Func{
-      .identifier = *translated_name,
-      .doc_comment = GetComment(function_decl),
-      .mangled_name = GetMangledName(function_decl),
-      .return_type = *return_type,
-      .params = std::move(params),
-      .is_inline = function_decl->isInlined(),
-  });
+
   return true;
 }
 
