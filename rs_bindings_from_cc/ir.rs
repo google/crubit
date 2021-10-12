@@ -102,9 +102,17 @@ pub struct Record {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct SourceLoc {
+    pub filename: String,
+    pub line: u64,
+    pub column: u64,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct UnsupportedItem {
     pub name: String,
     pub message: String,
+    pub source_loc: SourceLoc,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

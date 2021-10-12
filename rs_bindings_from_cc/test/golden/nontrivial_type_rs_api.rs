@@ -14,6 +14,7 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
+// rs_bindings_from_cc/test/golden/nontrivial_type.h:5:14
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'struct Nontrivial &&' is not supported
 

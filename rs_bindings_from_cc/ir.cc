@@ -165,11 +165,19 @@ nlohmann::json Record::ToJson() const {
   item["Record"] = std::move(record);
   return item;
 }
+nlohmann::json SourceLoc::ToJson() const {
+  nlohmann::json source_loc;
+  source_loc["filename"] = filename;
+  source_loc["line"] = line;
+  source_loc["column"] = column;
+  return source_loc;
+}
 
 nlohmann::json UnsupportedItem::ToJson() const {
   nlohmann::json unsupported;
   unsupported["name"] = name;
   unsupported["message"] = message;
+  unsupported["source_loc"] = source_loc.ToJson();
 
   nlohmann::json item;
   item["UnsupportedItem"] = std::move(unsupported);

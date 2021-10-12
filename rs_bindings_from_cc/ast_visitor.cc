@@ -20,6 +20,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
@@ -47,7 +48,21 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   return Base::TraverseTranslationUnitDecl(translation_unit_decl);
 }
 
+SourceLoc ConvertSourceLoc(const clang::SourceManager& sm,
+                           clang::SourceLocation loc) {
+  auto filename = sm.getFileEntryForID(sm.getFileID(loc))->getName();
+  if (filename.startswith("./")) {
+    filename = filename.substr(2);
+  }
+
+  return SourceLoc{.filename = filename.str(),
+                   .line = sm.getSpellingLineNumber(loc),
+                   .column = sm.getSpellingColumnNumber(loc)};
+}
+
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
+  auto& sm = function_decl->getASTContext().getSourceManager();
+
   std::vector<FuncParam> params;
   bool success = true;
 
@@ -58,7 +73,8 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       ir_.items.push_back(UnsupportedItem{
           .name = function_decl->getQualifiedNameAsString(),
           .message = absl::Substitute("Parameter type '$0' is not supported",
-                                      param->getType().getAsString())});
+                                      param->getType().getAsString()),
+          .source_loc = ConvertSourceLoc(sm, param->getBeginLoc())});
       success = false;
       continue;
     }
@@ -67,7 +83,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       ir_.items.push_back(UnsupportedItem{
           .name = function_decl->getQualifiedNameAsString(),
           .message = "Empty parameter names are not supported",
-      });
+          .source_loc = ConvertSourceLoc(sm, param->getBeginLoc())});
       success = false;
       continue;
     }
@@ -81,7 +97,9 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         .name = function_decl->getQualifiedNameAsString(),
         .message =
             absl::Substitute("Return type '$0' is not supported",
-                             function_decl->getReturnType().getAsString())});
+                             function_decl->getReturnType().getAsString()),
+        .source_loc = ConvertSourceLoc(
+            sm, function_decl->getReturnTypeSourceRange().getBegin())});
     success = false;
   }
   std::optional<Identifier> translated_name = GetTranslatedName(function_decl);

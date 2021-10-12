@@ -262,6 +262,19 @@ inline std::ostream& operator<<(std::ostream& o, const Record& r) {
   return o << r.ToJson();
 }
 
+// Source code location
+struct SourceLoc {
+  nlohmann::json ToJson() const;
+
+  std::string filename;
+  uint64 line;
+  uint64 column;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const SourceLoc& r) {
+  return o << r.ToJson();
+}
+
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {
   nlohmann::json ToJson() const;
@@ -275,6 +288,7 @@ struct UnsupportedItem {
   // Explanation of why we couldn't generate bindings
   // TODO(forster): We should support multiple reasons per unsupported item.
   std::string message;
+  SourceLoc source_loc;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
