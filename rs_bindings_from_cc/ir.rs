@@ -49,6 +49,26 @@ pub enum UnqualifiedIdentifier {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub enum ReferenceQualification {
+    LValue,
+    RValue,
+    Unqualified,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct InstanceMethodMetadata {
+    pub reference: ReferenceQualification,
+    pub is_const: bool,
+    pub is_virtual: bool,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct MemberFuncMetadata {
+    pub for_type: Identifier,
+    pub instance_method_metadata: Option<InstanceMethodMetadata>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
@@ -63,6 +83,7 @@ pub struct Func {
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
     pub is_inline: bool,
+    pub member_func_metadata: Option<MemberFuncMetadata>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]

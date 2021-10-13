@@ -184,6 +184,30 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // functions.
 using UnqualifiedIdentifier = std::variant<Identifier, SpecialName>;
 
+struct MemberFuncMetadata {
+  enum ReferenceQualification : char {
+    kLValue,       // void Foo() &;
+    kRValue,       // void Foo() &&;
+    kUnqualified,  // void Foo();
+  };
+
+  struct InstanceMethodMetadata {
+    ReferenceQualification reference = kUnqualified;
+    bool is_const = false;
+    bool is_virtual = false;
+  };
+
+  nlohmann::json ToJson() const;
+
+  // The type that this is a member function for.
+  Identifier for_type;
+
+  // Qualifiers for the instance method.
+  //
+  // If null, this is a static method.
+  std::optional<InstanceMethodMetadata> instance_method_metadata;
+};
+
 // A function involved in the bindings.
 struct Func {
   nlohmann::json ToJson() const;
@@ -194,6 +218,8 @@ struct Func {
   MappedType return_type;
   std::vector<FuncParam> params;
   bool is_inline;
+  // If null, this is not a member function.
+  std::optional<MemberFuncMetadata> member_func_metadata;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {

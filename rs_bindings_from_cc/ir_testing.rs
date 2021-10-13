@@ -34,6 +34,7 @@ pub fn ir_func(name: &str) -> Item {
         mangled_name: name.to_string(),
         return_type: ir_int(),
         params: vec![],
+        member_func_metadata: None,
     })
 }
 

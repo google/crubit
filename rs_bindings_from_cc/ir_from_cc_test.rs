@@ -45,6 +45,7 @@ fn test_function() {
                 return_type: ir_int(),
                 params: vec![ir_int_param("a"), ir_int_param("b")],
                 is_inline: false,
+                member_func_metadata: None,
             })],
             ..Default::default()
         },
@@ -204,4 +205,92 @@ fn test_type_conversion() -> Result<()> {
     assert_eq!(type_mapping["double"], "f64");
 
     Ok(())
+}
+
+fn assert_member_function_has_instance_method_metadata(
+    definition: &str,
+    expected_metadata: &Option<ir::InstanceMethodMetadata>,
+) {
+    let mut file = String::new();
+    file += "struct Struct {\n  ";
+    file += definition;
+    file += "\n};";
+    let ir = ir_from_cc(&file).unwrap();
+
+    let functions: Vec<_> = ir.functions().collect();
+    assert_eq!(functions.len(), 1);
+    let meta = functions[0]
+        .member_func_metadata
+        .as_ref()
+        .expect("Static member function should specify member_func_metadata");
+    assert_eq!(&meta.for_type.identifier, "Struct");
+    assert_eq!(&meta.instance_method_metadata, expected_metadata);
+}
+
+#[test]
+fn test_member_function_static() {
+    assert_member_function_has_instance_method_metadata("static void Function();", &None);
+}
+
+#[test]
+fn test_member_function() {
+    assert_member_function_has_instance_method_metadata(
+        "void Function();",
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::Unqualified,
+            is_const: false,
+            is_virtual: false,
+        }),
+    );
+}
+
+#[test]
+fn test_member_function_const() {
+    assert_member_function_has_instance_method_metadata(
+        "void Function() const;",
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::Unqualified,
+            is_const: true,
+            is_virtual: false,
+        }),
+    );
+}
+
+// TODO(b/202853028): Support virtual functions.
+#[test]
+fn test_member_function_virtual() {
+    let file = r#"
+    struct Struct {
+        virtual void Function();
+    };
+    "#;
+    let ir = ir_from_cc(file).unwrap();
+
+    let functions: Vec<_> = ir.functions().collect();
+    let expected: &[&ir::Func] = &[];
+    assert_eq!(functions, expected);
+}
+
+#[test]
+fn test_member_function_lvalue() {
+    assert_member_function_has_instance_method_metadata(
+        "void Function() &;",
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::LValue,
+            is_const: false,
+            is_virtual: false,
+        }),
+    );
+}
+
+#[test]
+fn test_member_function_rvalue() {
+    assert_member_function_has_instance_method_metadata(
+        "void Function() &&;",
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::RValue,
+            is_const: false,
+            is_virtual: false,
+        }),
+    );
 }

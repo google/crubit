@@ -592,6 +592,7 @@ mod tests {
             return_type: ir_int(),
             params: vec![ir_int_param("a"), ir_int_param("b")],
             is_inline: false,
+            member_func_metadata: None,
         })]);
         assert_eq!(
             generate_rs_api(&ir)?,
@@ -631,6 +632,7 @@ mod tests {
                 return_type: ir_int(),
                 params: vec![ir_int_param("a"), ir_int_param("b")],
                 is_inline: true,
+                member_func_metadata: None,
             })],
         };
 
@@ -830,6 +832,7 @@ mod tests {
                 },
             }],
             is_inline: true,
+            member_func_metadata: None,
         })]);
         assert_eq!(
             generate_rs_api(&ir)?,
@@ -896,8 +899,9 @@ mod tests {
                 mangled_name: "foo".to_string(),
                 doc_comment: Some("Doc Comment".to_string()),
                 return_type: ir_int(),
-                is_inline: true,
                 params: vec![],
+                is_inline: true,
+                member_func_metadata: None,
             })],
         };
 

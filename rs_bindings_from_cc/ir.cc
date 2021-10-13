@@ -10,6 +10,7 @@
 #include <variant>
 #include <vector>
 
+#include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {
@@ -84,6 +85,36 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
   return o << SpecialNameToString(special_name);
 }
 
+nlohmann::json MemberFuncMetadata::ToJson() const {
+  nlohmann::json meta;
+
+  meta["for_type"] = for_type.ToJson();
+
+  if (instance_method_metadata.has_value()) {
+    nlohmann::json instance;
+
+    absl::string_view reference;
+    switch (instance_method_metadata->reference) {
+      case MemberFuncMetadata::kLValue:
+        reference = "LValue";
+        break;
+      case MemberFuncMetadata::kRValue:
+        reference = "RValue";
+        break;
+      case MemberFuncMetadata::kUnqualified:
+        reference = "Unqualified";
+        break;
+    }
+    instance["reference"] = reference;
+    instance["is_const"] = instance_method_metadata->is_const;
+    instance["is_virtual"] = instance_method_metadata->is_virtual;
+
+    meta["instance_method_metadata"] = std::move(instance);
+  }
+
+  return meta;
+}
+
 nlohmann::json Func::ToJson() const {
   std::vector<nlohmann::json> json_params;
   json_params.reserve(params.size());
@@ -103,6 +134,9 @@ nlohmann::json Func::ToJson() const {
   func["return_type"] = return_type.ToJson();
   func["params"] = std::move(json_params);
   func["is_inline"] = is_inline;
+  if (member_func_metadata.has_value()) {
+    func["member_func_metadata"] = member_func_metadata->ToJson();
+  }
 
   nlohmann::json item;
   item["Func"] = std::move(func);

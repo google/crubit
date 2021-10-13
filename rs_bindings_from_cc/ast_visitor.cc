@@ -136,6 +136,59 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
             function_decl->getReturnTypeSourceRange().getBegin())});
     success = false;
   }
+
+  std::optional<MemberFuncMetadata> member_func_metadata;
+  if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+    if (method_decl->isVirtual()) {
+      // TODO(b/202853028): implement virtual functions.
+      ir_.items.push_back(UnsupportedItem{
+          .name = function_decl->getQualifiedNameAsString(),
+          .message = "Virtual functions are not supported",
+          .source_loc = ConvertSourceLoc(
+              function_decl->getReturnTypeSourceRange().getBegin())});
+      success = false;
+    } else {
+      std::optional<MemberFuncMetadata::InstanceMethodMetadata>
+          instance_metadata;
+      if (method_decl->isInstance()) {
+        MemberFuncMetadata::ReferenceQualification reference;
+        switch (method_decl->getRefQualifier()) {
+          case clang::RQ_LValue:
+            reference = MemberFuncMetadata::kLValue;
+            break;
+          case clang::RQ_RValue:
+            reference = MemberFuncMetadata::kRValue;
+            break;
+          case clang::RQ_None:
+            reference = MemberFuncMetadata::kUnqualified;
+            break;
+        }
+        instance_metadata = MemberFuncMetadata::InstanceMethodMetadata{
+            .reference = reference,
+            .is_const = method_decl->isConst(),
+            .is_virtual =
+                false,  // TODO(b/202853028): implement virtual functions.
+        };
+      }
+
+      std::optional<Identifier> record_identifier =
+          GetTranslatedIdentifier(method_decl->getParent());
+      if (!record_identifier.has_value()) {
+        ir_.items.push_back(UnsupportedItem{
+            .name = function_decl->getQualifiedNameAsString(),
+            .message = absl::Substitute(
+                "The Record for method '$0' could not be found",
+                function_decl->getQualifiedNameAsString()),
+            .source_loc = ConvertSourceLoc(function_decl->getSourceRange())});
+        success = false;
+      } else {
+        member_func_metadata =
+            MemberFuncMetadata{.for_type = *record_identifier,
+                               .instance_method_metadata = instance_metadata};
+      }
+    }
+  }
+
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
   if (success && translated_name.has_value()) {
@@ -146,6 +199,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         .return_type = *return_type,
         .params = std::move(params),
         .is_inline = function_decl->isInlined(),
+        .member_func_metadata = std::move(member_func_metadata),
     });
   }
 
