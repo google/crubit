@@ -16,15 +16,17 @@ fn is_ident_or_literal(tt: &TokenTree) -> bool {
 /// Produces C++ source code out of the token stream.
 ///
 /// Notable features:
-/// * quote! cannot produce a single `#` token (that is not immediately followed by `(`, `[`, `{`,
-///   or variable interpolation). For cases when we need `#` to be produced in the C++ source code
-///   use the placeholder `__HASH_TOKEN__`.
-/// * The Rust tokenizer ignores newlines as they are not significant for Rust. For C++ they are
-///   (for example there needs to be a newline after `#include "foo/bar.h"`). We are also using
-///   explict newlines for making the generated Rust/C++ source code more readable. Use the
-///   placeholder `__NEWLINE__` to insert a newline character.
-/// * `TokenStream` cannot encode comments, so we use the placeholder `__COMMENT__`, followed by a
-///   string literal.
+/// * quote! cannot produce a single `#` token (that is not immediately followed
+///   by `(`, `[`, `{`, or variable interpolation). For cases when we need `#`
+///   to be produced in the C++ source code use the placeholder
+///   `__HASH_TOKEN__`.
+/// * The Rust tokenizer ignores newlines as they are not significant for Rust.
+///   For C++ they are (for example there needs to be a newline after `#include
+///   "foo/bar.h"`). We are also using explict newlines for making the generated
+///   Rust/C++ source code more readable. Use the placeholder `__NEWLINE__` to
+///   insert a newline character.
+/// * `TokenStream` cannot encode comments, so we use the placeholder
+///   `__COMMENT__`, followed by a string literal.
 pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
     let mut result = String::new();
     let mut it = tokens.into_iter().peekable();

@@ -38,8 +38,8 @@ impl FfiU8Slice {
     /// Borrows data pointed to by this `FfiU8Slice` as a slice.
     pub fn as_slice(&self) -> &[u8] {
         // Safety:
-        // Instances of `FfiU8Slice` are only created by FFI functions, which are unsafe themselves
-        // so it's their responsibility to maintain safety.
+        // Instances of `FfiU8Slice` are only created by FFI functions, which are unsafe
+        // themselves so it's their responsibility to maintain safety.
         unsafe { slice::from_raw_parts(self.ptr, self.size) }
     }
 }
@@ -59,9 +59,9 @@ impl FfiU8SliceBox {
     /// Consumes self and returns boxed slice.
     pub fn into_boxed_slice(self) -> Box<[u8]> {
         // Safety:
-        // Instances of `FfiU8SliceBox` are either created by `from_boxed_slice`, which is safe,
-        // or by FFI functions, which are unsafe themselves so it's their responsibility to maintain
-        // safety.
+        // Instances of `FfiU8SliceBox` are either created by `from_boxed_slice`, which
+        // is safe, or by FFI functions, which are unsafe themselves so it's
+        // their responsibility to maintain safety.
         unsafe { Box::from_raw(slice::from_raw_parts_mut(self.ptr as *mut u8, self.size)) }
     }
 }

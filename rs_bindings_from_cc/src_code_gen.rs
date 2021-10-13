@@ -28,12 +28,13 @@ pub struct FfiBindings {
 /// This function panics on error.
 ///
 /// Ownership:
-///    * function doesn't take ownership of (in other words it borrows) the param `json`
+///    * function doesn't take ownership of (in other words it borrows) the
+///      param `json`
 ///    * function passes ownership of the returned value to the caller
 ///
 /// Safety:
-///    * function expects that param `json` is a FfiU8Slice for a valid array of bytes with the
-///      given size.
+///    * function expects that param `json` is a FfiU8Slice for a valid array of
+///      bytes with the given size.
 ///    * function expects that param `json` doesn't change during the call.
 #[no_mangle]
 pub unsafe extern "C" fn GenerateBindingsImpl(json: FfiU8Slice) -> FfiBindings {
@@ -68,8 +69,9 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
 
 /// Source code with attached information about how to modify the parent crate.
 ///
-/// For example, the snippet `vec![].into_raw_parts()` is not valid unless the `vec_into_raw_parts`
-/// feature is enabled. So such a snippet should be represented as:
+/// For example, the snippet `vec![].into_raw_parts()` is not valid unless the
+/// `vec_into_raw_parts` feature is enabled. So such a snippet should be
+/// represented as:
 ///
 /// ```
 /// RsSnippet {
@@ -90,20 +92,22 @@ impl From<TokenStream> for RsSnippet {
     }
 }
 
-/// If we know the original C++ function is codegenned and already compatible with `extern "C"`
-/// calling convention we skip creating/calling the C++ thunk since we can call the original C++
-/// directly.
+/// If we know the original C++ function is codegenned and already compatible
+/// with `extern "C"` calling convention we skip creating/calling the C++ thunk
+/// since we can call the original C++ directly.
 fn can_skip_cc_thunk(func: &Func) -> bool {
-    // Inline functions may not be codegenned in the C++ library since Clang doesn't know if Rust
-    // calls the function or not. Therefore in order to make inline functions callable from Rust we
-    // need to generate a C++ file that defines a thunk that delegates to the original inline
-    // function. When compiled, Clang will emit code for this thunk and Rust code will call the
+    // Inline functions may not be codegenned in the C++ library since Clang doesn't
+    // know if Rust calls the function or not. Therefore in order to make inline
+    // functions callable from Rust we need to generate a C++ file that defines
+    // a thunk that delegates to the original inline function. When compiled,
+    // Clang will emit code for this thunk and Rust code will call the
     // thunk when the user wants to call the original inline function.
     //
-    // This is not great runtime-performance-wise in regular builds (inline function will not be
-    // inlined, there will always be a function call), but it is correct. ThinLTO builds will be
-    // able to see through the thunk and inline code across the language boundary. For non-ThinLTO
-    // builds we plan to implement <internal link> which removes the runtime performance overhead.
+    // This is not great runtime-performance-wise in regular builds (inline function
+    // will not be inlined, there will always be a function call), but it is
+    // correct. ThinLTO builds will be able to see through the thunk and inline
+    // code across the language boundary. For non-ThinLTO builds we plan to
+    // implement <internal link> which removes the runtime performance overhead.
     !func.is_inline
 }
 
@@ -155,7 +159,8 @@ fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
         None => quote! {},
     }
 }
-/// Generates Rust source code for a given `Record` and associated assertions as a tuple.
+/// Generates Rust source code for a given `Record` and associated assertions as
+/// a tuple.
 fn generate_record(record: &Record) -> Result<(RsSnippet, RsSnippet)> {
     let ident = make_ident(&record.identifier.identifier);
     let doc_comment = generate_doc_comment(&record.doc_comment);
@@ -212,9 +217,9 @@ fn generate_record(record: &Record) -> Result<(RsSnippet, RsSnippet)> {
     if record.is_trivial_abi {
         unpin_impl = quote! {};
     } else {
-        // negative_impls are necessary for universal initialization due to Rust's coherence rules:
-        // PhantomPinned isn't enough to prove to Rust that a blanket impl that requires Unpin
-        // doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
+        // negative_impls are necessary for universal initialization due to Rust's
+        // coherence rules: PhantomPinned isn't enough to prove to Rust that a
+        // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         record_features.insert(make_ident("negative_impls"));
         unpin_impl = quote! {
             __NEWLINE__  __NEWLINE__
@@ -277,8 +282,8 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut thunks = vec![];
     let mut assertions = vec![];
 
-    // TODO(jeanpierreda): Delete has_record, either in favor of using RsSnippet, or not having uses.
-    // See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
+    // TODO(jeanpierreda): Delete has_record, either in favor of using RsSnippet, or not
+    // having uses. See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
     let mut has_record = false;
     let mut features = BTreeSet::new();
 
@@ -347,7 +352,8 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
 }
 
 fn rustfmt(input: String) -> Result<String> {
-    // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is fixed.
+    // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is
+    // fixed.
 
     let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
 
@@ -466,12 +472,13 @@ fn cc_struct_layout_assertion(record: &Record) -> TokenStream {
 }
 
 fn generate_rs_api_impl(ir: &IR) -> Result<String> {
-    // This function uses quote! to generate C++ source code out of convenience. This is a bold idea
-    // so we have to continously evaluate if it still makes sense or the cost of working around
-    // differences in Rust and C++ tokens is greather than the value added.
+    // This function uses quote! to generate C++ source code out of convenience.
+    // This is a bold idea so we have to continously evaluate if it still makes
+    // sense or the cost of working around differences in Rust and C++ tokens is
+    // greather than the value added.
     //
-    // See rs_bindings_from_cc/token_stream_printer.rs for a list
-    // of supported placeholders.
+    // See rs_bindings_from_cc/
+    // token_stream_printer.rs for a list of supported placeholders.
     let mut thunks = vec![];
     for func in ir.functions() {
         if can_skip_cc_thunk(&func) {
@@ -503,8 +510,8 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
     let standard_headers =
         if ir.records().next().is_none() { vec![] } else { vec![make_ident("cstddef")] };
 
-    // In order to generate C++ thunk in all the cases Clang needs to be able to access declarations
-    // from public headers of the C++ library.
+    // In order to generate C++ thunk in all the cases Clang needs to be able to
+    // access declarations from public headers of the C++ library.
     let includes = ir.used_headers.iter().map(|i| &i.name);
 
     let result = quote! {
