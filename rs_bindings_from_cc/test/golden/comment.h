@@ -1,0 +1,52 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+// File comment
+
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
+
+namespace ns {
+// a
+
+/// Foo
+struct Foo {
+  // Foo a
+
+  /// A field
+  int i;
+
+  // Foo b
+
+  /// Another field
+  int j;
+
+  // Foo c
+};
+
+// b
+
+}  // namespace ns
+
+// c
+
+/// foo
+inline void foo() {
+  // ignore
+}
+
+/// Bar
+struct Bar {
+  int i;
+};
+
+// d
+
+struct HasNoComments {
+  int i;
+};
+
+// e
+
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_

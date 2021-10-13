@@ -184,6 +184,15 @@ nlohmann::json UnsupportedItem::ToJson() const {
   return item;
 }
 
+nlohmann::json Comment::ToJson() const {
+  nlohmann::json comment;
+  comment["text"] = text;
+
+  nlohmann::json item;
+  item["Comment"] = std::move(comment);
+  return item;
+}
+
 nlohmann::json IR::ToJson() const {
   std::vector<nlohmann::json> json_used_headers;
   json_used_headers.reserve(used_headers.size());

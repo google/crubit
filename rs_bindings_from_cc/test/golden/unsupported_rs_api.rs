@@ -37,6 +37,8 @@ pub struct CustomType {
 // Error while generating bindings for item 'MultipleReasons':
 // Return type 'struct CustomType' is not supported
 
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
+
 const_assert_eq!(std::mem::size_of::<CustomType>(), 4usize);
 const_assert_eq!(std::mem::align_of::<CustomType>(), 4usize);
 const_assert_eq!(offset_of!(CustomType, i) * 8, 0usize);

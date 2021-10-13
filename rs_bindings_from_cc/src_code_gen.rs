@@ -277,6 +277,12 @@ fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #message })
 }
 
+/// Generates Rust source code for a given `Comment`.
+fn generate_comment(comment: &Comment) -> Result<TokenStream> {
+    let text = &comment.text;
+    Ok(quote! { __COMMENT__ #text })
+}
+
 fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut items = vec![];
     let mut thunks = vec![];
@@ -305,6 +311,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
                 has_record = true;
             }
             Item::UnsupportedItem(unsupported) => items.push(generate_unsupported(unsupported)?),
+            Item::Comment(comment) => items.push(generate_comment(comment)?),
         }
     }
 

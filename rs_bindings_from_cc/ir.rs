@@ -116,10 +116,16 @@ pub struct UnsupportedItem {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Comment {
+    pub text: String,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
     Func(Func),
     Record(Record),
     UnsupportedItem(UnsupportedItem),
+    Comment(Comment),
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]

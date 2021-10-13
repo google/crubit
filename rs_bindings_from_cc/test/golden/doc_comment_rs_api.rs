@@ -63,6 +63,8 @@ pub fn foo() -> i32 {
     unsafe { crate::detail::__rust_thunk__foo() }
 }
 
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
+
 mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk__foo() -> i32;

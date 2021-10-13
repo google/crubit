@@ -50,6 +50,8 @@ pub fn VoidReturningFunction() -> () {
     unsafe { crate::detail::__rust_thunk__VoidReturningFunction() }
 }
 
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
+
 mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk__VoidReturningFunction() -> ();

@@ -295,6 +295,16 @@ inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
   return o << r.ToJson();
 }
 
+struct Comment {
+  nlohmann::json ToJson() const;
+
+  std::string text;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
+  return o << r.ToJson();
+}
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
@@ -314,7 +324,7 @@ struct IR {
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers;
-  std::vector<std::variant<Func, Record, UnsupportedItem>> items;
+  std::vector<std::variant<Func, Record, UnsupportedItem, Comment>> items;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {

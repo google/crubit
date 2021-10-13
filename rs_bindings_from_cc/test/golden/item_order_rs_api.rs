@@ -29,6 +29,8 @@ pub fn second_func() -> i32 {
     unsafe { crate::detail::__rust_thunk__second_func() }
 }
 
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
+
 mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk__first_func() -> i32;

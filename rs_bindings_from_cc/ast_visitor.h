@@ -16,8 +16,10 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecursiveASTVisitor.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 
 namespace rs_bindings_from_cc {
 
@@ -30,7 +32,10 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
   explicit AstVisitor(absl::Span<const absl::string_view> public_header_names,
                       IR& ir)
-      : public_header_names_(public_header_names), ir_(ir), ctx_(nullptr) {}
+      : public_header_names_(public_header_names),
+        ir_(ir),
+        ctx_(nullptr),
+        comment_manager_(ir) {}
 
   // These functions are called by the base class while visiting the different
   // parts of the AST. The API follows the rules of the base class which is
@@ -59,6 +64,32 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_set<const clang::Decl*> seen_decls_;
+
+  // A component that keeps track of all comments and emits IR for all top-level
+  // comments that are not doc comments.
+  class CommentManager {
+   public:
+    explicit CommentManager(IR& ir) : ir_(ir) {}
+
+    // Notify the comment manager that we the visitor is traversing a decl.
+    // This will emit IR for all preceding comments.
+    void TraverseDecl(clang::Decl* decl);
+
+    // Emit IR for the remaining comments after the last decl.
+    void FlushComments();
+
+   private:
+    void LoadComments();
+    void VisitTopLevelComment(clang::RawComment* comment);
+
+    IR& ir_;
+    clang::ASTContext* ctx_;
+    clang::FileID current_file_;
+    std::vector<clang::RawComment*> file_comments_;
+    std::vector<clang::RawComment*>::iterator next_comment_;
+  };
+
+  CommentManager comment_manager_;
 };  // class AstVisitor
 
 }  // namespace rs_bindings_from_cc

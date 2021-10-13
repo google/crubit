@@ -32,6 +32,9 @@ constexpr std::string_view kTypeStatusPayloadUrl =
 
 bool AstVisitor::TraverseDecl(clang::Decl* decl) {
   if (seen_decls_.insert(decl->getCanonicalDecl()).second) {
+    // Emit all comments in the current file before the decl
+    comment_manager_.TraverseDecl(decl);
+
     return Base::TraverseDecl(decl);
   }
   return true;
@@ -46,7 +49,12 @@ bool AstVisitor::TraverseTranslationUnitDecl(
     ir_.used_headers.push_back(HeaderName(std::string(header_name)));
   }
 
-  return Base::TraverseTranslationUnitDecl(translation_unit_decl);
+  bool result = Base::TraverseTranslationUnitDecl(translation_unit_decl);
+
+  // Emit comments after the last decl
+  comment_manager_.FlushComments();
+
+  return result;
 }
 
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
@@ -335,6 +343,65 @@ std::optional<Identifier> AstVisitor::GetTranslatedName(
     return std::nullopt;
   }
   return Identifier(std::string(id->getName()));
+}
+
+void AstVisitor::CommentManager::TraverseDecl(clang::Decl* decl) {
+  ctx_ = &decl->getASTContext();
+
+  // When we go to a new file we flush the comments from the previous file,
+  // because source locations won't be comparable by '<' any more.
+  clang::FileID file = ctx_->getSourceManager().getFileID(decl->getBeginLoc());
+  if (file != current_file_) {
+    FlushComments();
+    current_file_ = file;
+    LoadComments();
+  }
+
+  // Visit all comments from the current file up to the current decl.
+  clang::RawComment* decl_comment = ctx_->getRawCommentForDeclNoCache(decl);
+  while (next_comment_ != file_comments_.end() &&
+         (*next_comment_)->getBeginLoc() < decl->getBeginLoc()) {
+    // Skip the decl's doc comment, which will be emitted as part of the decl.
+    if (*next_comment_ != decl_comment) {
+      VisitTopLevelComment(*next_comment_);
+    }
+    ++next_comment_;
+  }
+
+  // Skip comments that are within the decl, e.g., comments in the body of an
+  // inline function
+  // TODO(forster): We should retain floating comments within `Record`s
+  if (!clang::isa<clang::NamespaceDecl>(decl)) {
+    while (next_comment_ != file_comments_.end() &&
+           (*next_comment_)->getBeginLoc() < decl->getEndLoc()) {
+      ++next_comment_;
+    }
+  }
+}
+
+void AstVisitor::CommentManager::LoadComments() {
+  auto comments = ctx_->Comments.getCommentsInFile(current_file_);
+  if (comments) {
+    for (auto [_, comment] : *comments) {
+      file_comments_.push_back(comment);
+    }
+  }
+  next_comment_ = file_comments_.begin();
+}
+
+void AstVisitor::CommentManager::FlushComments() {
+  while (next_comment_ != file_comments_.end()) {
+    VisitTopLevelComment(*next_comment_);
+    next_comment_++;
+  }
+  file_comments_.clear();
+}
+
+void AstVisitor::CommentManager::VisitTopLevelComment(
+    clang::RawComment* comment) {
+  clang::SourceManager& sm = ctx_->getSourceManager();
+  ir_.items.push_back(
+      Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())});
 }
 
 }  // namespace rs_bindings_from_cc
