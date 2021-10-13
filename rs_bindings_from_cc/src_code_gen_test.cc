@@ -34,6 +34,7 @@ TEST(SrcGenTest, FFIIntegration) {
           "}\n"
           "\n"
           "mod detail {\n"
+          "    use super::*;\n"
           "    extern \"C\" {\n"
           "        pub(crate) fn __rust_thunk__hello_world(arg: i32) -> i32;\n"
           "    }\n"

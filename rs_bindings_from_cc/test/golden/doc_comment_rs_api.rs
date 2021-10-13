@@ -66,6 +66,7 @@ pub fn foo() -> i32 {
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
 
 mod detail {
+    use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk__foo() -> i32;
     }

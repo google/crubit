@@ -325,6 +325,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     } else {
         quote! {
             mod detail {
+                use super::*;
                 extern "C" {
                     #( #thunks )*
                 }
@@ -603,6 +604,7 @@ mod tests {
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
+                    use super::*;
                     extern "C" {
                         #[link_name = "_Z3Addii"]
                         pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
@@ -645,6 +647,7 @@ mod tests {
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
+                    use super::*;
                     extern "C" {
                         pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
                     } // extern
@@ -843,6 +846,7 @@ mod tests {
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
+                    use super::*;
                     extern "C" {
                         pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
                     } // extern

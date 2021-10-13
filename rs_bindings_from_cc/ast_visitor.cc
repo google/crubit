@@ -60,6 +60,20 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   std::vector<FuncParam> params;
   bool success = true;
+  // non-static member functions receive an implicit `this` parameter.
+  if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+    if (method_decl->isInstance()) {
+      auto param_type = ConvertType(method_decl->getThisType());
+      if (!param_type.ok()) {
+        ir_.items.push_back(UnsupportedItem{
+            .name = function_decl->getQualifiedNameAsString(),
+            .message = param_type.status().ToString(),
+            .source_loc = ConvertSourceLoc(method_decl->getBeginLoc())});
+        success = false;
+      }
+      params.push_back({*std::move(param_type), Identifier("__this")});
+    }
+  }
 
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
     auto param_type = ConvertType(param->getType());

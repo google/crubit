@@ -32,6 +32,7 @@ pub fn second_func() -> i32 {
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
 
 mod detail {
+    use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk__first_func() -> i32;
         pub(crate) fn __rust_thunk__second_func() -> i32;
