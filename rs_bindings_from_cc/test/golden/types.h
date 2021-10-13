@@ -8,6 +8,10 @@
 #include <cstddef>
 #include <cstdint>
 
+struct SomeStruct {
+  bool not_empty;  // TODO(b/202737338): delete this.
+};
+
 struct FieldTypeTestStruct {
   bool bool_field;
   char char_field;
@@ -50,6 +54,11 @@ struct FieldTypeTestStruct {
 
   float float_field;
   double double_field;
+
+  int* ptr_field;
+
+  SomeStruct struct_field;
+  SomeStruct* struct_ptr_field;
 };
 
 inline void VoidReturningFunction() {}

@@ -18,6 +18,10 @@ impl !Unpin for Nontrivial {}
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'struct Nontrivial &&' is not supported
 
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
+// Error while generating bindings for item 'TakesByValue':
+// Non-trivial_abi type 'struct Nontrivial' is not supported by value as a parameter
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
 mod detail {

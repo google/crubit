@@ -5,14 +5,16 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
-struct CustomType {
+struct NontrivialCustomType {
+  NontrivialCustomType(NontrivialCustomType&&);
+
   int i;
 };
 
-void UnsupportedParamType(CustomType n);
+void UnsupportedParamType(NontrivialCustomType n);
 void UnsupportedUnnamedParam(int);
-CustomType UnsupportedReturnType();
+NontrivialCustomType UnsupportedReturnType();
 
-CustomType MultipleReasons(CustomType n, int);
+NontrivialCustomType MultipleReasons(NontrivialCustomType n, int);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

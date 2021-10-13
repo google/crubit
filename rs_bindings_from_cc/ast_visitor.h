@@ -74,6 +74,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   // Gets the doc comment of the declaration.
   std::optional<std::string> GetComment(const clang::Decl* decl) const;
   SourceLoc ConvertSourceLoc(clang::SourceLocation loc) const;
+  SourceLoc ConvertSourceLoc(clang::SourceRange range) const;
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
 
   absl::Span<const absl::string_view> public_header_names_;

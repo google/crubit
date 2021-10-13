@@ -12,4 +12,6 @@ struct Nontrivial {
   int field;
 };
 
+void TakesByValue(Nontrivial nontrivial);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_

@@ -301,9 +301,12 @@ TEST(AstVisitorTest, Struct) {
 }
 
 TEST(AstVisitorTest, TrivialCopyConstructor) {
-  absl::string_view file =
-      "struct Implicit {};\n"
-      "struct Defaulted { Defaulted(const Defaulted&) = default; };\n";
+  absl::string_view file = R"cc(
+    struct Implicit {};
+    struct Defaulted {
+      Defaulted(const Defaulted&) = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -313,36 +316,55 @@ TEST(AstVisitorTest, TrivialCopyConstructor) {
 }
 
 TEST(AstVisitorTest, NontrivialCopyConstructor) {
-  absl::string_view file = "struct Defined { Defined(const Defined&);};\n";
-  // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
-  // TODO(b/202113881): "struct MemberDefaulted { MemberDefaulted(const
-  // MemberDefaulted&) = default; Defined x; };\n"
+  absl::string_view file = R"cc(
+    struct Defined {
+      Defined(const Defined&);
+    };
+    struct MemberImplicit {
+      Defined x;
+    };
+    struct MemberDefaulted {
+      MemberDefaulted(const MemberDefaulted&) = default;
+      Defined x;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivial)))));
 }
 
 TEST(AstVisitorTest, DeletedCopyConstructor) {
-  absl::string_view file =
-      "struct Deleted { Deleted(const Deleted&) = delete;};\n"
-      // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
-      "struct DeletedByCtorDef { DeletedByCtorDef(DeletedByCtorDef&&) {} };\n";
+  absl::string_view file = R"cc(
+    struct Deleted {
+      Deleted(const Deleted&) = delete;
+    };
+    struct DeletedByMember {
+      Deleted x;
+    };
+    struct DeletedByCtorDef {
+      DeletedByCtorDef(DeletedByCtorDef&&) {}
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kDeleted)))));
 }
 
 TEST(AstVisitorTest, PublicCopyConstructor) {
-  absl::string_view file =
-      "class Implicit {};\n"
-      "struct Defaulted { Defaulted(const Defaulted&) = default; };\n"
-      "class Section { public: Section(const Section&) = default; };\n";
+  absl::string_view file = R"cc(
+    class Implicit {};
+    struct Defaulted {
+      Defaulted(const Defaulted&) = default;
+    };
+    class Section {
+     public:
+      Section(const Section&) = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -351,9 +373,15 @@ TEST(AstVisitorTest, PublicCopyConstructor) {
 }
 
 TEST(AstVisitorTest, PrivateCopyConstructor) {
-  absl::string_view file =
-      "class Defaulted { Defaulted(const Defaulted&) = default; };\n"
-      "struct Section { private: Section(const Section&) = default; };\n";
+  absl::string_view file = R"cc(
+    class Defaulted {
+      Defaulted(const Defaulted&) = default;
+    };
+    struct Section {
+     private:
+      Section(const Section&) = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -362,9 +390,12 @@ TEST(AstVisitorTest, PrivateCopyConstructor) {
 }
 
 TEST(AstVisitorTest, TrivialMoveConstructor) {
-  absl::string_view file =
-      "struct Implicit {};\n"
-      "struct Defaulted { Defaulted(Defaulted&&) = default; };\n";
+  absl::string_view file = R"cc(
+    struct Implicit {};
+    struct Defaulted {
+      Defaulted(Defaulted&&) = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -374,37 +405,55 @@ TEST(AstVisitorTest, TrivialMoveConstructor) {
 }
 
 TEST(AstVisitorTest, NontrivialMoveConstructor) {
-  absl::string_view file = "struct Defined { Defined(Defined&&);};\n";
-  // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
-  // TODO(b/202113881): "struct MemberDefaulted { MemberDefaulted(
-  // MemberDefaulted&&) = default; Defined x; };\n"
+  absl::string_view file = R"cc(
+    struct Defined {
+      Defined(Defined&&);
+    };
+    struct MemberImplicit {
+      Defined x;
+    };
+    struct MemberDefaulted {
+      MemberDefaulted(MemberDefaulted&&) = default;
+      Defined x;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivial)))));
 }
 
 TEST(AstVisitorTest, DeletedMoveConstructor) {
-  absl::string_view file =
-      "struct Deleted { Deleted(Deleted&&) = delete;};\n"
-      // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
-      "struct SuppressedByCtorDef {"
-      " SuppressedByCtorDef(const SuppressedByCtorDef&) {}};\n";
+  absl::string_view file = R"cc(
+    struct Deleted {
+      Deleted(Deleted&&) = delete;
+    };
+    struct DeletedByMember {
+      Deleted x;
+    };
+    struct SuppressedByCtorDef {
+      SuppressedByCtorDef(const SuppressedByCtorDef&) {}
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kDeleted)))));
 }
 
 TEST(AstVisitorTest, PublicMoveConstructor) {
-  absl::string_view file =
-      "class Implicit {};\n"
-      "struct Defaulted { Defaulted(Defaulted&&) = default; };\n"
-      "class Section { public: Section(Section&&) = default; };\n";
+  absl::string_view file = R"cc(
+    class Implicit {};
+    struct Defaulted {
+      Defaulted(Defaulted&&) = default;
+    };
+    class Section {
+     public:
+      Section(Section&&) = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -413,9 +462,15 @@ TEST(AstVisitorTest, PublicMoveConstructor) {
 }
 
 TEST(AstVisitorTest, PrivateMoveConstructor) {
-  absl::string_view file =
-      "class Defaulted { Defaulted(Defaulted&&) = default; };\n"
-      "struct Section { private: Section(Section&&) = default; };\n";
+  absl::string_view file = R"cc(
+    class Defaulted {
+      Defaulted(Defaulted&&) = default;
+    };
+    struct Section {
+     private:
+      Section(Section&&) = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -424,9 +479,12 @@ TEST(AstVisitorTest, PrivateMoveConstructor) {
 }
 
 TEST(AstVisitorTest, TrivialDestructor) {
-  absl::string_view file =
-      "struct Implicit {};\n"
-      "struct Defaulted { ~Defaulted() = default; };\n";
+  absl::string_view file = R"cc(
+    struct Implicit {};
+    struct Defaulted {
+      ~Defaulted() = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -436,34 +494,54 @@ TEST(AstVisitorTest, TrivialDestructor) {
 }
 
 TEST(AstVisitorTest, NontrivialDestructor) {
-  absl::string_view file = "struct Defined { ~Defined();};\n";
-  // TODO(b/202113881): "struct MemberImplicit { Defined x; };\n"
-  // TODO(b/202113881): "struct MemberDefaulted { ~MemberDefaulted() = default;
-  // Defined x; };\n"
+  absl::string_view file = R"cc(
+    struct Defined {
+      ~Defined();
+    };
+    struct MemberImplicit {
+      Defined x;
+    };
+    struct MemberDefaulted {
+      ~MemberDefaulted() = default;
+      Defined x;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivial)))));
 }
 
 TEST(AstVisitorTest, DeletedDestructor) {
-  absl::string_view file = "struct Deleted { ~Deleted() = delete;};\n";
-  // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
+  absl::string_view file = R"cc(
+    struct Deleted {
+      ~Deleted() = delete;
+    };
+    struct DeletedByMember {
+      Deleted x;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kDeleted)))));
 }
 
 TEST(AstVisitorTest, PublicDestructor) {
-  absl::string_view file =
-      "class Implicit {};\n"
-      "struct Defaulted { ~Defaulted() = default; };\n"
-      "class Section { public: ~Section() = default; };\n";
+  absl::string_view file = R"cc(
+    class Implicit {};
+    struct Defaulted {
+      ~Defaulted() = default;
+    };
+    class Section {
+     public:
+      ~Section() = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
@@ -472,9 +550,15 @@ TEST(AstVisitorTest, PublicDestructor) {
 }
 
 TEST(AstVisitorTest, PrivateDestructor) {
-  absl::string_view file =
-      "class Defaulted { ~Defaulted() = default; };\n"
-      "struct Section { private: ~Section() = default; };\n";
+  absl::string_view file = R"cc(
+    class Defaulted {
+      ~Defaulted() = default;
+    };
+    struct Section {
+     private:
+      ~Section() = default;
+    };
+  )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();

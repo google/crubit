@@ -72,6 +72,26 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       success = false;
       continue;
     }
+
+    if (const clang::RecordType* record_type =
+            llvm::dyn_cast<clang::RecordType>(param->getType())) {
+      if (clang::RecordDecl* record_decl =
+              llvm::dyn_cast<clang::RecordDecl>(record_type->getDecl())) {
+        // TODO(b/200067242): non-trivial_abi structs, when passed by value,
+        // have a different representation which needs special support. We
+        // currently do not support it.
+        if (!record_decl->canPassInRegisters()) {
+          ir_.items.push_back(UnsupportedItem{
+              .name = function_decl->getQualifiedNameAsString(),
+              .message = absl::Substitute("Non-trivial_abi type '$0' is not "
+                                          "supported by value as a parameter",
+                                          param->getType().getAsString()),
+              .source_loc = ConvertSourceLoc(param->getBeginLoc())});
+          success = false;
+        }
+      }
+    }
+
     std::optional<Identifier> param_name = GetTranslatedIdentifier(param);
     if (!param_name.has_value()) {
       ir_.items.push_back(UnsupportedItem{
@@ -82,6 +102,27 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       continue;
     }
     params.push_back({*param_type, *std::move(param_name)});
+  }
+
+  if (const clang::RecordType* record_return_type =
+          llvm::dyn_cast<clang::RecordType>(function_decl->getReturnType())) {
+    if (clang::RecordDecl* record_decl =
+            llvm::dyn_cast<clang::RecordDecl>(record_return_type->getDecl())) {
+      // TODO(b/200067242): non-trivial_abi structs, when passed by value,
+      // have a different representation which needs special support. We
+      // currently do not support it.
+      if (!record_decl->canPassInRegisters()) {
+        ir_.items.push_back(UnsupportedItem{
+            .name = function_decl->getQualifiedNameAsString(),
+            .message =
+                absl::Substitute("Non-trivial_abi type '$0' is not supported "
+                                 "by value as a return type",
+                                 function_decl->getReturnType().getAsString()),
+            .source_loc =
+                ConvertSourceLoc(function_decl->getReturnTypeSourceRange())});
+        success = false;
+      }
+    }
   }
 
   auto return_type = ConvertType(function_decl->getReturnType());
@@ -267,6 +308,10 @@ SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceLocation loc) const {
                    .column = sm.getSpellingColumnNumber(loc)};
 }
 
+SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceRange range) const {
+  return ConvertSourceLoc(range.getBegin());
+}
+
 absl::StatusOr<MappedType> AstVisitor::ConvertType(
     clang::QualType qual_type) const {
   std::optional<MappedType> type = std::nullopt;
@@ -309,6 +354,15 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
                 type_string);
           }
         }
+    }
+  } else if (const clang::TagType* tag_type =
+                 qual_type->getAs<clang::TagType>()) {
+    // TODO(b/202692734): If tag_type is un-importable, fail here.
+    clang::TagDecl* tag_decl = tag_type->getDecl();
+
+    if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
+      std::string ident(id->Ident());
+      return MappedType::Simple(ident, ident);
     }
   }
 

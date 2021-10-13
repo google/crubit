@@ -9,6 +9,13 @@ use static_assertions::const_assert_eq;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
+pub struct SomeStruct {
+    /// TODO(b/202737338): delete this.
+    pub not_empty: bool,
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: u8,
@@ -43,6 +50,9 @@ pub struct FieldTypeTestStruct {
     pub uintptr_t_field: usize,
     pub float_field: f32,
     pub double_field: f64,
+    pub ptr_field: *mut i32,
+    pub struct_field: SomeStruct,
+    pub struct_ptr_field: *mut SomeStruct,
 }
 
 #[inline(always)]
@@ -58,7 +68,11 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 168usize);
+const_assert_eq!(std::mem::size_of::<SomeStruct>(), 1usize);
+const_assert_eq!(std::mem::align_of::<SomeStruct>(), 1usize);
+const_assert_eq!(offset_of!(SomeStruct, not_empty) * 8, 0usize);
+
+const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 192usize);
 const_assert_eq!(std::mem::align_of::<FieldTypeTestStruct>(), 8usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, bool_field) * 8, 0usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, char_field) * 8, 8usize);
@@ -93,3 +107,6 @@ const_assert_eq!(offset_of!(FieldTypeTestStruct, intptr_t_field) * 8, 1088usize)
 const_assert_eq!(offset_of!(FieldTypeTestStruct, uintptr_t_field) * 8, 1152usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, float_field) * 8, 1216usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, double_field) * 8, 1280usize);
+const_assert_eq!(offset_of!(FieldTypeTestStruct, ptr_field) * 8, 1344usize);
+const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_field) * 8, 1408usize);
+const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8, 1472usize);

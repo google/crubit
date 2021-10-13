@@ -5,6 +5,6 @@
 #include <cstddef>
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
-static_assert(sizeof(CustomType) == 4);
-static_assert(alignof(CustomType) == 4);
-static_assert(offsetof(CustomType, i) * 8 == 0);
+static_assert(sizeof(NontrivialCustomType) == 4);
+static_assert(alignof(NontrivialCustomType) == 4);
+static_assert(offsetof(NontrivialCustomType, i) * 8 == 0);
