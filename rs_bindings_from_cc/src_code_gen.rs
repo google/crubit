@@ -261,10 +261,11 @@ fn generate_copy_derives(record: &Record) -> Vec<Ident> {
 fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
     let message = format!(
         // TODO(forster): The "google3" prefix should probably come from a command line argument.
-        "google3/{}:{}:{}\nError while generating bindings for item '{}':\n{}",
+        // TODO(forster): Consider linking to the symbol instead of to the line number to avoid
+        // wrong links while generated files have not caught up.
+        "google3/{};l={}\nError while generating bindings for item '{}':\n{}",
         &item.source_loc.filename,
         &item.source_loc.line,
-        &item.source_loc.column,
         &item.name,
         &item.message
     );

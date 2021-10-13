@@ -13,27 +13,27 @@ pub struct CustomType {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h:8:27
+// rs_bindings_from_cc/test/golden/unsupported.h;l=8
 // Error while generating bindings for item 'UnsupportedParamType':
 // Parameter type 'struct CustomType' is not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h:9:30
+// rs_bindings_from_cc/test/golden/unsupported.h;l=9
 // Error while generating bindings for item 'UnsupportedUnnamedParam':
 // Empty parameter names are not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h:10:1
+// rs_bindings_from_cc/test/golden/unsupported.h;l=10
 // Error while generating bindings for item 'UnsupportedReturnType':
 // Return type 'struct CustomType' is not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h:12:28
+// rs_bindings_from_cc/test/golden/unsupported.h;l=12
 // Error while generating bindings for item 'MultipleReasons':
 // Parameter type 'struct CustomType' is not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h:12:42
+// rs_bindings_from_cc/test/golden/unsupported.h;l=12
 // Error while generating bindings for item 'MultipleReasons':
 // Empty parameter names are not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h:12:1
+// rs_bindings_from_cc/test/golden/unsupported.h;l=12
 // Error while generating bindings for item 'MultipleReasons':
 // Return type 'struct CustomType' is not supported
 
