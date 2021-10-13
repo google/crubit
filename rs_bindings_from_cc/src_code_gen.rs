@@ -116,8 +116,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 /// Returns the generated function and the thunk as a tuple.
 fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
-    let ident = make_ident(&func.identifier.identifier);
-    let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
+    let thunk_ident = thunk_ident(func);
     let doc_comment = generate_doc_comment(&func.doc_comment);
     // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
     let return_type_name = format_rs_type(&func.return_type.rs_type)?;
@@ -128,12 +127,18 @@ fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     let param_types =
         func.params.iter().map(|p| format_rs_type(&p.type_.rs_type)).collect::<Result<Vec<_>>>()?;
 
-    let api_func = quote! {
-        #doc_comment
-        #[inline(always)]
-        pub fn #ident( #( #param_idents: #param_types ),* ) -> #return_type_name {
-            unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
+    let api_func = match &func.name {
+        UnqualifiedIdentifier::Identifier(id) => {
+            let ident = make_ident(&id.identifier);
+            quote! {
+                #doc_comment
+                #[inline(always)]
+                pub fn #ident( #( #param_idents: #param_types ),* ) -> #return_type_name {
+                    unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
+                }
+            }
         }
+        _ => quote! {}, // TODO(b/200066396): define these.
     };
 
     let thunk_attr = if can_skip_cc_thunk(func) {
@@ -478,6 +483,23 @@ fn cc_struct_layout_assertion(record: &Record) -> TokenStream {
     }
 }
 
+fn thunk_ident(func: &Func) -> Ident {
+    match &func.name {
+        UnqualifiedIdentifier::Identifier(id) => format_ident!("__rust_thunk__{}", &id.identifier),
+
+        // TODO(jeanpierreda): generate a unique, but prettier, name?
+        // This is a little challenging because, for example, two different structs `Foo` in
+        // different namespaces should not collide. The canonical way to disambiguate is, well, name
+        // mangling. Here, we use the name mangling for the destructor or constructor itself.
+        UnqualifiedIdentifier::Destructor => {
+            format_ident!("__rust_destructor_thunk__{}", &func.mangled_name)
+        }
+        UnqualifiedIdentifier::Constructor => {
+            format_ident!("__rust_constructor_thunk__{}", &func.mangled_name)
+        }
+    }
+}
+
 fn generate_rs_api_impl(ir: &IR) -> Result<String> {
     // This function uses quote! to generate C++ source code out of convenience.
     // This is a bold idea so we have to continously evaluate if it still makes
@@ -492,8 +514,19 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
             continue;
         }
 
-        let thunk_ident = format_ident!("__rust_thunk__{}", &func.identifier.identifier);
-        let ident = make_ident(&func.identifier.identifier);
+        let thunk_ident = thunk_ident(func);
+        let implementation_function = match &func.name {
+            UnqualifiedIdentifier::Identifier(id) => {
+                let ident = make_ident(&id.identifier);
+                quote! {#ident}
+            }
+            // Use destroy_at to avoid needing to spell out the type name. The type name can be
+            // difficult (impossible?) to spell in the general case, but by using destroy_at, we
+            // avoid needing to determine what the correct spelling is, or save that spelling within
+            // the IR.
+            UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
+            _ => continue, // TODO(b/200066396): handle other cases
+        };
         let return_type_name = format_cc_type(&func.return_type.cc_type)?;
 
         let param_idents =
@@ -507,7 +540,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
         thunks.push(quote! {
             extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
-                return #ident( #( #param_idents ),* );
+                return #implementation_function( #( #param_idents ),* );
             }
         });
     }
@@ -553,7 +586,7 @@ mod tests {
     #[test]
     fn test_simple_function() -> Result<()> {
         let ir = ir_items(vec![Item::Func(Func {
-            identifier: ir_id("add"),
+            name: UnqualifiedIdentifier::Identifier(ir_id("add")),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,
             return_type: ir_int(),
@@ -592,7 +625,7 @@ mod tests {
                 HeaderName { name: "foo/baz.h".to_string() },
             ],
             items: vec![Item::Func(Func {
-                identifier: Identifier { identifier: "add".to_string() },
+                name: UnqualifiedIdentifier::Identifier(ir_id("add")),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),
@@ -750,7 +783,7 @@ mod tests {
     #[test]
     fn test_ptr_func() -> Result<()> {
         let ir = ir_items(vec![Item::Func(Func {
-            identifier: Identifier { identifier: "Deref".to_string() },
+            name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
             mangled_name: "_Z5DerefPKPi".to_string(),
             doc_comment: None,
             return_type: MappedType {
@@ -859,7 +892,7 @@ mod tests {
         let ir = IR {
             used_headers: vec![],
             items: vec![Item::Func(Func {
-                identifier: ir_id("func"),
+                name: UnqualifiedIdentifier::Identifier(ir_id("func")),
                 mangled_name: "foo".to_string(),
                 doc_comment: Some("Doc Comment".to_string()),
                 return_type: ir_int(),

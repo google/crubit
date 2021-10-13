@@ -42,6 +42,13 @@ pub struct Identifier {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub enum UnqualifiedIdentifier {
+    Identifier(Identifier),
+    Constructor,
+    Destructor,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,
@@ -50,7 +57,7 @@ pub struct FuncParam {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Func {
-    pub identifier: Identifier,
+    pub name: UnqualifiedIdentifier,
     pub mangled_name: String,
     pub doc_comment: Option<String>,
     pub return_type: MappedType,

@@ -7,6 +7,7 @@
 
 struct Nontrivial {
   Nontrivial(Nontrivial&&) {}
+  ~Nontrivial();
 
   int field;
 };

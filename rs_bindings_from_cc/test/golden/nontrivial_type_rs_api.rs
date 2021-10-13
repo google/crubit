@@ -20,6 +20,13 @@ impl !Unpin for Nontrivial {}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
+mod detail {
+    extern "C" {
+        #[link_name = "_ZN10NontrivialD1Ev"]
+        pub(crate) fn __rust_destructor_thunk___ZN10NontrivialD1Ev() -> ();
+    }
+}
+
 const_assert_eq!(std::mem::size_of::<Nontrivial>(), 4usize);
 const_assert_eq!(std::mem::align_of::<Nontrivial>(), 4usize);
 const_assert_eq!(offset_of!(Nontrivial, field) * 8, 0usize);

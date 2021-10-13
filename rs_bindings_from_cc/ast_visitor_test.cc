@@ -30,11 +30,23 @@ using ::testing::SizeIs;
 using ::testing::VariantWith;
 using ::testing::status::StatusIs;
 
+template <typename T>
+UnqualifiedIdentifier GetName(const T& x) {
+  return x.identifier;
+}
+UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
+
 // Matches an IR node that has the given identifier.
 MATCHER_P(IdentifierIs, identifier, "") {
-  if (arg.identifier.Ident() == identifier) return true;
+  UnqualifiedIdentifier name = GetName(arg);
+  const Identifier* actual = std::get_if<Identifier>(&name);
+  if (actual == nullptr) {
+    *result_listener << "actual name not an identifier.";
+    return false;
+  }
+  if (actual->Ident() == identifier) return true;
 
-  *result_listener << "actual identifier: '" << arg.identifier.Ident() << "'";
+  *result_listener << "actual identifier: '" << actual->Ident() << "'";
   return false;
 }
 
@@ -417,9 +429,10 @@ TEST(AstVisitorTest, TrivialDestructor) {
       "struct Defaulted { ~Defaulted() = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kTrivial)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kTrivial)))));
 }
 
 TEST(AstVisitorTest, NontrivialDestructor) {
@@ -428,9 +441,11 @@ TEST(AstVisitorTest, NontrivialDestructor) {
   // TODO(b/202113881): "struct MemberDefaulted { ~MemberDefaulted() = default;
   // Defined x; };\n"
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
-  EXPECT_THAT(ir.items, SizeIs(1));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kNontrivial)))));
+
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kNontrivial)))));
 }
 
 TEST(AstVisitorTest, DeletedDestructor) {
@@ -438,9 +453,10 @@ TEST(AstVisitorTest, DeletedDestructor) {
   // TODO(b/202113881): "struct DeletedByMember { Deleted x; };\n"
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(1));
-  EXPECT_THAT(ir.items, Each(VariantWith<Record>(Destructor(DefinitionIs(
-                            SpecialMemberFunc::Definition::kDeleted)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(1));
+  EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
+                           SpecialMemberFunc::Definition::kDeleted)))));
 }
 
 TEST(AstVisitorTest, PublicDestructor) {
@@ -450,9 +466,9 @@ TEST(AstVisitorTest, PublicDestructor) {
       "class Section { public: ~Section() = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(3));
-  EXPECT_THAT(ir.items,
-              Each(VariantWith<Record>(Destructor(AccessIs(kPublic)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(3));
+  EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPublic)))));
 }
 
 TEST(AstVisitorTest, PrivateDestructor) {
@@ -461,9 +477,9 @@ TEST(AstVisitorTest, PrivateDestructor) {
       "struct Section { private: ~Section() = default; };\n";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
-  EXPECT_THAT(ir.items, SizeIs(2));
-  EXPECT_THAT(ir.items,
-              Each(VariantWith<Record>(Destructor(AccessIs(kPrivate)))));
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPrivate)))));
 }
 
 TEST(AstVisitorTest, TrivialAbi) {

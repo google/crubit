@@ -39,7 +39,7 @@ fn test_function() {
         "int Add(int a, int b);",
         IR {
             items: vec![Item::Func(Func {
-                identifier: ir_id("Add"),
+                name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),

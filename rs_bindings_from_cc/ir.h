@@ -169,11 +169,26 @@ inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {
   return o << param.ToJson();
 }
 
+enum SpecialName {
+  kDestructor,
+  kConstructor,
+};
+
+std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
+
+// A generalized notion of identifier, or an "Unqualified Identifier" in C++
+// jargon: https://en.cppreference.com/w/cpp/language/identifiers
+//
+// Note that constructors are given a separate variant, so that we can treat
+// them differently. After all, they are not invoked or defined like normal
+// functions.
+using UnqualifiedIdentifier = std::variant<Identifier, SpecialName>;
+
 // A function involved in the bindings.
 struct Func {
   nlohmann::json ToJson() const;
 
-  Identifier identifier;
+  UnqualifiedIdentifier name;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
@@ -330,7 +345,6 @@ struct IR {
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
   return o << ir.ToJson();
 }
-
 }  // namespace rs_bindings_from_cc
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_

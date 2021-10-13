@@ -49,11 +49,28 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
  private:
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
-  // Gets the identifier naming the symbol.
-  // Returns nullopt for things with non-identifier names, such as the
-  // destructor.
-  std::optional<Identifier> GetTranslatedName(
+
+  // Gets an IR UnqualifiedIdentifier for the named decl.
+  //
+  // If the decl's name is an identifier, this returns that identifier as-is.
+  //
+  // If the decl is a special member function or operator overload, this returns
+  // a SpecialName.
+  //
+  // If the translated name is not yet implemented, this returns null.
+  std::optional<UnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const;
+
+  // GetTranslatedName, but only for identifier names. This is the common case.
+  std::optional<Identifier> GetTranslatedIdentifier(
+      const clang::NamedDecl* named_decl) const {
+    if (std::optional<UnqualifiedIdentifier> name =
+            GetTranslatedName(named_decl)) {
+      return std::move(*std::get_if<Identifier>(&*name));
+    }
+    return std::nullopt;
+  }
+
   // Gets the doc comment of the declaration.
   std::optional<std::string> GetComment(const clang::Decl* decl) const;
   SourceLoc ConvertSourceLoc(clang::SourceLocation loc) const;

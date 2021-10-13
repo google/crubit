@@ -72,7 +72,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       success = false;
       continue;
     }
-    std::optional<Identifier> param_name = GetTranslatedName(param);
+    std::optional<Identifier> param_name = GetTranslatedIdentifier(param);
     if (!param_name.has_value()) {
       ir_.items.push_back(UnsupportedItem{
           .name = function_decl->getQualifiedNameAsString(),
@@ -95,11 +95,11 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
             function_decl->getReturnTypeSourceRange().getBegin())});
     success = false;
   }
-  std::optional<Identifier> translated_name = GetTranslatedName(function_decl);
-  // For example, the destructor doesn't have a name.
+  std::optional<UnqualifiedIdentifier> translated_name =
+      GetTranslatedName(function_decl);
   if (success && translated_name.has_value()) {
     ir_.items.push_back(Func{
-        .identifier = *translated_name,
+        .name = *translated_name,
         .doc_comment = GetComment(function_decl),
         .mangled_name = GetMangledName(function_decl),
         .return_type = *return_type,
@@ -210,7 +210,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       access = default_access;
     }
 
-    std::optional<Identifier> field_name = GetTranslatedName(field_decl);
+    std::optional<Identifier> field_name = GetTranslatedIdentifier(field_decl);
     if (!field_name.has_value()) {
       return true;
     }
@@ -221,7 +221,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
   }
-  std::optional<Identifier> record_name = GetTranslatedName(record_decl);
+  std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
   if (!record_name.has_value()) {
     return true;
   }
@@ -329,20 +329,64 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
 
 std::string AstVisitor::GetMangledName(
     const clang::NamedDecl* named_decl) const {
+  clang::GlobalDecl decl;
+
+  // There are only three named decl types that don't work with the GlobalDecl
+  // unary constructor: GPU kernels (which do not exist in standard C++, so we
+  // ignore), constructors, and destructors. GlobalDecl does not support
+  // constructors and destructors from the unary constructor because there is
+  // more than one global declaration for a given constructor or destructor!
+  //
+  //   * (Ctor|Dtor)_Complete is a function which constructs / destroys the
+  //     entire object. This is what we want. :)
+  //   * Dtor_Deleting is a function which additionally calls operator delete.
+  //   * (Ctor|Dtor)_Base is a function which constructs/destroys the object but
+  //     NOT including virtual base class subobjects.
+  //   * (Ctor|Dtor)_Comdat: I *believe* this is the identifier used to
+  //     deduplicate inline functions, and is not callable.
+  //   * Dtor_(Copying|Default)Closure: These only exist in the MSVC++ ABI,
+  //     which we don't support for now. I don't know when they are used.
+  //
+  // It was hard to piece this together, so writing it down here to explain why
+  // we magically picked the *_Complete variants.
+  if (auto dtor = llvm::dyn_cast<clang::CXXDestructorDecl>(named_decl)) {
+    decl = clang::GlobalDecl(dtor, clang::CXXDtorType::Dtor_Complete);
+  } else if (auto ctor =
+                 llvm::dyn_cast<clang::CXXConstructorDecl>(named_decl)) {
+    decl = clang::GlobalDecl(ctor, clang::CXXCtorType::Ctor_Complete);
+  } else {
+    decl = clang::GlobalDecl(named_decl);
+  }
+
   std::string name;
   llvm::raw_string_ostream stream(name);
-  mangler_->mangleName(named_decl, stream);
+  mangler_->mangleName(decl, stream);
   stream.flush();
   return name;
 }
 
-std::optional<Identifier> AstVisitor::GetTranslatedName(
+std::optional<UnqualifiedIdentifier> AstVisitor::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
-  clang::IdentifierInfo* id = named_decl->getIdentifier();
-  if (id == nullptr) {
-    return std::nullopt;
+  switch (named_decl->getDeclName().getNameKind()) {
+    case clang::DeclarationName::Identifier: {
+      auto name = std::string(named_decl->getName());
+      if (name.empty()) {
+        // for example, a parameter with no name.
+        return std::nullopt;
+      }
+      return {Identifier(std::move(name))};
+    }
+    case clang::DeclarationName::CXXConstructorName:
+      return {SpecialName::kConstructor};
+    case clang::DeclarationName::CXXDestructorName:
+      return {SpecialName::kDestructor};
+    default:
+      // To be implemented later: operators, conversion functions.
+      // There are also e.g. literal operators, deduction guides, etc., but
+      // we might not need to implement them at all. Full list at:
+      // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
+      return std::nullopt;
   }
-  return Identifier(std::string(id->getName()));
 }
 
 void AstVisitor::CommentManager::TraverseDecl(clang::Decl* decl) {

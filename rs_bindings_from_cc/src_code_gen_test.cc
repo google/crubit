@@ -18,7 +18,7 @@ using ::testing::StrEq;
 
 TEST(SrcGenTest, FFIIntegration) {
   IR ir = {.used_headers = {HeaderName("foo/bar.h")},
-           .items = {Func{.identifier = Identifier("hello_world"),
+           .items = {Func{.name = Identifier("hello_world"),
                           .mangled_name = "$$mangled_name$$",
                           .return_type = MappedType::Simple("i32", "int"),
                           .params = {FuncParam{MappedType::Simple("i32", "int"),

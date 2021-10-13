@@ -28,7 +28,7 @@ pub fn ir_int_param(name: &str) -> FuncParam {
 /// Creates a simple `Item::Func` with a given name
 pub fn ir_func(name: &str) -> Item {
     Item::Func(Func {
-        identifier: ir_id(name),
+        name: ir::UnqualifiedIdentifier::Identifier(ir_id(name)),
         doc_comment: None,
         is_inline: true,
         mangled_name: name.to_string(),

@@ -4,7 +4,10 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
+#include <optional>
 #include <string>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "third_party/json/src/json.hpp"
@@ -68,6 +71,19 @@ nlohmann::json FuncParam::ToJson() const {
   return result;
 }
 
+static std::string SpecialNameToString(SpecialName special_name) {
+  switch (special_name) {
+    case SpecialName::kDestructor:
+      return "Destructor";
+    case SpecialName::kConstructor:
+      return "Constructor";
+  }
+}
+
+std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
+  return o << SpecialNameToString(special_name);
+}
+
 nlohmann::json Func::ToJson() const {
   std::vector<nlohmann::json> json_params;
   json_params.reserve(params.size());
@@ -75,7 +91,11 @@ nlohmann::json Func::ToJson() const {
     json_params.push_back(param.ToJson());
   }
   nlohmann::json func;
-  func["identifier"] = identifier.ToJson();
+  if (auto* id = std::get_if<Identifier>(&name)) {
+    func["name"]["Identifier"] = id->ToJson();
+  } else {
+    func["name"][SpecialNameToString(std::get<SpecialName>(name))] = nullptr;
+  }
   if (doc_comment) {
     func["doc_comment"] = *doc_comment;
   }
