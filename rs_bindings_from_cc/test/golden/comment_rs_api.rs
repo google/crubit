@@ -9,6 +9,8 @@ use static_assertions::const_assert_eq;
 
 // File comment
 
+// TODO(b/202929091)
+// namespace ns {
 // a
 
 /// Foo
@@ -23,7 +25,7 @@ pub struct Foo {
 
 // b
 
-// namespace ns
+// }  // namespace ns
 
 // c
 

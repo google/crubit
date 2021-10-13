@@ -7,7 +7,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
 
-namespace ns {
+// TODO(b/202929091)
+// namespace ns {
 // a
 
 /// Foo
@@ -27,7 +28,7 @@ struct Foo {
 
 // b
 
-}  // namespace ns
+// }  // namespace ns
 
 // c
 
