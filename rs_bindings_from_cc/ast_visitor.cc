@@ -35,8 +35,8 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
     return true;
   }
 
-  const clang::DeclContext* DC = decl->getDeclContext();
-  if (DC && DC->isNamespace()) {
+  const clang::DeclContext* decl_context = decl->getDeclContext();
+  if (decl_context && decl_context->isNamespace()) {
     std::string name = "unnamed";
     if (const auto* named_decl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
       name = named_decl->getQualifiedNameAsString();
