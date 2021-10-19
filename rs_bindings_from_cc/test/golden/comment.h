@@ -7,7 +7,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
 
-// TODO(b/202929091)
+// TODO(b/202933018): Re-enable once namespaces are supported
 // namespace ns {
 // a
 

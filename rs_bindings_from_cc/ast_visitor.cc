@@ -31,13 +31,27 @@ constexpr std::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
 bool AstVisitor::TraverseDecl(clang::Decl* decl) {
-  if (seen_decls_.insert(decl->getCanonicalDecl()).second) {
-    // Emit all comments in the current file before the decl
-    comment_manager_.TraverseDecl(decl);
-
-    return Base::TraverseDecl(decl);
+  if (!seen_decls_.insert(decl->getCanonicalDecl()).second) {
+    return true;
   }
-  return true;
+
+  const clang::DeclContext* DC = decl->getDeclContext();
+  if (DC && DC->isNamespace()) {
+    std::string name = "unnamed";
+    if (const auto* named_decl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
+      name = named_decl->getQualifiedNameAsString();
+    }
+    ir_.items.push_back(UnsupportedItem{
+        .name = name,
+        .message = "Items contained in namespaces are not supported yet",
+        .source_loc = ConvertSourceLoc(decl->getBeginLoc())});
+    return true;
+  }
+
+  // Emit all comments in the current file before the decl
+  comment_manager_.TraverseDecl(decl);
+
+  return Base::TraverseDecl(decl);
 }
 
 bool AstVisitor::TraverseTranslationUnitDecl(
@@ -366,7 +380,7 @@ std::optional<std::string> AstVisitor::GetComment(
 SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceLocation loc) const {
   auto& sm = ctx_->getSourceManager();
 
-  auto filename = sm.getFileEntryForID(sm.getFileID(loc))->getName();
+  clang::StringRef filename = sm.getFilename(loc);
   if (filename.startswith("./")) {
     filename = filename.substr(2);
   }

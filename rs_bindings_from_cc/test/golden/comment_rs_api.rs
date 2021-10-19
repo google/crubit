@@ -9,7 +9,7 @@ use static_assertions::const_assert_eq;
 
 // File comment
 
-// TODO(b/202929091)
+// TODO(b/202933018): Re-enable once namespaces are supported
 // namespace ns {
 // a
 

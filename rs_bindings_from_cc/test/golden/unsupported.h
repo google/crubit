@@ -17,4 +17,9 @@ NontrivialCustomType UnsupportedReturnType();
 
 NontrivialCustomType MultipleReasons(NontrivialCustomType n, int);
 
+namespace ns {
+void FunctionInNamespace();
+struct StructInNamespace {};
+}  // namespace ns
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

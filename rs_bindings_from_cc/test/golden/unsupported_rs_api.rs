@@ -42,6 +42,16 @@ impl !Unpin for NontrivialCustomType {}
 // Error while generating bindings for item 'MultipleReasons':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
 
+// rs_bindings_from_cc/test/golden/unsupported.h;l=17
+// Error while generating bindings for item 'ns::FunctionInNamespace':
+// Items contained in namespaces are not supported yet
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=18
+// Error while generating bindings for item 'ns::StructInNamespace':
+// Items contained in namespaces are not supported yet
+
+// namespace ns
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
 const_assert_eq!(std::mem::size_of::<NontrivialCustomType>(), 4usize);

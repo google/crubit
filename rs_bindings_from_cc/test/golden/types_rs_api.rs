@@ -7,6 +7,10 @@
 use memoffset_unstable_const::offset_of;
 use static_assertions::const_assert_eq;
 
+// google3/;l=764
+// Error while generating bindings for item 'std::__u':
+// Items contained in namespaces are not supported yet
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
