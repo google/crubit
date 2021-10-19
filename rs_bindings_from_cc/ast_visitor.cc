@@ -172,8 +172,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       ir_.items.push_back(UnsupportedItem{
           .name = function_decl->getQualifiedNameAsString(),
           .message = "Virtual functions are not supported",
-          .source_loc = ConvertSourceLoc(
-              function_decl->getReturnTypeSourceRange().getBegin())});
+          .source_loc = ConvertSourceLoc(function_decl->getSourceRange())});
       success = false;
     } else {
       std::optional<MemberFuncMetadata::InstanceMethodMetadata>
