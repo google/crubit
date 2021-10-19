@@ -22,4 +22,11 @@ void FunctionInNamespace();
 struct StructInNamespace {};
 }  // namespace ns
 
+struct ContainingStruct {
+  struct NestedStruct {};
+
+  // TODO(b/202737338): Remove this placeholder once we support empty structs.
+  int placeholder;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

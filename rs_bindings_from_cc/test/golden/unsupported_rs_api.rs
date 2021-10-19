@@ -52,8 +52,23 @@ impl !Unpin for NontrivialCustomType {}
 
 // namespace ns
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct ContainingStruct {
+    /// TODO(b/202737338): Remove this placeholder once we support empty structs.
+    pub placeholder: i32,
+}
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=22
+// Error while generating bindings for item 'ContainingStruct::NestedStruct':
+// Nested classes are not supported yet
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
 const_assert_eq!(std::mem::size_of::<NontrivialCustomType>(), 4usize);
 const_assert_eq!(std::mem::align_of::<NontrivialCustomType>(), 4usize);
 const_assert_eq!(offset_of!(NontrivialCustomType, i) * 8, 0usize);
+
+const_assert_eq!(std::mem::size_of::<ContainingStruct>(), 4usize);
+const_assert_eq!(std::mem::align_of::<ContainingStruct>(), 4usize);
+const_assert_eq!(offset_of!(ContainingStruct, placeholder) * 8, 0usize);

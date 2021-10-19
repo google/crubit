@@ -252,6 +252,15 @@ static AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
 }
 
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
+  const clang::DeclContext* decl_context = record_decl->getDeclContext();
+  if (decl_context && decl_context->isRecord()) {
+    ir_.items.push_back(UnsupportedItem{
+        .name = record_decl->getQualifiedNameAsString(),
+        .message = "Nested classes are not supported yet",
+        .source_loc = ConvertSourceLoc(record_decl->getBeginLoc())});
+    return true;
+  }
+
   std::vector<Field> fields;
   clang::AccessSpecifier default_access = clang::AS_public;
   // The definition is always rewritten, but default access to `kPublic` in case
