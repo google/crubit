@@ -260,7 +260,6 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     return true;
   }
 
-  std::vector<Field> fields;
   clang::AccessSpecifier default_access = clang::AS_public;
   // The definition is always rewritten, but default access to `kPublic` in case
   // it is implicitly defined.
@@ -329,37 +328,20 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       }
     }
   }
-  const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
-  for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    auto type = ConvertType(field_decl->getType());
-    if (!type.ok()) {
-      // TODO(b/200239975):  Add diagnostics for declarations we can't import
-      return true;
-    }
-    clang::AccessSpecifier access = field_decl->getAccess();
-    if (access == clang::AS_none) {
-      access = default_access;
-    }
-
-    std::optional<Identifier> field_name = GetTranslatedIdentifier(field_decl);
-    if (!field_name.has_value()) {
-      return true;
-    }
-    fields.push_back(
-        {.identifier = *std::move(field_name),
-         .doc_comment = GetComment(field_decl),
-         .type = *type,
-         .access = TranslateAccessSpecifier(access),
-         .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
+  std::optional<std::vector<Field>> fields =
+      ImportFields(record_decl, default_access);
+  if (!fields.has_value()) {
+    return true;
   }
   std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
   if (!record_name.has_value()) {
     return true;
   }
+  const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
   ir_.items.push_back(
       Record{.identifier = *record_name,
              .doc_comment = GetComment(record_decl),
-             .fields = std::move(fields),
+             .fields = *std::move(fields),
              .size = layout.getSize().getQuantity(),
              .alignment = layout.getAlignment().getQuantity(),
              .copy_constructor = copy_ctor,
@@ -469,6 +451,35 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
   // Rust, though volatile reads/writes still do.
 
   return *std::move(type);
+}
+
+std::optional<std::vector<Field>> AstVisitor::ImportFields(
+    clang::RecordDecl* record_decl, clang::AccessSpecifier default_access) {
+  std::vector<Field> fields;
+  const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
+  for (const clang::FieldDecl* field_decl : record_decl->fields()) {
+    auto type = ConvertType(field_decl->getType());
+    if (!type.ok()) {
+      // TODO(b/200239975):  Add diagnostics for declarations we can't import
+      return std::nullopt;
+    }
+    clang::AccessSpecifier access = field_decl->getAccess();
+    if (access == clang::AS_none) {
+      access = default_access;
+    }
+
+    std::optional<Identifier> field_name = GetTranslatedIdentifier(field_decl);
+    if (!field_name.has_value()) {
+      return std::nullopt;
+    }
+    fields.push_back(
+        {.identifier = *std::move(field_name),
+         .doc_comment = GetComment(field_decl),
+         .type = *type,
+         .access = TranslateAccessSpecifier(access),
+         .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
+  }
+  return fields;
 }
 
 std::string AstVisitor::GetMangledName(

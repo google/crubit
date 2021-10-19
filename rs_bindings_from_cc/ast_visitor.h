@@ -48,6 +48,9 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   bool VisitRecordDecl(clang::RecordDecl* record_decl);
 
  private:
+  std::optional<std::vector<Field>> ImportFields(
+      clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
+
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
