@@ -55,8 +55,8 @@ impl !Unpin for NontrivialCustomType {}
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
-    /// TODO(b/202737338): Remove this placeholder once we support empty structs.
-    pub placeholder: i32,
+    /// Prevent empty C++ struct being zero-size in Rust.
+    placeholder: core::mem::MaybeUninit<u8>,
 }
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=22
@@ -69,6 +69,5 @@ const_assert_eq!(std::mem::size_of::<NontrivialCustomType>(), 4usize);
 const_assert_eq!(std::mem::align_of::<NontrivialCustomType>(), 4usize);
 const_assert_eq!(offset_of!(NontrivialCustomType, i) * 8, 0usize);
 
-const_assert_eq!(std::mem::size_of::<ContainingStruct>(), 4usize);
-const_assert_eq!(std::mem::align_of::<ContainingStruct>(), 4usize);
-const_assert_eq!(offset_of!(ContainingStruct, placeholder) * 8, 0usize);
+const_assert_eq!(std::mem::size_of::<ContainingStruct>(), 1usize);
+const_assert_eq!(std::mem::align_of::<ContainingStruct>(), 1usize);

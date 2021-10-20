@@ -232,12 +232,22 @@ fn generate_record(record: &Record) -> Result<(RsSnippet, RsSnippet)> {
         };
     }
 
+    let empty_struct_placeholder_field = if record.fields.is_empty() {
+        quote! {
+          /// Prevent empty C++ struct being zero-size in Rust.
+          placeholder: core::mem::MaybeUninit<u8>,
+        }
+    } else {
+        quote! {}
+    };
+
     let record_tokens = quote! {
         #doc_comment
         #derives
         #[repr(C)]
         pub struct #ident {
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
+            #empty_struct_placeholder_field
         }
 
         #unpin_impl

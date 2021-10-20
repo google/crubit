@@ -11,7 +11,6 @@ extern "C" void __rust_thunk__VoidReturningFunction() {
 
 static_assert(sizeof(SomeStruct) == 1);
 static_assert(alignof(SomeStruct) == 1);
-static_assert(offsetof(SomeStruct, not_empty) * 8 == 0);
 
 static_assert(sizeof(FieldTypeTestStruct) == 192);
 static_assert(alignof(FieldTypeTestStruct) == 8);

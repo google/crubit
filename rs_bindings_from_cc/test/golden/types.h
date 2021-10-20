@@ -9,7 +9,6 @@
 #include <cstdint>
 
 struct SomeStruct {
-  bool not_empty;  // TODO(b/202737338): delete this.
 };
 
 struct FieldTypeTestStruct {

@@ -14,8 +14,8 @@ use static_assertions::const_assert_eq;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
-    /// TODO(b/202737338): delete this.
-    pub not_empty: bool,
+    /// Prevent empty C++ struct being zero-size in Rust.
+    placeholder: core::mem::MaybeUninit<u8>,
 }
 
 #[derive(Clone, Copy)]
@@ -75,7 +75,6 @@ mod detail {
 
 const_assert_eq!(std::mem::size_of::<SomeStruct>(), 1usize);
 const_assert_eq!(std::mem::align_of::<SomeStruct>(), 1usize);
-const_assert_eq!(offset_of!(SomeStruct, not_empty) * 8, 0usize);
 
 const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 192usize);
 const_assert_eq!(std::mem::align_of::<FieldTypeTestStruct>(), 8usize);

@@ -9,6 +9,5 @@ static_assert(sizeof(NontrivialCustomType) == 4);
 static_assert(alignof(NontrivialCustomType) == 4);
 static_assert(offsetof(NontrivialCustomType, i) * 8 == 0);
 
-static_assert(sizeof(ContainingStruct) == 4);
-static_assert(alignof(ContainingStruct) == 4);
-static_assert(offsetof(ContainingStruct, placeholder) * 8 == 0);
+static_assert(sizeof(ContainingStruct) == 1);
+static_assert(alignof(ContainingStruct) == 1);
