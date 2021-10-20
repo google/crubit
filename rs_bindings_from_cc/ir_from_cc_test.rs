@@ -5,23 +5,12 @@
 
 
 use anyhow::Result;
-use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::*;
 use ir_testing::*;
 use std::collections::HashMap;
 
-extern "C" {
-    fn json_from_cc(cc_source: FfiU8Slice) -> FfiU8SliceBox;
-}
-
 // TODO(mboehme): If we start needing to match on parts of the IR in tests,
 // check out the crate https://crates.io/crates/galvanic-assert.
-
-fn ir_from_cc(src: &str) -> Result<IR> {
-    let src_u8 = src.as_bytes();
-    let json_utf8 = unsafe { json_from_cc(FfiU8Slice::from_slice(src_u8)).into_boxed_slice() };
-    deserialize_ir(&*json_utf8)
-}
 
 fn assert_cc_produces_ir(cc_src: &str, mut expected: IR) {
     let actual = ir_from_cc(cc_src).unwrap();
