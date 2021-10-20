@@ -5,12 +5,12 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 
-#include "rs_bindings_from_cc/ast_visitor.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 
 namespace rs_bindings_from_cc {
 
@@ -19,14 +19,19 @@ namespace rs_bindings_from_cc {
 // generates the intermediate representation (`IR`).
 class AstConsumer : public clang::ASTConsumer {
  public:
-  explicit AstConsumer(absl::Span<const absl::string_view> public_header_names,
+  explicit AstConsumer(clang::CompilerInstance& instance,
+                       absl::Span<const absl::string_view> public_header_names,
                        IR& ir)
-      : ast_visitor_(public_header_names, ir) {}
+      : instance_(instance),
+        public_header_names_(public_header_names),
+        ir_(ir) {}
 
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
  private:
-  AstVisitor ast_visitor_;
+  clang::CompilerInstance& instance_;
+  absl::Span<const absl::string_view> public_header_names_;
+  IR& ir_;
 };  // class AstConsumer
 
 }  // namespace rs_bindings_from_cc

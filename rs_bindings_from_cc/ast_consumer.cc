@@ -18,7 +18,9 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
     // There is nothing more for us to do here.
     return;
   }
-  ast_visitor_.TraverseDecl(ast_context.getTranslationUnitDecl());
+  CHECK(instance_.hasSema());
+  AstVisitor ast_visitor(instance_.getSema(), public_header_names_, ir_);
+  ast_visitor.TraverseDecl(ast_context.getTranslationUnitDecl());
 }
 
 }  // namespace rs_bindings_from_cc

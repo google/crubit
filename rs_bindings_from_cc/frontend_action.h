@@ -25,7 +25,7 @@ class FrontendAction : public clang::ASTFrontendAction {
       : public_header_names_(public_header_names), ir_(ir) {}
 
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
-      clang::CompilerInstance&, llvm::StringRef) override;
+      clang::CompilerInstance& instance, llvm::StringRef) override;
 
  private:
   absl::Span<const absl::string_view> public_header_names_;

@@ -20,6 +20,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecursiveASTVisitor.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 
 namespace rs_bindings_from_cc {
 
@@ -30,9 +31,11 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  public:
   using Base = clang::RecursiveASTVisitor<AstVisitor>;
 
-  explicit AstVisitor(absl::Span<const absl::string_view> public_header_names,
+  explicit AstVisitor(clang::Sema& sema,
+                      absl::Span<const absl::string_view> public_header_names,
                       IR& ir)
-      : public_header_names_(public_header_names),
+      : sema_(sema),
+        public_header_names_(public_header_names),
         ir_(ir),
         ctx_(nullptr),
         comment_manager_(ir) {}
@@ -80,6 +83,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   SourceLoc ConvertSourceLoc(clang::SourceRange range) const;
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
 
+  clang::Sema& sema_;
   absl::Span<const absl::string_view> public_header_names_;
   IR& ir_;
   clang::ASTContext* ctx_;
