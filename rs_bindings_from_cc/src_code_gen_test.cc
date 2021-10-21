@@ -28,6 +28,9 @@ TEST(SrcGenTest, FFIIntegration) {
   EXPECT_THAT(
       bindings.rs_api,
       StrEq(
+          "#![rustfmt::skip]\n"
+          "#![feature(custom_inner_attributes)]\n"
+          "\n"
           "#[inline(always)]\n"
           "pub fn hello_world(arg: i32) -> i32 {\n"
           "    unsafe { crate::detail::__rust_thunk__hello_world(arg) }\n"

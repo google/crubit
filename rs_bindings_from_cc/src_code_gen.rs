@@ -330,6 +330,9 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut has_record = false;
     let mut features = BTreeSet::new();
 
+    // For #![rustfmt::skip].
+    features.insert(make_ident("custom_inner_attributes"));
+
     for item in &ir.items {
         match item {
             Item::Func(func) => {
@@ -429,7 +432,11 @@ fn rustfmt(input: String) -> Result<String> {
         bail!("Unable to format output with rustfmt");
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    // The code is formatted with a non-default rustfmt configuration. Prevent
+    // downstream workflows from reformatting with a different configuration.
+    let mut result = "#![rustfmt::skip]\n".to_string();
+    result += &*String::from_utf8_lossy(&output.stdout);
+    Ok(result)
 }
 
 fn make_ident(ident: &str) -> Ident {
@@ -630,6 +637,8 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
+                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+
                 #[inline(always)]
                 pub fn add(a: i32, b: i32) -> i32 {
                     unsafe { crate::detail::__rust_thunk__add(a, b) }
@@ -673,6 +682,8 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
+                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+
                 #[inline(always)]
                 pub fn add(a: i32, b: i32) -> i32 {
                     unsafe { crate::detail::__rust_thunk__add(a, b) }
@@ -740,7 +751,7 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
-                #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref)] __NEWLINE__ __NEWLINE__
+                #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 use memoffset_unstable_const::offset_of;
                 use static_assertions::const_assert_eq; __NEWLINE__ __NEWLINE__
@@ -879,6 +890,8 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
+                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+
                 #[inline(always)]
                 pub fn Deref(p: *const *mut i32) -> *mut i32 {
                     unsafe { crate::detail::__rust_thunk__Deref(p) }

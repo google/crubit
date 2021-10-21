@@ -1,8 +1,14 @@
-#![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref)]
+#![rustfmt::skip]
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(
+    const_maybe_uninit_as_ptr,
+    const_ptr_offset_from,
+    const_raw_ptr_deref,
+    custom_inner_attributes
+)]
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::const_assert_eq;
