@@ -67,7 +67,8 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     Ok(Bindings { rs_api, rs_api_impl })
 }
 
-/// Source code with attached information about how to modify the parent crate.
+/// Rust source code with attached information about how to modify the parent
+/// crate.
 ///
 /// For example, the snippet `vec![].into_raw_parts()` is not valid unless the
 /// `vec_into_raw_parts` feature is enabled. So such a snippet should be
@@ -75,7 +76,7 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
 ///
 /// ```
 /// RsSnippet {
-///   features: btree_set!["vec_into_raw_parts"],
+///   features: btree_set![make_ident("vec_into_raw_parts")],
 ///   tokens: quote!{vec![].into_raw_parts()},
 /// }
 /// ```
