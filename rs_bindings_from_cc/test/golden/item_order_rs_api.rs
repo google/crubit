@@ -13,6 +13,10 @@ pub struct FirstStruct {
     pub field: i32,
 }
 
+// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// Error while generating bindings for item 'FirstStruct::FirstStruct':
+// Nested classes are not supported yet
+
 #[inline(always)]
 pub fn first_func() -> i32 {
     unsafe { crate::detail::__rust_thunk__first_func() }
@@ -23,6 +27,10 @@ pub fn first_func() -> i32 {
 pub struct SecondStruct {
     pub field: i32,
 }
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Error while generating bindings for item 'SecondStruct::SecondStruct':
+// Nested classes are not supported yet
 
 #[inline(always)]
 pub fn second_func() -> i32 {

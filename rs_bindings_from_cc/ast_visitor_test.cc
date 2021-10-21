@@ -291,8 +291,9 @@ TEST(AstVisitorTest, Struct) {
       IR ir,
       IrFromCc({"struct SomeStruct { int first_field; int second_field; };"}));
 
-  EXPECT_THAT(ir.items,
-              ElementsAre(VariantWith<Record>(AllOf(
+  std::vector<Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records,
+              ElementsAre(Pointee(AllOf(
                   IdentifierIs("SomeStruct"), RecordSizeIs(8), AlignmentIs(4),
                   FieldsAre(AllOf(IdentifierIs("first_field"),
                                   FieldType(IsInt()), OffsetIs(0)),
@@ -613,20 +614,20 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
     };
   )"}));
 
+  std::vector<Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(
-      ir.items,
+      records,
       ElementsAre(
-          VariantWith<Record>(AllOf(
+          Pointee(AllOf(
               IdentifierIs("SomeStruct"),
               FieldsAre(
                   AllOf(IdentifierIs("default_access_int"), AccessIs(kPublic)),
                   AllOf(IdentifierIs("public_int"), AccessIs(kPublic)),
                   AllOf(IdentifierIs("protected_int"), AccessIs(kProtected)),
                   AllOf(IdentifierIs("private_int"), AccessIs(kPrivate))))),
-          VariantWith<Record>(
-              AllOf(IdentifierIs("SomeClass"),
-                    FieldsAre(AllOf(IdentifierIs("default_access_int"),
-                                    AccessIs(kPrivate)))))));
+          Pointee(AllOf(IdentifierIs("SomeClass"),
+                        FieldsAre(AllOf(IdentifierIs("default_access_int"),
+                                        AccessIs(kPrivate)))))));
 }
 
 }  // namespace

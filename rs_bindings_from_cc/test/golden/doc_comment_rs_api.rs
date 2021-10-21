@@ -17,6 +17,10 @@ pub struct DocCommentSlashes {
     pub i: i32,
 }
 
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=7
+// Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
+// Nested classes are not supported yet
+
 /// Doc comment
 ///
 ///  * with slashes and bang
@@ -26,6 +30,10 @@ pub struct DocCommentBang {
     /// A field
     pub i: i32,
 }
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=15
+// Error while generating bindings for item 'DocCommentBang::DocCommentBang':
+// Nested classes are not supported yet
 
 /// Multiline comment
 ///
@@ -37,6 +45,10 @@ pub struct MultilineCommentTwoStars {
     pub i: i32,
 }
 
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=23
+// Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
+// Nested classes are not supported yet
+
 /// Line comment
 ///
 ///  * with two slashes
@@ -47,6 +59,10 @@ pub struct LineComment {
     pub i: i32,
 }
 
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=31
+// Error while generating bindings for item 'LineComment::LineComment':
+// Nested classes are not supported yet
+
 /// Multiline comment
 ///
 ///  with one star
@@ -56,6 +72,10 @@ pub struct MultilineOneStar {
     /// A field
     pub i: i32,
 }
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+// Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
+// Nested classes are not supported yet
 
 /// A function
 #[inline(always)]

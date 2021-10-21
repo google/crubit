@@ -18,6 +18,10 @@ pub struct SomeStruct {
     placeholder: core::mem::MaybeUninit<u8>,
 }
 
+// rs_bindings_from_cc/test/golden/types.h;l=7
+// Error while generating bindings for item 'SomeStruct::SomeStruct':
+// Nested classes are not supported yet
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FieldTypeTestStruct {
@@ -58,6 +62,10 @@ pub struct FieldTypeTestStruct {
     pub struct_field: SomeStruct,
     pub struct_ptr_field: *mut SomeStruct,
 }
+
+// rs_bindings_from_cc/test/golden/types.h;l=10
+// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Nested classes are not supported yet
 
 #[inline(always)]
 pub fn VoidReturningFunction() -> () {

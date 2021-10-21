@@ -255,9 +255,9 @@ fn test_member_function_virtual() {
     "#;
     let ir = ir_from_cc(file).unwrap();
 
-    let functions: Vec<_> = ir.functions().collect();
-    let expected: &[&ir::Func] = &[];
-    assert_eq!(functions, expected);
+    for func in ir.functions() {
+        assert!(func.name != UnqualifiedIdentifier::Identifier(ir_id("Function")));
+    }
 }
 
 #[test]

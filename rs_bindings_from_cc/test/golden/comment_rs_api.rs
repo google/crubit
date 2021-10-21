@@ -23,6 +23,10 @@ pub struct Foo {
     pub j: i32,
 }
 
+// rs_bindings_from_cc/test/golden/comment.h;l=11
+// Error while generating bindings for item 'Foo::Foo':
+// Nested classes are not supported yet
+
 // b
 
 // }  // namespace ns
@@ -42,12 +46,20 @@ pub struct Bar {
     pub i: i32,
 }
 
+// rs_bindings_from_cc/test/golden/comment.h;l=37
+// Error while generating bindings for item 'Bar::Bar':
+// Nested classes are not supported yet
+
 /// d
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct HasNoComments {
     pub i: i32,
 }
+
+// rs_bindings_from_cc/test/golden/comment.h;l=43
+// Error while generating bindings for item 'HasNoComments::HasNoComments':
+// Nested classes are not supported yet
 
 // e
 

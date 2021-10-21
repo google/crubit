@@ -14,14 +14,14 @@
 
 namespace rs_bindings_from_cc {
 
-/// Parses C++ source code into IR.
-///
-/// Parameters:
-/// * `header_file_contents`: textual C++ source code to be parsed directly
-/// * `header_names`: names of headers to include from the file system before
-///    the textual source
-/// * `args`: additional command line arguments for Clang
-///
+// Parses C++ source code into IR.
+//
+// Parameters:
+// * `header_file_contents`: textual C++ source code to be parsed directly
+// * `header_names`: names of headers to include from the file system before
+//    the textual source
+// * `args`: additional command line arguments for Clang
+//
 absl::StatusOr<IR> IrFromCc(
     absl::Span<const absl::string_view> header_files_contents,
     absl::Span<const absl::string_view> header_names = {},

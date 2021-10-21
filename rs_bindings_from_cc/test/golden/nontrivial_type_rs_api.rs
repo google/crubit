@@ -14,9 +14,25 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=4
+// Error while generating bindings for item 'Nontrivial::Nontrivial':
+// Nested classes are not supported yet
+
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=5
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'struct Nontrivial &&' is not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=4
+// Error while generating bindings for item 'Nontrivial::Nontrivial':
+// Parameter type 'const struct Nontrivial &' is not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=4
+// Error while generating bindings for item 'Nontrivial::operator=':
+// Parameter type 'const struct Nontrivial &' is not supported
+
+// google3/;l=0
+// Error while generating bindings for item 'Nontrivial::operator=':
+// Return type 'struct Nontrivial &' is not supported
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
 // Error while generating bindings for item 'TakesByValue':

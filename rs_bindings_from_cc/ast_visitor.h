@@ -50,6 +50,10 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   bool VisitFunctionDecl(clang::FunctionDecl* function_decl);
   bool VisitRecordDecl(clang::RecordDecl* record_decl);
 
+  // We don't care about the syntax, but the semantics, and so need to visit
+  // even implicitly generated header items such as implicit destructors etc.
+  bool shouldVisitImplicitCode() const { return true; }
+
  private:
   std::optional<std::vector<Field>> ImportFields(
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
