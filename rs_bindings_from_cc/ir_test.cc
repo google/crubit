@@ -85,7 +85,7 @@ TEST(IrTest, IR) {
                     "size": 12,
                     "alignment": 4,
                     "copy_constructor": {
-                        "definition": "Nontrivial",
+                        "definition": "NontrivialSelf",
                         "access": "Private"
                     },
                     "move_constructor": {
@@ -128,7 +128,7 @@ TEST(IrTest, IR) {
                             .copy_constructor =
                                 SpecialMemberFunc{
                                     .definition = SpecialMemberFunc::
-                                        Definition::kNontrivial,
+                                        Definition::kNontrivialSelf,
                                     .access = kPrivate},
                             .move_constructor =
                                 SpecialMemberFunc{

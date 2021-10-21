@@ -811,9 +811,16 @@ mod tests {
     }
 
     #[test]
-    fn test_copy_derives_ctor_nontrivial() {
+    fn test_copy_derives_ctor_nontrivial_members() {
         let mut record = unwrapped_ir_record("S");
-        record.copy_constructor.definition = ir::SpecialMemberDefinition::Nontrivial;
+        record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialMembers;
+        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+    }
+
+    #[test]
+    fn test_copy_derives_ctor_nontrivial_self() {
+        let mut record = unwrapped_ir_record("S");
+        record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialSelf;
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 

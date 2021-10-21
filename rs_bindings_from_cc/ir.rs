@@ -106,7 +106,8 @@ pub struct Field {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum SpecialMemberDefinition {
     Trivial,
-    Nontrivial,
+    NontrivialMembers,
+    NontrivialSelf,
     Deleted,
 }
 
@@ -238,7 +239,7 @@ mod tests {
                     "size": 12,
                     "alignment": 4,
                     "copy_constructor": {
-                        "definition": "Nontrivial",
+                        "definition": "NontrivialSelf",
                         "access": "Private"
                     },
                     "move_constructor": {
@@ -306,7 +307,7 @@ mod tests {
                 size: 12,
                 alignment: 4,
                 copy_constructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::Nontrivial,
+                    definition: SpecialMemberDefinition::NontrivialSelf,
                     access: AccessSpecifier::Private,
                 },
                 move_constructor: SpecialMemberFunc {

@@ -251,11 +251,26 @@ inline std::ostream& operator<<(std::ostream& o, const Field& f) {
   return o << f.ToJson();
 }
 
-/// Information about special member functions.
+// Information about special member functions.
+//
+// Nontrivial definitions are divided into two: there are nontrivial definitions
+// which are nontrivial only due to a member variable which defines the special
+// member function, and those which are nontrivial because the operation was
+// user defined for the object itself, or for any base class.
+//
+// This allows us to sidestep calling C++ implementatinos of special member
+// functions in narrow cases: even for a nontrivial special member function, if
+// it is kNontrivialMembers, we can directly implement it in Rust in terms of
+// the member variables.
 struct SpecialMemberFunc {
   enum class Definition : char {
     kTrivial,
-    kNontrivial,
+    // Nontrivial, but only because of a member variable with a nontrivial
+    // special member function.
+    kNontrivialMembers,
+    // Nontrivial because of a user-defined special member function in this or a
+    // base class. (May *also* be nontrivial due to member variables.)
+    kNontrivialSelf,
     kDeleted,
   };
 

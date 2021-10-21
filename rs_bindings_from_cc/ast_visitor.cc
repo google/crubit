@@ -250,6 +250,55 @@ static AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
   }
 }
 
+// Returns a copy constructor for `record`, or `nullptr` if none is declared.
+//
+// Does not traverse to the base classes.
+static const clang::CXXConstructorDecl* GetCopyCtor(
+    const clang::CXXRecordDecl* record) {
+  for (clang::CXXConstructorDecl* ctor_decl : record->ctors()) {
+    if (ctor_decl->isCopyConstructor()) {
+      return ctor_decl;
+    }
+  }
+  return nullptr;
+}
+
+// Returns a move constructor for `record`, or `nullptr` if none is declared.
+//
+// Does not traverse to the base classes.
+static const clang::CXXConstructorDecl* GetMoveCtor(
+    const clang::CXXRecordDecl* record) {
+  for (clang::CXXConstructorDecl* ctor_decl : record->ctors()) {
+    if (ctor_decl->isMoveConstructor()) {
+      return ctor_decl;
+    }
+  }
+  return nullptr;
+}
+
+// Returns true if this class, and all base classes, only define the specified
+// special member implicitly or via =default.
+//
+// Args:
+//   record: the class/struct to check.
+//   getter: a function which returns the special member function in question.
+//       returns null if the special member function is implicitly defined.
+//       Signature: `const clang::FunctionDecl* (const clang::CXXRecordDecl*)`.
+template <typename F>
+static bool HasOnlyDefaultedSpecialMember(const clang::CXXRecordDecl* record,
+                                          const F& getter) {
+  auto nonrecursive_has_only_defaulted =
+      [&getter](const clang::CXXRecordDecl* record) {
+        const clang::FunctionDecl* decl = getter(record);
+        return decl == nullptr || decl->isDefaulted();
+      };
+
+  if (!nonrecursive_has_only_defaulted(record)) {
+    return false;
+  }
+  return record->forallBases(nonrecursive_has_only_defaulted);
+}
+
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context && decl_context->isRecord()) {
@@ -284,7 +333,12 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     if (cxx_record_decl->hasTrivialCopyConstructor()) {
       copy_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
     } else if (cxx_record_decl->hasNonTrivialCopyConstructor()) {
-      copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivial;
+      if (HasOnlyDefaultedSpecialMember(cxx_record_decl, &GetCopyCtor)) {
+        copy_ctor.definition =
+            SpecialMemberFunc::Definition::kNontrivialMembers;
+      } else {
+        copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
+      }
     } else {
       // I don't think the copy ctor can be implicitly deleted, but just in
       // case...
@@ -294,33 +348,50 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     if (cxx_record_decl->hasTrivialMoveConstructor()) {
       move_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
     } else if (cxx_record_decl->hasNonTrivialMoveConstructor()) {
-      move_ctor.definition = SpecialMemberFunc::Definition::kNontrivial;
+      if (HasOnlyDefaultedSpecialMember(cxx_record_decl, &GetMoveCtor)) {
+        move_ctor.definition =
+            SpecialMemberFunc::Definition::kNontrivialMembers;
+      } else {
+        move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
+      }
     } else {
-      // The move constructor can be **implicitly deleted** (and so not subject
-      // to the below loop over ctors), e.g. by the presence by a copy ctor.
+      // The move constructor can be **implicitly deleted**, e.g. by the
+      // presence by a copy ctor.
       move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
     }
 
     if (cxx_record_decl->hasTrivialDestructor()) {
       dtor.definition = SpecialMemberFunc::Definition::kTrivial;
     } else {
-      dtor.definition = SpecialMemberFunc::Definition::kNontrivial;
-    }
-
-    for (clang::CXXConstructorDecl* ctor_decl : cxx_record_decl->ctors()) {
-      if (ctor_decl->isCopyConstructor()) {
-        copy_ctor.access = TranslateAccessSpecifier(ctor_decl->getAccess());
-        if (ctor_decl->isDeleted()) {
-          copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-        }
-      } else if (ctor_decl->isMoveConstructor()) {
-        move_ctor.access = TranslateAccessSpecifier(ctor_decl->getAccess());
-        if (ctor_decl->isDeleted()) {
-          move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-        }
+      const bool has_only_defaulted_destructors = HasOnlyDefaultedSpecialMember(
+          cxx_record_decl, [](auto c) { return c->getDestructor(); });
+      if (has_only_defaulted_destructors) {
+        dtor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
+      } else {
+        dtor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
       }
     }
-    clang::CXXDestructorDecl* dtor_decl = cxx_record_decl->getDestructor();
+
+    const clang::CXXConstructorDecl* copy_ctor_decl =
+        GetCopyCtor(cxx_record_decl);
+    if (copy_ctor_decl != nullptr) {
+      copy_ctor.access = TranslateAccessSpecifier(copy_ctor_decl->getAccess());
+      if (copy_ctor_decl->isDeleted()) {
+        copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+      }
+    }
+
+    const clang::CXXConstructorDecl* move_ctor_decl =
+        GetMoveCtor(cxx_record_decl);
+    if (move_ctor_decl != nullptr) {
+      move_ctor.access = TranslateAccessSpecifier(move_ctor_decl->getAccess());
+      if (move_ctor_decl->isDeleted()) {
+        move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+      }
+    }
+
+    const clang::CXXDestructorDecl* dtor_decl =
+        cxx_record_decl->getDestructor();
     if (dtor_decl != nullptr) {
       dtor.access = TranslateAccessSpecifier(dtor_decl->getAccess());
       if (dtor_decl->isDeleted()) {
