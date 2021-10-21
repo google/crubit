@@ -258,7 +258,7 @@ inline std::ostream& operator<<(std::ostream& o, const Field& f) {
 // member function, and those which are nontrivial because the operation was
 // user defined for the object itself, or for any base class.
 //
-// This allows us to sidestep calling C++ implementatinos of special member
+// This allows us to sidestep calling C++ implementations of special member
 // functions in narrow cases: even for a nontrivial special member function, if
 // it is kNontrivialMembers, we can directly implement it in Rust in terms of
 // the member variables.

@@ -283,3 +283,34 @@ fn test_member_function_rvalue() {
         }),
     );
 }
+
+fn get_single_func_name(definition: &str) -> ir::UnqualifiedIdentifier {
+    let ir = ir_from_cc(definition).unwrap();
+    let functions: Vec<_> = ir.functions().collect();
+    assert_eq!(functions.len(), 1);
+    functions[0].name.clone()
+}
+
+#[test]
+fn test_identifier_function_name() {
+    assert_eq!(
+        get_single_func_name("void Function();"),
+        ir::UnqualifiedIdentifier::Identifier(ir::Identifier { identifier: "Function".into() }),
+    );
+}
+
+#[test]
+fn test_constructor_function_name() {
+    assert_eq!(
+        get_single_func_name("struct Struct {Struct();};"),
+        ir::UnqualifiedIdentifier::Constructor,
+    );
+}
+
+#[test]
+fn test_destructor_function_name() {
+    assert_eq!(
+        get_single_func_name("struct Struct {~Struct();};"),
+        ir::UnqualifiedIdentifier::Destructor,
+    );
+}
