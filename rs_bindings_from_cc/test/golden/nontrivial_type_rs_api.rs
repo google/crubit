@@ -22,6 +22,13 @@ impl !Unpin for Nontrivial {}
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'struct Nontrivial &&' is not supported
 
+impl Drop for Nontrivial {
+    #[inline(always)]
+    fn drop(&mut self) {
+        unsafe { crate::detail::__rust_destructor_thunk___ZN10NontrivialD1Ev(self) }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=4
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'const struct Nontrivial &' is not supported

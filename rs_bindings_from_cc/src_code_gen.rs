@@ -113,7 +113,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 
 /// Generates Rust source code for a given `Func`.
 ///
-/// Returns the generated function and the thunk as a tuple.
+/// Returns the generated function or trait impl, and the thunk, as a tuple.
 fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func);
@@ -138,6 +138,28 @@ fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
                 }
             }
         }
+
+        UnqualifiedIdentifier::Destructor => {
+            let type_name = make_ident(
+                &func
+                    .member_func_metadata
+                    .as_ref()
+                    .expect("Destructors must be member functions.")
+                    .for_type
+                    .identifier,
+            );
+            // TODO(b/200066399): do not implement Drop if the type is trivial.
+            quote! {
+                #doc_comment
+                impl Drop for #type_name {
+                    #[inline(always)]
+                    fn drop(&mut self) {
+                        unsafe { crate::detail::#thunk_ident(self) }
+                    }
+                }
+            }
+        }
+
         _ => quote! {}, // TODO(b/200066396): define these.
     };
 
@@ -957,6 +979,29 @@ mod tests {
         );
         assert!(rs_api.contains("/// Field doc\n"), "field doc comment missing");
 
+        Ok(())
+    }
+
+    /// At the least, a trivial type should have no drop impl if or until we add
+    /// empty drop impls.
+    #[test]
+    fn test_no_impl_drop() -> Result<()> {
+        let ir = ir_testing::ir_from_cc("struct Trivial {};")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert!(!rs_api.contains("impl Drop"));
+        Ok(())
+    }
+
+    /// User-defined destructors *must* become Drop impls.
+    #[test]
+    fn test_impl_drop() -> Result<()> {
+        let ir = ir_testing::ir_from_cc(
+            r#"struct UserDefinedDestructor {
+                ~UserDefinedDestructor();
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert!(rs_api.contains("impl Drop"));
         Ok(())
     }
 }
