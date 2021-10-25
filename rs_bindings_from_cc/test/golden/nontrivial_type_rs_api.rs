@@ -44,7 +44,7 @@ impl Drop for Nontrivial {
 // Error while generating bindings for item 'Nontrivial::operator=':
 // Parameter type 'const struct Nontrivial &' is not supported
 
-// google3/;l=0
+// <unknown location>
 // Error while generating bindings for item 'Nontrivial::operator=':
 // Return type 'struct Nontrivial &' is not supported
 

@@ -37,7 +37,7 @@ impl !Unpin for NontrivialCustomType {}
 // Error while generating bindings for item 'NontrivialCustomType::operator=':
 // Parameter type 'const struct NontrivialCustomType &' is not supported
 
-// google3/;l=0
+// <unknown location>
 // Error while generating bindings for item 'NontrivialCustomType::operator=':
 // Return type 'struct NontrivialCustomType &' is not supported
 

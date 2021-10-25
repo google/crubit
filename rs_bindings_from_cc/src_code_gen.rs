@@ -302,15 +302,18 @@ fn generate_copy_derives(record: &Record) -> Vec<Ident> {
 
 /// Generates Rust source code for a given `UnsupportedItem`.
 fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
+    let location = if item.source_loc.filename.is_empty() {
+        "<unknown location>".to_string()
+    } else {
+        // TODO(forster): The "google3" prefix should probably come from a command line
+        // argument.
+        // TODO(forster): Consider linking to the symbol instead of to the line number
+        // to avoid wrong links while generated files have not caught up.
+        format!("google3/{};l={}", &item.source_loc.filename, &item.source_loc.line)
+    };
     let message = format!(
-        // TODO(forster): The "google3" prefix should probably come from a command line argument.
-        // TODO(forster): Consider linking to the symbol instead of to the line number to avoid
-        // wrong links while generated files have not caught up.
-        "google3/{};l={}\nError while generating bindings for item '{}':\n{}",
-        &item.source_loc.filename,
-        &item.source_loc.line,
-        &item.name,
-        &item.message
+        "{}\nError while generating bindings for item '{}':\n{}",
+        &location, &item.name, &item.message
     );
     Ok(quote! { __COMMENT__ #message })
 }
