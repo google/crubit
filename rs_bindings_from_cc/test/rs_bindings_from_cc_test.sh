@@ -61,4 +61,22 @@ function test::tool_returns_nonzero_on_invalid_input() {
   CHECK_FILE_NOT_EXISTS "${cc_out}"
 }
 
+function test::public_headers() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+
+  local header_1="${TEST_TMPDIR}/header_1.h"
+  local header_2="${TEST_TMPDIR}/header_2.h"
+  echo "int function_1();" > "${header_1}"
+  echo "int function_2();" > "${header_2}"
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --public_headers=\"${header_1},${header_2}\" \
+      1>&2"
+  EXPECT_SUCCEED "grep function_1 \"${rs_out}\"" "function_1 was not imported"
+  EXPECT_SUCCEED "grep function_2 \"${rs_out}\"" "function_2 was not imported"
+}
+
 gbash::unit::main "$@"
