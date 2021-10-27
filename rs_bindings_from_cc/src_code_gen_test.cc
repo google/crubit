@@ -44,7 +44,8 @@ TEST(SrcGenTest, FFIIntegration) {
           "}\n"));
 
   EXPECT_THAT(bindings.rs_api_impl,
-              StrEq("#include \"foo/bar.h\"\n"
+              StrEq("#include <memory>\n"
+                    "#include \"foo/bar.h\"\n"
                     "\n"
                     "extern \"C\" int __rust_thunk__hello_world(int arg) { "
                     "return hello_world(arg); "

@@ -6,12 +6,20 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
 struct Nontrivial {
-  Nontrivial(Nontrivial&&) {}
+  Nontrivial(Nontrivial&&);
   ~Nontrivial();
 
   int field;
 };
 
+struct NontrivialInline {
+  NontrivialInline(NontrivialInline&&) {}
+  ~NontrivialInline() {}
+
+  int field;
+};
+
 void TakesByValue(Nontrivial nontrivial);
+void TakesByValueInline(NontrivialInline nontrivial);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <cstddef>
+#include <memory>
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
 static_assert(sizeof(NontrivialCustomType) == 4);

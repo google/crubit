@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <cstddef>
+#include <memory>
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
 extern "C" int __rust_thunk__foo() { return foo(); }

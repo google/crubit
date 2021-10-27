@@ -48,9 +48,47 @@ impl Drop for Nontrivial {
 // Error while generating bindings for item 'Nontrivial::operator=':
 // Return type 'struct Nontrivial &' is not supported
 
+#[repr(C)]
+pub struct NontrivialInline {
+    pub field: i32,
+}
+
+impl !Unpin for NontrivialInline {}
+
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
+// Error while generating bindings for item 'NontrivialInline::NontrivialInline':
+// Nested classes are not supported yet
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=12
+// Error while generating bindings for item 'NontrivialInline::NontrivialInline':
+// Parameter type 'struct NontrivialInline &&' is not supported
+
+impl Drop for NontrivialInline {
+    #[inline(always)]
+    fn drop(&mut self) {
+        unsafe { crate::detail::__rust_destructor_thunk___ZN16NontrivialInlineD1Ev(self) }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
+// Error while generating bindings for item 'NontrivialInline::NontrivialInline':
+// Parameter type 'const struct NontrivialInline &' is not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
+// Error while generating bindings for item 'NontrivialInline::operator=':
+// Parameter type 'const struct NontrivialInline &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'NontrivialInline::operator=':
+// Return type 'struct NontrivialInline &' is not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=18
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a parameter
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=19
+// Error while generating bindings for item 'TakesByValueInline':
+// Non-trivial_abi type 'struct NontrivialInline' is not supported by value as a parameter
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
@@ -59,9 +97,16 @@ mod detail {
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) fn __rust_destructor_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial) -> ();
+        pub(crate) fn __rust_destructor_thunk___ZN16NontrivialInlineD1Ev(
+            __this: *mut NontrivialInline,
+        ) -> ();
     }
 }
 
 const_assert_eq!(std::mem::size_of::<Nontrivial>(), 4usize);
 const_assert_eq!(std::mem::align_of::<Nontrivial>(), 4usize);
 const_assert_eq!(offset_of!(Nontrivial, field) * 8, 0usize);
+
+const_assert_eq!(std::mem::size_of::<NontrivialInline>(), 4usize);
+const_assert_eq!(std::mem::align_of::<NontrivialInline>(), 4usize);
+const_assert_eq!(offset_of!(NontrivialInline, field) * 8, 0usize);

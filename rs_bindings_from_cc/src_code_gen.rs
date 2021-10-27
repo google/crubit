@@ -591,8 +591,11 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
     let layout_assertions = ir.records().map(cc_struct_layout_assertion);
 
-    let standard_headers =
-        if ir.records().next().is_none() { vec![] } else { vec![make_ident("cstddef")] };
+    let mut standard_headers = <BTreeSet<Ident>>::new();
+    standard_headers.insert(make_ident("memory")); // ubiquitous.
+    if ir.records().next().is_some() {
+        standard_headers.insert(make_ident("cstddef"));
+    };
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
     // access declarations from public headers of the C++ library.
@@ -659,7 +662,7 @@ mod tests {
         );
 
         let rs_api = generate_rs_api_impl(&ir)?;
-        assert_eq!(rs_api.trim(), "");
+        assert_eq!(rs_api.trim(), "#include<memory>");
         assert!(rs_api.ends_with("\n"));
 
         Ok(())
@@ -705,6 +708,7 @@ mod tests {
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
             tokens_to_string(quote! {
+                __HASH_TOKEN__ include <memory> __NEWLINE__
                 __HASH_TOKEN__ include "foo/bar.h" __NEWLINE__
                 __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__ __NEWLINE__
 
@@ -778,7 +782,9 @@ mod tests {
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
             tokens_to_string(quote! {
-                __HASH_TOKEN__ include <cstddef> __NEWLINE__ __NEWLINE__ __NEWLINE__ __NEWLINE__
+                __HASH_TOKEN__ include <cstddef> __NEWLINE__
+                __HASH_TOKEN__ include <memory> __NEWLINE__
+                __NEWLINE__ __NEWLINE__ __NEWLINE__
                 static_assert(sizeof(SomeStruct) == 12);
                 static_assert(alignof(SomeStruct) == 4);
                 static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
@@ -913,6 +919,8 @@ mod tests {
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
             tokens_to_string(quote! {
+                __HASH_TOKEN__ include <memory> __NEWLINE__
+                __NEWLINE__
                 extern "C" int* __rust_thunk__Deref(int* const * p) {
                     return Deref(p);
                 }
