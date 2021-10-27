@@ -196,6 +196,22 @@ fn test_type_conversion() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn test_member_function_params() {
+    let ir = ir_from_cc(
+        r#"
+            struct Struct {
+                void Foo(int x, int y);
+            };
+        "#,
+    )
+    .unwrap();
+    let foo_func =
+        ir.functions().find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("Foo"))).unwrap();
+    let param_names: Vec<_> = foo_func.params.iter().map(|p| &p.identifier.identifier).collect();
+    assert_eq!(param_names, vec!["__this", "x", "y"]);
+}
+
 fn assert_member_function_has_instance_method_metadata(
     definition: &str,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
