@@ -84,8 +84,9 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
             .message = param_type.status().ToString(),
             .source_loc = ConvertSourceLoc(method_decl->getBeginLoc())});
         success = false;
+      } else {
+        params.push_back({*std::move(param_type), Identifier("__this")});
       }
-      params.push_back({*std::move(param_type), Identifier("__this")});
     }
   }
 
