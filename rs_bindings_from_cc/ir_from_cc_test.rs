@@ -213,6 +213,7 @@ fn test_member_function_params() {
 }
 
 fn assert_member_function_has_instance_method_metadata(
+    name: &str,
     definition: &str,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
@@ -222,24 +223,30 @@ fn assert_member_function_has_instance_method_metadata(
     file += "\n};";
     let ir = ir_from_cc(&file).unwrap();
 
-    let functions: Vec<_> = ir.functions().collect();
-    assert_eq!(functions.len(), 1);
-    let meta = functions[0]
+    let function =
+        ir.functions().find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id(name)));
+    let meta = function
+        .expect("Function not found")
         .member_func_metadata
         .as_ref()
-        .expect("Static member function should specify member_func_metadata");
+        .expect("Member function should specify member_func_metadata");
     assert_eq!(&meta.for_type.identifier, "Struct");
     assert_eq!(&meta.instance_method_metadata, expected_metadata);
 }
 
 #[test]
 fn test_member_function_static() {
-    assert_member_function_has_instance_method_metadata("static void Function();", &None);
+    assert_member_function_has_instance_method_metadata(
+        "Function",
+        "static void Function();",
+        &None,
+    );
 }
 
 #[test]
 fn test_member_function() {
     assert_member_function_has_instance_method_metadata(
+        "Function",
         "void Function();",
         &Some(ir::InstanceMethodMetadata {
             reference: ir::ReferenceQualification::Unqualified,
@@ -252,6 +259,7 @@ fn test_member_function() {
 #[test]
 fn test_member_function_const() {
     assert_member_function_has_instance_method_metadata(
+        "Function",
         "void Function() const;",
         &Some(ir::InstanceMethodMetadata {
             reference: ir::ReferenceQualification::Unqualified,
@@ -279,6 +287,7 @@ fn test_member_function_virtual() {
 #[test]
 fn test_member_function_lvalue() {
     assert_member_function_has_instance_method_metadata(
+        "Function",
         "void Function() &;",
         &Some(ir::InstanceMethodMetadata {
             reference: ir::ReferenceQualification::LValue,
@@ -291,6 +300,7 @@ fn test_member_function_lvalue() {
 #[test]
 fn test_member_function_rvalue() {
     assert_member_function_has_instance_method_metadata(
+        "Function",
         "void Function() &&;",
         &Some(ir::InstanceMethodMetadata {
             reference: ir::ReferenceQualification::RValue,
@@ -300,33 +310,33 @@ fn test_member_function_rvalue() {
     );
 }
 
-fn get_single_func_name(definition: &str) -> ir::UnqualifiedIdentifier {
+fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {
     let ir = ir_from_cc(definition).unwrap();
-    let functions: Vec<_> = ir.functions().collect();
-    assert_eq!(functions.len(), 1);
-    functions[0].name.clone()
+    ir.functions().map(|f| f.name.clone()).collect()
 }
 
 #[test]
 fn test_identifier_function_name() {
     assert_eq!(
-        get_single_func_name("void Function();"),
-        ir::UnqualifiedIdentifier::Identifier(ir::Identifier { identifier: "Function".into() }),
+        get_func_names("void Function();"),
+        vec![ir::UnqualifiedIdentifier::Identifier(ir::Identifier {
+            identifier: "Function".into()
+        })],
     );
 }
 
 #[test]
 fn test_constructor_function_name() {
     assert_eq!(
-        get_single_func_name("struct Struct {Struct();};"),
-        ir::UnqualifiedIdentifier::Constructor,
+        get_func_names("struct Struct {Struct();};"),
+        vec![ir::UnqualifiedIdentifier::Constructor],
     );
 }
 
 #[test]
 fn test_destructor_function_name() {
-    assert_eq!(
-        get_single_func_name("struct Struct {~Struct();};"),
-        ir::UnqualifiedIdentifier::Destructor,
+    assert!(
+        get_func_names("struct Struct {~Struct();};")
+            .contains(&ir::UnqualifiedIdentifier::Destructor)
     );
 }

@@ -33,6 +33,30 @@ pub struct Foo {
 // Error while generating bindings for item 'Foo::Foo':
 // Nested classes are not supported yet
 
+// rs_bindings_from_cc/test/golden/comment.h;l=11
+// Error while generating bindings for item 'Foo::Foo':
+// Parameter type 'const struct Foo &' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=11
+// Error while generating bindings for item 'Foo::operator=':
+// Parameter type 'const struct Foo &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'Foo::operator=':
+// Return type 'struct Foo &' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=11
+// Error while generating bindings for item 'Foo::Foo':
+// Parameter type 'struct Foo &&' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=11
+// Error while generating bindings for item 'Foo::operator=':
+// Parameter type 'struct Foo &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'Foo::operator=':
+// Return type 'struct Foo &' is not supported
+
 // b
 
 // }  // namespace ns
@@ -56,6 +80,30 @@ pub struct Bar {
 // Error while generating bindings for item 'Bar::Bar':
 // Nested classes are not supported yet
 
+// rs_bindings_from_cc/test/golden/comment.h;l=37
+// Error while generating bindings for item 'Bar::Bar':
+// Parameter type 'const struct Bar &' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=37
+// Error while generating bindings for item 'Bar::operator=':
+// Parameter type 'const struct Bar &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'Bar::operator=':
+// Return type 'struct Bar &' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=37
+// Error while generating bindings for item 'Bar::Bar':
+// Parameter type 'struct Bar &&' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=37
+// Error while generating bindings for item 'Bar::operator=':
+// Parameter type 'struct Bar &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'Bar::operator=':
+// Return type 'struct Bar &' is not supported
+
 /// d
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -67,6 +115,30 @@ pub struct HasNoComments {
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Nested classes are not supported yet
 
+// rs_bindings_from_cc/test/golden/comment.h;l=43
+// Error while generating bindings for item 'HasNoComments::HasNoComments':
+// Parameter type 'const struct HasNoComments &' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=43
+// Error while generating bindings for item 'HasNoComments::operator=':
+// Parameter type 'const struct HasNoComments &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'HasNoComments::operator=':
+// Return type 'struct HasNoComments &' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=43
+// Error while generating bindings for item 'HasNoComments::HasNoComments':
+// Parameter type 'struct HasNoComments &&' is not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=43
+// Error while generating bindings for item 'HasNoComments::operator=':
+// Parameter type 'struct HasNoComments &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'HasNoComments::operator=':
+// Return type 'struct HasNoComments &' is not supported
+
 // e
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
@@ -74,7 +146,12 @@ pub struct HasNoComments {
 mod detail {
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_constructor_thunk___ZN3FooC1Ev(__this: *mut Foo) -> ();
         pub(crate) fn __rust_thunk__foo() -> ();
+        pub(crate) fn __rust_constructor_thunk___ZN3BarC1Ev(__this: *mut Bar) -> ();
+        pub(crate) fn __rust_constructor_thunk___ZN13HasNoCommentsC1Ev(
+            __this: *mut HasNoComments,
+        ) -> ();
     }
 }
 

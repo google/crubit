@@ -214,6 +214,16 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
             MemberFuncMetadata{.for_type = *record_identifier,
                                .instance_method_metadata = instance_metadata};
       }
+
+      if (auto* dtor_decl =
+              llvm::dyn_cast<clang::CXXDestructorDecl>(function_decl)) {
+        if (dtor_decl->isTrivial()) {
+          // Omit trivial destructor decls.
+          // TODO(b/200066399): emit them, but make the appropriate decision
+          // about how to implement them in the code generation part.
+          success = false;
+        }
+      }
     }
   }
 
@@ -325,8 +335,9 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
       .definition = SpecialMemberFunc::Definition::kTrivial,
       .access = kPublic,
   };
-  if (const auto* cxx_record_decl =
+  if (auto* cxx_record_decl =
           clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
+    sema_.ForceDeclarationOfImplicitMembers(cxx_record_decl);
     if (cxx_record_decl->isClass()) {
       default_access = clang::AS_private;
     }

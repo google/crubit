@@ -23,6 +23,30 @@ pub struct FirstStruct {
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Nested classes are not supported yet
 
+// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// Error while generating bindings for item 'FirstStruct::FirstStruct':
+// Parameter type 'const struct FirstStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// Error while generating bindings for item 'FirstStruct::operator=':
+// Parameter type 'const struct FirstStruct &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'FirstStruct::operator=':
+// Return type 'struct FirstStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// Error while generating bindings for item 'FirstStruct::FirstStruct':
+// Parameter type 'struct FirstStruct &&' is not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// Error while generating bindings for item 'FirstStruct::operator=':
+// Parameter type 'struct FirstStruct &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'FirstStruct::operator=':
+// Return type 'struct FirstStruct &' is not supported
+
 #[inline(always)]
 pub fn first_func() -> i32 {
     unsafe { crate::detail::__rust_thunk__first_func() }
@@ -38,6 +62,30 @@ pub struct SecondStruct {
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Nested classes are not supported yet
 
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Error while generating bindings for item 'SecondStruct::SecondStruct':
+// Parameter type 'const struct SecondStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Error while generating bindings for item 'SecondStruct::operator=':
+// Parameter type 'const struct SecondStruct &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'SecondStruct::operator=':
+// Return type 'struct SecondStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Error while generating bindings for item 'SecondStruct::SecondStruct':
+// Parameter type 'struct SecondStruct &&' is not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Error while generating bindings for item 'SecondStruct::operator=':
+// Parameter type 'struct SecondStruct &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'SecondStruct::operator=':
+// Return type 'struct SecondStruct &' is not supported
+
 #[inline(always)]
 pub fn second_func() -> i32 {
     unsafe { crate::detail::__rust_thunk__second_func() }
@@ -48,7 +96,13 @@ pub fn second_func() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_constructor_thunk___ZN11FirstStructC1Ev(
+            __this: *mut FirstStruct,
+        ) -> ();
         pub(crate) fn __rust_thunk__first_func() -> i32;
+        pub(crate) fn __rust_constructor_thunk___ZN12SecondStructC1Ev(
+            __this: *mut SecondStruct,
+        ) -> ();
         pub(crate) fn __rust_thunk__second_func() -> i32;
     }
 }

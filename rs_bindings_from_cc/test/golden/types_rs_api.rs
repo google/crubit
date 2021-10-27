@@ -17,6 +17,78 @@ use static_assertions::const_assert_eq;
 // Error while generating bindings for item 'std::__u':
 // Items contained in namespaces are not supported yet
 
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// UNIMPLEMENTED: Unsupported type 'max_align_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='max_align_t *']
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// The Record for method '(anonymous struct)::' could not be found
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// UNIMPLEMENTED: Unsupported type 'max_align_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='max_align_t *']
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// Parameter type 'const max_align_t &' is not supported
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// The Record for method '(anonymous struct)::' could not be found
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// UNIMPLEMENTED: Unsupported type 'max_align_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='max_align_t *']
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Parameter type 'const max_align_t &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Return type 'max_align_t &' is not supported
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// The Record for method '(anonymous struct)::operator=' could not be found
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// UNIMPLEMENTED: Unsupported type 'max_align_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='max_align_t *']
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// Parameter type 'max_align_t &&' is not supported
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::':
+// The Record for method '(anonymous struct)::' could not be found
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// UNIMPLEMENTED: Unsupported type 'max_align_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='max_align_t *']
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Parameter type 'max_align_t &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Return type 'max_align_t &' is not supported
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// The Record for method '(anonymous struct)::operator=' could not be found
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::~':
+// UNIMPLEMENTED: Unsupported type 'max_align_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='max_align_t *']
+
+// google3/external/clang/toolchain/lib/clang/google3-trunk/include/__stddef_max_align_t.h;l=19
+// Error while generating bindings for item '(anonymous struct)::~':
+// The Record for method '(anonymous struct)::~' could not be found
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
@@ -27,6 +99,30 @@ pub struct SomeStruct {
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Nested classes are not supported yet
+
+// rs_bindings_from_cc/test/golden/types.h;l=7
+// Error while generating bindings for item 'SomeStruct::SomeStruct':
+// Parameter type 'const struct SomeStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=7
+// Error while generating bindings for item 'SomeStruct::operator=':
+// Parameter type 'const struct SomeStruct &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'SomeStruct::operator=':
+// Return type 'struct SomeStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=7
+// Error while generating bindings for item 'SomeStruct::SomeStruct':
+// Parameter type 'struct SomeStruct &&' is not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=7
+// Error while generating bindings for item 'SomeStruct::operator=':
+// Parameter type 'struct SomeStruct &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'SomeStruct::operator=':
+// Return type 'struct SomeStruct &' is not supported
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -73,6 +169,30 @@ pub struct FieldTypeTestStruct {
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
 
+// rs_bindings_from_cc/test/golden/types.h;l=10
+// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Parameter type 'const struct FieldTypeTestStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=10
+// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
+// Parameter type 'const struct FieldTypeTestStruct &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
+// Return type 'struct FieldTypeTestStruct &' is not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=10
+// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
+// Parameter type 'struct FieldTypeTestStruct &&' is not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=10
+// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
+// Parameter type 'struct FieldTypeTestStruct &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
+// Return type 'struct FieldTypeTestStruct &' is not supported
+
 #[inline(always)]
 pub fn VoidReturningFunction() -> () {
     unsafe { crate::detail::__rust_thunk__VoidReturningFunction() }
@@ -83,6 +203,10 @@ pub fn VoidReturningFunction() -> () {
 mod detail {
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_constructor_thunk___ZN10SomeStructC1Ev(__this: *mut SomeStruct) -> ();
+        pub(crate) fn __rust_constructor_thunk___ZN19FieldTypeTestStructC1Ev(
+            __this: *mut FieldTypeTestStruct,
+        ) -> ();
         pub(crate) fn __rust_thunk__VoidReturningFunction() -> ();
     }
 }
