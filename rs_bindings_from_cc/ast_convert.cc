@@ -42,12 +42,12 @@ static const clang::CXXConstructorDecl* GetMoveCtor(
 //       returns null if the special member function is implicitly defined.
 //       Signature: `const clang::FunctionDecl* (const clang::CXXRecordDecl*)`.
 template <typename F>
-bool HasOnlyDefaultedSpecialMember(const clang::CXXRecordDecl* record,
-                                   const F& getter) {
+bool HasNoUserProvidedSpecialMember(const clang::CXXRecordDecl* record,
+                                    const F& getter) {
   auto nonrecursive_has_only_defaulted =
       [&getter](const clang::CXXRecordDecl* record) {
         const clang::FunctionDecl* decl = getter(record);
-        return decl == nullptr || decl->isDefaulted();
+        return decl == nullptr || !decl->isUserProvided();
       };
 
   if (!nonrecursive_has_only_defaulted(record)) {
@@ -89,7 +89,7 @@ SpecialMemberFunc GetCopyCtorSpecialMemberFunc(
   if (cxx_record_decl->hasTrivialCopyConstructor()) {
     copy_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
   } else if (cxx_record_decl->hasNonTrivialCopyConstructor()) {
-    if (HasOnlyDefaultedSpecialMember(cxx_record_decl, &GetCopyCtor)) {
+    if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetCopyCtor)) {
       copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
     } else {
       copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
@@ -127,7 +127,7 @@ SpecialMemberFunc GetMoveCtorSpecialMemberFunc(
   if (cxx_record_decl->hasTrivialMoveConstructor()) {
     move_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
   } else if (cxx_record_decl->hasNonTrivialMoveConstructor()) {
-    if (HasOnlyDefaultedSpecialMember(cxx_record_decl, &GetMoveCtor)) {
+    if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetMoveCtor)) {
       move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
     } else {
       move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
@@ -165,7 +165,7 @@ SpecialMemberFunc GetDestructorSpecialMemberFunc(
   if (cxx_record_decl->hasTrivialDestructor()) {
     dtor.definition = SpecialMemberFunc::Definition::kTrivial;
   } else {
-    const bool has_only_defaulted_destructors = HasOnlyDefaultedSpecialMember(
+    const bool has_only_defaulted_destructors = HasNoUserProvidedSpecialMember(
         cxx_record_decl, [](auto c) { return c->getDestructor(); });
     if (has_only_defaulted_destructors) {
       dtor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;

@@ -323,11 +323,19 @@ TEST(AstVisitorTest, NontrivialSelfCopyConstructor) {
       NontrivialSelf(const NontrivialSelf&);
     };
     struct NontrivialSub : public NontrivialSelf {};
+
+    // Despite having a defaulted copy constructor, this is not trivially
+    // copyable, because the *first* declaration is not defaulted.
+    struct NontrivialSelfDefaulted {
+      NontrivialSelfDefaulted(const NontrivialSelfDefaulted&);
+    };
+    inline NontrivialSelfDefaulted::NontrivialSelfDefaulted(
+        const NontrivialSelfDefaulted&) = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
 
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivialSelf)))));
 }
@@ -432,10 +440,18 @@ TEST(AstVisitorTest, NontrivialSelfMoveConstructor) {
       NontrivialSelf(NontrivialSelf&&);
     };
     struct NontrivialSub : public NontrivialSelf {};
+
+    // Despite having a defaulted move constructor, this is not trivially
+    // movable, because the *first* declaration is not defaulted.
+    struct NontrivialSelfDefaulted {
+      NontrivialSelfDefaulted(NontrivialSelfDefaulted&&);
+    };
+    inline NontrivialSelfDefaulted::NontrivialSelfDefaulted(
+        NontrivialSelfDefaulted&&) = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivialSelf)))));
 }
@@ -540,10 +556,17 @@ TEST(AstVisitorTest, NontrivialSelfDestructor) {
       ~NontrivialSelf();
     };
     struct NontrivialSub : public NontrivialSelf {};
+
+    // Despite having a defaulted destructor, this is not trivially
+    // destructible, because the *first* declaration is not defaulted.
+    struct NontrivialSelfDefaulted {
+      ~NontrivialSelfDefaulted();
+    };
+    inline NontrivialSelfDefaulted::~NontrivialSelfDefaulted() = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({file}));
   std::vector<Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(2));
+  EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivialSelf)))));
 }
