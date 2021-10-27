@@ -795,29 +795,22 @@ mod tests {
         Ok(())
     }
 
-    fn unwrapped_ir_record(name: &str) -> Record {
-        match ir_record(name) {
-            Item::Record(r) => r,
-            _ => unreachable!(),
-        }
-    }
-
     #[test]
     fn test_copy_derives() {
-        let record = unwrapped_ir_record("S");
+        let record = ir_record("S");
         assert_eq!(generate_copy_derives(&record), &["Clone", "Copy"]);
     }
 
     #[test]
     fn test_copy_derives_not_is_trivial_abi() {
-        let mut record = unwrapped_ir_record("S");
+        let mut record = ir_record("S");
         record.is_trivial_abi = false;
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nonpublic() {
-        let mut record = unwrapped_ir_record("S");
+        let mut record = ir_record("S");
         for access in [ir::AccessSpecifier::Protected, ir::AccessSpecifier::Private] {
             record.copy_constructor.access = access;
             assert_eq!(generate_copy_derives(&record), &[""; 0]);
@@ -826,21 +819,21 @@ mod tests {
 
     #[test]
     fn test_copy_derives_ctor_deleted() {
-        let mut record = unwrapped_ir_record("S");
+        let mut record = ir_record("S");
         record.copy_constructor.definition = ir::SpecialMemberDefinition::Deleted;
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nontrivial_members() {
-        let mut record = unwrapped_ir_record("S");
+        let mut record = ir_record("S");
         record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialMembers;
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nontrivial_self() {
-        let mut record = unwrapped_ir_record("S");
+        let mut record = ir_record("S");
         record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialSelf;
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
@@ -932,10 +925,10 @@ mod tests {
     #[test]
     fn test_item_order() -> Result<()> {
         let ir = ir_items(vec![
-            ir_func("first_func"),
-            ir_record("FirstStruct"),
-            ir_func("second_func"),
-            ir_record("SecondStruct"),
+            ir_func("first_func").into(),
+            ir_record("FirstStruct").into(),
+            ir_func("second_func").into(),
+            ir_record("SecondStruct").into(),
         ]);
 
         let rs_api = generate_rs_api(&ir)?;

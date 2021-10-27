@@ -157,6 +157,30 @@ pub enum Item {
     Comment(Comment),
 }
 
+impl From<Func> for Item {
+    fn from(func: Func) -> Item {
+        Item::Func(func)
+    }
+}
+
+impl From<Record> for Item {
+    fn from(record: Record) -> Item {
+        Item::Record(record)
+    }
+}
+
+impl From<UnsupportedItem> for Item {
+    fn from(unsupported: UnsupportedItem) -> Item {
+        Item::UnsupportedItem(unsupported)
+    }
+}
+
+impl From<Comment> for Item {
+    fn from(comment: Comment) -> Item {
+        Item::Comment(comment)
+    }
+}
+
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IR {
     #[serde(default)]

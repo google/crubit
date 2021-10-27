@@ -5,7 +5,10 @@
 use anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
-use ir::{self, CcType, FuncParam, Identifier, Item, MappedType, RsType, SpecialMemberFunc, IR};
+use ir::{
+    self, CcType, Func, FuncParam, Identifier, Item, MappedType, Record, RsType, SpecialMemberFunc,
+    IR,
+};
 
 pub fn ir_from_cc(src: &str) -> Result<IR> {
     extern "C" {
@@ -35,13 +38,13 @@ pub fn ir_int_param(name: &str) -> FuncParam {
     FuncParam { identifier: ir_id(name), type_: ir_int() }
 }
 
-/// Creates a simple `Item::Func` with a given name
-pub fn ir_func(name: &str) -> Item {
+/// Creates a simple `Func` with a given name
+pub fn ir_func(name: &str) -> Func {
     let ir = ir_from_cc("inline int REPLACEME() {}").unwrap();
     for item in ir.items {
         if let Item::Func(mut func) = item {
             func.name = ir::UnqualifiedIdentifier::Identifier(ir_id(name));
-            return Item::Func(func);
+            return func;
         }
     }
     panic!("Test IR doesn't contain a function");
@@ -55,12 +58,12 @@ pub fn ir_public_trivial_special() -> SpecialMemberFunc {
 }
 
 /// Creates a simple `Item::Record` with a given name.
-pub fn ir_record(name: &str) -> Item {
+pub fn ir_record(name: &str) -> Record {
     let ir = ir_from_cc("struct REPLACEME {};").unwrap();
     for item in ir.items {
         if let Item::Record(mut record) = item {
             record.identifier = ir_id(name);
-            return Item::Record(record);
+            return record;
         }
     }
     panic!("Test IR doesn't contain a record");
