@@ -100,8 +100,8 @@ pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) -> () {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk___ZN7TrivialC1Ev(__this: *mut Trivial) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN20TrivialWithDefaultedC1Ev(
+        pub(crate) fn __rust_constructor_thunk__Trivial(__this: *mut Trivial) -> ();
+        pub(crate) fn __rust_constructor_thunk__TrivialWithDefaulted(
             __this: *mut TrivialWithDefaulted,
         ) -> ();
         #[link_name = "_Z12TakesByValue7Trivial"]

@@ -214,19 +214,15 @@ pub fn foo() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk___ZN17DocCommentSlashesC1Ev(
+        pub(crate) fn __rust_constructor_thunk__DocCommentSlashes(
             __this: *mut DocCommentSlashes,
         ) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN14DocCommentBangC1Ev(
-            __this: *mut DocCommentBang,
-        ) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN24MultilineCommentTwoStarsC1Ev(
+        pub(crate) fn __rust_constructor_thunk__DocCommentBang(__this: *mut DocCommentBang) -> ();
+        pub(crate) fn __rust_constructor_thunk__MultilineCommentTwoStars(
             __this: *mut MultilineCommentTwoStars,
         ) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN11LineCommentC1Ev(
-            __this: *mut LineComment,
-        ) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN16MultilineOneStarC1Ev(
+        pub(crate) fn __rust_constructor_thunk__LineComment(__this: *mut LineComment) -> ();
+        pub(crate) fn __rust_constructor_thunk__MultilineOneStar(
             __this: *mut MultilineOneStar,
         ) -> ();
         pub(crate) fn __rust_thunk__foo() -> i32;

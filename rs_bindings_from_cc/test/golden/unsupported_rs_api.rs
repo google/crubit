@@ -123,7 +123,7 @@ pub struct ContainingStruct {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk___ZN16ContainingStructC1Ev(
+        pub(crate) fn __rust_constructor_thunk__ContainingStruct(
             __this: *mut ContainingStruct,
         ) -> ();
     }

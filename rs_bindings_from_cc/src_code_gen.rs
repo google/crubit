@@ -117,7 +117,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 /// Returns the generated function or trait impl, and the thunk, as a tuple.
 fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
-    let thunk_ident = thunk_ident(func);
+    let thunk_ident = thunk_ident(func)?;
     let doc_comment = generate_doc_comment(&func.doc_comment);
     // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
     let return_type_name = format_rs_type(&func.return_type.rs_type)?;
@@ -527,19 +527,23 @@ fn cc_struct_layout_assertion(record: &Record) -> TokenStream {
     }
 }
 
-fn thunk_ident(func: &Func) -> Ident {
+fn thunk_ident(func: &Func) -> Result<Ident> {
+    let get_type_name = || {
+        if let Some(meta) = &func.member_func_metadata {
+            Ok(&meta.for_type.identifier)
+        } else {
+            bail!("Special member function must be a member function: {:?}", func.name)
+        }
+    };
     match &func.name {
-        UnqualifiedIdentifier::Identifier(id) => format_ident!("__rust_thunk__{}", &id.identifier),
-
-        // TODO(jeanpierreda): generate a unique, but prettier, name?
-        // This is a little challenging because, for example, two different structs `Foo` in
-        // different namespaces should not collide. The canonical way to disambiguate is, well, name
-        // mangling. Here, we use the name mangling for the destructor or constructor itself.
+        UnqualifiedIdentifier::Identifier(id) => {
+            Ok(format_ident!("__rust_thunk__{}", &id.identifier))
+        }
         UnqualifiedIdentifier::Destructor => {
-            format_ident!("__rust_destructor_thunk__{}", &func.mangled_name)
+            Ok(format_ident!("__rust_destructor_thunk__{}", get_type_name()?))
         }
         UnqualifiedIdentifier::Constructor => {
-            format_ident!("__rust_constructor_thunk__{}", &func.mangled_name)
+            Ok(format_ident!("__rust_constructor_thunk__{}", get_type_name()?))
         }
     }
 }
@@ -558,7 +562,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
             continue;
         }
 
-        let thunk_ident = thunk_ident(func);
+        let thunk_ident = thunk_ident(func)?;
         let implementation_function = match &func.name {
             UnqualifiedIdentifier::Identifier(id) => {
                 let ident = make_ident(&id.identifier);
@@ -618,12 +622,8 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rustfmt;
-
-    use super::Result;
-    use super::{generate_copy_derives, generate_rs_api, generate_rs_api_impl};
+    use super::*;
     use anyhow::anyhow;
-    use ir::*;
     use ir_testing::{
         ir_func, ir_id, ir_int, ir_int_param, ir_items, ir_public_trivial_special, ir_record,
     };
@@ -1028,5 +1028,37 @@ mod tests {
         let rs_api = generate_rs_api(&ir)?;
         assert!(rs_api.contains("impl Drop"));
         Ok(())
+    }
+
+    #[test]
+    fn test_thunk_ident_function() {
+        let func = ir_func("foo");
+        assert_eq!(thunk_ident(&func).unwrap(), make_ident("__rust_thunk__foo"));
+    }
+
+    #[test]
+    fn test_thunk_ident_special_names() {
+        let mut func = ir_func("unused");
+        func.member_func_metadata = Some(ir::MemberFuncMetadata {
+            for_type: ir_id("Class"),
+            instance_method_metadata: None,
+        });
+
+        func.name = UnqualifiedIdentifier::Destructor;
+        assert_eq!(thunk_ident(&func).unwrap(), make_ident("__rust_destructor_thunk__Class"));
+
+        func.name = UnqualifiedIdentifier::Constructor;
+        assert_eq!(thunk_ident(&func).unwrap(), make_ident("__rust_constructor_thunk__Class"));
+    }
+
+    #[test]
+    fn test_thunk_ident_invalid() {
+        let mut func = ir_func("unused");
+        for name in [UnqualifiedIdentifier::Destructor, UnqualifiedIdentifier::Constructor] {
+            func.name = name;
+            assert!(
+                thunk_ident(&func).unwrap_err().to_string().contains("must be a member function")
+            );
+        }
     }
 }

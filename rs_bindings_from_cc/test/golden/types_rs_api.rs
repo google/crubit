@@ -203,8 +203,8 @@ pub fn VoidReturningFunction() -> () {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk___ZN10SomeStructC1Ev(__this: *mut SomeStruct) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN19FieldTypeTestStructC1Ev(
+        pub(crate) fn __rust_constructor_thunk__SomeStruct(__this: *mut SomeStruct) -> ();
+        pub(crate) fn __rust_constructor_thunk__FieldTypeTestStruct(
             __this: *mut FieldTypeTestStruct,
         ) -> ();
         pub(crate) fn __rust_thunk__VoidReturningFunction() -> ();

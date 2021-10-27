@@ -146,12 +146,10 @@ pub struct HasNoComments {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk___ZN3FooC1Ev(__this: *mut Foo) -> ();
+        pub(crate) fn __rust_constructor_thunk__Foo(__this: *mut Foo) -> ();
         pub(crate) fn __rust_thunk__foo() -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN3BarC1Ev(__this: *mut Bar) -> ();
-        pub(crate) fn __rust_constructor_thunk___ZN13HasNoCommentsC1Ev(
-            __this: *mut HasNoComments,
-        ) -> ();
+        pub(crate) fn __rust_constructor_thunk__Bar(__this: *mut Bar) -> ();
+        pub(crate) fn __rust_constructor_thunk__HasNoComments(__this: *mut HasNoComments) -> ();
     }
 }
 
