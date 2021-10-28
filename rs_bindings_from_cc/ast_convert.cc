@@ -86,27 +86,22 @@ SpecialMemberFunc GetCopyCtorSpecialMemberFunc(
     return copy_ctor;
   }
 
-  if (cxx_record_decl->hasTrivialCopyConstructor()) {
-    copy_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else if (cxx_record_decl->hasNonTrivialCopyConstructor()) {
-    if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetCopyCtor)) {
-      copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-    } else {
-      copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
-    }
-  } else {
-    // The copy constructor can be **implicitly deleted**, e.g. by the
-    // presence of a move ctor.
-    copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-  }
-
   const clang::CXXConstructorDecl* copy_ctor_decl =
       GetCopyCtor(cxx_record_decl);
-  if (copy_ctor_decl != nullptr) {
-    copy_ctor.access = TranslateAccessSpecifier(copy_ctor_decl->getAccess());
-    if (copy_ctor_decl->isDeleted()) {
-      copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-    }
+  if (copy_ctor_decl == nullptr) {
+    copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+    return copy_ctor;
+  }
+
+  copy_ctor.access = TranslateAccessSpecifier(copy_ctor_decl->getAccess());
+  if (copy_ctor_decl->isDeleted()) {
+    copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+  } else if (copy_ctor_decl->isTrivial()) {
+    copy_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
+  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetCopyCtor)) {
+    copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
+  } else {
+    copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
   }
 
   return copy_ctor;
@@ -124,27 +119,22 @@ SpecialMemberFunc GetMoveCtorSpecialMemberFunc(
     return move_ctor;
   }
 
-  if (cxx_record_decl->hasTrivialMoveConstructor()) {
-    move_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else if (cxx_record_decl->hasNonTrivialMoveConstructor()) {
-    if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetMoveCtor)) {
-      move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-    } else {
-      move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
-    }
-  } else {
-    // The move constructor can be **implicitly deleted**, e.g. by the
-    // presence of a copy ctor.
-    move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-  }
-
   const clang::CXXConstructorDecl* move_ctor_decl =
       GetMoveCtor(cxx_record_decl);
-  if (move_ctor_decl != nullptr) {
-    move_ctor.access = TranslateAccessSpecifier(move_ctor_decl->getAccess());
-    if (move_ctor_decl->isDeleted()) {
-      move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-    }
+  if (move_ctor_decl == nullptr) {
+    move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+    return move_ctor;
+  }
+
+  move_ctor.access = TranslateAccessSpecifier(move_ctor_decl->getAccess());
+  if (move_ctor_decl->isDeleted()) {
+    move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
+  } else if (move_ctor_decl->isTrivial()) {
+    move_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
+  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetMoveCtor)) {
+    move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
+  } else {
+    move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
   }
 
   return move_ctor;
@@ -162,24 +152,22 @@ SpecialMemberFunc GetDestructorSpecialMemberFunc(
     return dtor;
   }
 
-  if (cxx_record_decl->hasTrivialDestructor()) {
-    dtor.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else {
-    const bool has_only_defaulted_destructors = HasNoUserProvidedSpecialMember(
-        cxx_record_decl, [](auto c) { return c->getDestructor(); });
-    if (has_only_defaulted_destructors) {
-      dtor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-    } else {
-      dtor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
-    }
+  const clang::CXXDestructorDecl* dtor_decl = cxx_record_decl->getDestructor();
+  if (dtor_decl == nullptr) {
+    dtor.definition = SpecialMemberFunc::Definition::kDeleted;
+    return dtor;
   }
 
-  const clang::CXXDestructorDecl* dtor_decl = cxx_record_decl->getDestructor();
-  if (dtor_decl != nullptr) {
-    dtor.access = TranslateAccessSpecifier(dtor_decl->getAccess());
-    if (dtor_decl->isDeleted()) {
-      dtor.definition = SpecialMemberFunc::Definition::kDeleted;
-    }
+  dtor.access = TranslateAccessSpecifier(dtor_decl->getAccess());
+  if (dtor_decl->isDeleted()) {
+    dtor.definition = SpecialMemberFunc::Definition::kDeleted;
+  } else if (dtor_decl->isTrivial()) {
+    dtor.definition = SpecialMemberFunc::Definition::kTrivial;
+  } else if (HasNoUserProvidedSpecialMember(
+                 cxx_record_decl, [](auto c) { return c->getDestructor(); })) {
+    dtor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
+  } else {
+    dtor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
   }
   return dtor;
 }
