@@ -4,6 +4,9 @@
 
 #include "rs_bindings_from_cc/ast_convert.h"
 
+#include "third_party/absl/functional/function_ref.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
+
 namespace rs_bindings_from_cc {
 namespace {
 
@@ -40,10 +43,10 @@ static const clang::CXXConstructorDecl* GetMoveCtor(
 //   record: the class/struct to check.
 //   getter: a function which returns the special member function in question.
 //       returns null if the special member function is implicitly defined.
-//       Signature: `const clang::FunctionDecl* (const clang::CXXRecordDecl*)`.
-template <typename F>
-bool HasNoUserProvidedSpecialMember(const clang::CXXRecordDecl* record,
-                                    const F& getter) {
+bool HasNoUserProvidedSpecialMember(
+    const clang::CXXRecordDecl* record,
+    absl::FunctionRef<const clang::FunctionDecl*(const clang::CXXRecordDecl*)>
+        getter) {
   auto nonrecursive_has_only_defaulted =
       [&getter](const clang::CXXRecordDecl* record) {
         const clang::FunctionDecl* decl = getter(record);
@@ -54,6 +57,40 @@ bool HasNoUserProvidedSpecialMember(const clang::CXXRecordDecl* record,
     return false;
   }
   return record->forallBases(nonrecursive_has_only_defaulted);
+}
+
+SpecialMemberFunc GetSpecialMemberFunc(
+    const clang::RecordDecl& record_decl,
+    absl::FunctionRef<const clang::FunctionDecl*(const clang::CXXRecordDecl*)>
+        getter) {
+  SpecialMemberFunc smf = {
+      .definition = SpecialMemberFunc::Definition::kTrivial,
+      .access = kPublic,
+  };
+
+  const auto* cxx_record_decl =
+      clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
+  if (cxx_record_decl == nullptr) {
+    return smf;
+  }
+
+  const clang::FunctionDecl* decl = getter(cxx_record_decl);
+  if (decl == nullptr) {
+    smf.definition = SpecialMemberFunc::Definition::kDeleted;
+    return smf;
+  }
+
+  smf.access = TranslateAccessSpecifier(decl->getAccess());
+  if (decl->isDeleted()) {
+    smf.definition = SpecialMemberFunc::Definition::kDeleted;
+  } else if (decl->isTrivial()) {
+    smf.definition = SpecialMemberFunc::Definition::kTrivial;
+  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, getter)) {
+    smf.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
+  } else {
+    smf.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
+  }
+  return smf;
 }
 }  // namespace
 
@@ -76,100 +113,18 @@ AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
 
 SpecialMemberFunc GetCopyCtorSpecialMemberFunc(
     const clang::RecordDecl& record_decl) {
-  SpecialMemberFunc copy_ctor = {
-      .definition = SpecialMemberFunc::Definition::kTrivial,
-      .access = kPublic,
-  };
-  const auto* cxx_record_decl =
-      clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
-  if (cxx_record_decl == nullptr) {
-    return copy_ctor;
-  }
-
-  const clang::CXXConstructorDecl* copy_ctor_decl =
-      GetCopyCtor(cxx_record_decl);
-  if (copy_ctor_decl == nullptr) {
-    copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-    return copy_ctor;
-  }
-
-  copy_ctor.access = TranslateAccessSpecifier(copy_ctor_decl->getAccess());
-  if (copy_ctor_decl->isDeleted()) {
-    copy_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-  } else if (copy_ctor_decl->isTrivial()) {
-    copy_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetCopyCtor)) {
-    copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-  } else {
-    copy_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
-  }
-
-  return copy_ctor;
+  return GetSpecialMemberFunc(record_decl, &GetCopyCtor);
 }
 
 SpecialMemberFunc GetMoveCtorSpecialMemberFunc(
     const clang::RecordDecl& record_decl) {
-  SpecialMemberFunc move_ctor = {
-      .definition = SpecialMemberFunc::Definition::kTrivial,
-      .access = kPublic,
-  };
-  const auto* cxx_record_decl =
-      clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
-  if (cxx_record_decl == nullptr) {
-    return move_ctor;
-  }
-
-  const clang::CXXConstructorDecl* move_ctor_decl =
-      GetMoveCtor(cxx_record_decl);
-  if (move_ctor_decl == nullptr) {
-    move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-    return move_ctor;
-  }
-
-  move_ctor.access = TranslateAccessSpecifier(move_ctor_decl->getAccess());
-  if (move_ctor_decl->isDeleted()) {
-    move_ctor.definition = SpecialMemberFunc::Definition::kDeleted;
-  } else if (move_ctor_decl->isTrivial()) {
-    move_ctor.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, &GetMoveCtor)) {
-    move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-  } else {
-    move_ctor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
-  }
-
-  return move_ctor;
+  return GetSpecialMemberFunc(record_decl, &GetMoveCtor);
 }
 
 SpecialMemberFunc GetDestructorSpecialMemberFunc(
     const clang::RecordDecl& record_decl) {
-  SpecialMemberFunc dtor = {
-      .definition = SpecialMemberFunc::Definition::kTrivial,
-      .access = kPublic,
-  };
-  const auto* cxx_record_decl =
-      clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
-  if (cxx_record_decl == nullptr) {
-    return dtor;
-  }
-
-  const clang::CXXDestructorDecl* dtor_decl = cxx_record_decl->getDestructor();
-  if (dtor_decl == nullptr) {
-    dtor.definition = SpecialMemberFunc::Definition::kDeleted;
-    return dtor;
-  }
-
-  dtor.access = TranslateAccessSpecifier(dtor_decl->getAccess());
-  if (dtor_decl->isDeleted()) {
-    dtor.definition = SpecialMemberFunc::Definition::kDeleted;
-  } else if (dtor_decl->isTrivial()) {
-    dtor.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else if (HasNoUserProvidedSpecialMember(
-                 cxx_record_decl, [](auto c) { return c->getDestructor(); })) {
-    dtor.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-  } else {
-    dtor.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
-  }
-  return dtor;
+  return GetSpecialMemberFunc(record_decl,
+                              [](auto c) { return c->getDestructor(); });
 }
 
 }  // namespace rs_bindings_from_cc
