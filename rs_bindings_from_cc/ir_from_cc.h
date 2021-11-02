@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
 
-#include <vector>
-
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"

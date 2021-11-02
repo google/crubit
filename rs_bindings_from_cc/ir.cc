@@ -4,12 +4,16 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
+#include <stdint.h>
+
 #include <optional>
+#include <ostream>
 #include <string>
-#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
+#include "base/integral_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
 

@@ -5,13 +5,18 @@
 #include "rs_bindings_from_cc/ast_visitor.h"
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+#include <variant>
 #include <vector>
 
-#include "base/logging.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_set.h"
+#include "third_party/absl/status/status.h"
+#include "third_party/absl/status/statusor.h"
+#include "third_party/absl/strings/cord.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
@@ -24,6 +29,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 
 namespace rs_bindings_from_cc {

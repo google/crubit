@@ -6,7 +6,11 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_VISITOR_H_
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_set.h"
@@ -20,6 +24,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecursiveASTVisitor.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 
 namespace rs_bindings_from_cc {

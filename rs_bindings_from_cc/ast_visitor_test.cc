@@ -2,19 +2,20 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <memory>
 #include <string>
-#include <utility>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
-#include "third_party/absl/container/flat_hash_map.h"
+#include "third_party/absl/status/status.h"
+#include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
-#include "third_party/absl/strings/substitute.h"
 #include "third_party/absl/types/span.h"
+#include "util/task/status_macros.h"
 
 namespace rs_bindings_from_cc {
 namespace {

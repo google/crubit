@@ -4,10 +4,21 @@
 
 #include "rs_bindings_from_cc/ir_from_cc.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "devtools/cymbal/common/clang_tool.h"
 #include "rs_bindings_from_cc/frontend_action.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
+#include "third_party/absl/status/status.h"
+#include "third_party/absl/status/statusor.h"
+#include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
+#include "third_party/absl/types/span.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
 
 namespace rs_bindings_from_cc {
 

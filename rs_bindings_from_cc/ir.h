@@ -11,11 +11,15 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 
+#include <stdint.h>
+
+#include <optional>
 #include <string>
-#include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
+#include "base/integral_types.h"
 #include "base/logging.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"

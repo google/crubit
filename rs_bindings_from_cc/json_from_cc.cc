@@ -2,8 +2,15 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <string>
+
+#include "base/logging.h"
 #include "rs_bindings_from_cc/ffi_types.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
+#include "third_party/absl/status/statusor.h"
+#include "third_party/absl/types/span.h"
+#include "third_party/json/src/json.hpp"
 #include "util/task/status.h"
 
 namespace rs_bindings_from_cc {

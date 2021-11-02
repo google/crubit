@@ -4,8 +4,6 @@
 
 #include "rs_bindings_from_cc/src_code_gen.h"
 
-#include <string>
-
 #include "rs_bindings_from_cc/ir.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"

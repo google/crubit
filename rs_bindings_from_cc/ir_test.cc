@@ -4,8 +4,6 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
-#include <string>
-
 #include "testing/base/public/gunit.h"
 #include "third_party/json/src/json.hpp"
 

@@ -6,25 +6,22 @@
 // * a Rust source file with bindings for the C++ API
 // * a C++ source file with the implementation of the bindings
 
-#include <memory>
 #include <string>
 #include <vector>
 
 #include "base/init_google.h"
 #include "base/logging.h"
-#include "devtools/cymbal/common/clang_tool.h"
-#include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
 #include "file/base/filesystem.h"
 #include "file/base/helpers.h"
 #include "file/base/options.h"
-#include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/flags/flag.h"
+#include "third_party/absl/status/status.h"
+#include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
-#include "third_party/absl/strings/substitute.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
+#include "third_party/json/src/json.hpp"
 #include "util/task/status.h"
 
 ABSL_FLAG(std::string, rs_out, "",
