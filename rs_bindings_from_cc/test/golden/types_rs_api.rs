@@ -89,6 +89,78 @@ use static_assertions::const_assert_eq;
 // Error while generating bindings for item '(anonymous struct)::~':
 // The Record for method '(anonymous struct)::~' could not be found
 
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// UNIMPLEMENTED: Unsupported type '__fsid_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='__fsid_t *']
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// The Record for method '(anonymous struct)::' could not be found
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// UNIMPLEMENTED: Unsupported type '__fsid_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='__fsid_t *']
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// Parameter type 'const __fsid_t &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// The Record for method '(anonymous struct)::' could not be found
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// UNIMPLEMENTED: Unsupported type '__fsid_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='__fsid_t *']
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Parameter type 'const __fsid_t &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Return type '__fsid_t &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// The Record for method '(anonymous struct)::operator=' could not be found
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// UNIMPLEMENTED: Unsupported type '__fsid_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='__fsid_t *']
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// Parameter type '__fsid_t &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::':
+// The Record for method '(anonymous struct)::' could not be found
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// UNIMPLEMENTED: Unsupported type '__fsid_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='__fsid_t *']
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Parameter type '__fsid_t &&' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// Return type '__fsid_t &' is not supported
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::operator=':
+// The Record for method '(anonymous struct)::operator=' could not be found
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::~':
+// UNIMPLEMENTED: Unsupported type '__fsid_t *' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='__fsid_t *']
+
+// <unknown location>
+// Error while generating bindings for item '(anonymous struct)::~':
+// The Record for method '(anonymous struct)::~' could not be found
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
