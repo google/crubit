@@ -66,8 +66,8 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   ctx_ = &translation_unit_decl->getASTContext();
   mangler_.reset(ctx_->createMangleContext());
 
-  for (const absl::string_view header_name : public_header_names_) {
-    ir_.used_headers.push_back(HeaderName(std::string(header_name)));
+  for (const HeaderName& header_name : public_header_names_) {
+    ir_.used_headers.push_back(header_name);
   }
 
   bool result = Base::TraverseTranslationUnitDecl(translation_unit_decl);

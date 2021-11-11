@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/ir.h"
 
 #include "testing/base/public/gunit.h"
+#include "third_party/absl/hash/hash_testing.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {
@@ -140,6 +141,13 @@ TEST(IrTest, IR) {
                                     .access = kPublic},
                             .is_trivial_abi = true}}};
   EXPECT_EQ(ir.ToJson(), expected);
+}
+
+TEST(HeaderName, Hash) {
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly({
+      HeaderName("foo.h"),
+      HeaderName("bar.h"),
+  }));
 }
 
 }  // namespace

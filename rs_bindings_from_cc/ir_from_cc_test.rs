@@ -17,7 +17,7 @@ fn assert_cc_produces_ir(cc_src: &str, mut expected: IR) {
 
     // ir_from_cc() always sets `used_headers` this way, so add it to the
     // expected IR.
-    expected.used_headers = vec![HeaderName { name: "test/testing_header_0.h".to_string() }];
+    expected.used_headers = vec![HeaderName { name: "ir_from_cc_virtual_header.h".to_string() }];
 
     assert_eq!(actual, expected);
 }

@@ -10,6 +10,7 @@
 #include "third_party/absl/functional/function_ref.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 
 namespace rs_bindings_from_cc {
 namespace {

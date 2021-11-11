@@ -41,11 +41,20 @@ class HeaderName {
 
   nlohmann::json ToJson() const;
 
+  template <typename H>
+  friend H AbslHashValue(H h, const HeaderName& header_name) {
+    return H::combine(std::move(h), header_name.name_);
+  }
+
  private:
   // Header pathname in the format suitable for a google3-relative quote
   // include.
   std::string name_;
 };
+
+inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
+  return lhs.IncludePath() == rhs.IncludePath();
+}
 
 inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
   return o << h.ToJson();

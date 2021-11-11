@@ -5,8 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 
+#include "base/logging.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "third_party/absl/strings/string_view.h"
+#include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
@@ -19,18 +21,24 @@ namespace rs_bindings_from_cc {
 // generates the intermediate representation (`IR`).
 class AstConsumer : public clang::ASTConsumer {
  public:
-  explicit AstConsumer(clang::CompilerInstance& instance,
-                       absl::Span<const absl::string_view> public_header_names,
-                       IR& ir)
+  explicit AstConsumer(clang::CompilerInstance& instance, Label current_target,
+                       absl::Span<const HeaderName> public_header_names,
+                       const absl::flat_hash_map<const HeaderName, const Label>*
+                           headers_to_targets,
+                       IR* ir)
       : instance_(instance),
+        current_target_(current_target),
         public_header_names_(public_header_names),
-        ir_(ir) {}
+        headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
+        ir_(*ABSL_DIE_IF_NULL(ir)) {}
 
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
  private:
   clang::CompilerInstance& instance_;
-  absl::Span<const absl::string_view> public_header_names_;
+  Label current_target_;
+  absl::Span<const HeaderName> public_header_names_;
+  const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
   IR& ir_;
 };  // class AstConsumer
 

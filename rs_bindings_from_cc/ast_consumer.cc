@@ -6,7 +6,9 @@
 
 #include "base/logging.h"
 #include "rs_bindings_from_cc/ast_visitor.h"
-#include "third_party/absl/strings/string_view.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "third_party/absl/container/flat_hash_map.h"
+#include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
@@ -22,7 +24,10 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
     return;
   }
   CHECK(instance_.hasSema());
-  AstVisitor ast_visitor(instance_.getSema(), public_header_names_, ir_);
+  CHECK(!public_header_names_.empty());
+  CHECK(!headers_to_targets_.empty());
+  AstVisitor ast_visitor(instance_.getSema(), current_target_,
+                         public_header_names_, &headers_to_targets_, &ir_);
   ast_visitor.TraverseDecl(ast_context.getTranslationUnitDecl());
 }
 

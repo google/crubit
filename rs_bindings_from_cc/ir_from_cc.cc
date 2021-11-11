@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "devtools/cymbal/common/clang_tool.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
@@ -22,28 +23,38 @@
 
 namespace rs_bindings_from_cc {
 
+static constexpr absl::string_view kVirtualHeaderPath =
+    "ir_from_cc_virtual_header.h";
 static constexpr absl::string_view kVirtualInputPath =
     "ir_from_cc_virtual_input.cc";
 
 absl::StatusOr<IR> IrFromCc(
-    absl::Span<const absl::string_view> header_files_contents,
-    absl::Span<const absl::string_view> header_names,
+    const absl::string_view extra_source_code, const Label current_target,
+    absl::Span<const HeaderName> public_headers,
+    absl::flat_hash_map<const HeaderName, const std::string>
+        virtual_headers_contents,
+    absl::flat_hash_map<const HeaderName, const Label> headers_to_targets,
     absl::Span<const absl::string_view> args) {
-  std::vector<std::string> headers{header_names.begin(), header_names.end()};
+  std::vector<const HeaderName> entrypoint_headers(public_headers.begin(),
+                                                   public_headers.end());
   absl::flat_hash_map<std::string, std::string> file_contents;
-  std::string virtual_input_file_content;
 
-  int counter = 0;
-  for (const absl::string_view header_content : header_files_contents) {
-    std::string filename(
-        absl::Substitute("test/testing_header_$0.h", counter++));
-    file_contents.insert({filename, std::string(header_content)});
-    headers.push_back(std::move(filename));
+  for (auto const& name_and_content : virtual_headers_contents) {
+    file_contents.insert({std::string(name_and_content.first.IncludePath()),
+                          name_and_content.second});
+  }
+  if (!extra_source_code.empty()) {
+    file_contents.insert(
+        {std::string(kVirtualHeaderPath), std::string(extra_source_code)});
+    HeaderName header_name = HeaderName(std::string(kVirtualHeaderPath));
+    entrypoint_headers.push_back(header_name);
+    headers_to_targets.insert({header_name, current_target});
   }
 
-  for (const std::string& filename : headers) {
+  std::string virtual_input_file_content;
+  for (const HeaderName& header_name : entrypoint_headers) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
-                              filename);
+                              header_name.IncludePath());
   }
   file_contents.insert(
       {std::string(kVirtualInputPath), virtual_input_file_content});
@@ -63,9 +74,8 @@ absl::StatusOr<IR> IrFromCc(
 
   if (IR ir; devtools::cymbal::RunToolWithClangFlagsOnCode(
           args_as_strings, file_contents,
-          std::make_unique<FrontendAction>(
-              std::vector<absl::string_view>(headers.begin(), headers.end()),
-              ir))) {
+          std::make_unique<FrontendAction>(current_target, entrypoint_headers,
+                                           &headers_to_targets, &ir))) {
     return ir;
   } else {
     return absl::Status(absl::StatusCode::kInvalidArgument,

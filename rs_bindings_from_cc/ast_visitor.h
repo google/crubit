@@ -12,10 +12,12 @@
 #include <variant>
 #include <vector>
 
+#include "base/logging.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/status/statusor.h"
-#include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
@@ -36,14 +38,18 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  public:
   using Base = clang::RecursiveASTVisitor<AstVisitor>;
 
-  explicit AstVisitor(clang::Sema& sema,
-                      absl::Span<const absl::string_view> public_header_names,
-                      IR& ir)
+  explicit AstVisitor(clang::Sema& sema, Label current_target,
+                      absl::Span<const HeaderName> public_header_names,
+                      const absl::flat_hash_map<const HeaderName, const Label>*
+                          headers_to_targets,
+                      IR* ir)
       : sema_(sema),
+        current_target_(current_target),
         public_header_names_(public_header_names),
-        ir_(ir),
+        headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
+        ir_(*ABSL_DIE_IF_NULL(ir)),
         ctx_(nullptr),
-        comment_manager_(ir) {}
+        comment_manager_(*ABSL_DIE_IF_NULL(ir)) {}
 
   // These functions are called by the base class while visiting the different
   // parts of the AST. The API follows the rules of the base class which is
@@ -93,7 +99,9 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
 
   clang::Sema& sema_;
-  absl::Span<const absl::string_view> public_header_names_;
+  Label current_target_;
+  absl::Span<const HeaderName> public_header_names_;
+  const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
   IR& ir_;
   clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;

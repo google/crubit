@@ -9,7 +9,6 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "third_party/absl/status/statusor.h"
-#include "third_party/absl/types/span.h"
 #include "third_party/json/src/json.hpp"
 #include "util/task/status.h"
 
