@@ -21,6 +21,7 @@
 
 #include "base/integral_types.h"
 #include "base/logging.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
 #include "util/intops/strong_int.h"
@@ -246,6 +247,7 @@ struct Func {
 
   UnqualifiedIdentifier name;
   DeclId decl_id;
+  Label owning_target;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
@@ -326,6 +328,7 @@ struct Record {
 
   Identifier identifier;
   DeclId decl_id;
+  Label owning_target;
   std::optional<std::string> doc_comment;
   std::vector<Field> fields;
   // Size and alignment in bytes.
@@ -414,6 +417,7 @@ struct IR {
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers;
+  Label current_target;
   std::vector<std::variant<Func, Record, UnsupportedItem, Comment>> items;
 };
 

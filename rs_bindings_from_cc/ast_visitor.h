@@ -70,6 +70,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
+  Label GetOwningTarget(const clang::Decl* decl) const;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //

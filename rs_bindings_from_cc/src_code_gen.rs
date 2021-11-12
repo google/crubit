@@ -635,6 +635,7 @@ mod tests {
         let ir = ir_items(vec![Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("add")),
             decl_id: DeclId(42),
+            owning_target: "//foo:bar".into(),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,
             return_type: ir_int(),
@@ -676,9 +677,11 @@ mod tests {
                 HeaderName { name: "foo/bar.h".to_string() },
                 HeaderName { name: "foo/baz.h".to_string() },
             ],
+            current_target: "//foo:bar".into(),
             items: vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("add")),
                 decl_id: DeclId(42),
+                owning_target: "//foo:bar".into(),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),
@@ -727,6 +730,7 @@ mod tests {
         let ir = ir_items(vec![Item::Record(Record {
             identifier: ir_id("SomeStruct"),
             decl_id: DeclId(42),
+            owning_target: "//foo:bar".into(),
             doc_comment: None,
             fields: vec![
                 Field {
@@ -846,6 +850,7 @@ mod tests {
         let ir = ir_items(vec![Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
             decl_id: DeclId(42),
+            owning_target: "//foo:bar".into(),
             mangled_name: "_Z5DerefPKPi".to_string(),
             doc_comment: None,
             return_type: MappedType {
@@ -972,9 +977,11 @@ mod tests {
     fn test_doc_comment_func() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
+            current_target: "//foo:bar".into(),
             items: vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("func")),
                 decl_id: DeclId(42),
+                owning_target: "//foo:bar".into(),
                 mangled_name: "foo".to_string(),
                 doc_comment: Some("Doc Comment".to_string()),
                 return_type: ir_int(),
@@ -996,9 +1003,11 @@ mod tests {
     fn test_doc_comment_record() -> Result<()> {
         let ir = IR {
             used_headers: vec![],
+            current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
                 identifier: ir_id("SomeStruct"),
                 decl_id: DeclId(42),
+                owning_target: "//foo:bar".into(),
                 doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
                 alignment: 0,
                 size: 0,

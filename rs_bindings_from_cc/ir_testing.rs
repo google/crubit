@@ -76,5 +76,5 @@ pub fn ir_record(name: &str) -> Record {
 
 // Creates a full `IR` data structure from a list of items
 pub fn ir_items(items: Vec<Item>) -> IR {
-    IR { used_headers: vec![], items }
+    IR { used_headers: vec![], current_target: "//test:testing_target".into(), items }
 }

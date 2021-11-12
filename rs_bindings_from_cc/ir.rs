@@ -48,6 +48,16 @@ pub struct Identifier {
 pub struct DeclId(pub usize);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(transparent)]
+pub struct Label(pub String);
+
+impl<T: Into<String>> From<T> for Label {
+    fn from(label: T) -> Self {
+        Self(label.into())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum UnqualifiedIdentifier {
     Identifier(Identifier),
     Constructor,
@@ -85,6 +95,7 @@ pub struct FuncParam {
 pub struct Func {
     pub name: UnqualifiedIdentifier,
     pub decl_id: DeclId,
+    pub owning_target: Label,
     pub mangled_name: String,
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
@@ -128,6 +139,7 @@ pub struct SpecialMemberFunc {
 pub struct Record {
     pub identifier: Identifier,
     pub decl_id: DeclId,
+    pub owning_target: Label,
     pub doc_comment: Option<String>,
     pub fields: Vec<Field>,
     pub size: usize,
@@ -189,10 +201,11 @@ impl From<Comment> for Item {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IR {
     #[serde(default)]
     pub used_headers: Vec<HeaderName>,
+    pub current_target: Label,
     #[serde(default)]
     pub items: Vec<Item>,
 }
@@ -221,13 +234,15 @@ mod tests {
     fn test_used_headers() {
         let input = r#"
         {
-            "used_headers": [{ "name": "foo/bar.h" }]
+            "used_headers": [{ "name": "foo/bar.h" }],
+            "current_target": "//foo:bar"
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
             used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
-            ..Default::default()
+            current_target: "//foo:bar".into(),
+            items: vec![],
         };
         assert_eq!(ir, expected);
     }
@@ -236,10 +251,12 @@ mod tests {
     fn test_member_access_specifiers() {
         let input = r#"
         {
+            "current_target": "//foo:bar",
             "items": [
                 { "Record" : {
                     "identifier": {"identifier": "SomeStruct" },
                     "decl_id": 42,
+                    "owning_target": "//foo:bar",
                     "fields": [
                         {
                             "identifier": {"identifier": "public_int" },
@@ -290,9 +307,12 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
+            used_headers: vec![],
+            current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 decl_id: DeclId(42),
+                owning_target: "//foo:bar".into(),
                 doc_comment: None,
                 fields: vec![
                     Field {
@@ -369,7 +389,6 @@ mod tests {
                 },
                 is_trivial_abi: true,
             })],
-            ..Default::default()
         };
         assert_eq!(ir, expected);
     }
@@ -378,10 +397,12 @@ mod tests {
     fn test_pointer_member_variable() {
         let input = r#"
         {
+            "current_target": "//foo:bar",
             "items": [
                 { "Record": {
                     "identifier": {"identifier": "SomeStruct" },
                     "decl_id": 42,
+                    "owning_target": "//foo:bar",
                     "fields": [
                         {
                             "identifier": {"identifier": "ptr" },
@@ -423,9 +444,12 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = IR {
+            used_headers: vec![],
+            current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
                 decl_id: DeclId(42),
+                owning_target: "//foo:bar".into(),
                 doc_comment: None,
                 fields: vec![Field {
                     identifier: Identifier { identifier: "ptr".to_string() },
@@ -471,7 +495,6 @@ mod tests {
                 },
                 is_trivial_abi: true,
             })],
-            ..Default::default()
         };
         assert_eq!(ir, expected);
     }

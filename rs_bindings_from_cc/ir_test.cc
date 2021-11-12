@@ -4,6 +4,9 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
+#include <string>
+
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/absl/hash/hash_testing.h"
 #include "third_party/json/src/json.hpp"
@@ -52,11 +55,13 @@ TEST(IrTest, TypeWithDeclIdToJson) {
 TEST(IrTest, IR) {
   nlohmann::json expected = nlohmann::json::parse(
       R"j({
+            "current_target": "//foo:bar",
             "used_headers": [{ "name": "foo/bar.h" }],
             "items": [
                 { "Record": {
                     "identifier": { "identifier": "SomeStruct" },
                     "decl_id": 42,
+                    "owning_target": "//foo:bar",
                     "fields": [
                     {
                         "identifier": { "identifier": "public_int" },
@@ -117,8 +122,10 @@ TEST(IrTest, IR) {
             ]
         })j");
   IR ir = {.used_headers = {HeaderName("foo/bar.h")},
+           .current_target = Label(std::string("//foo:bar")),
            .items = {Record{.identifier = Identifier("SomeStruct"),
                             .decl_id = DeclId(42),
+                            .owning_target = Label(std::string("//foo:bar")),
                             .fields =
                                 {
                                     Field{
@@ -129,8 +136,8 @@ TEST(IrTest, IR) {
                                         .offset = 0},
                                     Field{.identifier =
                                               Identifier("protected_int"),
-                                          .type =
-                                              MappedType::Simple("i32", "int"),
+                                          .type = MappedType::Simple("i32",
+                                                                     "int"),
                                           .access = kProtected,
                                           .offset = 32},
                                     Field{

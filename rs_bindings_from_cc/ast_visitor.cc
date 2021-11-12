@@ -13,8 +13,11 @@
 #include <variant>
 #include <vector>
 
+#include "base/logging.h"
 #include "rs_bindings_from_cc/ast_convert.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
@@ -75,6 +78,8 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   for (const HeaderName& header_name : public_header_names_) {
     ir_.used_headers.push_back(header_name);
   }
+
+  ir_.current_target = current_target_;
 
   bool result = Base::TraverseTranslationUnitDecl(translation_unit_decl);
 
@@ -246,6 +251,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     ir_.items.push_back(Func{
         .name = *translated_name,
         .decl_id = GenerateDeclId(function_decl),
+        .owning_target = GetOwningTarget(function_decl),
         .doc_comment = GetComment(function_decl),
         .mangled_name = GetMangledName(function_decl),
         .return_type = *return_type,
@@ -256,6 +262,17 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   }
 
   return true;
+}
+
+Label AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
+  clang::SourceManager& source_manager = ctx_->getSourceManager();
+  llvm::StringRef filename = source_manager.getFilename(decl->getLocation());
+
+  if (filename.startswith("./")) filename = filename.substr(2);
+  auto target_iterator = headers_to_targets_.find(HeaderName(filename.str()));
+  CHECK(target_iterator != headers_to_targets_.end())
+      << "Couldn't find target for " << filename.str();
+  return target_iterator->second;
 }
 
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
@@ -290,6 +307,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   ir_.items.push_back(
       Record{.identifier = *record_name,
              .decl_id = GenerateDeclId(record_decl),
+             .owning_target = GetOwningTarget(record_decl),
              .doc_comment = GetComment(record_decl),
              .fields = *std::move(fields),
              .size = layout.getSize().getQuantity(),

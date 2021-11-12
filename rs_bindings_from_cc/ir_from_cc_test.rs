@@ -40,9 +40,12 @@ fn test_function() {
     assert_cc_produces_ir_ignoring_decl_ids(
         "int Add(int a, int b);",
         IR {
+            current_target: "//test:testing_target".into(),
+            used_headers: /* ignored */ vec![],
             items: vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
                 decl_id: /* ignored */ DeclId(42),
+                owning_target: "//test:testing_target".into(),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),
@@ -50,7 +53,6 @@ fn test_function() {
                 is_inline: false,
                 member_func_metadata: None,
             })],
-            ..Default::default()
         },
     );
 }

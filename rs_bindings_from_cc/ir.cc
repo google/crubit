@@ -14,9 +14,11 @@
 #include <vector>
 
 #include "base/integral_types.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
-#include "util/gtl/int_type.h"
+#include "util/gtl/labs/string_type.h"
+#include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
 
@@ -139,6 +141,7 @@ nlohmann::json Func::ToJson() const {
     func["name"][SpecialNameToString(std::get<SpecialName>(name))] = nullptr;
   }
   func["decl_id"] = decl_id.value();
+  func["owning_target"] = owning_target.value();
   if (doc_comment) {
     func["doc_comment"] = *doc_comment;
   }
@@ -219,6 +222,7 @@ nlohmann::json Record::ToJson() const {
   nlohmann::json record;
   record["identifier"] = identifier.ToJson();
   record["decl_id"] = decl_id.value();
+  record["owning_target"] = owning_target.value();
   if (doc_comment) {
     record["doc_comment"] = *doc_comment;
   }
@@ -277,6 +281,7 @@ nlohmann::json IR::ToJson() const {
 
   nlohmann::json result;
   result["used_headers"] = std::move(json_used_headers);
+  result["current_target"] = current_target.value();
   result["items"] = std::move(json_items);
   return result;
 }
