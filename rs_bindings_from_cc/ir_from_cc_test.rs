@@ -12,23 +12,37 @@ use std::collections::HashMap;
 // TODO(mboehme): If we start needing to match on parts of the IR in tests,
 // check out the crate https://crates.io/crates/galvanic-assert.
 
-fn assert_cc_produces_ir(cc_src: &str, mut expected: IR) {
+fn assert_cc_produces_ir_ignoring_decl_ids(cc_src: &str, mut expected: IR) {
     let actual = ir_from_cc(cc_src).unwrap();
 
     // ir_from_cc() always sets `used_headers` this way, so add it to the
     // expected IR.
     expected.used_headers = vec![HeaderName { name: "ir_from_cc_virtual_header.h".to_string() }];
 
+    for (ref mut expected_item, actual_item) in expected.items.iter_mut().zip(&actual.items) {
+        // TODO(hlopko): Handle MappedTypes as well.
+        match (expected_item, actual_item) {
+            (Item::Func(ref mut expected_func), Item::Func(actual_func)) => {
+                expected_func.decl_id = actual_func.decl_id;
+            }
+            (Item::Record(ref mut expected_record), Item::Record(actual_record)) => {
+                expected_record.decl_id = actual_record.decl_id;
+            }
+            (_, _) => (),
+        }
+    }
+
     assert_eq!(actual, expected);
 }
 
 #[test]
 fn test_function() {
-    assert_cc_produces_ir(
+    assert_cc_produces_ir_ignoring_decl_ids(
         "int Add(int a, int b);",
         IR {
             items: vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
+                decl_id: /* ignored */ DeclId(42),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),

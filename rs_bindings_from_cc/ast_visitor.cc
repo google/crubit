@@ -4,6 +4,8 @@
 
 #include "rs_bindings_from_cc/ast_visitor.h"
 
+#include <stdint.h>
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -36,6 +38,10 @@ namespace rs_bindings_from_cc {
 
 constexpr std::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
+
+DeclId GenerateDeclId(clang::Decl* decl) {
+  return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
+}
 
 bool AstVisitor::TraverseDecl(clang::Decl* decl) {
   if (!seen_decls_.insert(decl->getCanonicalDecl()).second) {
@@ -239,6 +245,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   if (success && translated_name.has_value()) {
     ir_.items.push_back(Func{
         .name = *translated_name,
+        .decl_id = GenerateDeclId(function_decl),
         .doc_comment = GetComment(function_decl),
         .mangled_name = GetMangledName(function_decl),
         .return_type = *return_type,
@@ -282,6 +289,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
   ir_.items.push_back(
       Record{.identifier = *record_name,
+             .decl_id = GenerateDeclId(record_decl),
              .doc_comment = GetComment(record_decl),
              .fields = *std::move(fields),
              .size = layout.getSize().getQuantity(),
@@ -376,7 +384,8 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
 
     if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
       std::string ident(id->Ident());
-      return MappedType::Simple(ident, ident);
+      DeclId decl_id = GenerateDeclId(tag_decl);
+      return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
     }
   }
 

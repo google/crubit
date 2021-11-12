@@ -5,8 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_BLAZE_TYPES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_BLAZE_TYPES_H_
 
-#include <string>
-
+#include "third_party/absl/strings/string_view.h"
 #include "util/gtl/labs/string_type.h"
 
 namespace rs_bindings_from_cc {

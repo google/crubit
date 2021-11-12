@@ -16,6 +16,7 @@
 #include "base/integral_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
+#include "util/gtl/int_type.h"
 
 namespace rs_bindings_from_cc {
 
@@ -34,6 +35,9 @@ nlohmann::json RsType::ToJson() const {
     json_params.push_back(param.ToJson());
   }
   result["name"] = name;
+  if (decl_id.has_value()) {
+    result["decl_id"] = decl_id->value();
+  }
   result["type_params"] = std::move(json_params);
 
   return result;
@@ -48,6 +52,9 @@ nlohmann::json CcType::ToJson() const {
     json_params.push_back(param.ToJson());
   }
   result["name"] = name;
+  if (decl_id.has_value()) {
+    result["decl_id"] = decl_id->value();
+  }
   result["is_const"] = is_const;
   result["type_params"] = std::move(json_params);
 
@@ -131,6 +138,7 @@ nlohmann::json Func::ToJson() const {
   } else {
     func["name"][SpecialNameToString(std::get<SpecialName>(name))] = nullptr;
   }
+  func["decl_id"] = decl_id.value();
   if (doc_comment) {
     func["doc_comment"] = *doc_comment;
   }
@@ -210,6 +218,7 @@ nlohmann::json Record::ToJson() const {
 
   nlohmann::json record;
   record["identifier"] = identifier.ToJson();
+  record["decl_id"] = decl_id.value();
   if (doc_comment) {
     record["doc_comment"] = *doc_comment;
   }

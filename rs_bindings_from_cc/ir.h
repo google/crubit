@@ -23,6 +23,7 @@
 #include "base/logging.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
+#include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
 
@@ -60,12 +61,21 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
   return o << h.ToJson();
 }
 
+// An int uniquely representing a Decl. Since our IR goes through the JSON
+// serialization/deserialization at the moment, we need a way to restore graph
+// edges that don't follow the JSON tree structure (for example between types
+// and records). We use DeclIds for this.
+DEFINE_STRONG_INT_TYPE(DeclId, uintptr_t);
+
 // A C++ type involved in the bindings. It has the knowledge of how the type
 // is spelled in C++.
 struct CcType {
   nlohmann::json ToJson() const;
   // The name of the type. For example, int or void.
   std::string name;
+
+  // Id of a decl that this type corresponds to. `nullopt` for primitive types.
+  std::optional<DeclId> decl_id = std::nullopt;
 
   // The C++ const-qualification for the type.
   //
@@ -89,6 +99,9 @@ struct RsType {
 
   // The name of the type. For example, i32 or ().
   std::string name;
+
+  // Id of a decl that this type corresponds to. `nullopt` for primitive types.
+  std::optional<DeclId> decl_id = std::nullopt;
 
   // Type parameters for a generic type. Examples:
   //   i32 has no type parameters.
@@ -114,6 +127,12 @@ struct MappedType {
   /// For example, Void() is Simple("()", "void").
   static MappedType Simple(std::string rs_name, std::string cc_name) {
     return MappedType{RsType{rs_name}, CcType{cc_name}};
+  }
+
+  static MappedType WithDeclIds(std::string rs_name, DeclId rs_decl_id,
+                                std::string cc_name, DeclId cc_decl_id) {
+    return MappedType{RsType{std::move(rs_name), rs_decl_id},
+                      CcType{std::move(cc_name), cc_decl_id}};
   }
 
   static MappedType PointerTo(MappedType pointee_type) {
@@ -226,6 +245,7 @@ struct Func {
   nlohmann::json ToJson() const;
 
   UnqualifiedIdentifier name;
+  DeclId decl_id;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
@@ -305,6 +325,7 @@ struct Record {
   nlohmann::json ToJson() const;
 
   Identifier identifier;
+  DeclId decl_id;
   std::optional<std::string> doc_comment;
   std::vector<Field> fields;
   // Size and alignment in bytes.

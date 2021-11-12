@@ -21,6 +21,7 @@ pub struct HeaderName {
 pub struct RsType {
     pub name: String,
     pub type_params: Vec<RsType>,
+    pub decl_id: Option<DeclId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -28,6 +29,7 @@ pub struct CcType {
     pub name: String,
     pub is_const: bool,
     pub type_params: Vec<CcType>,
+    pub decl_id: Option<DeclId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -40,6 +42,10 @@ pub struct MappedType {
 pub struct Identifier {
     pub identifier: String,
 }
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
+#[serde(transparent)]
+pub struct DeclId(pub usize);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum UnqualifiedIdentifier {
@@ -78,6 +84,7 @@ pub struct FuncParam {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
+    pub decl_id: DeclId,
     pub mangled_name: String,
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
@@ -120,6 +127,7 @@ pub struct SpecialMemberFunc {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub identifier: Identifier,
+    pub decl_id: DeclId,
     pub doc_comment: Option<String>,
     pub fields: Vec<Field>,
     pub size: usize,
@@ -231,6 +239,7 @@ mod tests {
             "items": [
                 { "Record" : {
                     "identifier": {"identifier": "SomeStruct" },
+                    "decl_id": 42,
                     "fields": [
                         {
                             "identifier": {"identifier": "public_int" },
@@ -283,17 +292,23 @@ mod tests {
         let expected = IR {
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
+                decl_id: DeclId(42),
                 doc_comment: None,
                 fields: vec![
                     Field {
                         identifier: Identifier { identifier: "public_int".to_string() },
                         doc_comment: None,
                         type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            rs_type: RsType {
+                                name: "i32".to_string(),
+                                type_params: vec![],
+                                decl_id: None,
+                            },
                             cc_type: CcType {
                                 name: "int".to_string(),
                                 is_const: false,
                                 type_params: vec![],
+                                decl_id: None,
                             },
                         },
                         access: AccessSpecifier::Public,
@@ -303,11 +318,16 @@ mod tests {
                         identifier: Identifier { identifier: "protected_int".to_string() },
                         doc_comment: None,
                         type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            rs_type: RsType {
+                                name: "i32".to_string(),
+                                type_params: vec![],
+                                decl_id: None,
+                            },
                             cc_type: CcType {
                                 name: "int".to_string(),
                                 is_const: false,
                                 type_params: vec![],
+                                decl_id: None,
                             },
                         },
                         access: AccessSpecifier::Protected,
@@ -317,11 +337,16 @@ mod tests {
                         identifier: Identifier { identifier: "private_int".to_string() },
                         doc_comment: None,
                         type_: MappedType {
-                            rs_type: RsType { name: "i32".to_string(), type_params: vec![] },
+                            rs_type: RsType {
+                                name: "i32".to_string(),
+                                type_params: vec![],
+                                decl_id: None,
+                            },
                             cc_type: CcType {
                                 name: "int".to_string(),
                                 is_const: false,
                                 type_params: vec![],
+                                decl_id: None,
                             },
                         },
                         access: AccessSpecifier::Private,
@@ -356,15 +381,21 @@ mod tests {
             "items": [
                 { "Record": {
                     "identifier": {"identifier": "SomeStruct" },
+                    "decl_id": 42,
                     "fields": [
                         {
                             "identifier": {"identifier": "ptr" },
                             "type": {
                                 "rs_type": {"name": "*mut", "type_params": [
-                                    {"name": "SomeStruct", "type_params": []}
+                                    {"name": "SomeStruct", "type_params": [], "decl_id": 42}
                                 ]},
                                 "cc_type": { "name": "*", "is_const": false, "type_params": [
-                                    {"name": "SomeStruct", "is_const": false, "type_params": []}
+                                    {
+                                        "name": "SomeStruct",
+                                        "is_const": false,
+                                        "type_params": [],
+                                        "decl_id": 42
+                                    }
                                 ]}
                             },
                             "access": "Public",
@@ -394,6 +425,7 @@ mod tests {
         let expected = IR {
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
+                decl_id: DeclId(42),
                 doc_comment: None,
                 fields: vec![Field {
                     identifier: Identifier { identifier: "ptr".to_string() },
@@ -401,18 +433,22 @@ mod tests {
                     type_: MappedType {
                         rs_type: RsType {
                             name: "*mut".to_string(),
+                            decl_id: None,
                             type_params: vec![RsType {
                                 name: "SomeStruct".to_string(),
                                 type_params: vec![],
+                                decl_id: Some(DeclId(42)),
                             }],
                         },
                         cc_type: CcType {
                             name: "*".to_string(),
                             is_const: false,
+                            decl_id: None,
                             type_params: vec![CcType {
                                 name: "SomeStruct".to_string(),
                                 is_const: false,
                                 type_params: vec![],
+                                decl_id: Some(DeclId(42)),
                             }],
                         },
                     },

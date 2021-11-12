@@ -26,10 +26,26 @@ TEST(IrTest, TypeToJson) {
           ]
       }
   })j");
-  auto type = MappedType{.rs_type = RsType{"CompoundRs", {RsType{"i32"}}},
-                         .cc_type = CcType{.name = "CompoundCc",
-                                           .is_const = false,
-                                           .type_params = {CcType{"int"}}}};
+  auto type = MappedType{
+      .rs_type = RsType{.name = "CompoundRs", .type_params = {RsType{"i32"}}},
+      .cc_type = CcType{.name = "CompoundCc",
+                        .is_const = false,
+                        .type_params = {CcType{"int"}}}};
+  EXPECT_EQ(type.ToJson(), expected);
+}
+
+TEST(IrTest, TypeWithDeclIdToJson) {
+  nlohmann::json expected = nlohmann::json::parse(R"j({
+      "rs_type": {"name": "Status", "type_params": [], "decl_id": 42},
+      "cc_type": {
+        "is_const": false,
+        "name": "Result",
+        "type_params": [],
+        "decl_id": 43
+      }
+  })j");
+  auto type = MappedType{.rs_type = {RsType{"Status", DeclId(42)}},
+                         .cc_type = {CcType{"Result", DeclId(43)}}};
   EXPECT_EQ(type.ToJson(), expected);
 }
 
@@ -40,6 +56,7 @@ TEST(IrTest, IR) {
             "items": [
                 { "Record": {
                     "identifier": { "identifier": "SomeStruct" },
+                    "decl_id": 42,
                     "fields": [
                     {
                         "identifier": { "identifier": "public_int" },
@@ -101,6 +118,7 @@ TEST(IrTest, IR) {
         })j");
   IR ir = {.used_headers = {HeaderName("foo/bar.h")},
            .items = {Record{.identifier = Identifier("SomeStruct"),
+                            .decl_id = DeclId(42),
                             .fields =
                                 {
                                     Field{

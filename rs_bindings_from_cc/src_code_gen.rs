@@ -634,6 +634,7 @@ mod tests {
     fn test_simple_function() -> Result<()> {
         let ir = ir_items(vec![Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("add")),
+            decl_id: DeclId(42),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,
             return_type: ir_int(),
@@ -677,6 +678,7 @@ mod tests {
             ],
             items: vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("add")),
+                decl_id: DeclId(42),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),
@@ -724,6 +726,7 @@ mod tests {
     fn test_simple_struct() -> Result<()> {
         let ir = ir_items(vec![Item::Record(Record {
             identifier: ir_id("SomeStruct"),
+            decl_id: DeclId(42),
             doc_comment: None,
             fields: vec![
                 Field {
@@ -842,20 +845,28 @@ mod tests {
     fn test_ptr_func() -> Result<()> {
         let ir = ir_items(vec![Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
+            decl_id: DeclId(42),
             mangled_name: "_Z5DerefPKPi".to_string(),
             doc_comment: None,
             return_type: MappedType {
                 rs_type: RsType {
                     name: "*mut".to_string(),
-                    type_params: vec![RsType { name: "i32".to_string(), type_params: vec![] }],
+                    decl_id: None,
+                    type_params: vec![RsType {
+                        name: "i32".to_string(),
+                        type_params: vec![],
+                        decl_id: None,
+                    }],
                 },
                 cc_type: CcType {
                     name: "*".to_string(),
                     is_const: false,
+                    decl_id: None,
                     type_params: vec![CcType {
                         name: "int".to_string(),
                         is_const: false,
                         type_params: vec![],
+                        decl_id: None,
                     }],
                 },
             },
@@ -864,24 +875,30 @@ mod tests {
                 type_: MappedType {
                     rs_type: RsType {
                         name: "*const".to_string(),
+                        decl_id: None,
                         type_params: vec![RsType {
                             name: "*mut".to_string(),
+                            decl_id: None,
                             type_params: vec![RsType {
                                 name: "i32".to_string(),
                                 type_params: vec![],
+                                decl_id: None,
                             }],
                         }],
                     },
                     cc_type: CcType {
                         name: "*".to_string(),
                         is_const: false,
+                        decl_id: None,
                         type_params: vec![CcType {
                             name: "*".to_string(),
                             is_const: true,
+                            decl_id: None,
                             type_params: vec![CcType {
                                 name: "int".to_string(),
                                 is_const: false,
                                 type_params: vec![],
+                                decl_id: None,
                             }],
                         }],
                     },
@@ -957,6 +974,7 @@ mod tests {
             used_headers: vec![],
             items: vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("func")),
+                decl_id: DeclId(42),
                 mangled_name: "foo".to_string(),
                 doc_comment: Some("Doc Comment".to_string()),
                 return_type: ir_int(),
@@ -980,6 +998,7 @@ mod tests {
             used_headers: vec![],
             items: vec![Item::Record(Record {
                 identifier: ir_id("SomeStruct"),
+                decl_id: DeclId(42),
                 doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
                 alignment: 0,
                 size: 0,

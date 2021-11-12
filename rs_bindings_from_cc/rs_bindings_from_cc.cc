@@ -25,8 +25,8 @@
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
-#include "third_party/absl/strings/substitute.h"
 #include "third_party/json/src/json.hpp"
+#include "util/gtl/labs/string_type.h"
 #include "util/task/status.h"
 
 ABSL_FLAG(std::string, rs_out, "",
