@@ -29,6 +29,9 @@
 #include "util/gtl/labs/string_type.h"
 #include "util/task/status.h"
 
+ABSL_FLAG(bool, do_nothing, false,
+          "if set to true the tool will produce empty files "
+          "(useful for testing Blaze integration)");
 ABSL_FLAG(std::string, rs_out, "",
           "output path for the Rust source file with bindings");
 ABSL_FLAG(std::string, cc_out, "",
@@ -58,6 +61,17 @@ int main(int argc, char* argv[]) {
   QCHECK(!rs_out.empty()) << "please specify --rs_out";
   auto cc_out = absl::GetFlag(FLAGS_cc_out);
   QCHECK(!cc_out.empty()) << "please specify --cc_out";
+
+  if (absl::GetFlag(FLAGS_do_nothing)) {
+    CHECK_OK(file::SetContents(
+        rs_out, "// intentionally left empty because --do_nothing was passed.",
+        file::Defaults()));
+    CHECK_OK(file::SetContents(
+        cc_out, "// intentionally left empty because --do_nothing was passed.",
+        file::Defaults()));
+    return 0;
+  }
+
   auto public_headers = absl::GetFlag(FLAGS_public_headers);
   QCHECK(!public_headers.empty())
       << "please specify at least one header in --public_headers";

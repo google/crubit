@@ -62,6 +62,23 @@ EOT
   EXPECT_FILE_NOT_EMPTY "${cc_out}"
 }
 
+function test::do_nothing() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --do_nothing"
+
+  EXPECT_FILE_NOT_EMPTY "${rs_out}"
+  EXPECT_FILE_NOT_EMPTY "${cc_out}"
+
+  EXPECT_SUCCEED "cat \"${rs_out}\" | grep '// intentionally left empty because --do_nothing was passed.'"
+  EXPECT_SUCCEED "cat \"${cc_out}\" | grep '// intentionally left empty because --do_nothing was passed.'"
+}
+
 function test::tool_returns_nonzero_on_invalid_input() {
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
