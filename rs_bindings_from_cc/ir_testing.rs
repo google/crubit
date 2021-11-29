@@ -46,7 +46,7 @@ pub fn ir_int_param(name: &str) -> FuncParam {
 /// Creates a simple `Func` with a given name
 pub fn ir_func(name: &str) -> Func {
     let ir = ir_from_cc("inline int REPLACEME() {}").unwrap();
-    for item in ir.items {
+    for item in ir.take_items() {
         if let Item::Func(mut func) = item {
             func.name = ir::UnqualifiedIdentifier::Identifier(ir_id(name));
             return func;
@@ -65,16 +65,11 @@ pub fn ir_public_trivial_special() -> SpecialMemberFunc {
 /// Creates a simple `Item::Record` with a given name.
 pub fn ir_record(name: &str) -> Record {
     let ir = ir_from_cc("struct REPLACEME {};").unwrap();
-    for item in ir.items {
+    for item in ir.take_items() {
         if let Item::Record(mut record) = item {
             record.identifier = ir_id(name);
             return record;
         }
     }
     panic!("Test IR doesn't contain a record");
-}
-
-// Creates a full `IR` data structure from a list of items
-pub fn ir_items(items: Vec<Item>) -> IR {
-    IR { used_headers: vec![], current_target: "//test:testing_target".into(), items }
 }

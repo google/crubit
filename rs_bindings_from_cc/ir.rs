@@ -4,12 +4,54 @@
 
 /// Types and deserialization logic for IR. See docs in
 // `rs_bindings_from_cc/ir.h` for more information.
-use anyhow::Result;
+use anyhow::{bail, Result};
+use itertools::Itertools;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::io::Read;
 
+/// Deserialize `IR` from JSON given as a reader.
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
-    Ok(serde_json::from_reader(reader)?)
+    let flat_ir = serde_json::from_reader(reader)?;
+    make_ir(flat_ir)
+}
+
+/// Create a testing `IR` instance from given items, using mock values for other
+/// fields.
+pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
+    make_ir_from_parts(
+        items.into_iter().collect_vec(),
+        /* used_headers= */ vec![],
+        /* current_target= */ "//test:testing_target".into(),
+    )
+}
+
+/// Create a testing `IR` instance from given parts. This function does not use
+/// any mock values.
+pub fn make_ir_from_parts(
+    items: Vec<Item>,
+    used_headers: Vec<HeaderName>,
+    current_target: Label,
+) -> Result<IR> {
+    make_ir(FlatIR { used_headers, current_target, items })
+}
+
+fn make_ir(flat_ir: FlatIR) -> Result<IR> {
+    let mut used_decl_ids = HashMap::new();
+    for item in &flat_ir.items {
+        if let Some(decl_id) = item.decl_id() {
+            if let Some(existing_decl) = used_decl_ids.insert(decl_id, item) {
+                bail!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
+            }
+        }
+    }
+    let decl_id_to_item_idx = flat_ir
+        .items
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, item)| item.decl_id().map(|decl_id| (decl_id, idx)))
+        .collect::<HashMap<_, _>>();
+    Ok(IR { flat_ir, decl_id_to_item_idx })
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -177,6 +219,17 @@ pub enum Item {
     Comment(Comment),
 }
 
+impl Item {
+    fn decl_id(&self) -> Option<DeclId> {
+        match self {
+            Item::Record(Record { decl_id, .. }) | Item::Func(Func { decl_id, .. }) => {
+                Some(*decl_id)
+            }
+            _ => None,
+        }
+    }
+}
+
 impl From<Func> for Item {
     fn from(func: Func) -> Item {
         Item::Func(func)
@@ -202,24 +255,51 @@ impl From<Comment> for Item {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[serde(rename(deserialize = "IR"))]
+struct FlatIR {
+    #[serde(default)]
+    used_headers: Vec<HeaderName>,
+    current_target: Label,
+    #[serde(default)]
+    items: Vec<Item>,
+}
+
+/// Struct providing the necessary information about the API of a C++ target to
+/// enable generation of Rust bindings source code (both `rs_api.rs` and
+/// `rs_api_impl.cc` files).
+#[derive(PartialEq, Debug)]
 pub struct IR {
-    #[serde(default)]
-    pub used_headers: Vec<HeaderName>,
-    pub current_target: Label,
-    #[serde(default)]
-    pub items: Vec<Item>,
+    flat_ir: FlatIR,
+    // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
+    decl_id_to_item_idx: HashMap<DeclId, usize>,
 }
 
 impl IR {
+    pub fn items(&self) -> impl Iterator<Item = &Item> {
+        self.flat_ir.items.iter()
+    }
+
+    pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {
+        self.flat_ir.items.iter_mut()
+    }
+
+    pub fn take_items(self) -> Vec<Item> {
+        self.flat_ir.items
+    }
+
+    pub fn used_headers(&self) -> impl Iterator<Item = &HeaderName> {
+        self.flat_ir.used_headers.iter()
+    }
+
     pub fn functions(&self) -> impl Iterator<Item = &Func> {
-        self.items.iter().filter_map(|item| match item {
+        self.items().filter_map(|item| match item {
             Item::Func(func) => Some(func),
             _ => None,
         })
     }
 
     pub fn records(&self) -> impl Iterator<Item = &Record> {
-        self.items.iter().filter_map(|item| match item {
+        self.items().filter_map(|item| match item {
             Item::Record(func) => Some(func),
             _ => None,
         })
@@ -239,12 +319,12 @@ mod tests {
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = IR {
+        let expected = FlatIR {
             used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
             current_target: "//foo:bar".into(),
             items: vec![],
         };
-        assert_eq!(ir, expected);
+        assert_eq!(ir.flat_ir, expected);
     }
 
     #[test]
@@ -306,7 +386,7 @@ mod tests {
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = IR {
+        let expected = FlatIR {
             used_headers: vec![],
             current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
@@ -390,7 +470,7 @@ mod tests {
                 is_trivial_abi: true,
             })],
         };
-        assert_eq!(ir, expected);
+        assert_eq!(ir.flat_ir, expected);
     }
 
     #[test]
@@ -443,7 +523,7 @@ mod tests {
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = IR {
+        let expected = FlatIR {
             used_headers: vec![],
             current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
@@ -496,6 +576,6 @@ mod tests {
                 is_trivial_abi: true,
             })],
         };
-        assert_eq!(ir, expected);
+        assert_eq!(ir.flat_ir, expected);
     }
 }

@@ -337,7 +337,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     // For #![rustfmt::skip].
     features.insert(make_ident("custom_inner_attributes"));
 
-    for item in &ir.items {
+    for item in ir.items() {
         match item {
             Item::Func(func) => {
                 let (snippet, thunk) = generate_func(func)?;
@@ -603,7 +603,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
     // access declarations from public headers of the C++ library.
-    let includes = ir.used_headers.iter().map(|i| &i.name);
+    let includes = ir.used_headers().map(|i| &i.name);
 
     let result = quote! {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
@@ -624,15 +624,26 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use ir_testing::{
-        ir_func, ir_id, ir_int, ir_int_param, ir_items, ir_public_trivial_special, ir_record,
-    };
+    use ir_testing::{ir_func, ir_id, ir_int, ir_int_param, ir_public_trivial_special, ir_record};
     use quote::quote;
     use token_stream_printer::tokens_to_string;
 
     #[test]
+    // TODO(hlopko): Move this test to a more principled place where it can access
+    // `ir_testing`.
+    fn test_duplicate_decl_ids_err() {
+        let mut r1 = ir_record("R1");
+        r1.decl_id = DeclId(42);
+        let mut r2 = ir_record("R2");
+        r2.decl_id = DeclId(42);
+        let result = make_ir_from_items([r1.into(), r2.into()]);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Duplicate decl_id found in"));
+    }
+
+    #[test]
     fn test_simple_function() -> Result<()> {
-        let ir = ir_items(vec![Item::Func(Func {
+        let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("add")),
             decl_id: DeclId(42),
             owning_target: "//foo:bar".into(),
@@ -642,7 +653,7 @@ mod tests {
             params: vec![ir_int_param("a"), ir_int_param("b")],
             is_inline: false,
             member_func_metadata: None,
-        })]);
+        })])?;
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
@@ -672,13 +683,8 @@ mod tests {
 
     #[test]
     fn test_inline_function() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![
-                HeaderName { name: "foo/bar.h".to_string() },
-                HeaderName { name: "foo/baz.h".to_string() },
-            ],
-            current_target: "//foo:bar".into(),
-            items: vec![Item::Func(Func {
+        let ir = make_ir_from_parts(
+            vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("add")),
                 decl_id: DeclId(42),
                 owning_target: "//foo:bar".into(),
@@ -689,7 +695,13 @@ mod tests {
                 is_inline: true,
                 member_func_metadata: None,
             })],
-        };
+            /* used_headers= */
+            vec![
+                HeaderName { name: "foo/bar.h".to_string() },
+                HeaderName { name: "foo/baz.h".to_string() },
+            ],
+            /* current_target= */ "//foo:bar".into(),
+        )?;
 
         assert_eq!(
             generate_rs_api(&ir)?,
@@ -727,7 +739,7 @@ mod tests {
 
     #[test]
     fn test_simple_struct() -> Result<()> {
-        let ir = ir_items(vec![Item::Record(Record {
+        let ir = make_ir_from_items([Item::Record(Record {
             identifier: ir_id("SomeStruct"),
             decl_id: DeclId(42),
             owning_target: "//foo:bar".into(),
@@ -761,7 +773,7 @@ mod tests {
             move_constructor: ir_public_trivial_special(),
             destructor: ir_public_trivial_special(),
             is_trivial_abi: true,
-        })]);
+        })])?;
 
         assert_eq!(
             generate_rs_api(&ir)?,
@@ -847,7 +859,7 @@ mod tests {
 
     #[test]
     fn test_ptr_func() -> Result<()> {
-        let ir = ir_items(vec![Item::Func(Func {
+        let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
             decl_id: DeclId(42),
             owning_target: "//foo:bar".into(),
@@ -911,7 +923,7 @@ mod tests {
             }],
             is_inline: true,
             member_func_metadata: None,
-        })]);
+        })])?;
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
@@ -946,15 +958,14 @@ mod tests {
 
     #[test]
     fn test_item_order() -> Result<()> {
-        let ir = ir_items(vec![
+        let ir = make_ir_from_items([
             ir_func("first_func").into(),
             ir_record("FirstStruct").into(),
             ir_func("second_func").into(),
             ir_record("SecondStruct").into(),
-        ]);
+        ])?;
 
         let rs_api = generate_rs_api(&ir)?;
-
         let idx = |s: &str| rs_api.find(s).ok_or(anyhow!("'{}' missing", s));
 
         let f1 = idx("fn first_func")?;
@@ -975,21 +986,17 @@ mod tests {
 
     #[test]
     fn test_doc_comment_func() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![],
-            current_target: "//foo:bar".into(),
-            items: vec![Item::Func(Func {
-                name: UnqualifiedIdentifier::Identifier(ir_id("func")),
-                decl_id: DeclId(42),
-                owning_target: "//foo:bar".into(),
-                mangled_name: "foo".to_string(),
-                doc_comment: Some("Doc Comment".to_string()),
-                return_type: ir_int(),
-                params: vec![],
-                is_inline: true,
-                member_func_metadata: None,
-            })],
-        };
+        let ir = make_ir_from_items([Item::Func(Func {
+            name: UnqualifiedIdentifier::Identifier(ir_id("func")),
+            decl_id: DeclId(42),
+            owning_target: "//foo:bar".into(),
+            mangled_name: "foo".to_string(),
+            doc_comment: Some("Doc Comment".to_string()),
+            return_type: ir_int(),
+            params: vec![],
+            is_inline: true,
+            member_func_metadata: None,
+        })])?;
 
         assert!(
             generate_rs_api(&ir)?.contains("/// Doc Comment\n#[inline(always)]\npub fn func"),
@@ -1001,29 +1008,25 @@ mod tests {
 
     #[test]
     fn test_doc_comment_record() -> Result<()> {
-        let ir = IR {
-            used_headers: vec![],
-            current_target: "//foo:bar".into(),
-            items: vec![Item::Record(Record {
-                identifier: ir_id("SomeStruct"),
-                decl_id: DeclId(42),
-                owning_target: "//foo:bar".into(),
-                doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
-                alignment: 0,
-                size: 0,
-                fields: vec![Field {
-                    identifier: ir_id("field"),
-                    doc_comment: Some("Field doc".to_string()),
-                    type_: ir_int(),
-                    access: AccessSpecifier::Public,
-                    offset: 0,
-                }],
-                copy_constructor: ir_public_trivial_special(),
-                move_constructor: ir_public_trivial_special(),
-                destructor: ir_public_trivial_special(),
-                is_trivial_abi: true,
-            })],
-        };
+        let ir = make_ir_from_items([Item::Record(Record {
+            identifier: ir_id("SomeStruct"),
+            decl_id: DeclId(42),
+            owning_target: "//foo:bar".into(),
+            doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
+            alignment: 0,
+            size: 0,
+            fields: vec![Field {
+                identifier: ir_id("field"),
+                doc_comment: Some("Field doc".to_string()),
+                type_: ir_int(),
+                access: AccessSpecifier::Public,
+                offset: 0,
+            }],
+            copy_constructor: ir_public_trivial_special(),
+            move_constructor: ir_public_trivial_special(),
+            destructor: ir_public_trivial_special(),
+            is_trivial_abi: true,
+        })])?;
 
         let rs_api = generate_rs_api(&ir)?;
         assert!(

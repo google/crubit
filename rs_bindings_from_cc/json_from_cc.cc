@@ -16,7 +16,7 @@ namespace rs_bindings_from_cc {
 
 // This is intended to be called from Rust.
 extern "C" FfiU8SliceBox json_from_cc(FfiU8Slice cc_source) {
-  absl::StatusOr<IR> ir = IrFromCc({StringViewFromFfiU8Slice(cc_source)});
+  absl::StatusOr<IR> ir = IrFromCc(StringViewFromFfiU8Slice(cc_source));
   // TODO(forster): For now it is good enough to just exit: We are just using
   // this from tests, which are ok to just fail. Clang has already printed error
   // messages. If we start using this for production, then we should bridge the

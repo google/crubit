@@ -7,19 +7,17 @@
 use anyhow::Result;
 use ir::*;
 use ir_testing::*;
+use itertools::Itertools;
 use std::collections::HashMap;
+use std::iter::Iterator;
 
 // TODO(mboehme): If we start needing to match on parts of the IR in tests,
 // check out the crate https://crates.io/crates/galvanic-assert.
 
-fn assert_cc_produces_ir_ignoring_decl_ids(cc_src: &str, mut expected: IR) {
+fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec<Item>) {
     let actual = ir_from_cc(cc_src).unwrap();
 
-    // ir_from_cc() always sets `used_headers` this way, so add it to the
-    // expected IR.
-    expected.used_headers = vec![HeaderName { name: "ir_from_cc_virtual_header.h".to_string() }];
-
-    for (ref mut expected_item, actual_item) in expected.items.iter_mut().zip(&actual.items) {
+    for (ref mut expected_item, actual_item) in expected.iter_mut().zip(actual.items()) {
         // TODO(hlopko): Handle MappedTypes as well.
         match (expected_item, actual_item) {
             (Item::Func(ref mut expected_func), Item::Func(actual_func)) => {
@@ -32,17 +30,14 @@ fn assert_cc_produces_ir_ignoring_decl_ids(cc_src: &str, mut expected: IR) {
         }
     }
 
-    assert_eq!(actual, expected);
+    assert_eq!(actual.items().collect_vec(), expected.iter().collect_vec());
 }
 
 #[test]
 fn test_function() {
-    assert_cc_produces_ir_ignoring_decl_ids(
+    assert_cc_produces_ir_items_ignoring_decl_ids(
         "int Add(int a, int b);",
-        IR {
-            current_target: "//test:testing_target".into(),
-            used_headers: /* ignored */ vec![],
-            items: vec![Item::Func(Func {
+        vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
                 decl_id: /* ignored */ DeclId(42),
                 owning_target: "//test:testing_target".into(),
@@ -53,7 +48,6 @@ fn test_function() {
                 is_inline: false,
                 member_func_metadata: None,
             })],
-        },
     );
 }
 
