@@ -156,8 +156,14 @@ fn test_type_conversion() -> Result<()> {
         "#,
     )?;
     let fields = ir.records().next().unwrap().fields.iter();
-    let type_mapping: HashMap<_, _> =
-        fields.map(|f| (f.type_.cc_type.name.as_str(), f.type_.rs_type.name.as_str())).collect();
+    let type_mapping: HashMap<_, _> = fields
+        .map(|f| {
+            (
+                f.type_.cc_type.name.as_ref().unwrap().as_str(),
+                f.type_.rs_type.name.as_ref().unwrap().as_str(),
+            )
+        })
+        .collect();
 
     assert_eq!(type_mapping["bool"], "bool");
 

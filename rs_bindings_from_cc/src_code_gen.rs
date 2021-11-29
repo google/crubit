@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -115,18 +115,21 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 /// Generates Rust source code for a given `Func`.
 ///
 /// Returns the generated function or trait impl, and the thunk, as a tuple.
-fn generate_func(func: &Func) -> Result<(RsSnippet, RsSnippet)> {
+fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func)?;
     let doc_comment = generate_doc_comment(&func.doc_comment);
     // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
-    let return_type_name = format_rs_type(&func.return_type.rs_type)?;
+    let return_type_name = format_rs_type(&func.return_type.rs_type, ir)?;
 
     let param_idents =
         func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
 
-    let param_types =
-        func.params.iter().map(|p| format_rs_type(&p.type_.rs_type)).collect::<Result<Vec<_>>>()?;
+    let param_types = func
+        .params
+        .iter()
+        .map(|p| format_rs_type(&p.type_.rs_type, ir))
+        .collect::<Result<Vec<_>>>()?;
 
     let api_func = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
@@ -189,7 +192,7 @@ fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
 }
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-fn generate_record(record: &Record) -> Result<(RsSnippet, RsSnippet)> {
+fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let ident = make_ident(&record.identifier.identifier);
     let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
@@ -199,7 +202,7 @@ fn generate_record(record: &Record) -> Result<(RsSnippet, RsSnippet)> {
     let field_types = record
         .fields
         .iter()
-        .map(|f| format_rs_type(&f.type_.rs_type))
+        .map(|f| format_rs_type(&f.type_.rs_type, ir))
         .collect::<Result<Vec<_>>>()?;
     let field_accesses = record
         .fields
@@ -340,14 +343,14 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     for item in ir.items() {
         match item {
             Item::Func(func) => {
-                let (snippet, thunk) = generate_func(func)?;
+                let (snippet, thunk) = generate_func(func, ir)?;
                 features.extend(snippet.features);
                 features.extend(thunk.features);
                 items.push(snippet.tokens);
                 thunks.push(thunk.tokens);
             }
             Item::Record(record) => {
-                let (snippet, assertions_snippet) = generate_record(record)?;
+                let (snippet, assertions_snippet) = generate_record(record, ir)?;
                 features.extend(snippet.features);
                 features.extend(assertions_snippet.features);
                 items.push(snippet.tokens);
@@ -447,63 +450,67 @@ fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
-fn format_rs_type(ty: &ir::RsType) -> Result<TokenStream> {
-    let ptr_fragment = match ty.name.as_str() {
-        "*mut" => Some(quote! {*mut}),
-        "*const" => Some(quote! {*const}),
-        _ => None,
-    };
-    match ptr_fragment {
-        Some(ptr_fragment) => {
-            if ty.type_params.len() != 1 {
-                return Err(anyhow!(
-                    "Invalid pointer type (need exactly 1 type parameter): {:?}",
-                    ty
-                ));
+fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
+    if let Some(ref name) = ty.name {
+        let ptr_fragment = match name.as_str() {
+            "*mut" => Some(quote! {*mut}),
+            "*const" => Some(quote! {*const}),
+            _ => None,
+        };
+        match ptr_fragment {
+            Some(ptr_fragment) => {
+                if ty.type_params.len() != 1 {
+                    bail!("Invalid pointer type (need exactly 1 type parameter): {:?}", ty);
+                }
+                let nested_type = format_rs_type(&ty.type_params[0], ir)?;
+                Ok(quote! {#ptr_fragment #nested_type})
             }
-            let nested_type = format_rs_type(&ty.type_params[0])?;
-            Ok(quote! {#ptr_fragment #nested_type})
-        }
-        None => {
-            if ty.type_params.len() > 0 {
-                return Err(anyhow!("Type not yet supported: {:?}", ty));
-            }
-            match ty.name.as_str() {
-                "()" => Ok(quote! {()}),
-                name => {
-                    let ident = make_ident(name);
-                    Ok(quote! {#ident})
+            None => {
+                if !ty.type_params.is_empty() {
+                    bail!("Type not yet supported: {:?}", ty);
+                }
+                match name.as_str() {
+                    "()" => Ok(quote! {()}),
+                    name => {
+                        let ident = make_ident(name);
+                        Ok(quote! {#ident})
+                    }
                 }
             }
         }
+    } else {
+        let ident = make_ident(ir.record_for_type(ty)?.identifier.identifier.as_str());
+        Ok(quote! {#ident})
     }
 }
 
-fn format_cc_type(ty: &ir::CcType) -> Result<TokenStream> {
+fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     let const_fragment = if ty.is_const {
         quote! {const}
     } else {
         quote! {}
     };
-    match ty.name.as_str() {
-        "*" => {
-            if ty.type_params.len() != 1 {
-                return Err(anyhow!(
-                    "Invalid pointer type (need exactly 1 type parameter): {:?}",
-                    ty
-                ));
+    if let Some(ref name) = ty.name {
+        match name.as_str() {
+            "*" => {
+                if ty.type_params.len() != 1 {
+                    bail!("Invalid pointer type (need exactly 1 type parameter): {:?}", ty);
+                }
+                assert_eq!(ty.type_params.len(), 1);
+                let nested_type = format_cc_type(&ty.type_params[0], ir)?;
+                Ok(quote! {#nested_type * #const_fragment})
             }
-            assert_eq!(ty.type_params.len(), 1);
-            let nested_type = format_cc_type(&ty.type_params[0])?;
-            Ok(quote! {#nested_type * #const_fragment})
-        }
-        ident => {
-            if ty.type_params.len() > 0 {
-                return Err(anyhow!("Type not yet supported: {:?}", ty));
+            ident => {
+                if !ty.type_params.is_empty() {
+                    bail!("Type not yet supported: {:?}", ty);
+                }
+                let ident = make_ident(ident);
+                Ok(quote! {#ident #const_fragment})
             }
-            let ident = make_ident(ident);
-            Ok(quote! {#ident #const_fragment})
         }
+    } else {
+        let ident = make_ident(ir.record_for_type(ty)?.identifier.identifier.as_str());
+        Ok(quote! {#ident})
     }
 }
 
@@ -575,7 +582,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
             UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
             _ => continue, // TODO(b/200066396): handle other cases
         };
-        let return_type_name = format_cc_type(&func.return_type.cc_type)?;
+        let return_type_name = format_cc_type(&func.return_type.cc_type, ir)?;
 
         let param_idents =
             func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
@@ -583,7 +590,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
         let param_types = func
             .params
             .iter()
-            .map(|p| format_cc_type(&p.type_.cc_type))
+            .map(|p| format_cc_type(&p.type_.cc_type, ir))
             .collect::<Result<Vec<_>>>()?;
 
         thunks.push(quote! {
@@ -867,20 +874,20 @@ mod tests {
             doc_comment: None,
             return_type: MappedType {
                 rs_type: RsType {
-                    name: "*mut".to_string(),
+                    name: "*mut".to_string().into(),
                     decl_id: None,
                     type_params: vec![RsType {
-                        name: "i32".to_string(),
+                        name: "i32".to_string().into(),
                         type_params: vec![],
                         decl_id: None,
                     }],
                 },
                 cc_type: CcType {
-                    name: "*".to_string(),
+                    name: "*".to_string().into(),
                     is_const: false,
                     decl_id: None,
                     type_params: vec![CcType {
-                        name: "int".to_string(),
+                        name: "int".to_string().into(),
                         is_const: false,
                         type_params: vec![],
                         decl_id: None,
@@ -891,28 +898,28 @@ mod tests {
                 identifier: Identifier { identifier: "p".to_string() },
                 type_: MappedType {
                     rs_type: RsType {
-                        name: "*const".to_string(),
+                        name: "*const".to_string().into(),
                         decl_id: None,
                         type_params: vec![RsType {
-                            name: "*mut".to_string(),
+                            name: "*mut".to_string().into(),
                             decl_id: None,
                             type_params: vec![RsType {
-                                name: "i32".to_string(),
+                                name: "i32".to_string().into(),
                                 type_params: vec![],
                                 decl_id: None,
                             }],
                         }],
                     },
                     cc_type: CcType {
-                        name: "*".to_string(),
+                        name: "*".to_string().into(),
                         is_const: false,
                         decl_id: None,
                         type_params: vec![CcType {
-                            name: "*".to_string(),
+                            name: "*".to_string().into(),
                             is_const: true,
                             decl_id: None,
                             type_params: vec![CcType {
-                                name: "int".to_string(),
+                                name: "int".to_string().into(),
                                 is_const: false,
                                 type_params: vec![],
                                 decl_id: None,

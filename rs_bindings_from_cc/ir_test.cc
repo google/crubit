@@ -39,10 +39,9 @@ TEST(IrTest, TypeToJson) {
 
 TEST(IrTest, TypeWithDeclIdToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
-      "rs_type": {"name": "Status", "type_params": [], "decl_id": 42},
+      "rs_type": {"type_params": [], "decl_id": 42},
       "cc_type": {
         "is_const": false,
-        "name": "Result",
         "type_params": [],
         "decl_id": 43
       }

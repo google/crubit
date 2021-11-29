@@ -36,9 +36,10 @@ nlohmann::json RsType::ToJson() const {
   for (const RsType& param : type_params) {
     json_params.push_back(param.ToJson());
   }
-  result["name"] = name;
   if (decl_id.has_value()) {
     result["decl_id"] = decl_id->value();
+  } else {
+    result["name"] = name;
   }
   result["type_params"] = std::move(json_params);
 
@@ -53,9 +54,10 @@ nlohmann::json CcType::ToJson() const {
   for (const CcType& param : type_params) {
     json_params.push_back(param.ToJson());
   }
-  result["name"] = name;
   if (decl_id.has_value()) {
     result["decl_id"] = decl_id->value();
+  } else {
+    result["name"] = name;
   }
   result["is_const"] = is_const;
   result["type_params"] = std::move(json_params);

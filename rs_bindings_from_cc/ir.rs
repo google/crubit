@@ -4,7 +4,7 @@
 
 /// Types and deserialization logic for IR. See docs in
 // `rs_bindings_from_cc/ir.h` for more information.
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -61,17 +61,33 @@ pub struct HeaderName {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
-    pub name: String,
+    pub name: Option<String>,
     pub type_params: Vec<RsType>,
     pub decl_id: Option<DeclId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct CcType {
-    pub name: String,
+    pub name: Option<String>,
     pub is_const: bool,
     pub type_params: Vec<CcType>,
     pub decl_id: Option<DeclId>,
+}
+
+pub trait OwningDeclId {
+    fn owning_decl_id(&self) -> Option<DeclId>;
+}
+
+impl OwningDeclId for RsType {
+    fn owning_decl_id(&self) -> Option<DeclId> {
+        self.decl_id
+    }
+}
+
+impl OwningDeclId for CcType {
+    fn owning_decl_id(&self) -> Option<DeclId> {
+        self.decl_id
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -304,6 +320,29 @@ impl IR {
             _ => None,
         })
     }
+
+    pub fn record_for_type<T>(&self, ty: &T) -> Result<&Record>
+    where
+        T: OwningDeclId + std::fmt::Debug,
+    {
+        if let Some(decl_id) = ty.owning_decl_id() {
+            let idx = *self
+                .decl_id_to_item_idx
+                .get(&decl_id)
+                .with_context(|| format!("Couldn't find decl_id {:?} in the IR.", decl_id))?;
+            let item = self
+                .flat_ir
+                .items
+                .get(idx)
+                .with_context(|| format!("Couldn't find an item at idx {}", idx))?;
+            match item {
+                Item::Record(ref record) => Ok(record),
+                _ => bail!("Unexpected item type {:?}", item),
+            }
+        } else {
+            bail!("Type {:?} does not have an associated record.", ty)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -400,12 +439,12 @@ mod tests {
                         doc_comment: None,
                         type_: MappedType {
                             rs_type: RsType {
-                                name: "i32".to_string(),
+                                name: "i32".to_string().into(),
                                 type_params: vec![],
                                 decl_id: None,
                             },
                             cc_type: CcType {
-                                name: "int".to_string(),
+                                name: "int".to_string().into(),
                                 is_const: false,
                                 type_params: vec![],
                                 decl_id: None,
@@ -419,12 +458,12 @@ mod tests {
                         doc_comment: None,
                         type_: MappedType {
                             rs_type: RsType {
-                                name: "i32".to_string(),
+                                name: "i32".to_string().into(),
                                 type_params: vec![],
                                 decl_id: None,
                             },
                             cc_type: CcType {
-                                name: "int".to_string(),
+                                name: "int".to_string().into(),
                                 is_const: false,
                                 type_params: vec![],
                                 decl_id: None,
@@ -438,12 +477,12 @@ mod tests {
                         doc_comment: None,
                         type_: MappedType {
                             rs_type: RsType {
-                                name: "i32".to_string(),
+                                name: "i32".to_string().into(),
                                 type_params: vec![],
                                 decl_id: None,
                             },
                             cc_type: CcType {
-                                name: "int".to_string(),
+                                name: "int".to_string().into(),
                                 is_const: false,
                                 type_params: vec![],
                                 decl_id: None,
@@ -536,20 +575,20 @@ mod tests {
                     doc_comment: None,
                     type_: MappedType {
                         rs_type: RsType {
-                            name: "*mut".to_string(),
+                            name: "*mut".to_string().into(),
                             decl_id: None,
                             type_params: vec![RsType {
-                                name: "SomeStruct".to_string(),
+                                name: "SomeStruct".to_string().into(),
                                 type_params: vec![],
                                 decl_id: Some(DeclId(42)),
                             }],
                         },
                         cc_type: CcType {
-                            name: "*".to_string(),
+                            name: "*".to_string().into(),
                             is_const: false,
                             decl_id: None,
                             type_params: vec![CcType {
-                                name: "SomeStruct".to_string(),
+                                name: "SomeStruct".to_string().into(),
                                 is_const: false,
                                 type_params: vec![],
                                 decl_id: Some(DeclId(42)),
