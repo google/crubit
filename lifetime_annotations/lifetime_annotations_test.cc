@@ -87,7 +87,7 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsNoLifetimeElision) {
 
 TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         #include "header.h"
   )",
                                           {std::make_pair("header.h", R"(
@@ -99,7 +99,7 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_OneInputLifetime) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         int** f(int*);
   )"),
               IsOkAndHolds(LifetimesAre({{"f", "a -> (a, a)"}})));
@@ -107,7 +107,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_OneInputLifetime) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_NoOutputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         void f(int**, int *);
   )"),
               IsOkAndHolds(LifetimesAre({{"f", "(a, b), c"}})));
@@ -115,7 +115,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_NoOutputLifetimes) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         template <class T> class vector {};
         int* f(vector<int *>);
         vector<int*> g(int *);
@@ -125,7 +125,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_Method) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         struct S {
           int** method(int *, int *);
         };
@@ -135,7 +135,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Method) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         int* f();
   )"),
               StatusIs(absl::StatusCode::kUnknown,
@@ -144,7 +144,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma lifetime_elision
+        #pragma clang lifetime_elision
         int* f(int**);
   )"),
               StatusIs(absl::StatusCode::kUnknown,

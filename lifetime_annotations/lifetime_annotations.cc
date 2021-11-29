@@ -122,7 +122,7 @@ void AddLifetimeAnnotationHandlers(
     std::shared_ptr<LifetimeAnnotationContext> context) {
   // Preprocessor takes ownership of the handler.
   compiler.getPreprocessor().AddPragmaHandler(
-      new LifetimeElisionPragmaHandler(context));
+      "clang", new LifetimeElisionPragmaHandler(context));
 }
 
 }  // namespace devtools_rust
