@@ -49,16 +49,18 @@ class LifetimeAnnotationsTest : public testing::Test {
                match(findAll(functionDecl().bind("func")), ast_context)) {
             if (const auto* func =
                     node.getNodeAs<clang::FunctionDecl>("func")) {
+              LifetimeSymbolTable symbol_table;
               llvm::Expected<FunctionLifetimes> func_lifetimes =
-                  GetLifetimeAnnotations(func, lifetime_context);
+                  GetLifetimeAnnotations(func, lifetime_context, &symbol_table);
 
               if (!func_lifetimes) {
                 result = absl::UnknownError(
                     llvm::toString(func_lifetimes.takeError()));
                 return;
               }
-              named_func_lifetimes.Add(QualifiedName(func),
-                                       NameLifetimes(*func_lifetimes));
+              named_func_lifetimes.Add(
+                  QualifiedName(func),
+                  NameLifetimes(*func_lifetimes, symbol_table));
             }
           }
 

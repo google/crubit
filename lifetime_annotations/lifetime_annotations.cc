@@ -4,6 +4,7 @@
 
 #include "lifetime_annotations/lifetime_annotations.h"
 
+#include <functional>
 #include <optional>
 #include <utility>
 
@@ -16,7 +17,8 @@
 namespace devtools_rust {
 
 static std::optional<FunctionLifetimes> ElidedLifetimes(
-    const clang::FunctionDecl* func) {
+    const clang::FunctionDecl* func,
+    std::function<Lifetime()> lifetime_factory) {
   FunctionLifetimes result;
 
   // Every input lifetime is assigned a distinct lifetime.
@@ -26,12 +28,12 @@ static std::optional<FunctionLifetimes> ElidedLifetimes(
     const clang::ParmVarDecl* param = func->getParamDecl(i);
 
     result.param_lifetimes[i] =
-        CreateLifetimesForType(param->getType(), Lifetime::CreateVariable);
+        CreateLifetimesForType(param->getType(), lifetime_factory);
     all_input_lifetimes.append(result.param_lifetimes[i]);
   }
 
   if (clang::isa<clang::CXXMethodDecl>(func)) {
-    Lifetime this_lifetime = Lifetime::CreateVariable();
+    Lifetime this_lifetime = lifetime_factory();
     result.this_lifetimes.push_back(this_lifetime);
 
     // If we have an implicit `this` parameter, its lifetime is assigned to all
@@ -59,7 +61,8 @@ static std::optional<FunctionLifetimes> ElidedLifetimes(
 }
 
 llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
-    const clang::FunctionDecl* func, const LifetimeAnnotationContext& context) {
+    const clang::FunctionDecl* func, const LifetimeAnnotationContext& context,
+    LifetimeSymbolTable* symbol_table) {
   // TODO(mboehme):
   // - Add support for retrieving actual lifetime annotations (not just
   //   lifetimes implied by elision).
@@ -67,7 +70,10 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
   //   annotated with the same lifetimes.
 
   // For the time being, we only return elided lifetimes.
-  std::optional<FunctionLifetimes> elided_lifetimes = ElidedLifetimes(func);
+
+  // See whether there are any lifetimes to be elided at all.
+  std::optional<FunctionLifetimes> elided_lifetimes =
+      ElidedLifetimes(func, Lifetime::Static);
 
   if (!elided_lifetimes.has_value()) {
     return llvm::createStringError(
@@ -92,7 +98,20 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     }
   }
 
-  return *std::move(elided_lifetimes);
+  // We know we're allowed to elide lifetimes, so produce the elided lifetimes
+  // again, but this time create new variables for the elided lifetimes.
+  if (symbol_table) {
+    elided_lifetimes = ElidedLifetimes(func, [symbol_table]() {
+      Lifetime lifetime = Lifetime::CreateVariable();
+      symbol_table->LookupLifetimeAndMaybeDeclare(lifetime);
+      return lifetime;
+    });
+  } else {
+    elided_lifetimes = ElidedLifetimes(func, Lifetime::CreateVariable);
+  }
+
+  assert(elided_lifetimes.has_value());
+  return std::move(elided_lifetimes).value();
 }
 
 namespace {
