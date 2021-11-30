@@ -40,5 +40,30 @@ TEST(LifetimeSymbolTableTest, LookupLifetime) {
   EXPECT_EQ(table.LookupLifetime(b), "b");
 }
 
+TEST(LifetimeSymbolTableTest, LookupLifetimeAndMaybeDeclare) {
+  {
+    LifetimeSymbolTable table;
+
+    table.LookupNameAndMaybeDeclare("a");
+    table.LookupNameAndMaybeDeclare("c");
+
+    EXPECT_EQ(table.LookupLifetimeAndMaybeDeclare(Lifetime::CreateVariable()),
+              "b");
+    EXPECT_EQ(table.LookupLifetimeAndMaybeDeclare(Lifetime::CreateVariable()),
+              "d");
+  }
+
+  {
+    LifetimeSymbolTable table;
+    for (int i = 0; i < 26; ++i) {
+      table.LookupLifetimeAndMaybeDeclare(Lifetime::CreateVariable());
+    }
+    EXPECT_EQ(table.LookupLifetimeAndMaybeDeclare(Lifetime::CreateVariable()),
+              "aa");
+    EXPECT_EQ(table.LookupLifetimeAndMaybeDeclare(Lifetime::CreateVariable()),
+              "ab");
+  }
+}
+
 }  // namespace
 }  // namespace devtools_rust
