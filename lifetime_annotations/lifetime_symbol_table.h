@@ -6,6 +6,7 @@
 #define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_SYMBOL_TABLE_H_
 
 #include <optional>
+#include <string>
 
 #include "lifetime_annotations/lifetime.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMap.h"
@@ -28,8 +29,15 @@ class LifetimeSymbolTable {
   // If `name` is "static", returns `Lifetime::Static()`.
   Lifetime LookupNameAndMaybeDeclare(llvm::StringRef name);
 
+  // Looks up a lifetime in the symbol table.
+  // Returns the corresponding name if the lifetime was present in the symbol
+  // table, or nullopt if the lifetime wasn't found.
+  // If `lifetime` is `Lifetime::Static()`, returns "static".
+  std::optional<llvm::StringRef> LookupLifetime(Lifetime lifetime) const;
+
  private:
   llvm::StringMap<Lifetime> name_to_lifetime_;
+  llvm::DenseMap<Lifetime, std::string> lifetime_to_name_;
 };
 
 }  // namespace devtools_rust

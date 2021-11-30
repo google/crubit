@@ -30,5 +30,15 @@ TEST(LifetimeSymbolTableTest, LookupName) {
   EXPECT_EQ(table.LookupNameAndMaybeDeclare("b"), b);
 }
 
+TEST(LifetimeSymbolTableTest, LookupLifetime) {
+  LifetimeSymbolTable table;
+
+  Lifetime a = table.LookupNameAndMaybeDeclare("a");
+  Lifetime b = table.LookupNameAndMaybeDeclare("b");
+
+  EXPECT_EQ(table.LookupLifetime(a), "a");
+  EXPECT_EQ(table.LookupLifetime(b), "b");
+}
+
 }  // namespace
 }  // namespace devtools_rust

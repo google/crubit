@@ -29,7 +29,23 @@ Lifetime LifetimeSymbolTable::LookupNameAndMaybeDeclare(llvm::StringRef name) {
   auto [iter, inserted] =
       name_to_lifetime_.try_emplace(name, Lifetime::Static());
   if (inserted) {
-    iter->second = Lifetime::CreateVariable();
+    Lifetime lifetime = Lifetime::CreateVariable();
+    iter->second = lifetime;
+    assert(!lifetime_to_name_.count(lifetime));
+    lifetime_to_name_[lifetime] = name;
+  }
+  return iter->second;
+}
+
+std::optional<llvm::StringRef> LifetimeSymbolTable::LookupLifetime(
+    Lifetime lifetime) const {
+  if (lifetime == Lifetime::Static()) {
+    return "static";
+  }
+
+  auto iter = lifetime_to_name_.find(lifetime);
+  if (iter == lifetime_to_name_.end()) {
+    return std::nullopt;
   }
   return iter->second;
 }
