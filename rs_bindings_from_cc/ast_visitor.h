@@ -95,9 +95,13 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
   // Gets the doc comment of the declaration.
   std::optional<std::string> GetComment(const clang::Decl* decl) const;
-  SourceLoc ConvertSourceLoc(clang::SourceLocation loc) const;
-  SourceLoc ConvertSourceLoc(clang::SourceRange range) const;
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
+
+  void PushUnsupportedItem(std::string name, std::string message,
+                           clang::SourceLocation source_location);
+  void PushUnsupportedItem(std::string name, std::string message,
+                           clang::SourceRange source_range);
+  SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 
   clang::Sema& sema_;
   Label current_target_;

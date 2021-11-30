@@ -57,10 +57,10 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
     if (const auto* named_decl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
       name = named_decl->getQualifiedNameAsString();
     }
-    ir_.items.push_back(UnsupportedItem{
-        .name = name,
-        .message = "Items contained in namespaces are not supported yet",
-        .source_loc = ConvertSourceLoc(decl->getBeginLoc())});
+    PushUnsupportedItem(name,
+                        "Items contained in namespaces are not supported yet",
+                        decl->getBeginLoc());
+
     return true;
   }
 
@@ -97,10 +97,10 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     if (method_decl->isInstance()) {
       auto param_type = ConvertType(method_decl->getThisType());
       if (!param_type.ok()) {
-        ir_.items.push_back(UnsupportedItem{
-            .name = function_decl->getQualifiedNameAsString(),
-            .message = param_type.status().ToString(),
-            .source_loc = ConvertSourceLoc(method_decl->getBeginLoc())});
+        PushUnsupportedItem(function_decl->getQualifiedNameAsString(),
+                            param_type.status().ToString(),
+                            method_decl->getBeginLoc());
+
         success = false;
       } else {
         params.push_back({*std::move(param_type), Identifier("__this")});
@@ -111,11 +111,11 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   for (const clang::ParmVarDecl* param : function_decl->parameters()) {
     auto param_type = ConvertType(param->getType());
     if (!param_type.ok()) {
-      ir_.items.push_back(UnsupportedItem{
-          .name = function_decl->getQualifiedNameAsString(),
-          .message = absl::Substitute("Parameter type '$0' is not supported",
-                                      param->getType().getAsString()),
-          .source_loc = ConvertSourceLoc(param->getBeginLoc())});
+      PushUnsupportedItem(
+          function_decl->getQualifiedNameAsString(),
+          absl::Substitute("Parameter type '$0' is not supported",
+                           param->getType().getAsString()),
+          param->getBeginLoc());
       success = false;
       continue;
     }
@@ -128,12 +128,12 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         // have a different representation which needs special support. We
         // currently do not support it.
         if (!record_decl->canPassInRegisters()) {
-          ir_.items.push_back(UnsupportedItem{
-              .name = function_decl->getQualifiedNameAsString(),
-              .message = absl::Substitute("Non-trivial_abi type '$0' is not "
-                                          "supported by value as a parameter",
-                                          param->getType().getAsString()),
-              .source_loc = ConvertSourceLoc(param->getBeginLoc())});
+          PushUnsupportedItem(
+              function_decl->getQualifiedNameAsString(),
+              absl::Substitute("Non-trivial_abi type '$0' is not "
+                               "supported by value as a parameter",
+                               param->getType().getAsString()),
+              param->getBeginLoc());
           success = false;
         }
       }
@@ -141,10 +141,9 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
     std::optional<Identifier> param_name = GetTranslatedIdentifier(param);
     if (!param_name.has_value()) {
-      ir_.items.push_back(UnsupportedItem{
-          .name = function_decl->getQualifiedNameAsString(),
-          .message = "Empty parameter names are not supported",
-          .source_loc = ConvertSourceLoc(param->getBeginLoc())});
+      PushUnsupportedItem(function_decl->getQualifiedNameAsString(),
+                          "Empty parameter names are not supported",
+                          param->getBeginLoc());
       success = false;
       continue;
     }
@@ -159,14 +158,12 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       // have a different representation which needs special support. We
       // currently do not support it.
       if (!record_decl->canPassInRegisters()) {
-        ir_.items.push_back(UnsupportedItem{
-            .name = function_decl->getQualifiedNameAsString(),
-            .message =
-                absl::Substitute("Non-trivial_abi type '$0' is not supported "
-                                 "by value as a return type",
-                                 function_decl->getReturnType().getAsString()),
-            .source_loc =
-                ConvertSourceLoc(function_decl->getReturnTypeSourceRange())});
+        PushUnsupportedItem(
+            function_decl->getQualifiedNameAsString(),
+            absl::Substitute("Non-trivial_abi type '$0' is not supported "
+                             "by value as a return type",
+                             function_decl->getReturnType().getAsString()),
+            function_decl->getReturnTypeSourceRange());
         success = false;
       }
     }
@@ -174,13 +171,11 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
   auto return_type = ConvertType(function_decl->getReturnType());
   if (!return_type.ok()) {
-    ir_.items.push_back(UnsupportedItem{
-        .name = function_decl->getQualifiedNameAsString(),
-        .message =
-            absl::Substitute("Return type '$0' is not supported",
-                             function_decl->getReturnType().getAsString()),
-        .source_loc = ConvertSourceLoc(
-            function_decl->getReturnTypeSourceRange().getBegin())});
+    PushUnsupportedItem(
+        function_decl->getQualifiedNameAsString(),
+        absl::Substitute("Return type '$0' is not supported",
+                         function_decl->getReturnType().getAsString()),
+        function_decl->getReturnTypeSourceRange());
     success = false;
   }
 
@@ -188,10 +183,9 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (method_decl->isVirtual()) {
       // TODO(b/202853028): implement virtual functions.
-      ir_.items.push_back(UnsupportedItem{
-          .name = function_decl->getQualifiedNameAsString(),
-          .message = "Virtual functions are not supported",
-          .source_loc = ConvertSourceLoc(function_decl->getSourceRange())});
+      PushUnsupportedItem(function_decl->getQualifiedNameAsString(),
+                          "Virtual functions are not supported",
+                          function_decl->getSourceRange());
       success = false;
     } else {
       std::optional<MemberFuncMetadata::InstanceMethodMetadata>
@@ -220,12 +214,11 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       std::optional<Identifier> record_identifier =
           GetTranslatedIdentifier(method_decl->getParent());
       if (!record_identifier.has_value()) {
-        ir_.items.push_back(UnsupportedItem{
-            .name = function_decl->getQualifiedNameAsString(),
-            .message = absl::Substitute(
-                "The Record for method '$0' could not be found",
-                function_decl->getQualifiedNameAsString()),
-            .source_loc = ConvertSourceLoc(function_decl->getSourceRange())});
+        PushUnsupportedItem(
+            function_decl->getQualifiedNameAsString(),
+            absl::Substitute("The Record for method '$0' could not be found",
+                             function_decl->getQualifiedNameAsString()),
+            function_decl->getSourceRange());
         success = false;
       } else {
         member_func_metadata =
@@ -278,10 +271,9 @@ Label AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context && decl_context->isRecord()) {
-    ir_.items.push_back(UnsupportedItem{
-        .name = record_decl->getQualifiedNameAsString(),
-        .message = "Nested classes are not supported yet",
-        .source_loc = ConvertSourceLoc(record_decl->getBeginLoc())});
+    PushUnsupportedItem(record_decl->getQualifiedNameAsString(),
+                        "Nested classes are not supported yet",
+                        record_decl->getBeginLoc());
     return true;
   }
 
@@ -335,7 +327,20 @@ std::optional<std::string> AstVisitor::GetComment(
   }
 }
 
-SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceLocation loc) const {
+void AstVisitor::PushUnsupportedItem(std::string name, std::string message,
+                                     clang::SourceLocation source_location) {
+  ir_.items.push_back(
+      UnsupportedItem{.name = name,
+                      .message = message,
+                      .source_loc = ConvertSourceLocation(source_location)});
+}
+
+void AstVisitor::PushUnsupportedItem(std::string name, std::string message,
+                                     clang::SourceRange source_range) {
+  PushUnsupportedItem(name, message, source_range.getBegin());
+}
+
+SourceLoc AstVisitor::ConvertSourceLocation(clang::SourceLocation loc) const {
   auto& sm = ctx_->getSourceManager();
 
   clang::StringRef filename = sm.getFilename(loc);
@@ -346,10 +351,6 @@ SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceLocation loc) const {
   return SourceLoc{.filename = filename.str(),
                    .line = sm.getSpellingLineNumber(loc),
                    .column = sm.getSpellingColumnNumber(loc)};
-}
-
-SourceLoc AstVisitor::ConvertSourceLoc(clang::SourceRange range) const {
-  return ConvertSourceLoc(range.getBegin());
 }
 
 absl::StatusOr<MappedType> AstVisitor::ConvertType(
