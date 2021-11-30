@@ -20,14 +20,14 @@ class LifetimeBijection {
   // to the bijection, or is already present. Returns false if the lifetimes
   // conflict with other mappings already recorded in the bijection.
   bool Add(Lifetime lifetime_in_a, Lifetime lifetime_in_b) {
-    if (a_to_b_.count(lifetime_in_a)) {
-      return a_to_b_.lookup(lifetime_in_a) == lifetime_in_b;
-    } else if (b_to_a_.count(lifetime_in_b)) {
-      return false;
+    auto [a_to_b_iter, a_to_b_inserted] =
+        a_to_b_.try_emplace(lifetime_in_a, lifetime_in_b);
+    if (!a_to_b_inserted) {
+      return a_to_b_iter->second == lifetime_in_b;
     }
-    a_to_b_[lifetime_in_a] = lifetime_in_b;
-    b_to_a_[lifetime_in_b] = lifetime_in_a;
-    return true;
+    auto [_, b_to_a_inserted] =
+        b_to_a_.try_emplace(lifetime_in_b, lifetime_in_a);
+    return b_to_a_inserted;
   }
 
  private:
