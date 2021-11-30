@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/lifetime_symbol_table.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringMap.h"
 
@@ -21,6 +22,13 @@ namespace devtools_rust {
 // Returns a human-readable representation of `func_lifetimes` that uses
 // alphabetic names for lifetimes.
 std::string NameLifetimes(const FunctionLifetimes& func_lifetimes);
+
+// Returns a human-readable representation of `func_lifetimes` that uses
+// the names from the given symbol table. The symbol table needs to contain
+// names for all lifetimes in `func_lifetimes` except local lifetimes and the
+// static lifetime.
+std::string NameLifetimes(const FunctionLifetimes& func_lifetimes,
+                          const LifetimeSymbolTable& symbol_table);
 
 // Associates functions (identified by their name) with function lifetimes in
 // the format returned by NameLifetimes().

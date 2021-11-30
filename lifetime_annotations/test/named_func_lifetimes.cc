@@ -5,43 +5,39 @@
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 
 #include <algorithm>
+#include <optional>
 #include <string>
 
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMap.h"
 
 namespace devtools_rust {
 
-namespace {
-
-class LifetimeNamer {
- public:
-  std::string Name(Lifetime l) {
+std::string NameLifetimes(const FunctionLifetimes& func_lifetimes) {
+  LifetimeSymbolTable symbol_table;
+  return func_lifetimes.DebugString([&symbol_table](Lifetime l) -> std::string {
     if (l.IsLocal()) {
       return "local";
     }
     if (l == Lifetime::Static()) {
       return "static";
     }
-    auto iter = lifetime_names_.find(l);
-    if (iter != lifetime_names_.end()) {
-      return iter->second;
+    return symbol_table.LookupLifetimeAndMaybeDeclare(l).str();
+  });
+}
+
+std::string NameLifetimes(const FunctionLifetimes& func_lifetimes,
+                          const LifetimeSymbolTable& symbol_table) {
+  return func_lifetimes.DebugString([&symbol_table](Lifetime l) -> std::string {
+    if (l.IsLocal()) {
+      return "local";
     }
-    std::string name(1, next_name_++);
-    lifetime_names_[l] = name;
-    return name;
-  }
-
- private:
-  llvm::DenseMap<Lifetime, std::string> lifetime_names_;
-  char next_name_ = 'a';
-};
-
-}  // namespace
-
-std::string NameLifetimes(const FunctionLifetimes& func_lifetimes) {
-  LifetimeNamer namer;
-  return func_lifetimes.DebugString(
-      [&namer](Lifetime l) { return namer.Name(l); });
+    if (l == Lifetime::Static()) {
+      return "static";
+    }
+    std::optional<llvm::StringRef> name = symbol_table.LookupLifetime(l);
+    assert(name.has_value());
+    return name.value().str();
+  });
 }
 
 std::optional<llvm::StringRef> NamedFuncLifetimes::Get(
