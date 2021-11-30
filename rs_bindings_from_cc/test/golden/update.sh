@@ -25,6 +25,6 @@ done
 bazel build "${TARGETS[@]}"
 
 for header in *.h; do
-  cat "$(bazel info bazel-bin)/${PKG}/${header%.h}_bindings_files_rs_api.rs" >"${header%.h}_rs_api.rs"
-  cat "$(bazel info bazel-bin)/${PKG}/${header%.h}_bindings_files_rs_api_impl.cc" >"${header%.h}_rs_api_impl.cc"
+  cat "$(bazel info bazel-bin)/${PKG}/${header%.h}_cc_rust_api.rs" >"${header%.h}_rs_api.rs"
+  cat "$(bazel info bazel-bin)/${PKG}/${header%.h}_cc_rust_api_impl.cc" >"${header%.h}_rs_api_impl.cc"
 done
