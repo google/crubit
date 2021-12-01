@@ -13,7 +13,7 @@ extern "C" void __rust_thunk__VoidReturningFunction() {
 static_assert(sizeof(SomeStruct) == 1);
 static_assert(alignof(SomeStruct) == 1);
 
-static_assert(sizeof(FieldTypeTestStruct) == 192);
+static_assert(sizeof(FieldTypeTestStruct) == 200);
 static_assert(alignof(FieldTypeTestStruct) == 8);
 static_assert(offsetof(FieldTypeTestStruct, bool_field) * 8 == 0);
 static_assert(offsetof(FieldTypeTestStruct, char_field) * 8 == 8);
@@ -52,3 +52,5 @@ static_assert(offsetof(FieldTypeTestStruct, double_field) * 8 == 1280);
 static_assert(offsetof(FieldTypeTestStruct, ptr_field) * 8 == 1344);
 static_assert(offsetof(FieldTypeTestStruct, struct_field) * 8 == 1408);
 static_assert(offsetof(FieldTypeTestStruct, struct_ptr_field) * 8 == 1472);
+static_assert(offsetof(FieldTypeTestStruct, const_struct_ptr_field) * 8 ==
+              1536);

@@ -58,6 +58,7 @@ struct FieldTypeTestStruct {
 
   SomeStruct struct_field;
   SomeStruct* struct_ptr_field;
+  const SomeStruct* const_struct_ptr_field;
 };
 
 inline void VoidReturningFunction() {}

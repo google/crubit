@@ -402,7 +402,7 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
     if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
       std::string ident(id->Ident());
       DeclId decl_id = GenerateDeclId(tag_decl);
-      return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+      type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
     }
   }
 

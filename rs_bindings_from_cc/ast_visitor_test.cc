@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <variant>
@@ -38,6 +39,15 @@ UnqualifiedIdentifier GetName(const T& x) {
   return x.identifier;
 }
 UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
+
+std::optional<DeclId> DeclIdForRecord(const IR& ir, absl::string_view ident) {
+  for (const Record* record : ir.get_items_if<Record>()) {
+    if (record->identifier.Ident() == ident) {
+      return record->decl_id;
+    }
+  }
+  return std::nullopt;
+}
 
 // Matches an IR node that has the given identifier.
 MATCHER_P(IdentifierIs, identifier, "") {
@@ -91,13 +101,29 @@ auto ParamType(const Args&... matchers) {
   return testing::Field("type", &FuncParam::type, AllOf(matchers...));
 }
 
-// Matches a RsType or CcType that has the given name.
+// Matches an RsType or CcType that has the given name.
 MATCHER_P(NameIs, name, "") {
   if (arg.name == name) return true;
 
   *result_listener << "actual name: '" << arg.name << "'";
   return false;
 }
+
+// Matches an RsType or CcType that has the given decl_id.
+MATCHER_P(DeclIdIs, decl_id, "") {
+  if (arg.decl_id.has_value() && *arg.decl_id == decl_id) return true;
+
+  *result_listener << "actual decl_id: ";
+  if (arg.decl_id.has_value()) {
+    *result_listener << *arg.decl_id;
+  } else {
+    *result_listener << "std::nullopt";
+  }
+  return false;
+}
+
+// Matches an RsType or CcType that is const .
+MATCHER(IsConst, "") { return arg.is_const; }
 
 // Matches a MappedType with a CcType that matches all given matchers.
 template <typename... Args>
@@ -135,10 +161,16 @@ auto CcPointsTo(const Matcher& matcher) {
   return AllOf(NameIs("*"), CcTypeParamsAre(matcher));
 }
 
-// Matches an RsType that is a pointer to a type matching `matcher`.
+// Matches an RsType that is a mutable pointer to a type matching `matcher`.
 template <typename Matcher>
 auto RsPointsTo(const Matcher& matcher) {
   return AllOf(NameIs("*mut"), RsTypeParamsAre(matcher));
+}
+
+// Matches an RsType that is a const pointer to a type matching `matcher`.
+template <typename Matcher>
+auto RsConstPointsTo(const Matcher& matcher) {
+  return AllOf(NameIs("*const"), RsTypeParamsAre(matcher));
 }
 
 // Matches a MappedType that is void.
@@ -295,6 +327,22 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
   EXPECT_THAT(ir.items,
               ElementsAre(VariantWith<Func>(AllOf(
                   ReturnType(IsIntPtr()), ParamsAre(ParamType(IsIntPtr()))))));
+}
+
+TEST(AstVisitorTest, TestImportConstStructPointerFunc) {
+  ASSERT_OK_AND_ASSIGN(IR ir,
+                       IrFromCc("struct S{}; const S* Foo(const S* s);"));
+
+  std::optional<DeclId> decl_id = DeclIdForRecord(ir, "S");
+  ASSERT_TRUE(decl_id.has_value());
+
+  auto is_ptr_to_const_s =
+      AllOf(CcTypeIs(CcPointsTo(AllOf(DeclIdIs(*decl_id), IsConst()))),
+            RsTypeIs(RsConstPointsTo(DeclIdIs(*decl_id))));
+
+  EXPECT_THAT(ir.items, Contains(VariantWith<Func>(AllOf(
+                            IdentifierIs("Foo"), ReturnType(is_ptr_to_const_s),
+                            ParamsAre(ParamType(is_ptr_to_const_s))))));
 }
 
 TEST(AstVisitorTest, Struct) {

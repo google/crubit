@@ -230,6 +230,7 @@ pub struct FieldTypeTestStruct {
     pub ptr_field: *mut i32,
     pub struct_field: SomeStruct,
     pub struct_ptr_field: *mut SomeStruct,
+    pub const_struct_ptr_field: *const SomeStruct,
 }
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
@@ -281,7 +282,7 @@ mod detail {
 const_assert_eq!(std::mem::size_of::<SomeStruct>(), 1usize);
 const_assert_eq!(std::mem::align_of::<SomeStruct>(), 1usize);
 
-const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 192usize);
+const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 200usize);
 const_assert_eq!(std::mem::align_of::<FieldTypeTestStruct>(), 8usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, bool_field) * 8, 0usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, char_field) * 8, 8usize);
@@ -319,3 +320,4 @@ const_assert_eq!(offset_of!(FieldTypeTestStruct, double_field) * 8, 1280usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, ptr_field) * 8, 1344usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_field) * 8, 1408usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8, 1472usize);
+const_assert_eq!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8, 1536usize);
