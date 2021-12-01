@@ -4,10 +4,25 @@
 
 #[cfg(test)]
 mod tests {
-    use hello_world::hello_world;
+    #[test]
+    fn test_return_value() {
+        use simple_functions::return_value;
+        assert_eq!(return_value(), 42);
+    }
 
     #[test]
-    fn test_hello_world() {
-        assert_eq!(hello_world(), 42);
+    fn test_return_pointer() {
+        use simple_functions::return_pointer;
+        unsafe {
+            assert_eq!(*return_pointer(), 42);
+        }
+    }
+
+    #[test]
+    fn test_take_pointer() {
+        use simple_functions::take_pointer;
+        let mut i: i32 = 0;
+        take_pointer(&mut i);
+        assert_eq!(i, 42);
     }
 }
