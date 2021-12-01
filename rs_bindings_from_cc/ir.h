@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include <iomanip>
 #include <optional>
 #include <string>
 #include <utility>
@@ -32,6 +33,7 @@ namespace internal {
 inline constexpr absl::string_view kRustPtrMut = "*mut";
 inline constexpr absl::string_view kRustPtrConst = "*const";
 inline constexpr absl::string_view kCcPtr = "*";
+inline constexpr int kJsonIndent = 2;
 }  // namespace internal
 
 // A name of a public header of the C++ library.
@@ -59,7 +61,7 @@ inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
-  return o << h.ToJson();
+  return o << std::setw(internal::kJsonIndent) << h.ToJson();
 }
 
 // An int uniquely representing a Decl. Since our IR goes through the JSON
@@ -112,7 +114,7 @@ struct RsType {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
-  return o << type.ToJson();
+  return o << std::setw(internal::kJsonIndent) << type.ToJson();
 }
 
 // A type involved in the bindings. The rs_type and cc_type will be treated
@@ -156,7 +158,7 @@ struct MappedType {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const MappedType& type) {
-  return o << type.ToJson();
+  return o << std::setw(internal::kJsonIndent) << type.ToJson();
 }
 
 // An identifier involved in bindings.
@@ -183,7 +185,7 @@ class Identifier {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
-  return o << id.Ident();
+  return o << std::setw(internal::kJsonIndent) << id.Ident();
 }
 
 // A function parameter.
@@ -199,7 +201,7 @@ struct FuncParam {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {
-  return o << param.ToJson();
+  return o << std::setw(internal::kJsonIndent) << param.ToJson();
 }
 
 enum SpecialName {
@@ -258,7 +260,7 @@ struct Func {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
-  return o << f.ToJson();
+  return o << std::setw(internal::kJsonIndent) << f.ToJson();
 }
 
 // Access specifier for a member or base class.
@@ -283,7 +285,7 @@ struct Field {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {
-  return o << f.ToJson();
+  return o << std::setw(internal::kJsonIndent) << f.ToJson();
 }
 
 // Information about special member functions.
@@ -319,7 +321,7 @@ std::ostream& operator<<(std::ostream& o,
                          const SpecialMemberFunc::Definition& definition);
 
 inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
-  return o << f.ToJson();
+  return o << std::setw(internal::kJsonIndent) << f.ToJson();
 }
 
 // A record (struct, class, union).
@@ -352,7 +354,7 @@ struct Record {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
-  return o << r.ToJson();
+  return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
 
 // Source code location
@@ -365,7 +367,7 @@ struct SourceLoc {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const SourceLoc& r) {
-  return o << r.ToJson();
+  return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
 
 // A placeholder for an item that we can't generate bindings for (yet)
@@ -385,7 +387,7 @@ struct UnsupportedItem {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
-  return o << r.ToJson();
+  return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
 
 struct Comment {
@@ -395,7 +397,7 @@ struct Comment {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
-  return o << r.ToJson();
+  return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
 
 // A complete intermediate representation of bindings for publicly accessible
@@ -422,7 +424,7 @@ struct IR {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
-  return o << ir.ToJson();
+  return o << std::setw(internal::kJsonIndent) << ir.ToJson();
 }
 }  // namespace rs_bindings_from_cc
 
