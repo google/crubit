@@ -236,7 +236,6 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     // b/200120034#comment15
     assertion_features.insert(make_ident("const_ptr_offset_from"));
     assertion_features.insert(make_ident("const_maybe_uninit_as_ptr"));
-    assertion_features.insert(make_ident("const_raw_ptr_deref"));
 
     let derives = generate_copy_derives(record);
     let derives = if derives.is_empty() {
@@ -785,7 +784,7 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             rustfmt(tokens_to_string(quote! {
-                #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, const_raw_ptr_deref, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+                #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 use memoffset_unstable_const::offset_of;
                 use static_assertions::const_assert_eq; __NEWLINE__ __NEWLINE__

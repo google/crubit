@@ -6,7 +6,6 @@
 #![feature(
     const_maybe_uninit_as_ptr,
     const_ptr_offset_from,
-    const_raw_ptr_deref,
     custom_inner_attributes,
     negative_impls
 )]
