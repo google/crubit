@@ -302,7 +302,7 @@ TEST(AstVisitorTest, Struct) {
       IR ir,
       IrFromCc("struct SomeStruct { int first_field; int second_field; };"));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records,
               ElementsAre(Pointee(AllOf(
                   IdentifierIs("SomeStruct"), RecordSizeIs(8), AlignmentIs(4),
@@ -321,7 +321,7 @@ TEST(AstVisitorTest, TrivialCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kTrivial)))));
@@ -344,7 +344,7 @@ TEST(AstVisitorTest, NontrivialSelfCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivialSelf)))));
@@ -365,7 +365,7 @@ TEST(AstVisitorTest, NontrivialMembersCopyConstructor) {
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(records,
               Each(Pointee(AnyOf(
@@ -388,7 +388,7 @@ TEST(AstVisitorTest, DeletedCopyConstructor) {
     };
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kDeleted)))));
@@ -407,7 +407,7 @@ TEST(AstVisitorTest, PublicCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPublic)))));
 }
@@ -424,7 +424,7 @@ TEST(AstVisitorTest, PrivateCopyConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPrivate)))));
 }
@@ -438,7 +438,7 @@ TEST(AstVisitorTest, TrivialMoveConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kTrivial)))));
@@ -460,7 +460,7 @@ TEST(AstVisitorTest, NontrivialSelfMoveConstructor) {
         NontrivialSelfDefaulted&&) = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivialSelf)))));
@@ -481,7 +481,7 @@ TEST(AstVisitorTest, NontrivialMembersMoveConstructor) {
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(records,
               Each(Pointee(AnyOf(
@@ -504,7 +504,7 @@ TEST(AstVisitorTest, DeletedMoveConstructor) {
     };
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kDeleted)))));
@@ -523,7 +523,7 @@ TEST(AstVisitorTest, PublicMoveConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPublic)))));
 }
@@ -540,7 +540,7 @@ TEST(AstVisitorTest, PrivateMoveConstructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPrivate)))));
 }
@@ -554,7 +554,7 @@ TEST(AstVisitorTest, TrivialDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kTrivial)))));
@@ -575,7 +575,7 @@ TEST(AstVisitorTest, NontrivialSelfDestructor) {
     inline NontrivialSelfDefaulted::~NontrivialSelfDefaulted() = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kNontrivialSelf)))));
@@ -596,7 +596,7 @@ TEST(AstVisitorTest, NontrivialMembersDestructor) {
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(records,
               Each(Pointee(AnyOf(
@@ -617,7 +617,7 @@ TEST(AstVisitorTest, DeletedDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
                            SpecialMemberFunc::Definition::kDeleted)))));
@@ -636,7 +636,7 @@ TEST(AstVisitorTest, PublicDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPublic)))));
 }
@@ -653,7 +653,7 @@ TEST(AstVisitorTest, PrivateDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
   EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPrivate)))));
 }
@@ -670,7 +670,7 @@ TEST(AstVisitorTest, TrivialAbi) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
   EXPECT_THAT(records, Each(Pointee(IsTrivialAbi())));
 }
@@ -683,7 +683,7 @@ TEST(AstVisitorTest, NotTrivialAbi) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(1));
   EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
 }
@@ -705,7 +705,7 @@ TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
     };
   )"}));
 
-  std::vector<Record*> records = ir.get_items_if<Record>();
+  std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(
       records,
       ElementsAre(

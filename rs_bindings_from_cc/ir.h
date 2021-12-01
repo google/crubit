@@ -406,9 +406,9 @@ struct IR {
   nlohmann::json ToJson() const;
 
   template <typename T>
-  std::vector<T*> get_items_if() {
-    std::vector<T*> filtered_items;
-    for (auto& item : items) {
+  std::vector<const T*> get_items_if() const {
+    std::vector<const T*> filtered_items;
+    for (const auto& item : items) {
       if (auto* filtered_item = std::get_if<T>(&item)) {
         filtered_items.push_back(filtered_item);
       }
