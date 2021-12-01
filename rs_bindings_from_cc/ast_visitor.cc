@@ -358,13 +358,12 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
   std::optional<MappedType> type = std::nullopt;
   std::string type_string = qual_type.getAsString();
 
-  if (const clang::PointerType* pointer_type =
-          qual_type->getAs<clang::PointerType>()) {
+  if (const auto* pointer_type = qual_type->getAs<clang::PointerType>()) {
     auto pointee_type = ConvertType(pointer_type->getPointeeType());
     if (pointee_type.ok()) {
       type = MappedType::PointerTo(*pointee_type);
     }
-  } else if (const clang::BuiltinType* builtin_type =
+  } else if (const auto* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
@@ -396,8 +395,7 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
           }
         }
     }
-  } else if (const clang::TagType* tag_type =
-                 qual_type->getAs<clang::TagType>()) {
+  } else if (const auto* tag_type = qual_type->getAs<clang::TagType>()) {
     // TODO(b/202692734): If tag_type is un-importable, fail here.
     clang::TagDecl* tag_decl = tag_type->getDecl();
 
