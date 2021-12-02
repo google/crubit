@@ -450,36 +450,50 @@ fn make_ident(ident: &str) -> Ident {
 }
 
 fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
-    if let Some(ref name) = ty.name {
-        let ptr_fragment = match name.as_str() {
-            "*mut" => Some(quote! {*mut}),
-            "*const" => Some(quote! {*const}),
-            _ => None,
-        };
-        match ptr_fragment {
-            Some(ptr_fragment) => {
-                if ty.type_params.len() != 1 {
-                    bail!("Invalid pointer type (need exactly 1 type parameter): {:?}", ty);
-                }
-                let nested_type = format_rs_type(&ty.type_params[0], ir)?;
-                Ok(quote! {#ptr_fragment #nested_type})
-            }
-            None => {
-                if !ty.type_params.is_empty() {
-                    bail!("Type not yet supported: {:?}", ty);
-                }
-                match name.as_str() {
-                    "()" => Ok(quote! {()}),
-                    name => {
-                        let ident = make_ident(name);
-                        Ok(quote! {#ident})
-                    }
-                }
-            }
+    enum TypeKind<'a> {
+        Pointer(TokenStream),
+        Record(Ident),
+        Unit,
+        Other(&'a str),
+    }
+    let kind = if let Some(ref name) = ty.name {
+        match name.as_str() {
+            "*mut" => TypeKind::Pointer(quote! {mut}),
+            "*const" => TypeKind::Pointer(quote! {const}),
+            "()" => TypeKind::Unit,
+            _ => TypeKind::Other(name),
         }
     } else {
         let ident = make_ident(ir.record_for_type(ty)?.identifier.identifier.as_str());
-        Ok(quote! {#ident})
+        TypeKind::Record(ident)
+    };
+    match kind {
+        TypeKind::Pointer(mutability) => {
+            if ty.type_params.len() != 1 {
+                bail!("Invalid pointer type (need exactly 1 type parameter): {:?}", ty);
+            }
+            let nested_type = format_rs_type(&ty.type_params[0], ir)?;
+            Ok(quote! {* #mutability #nested_type})
+        }
+        TypeKind::Record(ident) => {
+            if !ty.type_params.is_empty() {
+                bail!("Type parameters on records are not yet supported: {:?}", ty);
+            }
+            Ok(quote! {#ident})
+        }
+        TypeKind::Unit => {
+            if !ty.type_params.is_empty() {
+                bail!("Unit type must not have type parameters: {:?}", ty);
+            }
+            Ok(quote! {()})
+        }
+        TypeKind::Other(name) => {
+            if !ty.type_params.is_empty() {
+                bail!("Type not yet supported: {:?}", ty);
+            }
+            let ident = make_ident(name);
+            Ok(quote! {#ident})
+        }
     }
 }
 
