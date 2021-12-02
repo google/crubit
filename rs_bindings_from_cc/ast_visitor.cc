@@ -42,7 +42,7 @@ namespace rs_bindings_from_cc {
 constexpr std::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
-DeclId GenerateDeclId(clang::Decl* decl) {
+static DeclId GenerateDeclId(const clang::Decl* decl) {
   return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
 
@@ -236,12 +236,18 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     }
   }
 
+  std::optional<DeclId> record_decl_id;
+  if (const auto* method_decl =
+          llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+    record_decl_id = GenerateDeclId(method_decl->getParent());
+  }
+
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
   if (success && translated_name.has_value()) {
     ir_.items.push_back(Func{
         .name = *translated_name,
-        .decl_id = GenerateDeclId(function_decl),
+        .record_decl_id = record_decl_id,
         .owning_target = GetOwningTarget(function_decl),
         .doc_comment = GetComment(function_decl),
         .mangled_name = GetMangledName(function_decl),
@@ -303,7 +309,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
   ir_.items.push_back(
       Record{.identifier = *record_name,
-             .decl_id = GenerateDeclId(record_decl),
+             .id = GenerateDeclId(record_decl),
              .owning_target = GetOwningTarget(record_decl),
              .doc_comment = GetComment(record_decl),
              .fields = *std::move(fields),

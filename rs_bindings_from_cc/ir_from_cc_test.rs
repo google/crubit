@@ -21,10 +21,10 @@ fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec
         // TODO(hlopko): Handle MappedTypes as well.
         match (expected_item, actual_item) {
             (Item::Func(ref mut expected_func), Item::Func(actual_func)) => {
-                expected_func.decl_id = actual_func.decl_id;
+                expected_func.record_decl_id = actual_func.record_decl_id;
             }
             (Item::Record(ref mut expected_record), Item::Record(actual_record)) => {
-                expected_record.decl_id = actual_record.decl_id;
+                expected_record.id = actual_record.id;
             }
             (_, _) => (),
         }
@@ -38,16 +38,16 @@ fn test_function() {
     assert_cc_produces_ir_items_ignoring_decl_ids(
         "int Add(int a, int b);",
         vec![Item::Func(Func {
-                name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
-                decl_id: /* ignored */ DeclId(42),
-                owning_target: "//test:testing_target".into(),
-                mangled_name: "_Z3Addii".to_string(),
-                doc_comment: None,
-                return_type: ir_int(),
-                params: vec![ir_int_param("a"), ir_int_param("b")],
-                is_inline: false,
-                member_func_metadata: None,
-            })],
+            name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
+            record_decl_id: None,
+            owning_target: "//test:testing_target".into(),
+            mangled_name: "_Z3Addii".to_string(),
+            doc_comment: None,
+            return_type: ir_int(),
+            params: vec![ir_int_param("a"), ir_int_param("b")],
+            is_inline: false,
+            member_func_metadata: None,
+        })],
     );
 }
 

@@ -29,7 +29,6 @@ using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Pointee;
-using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::VariantWith;
 using ::testing::status::StatusIs;
@@ -43,7 +42,7 @@ UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
 std::optional<DeclId> DeclIdForRecord(const IR& ir, absl::string_view ident) {
   for (const Record* record : ir.get_items_if<Record>()) {
     if (record->identifier.Ident() == ident) {
-      return record->decl_id;
+      return record->id;
     }
   }
   return std::nullopt;

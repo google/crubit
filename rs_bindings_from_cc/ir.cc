@@ -137,7 +137,9 @@ nlohmann::json Func::ToJson() const {
   } else {
     func["name"][SpecialNameToString(std::get<SpecialName>(name))] = nullptr;
   }
-  func["decl_id"] = decl_id.value();
+  if (record_decl_id.has_value()) {
+    func["record_decl_id"] = record_decl_id->value();
+  }
   func["owning_target"] = owning_target.value();
   if (doc_comment) {
     func["doc_comment"] = *doc_comment;
@@ -212,7 +214,7 @@ nlohmann::json SpecialMemberFunc::ToJson() const {
 nlohmann::json Record::ToJson() const {
   nlohmann::json record;
   record["identifier"] = identifier.ToJson();
-  record["decl_id"] = decl_id.value();
+  record["id"] = id.value();
   record["owning_target"] = owning_target.value();
   if (doc_comment) {
     record["doc_comment"] = *doc_comment;

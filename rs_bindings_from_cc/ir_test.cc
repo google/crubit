@@ -59,7 +59,7 @@ TEST(IrTest, IR) {
             "items": [
                 { "Record": {
                     "identifier": { "identifier": "SomeStruct" },
-                    "decl_id": 42,
+                    "id": 42,
                     "owning_target": "//foo:bar",
                     "fields": [
                     {
@@ -123,7 +123,7 @@ TEST(IrTest, IR) {
   IR ir = {.used_headers = {HeaderName("foo/bar.h")},
            .current_target = Label(std::string("//foo:bar")),
            .items = {Record{.identifier = Identifier("SomeStruct"),
-                            .decl_id = DeclId(42),
+                            .id = DeclId(42),
                             .owning_target = Label(std::string("//foo:bar")),
                             .fields =
                                 {

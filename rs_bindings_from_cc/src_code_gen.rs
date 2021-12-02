@@ -653,9 +653,9 @@ mod tests {
     // `ir_testing`.
     fn test_duplicate_decl_ids_err() {
         let mut r1 = ir_record("R1");
-        r1.decl_id = DeclId(42);
+        r1.id = DeclId(42);
         let mut r2 = ir_record("R2");
-        r2.decl_id = DeclId(42);
+        r2.id = DeclId(42);
         let result = make_ir_from_items([r1.into(), r2.into()]);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Duplicate decl_id found in"));
@@ -665,7 +665,7 @@ mod tests {
     fn test_simple_function() -> Result<()> {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("add")),
-            decl_id: DeclId(42),
+            record_decl_id: None,
             owning_target: "//foo:bar".into(),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,
@@ -706,7 +706,7 @@ mod tests {
         let ir = make_ir_from_parts(
             vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("add")),
-                decl_id: DeclId(42),
+                record_decl_id: None,
                 owning_target: "//foo:bar".into(),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
@@ -761,7 +761,7 @@ mod tests {
     fn test_simple_struct() -> Result<()> {
         let ir = make_ir_from_items([Item::Record(Record {
             identifier: ir_id("SomeStruct"),
-            decl_id: DeclId(42),
+            id: DeclId(42),
             owning_target: "//foo:bar".into(),
             doc_comment: None,
             fields: vec![
@@ -881,7 +881,7 @@ mod tests {
     fn test_ptr_func() -> Result<()> {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
-            decl_id: DeclId(42),
+            record_decl_id: None,
             owning_target: "//foo:bar".into(),
             mangled_name: "_Z5DerefPKPi".to_string(),
             doc_comment: None,
@@ -1008,7 +1008,7 @@ mod tests {
     fn test_doc_comment_func() -> Result<()> {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("func")),
-            decl_id: DeclId(42),
+            record_decl_id: None,
             owning_target: "//foo:bar".into(),
             mangled_name: "foo".to_string(),
             doc_comment: Some("Doc Comment".to_string()),
@@ -1030,7 +1030,7 @@ mod tests {
     fn test_doc_comment_record() -> Result<()> {
         let ir = make_ir_from_items([Item::Record(Record {
             identifier: ir_id("SomeStruct"),
-            decl_id: DeclId(42),
+            id: DeclId(42),
             owning_target: "//foo:bar".into(),
             doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
             alignment: 0,

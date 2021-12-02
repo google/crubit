@@ -39,8 +39,8 @@ pub fn make_ir_from_parts(
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
     let mut used_decl_ids = HashMap::new();
     for item in &flat_ir.items {
-        if let Some(decl_id) = item.decl_id() {
-            if let Some(existing_decl) = used_decl_ids.insert(decl_id, item) {
+        if let Some(Record { id, .. }) = item.as_record() {
+            if let Some(existing_decl) = used_decl_ids.insert(id, item) {
                 bail!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
             }
         }
@@ -49,7 +49,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
         .items
         .iter()
         .enumerate()
-        .filter_map(|(idx, item)| item.decl_id().map(|decl_id| (decl_id, idx)))
+        .filter_map(|(idx, item)| item.as_record().map(|record| (record.id, idx)))
         .collect::<HashMap<_, _>>();
     Ok(IR { flat_ir, decl_id_to_item_idx })
 }
@@ -74,18 +74,18 @@ pub struct CcType {
     pub decl_id: Option<DeclId>,
 }
 
-pub trait OwningDeclId {
-    fn owning_decl_id(&self) -> Option<DeclId>;
+pub trait TypeWithDeclId {
+    fn decl_id(&self) -> Option<DeclId>;
 }
 
-impl OwningDeclId for RsType {
-    fn owning_decl_id(&self) -> Option<DeclId> {
+impl TypeWithDeclId for RsType {
+    fn decl_id(&self) -> Option<DeclId> {
         self.decl_id
     }
 }
 
-impl OwningDeclId for CcType {
-    fn owning_decl_id(&self) -> Option<DeclId> {
+impl TypeWithDeclId for CcType {
+    fn decl_id(&self) -> Option<DeclId> {
         self.decl_id
     }
 }
@@ -161,7 +161,7 @@ pub struct FuncParam {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
-    pub decl_id: DeclId,
+    pub record_decl_id: Option<DeclId>,
     pub owning_target: Label,
     pub mangled_name: String,
     pub doc_comment: Option<String>,
@@ -205,7 +205,7 @@ pub struct SpecialMemberFunc {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub identifier: Identifier,
-    pub decl_id: DeclId,
+    pub id: DeclId,
     pub owning_target: Label,
     pub doc_comment: Option<String>,
     pub fields: Vec<Field>,
@@ -245,11 +245,9 @@ pub enum Item {
 }
 
 impl Item {
-    fn decl_id(&self) -> Option<DeclId> {
+    fn as_record(&self) -> Option<&Record> {
         match self {
-            Item::Record(Record { decl_id, .. }) | Item::Func(Func { decl_id, .. }) => {
-                Some(*decl_id)
-            }
+            Item::Record(record) => Some(record),
             _ => None,
         }
     }
@@ -339,9 +337,9 @@ impl IR {
 
     pub fn record_for_type<T>(&self, ty: &T) -> Result<&Record>
     where
-        T: OwningDeclId + std::fmt::Debug,
+        T: TypeWithDeclId + std::fmt::Debug,
     {
-        if let Some(decl_id) = ty.owning_decl_id() {
+        if let Some(decl_id) = ty.decl_id() {
             let idx = *self
                 .decl_id_to_item_idx
                 .get(&decl_id)
@@ -390,7 +388,7 @@ mod tests {
             "items": [
                 { "Record" : {
                     "identifier": {"identifier": "SomeStruct" },
-                    "decl_id": 42,
+                    "id": 42,
                     "owning_target": "//foo:bar",
                     "fields": [
                         {
@@ -446,7 +444,7 @@ mod tests {
             current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
-                decl_id: DeclId(42),
+                id: DeclId(42),
                 owning_target: "//foo:bar".into(),
                 doc_comment: None,
                 fields: vec![
@@ -536,7 +534,7 @@ mod tests {
             "items": [
                 { "Record": {
                     "identifier": {"identifier": "SomeStruct" },
-                    "decl_id": 42,
+                    "id": 42,
                     "owning_target": "//foo:bar",
                     "fields": [
                         {
@@ -583,7 +581,7 @@ mod tests {
             current_target: "//foo:bar".into(),
             items: vec![Item::Record(Record {
                 identifier: Identifier { identifier: "SomeStruct".to_string() },
-                decl_id: DeclId(42),
+                id: DeclId(42),
                 owning_target: "//foo:bar".into(),
                 doc_comment: None,
                 fields: vec![Field {
