@@ -62,7 +62,7 @@ pub struct HeaderName {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
     pub name: Option<String>,
-    pub type_params: Vec<RsType>,
+    pub type_args: Vec<RsType>,
     pub decl_id: Option<DeclId>,
 }
 
@@ -70,7 +70,7 @@ pub struct RsType {
 pub struct CcType {
     pub name: Option<String>,
     pub is_const: bool,
-    pub type_params: Vec<CcType>,
+    pub type_args: Vec<CcType>,
     pub decl_id: Option<DeclId>,
 }
 
@@ -380,8 +380,8 @@ mod tests {
                         {
                             "identifier": {"identifier": "public_int" },
                             "type": {
-                                "rs_type": {"name": "i32", "type_params": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_params": []}
+                                "rs_type": {"name": "i32", "type_args": []},
+                                "cc_type": {"name": "int", "is_const": false, "type_args": []}
                             },
                             "access": "Public",
                             "offset": 0
@@ -389,8 +389,8 @@ mod tests {
                         {
                             "identifier": {"identifier": "protected_int" },
                             "type": {
-                                "rs_type": {"name": "i32", "type_params": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_params": []}
+                                "rs_type": {"name": "i32", "type_args": []},
+                                "cc_type": {"name": "int", "is_const": false, "type_args": []}
                             },
                             "access": "Protected",
                             "offset": 32
@@ -398,8 +398,8 @@ mod tests {
                         {
                             "identifier": {"identifier": "private_int" },
                             "type": {
-                                "rs_type": {"name": "i32", "type_params": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_params": []}
+                                "rs_type": {"name": "i32", "type_args": []},
+                                "cc_type": {"name": "int", "is_const": false, "type_args": []}
                             },
                             "access": "Private",
                             "offset": 64
@@ -440,13 +440,13 @@ mod tests {
                         type_: MappedType {
                             rs_type: RsType {
                                 name: "i32".to_string().into(),
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             },
                             cc_type: CcType {
                                 name: "int".to_string().into(),
                                 is_const: false,
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             },
                         },
@@ -459,13 +459,13 @@ mod tests {
                         type_: MappedType {
                             rs_type: RsType {
                                 name: "i32".to_string().into(),
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             },
                             cc_type: CcType {
                                 name: "int".to_string().into(),
                                 is_const: false,
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             },
                         },
@@ -478,13 +478,13 @@ mod tests {
                         type_: MappedType {
                             rs_type: RsType {
                                 name: "i32".to_string().into(),
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             },
                             cc_type: CcType {
                                 name: "int".to_string().into(),
                                 is_const: false,
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             },
                         },
@@ -526,14 +526,14 @@ mod tests {
                         {
                             "identifier": {"identifier": "ptr" },
                             "type": {
-                                "rs_type": {"name": "*mut", "type_params": [
-                                    {"name": "SomeStruct", "type_params": [], "decl_id": 42}
+                                "rs_type": {"name": "*mut", "type_args": [
+                                    {"name": "SomeStruct", "type_args": [], "decl_id": 42}
                                 ]},
-                                "cc_type": { "name": "*", "is_const": false, "type_params": [
+                                "cc_type": { "name": "*", "is_const": false, "type_args": [
                                     {
                                         "name": "SomeStruct",
                                         "is_const": false,
-                                        "type_params": [],
+                                        "type_args": [],
                                         "decl_id": 42
                                     }
                                 ]}
@@ -577,9 +577,9 @@ mod tests {
                         rs_type: RsType {
                             name: "*mut".to_string().into(),
                             decl_id: None,
-                            type_params: vec![RsType {
+                            type_args: vec![RsType {
                                 name: "SomeStruct".to_string().into(),
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: Some(DeclId(42)),
                             }],
                         },
@@ -587,10 +587,10 @@ mod tests {
                             name: "*".to_string().into(),
                             is_const: false,
                             decl_id: None,
-                            type_params: vec![CcType {
+                            type_args: vec![CcType {
                                 name: "SomeStruct".to_string().into(),
                                 is_const: false,
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: Some(DeclId(42)),
                             }],
                         },

@@ -469,26 +469,26 @@ fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
     };
     match kind {
         TypeKind::Pointer(mutability) => {
-            if ty.type_params.len() != 1 {
-                bail!("Invalid pointer type (need exactly 1 type parameter): {:?}", ty);
+            if ty.type_args.len() != 1 {
+                bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
             }
-            let nested_type = format_rs_type(&ty.type_params[0], ir)?;
+            let nested_type = format_rs_type(&ty.type_args[0], ir)?;
             Ok(quote! {* #mutability #nested_type})
         }
         TypeKind::Record(ident) => {
-            if !ty.type_params.is_empty() {
-                bail!("Type parameters on records are not yet supported: {:?}", ty);
+            if !ty.type_args.is_empty() {
+                bail!("Type arguments on records are not yet supported: {:?}", ty);
             }
             Ok(quote! {#ident})
         }
         TypeKind::Unit => {
-            if !ty.type_params.is_empty() {
-                bail!("Unit type must not have type parameters: {:?}", ty);
+            if !ty.type_args.is_empty() {
+                bail!("Unit type must not have type arguments: {:?}", ty);
             }
             Ok(quote! {()})
         }
         TypeKind::Other(name) => {
-            if !ty.type_params.is_empty() {
+            if !ty.type_args.is_empty() {
                 bail!("Type not yet supported: {:?}", ty);
             }
             let ident = make_ident(name);
@@ -506,15 +506,15 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     if let Some(ref name) = ty.name {
         match name.as_str() {
             "*" => {
-                if ty.type_params.len() != 1 {
-                    bail!("Invalid pointer type (need exactly 1 type parameter): {:?}", ty);
+                if ty.type_args.len() != 1 {
+                    bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
                 }
-                assert_eq!(ty.type_params.len(), 1);
-                let nested_type = format_cc_type(&ty.type_params[0], ir)?;
+                assert_eq!(ty.type_args.len(), 1);
+                let nested_type = format_cc_type(&ty.type_args[0], ir)?;
                 Ok(quote! {#nested_type * #const_fragment})
             }
             ident => {
-                if !ty.type_params.is_empty() {
+                if !ty.type_args.is_empty() {
                     bail!("Type not yet supported: {:?}", ty);
                 }
                 let ident = make_ident(ident);
@@ -889,9 +889,9 @@ mod tests {
                 rs_type: RsType {
                     name: "*mut".to_string().into(),
                     decl_id: None,
-                    type_params: vec![RsType {
+                    type_args: vec![RsType {
                         name: "i32".to_string().into(),
-                        type_params: vec![],
+                        type_args: vec![],
                         decl_id: None,
                     }],
                 },
@@ -899,10 +899,10 @@ mod tests {
                     name: "*".to_string().into(),
                     is_const: false,
                     decl_id: None,
-                    type_params: vec![CcType {
+                    type_args: vec![CcType {
                         name: "int".to_string().into(),
                         is_const: false,
-                        type_params: vec![],
+                        type_args: vec![],
                         decl_id: None,
                     }],
                 },
@@ -913,12 +913,12 @@ mod tests {
                     rs_type: RsType {
                         name: "*const".to_string().into(),
                         decl_id: None,
-                        type_params: vec![RsType {
+                        type_args: vec![RsType {
                             name: "*mut".to_string().into(),
                             decl_id: None,
-                            type_params: vec![RsType {
+                            type_args: vec![RsType {
                                 name: "i32".to_string().into(),
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             }],
                         }],
@@ -927,14 +927,14 @@ mod tests {
                         name: "*".to_string().into(),
                         is_const: false,
                         decl_id: None,
-                        type_params: vec![CcType {
+                        type_args: vec![CcType {
                             name: "*".to_string().into(),
                             is_const: true,
                             decl_id: None,
-                            type_params: vec![CcType {
+                            type_args: vec![CcType {
                                 name: "int".to_string().into(),
                                 is_const: false,
-                                type_params: vec![],
+                                type_args: vec![],
                                 decl_id: None,
                             }],
                         }],

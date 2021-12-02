@@ -89,11 +89,11 @@ struct CcType {
   // all the same type in C++.
   bool is_const = false;
 
-  // Type parameters for a generic type. Examples:
-  //   int has no type parameters.
-  //   int* has a single type parameter, int.
-  //   tuple<int, float> has two type parameters, int and float.
-  std::vector<CcType> type_params = {};
+  // Type arguments for a generic type. Examples:
+  //   int has no type arguments.
+  //   int* has a single type argument, int.
+  //   tuple<int, float> has two type arguments, int and float.
+  std::vector<CcType> type_args = {};
 };
 
 // A Rust type involved in the bindings. It has the knowledge of how the type
@@ -107,11 +107,11 @@ struct RsType {
   // Id of a decl that this type corresponds to. `nullopt` for primitive types.
   std::optional<DeclId> decl_id = std::nullopt;
 
-  // Type parameters for a generic type. Examples:
-  //   i32 has no type parameters.
-  //   *mut i32 has a single type parameter, i32.
-  //   (i32, f32) has two type parameters, i32 and f32.
-  std::vector<RsType> type_params = {};
+  // Type arguments for a generic type. Examples:
+  //   i32 has no type arguments.
+  //   *mut i32 has a single type argument, i32.
+  //   (i32, f32) has two type arguments, i32 and f32.
+  std::vector<RsType> type_args = {};
 };
 
 inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
@@ -145,8 +145,8 @@ struct MappedType {
                                     : internal::kRustPtrMut;
     auto pointer_type =
         Simple(std::string(rs_name), std::string(internal::kCcPtr));
-    pointer_type.rs_type.type_params.push_back(std::move(pointee_type.rs_type));
-    pointer_type.cc_type.type_params.push_back(std::move(pointee_type.cc_type));
+    pointer_type.rs_type.type_args.push_back(std::move(pointee_type.rs_type));
+    pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
     return pointer_type;
   }
 
@@ -156,8 +156,8 @@ struct MappedType {
                                     : internal::kRustPtrMut;
     auto pointer_type =
         Simple(std::string(rs_name), std::string(internal::kCcLValueRef));
-    pointer_type.rs_type.type_params.push_back(std::move(pointee_type.rs_type));
-    pointer_type.cc_type.type_params.push_back(std::move(pointee_type.cc_type));
+    pointer_type.rs_type.type_args.push_back(std::move(pointee_type.rs_type));
+    pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
     return pointer_type;
   }
 

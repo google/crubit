@@ -46,7 +46,7 @@ nlohmann::json RsType::ToJson() const {
   } else {
     result["name"] = name;
   }
-  result["type_params"] = VectorToJson(type_params);
+  result["type_args"] = VectorToJson(type_args);
 
   return result;
 }
@@ -60,7 +60,7 @@ nlohmann::json CcType::ToJson() const {
     result["name"] = name;
   }
   result["is_const"] = is_const;
-  result["type_params"] = VectorToJson(type_params);
+  result["type_args"] = VectorToJson(type_args);
 
   return result;
 }

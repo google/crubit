@@ -19,30 +19,30 @@ TEST(IrTest, TypeToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
       "rs_type": {
           "name": "CompoundRs",
-          "type_params": [{"name": "i32", "type_params": []}]
+          "type_args": [{"name": "i32", "type_args": []}]
       },
       "cc_type": {
           "name": "CompoundCc",
           "is_const": false,
-          "type_params": [
-              {"is_const": false, "name": "int", "type_params": []}
+          "type_args": [
+              {"is_const": false, "name": "int", "type_args": []}
           ]
       }
   })j");
   auto type = MappedType{
-      .rs_type = RsType{.name = "CompoundRs", .type_params = {RsType{"i32"}}},
+      .rs_type = RsType{.name = "CompoundRs", .type_args = {RsType{"i32"}}},
       .cc_type = CcType{.name = "CompoundCc",
                         .is_const = false,
-                        .type_params = {CcType{"int"}}}};
+                        .type_args = {CcType{"int"}}}};
   EXPECT_EQ(type.ToJson(), expected);
 }
 
 TEST(IrTest, TypeWithDeclIdToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
-      "rs_type": {"type_params": [], "decl_id": 42},
+      "rs_type": {"type_args": [], "decl_id": 42},
       "cc_type": {
         "is_const": false,
-        "type_params": [],
+        "type_args": [],
         "decl_id": 43
       }
   })j");
@@ -65,11 +65,11 @@ TEST(IrTest, IR) {
                     {
                         "identifier": { "identifier": "public_int" },
                         "type": {
-                            "rs_type": { "name": "i32", "type_params": [] },
+                            "rs_type": { "name": "i32", "type_args": [] },
                             "cc_type": {
                                 "is_const": false,
                                 "name": "int",
-                                "type_params": []
+                                "type_args": []
                             }
                         },
                         "access": "Public",
@@ -78,11 +78,11 @@ TEST(IrTest, IR) {
                     {
                         "identifier": { "identifier": "protected_int" },
                         "type": {
-                            "rs_type": { "name": "i32", "type_params": [] },
+                            "rs_type": { "name": "i32", "type_args": [] },
                             "cc_type": {
                                 "is_const": false,
                                 "name": "int",
-                                "type_params": []
+                                "type_args": []
                             }
                         },
                         "access": "Protected",
@@ -91,11 +91,11 @@ TEST(IrTest, IR) {
                     {
                         "identifier": { "identifier": "private_int" },
                         "type": {
-                            "rs_type": { "name": "i32", "type_params": [] },
+                            "rs_type": { "name": "i32", "type_args": [] },
                             "cc_type": {
                                 "is_const": false,
                                 "name": "int",
-                                "type_params": []
+                                "type_args": []
                             }
                         },
                         "access": "Private",

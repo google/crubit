@@ -137,17 +137,17 @@ auto RsTypeIs(const Args&... matchers) {
   return testing::Field("rs_type", &MappedType::rs_type, AllOf(matchers...));
 }
 
-// Matches an RsType that has type parameters matching `matchers`.
+// Matches an RsType that has type arguments matching `matchers`.
 template <typename... Args>
 auto RsTypeParamsAre(const Args&... matchers) {
-  return testing::Field("type_params", &RsType::type_params,
+  return testing::Field("type_args", &RsType::type_args,
                         ElementsAre(matchers...));
 }
 
-// Matches a CcType that has type parameters matching `matchers`.
+// Matches a CcType that has type arguments matching `matchers`.
 template <typename... Args>
 auto CcTypeParamsAre(const Args&... matchers) {
-  return testing::Field("type_params", &CcType::type_params,
+  return testing::Field("type_args", &CcType::type_args,
                         ElementsAre(matchers...));
 }
 
@@ -196,7 +196,7 @@ auto IsIntRef() {
                RsTypeIs(RsPointsTo(IsRsInt())));
 }
 
-// Matches a MappedType for cc and rs types with no type parameters.
+// Matches a MappedType for cc and rs types with no type arguments.
 auto IsSimpleType(absl::string_view rs_name, absl::string_view cc_name) {
   return AllOf(CcTypeIs(NameIs(cc_name), CcTypeParamsAre()),
                RsTypeIs(NameIs(rs_name), RsTypeParamsAre()));
