@@ -37,15 +37,6 @@ pub struct ContainingStruct {
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
 
-mod detail {
-    use super::*;
-    extern "C" {
-        pub(crate) fn __rust_constructor_thunk__ContainingStruct(
-            __this: *mut ContainingStruct,
-        ) -> ();
-    }
-}
-
 const_assert_eq!(std::mem::size_of::<NontrivialCustomType>(), 4usize);
 const_assert_eq!(std::mem::align_of::<NontrivialCustomType>(), 4usize);
 const_assert_eq!(offset_of!(NontrivialCustomType, i) * 8, 0usize);

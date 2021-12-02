@@ -86,6 +86,8 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 }
 
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
+  if (!IsFromCurrentTarget(function_decl)) return true;
+
   std::vector<FuncParam> params;
   bool success = true;
   // non-static member functions receive an implicit `this` parameter.

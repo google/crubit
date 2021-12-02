@@ -122,6 +122,15 @@ pub enum UnqualifiedIdentifier {
     Destructor,
 }
 
+impl UnqualifiedIdentifier {
+    pub fn identifier_as_str(&self) -> Option<&str> {
+        match self {
+            UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.identifier.as_str()),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum ReferenceQualification {
     LValue,

@@ -52,6 +52,15 @@ fn test_function() {
 }
 
 #[test]
+fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
+    let ir = ir_from_cc_dependency("int Add(int a, int b);", "int Multiply(int a, int b);")?;
+    let names = ir.functions().map(|i| i.name.identifier_as_str().unwrap()).collect_vec();
+    assert_strings_contain(names.as_slice(), "Add");
+    assert_strings_dont_contain(names.as_slice(), "Multiply");
+    Ok(())
+}
+
+#[test]
 fn test_doc_comment() -> Result<()> {
     let ir = ir_from_cc(
         r#"
