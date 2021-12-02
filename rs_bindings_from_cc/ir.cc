@@ -22,6 +22,16 @@
 
 namespace rs_bindings_from_cc {
 
+template <class T>
+static std::vector<nlohmann::json> VectorToJson(const std::vector<T>& v) {
+  std::vector<nlohmann::json> result;
+  result.reserve(v.size());
+  for (const T& t : v) {
+    result.push_back(t.ToJson());
+  }
+  return result;
+}
+
 nlohmann::json HeaderName::ToJson() const {
   nlohmann::json result;
   result["name"] = name_;
@@ -31,17 +41,12 @@ nlohmann::json HeaderName::ToJson() const {
 nlohmann::json RsType::ToJson() const {
   nlohmann::json result;
 
-  std::vector<nlohmann::json> json_params;
-  json_params.reserve(type_params.size());
-  for (const RsType& param : type_params) {
-    json_params.push_back(param.ToJson());
-  }
   if (decl_id.has_value()) {
     result["decl_id"] = decl_id->value();
   } else {
     result["name"] = name;
   }
-  result["type_params"] = std::move(json_params);
+  result["type_params"] = VectorToJson(type_params);
 
   return result;
 }
@@ -49,18 +54,13 @@ nlohmann::json RsType::ToJson() const {
 nlohmann::json CcType::ToJson() const {
   nlohmann::json result;
 
-  std::vector<nlohmann::json> json_params;
-  json_params.reserve(type_params.size());
-  for (const CcType& param : type_params) {
-    json_params.push_back(param.ToJson());
-  }
   if (decl_id.has_value()) {
     result["decl_id"] = decl_id->value();
   } else {
     result["name"] = name;
   }
   result["is_const"] = is_const;
-  result["type_params"] = std::move(json_params);
+  result["type_params"] = VectorToJson(type_params);
 
   return result;
 }
@@ -131,11 +131,6 @@ nlohmann::json MemberFuncMetadata::ToJson() const {
 }
 
 nlohmann::json Func::ToJson() const {
-  std::vector<nlohmann::json> json_params;
-  json_params.reserve(params.size());
-  for (const FuncParam& param : params) {
-    json_params.push_back(param.ToJson());
-  }
   nlohmann::json func;
   if (auto* id = std::get_if<Identifier>(&name)) {
     func["name"]["Identifier"] = id->ToJson();
@@ -149,7 +144,7 @@ nlohmann::json Func::ToJson() const {
   }
   func["mangled_name"] = mangled_name;
   func["return_type"] = return_type.ToJson();
-  func["params"] = std::move(json_params);
+  func["params"] = VectorToJson(params);
   func["is_inline"] = is_inline;
   if (member_func_metadata.has_value()) {
     func["member_func_metadata"] = member_func_metadata->ToJson();
@@ -215,12 +210,6 @@ nlohmann::json SpecialMemberFunc::ToJson() const {
 }
 
 nlohmann::json Record::ToJson() const {
-  std::vector<nlohmann::json> json_fields;
-  json_fields.reserve(fields.size());
-  for (const Field& field : fields) {
-    json_fields.push_back(field.ToJson());
-  }
-
   nlohmann::json record;
   record["identifier"] = identifier.ToJson();
   record["decl_id"] = decl_id.value();
@@ -228,7 +217,7 @@ nlohmann::json Record::ToJson() const {
   if (doc_comment) {
     record["doc_comment"] = *doc_comment;
   }
-  record["fields"] = std::move(json_fields);
+  record["fields"] = VectorToJson(fields);
   record["size"] = size;
   record["alignment"] = alignment;
   record["copy_constructor"] = copy_constructor.ToJson();
@@ -269,12 +258,6 @@ nlohmann::json Comment::ToJson() const {
 }
 
 nlohmann::json IR::ToJson() const {
-  std::vector<nlohmann::json> json_used_headers;
-  json_used_headers.reserve(used_headers.size());
-  for (const HeaderName& header : used_headers) {
-    json_used_headers.push_back(header.ToJson());
-  }
-
   std::vector<nlohmann::json> json_items;
   json_items.reserve(items.size());
   for (const auto& item : items) {
@@ -282,7 +265,7 @@ nlohmann::json IR::ToJson() const {
   }
 
   nlohmann::json result;
-  result["used_headers"] = std::move(json_used_headers);
+  result["used_headers"] = VectorToJson(used_headers);
   result["current_target"] = current_target.value();
   result["items"] = std::move(json_items);
   return result;
