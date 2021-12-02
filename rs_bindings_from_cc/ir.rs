@@ -321,6 +321,13 @@ impl IR {
         })
     }
 
+    pub fn unsupported_items(&self) -> impl Iterator<Item = &UnsupportedItem> {
+        self.items().filter_map(|item| match item {
+            Item::UnsupportedItem(unsupported_item) => Some(unsupported_item),
+            _ => None,
+        })
+    }
+
     pub fn record_for_type<T>(&self, ty: &T) -> Result<&Record>
     where
         T: OwningDeclId + std::fmt::Debug,

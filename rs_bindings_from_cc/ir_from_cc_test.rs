@@ -356,3 +356,47 @@ fn test_destructor_function_name() {
             .contains(&ir::UnqualifiedIdentifier::Destructor)
     );
 }
+
+#[test]
+fn test_unsupported_items_are_emitted() -> Result<()> {
+    // We will have to rewrite this test to use something else that is unsupported
+    // once we start importing structs from namespaces.
+    let ir = ir_from_cc("namespace my_namespace { struct StructFromNamespaceIsUnsupported {}; }")?;
+    assert_strings_contain(
+        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
+        "my_namespace::StructFromNamespaceIsUnsupported",
+    );
+    Ok(())
+}
+
+#[test]
+fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
+    // We will have to rewrite this test to use something else that is unsupported
+    // once we start importing structs from namespaces.
+    let ir = ir_from_cc_dependency(
+        "struct MyOtherStruct { my_namespace::StructFromNamespaceIsUnsupported my_struct; };",
+        "namespace my_namespace { struct StructFromNamespaceIsUnsupported {}; }",
+    )?;
+    let names = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
+    assert_strings_dont_contain(names.as_slice(), "my_namespace::StructFromNamespaceIsUnsupported");
+    assert_strings_contain(names.as_slice(), "MyOtherStruct::MyOtherStruct");
+    Ok(())
+}
+
+fn assert_strings_contain(strings: &[&str], expected_string: &str) {
+    assert!(
+        strings.iter().any(|s| *s == expected_string),
+        "Value '{}' was unexpectedly missing from {:?}",
+        expected_string,
+        strings
+    );
+}
+
+fn assert_strings_dont_contain(strings: &[&str], unexpected_string: &str) {
+    assert!(
+        strings.iter().all(|s| *s != unexpected_string),
+        "Value '{}' was unexpectedly found in {:?}",
+        unexpected_string,
+        strings
+    );
+}

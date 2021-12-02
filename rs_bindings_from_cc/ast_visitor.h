@@ -72,6 +72,10 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
   Label GetOwningTarget(const clang::Decl* decl) const;
 
+  // Checks if the given decl belongs to the current target. Does not look into
+  // other redeclarations of the decl.
+  bool IsFromCurrentTarget(const clang::Decl* decl) const;
+
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //
   // If the decl's name is an identifier, this returns that identifier as-is.
@@ -97,9 +101,9 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   std::optional<std::string> GetComment(const clang::Decl* decl) const;
   absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
 
-  void PushUnsupportedItem(std::string name, std::string message,
+  void PushUnsupportedItem(const clang::Decl* decl, std::string message,
                            clang::SourceLocation source_location);
-  void PushUnsupportedItem(std::string name, std::string message,
+  void PushUnsupportedItem(const clang::Decl* decl, std::string message,
                            clang::SourceRange source_range);
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 

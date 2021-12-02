@@ -20,54 +20,6 @@ pub struct NontrivialCustomType {
 
 impl !Unpin for NontrivialCustomType {}
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=4
-// Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=5
-// Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Parameter type 'struct NontrivialCustomType &&' is not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=4
-// Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=4
-// Error while generating bindings for item 'NontrivialCustomType::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=10
-// Error while generating bindings for item 'UnsupportedParamType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=11
-// Error while generating bindings for item 'UnsupportedUnnamedParam':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=12
-// Error while generating bindings for item 'UnsupportedReturnType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=14
-// Error while generating bindings for item 'MultipleReasons':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=14
-// Error while generating bindings for item 'MultipleReasons':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=14
-// Error while generating bindings for item 'MultipleReasons':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=17
-// Error while generating bindings for item 'ns::FunctionInNamespace':
-// Items contained in namespaces are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=18
-// Error while generating bindings for item 'ns::StructInNamespace':
-// Items contained in namespaces are not supported yet
-
 // namespace ns
 
 #[derive(Clone, Copy)]
@@ -76,34 +28,6 @@ pub struct ContainingStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: core::mem::MaybeUninit<u8>,
 }
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=21
-// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=22
-// Error while generating bindings for item 'ContainingStruct::NestedStruct':
-// Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=22
-// Error while generating bindings for item 'ContainingStruct::NestedStruct::NestedStruct':
-// Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=21
-// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=21
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=21
-// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Parameter type 'struct ContainingStruct &&' is not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=21
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// Parameter type 'struct ContainingStruct &&' is not supported
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 

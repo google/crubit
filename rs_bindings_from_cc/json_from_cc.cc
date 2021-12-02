@@ -5,6 +5,7 @@
 #include <string>
 
 #include "base/logging.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
@@ -14,9 +15,23 @@
 
 namespace rs_bindings_from_cc {
 
+// LINT.IfChange
+static constexpr absl::string_view kDependencyTarget = "//test:dependency";
+
+static constexpr absl::string_view kDependencyHeaderName =
+    "test/dependency_header.h";
+// LINT.ThenChange(//depot/rs_bindings_from_cc/ir_testing.rs)
+
 // This is intended to be called from Rust.
-extern "C" FfiU8SliceBox json_from_cc(FfiU8Slice cc_source) {
-  absl::StatusOr<IR> ir = IrFromCc(StringViewFromFfiU8Slice(cc_source));
+extern "C" FfiU8SliceBox json_from_cc_dependency(
+    FfiU8Slice header_source, FfiU8Slice dependency_header_source) {
+  absl::StatusOr<IR> ir = IrFromCc(
+      StringViewFromFfiU8Slice(header_source), Label{"//test:testing_target"},
+      /* public_headers= */ {},
+      {{HeaderName(std::string(kDependencyHeaderName)),
+        std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
+      {{HeaderName(std::string(kDependencyHeaderName)),
+        Label{kDependencyTarget}}});
   // TODO(forster): For now it is good enough to just exit: We are just using
   // this from tests, which are ok to just fail. Clang has already printed error
   // messages. If we start using this for production, then we should bridge the

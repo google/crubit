@@ -10,13 +10,37 @@ use ir::{
     IR,
 };
 
-pub fn ir_from_cc(src: &str) -> Result<IR> {
+/// Generates `IR` from a header containing `header_source`.
+pub fn ir_from_cc(header_source: &str) -> Result<IR> {
+    ir_from_cc_dependency(header_source, "// empty header")
+}
+
+const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
+
+/// Generates `IR` from a header that depends on another header.
+///
+/// `header_source` of the header will be updated to contain the `#include` line
+/// for the header with `dependency_header_source`. The name of the dependency
+/// target is assumed to be `"//test:dependency"`.
+pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str) -> Result<IR> {
     extern "C" {
-        fn json_from_cc(cc_source: FfiU8Slice) -> FfiU8SliceBox;
+        fn json_from_cc_dependency(
+            header_source: FfiU8Slice,
+            dependency_header_source: FfiU8Slice,
+        ) -> FfiU8SliceBox;
     }
 
-    let src_u8 = src.as_bytes();
-    let json_utf8 = unsafe { json_from_cc(FfiU8Slice::from_slice(src_u8)).into_boxed_slice() };
+    let header_source_with_include =
+        format!("#include \"{}\"\n\n{}", DEPENDENCY_HEADER_NAME, header_source);
+    let header_source_with_include_u8 = header_source_with_include.as_bytes();
+    let dependency_header_source_u8 = dependency_header_source.as_bytes();
+    let json_utf8 = unsafe {
+        json_from_cc_dependency(
+            FfiU8Slice::from_slice(header_source_with_include_u8),
+            FfiU8Slice::from_slice(dependency_header_source_u8),
+        )
+        .into_boxed_slice()
+    };
     ir::deserialize_ir(&*json_utf8)
 }
 
