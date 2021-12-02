@@ -11,4 +11,11 @@ int* return_pointer() {
   return &i;
 }
 
+int& return_reference() {
+  static int i = 42;
+  return i;
+}
+
 void take_pointer(int* i) { *i = 42; }
+
+void take_reference(int& i) { i = 42; }

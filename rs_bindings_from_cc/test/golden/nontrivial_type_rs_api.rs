@@ -42,15 +42,11 @@ impl Drop for Nontrivial {
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=9
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Parameter type 'const struct Nontrivial &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=9
 // Error while generating bindings for item 'Nontrivial::operator=':
-// Parameter type 'const struct Nontrivial &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Nontrivial::operator=':
-// Return type 'struct Nontrivial &' is not supported
+// Empty parameter names are not supported
 
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
@@ -80,15 +76,11 @@ impl Drop for NontrivialInline {
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=20
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
-// Parameter type 'const struct NontrivialInline &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=20
 // Error while generating bindings for item 'NontrivialInline::operator=':
-// Parameter type 'const struct NontrivialInline &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'NontrivialInline::operator=':
-// Return type 'struct NontrivialInline &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=27
 // Error while generating bindings for item 'TakesByValue':

@@ -22,15 +22,11 @@ pub struct Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
 // Error while generating bindings for item 'Trivial::Trivial':
-// Parameter type 'const struct Trivial &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
 // Error while generating bindings for item 'Trivial::operator=':
-// Parameter type 'const struct Trivial &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Trivial::operator=':
-// Return type 'struct Trivial &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
 // Error while generating bindings for item 'Trivial::Trivial':
@@ -39,10 +35,6 @@ pub struct Trivial {
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
 // Error while generating bindings for item 'Trivial::operator=':
 // Parameter type 'struct Trivial &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Trivial::operator=':
-// Return type 'struct Trivial &' is not supported
 
 /// Defaulted special member functions are trivial on a struct with only trivial
 /// members.
@@ -58,15 +50,11 @@ pub struct TrivialWithDefaulted {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=15
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
-// Parameter type 'const struct TrivialWithDefaulted &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=16
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Parameter type 'const struct TrivialWithDefaulted &' is not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=16
-// Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Return type 'struct TrivialWithDefaulted &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=17
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
@@ -75,10 +63,6 @@ pub struct TrivialWithDefaulted {
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=18
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
 // Parameter type 'struct TrivialWithDefaulted &&' is not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=18
-// Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Return type 'struct TrivialWithDefaulted &' is not supported
 
 #[inline(always)]
 pub fn TakesByValue(trivial: Trivial) -> () {

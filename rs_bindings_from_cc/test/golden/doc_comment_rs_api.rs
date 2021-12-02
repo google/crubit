@@ -24,15 +24,11 @@ pub struct DocCommentSlashes {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
-// Parameter type 'const struct DocCommentSlashes &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Parameter type 'const struct DocCommentSlashes &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Return type 'struct DocCommentSlashes &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
@@ -41,10 +37,6 @@ pub struct DocCommentSlashes {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
 // Parameter type 'struct DocCommentSlashes &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Return type 'struct DocCommentSlashes &' is not supported
 
 /// Doc comment
 ///
@@ -62,15 +54,11 @@ pub struct DocCommentBang {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=15
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
-// Parameter type 'const struct DocCommentBang &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=15
 // Error while generating bindings for item 'DocCommentBang::operator=':
-// Parameter type 'const struct DocCommentBang &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'DocCommentBang::operator=':
-// Return type 'struct DocCommentBang &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=15
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
@@ -79,10 +67,6 @@ pub struct DocCommentBang {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=15
 // Error while generating bindings for item 'DocCommentBang::operator=':
 // Parameter type 'struct DocCommentBang &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'DocCommentBang::operator=':
-// Return type 'struct DocCommentBang &' is not supported
 
 /// Multiline comment
 ///
@@ -100,15 +84,11 @@ pub struct MultilineCommentTwoStars {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=23
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Parameter type 'const struct MultilineCommentTwoStars &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=23
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Parameter type 'const struct MultilineCommentTwoStars &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Return type 'struct MultilineCommentTwoStars &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=23
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
@@ -117,10 +97,6 @@ pub struct MultilineCommentTwoStars {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=23
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Return type 'struct MultilineCommentTwoStars &' is not supported
 
 /// Line comment
 ///
@@ -138,15 +114,11 @@ pub struct LineComment {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=31
 // Error while generating bindings for item 'LineComment::LineComment':
-// Parameter type 'const struct LineComment &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=31
 // Error while generating bindings for item 'LineComment::operator=':
-// Parameter type 'const struct LineComment &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'LineComment::operator=':
-// Return type 'struct LineComment &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=31
 // Error while generating bindings for item 'LineComment::LineComment':
@@ -155,10 +127,6 @@ pub struct LineComment {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=31
 // Error while generating bindings for item 'LineComment::operator=':
 // Parameter type 'struct LineComment &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'LineComment::operator=':
-// Return type 'struct LineComment &' is not supported
 
 /// Multiline comment
 ///
@@ -176,15 +144,11 @@ pub struct MultilineOneStar {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
-// Parameter type 'const struct MultilineOneStar &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'MultilineOneStar::operator=':
-// Parameter type 'const struct MultilineOneStar &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'MultilineOneStar::operator=':
-// Return type 'struct MultilineOneStar &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
@@ -193,10 +157,6 @@ pub struct MultilineOneStar {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'MultilineOneStar::operator=':
 // Parameter type 'struct MultilineOneStar &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'MultilineOneStar::operator=':
-// Return type 'struct MultilineOneStar &' is not supported
 
 /// A function
 #[inline(always)]

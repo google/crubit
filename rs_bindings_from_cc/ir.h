@@ -33,6 +33,7 @@ namespace internal {
 inline constexpr absl::string_view kRustPtrMut = "*mut";
 inline constexpr absl::string_view kRustPtrConst = "*const";
 inline constexpr absl::string_view kCcPtr = "*";
+inline constexpr absl::string_view kCcLValueRef = "&";
 inline constexpr int kJsonIndent = 2;
 }  // namespace internal
 
@@ -144,6 +145,17 @@ struct MappedType {
                                     : internal::kRustPtrMut;
     auto pointer_type =
         Simple(std::string(rs_name), std::string(internal::kCcPtr));
+    pointer_type.rs_type.type_params.push_back(std::move(pointee_type.rs_type));
+    pointer_type.cc_type.type_params.push_back(std::move(pointee_type.cc_type));
+    return pointer_type;
+  }
+
+  static MappedType LValueReferenceTo(MappedType pointee_type) {
+    absl::string_view rs_name = pointee_type.cc_type.is_const
+                                    ? internal::kRustPtrConst
+                                    : internal::kRustPtrMut;
+    auto pointer_type =
+        Simple(std::string(rs_name), std::string(internal::kCcLValueRef));
     pointer_type.rs_type.type_params.push_back(std::move(pointee_type.rs_type));
     pointer_type.cc_type.type_params.push_back(std::move(pointee_type.cc_type));
     return pointer_type;

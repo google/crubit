@@ -363,6 +363,12 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
     if (pointee_type.ok()) {
       type = MappedType::PointerTo(*pointee_type);
     }
+  } else if (const auto* lvalue_ref_type =
+                 qual_type->getAs<clang::LValueReferenceType>()) {
+    auto pointee_type = ConvertType(lvalue_ref_type->getPointeeType());
+    if (pointee_type.ok()) {
+      type = MappedType::LValueReferenceTo(*pointee_type);
+    }
   } else if (const auto* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {

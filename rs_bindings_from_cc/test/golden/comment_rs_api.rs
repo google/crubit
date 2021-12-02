@@ -30,15 +30,11 @@ pub struct Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::Foo':
-// Parameter type 'const struct Foo &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::operator=':
-// Parameter type 'const struct Foo &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Foo::operator=':
-// Return type 'struct Foo &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::Foo':
@@ -47,10 +43,6 @@ pub struct Foo {
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::operator=':
 // Parameter type 'struct Foo &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Foo::operator=':
-// Return type 'struct Foo &' is not supported
 
 // b
 
@@ -77,15 +69,11 @@ pub struct Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::Bar':
-// Parameter type 'const struct Bar &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::operator=':
-// Parameter type 'const struct Bar &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Bar::operator=':
-// Return type 'struct Bar &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::Bar':
@@ -94,10 +82,6 @@ pub struct Bar {
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::operator=':
 // Parameter type 'struct Bar &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'Bar::operator=':
-// Return type 'struct Bar &' is not supported
 
 /// d
 #[derive(Clone, Copy)]
@@ -112,15 +96,11 @@ pub struct HasNoComments {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
-// Parameter type 'const struct HasNoComments &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::operator=':
-// Parameter type 'const struct HasNoComments &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'HasNoComments::operator=':
-// Return type 'struct HasNoComments &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
@@ -129,10 +109,6 @@ pub struct HasNoComments {
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::operator=':
 // Parameter type 'struct HasNoComments &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'HasNoComments::operator=':
-// Return type 'struct HasNoComments &' is not supported
 
 // e
 

@@ -19,10 +19,26 @@ mod tests {
     }
 
     #[test]
+    fn test_return_reference() {
+        use simple_functions::return_reference;
+        unsafe {
+            assert_eq!(*return_reference(), 42);
+        }
+    }
+
+    #[test]
     fn test_take_pointer() {
         use simple_functions::take_pointer;
         let mut i: i32 = 0;
         take_pointer(&mut i);
+        assert_eq!(i, 42);
+    }
+
+    #[test]
+    fn test_take_reference() {
+        use simple_functions::take_reference;
+        let mut i: i32 = 0;
+        take_reference(&mut i);
         assert_eq!(i, 42);
     }
 }

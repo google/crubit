@@ -169,15 +169,11 @@ pub struct SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Parameter type 'const struct SomeStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Parameter type 'const struct SomeStruct &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'SomeStruct::operator=':
-// Return type 'struct SomeStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
@@ -186,10 +182,6 @@ pub struct SomeStruct {
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter type 'struct SomeStruct &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'SomeStruct::operator=':
-// Return type 'struct SomeStruct &' is not supported
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -231,6 +223,8 @@ pub struct FieldTypeTestStruct {
     pub struct_field: SomeStruct,
     pub struct_ptr_field: *mut SomeStruct,
     pub const_struct_ptr_field: *const SomeStruct,
+    pub struct_ref_field: *mut SomeStruct,
+    pub const_struct_ref_field: *const SomeStruct,
 }
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
@@ -239,15 +233,11 @@ pub struct FieldTypeTestStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Parameter type 'const struct FieldTypeTestStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::operator=':
-// Parameter type 'const struct FieldTypeTestStruct &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
-// Return type 'struct FieldTypeTestStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
@@ -256,10 +246,6 @@ pub struct FieldTypeTestStruct {
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::operator=':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
-// Return type 'struct FieldTypeTestStruct &' is not supported
 
 #[inline(always)]
 pub fn VoidReturningFunction() -> () {
@@ -282,7 +268,7 @@ mod detail {
 const_assert_eq!(std::mem::size_of::<SomeStruct>(), 1usize);
 const_assert_eq!(std::mem::align_of::<SomeStruct>(), 1usize);
 
-const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 200usize);
+const_assert_eq!(std::mem::size_of::<FieldTypeTestStruct>(), 216usize);
 const_assert_eq!(std::mem::align_of::<FieldTypeTestStruct>(), 8usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, bool_field) * 8, 0usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, char_field) * 8, 8usize);
@@ -321,3 +307,5 @@ const_assert_eq!(offset_of!(FieldTypeTestStruct, ptr_field) * 8, 1344usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_field) * 8, 1408usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8, 1472usize);
 const_assert_eq!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8, 1536usize);
+const_assert_eq!(offset_of!(FieldTypeTestStruct, struct_ref_field) * 8, 1600usize);
+const_assert_eq!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 8, 1664usize);

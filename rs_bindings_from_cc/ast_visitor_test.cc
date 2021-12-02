@@ -161,6 +161,11 @@ auto CcPointsTo(const Matcher& matcher) {
   return AllOf(NameIs("*"), CcTypeParamsAre(matcher));
 }
 
+template <typename Matcher>
+auto CcReferenceTo(const Matcher& matcher) {
+  return AllOf(NameIs("&"), CcTypeParamsAre(matcher));
+}
+
 // Matches an RsType that is a mutable pointer to a type matching `matcher`.
 template <typename Matcher>
 auto RsPointsTo(const Matcher& matcher) {
@@ -182,6 +187,12 @@ auto IsInt() { return AllOf(CcTypeIs(IsCcInt()), RsTypeIs(IsRsInt())); }
 // Matches a MappedType that is a pointer to integer.
 auto IsIntPtr() {
   return AllOf(CcTypeIs(CcPointsTo(IsCcInt())),
+               RsTypeIs(RsPointsTo(IsRsInt())));
+}
+
+// Matches a MappedType that is an lvalue reference to integer.
+auto IsIntRef() {
+  return AllOf(CcTypeIs(CcReferenceTo(IsCcInt())),
                RsTypeIs(RsPointsTo(IsRsInt())));
 }
 
@@ -343,6 +354,14 @@ TEST(AstVisitorTest, TestImportConstStructPointerFunc) {
   EXPECT_THAT(ir.items, Contains(VariantWith<Func>(AllOf(
                             IdentifierIs("Foo"), ReturnType(is_ptr_to_const_s),
                             ParamsAre(ParamType(is_ptr_to_const_s))))));
+}
+
+TEST(AstVisitorTest, TestImportReferenceFunc) {
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int& Foo(int& a);"));
+
+  EXPECT_THAT(ir.items,
+              ElementsAre(VariantWith<Func>(AllOf(
+                  ReturnType(IsIntRef()), ParamsAre(ParamType(IsIntRef()))))));
 }
 
 TEST(AstVisitorTest, Struct) {

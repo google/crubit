@@ -20,15 +20,11 @@ pub struct FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
-// Parameter type 'const struct FirstStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
 // Error while generating bindings for item 'FirstStruct::operator=':
-// Parameter type 'const struct FirstStruct &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'FirstStruct::operator=':
-// Return type 'struct FirstStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
@@ -37,10 +33,6 @@ pub struct FirstStruct {
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
 // Error while generating bindings for item 'FirstStruct::operator=':
 // Parameter type 'struct FirstStruct &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'FirstStruct::operator=':
-// Return type 'struct FirstStruct &' is not supported
 
 #[inline(always)]
 pub fn first_func() -> i32 {
@@ -59,15 +51,11 @@ pub struct SecondStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
-// Parameter type 'const struct SecondStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::operator=':
-// Parameter type 'const struct SecondStruct &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'SecondStruct::operator=':
-// Return type 'struct SecondStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
@@ -76,10 +64,6 @@ pub struct SecondStruct {
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::operator=':
 // Parameter type 'struct SecondStruct &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'SecondStruct::operator=':
-// Return type 'struct SecondStruct &' is not supported
 
 #[inline(always)]
 pub fn second_func() -> i32 {

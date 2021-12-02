@@ -30,15 +30,11 @@ impl !Unpin for NontrivialCustomType {}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=4
 // Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Parameter type 'const struct NontrivialCustomType &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=4
 // Error while generating bindings for item 'NontrivialCustomType::operator=':
-// Parameter type 'const struct NontrivialCustomType &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'NontrivialCustomType::operator=':
-// Return type 'struct NontrivialCustomType &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=10
 // Error while generating bindings for item 'UnsupportedParamType':
@@ -95,15 +91,11 @@ pub struct ContainingStruct {
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=21
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Parameter type 'const struct ContainingStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=21
 // Error while generating bindings for item 'ContainingStruct::operator=':
-// Parameter type 'const struct ContainingStruct &' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// Return type 'struct ContainingStruct &' is not supported
+// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=21
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
@@ -112,10 +104,6 @@ pub struct ContainingStruct {
 // rs_bindings_from_cc/test/golden/unsupported.h;l=21
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // Parameter type 'struct ContainingStruct &&' is not supported
-
-// <unknown location>
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// Return type 'struct ContainingStruct &' is not supported
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
