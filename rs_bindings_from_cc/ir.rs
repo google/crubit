@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::io::Read;
 
+pub const TESTING_TARGET: &str = "//test:testing_target";
+
 /// Deserialize `IR` from JSON given as a reader.
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
     let flat_ir = serde_json::from_reader(reader)?;
@@ -23,7 +25,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
     make_ir_from_parts(
         items.into_iter().collect_vec(),
         /* used_headers= */ vec![],
-        /* current_target= */ "//test:testing_target".into(),
+        /* current_target= */ TESTING_TARGET.into(),
     )
 }
 
@@ -109,6 +111,15 @@ pub struct DeclId(pub usize);
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]
 pub struct Label(pub String);
+
+impl Label {
+    pub fn target_name(&self) -> Result<&str> {
+        match self.0.split_once(":") {
+            Some((_package, target_name)) => Ok(target_name),
+            None => bail!("Unsupported label format {:?}", self.0),
+        }
+    }
+}
 
 impl<T: Into<String>> From<T> for Label {
     fn from(label: T) -> Self {
@@ -216,6 +227,12 @@ pub struct Record {
     pub move_constructor: SpecialMemberFunc,
     pub destructor: SpecialMemberFunc,
     pub is_trivial_abi: bool,
+}
+
+impl Record {
+    pub fn owning_crate_name(&self) -> Result<&str> {
+        self.owning_target.target_name()
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -393,6 +410,12 @@ impl IR {
             .get(&decl_id)
             .with_context(|| format!("Couldn't find decl_id {:?} in the IR.", decl_id))?;
         self.flat_ir.items.get(idx).with_context(|| format!("Couldn't find an item at idx {}", idx))
+    }
+
+    pub fn is_in_current_target(&self, record: &Record) -> bool {
+        // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
+        // values.
+        record.owning_target == self.flat_ir.current_target
     }
 }
 

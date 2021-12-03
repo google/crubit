@@ -6,8 +6,8 @@ use anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
-    self, CcType, Func, FuncParam, Identifier, Item, MappedType, Record, RsType, SpecialMemberFunc,
-    IR,
+    self, CcType, DeclId, Func, FuncParam, Identifier, Item, MappedType, Record, RsType,
+    SpecialMemberFunc, IR,
 };
 
 /// Generates `IR` from a header containing `header_source`.
@@ -62,9 +62,25 @@ pub fn ir_int() -> MappedType {
     }
 }
 
+pub fn ir_type(decl_id: usize) -> MappedType {
+    MappedType {
+        rs_type: RsType { name: None, type_args: vec![], decl_id: Some(DeclId(decl_id)) },
+        cc_type: CcType {
+            name: None,
+            type_args: vec![],
+            is_const: false,
+            decl_id: Some(DeclId(decl_id)),
+        },
+    }
+}
+
 /// Creates a simple `FuncParam` with a given name and `int`/`i32` type
 pub fn ir_int_param(name: &str) -> FuncParam {
     FuncParam { identifier: ir_id(name), type_: ir_int() }
+}
+
+pub fn ir_param(name: &str, decl_id: usize) -> FuncParam {
+    FuncParam { identifier: ir_id(name), type_: ir_type(decl_id) }
 }
 
 /// Creates a simple `Func` with a given name

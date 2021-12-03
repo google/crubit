@@ -3,31 +3,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(
-    const_maybe_uninit_as_ptr,
-    const_ptr_offset_from,
-    custom_inner_attributes,
-    negative_impls
-)]
-
-use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
-
-#[repr(C)]
-pub struct NontrivialCustomType {
-    pub i: i32,
-}
-
-impl !Unpin for NontrivialCustomType {}
+#![feature(custom_inner_attributes)]
 
 // namespace ns
-
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub struct ContainingStruct {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: core::mem::MaybeUninit<u8>,
-}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
@@ -36,10 +14,3 @@ pub struct ContainingStruct {
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
-
-const_assert_eq!(std::mem::size_of::<NontrivialCustomType>(), 4usize);
-const_assert_eq!(std::mem::align_of::<NontrivialCustomType>(), 4usize);
-const_assert_eq!(offset_of!(NontrivialCustomType, i) * 8, 0usize);
-
-const_assert_eq!(std::mem::size_of::<ContainingStruct>(), 1usize);
-const_assert_eq!(std::mem::align_of::<ContainingStruct>(), 1usize);

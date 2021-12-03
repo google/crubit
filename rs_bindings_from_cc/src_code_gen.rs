@@ -387,6 +387,9 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
                 thunks.push(thunk.tokens);
             }
             Item::Record(record) => {
+                if !ir.is_in_current_target(record) {
+                    continue;
+                }
                 let (snippet, assertions_snippet) = generate_record(record, ir)?;
                 features.extend(snippet.features);
                 features.extend(assertions_snippet.features);
@@ -490,7 +493,7 @@ fn make_ident(ident: &str) -> Ident {
 fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
     enum TypeKind<'a> {
         Pointer(TokenStream),
-        Record(Ident),
+        Record(TokenStream),
         Unit,
         Other(&'a str),
     }
@@ -502,8 +505,15 @@ fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
             _ => TypeKind::Other(name),
         }
     } else {
-        let ident = make_ident(ir.record_for_type(ty)?.identifier.identifier.as_str());
-        TypeKind::Record(ident)
+        let record = ir.record_for_type(ty)?;
+        let ident = make_ident(record.identifier.identifier.as_str());
+        let path: TokenStream = if ir.is_in_current_target(record) {
+            quote! {#ident}
+        } else {
+            let owning_crate = make_ident(record.owning_crate_name()?);
+            quote! {#owning_crate::#ident}
+        };
+        TypeKind::Record(path)
     };
     match kind {
         TypeKind::Pointer(mutability) => {
@@ -513,11 +523,11 @@ fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
             let nested_type = format_rs_type(&ty.type_args[0], ir)?;
             Ok(quote! {* #mutability #nested_type})
         }
-        TypeKind::Record(ident) => {
+        TypeKind::Record(path) => {
             if !ty.type_args.is_empty() {
                 bail!("Type arguments on records are not yet supported: {:?}", ty);
             }
-            Ok(quote! {#ident})
+            Ok(path)
         }
         TypeKind::Unit => {
             if !ty.type_args.is_empty() {
@@ -565,7 +575,10 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     }
 }
 
-fn cc_struct_layout_assertion(record: &Record) -> TokenStream {
+fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
+    if !ir.is_in_current_target(record) {
+        return quote! {};
+    }
     let record_ident = make_ident(&record.identifier.identifier);
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
@@ -652,7 +665,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
         });
     }
 
-    let layout_assertions = ir.records().map(cc_struct_layout_assertion);
+    let layout_assertions = ir.records().map(|record| cc_struct_layout_assertion(record, ir));
 
     let mut standard_headers = <BTreeSet<Ident>>::new();
     standard_headers.insert(make_ident("memory")); // ubiquitous.
@@ -684,7 +697,8 @@ mod tests {
     use super::*;
     use anyhow::anyhow;
     use ir_testing::{
-        ir_empty, ir_func, ir_id, ir_int, ir_int_param, ir_public_trivial_special, ir_record,
+        ir_empty, ir_from_cc_dependency, ir_func, ir_id, ir_int, ir_int_param,
+        ir_public_trivial_special, ir_record,
     };
     use quote::quote;
     use token_stream_printer::tokens_to_string;
@@ -707,7 +721,7 @@ mod tests {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("add")),
             record_decl_id: None,
-            owning_target: "//foo:bar".into(),
+            owning_target: ir::TESTING_TARGET.into(),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,
             return_type: ir_int(),
@@ -748,7 +762,7 @@ mod tests {
             vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("add")),
                 record_decl_id: None,
-                owning_target: "//foo:bar".into(),
+                owning_target: ir::TESTING_TARGET.into(),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
                 return_type: ir_int(),
@@ -799,11 +813,54 @@ mod tests {
     }
 
     #[test]
+    fn test_simple_function_with_types_from_other_target() -> Result<()> {
+        let ir = ir_from_cc_dependency(
+            "inline ReturnStruct DoSomething(ParamStruct param);",
+            "struct ReturnStruct {}; struct ParamStruct {};",
+        )?;
+
+        assert_eq!(
+            generate_rs_api(&ir)?,
+            rustfmt(tokens_to_string(quote! {
+                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+
+                #[inline(always)]
+                pub fn DoSomething(param: dependency::ParamStruct)
+                  -> dependency::ReturnStruct {
+                    unsafe { crate::detail::__rust_thunk__DoSomething(param) }
+                } __NEWLINE__ __NEWLINE__
+
+                mod detail {
+                    use super::*;
+                    extern "C" {
+                        pub(crate) fn __rust_thunk__DoSomething(param: dependency::ParamStruct)
+                          -> dependency::ReturnStruct;
+                    } // extern
+                } // mod detail
+            })?)?
+        );
+
+        assert_eq!(
+            generate_rs_api_impl(&ir)?.trim(),
+            tokens_to_string(quote! {
+                __HASH_TOKEN__ include <cstddef> __NEWLINE__
+                __HASH_TOKEN__ include <memory> __NEWLINE__
+                __HASH_TOKEN__ include "ir_from_cc_virtual_header.h" __NEWLINE__ __NEWLINE__
+
+                extern "C" ReturnStruct __rust_thunk__DoSomething(ParamStruct param) {
+                    return DoSomething(param);
+                }
+            })?
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_simple_struct() -> Result<()> {
         let ir = make_ir_from_items([Item::Record(Record {
             identifier: ir_id("SomeStruct"),
             id: DeclId(42),
-            owning_target: "//foo:bar".into(),
+            owning_target: ir::TESTING_TARGET.into(),
             doc_comment: None,
             fields: vec![
                 Field {
@@ -876,6 +933,25 @@ mod tests {
     }
 
     #[test]
+    fn test_struct_from_other_target() -> Result<()> {
+        let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
+
+        assert_eq!(
+            generate_rs_api(&ir)?,
+            rustfmt(tokens_to_string(quote! {#![feature(custom_inner_attributes)]})?)?
+        );
+        assert_eq!(
+            generate_rs_api_impl(&ir)?.trim(),
+            tokens_to_string(quote! {
+                __HASH_TOKEN__ include <cstddef> __NEWLINE__
+                __HASH_TOKEN__ include <memory> __NEWLINE__
+                __HASH_TOKEN__ include "ir_from_cc_virtual_header.h"
+            })?
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_copy_derives() {
         let record = ir_record("S");
         assert_eq!(generate_copy_derives(&record), &["Clone", "Copy"]);
@@ -923,7 +999,7 @@ mod tests {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
             record_decl_id: None,
-            owning_target: "//foo:bar".into(),
+            owning_target: ir::TESTING_TARGET.into(),
             mangled_name: "_Z5DerefPKPi".to_string(),
             doc_comment: None,
             return_type: MappedType {
@@ -1050,7 +1126,7 @@ mod tests {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("func")),
             record_decl_id: None,
-            owning_target: "//foo:bar".into(),
+            owning_target: ir::TESTING_TARGET.into(),
             mangled_name: "foo".to_string(),
             doc_comment: Some("Doc Comment".to_string()),
             return_type: ir_int(),
@@ -1072,7 +1148,7 @@ mod tests {
         let ir = make_ir_from_items([Item::Record(Record {
             identifier: ir_id("SomeStruct"),
             id: DeclId(42),
-            owning_target: "//foo:bar".into(),
+            owning_target: ir::TESTING_TARGET.into(),
             doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
             alignment: 0,
             size: 0,
