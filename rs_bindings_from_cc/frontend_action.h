@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "base/logging.h"
+#include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
@@ -30,7 +31,9 @@ class FrontendAction : public clang::ASTFrontendAction {
       : current_target_(current_target),
         public_header_names_(public_header_names),
         headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
-        ir_(*ABSL_DIE_IF_NULL(ir)) {}
+        ir_(*ABSL_DIE_IF_NULL(ir)),
+        lifetime_context_(
+            std::make_shared<devtools_rust::LifetimeAnnotationContext>()) {}
 
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance& instance, llvm::StringRef) override;
@@ -40,6 +43,7 @@ class FrontendAction : public clang::ASTFrontendAction {
   absl::Span<const HeaderName> public_header_names_;
   const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
   IR& ir_;
+  std::shared_ptr<devtools_rust::LifetimeAnnotationContext> lifetime_context_;
 };
 
 }  // namespace rs_bindings_from_cc

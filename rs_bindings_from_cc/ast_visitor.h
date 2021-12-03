@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "base/logging.h"
+#include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
@@ -38,18 +39,20 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  public:
   using Base = clang::RecursiveASTVisitor<AstVisitor>;
 
-  explicit AstVisitor(clang::Sema& sema, Label current_target,
-                      absl::Span<const HeaderName> public_header_names,
-                      const absl::flat_hash_map<const HeaderName, const Label>*
-                          headers_to_targets,
-                      IR* ir)
+  explicit AstVisitor(
+      clang::Sema& sema, Label current_target,
+      absl::Span<const HeaderName> public_header_names,
+      const absl::flat_hash_map<const HeaderName, const Label>*
+          headers_to_targets,
+      IR* ir, const devtools_rust::LifetimeAnnotationContext& lifetime_context)
       : sema_(sema),
         current_target_(current_target),
         public_header_names_(public_header_names),
         headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
         ir_(*ABSL_DIE_IF_NULL(ir)),
         ctx_(nullptr),
-        comment_manager_(*ABSL_DIE_IF_NULL(ir)) {}
+        comment_manager_(*ABSL_DIE_IF_NULL(ir)),
+        lifetime_context_(lifetime_context) {}
 
   // These functions are called by the base class while visiting the different
   // parts of the AST. The API follows the rules of the base class which is
@@ -141,6 +144,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   };
 
   CommentManager comment_manager_;
+  const devtools_rust::LifetimeAnnotationContext& lifetime_context_;
 };  // class AstVisitor
 
 }  // namespace rs_bindings_from_cc

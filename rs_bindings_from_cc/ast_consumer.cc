@@ -27,7 +27,8 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
   CHECK(!public_header_names_.empty());
   CHECK(!headers_to_targets_.empty());
   AstVisitor ast_visitor(instance_.getSema(), current_target_,
-                         public_header_names_, &headers_to_targets_, &ir_);
+                         public_header_names_, &headers_to_targets_, &ir_,
+                         *lifetime_context_);
   ast_visitor.TraverseDecl(ast_context.getTranslationUnitDecl());
 }
 

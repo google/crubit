@@ -5,7 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 
+#include <memory>
+
 #include "base/logging.h"
+#include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
@@ -25,12 +28,15 @@ class AstConsumer : public clang::ASTConsumer {
                        absl::Span<const HeaderName> public_header_names,
                        const absl::flat_hash_map<const HeaderName, const Label>*
                            headers_to_targets,
-                       IR* ir)
+                       IR* ir,
+                       std::shared_ptr<devtools_rust::LifetimeAnnotationContext>
+                           lifetime_context)
       : instance_(instance),
         current_target_(current_target),
         public_header_names_(public_header_names),
         headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
-        ir_(*ABSL_DIE_IF_NULL(ir)) {}
+        ir_(*ABSL_DIE_IF_NULL(ir)),
+        lifetime_context_(lifetime_context) {}
 
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
@@ -40,6 +46,7 @@ class AstConsumer : public clang::ASTConsumer {
   absl::Span<const HeaderName> public_header_names_;
   const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
   IR& ir_;
+  std::shared_ptr<devtools_rust::LifetimeAnnotationContext> lifetime_context_;
 };  // class AstConsumer
 
 }  // namespace rs_bindings_from_cc
