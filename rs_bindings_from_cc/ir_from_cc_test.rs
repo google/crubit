@@ -41,6 +41,7 @@ fn test_function() {
             doc_comment: None,
             return_type: ir_int(),
             params: vec![ir_int_param("a"), ir_int_param("b")],
+            lifetime_params: vec![],
             is_inline: false,
             member_func_metadata: None,
         })],

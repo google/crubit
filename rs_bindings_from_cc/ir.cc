@@ -38,6 +38,13 @@ nlohmann::json HeaderName::ToJson() const {
   return result;
 }
 
+nlohmann::json Lifetime::ToJson() const {
+  nlohmann::json result;
+  result["name"] = name;
+  result["id"] = id.value();
+  return result;
+}
+
 nlohmann::json RsType::ToJson() const {
   nlohmann::json result;
 
@@ -46,6 +53,12 @@ nlohmann::json RsType::ToJson() const {
   } else {
     result["name"] = name;
   }
+  std::vector<nlohmann::json> json_lifetime_args;
+  json_lifetime_args.reserve(lifetime_args.size());
+  for (const LifetimeId& lifetime_id : lifetime_args) {
+    json_lifetime_args.push_back(lifetime_id.value());
+  }
+  result["lifetime_args"] = json_lifetime_args;
   result["type_args"] = VectorToJson(type_args);
 
   return result;
@@ -144,6 +157,7 @@ nlohmann::json Func::ToJson() const {
   func["mangled_name"] = mangled_name;
   func["return_type"] = return_type.ToJson();
   func["params"] = VectorToJson(params);
+  func["lifetime_params"] = VectorToJson(lifetime_params);
   func["is_inline"] = is_inline;
   if (member_func_metadata.has_value()) {
     func["member_func_metadata"] = member_func_metadata->ToJson();
@@ -217,6 +231,7 @@ nlohmann::json Record::ToJson() const {
     record["doc_comment"] = *doc_comment;
   }
   record["fields"] = VectorToJson(fields);
+  record["lifetime_params"] = VectorToJson(lifetime_params);
   record["size"] = size;
   record["alignment"] = alignment;
   record["copy_constructor"] = copy_constructor.ToJson();

@@ -62,9 +62,20 @@ pub struct HeaderName {
     pub name: String,
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
+#[serde(transparent)]
+pub struct LifetimeId(pub i32);
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Lifetime {
+    pub name: String,
+    pub id: LifetimeId,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
     pub name: Option<String>,
+    pub lifetime_args: Vec<LifetimeId>,
     pub type_args: Vec<RsType>,
     pub decl_id: Option<DeclId>,
 }
@@ -178,6 +189,7 @@ pub struct Func {
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
+    pub lifetime_params: Vec<Lifetime>,
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
 }
@@ -220,6 +232,7 @@ pub struct Record {
     pub owning_target: Label,
     pub doc_comment: Option<String>,
     pub fields: Vec<Field>,
+    pub lifetime_params: Vec<Lifetime>,
     pub size: usize,
     pub alignment: usize,
     pub copy_constructor: SpecialMemberFunc,
@@ -453,7 +466,7 @@ mod tests {
                         {
                             "identifier": {"identifier": "public_int" },
                             "type": {
-                                "rs_type": {"name": "i32", "type_args": []},
+                                "rs_type": {"name": "i32", "lifetime_args": [], "type_args": []},
                                 "cc_type": {"name": "int", "is_const": false, "type_args": []}
                             },
                             "access": "Public",
@@ -462,7 +475,7 @@ mod tests {
                         {
                             "identifier": {"identifier": "protected_int" },
                             "type": {
-                                "rs_type": {"name": "i32", "type_args": []},
+                                "rs_type": {"name": "i32", "lifetime_args": [], "type_args": []},
                                 "cc_type": {"name": "int", "is_const": false, "type_args": []}
                             },
                             "access": "Protected",
@@ -471,13 +484,14 @@ mod tests {
                         {
                             "identifier": {"identifier": "private_int" },
                             "type": {
-                                "rs_type": {"name": "i32", "type_args": []},
+                                "rs_type": {"name": "i32", "lifetime_args": [], "type_args": []},
                                 "cc_type": {"name": "int", "is_const": false, "type_args": []}
                             },
                             "access": "Private",
                             "offset": 64
                         }
                     ],
+                    "lifetime_params": [],
                     "size": 12,
                     "alignment": 4,
                     "copy_constructor": {
@@ -513,6 +527,7 @@ mod tests {
                         type_: MappedType {
                             rs_type: RsType {
                                 name: "i32".to_string().into(),
+                                lifetime_args: vec![],
                                 type_args: vec![],
                                 decl_id: None,
                             },
@@ -532,6 +547,7 @@ mod tests {
                         type_: MappedType {
                             rs_type: RsType {
                                 name: "i32".to_string().into(),
+                                lifetime_args: vec![],
                                 type_args: vec![],
                                 decl_id: None,
                             },
@@ -551,6 +567,7 @@ mod tests {
                         type_: MappedType {
                             rs_type: RsType {
                                 name: "i32".to_string().into(),
+                                lifetime_args: vec![],
                                 type_args: vec![],
                                 decl_id: None,
                             },
@@ -565,6 +582,7 @@ mod tests {
                         offset: 64,
                     },
                 ],
+                lifetime_params: vec![],
                 size: 12,
                 alignment: 4,
                 copy_constructor: SpecialMemberFunc {
@@ -599,8 +617,8 @@ mod tests {
                         {
                             "identifier": {"identifier": "ptr" },
                             "type": {
-                                "rs_type": {"name": "*mut", "type_args": [
-                                    {"name": "SomeStruct", "type_args": [], "decl_id": 42}
+                                "rs_type": {"name": "*mut", "lifetime_args": [], "type_args": [
+                                    {"name": "SomeStruct", "lifetime_args": [], "type_args": [], "decl_id": 42}
                                 ]},
                                 "cc_type": { "name": "*", "is_const": false, "type_args": [
                                     {
@@ -615,6 +633,7 @@ mod tests {
                             "offset": 0
                         }
                     ],
+                    "lifetime_params": [],
                     "size": 8,
                     "alignment": 8,
                     "copy_constructor": {
@@ -650,8 +669,10 @@ mod tests {
                         rs_type: RsType {
                             name: "*mut".to_string().into(),
                             decl_id: None,
+                            lifetime_args: vec![],
                             type_args: vec![RsType {
                                 name: "SomeStruct".to_string().into(),
+                                lifetime_args: vec![],
                                 type_args: vec![],
                                 decl_id: Some(DeclId(42)),
                             }],
@@ -671,6 +692,7 @@ mod tests {
                     access: AccessSpecifier::Public,
                     offset: 0,
                 }],
+                lifetime_params: vec![],
                 size: 8,
                 alignment: 8,
                 move_constructor: SpecialMemberFunc {

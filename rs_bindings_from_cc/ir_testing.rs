@@ -52,7 +52,12 @@ pub fn ir_id(name: &str) -> Identifier {
 /// Creates a simple type instance for `int`/`i32`
 pub fn ir_int() -> MappedType {
     MappedType {
-        rs_type: RsType { name: "i32".to_string().into(), type_args: vec![], decl_id: None },
+        rs_type: RsType {
+            name: "i32".to_string().into(),
+            lifetime_args: vec![],
+            type_args: vec![],
+            decl_id: None,
+        },
         cc_type: CcType {
             name: "int".to_string().into(),
             type_args: vec![],
@@ -64,7 +69,12 @@ pub fn ir_int() -> MappedType {
 
 pub fn ir_type(decl_id: usize) -> MappedType {
     MappedType {
-        rs_type: RsType { name: None, type_args: vec![], decl_id: Some(DeclId(decl_id)) },
+        rs_type: RsType {
+            name: None,
+            lifetime_args: vec![],
+            type_args: vec![],
+            decl_id: Some(DeclId(decl_id)),
+        },
         cc_type: CcType {
             name: None,
             type_args: vec![],

@@ -29,7 +29,8 @@ TEST(IrTest, TypeToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
       "rs_type": {
           "name": "CompoundRs",
-          "type_args": [{"name": "i32", "type_args": []}]
+          "lifetime_args": [],
+          "type_args": [{"name": "i32", "lifetime_args": [], "type_args": []}]
       },
       "cc_type": {
           "name": "CompoundCc",
@@ -49,7 +50,7 @@ TEST(IrTest, TypeToJson) {
 
 TEST(IrTest, TypeWithDeclIdToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
-      "rs_type": {"type_args": [], "decl_id": 42},
+      "rs_type": {"lifetime_args": [], "type_args": [], "decl_id": 42},
       "cc_type": {
         "is_const": false,
         "type_args": [],
@@ -75,7 +76,7 @@ TEST(IrTest, IR) {
                     {
                         "identifier": { "identifier": "public_int" },
                         "type": {
-                            "rs_type": { "name": "i32", "type_args": [] },
+                            "rs_type": { "name": "i32", "lifetime_args": [], "type_args": [] },
                             "cc_type": {
                                 "is_const": false,
                                 "name": "int",
@@ -88,7 +89,7 @@ TEST(IrTest, IR) {
                     {
                         "identifier": { "identifier": "protected_int" },
                         "type": {
-                            "rs_type": { "name": "i32", "type_args": [] },
+                            "rs_type": { "name": "i32", "lifetime_args": [], "type_args": [] },
                             "cc_type": {
                                 "is_const": false,
                                 "name": "int",
@@ -101,7 +102,7 @@ TEST(IrTest, IR) {
                     {
                         "identifier": { "identifier": "private_int" },
                         "type": {
-                            "rs_type": { "name": "i32", "type_args": [] },
+                            "rs_type": { "name": "i32", "lifetime_args": [], "type_args": [] },
                             "cc_type": {
                                 "is_const": false,
                                 "name": "int",
@@ -112,6 +113,7 @@ TEST(IrTest, IR) {
                         "offset": 64
                     }
                     ],
+                    "lifetime_params": [],
                     "size": 12,
                     "alignment": 4,
                     "copy_constructor": {

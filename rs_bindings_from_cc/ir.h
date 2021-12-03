@@ -71,6 +71,27 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 // and records). We use DeclIds for this.
 DEFINE_STRONG_INT_TYPE(DeclId, uintptr_t);
 
+// A numerical ID that uniquely identifies a lifetime.
+DEFINE_STRONG_INT_TYPE(LifetimeId, int);
+
+// A lifetime.
+struct Lifetime {
+  nlohmann::json ToJson() const;
+
+  // Lifetime name. Unlike syn::Lifetime, this does not include the apostrophe.
+  //
+  // Note that this is not an identifier; the rules for what is a valid lifetime
+  // name are slightly different than for identifiers, so we simply use a
+  // std::string instead of an Identifier here.
+  std::string name;
+
+  LifetimeId id;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const Lifetime& l) {
+  return o << std::setw(internal::kJsonIndent) << l.ToJson();
+}
+
 // A C++ type involved in the bindings. It has the knowledge of how the type
 // is spelled in C++.
 struct CcType {
@@ -106,6 +127,15 @@ struct RsType {
 
   // Id of a decl that this type corresponds to. `nullopt` for primitive types.
   std::optional<DeclId> decl_id = std::nullopt;
+
+  // Lifetime arguments for a generic type. Examples:
+  //   *mut i32 has no lifetime arguments
+  //   &'a 32 has a single lifetime argument, 'a.
+  //   SomeType<'a, 'b> has two lifetime arguments, 'a and 'b.
+  // Lifetimes are identified by their unique ID. The corresponding Lifetime
+  // will be found within the lifetime_params of a Func or Record that uses
+  // this type.
+  std::vector<LifetimeId> lifetime_args = {};
 
   // Type arguments for a generic type. Examples:
   //   i32 has no type arguments.
@@ -265,6 +295,7 @@ struct Func {
   std::string mangled_name;
   MappedType return_type;
   std::vector<FuncParam> params;
+  std::vector<Lifetime> lifetime_params;
   bool is_inline;
   // If null, this is not a member function.
   std::optional<MemberFuncMetadata> member_func_metadata;
@@ -344,6 +375,7 @@ struct Record {
   Label owning_target;
   std::optional<std::string> doc_comment;
   std::vector<Field> fields;
+  std::vector<Lifetime> lifetime_params;
   // Size and alignment in bytes.
   int64_t size;
   int64_t alignment;

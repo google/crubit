@@ -725,6 +725,7 @@ mod tests {
             doc_comment: None,
             return_type: ir_int(),
             params: vec![ir_int_param("a"), ir_int_param("b")],
+            lifetime_params: vec![],
             is_inline: false,
             member_func_metadata: None,
         })])?;
@@ -765,6 +766,7 @@ mod tests {
                 doc_comment: None,
                 return_type: ir_int(),
                 params: vec![ir_int_param("a"), ir_int_param("b")],
+                lifetime_params: vec![],
                 is_inline: true,
                 member_func_metadata: None,
             })],
@@ -883,6 +885,7 @@ mod tests {
                     offset: 64,
                 },
             ],
+            lifetime_params: vec![],
             size: 12,
             alignment: 4,
             copy_constructor: ir_public_trivial_special(),
@@ -1003,8 +1006,10 @@ mod tests {
                 rs_type: RsType {
                     name: "*mut".to_string().into(),
                     decl_id: None,
+                    lifetime_args: vec![],
                     type_args: vec![RsType {
                         name: "i32".to_string().into(),
+                        lifetime_args: vec![],
                         type_args: vec![],
                         decl_id: None,
                     }],
@@ -1027,11 +1032,14 @@ mod tests {
                     rs_type: RsType {
                         name: "*const".to_string().into(),
                         decl_id: None,
+                        lifetime_args: vec![],
                         type_args: vec![RsType {
                             name: "*mut".to_string().into(),
                             decl_id: None,
+                            lifetime_args: vec![],
                             type_args: vec![RsType {
                                 name: "i32".to_string().into(),
+                                lifetime_args: vec![],
                                 type_args: vec![],
                                 decl_id: None,
                             }],
@@ -1055,6 +1063,7 @@ mod tests {
                     },
                 },
             }],
+            lifetime_params: vec![],
             is_inline: true,
             member_func_metadata: None,
         })])?;
@@ -1127,6 +1136,7 @@ mod tests {
             doc_comment: Some("Doc Comment".to_string()),
             return_type: ir_int(),
             params: vec![],
+            lifetime_params: vec![],
             is_inline: true,
             member_func_metadata: None,
         })])?;
@@ -1155,6 +1165,7 @@ mod tests {
                 access: AccessSpecifier::Public,
                 offset: 0,
             }],
+            lifetime_params: vec![],
             copy_constructor: ir_public_trivial_special(),
             move_constructor: ir_public_trivial_special(),
             destructor: ir_public_trivial_special(),
