@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
+#include <iomanip>
 #include <string>
 
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -14,6 +15,15 @@
 namespace rs_bindings_from_cc {
 
 namespace {
+
+MATCHER_P(EqualsJson, expected_json, "") {
+  if (arg == expected_json) {
+    return true;
+  }
+  *result_listener << "Diff:\n"
+                   << std::setw(2) << nlohmann::json::diff(arg, expected_json);
+  return false;
+}
 
 TEST(IrTest, TypeToJson) {
   nlohmann::json expected = nlohmann::json::parse(R"j({
@@ -34,7 +44,7 @@ TEST(IrTest, TypeToJson) {
       .cc_type = CcType{.name = "CompoundCc",
                         .is_const = false,
                         .type_args = {CcType{"int"}}}};
-  EXPECT_EQ(type.ToJson(), expected);
+  EXPECT_THAT(type.ToJson(), EqualsJson(expected));
 }
 
 TEST(IrTest, TypeWithDeclIdToJson) {
@@ -48,7 +58,7 @@ TEST(IrTest, TypeWithDeclIdToJson) {
   })j");
   auto type = MappedType{.rs_type = {RsType{"Status", DeclId(42)}},
                          .cc_type = {CcType{"Result", DeclId(43)}}};
-  EXPECT_EQ(type.ToJson(), expected);
+  EXPECT_THAT(type.ToJson(), EqualsJson(expected));
 }
 
 TEST(IrTest, IR) {
@@ -164,7 +174,7 @@ TEST(IrTest, IR) {
                                         SpecialMemberFunc::Definition::kTrivial,
                                     .access = kPublic},
                             .is_trivial_abi = true}}};
-  EXPECT_EQ(ir.ToJson(), expected);
+  EXPECT_THAT(ir.ToJson(), EqualsJson(expected));
 }
 
 TEST(HeaderName, Hash) {
