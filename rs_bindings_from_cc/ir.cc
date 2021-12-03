@@ -137,9 +137,6 @@ nlohmann::json Func::ToJson() const {
   } else {
     func["name"][SpecialNameToString(std::get<SpecialName>(name))] = nullptr;
   }
-  if (record_decl_id.has_value()) {
-    func["record_decl_id"] = record_decl_id->value();
-  }
   func["owning_target"] = owning_target.value();
   if (doc_comment) {
     func["doc_comment"] = *doc_comment;

@@ -215,18 +215,11 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     }
   }
 
-  std::optional<DeclId> record_decl_id;
-  if (const auto* method_decl =
-          llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    record_decl_id = GenerateDeclId(method_decl->getParent());
-  }
-
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
   if (success && translated_name.has_value()) {
     ir_.items.push_back(Func{
         .name = *translated_name,
-        .record_decl_id = record_decl_id,
         .owning_target = GetOwningTarget(function_decl),
         .doc_comment = GetComment(function_decl),
         .mangled_name = GetMangledName(function_decl),

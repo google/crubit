@@ -720,7 +720,6 @@ mod tests {
     fn test_simple_function() -> Result<()> {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("add")),
-            record_decl_id: None,
             owning_target: ir::TESTING_TARGET.into(),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,
@@ -761,7 +760,6 @@ mod tests {
         let ir = make_ir_from_parts(
             vec![Item::Func(Func {
                 name: UnqualifiedIdentifier::Identifier(ir_id("add")),
-                record_decl_id: None,
                 owning_target: ir::TESTING_TARGET.into(),
                 mangled_name: "_Z3Addii".to_string(),
                 doc_comment: None,
@@ -998,7 +996,6 @@ mod tests {
     fn test_ptr_func() -> Result<()> {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
-            record_decl_id: None,
             owning_target: ir::TESTING_TARGET.into(),
             mangled_name: "_Z5DerefPKPi".to_string(),
             doc_comment: None,
@@ -1125,7 +1122,6 @@ mod tests {
     fn test_doc_comment_func() -> Result<()> {
         let ir = make_ir_from_items([Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("func")),
-            record_decl_id: None,
             owning_target: ir::TESTING_TARGET.into(),
             mangled_name: "foo".to_string(),
             doc_comment: Some("Doc Comment".to_string()),

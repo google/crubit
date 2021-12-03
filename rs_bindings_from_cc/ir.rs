@@ -173,7 +173,6 @@ pub struct FuncParam {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
-    pub record_decl_id: Option<DeclId>,
     pub owning_target: Label,
     pub mangled_name: String,
     pub doc_comment: Option<String>,

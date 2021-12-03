@@ -20,9 +20,6 @@ fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec
     for (ref mut expected_item, actual_item) in expected.iter_mut().zip(actual.items()) {
         // TODO(hlopko): Handle MappedTypes as well.
         match (expected_item, actual_item) {
-            (Item::Func(ref mut expected_func), Item::Func(actual_func)) => {
-                expected_func.record_decl_id = actual_func.record_decl_id;
-            }
             (Item::Record(ref mut expected_record), Item::Record(actual_record)) => {
                 expected_record.id = actual_record.id;
             }
@@ -39,7 +36,6 @@ fn test_function() {
         "int Add(int a, int b);",
         vec![Item::Func(Func {
             name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
-            record_decl_id: None,
             owning_target: "//test:testing_target".into(),
             mangled_name: "_Z3Addii".to_string(),
             doc_comment: None,

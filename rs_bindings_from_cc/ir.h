@@ -260,9 +260,6 @@ struct Func {
   nlohmann::json ToJson() const;
 
   UnqualifiedIdentifier name;
-  // `DeclId` of the Record this function (method) belongs to, nullopt for
-  // free-standing functions.
-  std::optional<DeclId> record_decl_id = std::nullopt;
   Label owning_target;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
