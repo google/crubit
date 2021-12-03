@@ -8,6 +8,7 @@ use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::io::Read;
 
 /// Deserialize `IR` from JSON given as a reader.
@@ -259,9 +260,27 @@ impl From<Func> for Item {
     }
 }
 
+impl<'a> TryFrom<&'a Item> for &'a Func {
+    type Error = anyhow::Error;
+    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+        if let Item::Func(f) = value { Ok(f) } else { anyhow::bail!("Not a Func: {:#?}", value) }
+    }
+}
+
 impl From<Record> for Item {
     fn from(record: Record) -> Item {
         Item::Record(record)
+    }
+}
+
+impl<'a> TryFrom<&'a Item> for &'a Record {
+    type Error = anyhow::Error;
+    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+        if let Item::Record(r) = value {
+            Ok(r)
+        } else {
+            anyhow::bail!("Not a Record: {:#?}", value)
+        }
     }
 }
 
@@ -271,9 +290,31 @@ impl From<UnsupportedItem> for Item {
     }
 }
 
+impl<'a> TryFrom<&'a Item> for &'a UnsupportedItem {
+    type Error = anyhow::Error;
+    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+        if let Item::UnsupportedItem(u) = value {
+            Ok(u)
+        } else {
+            anyhow::bail!("Not an UnsupportedItem: {:#?}", value)
+        }
+    }
+}
+
 impl From<Comment> for Item {
     fn from(comment: Comment) -> Item {
         Item::Comment(comment)
+    }
+}
+
+impl<'a> TryFrom<&'a Item> for &'a Comment {
+    type Error = anyhow::Error;
+    fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
+        if let Item::Comment(c) = value {
+            Ok(c)
+        } else {
+            anyhow::bail!("Not a Comment: {:#?}", value)
+        }
     }
 }
 
@@ -340,22 +381,18 @@ impl IR {
         T: TypeWithDeclId + std::fmt::Debug,
     {
         if let Some(decl_id) = ty.decl_id() {
-            let idx = *self
-                .decl_id_to_item_idx
-                .get(&decl_id)
-                .with_context(|| format!("Couldn't find decl_id {:?} in the IR.", decl_id))?;
-            let item = self
-                .flat_ir
-                .items
-                .get(idx)
-                .with_context(|| format!("Couldn't find an item at idx {}", idx))?;
-            match item {
-                Item::Record(ref record) => Ok(record),
-                _ => bail!("Unexpected item type {:?}", item),
-            }
+            self.find_decl(decl_id)?.try_into()
         } else {
             bail!("Type {:?} does not have an associated record.", ty)
         }
+    }
+
+    pub fn find_decl(&self, decl_id: DeclId) -> Result<&Item> {
+        let idx = *self
+            .decl_id_to_item_idx
+            .get(&decl_id)
+            .with_context(|| format!("Couldn't find decl_id {:?} in the IR.", decl_id))?;
+        self.flat_ir.items.get(idx).with_context(|| format!("Couldn't find an item at idx {}", idx))
     }
 }
 
