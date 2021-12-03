@@ -97,3 +97,8 @@ pub fn ir_record(name: &str) -> Record {
     }
     panic!("Test IR doesn't contain a record");
 }
+
+/// Creates an empty IR.
+pub fn ir_empty() -> IR {
+    ir_from_cc("/* nonempty to force an entrypoint header to exist */").unwrap()
+}

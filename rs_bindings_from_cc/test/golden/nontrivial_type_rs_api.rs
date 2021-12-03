@@ -20,7 +20,7 @@ use static_assertions::const_assert_eq;
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[repr(C)]
 pub struct Nontrivial {
-    pub field: i32,
+    pub field: std::mem::ManuallyDrop<i32>,
 }
 
 impl !Unpin for Nontrivial {}
@@ -54,7 +54,7 @@ impl Drop for Nontrivial {
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[repr(C)]
 pub struct NontrivialInline {
-    pub field: i32,
+    pub field: std::mem::ManuallyDrop<i32>,
 }
 
 impl !Unpin for NontrivialInline {}
@@ -82,11 +82,48 @@ impl Drop for NontrivialInline {
 // Error while generating bindings for item 'NontrivialInline::operator=':
 // Empty parameter names are not supported
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=27
+/// Nontrivial due to member variables.
+///
+/// This changes how the destructor / drop impl work -- instead of calling
+/// the destructor for NontrivialMembers, it just calls the destructors for
+/// each field.
+#[repr(C)]
+pub struct NontrivialMembers {
+    pub nontrivial_member: Nontrivial,
+}
+
+impl !Unpin for NontrivialMembers {}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
+// Nested classes are not supported yet
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
+// Empty parameter names are not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
+// Parameter type 'struct NontrivialMembers &&' is not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// Error while generating bindings for item 'NontrivialMembers::operator=':
+// Empty parameter names are not supported
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// Error while generating bindings for item 'NontrivialMembers::operator=':
+// Parameter type 'struct NontrivialMembers &&' is not supported
+
+impl Drop for NontrivialMembers {
+    #[inline(always)]
+    fn drop(&mut self) {}
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=36
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a parameter
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=28
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=37
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as a parameter
 
@@ -100,6 +137,9 @@ mod detail {
         pub(crate) fn __rust_destructor_thunk__NontrivialInline(
             __this: *mut NontrivialInline,
         ) -> ();
+        pub(crate) fn __rust_constructor_thunk__NontrivialMembers(
+            __this: *mut NontrivialMembers,
+        ) -> ();
     }
 }
 
@@ -110,3 +150,7 @@ const_assert_eq!(offset_of!(Nontrivial, field) * 8, 0usize);
 const_assert_eq!(std::mem::size_of::<NontrivialInline>(), 4usize);
 const_assert_eq!(std::mem::align_of::<NontrivialInline>(), 4usize);
 const_assert_eq!(offset_of!(NontrivialInline, field) * 8, 0usize);
+
+const_assert_eq!(std::mem::size_of::<NontrivialMembers>(), 4usize);
+const_assert_eq!(std::mem::align_of::<NontrivialMembers>(), 4usize);
+const_assert_eq!(offset_of!(NontrivialMembers, nontrivial_member) * 8, 0usize);

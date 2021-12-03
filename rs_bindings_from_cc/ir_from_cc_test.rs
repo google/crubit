@@ -248,6 +248,8 @@ fn assert_member_function_has_instance_method_metadata(
     file += "\n};";
     let ir = ir_from_cc(&file).unwrap();
 
+    let record =
+        ir.records().find(|r| r.identifier.identifier == "Struct").expect("Struct not found");
     let function =
         ir.functions().find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id(name)));
     let meta = function
@@ -255,7 +257,7 @@ fn assert_member_function_has_instance_method_metadata(
         .member_func_metadata
         .as_ref()
         .expect("Member function should specify member_func_metadata");
-    assert_eq!(&meta.for_type.identifier, "Struct");
+    assert_eq!(meta.record_id, record.id);
     assert_eq!(&meta.instance_method_metadata, expected_metadata);
 }
 
@@ -352,9 +354,9 @@ fn test_identifier_function_name() {
 
 #[test]
 fn test_constructor_function_name() {
-    assert_eq!(
-        get_func_names("struct Struct {Struct();};"),
-        vec![ir::UnqualifiedIdentifier::Constructor],
+    assert!(
+        get_func_names("struct Struct {Struct();};")
+            .contains(&ir::UnqualifiedIdentifier::Constructor)
     );
 }
 

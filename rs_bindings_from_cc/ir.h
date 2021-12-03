@@ -247,7 +247,7 @@ struct MemberFuncMetadata {
   nlohmann::json ToJson() const;
 
   // The type that this is a member function for.
-  Identifier for_type;
+  DeclId record_id;
 
   // Qualifiers for the instance method.
   //

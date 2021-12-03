@@ -6,6 +6,25 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
+extern "C" void __rust_destructor_thunk__DocCommentSlashes(
+    DocCommentSlashes* __this) {
+  return std ::destroy_at(__this);
+}
+extern "C" void __rust_destructor_thunk__DocCommentBang(
+    DocCommentBang* __this) {
+  return std ::destroy_at(__this);
+}
+extern "C" void __rust_destructor_thunk__MultilineCommentTwoStars(
+    MultilineCommentTwoStars* __this) {
+  return std ::destroy_at(__this);
+}
+extern "C" void __rust_destructor_thunk__LineComment(LineComment* __this) {
+  return std ::destroy_at(__this);
+}
+extern "C" void __rust_destructor_thunk__MultilineOneStar(
+    MultilineOneStar* __this) {
+  return std ::destroy_at(__this);
+}
 extern "C" int __rust_thunk__foo() { return foo(); }
 
 static_assert(sizeof(DocCommentSlashes) == 4);

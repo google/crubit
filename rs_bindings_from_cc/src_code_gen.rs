@@ -10,6 +10,7 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
 use std::collections::BTreeSet;
+use std::convert::TryInto;
 use std::io::Write;
 use std::iter::Iterator;
 use std::panic::catch_unwind;
@@ -117,7 +118,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 /// Returns the generated function or trait impl, and the thunk, as a tuple.
 fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
-    let thunk_ident = thunk_ident(func)?;
+    let thunk_ident = thunk_ident(func, ir)?;
     let doc_comment = generate_doc_comment(&func.doc_comment);
     // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
     let return_type_name = format_rs_type(&func.return_type.rs_type, ir)?;
@@ -131,6 +132,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .map(|p| format_rs_type(&p.type_.rs_type, ir))
         .collect::<Result<Vec<_>>>()?;
 
+    let mut calls_thunk = true;
     let api_func = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
             let ident = make_ident(&id.identifier);
@@ -144,22 +146,46 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         }
 
         UnqualifiedIdentifier::Destructor => {
-            let type_name = make_ident(
-                &func
-                    .member_func_metadata
-                    .as_ref()
-                    .expect("Destructors must be member functions.")
-                    .for_type
-                    .identifier,
-            );
-            // TODO(b/200066399): do not implement Drop if the type is trivial.
-            quote! {
-                #doc_comment
-                impl Drop for #type_name {
-                    #[inline(always)]
-                    fn drop(&mut self) {
-                        unsafe { crate::detail::#thunk_ident(self) }
+            let record: &Record = ir
+                .find_decl(
+                    func.member_func_metadata
+                        .as_ref()
+                        .expect("Destructors must be member functions.")
+                        .record_id,
+                )?
+                .try_into()?;
+            let type_name = make_ident(&record.identifier.identifier);
+            match record.destructor.definition {
+                // TODO(b/202258760): Only omit destructor if `Copy` is specified.
+                SpecialMemberDefinition::Trivial => {
+                    calls_thunk = false;
+                    quote! {}
+                }
+                SpecialMemberDefinition::NontrivialMembers => {
+                    calls_thunk = false;
+                    quote! {
+                        #doc_comment
+                        impl Drop for #type_name {
+                            #[inline(always)]
+                            fn drop(&mut self) {
+                                /* the destructors of the members can be invoked instead */
+                            }
+                        }
                     }
+                }
+                SpecialMemberDefinition::NontrivialSelf => {
+                    quote! {
+                        #doc_comment
+                        impl Drop for #type_name {
+                            #[inline(always)]
+                            fn drop(&mut self) {
+                                unsafe { crate::detail::#thunk_ident(self) }
+                            }
+                        }
+                    }
+                }
+                SpecialMemberDefinition::Deleted => {
+                    bail!("Deleted destructors can't be called") // TODO(b/200066399): handle this?
                 }
             }
         }
@@ -167,15 +193,19 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         _ => quote! {}, // TODO(b/200066396): define these.
     };
 
-    let thunk_attr = if can_skip_cc_thunk(func) {
-        quote! {#[link_name = #mangled_name]}
+    let thunk = if calls_thunk {
+        let thunk_attr = if can_skip_cc_thunk(func) {
+            quote! {#[link_name = #mangled_name]}
+        } else {
+            quote! {}
+        };
+
+        quote! {
+            #thunk_attr
+            pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
+        }
     } else {
         quote! {}
-    };
-
-    let thunk = quote! {
-        #thunk_attr
-        pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
     };
 
     Ok((api_func.into(), thunk.into()))
@@ -202,7 +232,15 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let field_types = record
         .fields
         .iter()
-        .map(|f| format_rs_type(&f.type_.rs_type, ir))
+        .map(|f| {
+            let mut formatted = format_rs_type(&f.type_.rs_type, ir)?;
+            if record.destructor.definition == SpecialMemberDefinition::NontrivialSelf {
+                formatted = quote! {
+                    std::mem::ManuallyDrop<#formatted>
+                };
+            }
+            Ok(formatted)
+        })
         .collect::<Result<Vec<_>>>()?;
     let field_accesses = record
         .fields
@@ -547,10 +585,11 @@ fn cc_struct_layout_assertion(record: &Record) -> TokenStream {
     }
 }
 
-fn thunk_ident(func: &Func) -> Result<Ident> {
+fn thunk_ident(func: &Func, ir: &IR) -> Result<Ident> {
     let get_type_name = || {
         if let Some(meta) = &func.member_func_metadata {
-            Ok(&meta.for_type.identifier)
+            let record: &Record = ir.find_decl(meta.record_id)?.try_into()?;
+            Ok(&record.identifier.identifier)
         } else {
             bail!("Special member function must be a member function: {:?}", func.name)
         }
@@ -582,7 +621,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
             continue;
         }
 
-        let thunk_ident = thunk_ident(func)?;
+        let thunk_ident = thunk_ident(func, ir)?;
         let implementation_function = match &func.name {
             UnqualifiedIdentifier::Identifier(id) => {
                 let ident = make_ident(&id.identifier);
@@ -644,7 +683,9 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use ir_testing::{ir_func, ir_id, ir_int, ir_int_param, ir_public_trivial_special, ir_record};
+    use ir_testing::{
+        ir_empty, ir_func, ir_id, ir_int, ir_int_param, ir_public_trivial_special, ir_record,
+    };
     use quote::quote;
     use token_stream_printer::tokens_to_string;
 
@@ -1068,38 +1109,81 @@ mod tests {
         Ok(())
     }
 
-    /// User-defined destructors *must* become Drop impls.
+    /// User-defined destructors *must* become Drop impls with ManuallyDrop
+    /// fields
     #[test]
-    fn test_impl_drop() -> Result<()> {
+    fn test_impl_drop_user_defined_destructor() -> Result<()> {
         let ir = ir_testing::ir_from_cc(
             r#"struct UserDefinedDestructor {
                 ~UserDefinedDestructor();
+                int x;
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
         assert!(rs_api.contains("impl Drop"));
+        assert!(!rs_api.contains("fn drop(&mut self) {}"));
+        assert!(rs_api.contains("pub x: std::mem::ManuallyDrop<i32>,"));
+        Ok(())
+    }
+
+    /// nontrivial types without user-defined destructors must have an empty
+    /// drop definition.
+    #[test]
+    fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
+        // TODO(jeanpierreda): This would be cleaner if the UserDefinedDestructor code were
+        // omitted. For example, we simulate it so that UserDefinedDestructor
+        // comes from another library.
+        let ir = ir_testing::ir_from_cc(
+            r#"struct UserDefinedDestructor {
+                ~UserDefinedDestructor();
+            };
+
+            struct NontrivialMembers {
+                UserDefinedDestructor udd;
+                int x;
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert!(rs_api.contains("fn drop(&mut self) {}"));
+        assert!(rs_api.contains("pub x: i32,"));
+        Ok(())
+    }
+
+    /// Trivial types (at least those that are mapped to Copy rust types) do not
+    /// get a Drop impl.
+    #[test]
+    fn test_impl_drop_trivial() -> Result<()> {
+        let ir = ir_testing::ir_from_cc(
+            r#"struct Trivial {
+                ~Trivial() = default;
+                int x;
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert!(!rs_api.contains("impl Drop"));
+        assert!(rs_api.contains("pub x: i32,"));
         Ok(())
     }
 
     #[test]
     fn test_thunk_ident_function() {
         let func = ir_func("foo");
-        assert_eq!(thunk_ident(&func).unwrap(), make_ident("__rust_thunk__foo"));
+        assert_eq!(thunk_ident(&func, &ir_empty()).unwrap(), make_ident("__rust_thunk__foo"));
     }
 
     #[test]
     fn test_thunk_ident_special_names() {
+        let ir = ir_testing::ir_from_cc("struct Class {};").unwrap();
+        let class = ir.records().find(|r| r.identifier.identifier == "Class").unwrap();
         let mut func = ir_func("unused");
-        func.member_func_metadata = Some(ir::MemberFuncMetadata {
-            for_type: ir_id("Class"),
-            instance_method_metadata: None,
-        });
+        func.member_func_metadata =
+            Some(ir::MemberFuncMetadata { record_id: class.id, instance_method_metadata: None });
 
         func.name = UnqualifiedIdentifier::Destructor;
-        assert_eq!(thunk_ident(&func).unwrap(), make_ident("__rust_destructor_thunk__Class"));
+        assert_eq!(thunk_ident(&func, &ir).unwrap(), make_ident("__rust_destructor_thunk__Class"));
 
         func.name = UnqualifiedIdentifier::Constructor;
-        assert_eq!(thunk_ident(&func).unwrap(), make_ident("__rust_constructor_thunk__Class"));
+        assert_eq!(thunk_ident(&func, &ir).unwrap(), make_ident("__rust_constructor_thunk__Class"));
     }
 
     #[test]
@@ -1108,7 +1192,10 @@ mod tests {
         for name in [UnqualifiedIdentifier::Destructor, UnqualifiedIdentifier::Constructor] {
             func.name = name;
             assert!(
-                thunk_ident(&func).unwrap_err().to_string().contains("must be a member function")
+                thunk_ident(&func, &ir_empty())
+                    .unwrap_err()
+                    .to_string()
+                    .contains("must be a member function")
             );
         }
     }

@@ -209,30 +209,9 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         };
       }
 
-      std::optional<Identifier> record_identifier =
-          GetTranslatedIdentifier(method_decl->getParent());
-      if (!record_identifier.has_value()) {
-        PushUnsupportedItem(
-            function_decl,
-            absl::Substitute("The Record for method '$0' could not be found",
-                             function_decl->getQualifiedNameAsString()),
-            function_decl->getSourceRange());
-        success = false;
-      } else {
-        member_func_metadata =
-            MemberFuncMetadata{.for_type = *record_identifier,
-                               .instance_method_metadata = instance_metadata};
-      }
-
-      if (auto* dtor_decl =
-              llvm::dyn_cast<clang::CXXDestructorDecl>(function_decl)) {
-        if (dtor_decl->isTrivial()) {
-          // Omit trivial destructor decls.
-          // TODO(b/200066399): emit them, but make the appropriate decision
-          // about how to implement them in the code generation part.
-          success = false;
-        }
-      }
+      member_func_metadata = MemberFuncMetadata{
+          .record_id = GenerateDeclId(method_decl->getParent()),
+          .instance_method_metadata = instance_metadata};
     }
   }
 

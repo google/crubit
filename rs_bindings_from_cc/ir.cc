@@ -103,7 +103,7 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
 nlohmann::json MemberFuncMetadata::ToJson() const {
   nlohmann::json meta;
 
-  meta["for_type"] = for_type.ToJson();
+  meta["record_id"] = record_id.value();
 
   if (instance_method_metadata.has_value()) {
     nlohmann::json instance;

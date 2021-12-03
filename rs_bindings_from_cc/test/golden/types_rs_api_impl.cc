@@ -6,6 +6,13 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/types.h"
 
+extern "C" void __rust_destructor_thunk__SomeStruct(SomeStruct* __this) {
+  return std ::destroy_at(__this);
+}
+extern "C" void __rust_destructor_thunk__FieldTypeTestStruct(
+    FieldTypeTestStruct* __this) {
+  return std ::destroy_at(__this);
+}
 extern "C" void __rust_thunk__VoidReturningFunction() {
   return VoidReturningFunction();
 }

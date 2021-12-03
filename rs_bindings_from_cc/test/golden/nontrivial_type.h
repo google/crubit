@@ -28,6 +28,15 @@ struct NontrivialInline {
   int field;
 };
 
+// Nontrivial due to member variables.
+//
+// This changes how the destructor / drop impl work -- instead of calling
+// the destructor for NontrivialMembers, it just calls the destructors for
+// each field.
+struct NontrivialMembers {
+  Nontrivial nontrivial_member;
+};
+
 void TakesByValue(Nontrivial nontrivial);
 void TakesByValueInline(NontrivialInline nontrivial);
 

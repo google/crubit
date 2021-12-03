@@ -6,7 +6,16 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/comment.h"
 
+extern "C" void __rust_destructor_thunk__Foo(Foo* __this) {
+  return std ::destroy_at(__this);
+}
 extern "C" void __rust_thunk__foo() { return foo(); }
+extern "C" void __rust_destructor_thunk__Bar(Bar* __this) {
+  return std ::destroy_at(__this);
+}
+extern "C" void __rust_destructor_thunk__HasNoComments(HasNoComments* __this) {
+  return std ::destroy_at(__this);
+}
 
 static_assert(sizeof(Foo) == 8);
 static_assert(alignof(Foo) == 4);

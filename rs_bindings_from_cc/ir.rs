@@ -148,7 +148,7 @@ pub struct InstanceMethodMetadata {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct MemberFuncMetadata {
-    pub for_type: Identifier,
+    pub record_id: DeclId,
     pub instance_method_metadata: Option<InstanceMethodMetadata>,
 }
 

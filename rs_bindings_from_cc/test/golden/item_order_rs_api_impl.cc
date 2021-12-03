@@ -6,7 +6,13 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/item_order.h"
 
+extern "C" void __rust_destructor_thunk__FirstStruct(FirstStruct* __this) {
+  return std ::destroy_at(__this);
+}
 extern "C" int __rust_thunk__first_func() { return first_func(); }
+extern "C" void __rust_destructor_thunk__SecondStruct(SecondStruct* __this) {
+  return std ::destroy_at(__this);
+}
 extern "C" int __rust_thunk__second_func() { return second_func(); }
 
 static_assert(sizeof(FirstStruct) == 4);

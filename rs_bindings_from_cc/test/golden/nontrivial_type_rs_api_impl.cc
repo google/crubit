@@ -10,6 +10,10 @@ extern "C" void __rust_destructor_thunk__NontrivialInline(
     NontrivialInline* __this) {
   return std ::destroy_at(__this);
 }
+extern "C" void __rust_destructor_thunk__NontrivialMembers(
+    NontrivialMembers* __this) {
+  return std ::destroy_at(__this);
+}
 
 static_assert(sizeof(Nontrivial) == 4);
 static_assert(alignof(Nontrivial) == 4);
@@ -18,3 +22,7 @@ static_assert(offsetof(Nontrivial, field) * 8 == 0);
 static_assert(sizeof(NontrivialInline) == 4);
 static_assert(alignof(NontrivialInline) == 4);
 static_assert(offsetof(NontrivialInline, field) * 8 == 0);
+
+static_assert(sizeof(NontrivialMembers) == 4);
+static_assert(alignof(NontrivialMembers) == 4);
+static_assert(offsetof(NontrivialMembers, nontrivial_member) * 8 == 0);
