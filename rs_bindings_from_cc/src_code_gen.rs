@@ -261,7 +261,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             quote! {
                 // The IR contains the offset in bits, while offset_of!()
                 // returns the offset in bytes, so we need to convert.
-                const_assert_eq!(offset_of!(#ident, #field_ident) * 8, #offset);
+                const _: () = assert!(offset_of!(#ident, #field_ident) * 8 == #offset);
             }
         });
     let mut record_features = BTreeSet::new();
@@ -317,8 +317,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     };
 
     let assertion_tokens = quote! {
-        const_assert_eq!(std::mem::size_of::<#ident>(), #size);
-        const_assert_eq!(std::mem::align_of::<#ident>(), #alignment);
+        const _: () = assert!(std::mem::size_of::<#ident>() == #size);
+        const _: () = assert!(std::mem::align_of::<#ident>() == #alignment);
         #( #field_assertions )*
     };
 
@@ -418,7 +418,6 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let imports = if has_record {
         quote! {
             use memoffset_unstable_const::offset_of;
-            use static_assertions::const_assert_eq;
         }
     } else {
         quote! {}
@@ -899,8 +898,7 @@ mod tests {
             rustfmt(tokens_to_string(quote! {
                 #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
-                use memoffset_unstable_const::offset_of;
-                use static_assertions::const_assert_eq; __NEWLINE__ __NEWLINE__
+                use memoffset_unstable_const::offset_of; __NEWLINE__ __NEWLINE__
 
                 #[derive(Clone, Copy)]
                 #[repr(C)]
@@ -910,11 +908,11 @@ mod tests {
                     private_int: i32,
                 } __NEWLINE__ __NEWLINE__
 
-                const_assert_eq!(std::mem::size_of::<SomeStruct>(), 12usize);
-                const_assert_eq!(std::mem::align_of::<SomeStruct>(), 4usize);
-                const_assert_eq!(offset_of!(SomeStruct, public_int) * 8, 0usize);
-                const_assert_eq!(offset_of!(SomeStruct, protected_int) * 8, 32usize);
-                const_assert_eq!(offset_of!(SomeStruct, private_int) * 8, 64usize);
+                const _: () = assert!(std::mem::size_of::<SomeStruct>() == 12usize);
+                const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4usize);
+                const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
+                const _: () = assert!(offset_of!(SomeStruct, protected_int) * 8 == 32usize);
+                const _: () = assert!(offset_of!(SomeStruct, private_int) * 8 == 64usize);
             })?)?
         );
         assert_eq!(

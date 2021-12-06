@@ -11,7 +11,6 @@
 )]
 
 use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
 
 /// Nontrivial due to (declared, but not yet defined) user-specified constructor
 /// and destructor.
@@ -143,14 +142,14 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<Nontrivial>(), 4usize);
-const_assert_eq!(std::mem::align_of::<Nontrivial>(), 4usize);
-const_assert_eq!(offset_of!(Nontrivial, field) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<Nontrivial>() == 4usize);
+const _: () = assert!(std::mem::align_of::<Nontrivial>() == 4usize);
+const _: () = assert!(offset_of!(Nontrivial, field) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<NontrivialInline>(), 4usize);
-const_assert_eq!(std::mem::align_of::<NontrivialInline>(), 4usize);
-const_assert_eq!(offset_of!(NontrivialInline, field) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<NontrivialInline>() == 4usize);
+const _: () = assert!(std::mem::align_of::<NontrivialInline>() == 4usize);
+const _: () = assert!(offset_of!(NontrivialInline, field) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<NontrivialMembers>(), 4usize);
-const_assert_eq!(std::mem::align_of::<NontrivialMembers>(), 4usize);
-const_assert_eq!(offset_of!(NontrivialMembers, nontrivial_member) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<NontrivialMembers>() == 4usize);
+const _: () = assert!(std::mem::align_of::<NontrivialMembers>() == 4usize);
+const _: () = assert!(offset_of!(NontrivialMembers, nontrivial_member) * 8 == 0usize);

@@ -6,7 +6,6 @@
 #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)]
 
 use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
 
 // File comment
 
@@ -124,15 +123,15 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<Foo>(), 8usize);
-const_assert_eq!(std::mem::align_of::<Foo>(), 4usize);
-const_assert_eq!(offset_of!(Foo, i) * 8, 0usize);
-const_assert_eq!(offset_of!(Foo, j) * 8, 32usize);
+const _: () = assert!(std::mem::size_of::<Foo>() == 8usize);
+const _: () = assert!(std::mem::align_of::<Foo>() == 4usize);
+const _: () = assert!(offset_of!(Foo, i) * 8 == 0usize);
+const _: () = assert!(offset_of!(Foo, j) * 8 == 32usize);
 
-const_assert_eq!(std::mem::size_of::<Bar>(), 4usize);
-const_assert_eq!(std::mem::align_of::<Bar>(), 4usize);
-const_assert_eq!(offset_of!(Bar, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<Bar>() == 4usize);
+const _: () = assert!(std::mem::align_of::<Bar>() == 4usize);
+const _: () = assert!(offset_of!(Bar, i) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<HasNoComments>(), 4usize);
-const_assert_eq!(std::mem::align_of::<HasNoComments>(), 4usize);
-const_assert_eq!(offset_of!(HasNoComments, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<HasNoComments>() == 4usize);
+const _: () = assert!(std::mem::align_of::<HasNoComments>() == 4usize);
+const _: () = assert!(offset_of!(HasNoComments, i) * 8 == 0usize);

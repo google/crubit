@@ -6,7 +6,6 @@
 #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)]
 
 use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -82,10 +81,10 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<FirstStruct>(), 4usize);
-const_assert_eq!(std::mem::align_of::<FirstStruct>(), 4usize);
-const_assert_eq!(offset_of!(FirstStruct, field) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<FirstStruct>() == 4usize);
+const _: () = assert!(std::mem::align_of::<FirstStruct>() == 4usize);
+const _: () = assert!(offset_of!(FirstStruct, field) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<SecondStruct>(), 4usize);
-const_assert_eq!(std::mem::align_of::<SecondStruct>(), 4usize);
-const_assert_eq!(offset_of!(SecondStruct, field) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<SecondStruct>() == 4usize);
+const _: () = assert!(std::mem::align_of::<SecondStruct>() == 4usize);
+const _: () = assert!(offset_of!(SecondStruct, field) * 8 == 0usize);

@@ -6,7 +6,6 @@
 #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)]
 
 use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
 
 /// Doc comment
 ///
@@ -184,22 +183,22 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<DocCommentSlashes>(), 4usize);
-const_assert_eq!(std::mem::align_of::<DocCommentSlashes>(), 4usize);
-const_assert_eq!(offset_of!(DocCommentSlashes, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<DocCommentSlashes>() == 4usize);
+const _: () = assert!(std::mem::align_of::<DocCommentSlashes>() == 4usize);
+const _: () = assert!(offset_of!(DocCommentSlashes, i) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<DocCommentBang>(), 4usize);
-const_assert_eq!(std::mem::align_of::<DocCommentBang>(), 4usize);
-const_assert_eq!(offset_of!(DocCommentBang, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<DocCommentBang>() == 4usize);
+const _: () = assert!(std::mem::align_of::<DocCommentBang>() == 4usize);
+const _: () = assert!(offset_of!(DocCommentBang, i) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<MultilineCommentTwoStars>(), 4usize);
-const_assert_eq!(std::mem::align_of::<MultilineCommentTwoStars>(), 4usize);
-const_assert_eq!(offset_of!(MultilineCommentTwoStars, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<MultilineCommentTwoStars>() == 4usize);
+const _: () = assert!(std::mem::align_of::<MultilineCommentTwoStars>() == 4usize);
+const _: () = assert!(offset_of!(MultilineCommentTwoStars, i) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<LineComment>(), 4usize);
-const_assert_eq!(std::mem::align_of::<LineComment>(), 4usize);
-const_assert_eq!(offset_of!(LineComment, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<LineComment>() == 4usize);
+const _: () = assert!(std::mem::align_of::<LineComment>() == 4usize);
+const _: () = assert!(offset_of!(LineComment, i) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<MultilineOneStar>(), 4usize);
-const_assert_eq!(std::mem::align_of::<MultilineOneStar>(), 4usize);
-const_assert_eq!(offset_of!(MultilineOneStar, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<MultilineOneStar>() == 4usize);
+const _: () = assert!(std::mem::align_of::<MultilineOneStar>() == 4usize);
+const _: () = assert!(offset_of!(MultilineOneStar, i) * 8 == 0usize);

@@ -6,7 +6,6 @@
 #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)]
 
 use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
 
@@ -56,6 +55,6 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<UserOfImportedType>(), 8usize);
-const_assert_eq!(std::mem::align_of::<UserOfImportedType>(), 8usize);
-const_assert_eq!(offset_of!(UserOfImportedType, trivial) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<UserOfImportedType>() == 8usize);
+const _: () = assert!(std::mem::align_of::<UserOfImportedType>() == 8usize);
+const _: () = assert!(offset_of!(UserOfImportedType, trivial) * 8 == 0usize);

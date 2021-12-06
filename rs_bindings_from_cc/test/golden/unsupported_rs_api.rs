@@ -11,7 +11,6 @@
 )]
 
 use memoffset_unstable_const::offset_of;
-use static_assertions::const_assert_eq;
 
 #[repr(C)]
 pub struct NontrivialCustomType {
@@ -116,9 +115,9 @@ mod detail {
     }
 }
 
-const_assert_eq!(std::mem::size_of::<NontrivialCustomType>(), 4usize);
-const_assert_eq!(std::mem::align_of::<NontrivialCustomType>(), 4usize);
-const_assert_eq!(offset_of!(NontrivialCustomType, i) * 8, 0usize);
+const _: () = assert!(std::mem::size_of::<NontrivialCustomType>() == 4usize);
+const _: () = assert!(std::mem::align_of::<NontrivialCustomType>() == 4usize);
+const _: () = assert!(offset_of!(NontrivialCustomType, i) * 8 == 0usize);
 
-const_assert_eq!(std::mem::size_of::<ContainingStruct>(), 1usize);
-const_assert_eq!(std::mem::align_of::<ContainingStruct>(), 1usize);
+const _: () = assert!(std::mem::size_of::<ContainingStruct>() == 1usize);
+const _: () = assert!(std::mem::align_of::<ContainingStruct>() == 1usize);
