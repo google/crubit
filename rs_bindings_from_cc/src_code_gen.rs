@@ -1295,17 +1295,21 @@ mod tests {
 
     #[test]
     fn test_thunk_ident_special_names() {
-        let ir = ir_from_cc("struct Class {};").unwrap();
-        let class = ir.records().find(|r| r.identifier.identifier == "Class").unwrap();
-        let mut func = ir_func("unused");
-        func.member_func_metadata =
-            Some(ir::MemberFuncMetadata { record_id: class.id, instance_method_metadata: None });
+        let ir = ir_testing::ir_from_cc("struct Class {};").unwrap();
 
-        func.name = UnqualifiedIdentifier::Destructor;
-        assert_eq!(thunk_ident(&func, &ir).unwrap(), make_ident("__rust_destructor_thunk__Class"));
+        let destructor =
+            ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
+        assert_eq!(
+            thunk_ident(&destructor, &ir).unwrap(),
+            make_ident("__rust_destructor_thunk__Class")
+        );
 
-        func.name = UnqualifiedIdentifier::Constructor;
-        assert_eq!(thunk_ident(&func, &ir).unwrap(), make_ident("__rust_constructor_thunk__Class"));
+        let constructor =
+            ir.functions().find(|f| f.name == UnqualifiedIdentifier::Constructor).unwrap();
+        assert_eq!(
+            thunk_ident(&constructor, &ir).unwrap(),
+            make_ident("__rust_constructor_thunk__Class")
+        );
     }
 
     #[test]
