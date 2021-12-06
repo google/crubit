@@ -102,7 +102,21 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
   // Gets the doc comment of the declaration.
   std::optional<std::string> GetComment(const clang::Decl* decl) const;
-  absl::StatusOr<MappedType> ConvertType(clang::QualType qual_type) const;
+
+  // Converts the Clang type `qual_type` into an equivalent `MappedType`.
+  // Lifetimes for the type can optionally be specified using `lifetimes`.
+  // If `qual_type` is a pointer type, `nullable` specifies whether the pointer
+  // can be null.
+  // TODO(b/209390498): Currently, we're able to specify nullability only for
+  // top-level pointers. Extend this so that we can specify nullability for all
+  // pointers contained in `qual_type`, in the same way that `lifetimes`
+  // specifies lifetimes for all these pointers. Once this is done, make sure
+  // that all callers pass in the appropriate information, derived from
+  // nullability annotations.
+  absl::StatusOr<MappedType> ConvertType(
+      clang::QualType qual_type,
+      std::optional<devtools_rust::TypeLifetimes> lifetimes = std::nullopt,
+      bool nullable = true) const;
 
   void PushUnsupportedItem(const clang::Decl* decl, std::string message,
                            clang::SourceLocation source_location);

@@ -49,6 +49,9 @@ class Lifetime {
   // Returns whether this lifetime is a local lifetime.
   bool IsLocal() const;
 
+  // Returns a unique numeric ID for the lifetime.
+  int Id() const { return id_; }
+
   // Returns a textual representation of the lifetime for debug logging.
   std::string DebugString() const;
 

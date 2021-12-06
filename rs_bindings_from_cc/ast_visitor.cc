@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -88,12 +89,24 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   if (!IsFromCurrentTarget(function_decl)) return true;
 
+  devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
+  llvm::Expected<devtools_rust::FunctionLifetimes> lifetimes =
+      devtools_rust::GetLifetimeAnnotations(function_decl, lifetime_context_,
+                                            &lifetime_symbol_table);
+  llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
+
   std::vector<FuncParam> params;
   bool success = true;
   // non-static member functions receive an implicit `this` parameter.
   if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (method_decl->isInstance()) {
-      auto param_type = ConvertType(method_decl->getThisType());
+      std::optional<devtools_rust::TypeLifetimes> this_lifetimes;
+      if (lifetimes) {
+        this_lifetimes = lifetimes->this_lifetimes;
+        all_lifetimes.insert(this_lifetimes->begin(), this_lifetimes->end());
+      }
+      auto param_type = ConvertType(method_decl->getThisType(), this_lifetimes,
+                                    /*nullable=*/false);
       if (!param_type.ok()) {
         PushUnsupportedItem(function_decl, param_type.status().ToString(),
                             method_decl->getBeginLoc());
@@ -105,8 +118,17 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     }
   }
 
-  for (const clang::ParmVarDecl* param : function_decl->parameters()) {
-    auto param_type = ConvertType(param->getType());
+  if (lifetimes) {
+    CHECK_EQ(lifetimes->param_lifetimes.size(), function_decl->getNumParams());
+  }
+  for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
+    const clang::ParmVarDecl* param = function_decl->getParamDecl(i);
+    std::optional<devtools_rust::TypeLifetimes> param_lifetimes;
+    if (lifetimes) {
+      param_lifetimes = lifetimes->param_lifetimes[i];
+      all_lifetimes.insert(param_lifetimes->begin(), param_lifetimes->end());
+    }
+    auto param_type = ConvertType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
       PushUnsupportedItem(
           function_decl,
@@ -166,7 +188,13 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     }
   }
 
-  auto return_type = ConvertType(function_decl->getReturnType());
+  std::optional<devtools_rust::TypeLifetimes> return_lifetimes;
+  if (lifetimes) {
+    return_lifetimes = lifetimes->return_lifetimes;
+    all_lifetimes.insert(return_lifetimes->begin(), return_lifetimes->end());
+  }
+  auto return_type =
+      ConvertType(function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
     PushUnsupportedItem(
         function_decl,
@@ -175,6 +203,18 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         function_decl->getReturnTypeSourceRange());
     success = false;
   }
+
+  std::vector<Lifetime> lifetime_params;
+  for (devtools_rust::Lifetime lifetime : all_lifetimes) {
+    std::optional<llvm::StringRef> name =
+        lifetime_symbol_table.LookupLifetime(lifetime);
+    CHECK(name.has_value());
+    lifetime_params.push_back(
+        {.name = name->str(), .id = LifetimeId(lifetime.Id())});
+  }
+  std::sort(
+      lifetime_params.begin(), lifetime_params.end(),
+      [](const Lifetime& l1, const Lifetime& l2) { return l1.name < l2.name; });
 
   std::optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
@@ -225,6 +265,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         .mangled_name = GetMangledName(function_decl),
         .return_type = *return_type,
         .params = std::move(params),
+        .lifetime_params = std::move(lifetime_params),
         .is_inline = function_decl->isInlined(),
         .member_func_metadata = std::move(member_func_metadata),
     });
@@ -345,20 +386,35 @@ SourceLoc AstVisitor::ConvertSourceLocation(clang::SourceLocation loc) const {
 }
 
 absl::StatusOr<MappedType> AstVisitor::ConvertType(
-    clang::QualType qual_type) const {
+    clang::QualType qual_type,
+    std::optional<devtools_rust::TypeLifetimes> lifetimes,
+    bool nullable) const {
   std::optional<MappedType> type = std::nullopt;
   std::string type_string = qual_type.getAsString();
 
   if (const auto* pointer_type = qual_type->getAs<clang::PointerType>()) {
-    auto pointee_type = ConvertType(pointer_type->getPointeeType());
+    std::optional<LifetimeId> lifetime;
+    if (lifetimes.has_value()) {
+      CHECK(!lifetimes->empty());
+      lifetime = LifetimeId(lifetimes->back().Id());
+      lifetimes->pop_back();
+    }
+    auto pointee_type = ConvertType(pointer_type->getPointeeType(), lifetimes);
     if (pointee_type.ok()) {
-      type = MappedType::PointerTo(*pointee_type);
+      type = MappedType::PointerTo(*pointee_type, lifetime, nullable);
     }
   } else if (const auto* lvalue_ref_type =
                  qual_type->getAs<clang::LValueReferenceType>()) {
-    auto pointee_type = ConvertType(lvalue_ref_type->getPointeeType());
+    std::optional<LifetimeId> lifetime;
+    if (lifetimes.has_value()) {
+      CHECK(!lifetimes->empty());
+      lifetime = LifetimeId(lifetimes->back().Id());
+      lifetimes->pop_back();
+    }
+    auto pointee_type =
+        ConvertType(lvalue_ref_type->getPointeeType(), lifetimes);
     if (pointee_type.ok()) {
-      type = MappedType::LValueReferenceTo(*pointee_type);
+      type = MappedType::LValueReferenceTo(*pointee_type, lifetime);
     }
   } else if (const auto* builtin_type =
                  qual_type->getAs<clang::BuiltinType>()) {

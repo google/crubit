@@ -32,6 +32,8 @@ namespace rs_bindings_from_cc {
 namespace internal {
 inline constexpr absl::string_view kRustPtrMut = "*mut";
 inline constexpr absl::string_view kRustPtrConst = "*const";
+inline constexpr absl::string_view kRustRefMut = "&mut";
+inline constexpr absl::string_view kRustRefConst = "&";
 inline constexpr absl::string_view kCcPtr = "*";
 inline constexpr absl::string_view kCcLValueRef = "&";
 inline constexpr int kJsonIndent = 2;
@@ -169,26 +171,47 @@ struct MappedType {
                       CcType{std::move(cc_name), cc_decl_id}};
   }
 
-  static MappedType PointerTo(MappedType pointee_type) {
-    absl::string_view rs_name = pointee_type.cc_type.is_const
-                                    ? internal::kRustPtrConst
-                                    : internal::kRustPtrMut;
+  static MappedType PointerTo(MappedType pointee_type,
+                              std::optional<LifetimeId> lifetime,
+                              bool nullable = true) {
+    absl::string_view rs_name;
+    // TODO(mboehme): Map nullable pointers with lifetimes to
+    // Option<&> / Option<&mut>
+    if (lifetime.has_value() && !nullable) {
+      rs_name = pointee_type.cc_type.is_const ? internal::kRustRefConst
+                                              : internal::kRustRefMut;
+    } else {
+      rs_name = pointee_type.cc_type.is_const ? internal::kRustPtrConst
+                                              : internal::kRustPtrMut;
+    }
     auto pointer_type =
         Simple(std::string(rs_name), std::string(internal::kCcPtr));
+    if (lifetime.has_value()) {
+      pointer_type.rs_type.lifetime_args.push_back(*std::move(lifetime));
+    }
     pointer_type.rs_type.type_args.push_back(std::move(pointee_type.rs_type));
     pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
     return pointer_type;
   }
 
-  static MappedType LValueReferenceTo(MappedType pointee_type) {
-    absl::string_view rs_name = pointee_type.cc_type.is_const
-                                    ? internal::kRustPtrConst
-                                    : internal::kRustPtrMut;
-    auto pointer_type =
+  static MappedType LValueReferenceTo(MappedType pointee_type,
+                                      std::optional<LifetimeId> lifetime) {
+    absl::string_view rs_name;
+    if (lifetime.has_value()) {
+      rs_name = pointee_type.cc_type.is_const ? internal::kRustRefConst
+                                              : internal::kRustRefMut;
+    } else {
+      rs_name = pointee_type.cc_type.is_const ? internal::kRustPtrConst
+                                              : internal::kRustPtrMut;
+    }
+    auto reference_type =
         Simple(std::string(rs_name), std::string(internal::kCcLValueRef));
-    pointer_type.rs_type.type_args.push_back(std::move(pointee_type.rs_type));
-    pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
-    return pointer_type;
+    if (lifetime.has_value()) {
+      reference_type.rs_type.lifetime_args.push_back(*std::move(lifetime));
+    }
+    reference_type.rs_type.type_args.push_back(std::move(pointee_type.rs_type));
+    reference_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
+    return reference_type;
   }
 
   bool IsVoid() const { return rs_type.name == "()"; }

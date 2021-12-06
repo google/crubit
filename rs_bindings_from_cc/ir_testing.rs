@@ -128,3 +128,16 @@ pub fn ir_record(name: &str) -> Record {
 pub fn ir_empty() -> IR {
     ir_from_cc("/* nonempty to force an entrypoint header to exist */").unwrap()
 }
+
+/// Retrieves the function with the given name.
+/// Panics if no such function could be found.
+pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
+    for item in ir.items() {
+        if let Item::Func(func) = item {
+            if func.name == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
+                return func;
+            }
+        }
+    }
+    panic!("Didn't find function with name {}", name);
+}
