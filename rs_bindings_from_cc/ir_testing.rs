@@ -95,10 +95,10 @@ pub fn ir_param(name: &str, decl_id: usize) -> FuncParam {
 
 /// Creates a simple `Func` with a given name
 pub fn ir_func(name: &str) -> Func {
-    let ir = ir_from_cc("inline int REPLACEME() {return 0;}").unwrap();
+    let ir =
+        ir_from_cc(&str::replace("inline int REPLACEME() {return 0;}", "REPLACEME", name)).unwrap();
     for item in ir.take_items() {
-        if let Item::Func(mut func) = item {
-            func.name = ir::UnqualifiedIdentifier::Identifier(ir_id(name));
+        if let Item::Func(func) = item {
             return func;
         }
     }
