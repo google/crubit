@@ -1295,7 +1295,7 @@ mod tests {
 
     #[test]
     fn test_thunk_ident_special_names() {
-        let ir = ir_testing::ir_from_cc("struct Class {};").unwrap();
+        let ir = ir_from_cc("struct Class {};").unwrap();
 
         let destructor =
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
