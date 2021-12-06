@@ -9,7 +9,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::convert::TryInto;
 use std::io::Write;
 use std::iter::Iterator;
@@ -120,8 +120,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func, ir)?;
     let doc_comment = generate_doc_comment(&func.doc_comment);
+    let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
+        func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
+    );
     // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
-    let return_type_name = format_rs_type(&func.return_type.rs_type, ir)?;
+    let return_type_name = format_rs_type(&func.return_type.rs_type, ir, &lifetime_to_name)?;
 
     let param_idents =
         func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
@@ -129,8 +132,19 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let param_types = func
         .params
         .iter()
-        .map(|p| format_rs_type(&p.type_.rs_type, ir))
+        .map(|p| format_rs_type(&p.type_.rs_type, ir, &lifetime_to_name))
         .collect::<Result<Vec<_>>>()?;
+
+    let lifetimes = func
+        .lifetime_params
+        .iter()
+        .map(|l| syn::Lifetime::new(&format!("'{}", l.name), proc_macro2::Span::call_site()))
+        .collect_vec();
+    let generic_params = if lifetimes.is_empty() {
+        quote! {}
+    } else {
+        quote! { < #( #lifetimes ),* > }
+    };
 
     let mut calls_thunk = true;
     let api_func = match &func.name {
@@ -139,7 +153,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             quote! {
                 #doc_comment
                 #[inline(always)]
-                pub fn #ident( #( #param_idents: #param_types ),* ) -> #return_type_name {
+                pub fn #ident #generic_params( #( #param_idents: #param_types ),* ) -> #return_type_name {
                     unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
                 }
             }
@@ -202,7 +216,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
 
         quote! {
             #thunk_attr
-            pub(crate) fn #thunk_ident( #( #param_idents: #param_types ),* ) -> #return_type_name ;
+            pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),* ) -> #return_type_name ;
         }
     } else {
         quote! {}
@@ -233,7 +247,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .fields
         .iter()
         .map(|f| {
-            let mut formatted = format_rs_type(&f.type_.rs_type, ir)?;
+            let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())?;
             if record.destructor.definition == SpecialMemberDefinition::NontrivialSelf {
                 formatted = quote! {
                     std::mem::ManuallyDrop<#formatted>
@@ -489,9 +503,14 @@ fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
-fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
+fn format_rs_type(
+    ty: &ir::RsType,
+    ir: &IR,
+    lifetime_to_name: &HashMap<LifetimeId, String>,
+) -> Result<TokenStream> {
     enum TypeKind<'a> {
         Pointer(TokenStream),
+        Reference(TokenStream),
         Record(TokenStream),
         Unit,
         Other(&'a str),
@@ -500,6 +519,8 @@ fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
         match name.as_str() {
             "*mut" => TypeKind::Pointer(quote! {mut}),
             "*const" => TypeKind::Pointer(quote! {const}),
+            "&mut" => TypeKind::Reference(quote! {mut}),
+            "&" => TypeKind::Reference(quote! {}),
             "()" => TypeKind::Unit,
             _ => TypeKind::Other(name),
         }
@@ -519,8 +540,23 @@ fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
             if ty.type_args.len() != 1 {
                 bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
             }
-            let nested_type = format_rs_type(&ty.type_args[0], ir)?;
+            let nested_type = format_rs_type(&ty.type_args[0], ir, lifetime_to_name)?;
             Ok(quote! {* #mutability #nested_type})
+        }
+        TypeKind::Reference(mutability) => {
+            if ty.lifetime_args.len() != 1 || ty.type_args.len() != 1 {
+                bail!(
+                    "Invalid reference type (need exactly 1 lifetime argument and 1 type argument): {:?}",
+                    ty
+                );
+            }
+            let nested_type = format_rs_type(&ty.type_args[0], ir, lifetime_to_name)?;
+            let lifetime_id = &ty.lifetime_args[0];
+            let lifetime = syn::Lifetime::new(
+                &format!("'{}", lifetime_to_name.get(lifetime_id).unwrap()),
+                proc_macro2::Span::call_site(),
+            );
+            Ok(quote! {& #lifetime #mutability #nested_type})
         }
         TypeKind::Record(path) => {
             if !ty.type_args.is_empty() {
@@ -696,11 +732,16 @@ mod tests {
     use super::*;
     use anyhow::anyhow;
     use ir_testing::{
-        ir_empty, ir_from_cc_dependency, ir_func, ir_id, ir_int, ir_int_param,
-        ir_public_trivial_special, ir_record,
+        ir_empty, ir_from_cc, ir_from_cc_dependency, ir_func, ir_id, ir_int, ir_int_param,
+        ir_public_trivial_special, ir_record, retrieve_func,
     };
     use quote::quote;
     use token_stream_printer::tokens_to_string;
+
+    fn assert_code_contains(code: &TokenStream, snippet: &str) {
+        let code_str = rustfmt(tokens_to_string(code.clone()).unwrap()).unwrap();
+        assert!(code_str.contains(snippet), "{}", code_str);
+    }
 
     #[test]
     // TODO(hlopko): Move this test to a more principled place where it can access
@@ -1184,7 +1225,7 @@ mod tests {
     /// empty drop impls.
     #[test]
     fn test_no_impl_drop() -> Result<()> {
-        let ir = ir_testing::ir_from_cc("struct Trivial {};")?;
+        let ir = ir_from_cc("struct Trivial {};")?;
         let rs_api = generate_rs_api(&ir)?;
         assert!(!rs_api.contains("impl Drop"));
         Ok(())
@@ -1194,7 +1235,7 @@ mod tests {
     /// fields
     #[test]
     fn test_impl_drop_user_defined_destructor() -> Result<()> {
-        let ir = ir_testing::ir_from_cc(
+        let ir = ir_from_cc(
             r#"struct UserDefinedDestructor {
                 ~UserDefinedDestructor();
                 int x;
@@ -1214,7 +1255,7 @@ mod tests {
         // TODO(jeanpierreda): This would be cleaner if the UserDefinedDestructor code were
         // omitted. For example, we simulate it so that UserDefinedDestructor
         // comes from another library.
-        let ir = ir_testing::ir_from_cc(
+        let ir = ir_from_cc(
             r#"struct UserDefinedDestructor {
                 ~UserDefinedDestructor();
             };
@@ -1234,7 +1275,7 @@ mod tests {
     /// get a Drop impl.
     #[test]
     fn test_impl_drop_trivial() -> Result<()> {
-        let ir = ir_testing::ir_from_cc(
+        let ir = ir_from_cc(
             r#"struct Trivial {
                 ~Trivial() = default;
                 int x;
@@ -1254,7 +1295,7 @@ mod tests {
 
     #[test]
     fn test_thunk_ident_special_names() {
-        let ir = ir_testing::ir_from_cc("struct Class {};").unwrap();
+        let ir = ir_from_cc("struct Class {};").unwrap();
         let class = ir.records().find(|r| r.identifier.identifier == "Class").unwrap();
         let mut func = ir_func("unused");
         func.member_func_metadata =
@@ -1279,5 +1320,26 @@ mod tests {
                     .contains("must be a member function")
             );
         }
+    }
+
+    #[test]
+    fn test_elided_lifetimes() {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+          struct S {
+            int& f(int& i);
+          };"#,
+        )
+        .unwrap();
+        let func = retrieve_func(&ir, "f");
+        let (api, thunk) = generate_func(&func, &ir).unwrap();
+        assert_code_contains(
+            &api.tokens,
+            "pub fn f<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32",
+        );
+        assert_code_contains(
+            &thunk.tokens,
+            "pub(crate) fn __rust_thunk__f<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32",
+        );
     }
 }

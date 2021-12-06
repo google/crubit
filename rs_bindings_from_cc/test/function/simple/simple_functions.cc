@@ -19,3 +19,5 @@ int& return_reference() {
 void take_pointer(int* i) { *i = 42; }
 
 void take_reference(int& i) { i = 42; }
+
+const int& forward_reference(const int& i) { return i; }

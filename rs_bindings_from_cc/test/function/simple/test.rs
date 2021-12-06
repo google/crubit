@@ -41,4 +41,11 @@ mod tests {
         take_reference(&mut i);
         assert_eq!(i, 42);
     }
+
+    #[test]
+    fn test_forward_reference() {
+        use simple_functions::forward_reference;
+        let i: i32 = 42;
+        assert_eq!(*forward_reference(&i), 42);
+    }
 }
