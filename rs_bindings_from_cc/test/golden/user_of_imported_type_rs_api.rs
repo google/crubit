@@ -55,6 +55,8 @@ mod detail {
     }
 }
 
+const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+
 const _: () = assert!(std::mem::size_of::<UserOfImportedType>() == 8usize);
 const _: () = assert!(std::mem::align_of::<UserOfImportedType>() == 8usize);
 const _: () = assert!(offset_of!(UserOfImportedType, trivial) * 8 == 0usize);

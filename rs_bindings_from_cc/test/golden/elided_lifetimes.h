@@ -13,4 +13,6 @@ struct S {
   int& method(int& p1, int& p2);
 };
 
+void take_pointer(int* p);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ELIDED_LIFETIMES_H_

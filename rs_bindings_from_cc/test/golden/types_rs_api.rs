@@ -116,6 +116,8 @@ mod detail {
     }
 }
 
+const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+
 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 1usize);
 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 1usize);
 

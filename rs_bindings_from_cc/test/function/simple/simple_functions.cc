@@ -16,8 +16,14 @@ int& return_reference() {
   return i;
 }
 
-void take_pointer(int* i) { *i = 42; }
+void take_pointer(int* i) {
+  if (i) {
+    *i = 42;
+  }
+}
 
 void take_reference(int& i) { i = 42; }
+
+const int* forward_pointer(const int* i) { return i; }
 
 const int& forward_reference(const int& i) { return i; }

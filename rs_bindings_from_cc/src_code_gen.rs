@@ -383,6 +383,15 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
     let mut thunks = vec![];
     let mut assertions = vec![];
 
+    // We import nullable pointers as an Option<&T> and assume that at the ABI
+    // level, None is represented as a zero pointer value whereas Some is
+    // represented as as non-zero pointer value. This seems like a pretty safe
+    // assumption to make, but to provide some safeguard, assert that
+    // `Option<&i32>` and `&i32` have the same size.
+    assertions.push(quote! {
+        const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+    });
+
     // TODO(jeanpierreda): Delete has_record, either in favor of using RsSnippet, or not
     // having uses. See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
     let mut has_record = false;
@@ -571,11 +580,17 @@ fn format_rs_type(
             Ok(quote! {()})
         }
         TypeKind::Other(name) => {
-            if !ty.type_args.is_empty() {
-                bail!("Type not yet supported: {:?}", ty);
-            }
             let ident = make_ident(name);
-            Ok(quote! {#ident})
+            let type_args = if ty.type_args.is_empty() {
+                quote! {}
+            } else {
+                let mut formatted_args = vec![];
+                for type_arg in ty.type_args.iter() {
+                    formatted_args.push(format_rs_type(type_arg, ir, lifetime_to_name)?);
+                }
+                quote! { < #( #formatted_args ),* > }
+            };
+            Ok(quote! {#ident #type_args})
         }
     }
 }
@@ -786,6 +801,8 @@ mod tests {
                         pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
                     } // extern
                 } // mod detail
+                __NEWLINE__ __NEWLINE__
+                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
             })?)?
         );
 
@@ -834,6 +851,8 @@ mod tests {
                         pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
                     } // extern
                 } // mod detail
+                __NEWLINE__ __NEWLINE__
+                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
             })?)?
         );
 
@@ -877,6 +896,8 @@ mod tests {
                           -> dependency::ReturnStruct;
                     } // extern
                 } // mod detail
+                __NEWLINE__ __NEWLINE__
+                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
             })?)?
         );
 
@@ -949,6 +970,8 @@ mod tests {
                     private_int: i32,
                 } __NEWLINE__ __NEWLINE__
 
+                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+                __NEWLINE__ __NEWLINE__
                 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 12usize);
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4usize);
                 const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
@@ -978,7 +1001,11 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {#![feature(custom_inner_attributes)]})?)?
+            rustfmt(tokens_to_string(quote! {
+              #![feature(custom_inner_attributes)]
+              __NEWLINE__ __NEWLINE__
+              const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+            })?)?
         );
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
@@ -1122,6 +1149,8 @@ mod tests {
                         pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
                     } // extern
                 } // mod detail
+                __NEWLINE__ __NEWLINE__
+                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
             })?)?
         );
 

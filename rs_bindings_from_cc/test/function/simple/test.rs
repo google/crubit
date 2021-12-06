@@ -29,8 +29,9 @@ mod tests {
     #[test]
     fn test_take_pointer() {
         use simple_functions::take_pointer;
+        take_pointer(None);
         let mut i: i32 = 0;
-        take_pointer(&mut i);
+        take_pointer(Some(&mut i));
         assert_eq!(i, 42);
     }
 
@@ -40,6 +41,14 @@ mod tests {
         let mut i: i32 = 0;
         take_reference(&mut i);
         assert_eq!(i, 42);
+    }
+
+    #[test]
+    fn test_forward_pointer() {
+        use simple_functions::forward_pointer;
+        assert_eq!(forward_pointer(None), None);
+        let i: i32 = 42;
+        assert_eq!(*forward_pointer(Some(&i)).unwrap(), 42);
     }
 
     #[test]

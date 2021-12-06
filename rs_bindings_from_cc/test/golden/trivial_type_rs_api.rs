@@ -89,6 +89,8 @@ mod detail {
     }
 }
 
+const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+
 const _: () = assert!(std::mem::size_of::<Trivial>() == 4usize);
 const _: () = assert!(std::mem::align_of::<Trivial>() == 4usize);
 const _: () = assert!(offset_of!(Trivial, trivial_field) * 8 == 0usize);

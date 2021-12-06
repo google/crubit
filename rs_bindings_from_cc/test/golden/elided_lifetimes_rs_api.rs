@@ -44,6 +44,11 @@ pub fn method<'a, 'b, 'c>(__this: &'c mut S, p1: &'a mut i32, p2: &'b mut i32) -
 // Error while generating bindings for item 'S::operator=':
 // Parameter type 'struct S &&' is not supported
 
+#[inline(always)]
+pub fn take_pointer<'a>(p: Option<&'a mut i32>) -> () {
+    unsafe { crate::detail::__rust_thunk__take_pointer(p) }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ELIDED_LIFETIMES_H_
 
 mod detail {
@@ -58,8 +63,12 @@ mod detail {
             p2: &'b mut i32,
         ) -> &'c mut i32;
         pub(crate) fn __rust_constructor_thunk__S<'a>(__this: &'a mut S) -> ();
+        #[link_name = "_Z12take_pointerPi"]
+        pub(crate) fn __rust_thunk__take_pointer<'a>(p: Option<&'a mut i32>) -> ();
     }
 }
+
+const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
 
 const _: () = assert!(std::mem::size_of::<S>() == 1usize);
 const _: () = assert!(std::mem::align_of::<S>() == 1usize);

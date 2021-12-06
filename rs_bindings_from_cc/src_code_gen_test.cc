@@ -39,7 +39,10 @@ TEST(SrcGenTest, FFIIntegration) {
           "    extern \"C\" {\n"
           "        pub(crate) fn __rust_thunk__hello_world(arg: i32) -> i32;\n"
           "    }\n"
-          "}\n"));
+          "}\n"
+          "\n"
+          "const _: () = assert!(std::mem::size_of::<Option<&i32>>() == "
+          "std::mem::size_of::<&i32>());\n"));
 
   EXPECT_THAT(bindings.rs_api_impl,
               StrEq("#include <memory>\n"

@@ -82,9 +82,8 @@ MappedType MappedType::PointerTo(MappedType pointee_type,
                                  std::optional<LifetimeId> lifetime,
                                  bool nullable) {
   absl::string_view rs_name;
-  // TODO(mboehme): Map nullable pointers with lifetimes to
-  // Option<&> / Option<&mut>
-  if (lifetime.has_value() && !nullable) {
+  bool has_lifetime = lifetime.has_value();
+  if (has_lifetime) {
     rs_name = pointee_type.cc_type.is_const ? internal::kRustRefConst
                                             : internal::kRustRefMut;
   } else {
@@ -93,10 +92,14 @@ MappedType MappedType::PointerTo(MappedType pointee_type,
   }
   auto pointer_type =
       Simple(std::string(rs_name), std::string(internal::kCcPtr));
-  if (lifetime.has_value()) {
+  if (has_lifetime) {
     pointer_type.rs_type.lifetime_args.push_back(*std::move(lifetime));
   }
   pointer_type.rs_type.type_args.push_back(std::move(pointee_type.rs_type));
+  if (has_lifetime && nullable) {
+    pointer_type.rs_type =
+        RsType{.name = "Option", .type_args = {pointer_type.rs_type}};
+  }
   pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
   return pointer_type;
 }
