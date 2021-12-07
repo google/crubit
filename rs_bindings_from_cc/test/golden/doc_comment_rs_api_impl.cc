@@ -6,26 +6,25 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
-extern "C" void __rust_destructor_thunk__DocCommentSlashes(
+extern "C" void __rust_thunk___ZN17DocCommentSlashesD1Ev(
     DocCommentSlashes* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__DocCommentBang(
-    DocCommentBang* __this) {
+extern "C" void __rust_thunk___ZN14DocCommentBangD1Ev(DocCommentBang* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__MultilineCommentTwoStars(
+extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsD1Ev(
     MultilineCommentTwoStars* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__LineComment(LineComment* __this) {
+extern "C" void __rust_thunk___ZN11LineCommentD1Ev(LineComment* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__MultilineOneStar(
+extern "C" void __rust_thunk___ZN16MultilineOneStarD1Ev(
     MultilineOneStar* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" int __rust_thunk__foo() { return foo(); }
+extern "C" int __rust_thunk___Z3foov() { return foo(); }
 
 static_assert(sizeof(DocCommentSlashes) == 4);
 static_assert(alignof(DocCommentSlashes) == 4);

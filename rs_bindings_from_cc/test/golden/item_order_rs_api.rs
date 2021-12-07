@@ -35,7 +35,7 @@ pub struct FirstStruct {
 
 #[inline(always)]
 pub fn first_func() -> i32 {
-    unsafe { crate::detail::__rust_thunk__first_func() }
+    unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
 #[derive(Clone, Copy)]
@@ -66,7 +66,7 @@ pub struct SecondStruct {
 
 #[inline(always)]
 pub fn second_func() -> i32 {
-    unsafe { crate::detail::__rust_thunk__second_func() }
+    unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
@@ -74,10 +74,10 @@ pub fn second_func() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk__FirstStruct(__this: *mut FirstStruct) -> ();
-        pub(crate) fn __rust_thunk__first_func() -> i32;
-        pub(crate) fn __rust_constructor_thunk__SecondStruct(__this: *mut SecondStruct) -> ();
-        pub(crate) fn __rust_thunk__second_func() -> i32;
+        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut FirstStruct) -> ();
+        pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
+        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut SecondStruct) -> ();
+        pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
 }
 

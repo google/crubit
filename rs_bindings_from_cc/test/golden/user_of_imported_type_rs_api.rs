@@ -11,7 +11,7 @@ use memoffset_unstable_const::offset_of;
 
 #[inline(always)]
 pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial {
-    unsafe { crate::detail::__rust_thunk__UsesImportedType(t) }
+    unsafe { crate::detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
 }
 
 #[derive(Clone, Copy)]
@@ -46,10 +46,10 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_Z16UsesImportedType7Trivial"]
-        pub(crate) fn __rust_thunk__UsesImportedType(
+        pub(crate) fn __rust_thunk___Z16UsesImportedType7Trivial(
             t: trivial_type_cc::Trivial,
         ) -> trivial_type_cc::Trivial;
-        pub(crate) fn __rust_constructor_thunk__UserOfImportedType(
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
             __this: *mut UserOfImportedType,
         ) -> ();
     }

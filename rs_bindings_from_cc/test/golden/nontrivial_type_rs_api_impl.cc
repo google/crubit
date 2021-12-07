@@ -6,11 +6,11 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/nontrivial_type.h"
 
-extern "C" void __rust_destructor_thunk__NontrivialInline(
+extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
     NontrivialInline* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__NontrivialMembers(
+extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
     NontrivialMembers* __this) {
   return std ::destroy_at(__this);
 }

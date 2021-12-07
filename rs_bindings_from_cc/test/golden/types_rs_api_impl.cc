@@ -6,14 +6,14 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/types.h"
 
-extern "C" void __rust_destructor_thunk__SomeStruct(SomeStruct* __this) {
+extern "C" void __rust_thunk___ZN10SomeStructD1Ev(SomeStruct* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__FieldTypeTestStruct(
+extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
     FieldTypeTestStruct* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_thunk__VoidReturningFunction() {
+extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   return VoidReturningFunction();
 }
 

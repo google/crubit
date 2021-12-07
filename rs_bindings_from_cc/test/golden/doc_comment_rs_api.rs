@@ -160,7 +160,7 @@ pub struct MultilineOneStar {
 /// A function
 #[inline(always)]
 pub fn foo() -> i32 {
-    unsafe { crate::detail::__rust_thunk__foo() }
+    unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
@@ -168,18 +168,16 @@ pub fn foo() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk__DocCommentSlashes(
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(
             __this: *mut DocCommentSlashes,
         ) -> ();
-        pub(crate) fn __rust_constructor_thunk__DocCommentBang(__this: *mut DocCommentBang) -> ();
-        pub(crate) fn __rust_constructor_thunk__MultilineCommentTwoStars(
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(__this: *mut DocCommentBang) -> ();
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
             __this: *mut MultilineCommentTwoStars,
         ) -> ();
-        pub(crate) fn __rust_constructor_thunk__LineComment(__this: *mut LineComment) -> ();
-        pub(crate) fn __rust_constructor_thunk__MultilineOneStar(
-            __this: *mut MultilineOneStar,
-        ) -> ();
-        pub(crate) fn __rust_thunk__foo() -> i32;
+        pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut LineComment) -> ();
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(__this: *mut MultilineOneStar) -> ();
+        pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }
 }
 

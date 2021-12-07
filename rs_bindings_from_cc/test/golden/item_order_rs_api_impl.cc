@@ -6,14 +6,14 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/item_order.h"
 
-extern "C" void __rust_destructor_thunk__FirstStruct(FirstStruct* __this) {
+extern "C" void __rust_thunk___ZN11FirstStructD1Ev(FirstStruct* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" int __rust_thunk__first_func() { return first_func(); }
-extern "C" void __rust_destructor_thunk__SecondStruct(SecondStruct* __this) {
+extern "C" int __rust_thunk___Z10first_funcv() { return first_func(); }
+extern "C" void __rust_thunk___ZN12SecondStructD1Ev(SecondStruct* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" int __rust_thunk__second_func() { return second_func(); }
+extern "C" int __rust_thunk___Z11second_funcv() { return second_func(); }
 
 static_assert(sizeof(FirstStruct) == 4);
 static_assert(alignof(FirstStruct) == 4);

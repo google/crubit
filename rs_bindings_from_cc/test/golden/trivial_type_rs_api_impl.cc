@@ -6,10 +6,10 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/trivial_type.h"
 
-extern "C" void __rust_destructor_thunk__Trivial(Trivial* __this) {
+extern "C" void __rust_thunk___ZN7TrivialD1Ev(Trivial* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__TrivialWithDefaulted(
+extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
     TrivialWithDefaulted* __this) {
   return std ::destroy_at(__this);
 }

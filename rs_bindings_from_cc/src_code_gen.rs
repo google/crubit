@@ -118,7 +118,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 /// Returns the generated function or trait impl, and the thunk, as a tuple.
 fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let mangled_name = &func.mangled_name;
-    let thunk_ident = thunk_ident(func, ir)?;
+    let thunk_ident = thunk_ident(func);
     let doc_comment = generate_doc_comment(&func.doc_comment);
     let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
         func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
@@ -648,26 +648,8 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     }
 }
 
-fn thunk_ident(func: &Func, ir: &IR) -> Result<Ident> {
-    let get_type_name = || {
-        if let Some(meta) = &func.member_func_metadata {
-            let record: &Record = ir.find_decl(meta.record_id)?.try_into()?;
-            Ok(&record.identifier.identifier)
-        } else {
-            bail!("Special member function must be a member function: {:?}", func.name)
-        }
-    };
-    match &func.name {
-        UnqualifiedIdentifier::Identifier(id) => {
-            Ok(format_ident!("__rust_thunk__{}", &id.identifier))
-        }
-        UnqualifiedIdentifier::Destructor => {
-            Ok(format_ident!("__rust_destructor_thunk__{}", get_type_name()?))
-        }
-        UnqualifiedIdentifier::Constructor => {
-            Ok(format_ident!("__rust_constructor_thunk__{}", get_type_name()?))
-        }
-    }
+fn thunk_ident(func: &Func) -> Ident {
+    format_ident!("__rust_thunk__{}", func.mangled_name)
 }
 
 fn generate_rs_api_impl(ir: &IR) -> Result<String> {
@@ -684,7 +666,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
             continue;
         }
 
-        let thunk_ident = thunk_ident(func, ir)?;
+        let thunk_ident = thunk_ident(func);
         let implementation_function = match &func.name {
             UnqualifiedIdentifier::Identifier(id) => {
                 let ident = make_ident(&id.identifier);
@@ -747,7 +729,7 @@ mod tests {
     use super::*;
     use anyhow::anyhow;
     use ir_testing::{
-        ir_empty, ir_from_cc, ir_from_cc_dependency, ir_func, ir_id, ir_int, ir_int_param,
+        ir_from_cc, ir_from_cc_dependency, ir_func, ir_id, ir_int, ir_int_param,
         ir_public_trivial_special, ir_record, retrieve_func,
     };
     use quote::quote;
@@ -791,14 +773,14 @@ mod tests {
 
                 #[inline(always)]
                 pub fn add(a: i32, b: i32) -> i32 {
-                    unsafe { crate::detail::__rust_thunk__add(a, b) }
+                    unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
                     use super::*;
                     extern "C" {
                         #[link_name = "_Z3Addii"]
-                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                        pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
                     } // extern
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
@@ -842,13 +824,13 @@ mod tests {
 
                 #[inline(always)]
                 pub fn add(a: i32, b: i32) -> i32 {
-                    unsafe { crate::detail::__rust_thunk__add(a, b) }
+                    unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
                     use super::*;
                     extern "C" {
-                        pub(crate) fn __rust_thunk__add(a: i32, b: i32) -> i32;
+                        pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
                     } // extern
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
@@ -863,7 +845,7 @@ mod tests {
                 __HASH_TOKEN__ include "foo/bar.h" __NEWLINE__
                 __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__ __NEWLINE__
 
-                extern "C" int __rust_thunk__add(int a, int b) {
+                extern "C" int __rust_thunk___Z3Addii(int a, int b) {
                     return add(a, b);
                 }
             })?
@@ -886,13 +868,13 @@ mod tests {
                 #[inline(always)]
                 pub fn DoSomething(param: dependency::ParamStruct)
                   -> dependency::ReturnStruct {
-                    unsafe { crate::detail::__rust_thunk__DoSomething(param) }
+                    unsafe { crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(param) }
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
                     use super::*;
                     extern "C" {
-                        pub(crate) fn __rust_thunk__DoSomething(param: dependency::ParamStruct)
+                        pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(param: dependency::ParamStruct)
                           -> dependency::ReturnStruct;
                     } // extern
                 } // mod detail
@@ -908,7 +890,7 @@ mod tests {
                 __HASH_TOKEN__ include <memory> __NEWLINE__
                 __HASH_TOKEN__ include "ir_from_cc_virtual_header.h" __NEWLINE__ __NEWLINE__
 
-                extern "C" ReturnStruct __rust_thunk__DoSomething(ParamStruct param) {
+                extern "C" ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(ParamStruct param) {
                     return DoSomething(param);
                 }
             })?
@@ -1140,13 +1122,13 @@ mod tests {
 
                 #[inline(always)]
                 pub fn Deref(p: *const *mut i32) -> *mut i32 {
-                    unsafe { crate::detail::__rust_thunk__Deref(p) }
+                    unsafe { crate::detail::__rust_thunk___Z5DerefPKPi(p) }
                 } __NEWLINE__ __NEWLINE__
 
                 mod detail {
                     use super::*;
                     extern "C" {
-                        pub(crate) fn __rust_thunk__Deref(p: *const *mut i32) -> *mut i32;
+                        pub(crate) fn __rust_thunk___Z5DerefPKPi(p: *const *mut i32) -> *mut i32;
                     } // extern
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
@@ -1159,7 +1141,7 @@ mod tests {
             tokens_to_string(quote! {
                 __HASH_TOKEN__ include <memory> __NEWLINE__
                 __NEWLINE__
-                extern "C" int* __rust_thunk__Deref(int* const * p) {
+                extern "C" int* __rust_thunk___Z5DerefPKPi(int* const * p) {
                     return Deref(p);
                 }
             })?
@@ -1179,12 +1161,14 @@ mod tests {
         let rs_api = generate_rs_api(&ir)?;
         let idx = |s: &str| rs_api.find(s).ok_or(anyhow!("'{}' missing", s));
 
+        println!("{:?}", ir);
+
         let f1 = idx("fn first_func")?;
         let f2 = idx("fn second_func")?;
         let s1 = idx("struct FirstStruct")?;
         let s2 = idx("struct SecondStruct")?;
-        let t1 = idx("fn __rust_thunk__first_func")?;
-        let t2 = idx("fn __rust_thunk__second_func")?;
+        let t1 = idx("fn __rust_thunk___Z10first_funcv")?;
+        let t2 = idx("fn __rust_thunk___Z11second_funcv")?;
 
         assert!(f1 < s1);
         assert!(s1 < f2);
@@ -1319,7 +1303,7 @@ mod tests {
     #[test]
     fn test_thunk_ident_function() {
         let func = ir_func("foo");
-        assert_eq!(thunk_ident(&func, &ir_empty()).unwrap(), make_ident("__rust_thunk__foo"));
+        assert_eq!(thunk_ident(&func), make_ident("__rust_thunk___Z3foov"));
     }
 
     #[test]
@@ -1328,31 +1312,11 @@ mod tests {
 
         let destructor =
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
-        assert_eq!(
-            thunk_ident(&destructor, &ir).unwrap(),
-            make_ident("__rust_destructor_thunk__Class")
-        );
+        assert_eq!(thunk_ident(&destructor), make_ident("__rust_thunk___ZN5ClassD1Ev"));
 
         let constructor =
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Constructor).unwrap();
-        assert_eq!(
-            thunk_ident(&constructor, &ir).unwrap(),
-            make_ident("__rust_constructor_thunk__Class")
-        );
-    }
-
-    #[test]
-    fn test_thunk_ident_invalid() {
-        let mut func = ir_func("unused");
-        for name in [UnqualifiedIdentifier::Destructor, UnqualifiedIdentifier::Constructor] {
-            func.name = name;
-            assert!(
-                thunk_ident(&func, &ir_empty())
-                    .unwrap_err()
-                    .to_string()
-                    .contains("must be a member function")
-            );
-        }
+        assert_eq!(thunk_ident(&constructor), make_ident("__rust_thunk___ZN5ClassC1Ev"));
     }
 
     #[test]
@@ -1372,7 +1336,7 @@ mod tests {
         );
         assert_code_contains(
             &thunk.tokens,
-            "pub(crate) fn __rust_thunk__f<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32",
+            "pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32",
         );
     }
 }

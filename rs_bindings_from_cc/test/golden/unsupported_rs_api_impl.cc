@@ -6,11 +6,11 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
-extern "C" void __rust_destructor_thunk__NontrivialCustomType(
+extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
     NontrivialCustomType* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__ContainingStruct(
+extern "C" void __rust_thunk___ZN16ContainingStructD1Ev(
     ContainingStruct* __this) {
   return std ::destroy_at(__this);
 }

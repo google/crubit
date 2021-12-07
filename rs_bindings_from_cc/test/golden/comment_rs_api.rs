@@ -52,7 +52,7 @@ pub struct Foo {
 /// foo
 #[inline(always)]
 pub fn foo() -> () {
-    unsafe { crate::detail::__rust_thunk__foo() }
+    unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
 /// Bar
@@ -116,10 +116,10 @@ pub struct HasNoComments {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk__Foo(__this: *mut Foo) -> ();
-        pub(crate) fn __rust_thunk__foo() -> ();
-        pub(crate) fn __rust_constructor_thunk__Bar(__this: *mut Bar) -> ();
-        pub(crate) fn __rust_constructor_thunk__HasNoComments(__this: *mut HasNoComments) -> ();
+        pub(crate) fn __rust_thunk___ZN3FooC1Ev(__this: *mut Foo) -> ();
+        pub(crate) fn __rust_thunk___Z3foov() -> ();
+        pub(crate) fn __rust_thunk___ZN3BarC1Ev(__this: *mut Bar) -> ();
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut HasNoComments) -> ();
     }
 }
 

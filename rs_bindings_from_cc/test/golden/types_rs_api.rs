@@ -100,7 +100,7 @@ pub struct FieldTypeTestStruct {
 
 #[inline(always)]
 pub fn VoidReturningFunction() -> () {
-    unsafe { crate::detail::__rust_thunk__VoidReturningFunction() }
+    unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
@@ -108,11 +108,11 @@ pub fn VoidReturningFunction() -> () {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk__SomeStruct(__this: *mut SomeStruct) -> ();
-        pub(crate) fn __rust_constructor_thunk__FieldTypeTestStruct(
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut SomeStruct) -> ();
+        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1Ev(
             __this: *mut FieldTypeTestStruct,
         ) -> ();
-        pub(crate) fn __rust_thunk__VoidReturningFunction() -> ();
+        pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv() -> ();
     }
 }
 

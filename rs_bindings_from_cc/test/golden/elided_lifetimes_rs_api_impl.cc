@@ -6,7 +6,7 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/elided_lifetimes.h"
 
-extern "C" void __rust_destructor_thunk__S(S* __this) {
+extern "C" void __rust_thunk___ZN1SD1Ev(S* __this) {
   return std ::destroy_at(__this);
 }
 

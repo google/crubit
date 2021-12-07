@@ -35,7 +35,7 @@ impl !Unpin for Nontrivial {}
 impl Drop for Nontrivial {
     #[inline(always)]
     fn drop(&mut self) {
-        unsafe { crate::detail::__rust_destructor_thunk__Nontrivial(self) }
+        unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
 
@@ -69,7 +69,7 @@ impl !Unpin for NontrivialInline {}
 impl Drop for NontrivialInline {
     #[inline(always)]
     fn drop(&mut self) {
-        unsafe { crate::detail::__rust_destructor_thunk__NontrivialInline(self) }
+        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
     }
 }
 
@@ -132,11 +132,9 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) fn __rust_destructor_thunk__Nontrivial(__this: *mut Nontrivial) -> ();
-        pub(crate) fn __rust_destructor_thunk__NontrivialInline(
-            __this: *mut NontrivialInline,
-        ) -> ();
-        pub(crate) fn __rust_constructor_thunk__NontrivialMembers(
+        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial) -> ();
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline) -> ();
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev(
             __this: *mut NontrivialMembers,
         ) -> ();
     }

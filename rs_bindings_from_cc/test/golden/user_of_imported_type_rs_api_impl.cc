@@ -6,7 +6,7 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/user_of_imported_type.h"
 
-extern "C" void __rust_destructor_thunk__UserOfImportedType(
+extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
     UserOfImportedType* __this) {
   return std ::destroy_at(__this);
 }

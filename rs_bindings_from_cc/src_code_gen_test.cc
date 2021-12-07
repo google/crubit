@@ -17,7 +17,7 @@ using ::testing::StrEq;
 TEST(SrcGenTest, FFIIntegration) {
   IR ir = {.used_headers = {HeaderName("foo/bar.h")},
            .items = {Func{.name = Identifier("hello_world"),
-                          .mangled_name = "$$mangled_name$$",
+                          .mangled_name = "mangled_name",
                           .return_type = MappedType::Simple("i32", "int"),
                           .params = {FuncParam{MappedType::Simple("i32", "int"),
                                                Identifier("arg")}},
@@ -31,13 +31,13 @@ TEST(SrcGenTest, FFIIntegration) {
           "\n"
           "#[inline(always)]\n"
           "pub fn hello_world(arg: i32) -> i32 {\n"
-          "    unsafe { crate::detail::__rust_thunk__hello_world(arg) }\n"
+          "    unsafe { crate::detail::__rust_thunk__mangled_name(arg) }\n"
           "}\n"
           "\n"
           "mod detail {\n"
           "    use super::*;\n"
           "    extern \"C\" {\n"
-          "        pub(crate) fn __rust_thunk__hello_world(arg: i32) -> i32;\n"
+          "        pub(crate) fn __rust_thunk__mangled_name(arg: i32) -> i32;\n"
           "    }\n"
           "}\n"
           "\n"
@@ -48,7 +48,7 @@ TEST(SrcGenTest, FFIIntegration) {
               StrEq("#include <memory>\n"
                     "#include \"foo/bar.h\"\n"
                     "\n"
-                    "extern \"C\" int __rust_thunk__hello_world(int arg) { "
+                    "extern \"C\" int __rust_thunk__mangled_name(int arg) { "
                     "return hello_world(arg); "
                     "}\n"));
 }

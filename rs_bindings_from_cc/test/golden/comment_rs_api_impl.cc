@@ -6,14 +6,14 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/comment.h"
 
-extern "C" void __rust_destructor_thunk__Foo(Foo* __this) {
+extern "C" void __rust_thunk___ZN3FooD1Ev(Foo* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_thunk__foo() { return foo(); }
-extern "C" void __rust_destructor_thunk__Bar(Bar* __this) {
+extern "C" void __rust_thunk___Z3foov() { return foo(); }
+extern "C" void __rust_thunk___ZN3BarD1Ev(Bar* __this) {
   return std ::destroy_at(__this);
 }
-extern "C" void __rust_destructor_thunk__HasNoComments(HasNoComments* __this) {
+extern "C" void __rust_thunk___ZN13HasNoCommentsD1Ev(HasNoComments* __this) {
   return std ::destroy_at(__this);
 }
 

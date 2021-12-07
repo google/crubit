@@ -65,12 +65,14 @@ pub struct TrivialWithDefaulted {
 
 #[inline(always)]
 pub fn TakesByValue(trivial: Trivial) -> () {
-    unsafe { crate::detail::__rust_thunk__TakesByValue(trivial) }
+    unsafe { crate::detail::__rust_thunk___Z12TakesByValue7Trivial(trivial) }
 }
 
 #[inline(always)]
 pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) -> () {
-    unsafe { crate::detail::__rust_thunk__TakesWithDefaultedByValue(trivial) }
+    unsafe {
+        crate::detail::__rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(trivial)
+    }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
@@ -78,14 +80,16 @@ pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) -> () {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_constructor_thunk__Trivial(__this: *mut Trivial) -> ();
-        pub(crate) fn __rust_constructor_thunk__TrivialWithDefaulted(
+        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: *mut Trivial) -> ();
+        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
             __this: *mut TrivialWithDefaulted,
         ) -> ();
         #[link_name = "_Z12TakesByValue7Trivial"]
-        pub(crate) fn __rust_thunk__TakesByValue(trivial: Trivial) -> ();
+        pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial) -> ();
         #[link_name = "_Z25TakesWithDefaultedByValue20TrivialWithDefaulted"]
-        pub(crate) fn __rust_thunk__TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) -> ();
+        pub(crate) fn __rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(
+            trivial: TrivialWithDefaulted,
+        ) -> ();
     }
 }
 
