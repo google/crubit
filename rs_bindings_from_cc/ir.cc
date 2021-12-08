@@ -249,8 +249,8 @@ static std::string SpecialMemberDefinitionToString(
       return "Trivial";
     case SpecialMemberFunc::Definition::kNontrivialMembers:
       return "NontrivialMembers";
-    case SpecialMemberFunc::Definition::kNontrivialSelf:
-      return "NontrivialSelf";
+    case SpecialMemberFunc::Definition::kNontrivialUserDefined:
+      return "NontrivialUserDefined";
     case SpecialMemberFunc::Definition::kDeleted:
       return "Deleted";
   }

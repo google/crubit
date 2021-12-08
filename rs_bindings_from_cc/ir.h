@@ -336,7 +336,7 @@ struct SpecialMemberFunc {
     kNontrivialMembers,
     // Nontrivial because of a user-defined special member function in this or a
     // base class. (May *also* be nontrivial due to member variables.)
-    kNontrivialSelf,
+    kNontrivialUserDefined,
     kDeleted,
   };
 

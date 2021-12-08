@@ -393,52 +393,54 @@ TEST(AstVisitorTest, TrivialCopyConstructor) {
                            SpecialMemberFunc::Definition::kTrivial)))));
 }
 
-TEST(AstVisitorTest, NontrivialSelfCopyConstructor) {
+TEST(AstVisitorTest, NontrivialUserDefinedCopyConstructor) {
   absl::string_view file = R"cc(
-    struct NontrivialSelf {
-      NontrivialSelf(const NontrivialSelf&);
+    struct NontrivialUserDefined {
+      NontrivialUserDefined(const NontrivialUserDefined&);
     };
-    struct NontrivialSub : public NontrivialSelf {};
+    struct NontrivialSub : public NontrivialUserDefined {};
 
     // Despite having a defaulted copy constructor, this is not trivially
     // copyable, because the *first* declaration is not defaulted.
-    struct NontrivialSelfDefaulted {
-      NontrivialSelfDefaulted(const NontrivialSelfDefaulted&);
+    struct NontrivialUserDefinedDefaulted {
+      NontrivialUserDefinedDefaulted(const NontrivialUserDefinedDefaulted&);
     };
-    inline NontrivialSelfDefaulted::NontrivialSelfDefaulted(
-        const NontrivialSelfDefaulted&) = default;
+    inline NontrivialUserDefinedDefaulted::NontrivialUserDefinedDefaulted(
+        const NontrivialUserDefinedDefaulted&) = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kNontrivialSelf)))));
+  EXPECT_THAT(records,
+              Each(Pointee(CopyConstructor(DefinitionIs(
+                  SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
 }
 
 TEST(AstVisitorTest, NontrivialMembersCopyConstructor) {
   absl::string_view file = R"cc(
-    struct NontrivialSelf {
-      NontrivialSelf(const NontrivialSelf&);
+    struct NontrivialUserDefined {
+      NontrivialUserDefined(const NontrivialUserDefined&);
     };
     struct MemberImplicit {
-      NontrivialSelf x;
+      NontrivialUserDefined x;
     };
     struct MemberDefaulted {
       MemberDefaulted(const MemberDefaulted&) = default;
-      NontrivialSelf x;
+      NontrivialUserDefined x;
     };
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
-  EXPECT_THAT(records,
-              Each(Pointee(AnyOf(
-                  IdentifierIs(
-                      "NontrivialSelf"),  // needed to create nontrivial members
-                  CopyConstructor(DefinitionIs(
-                      SpecialMemberFunc::Definition::kNontrivialMembers))))));
+  EXPECT_THAT(
+      records,
+      Each(Pointee(AnyOf(
+          IdentifierIs(
+              "NontrivialUserDefined"),  // needed to create nontrivial members
+          CopyConstructor(DefinitionIs(
+              SpecialMemberFunc::Definition::kNontrivialMembers))))));
 }
 
 TEST(AstVisitorTest, DeletedCopyConstructor) {
@@ -510,51 +512,53 @@ TEST(AstVisitorTest, TrivialMoveConstructor) {
                            SpecialMemberFunc::Definition::kTrivial)))));
 }
 
-TEST(AstVisitorTest, NontrivialSelfMoveConstructor) {
+TEST(AstVisitorTest, NontrivialUserDefinedMoveConstructor) {
   absl::string_view file = R"cc(
-    struct NontrivialSelf {
-      NontrivialSelf(NontrivialSelf&&);
+    struct NontrivialUserDefined {
+      NontrivialUserDefined(NontrivialUserDefined&&);
     };
-    struct NontrivialSub : public NontrivialSelf {};
+    struct NontrivialSub : public NontrivialUserDefined {};
 
     // Despite having a defaulted move constructor, this is not trivially
     // movable, because the *first* declaration is not defaulted.
-    struct NontrivialSelfDefaulted {
-      NontrivialSelfDefaulted(NontrivialSelfDefaulted&&);
+    struct NontrivialUserDefinedDefaulted {
+      NontrivialUserDefinedDefaulted(NontrivialUserDefinedDefaulted&&);
     };
-    inline NontrivialSelfDefaulted::NontrivialSelfDefaulted(
-        NontrivialSelfDefaulted&&) = default;
+    inline NontrivialUserDefinedDefaulted::NontrivialUserDefinedDefaulted(
+        NontrivialUserDefinedDefaulted&&) = default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kNontrivialSelf)))));
+  EXPECT_THAT(records,
+              Each(Pointee(MoveConstructor(DefinitionIs(
+                  SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
 }
 
 TEST(AstVisitorTest, NontrivialMembersMoveConstructor) {
   absl::string_view file = R"cc(
-    struct NontrivialSelf {
-      NontrivialSelf(NontrivialSelf&&);
+    struct NontrivialUserDefined {
+      NontrivialUserDefined(NontrivialUserDefined&&);
     };
     struct MemberImplicit {
-      NontrivialSelf x;
+      NontrivialUserDefined x;
     };
     struct MemberDefaulted {
       MemberDefaulted(MemberDefaulted&&) = default;
-      NontrivialSelf x;
+      NontrivialUserDefined x;
     };
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
-  EXPECT_THAT(records,
-              Each(Pointee(AnyOf(
-                  IdentifierIs(
-                      "NontrivialSelf"),  // needed to create nontrivial members
-                  MoveConstructor(DefinitionIs(
-                      SpecialMemberFunc::Definition::kNontrivialMembers))))));
+  EXPECT_THAT(
+      records,
+      Each(Pointee(AnyOf(
+          IdentifierIs(
+              "NontrivialUserDefined"),  // needed to create nontrivial members
+          MoveConstructor(DefinitionIs(
+              SpecialMemberFunc::Definition::kNontrivialMembers))))));
 }
 
 TEST(AstVisitorTest, DeletedMoveConstructor) {
@@ -626,50 +630,53 @@ TEST(AstVisitorTest, TrivialDestructor) {
                            SpecialMemberFunc::Definition::kTrivial)))));
 }
 
-TEST(AstVisitorTest, NontrivialSelfDestructor) {
+TEST(AstVisitorTest, NontrivialUserDefinedDestructor) {
   absl::string_view file = R"cc(
-    struct NontrivialSelf {
-      ~NontrivialSelf();
+    struct NontrivialUserDefined {
+      ~NontrivialUserDefined();
     };
-    struct NontrivialSub : public NontrivialSelf {};
+    struct NontrivialSub : public NontrivialUserDefined {};
 
     // Despite having a defaulted destructor, this is not trivially
     // destructible, because the *first* declaration is not defaulted.
-    struct NontrivialSelfDefaulted {
-      ~NontrivialSelfDefaulted();
+    struct NontrivialUserDefinedDefaulted {
+      ~NontrivialUserDefinedDefaulted();
     };
-    inline NontrivialSelfDefaulted::~NontrivialSelfDefaulted() = default;
+    inline NontrivialUserDefinedDefaulted::~NontrivialUserDefinedDefaulted() =
+        default;
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kNontrivialSelf)))));
+  EXPECT_THAT(records,
+              Each(Pointee(Destructor(DefinitionIs(
+                  SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
 }
 
 TEST(AstVisitorTest, NontrivialMembersDestructor) {
   absl::string_view file = R"cc(
-    struct NontrivialSelf {
-      ~NontrivialSelf();
+    struct NontrivialUserDefined {
+      ~NontrivialUserDefined();
     };
     struct MemberImplicit {
-      NontrivialSelf x;
+      NontrivialUserDefined x;
     };
     struct MemberDefaulted {
       MemberDefaulted(MemberDefaulted&&) = default;
-      NontrivialSelf x;
+      NontrivialUserDefined x;
     };
     struct Subclass : public MemberImplicit {};
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
-  EXPECT_THAT(records,
-              Each(Pointee(AnyOf(
-                  IdentifierIs(
-                      "NontrivialSelf"),  // needed to create nontrivial members
-                  Destructor(DefinitionIs(
-                      SpecialMemberFunc::Definition::kNontrivialMembers))))));
+  EXPECT_THAT(
+      records,
+      Each(Pointee(AnyOf(
+          IdentifierIs(
+              "NontrivialUserDefined"),  // needed to create nontrivial members
+          Destructor(DefinitionIs(
+              SpecialMemberFunc::Definition::kNontrivialMembers))))));
 }
 
 TEST(AstVisitorTest, DeletedDestructor) {

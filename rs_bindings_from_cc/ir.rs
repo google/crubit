@@ -215,7 +215,7 @@ pub struct Field {
 pub enum SpecialMemberDefinition {
     Trivial,
     NontrivialMembers,
-    NontrivialSelf,
+    NontrivialUserDefined,
     Deleted,
 }
 
@@ -495,7 +495,7 @@ mod tests {
                     "size": 12,
                     "alignment": 4,
                     "copy_constructor": {
-                        "definition": "NontrivialSelf",
+                        "definition": "NontrivialUserDefined",
                         "access": "Private"
                     },
                     "move_constructor": {
@@ -586,7 +586,7 @@ mod tests {
                 size: 12,
                 alignment: 4,
                 copy_constructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::NontrivialSelf,
+                    definition: SpecialMemberDefinition::NontrivialUserDefined,
                     access: AccessSpecifier::Private,
                 },
                 move_constructor: SpecialMemberFunc {

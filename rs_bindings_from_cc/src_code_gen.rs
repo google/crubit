@@ -187,7 +187,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                         }
                     }
                 }
-                SpecialMemberDefinition::NontrivialSelf => {
+                SpecialMemberDefinition::NontrivialUserDefined => {
                     quote! {
                         #doc_comment
                         impl Drop for #type_name {
@@ -248,7 +248,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .iter()
         .map(|f| {
             let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())?;
-            if record.destructor.definition == SpecialMemberDefinition::NontrivialSelf {
+            if record.destructor.definition == SpecialMemberDefinition::NontrivialUserDefined {
                 formatted = quote! {
                     std::mem::ManuallyDrop<#formatted>
                 };
@@ -1039,7 +1039,7 @@ mod tests {
     #[test]
     fn test_copy_derives_ctor_nontrivial_self() {
         let mut record = ir_record("S");
-        record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialSelf;
+        record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialUserDefined;
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 

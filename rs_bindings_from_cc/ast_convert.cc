@@ -93,7 +93,7 @@ SpecialMemberFunc GetSpecialMemberFunc(
   } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, getter)) {
     smf.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
   } else {
-    smf.definition = SpecialMemberFunc::Definition::kNontrivialSelf;
+    smf.definition = SpecialMemberFunc::Definition::kNontrivialUserDefined;
   }
   return smf;
 }
