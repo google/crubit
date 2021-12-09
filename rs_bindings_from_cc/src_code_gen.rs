@@ -62,8 +62,12 @@ struct Bindings {
 
 fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     let ir = deserialize_ir(json)?;
-    let rs_api = generate_rs_api(&ir)?;
+
+    // The code is formatted with a non-default rustfmt configuration. Prevent
+    // downstream workflows from reformatting with a different configuration.
+    let rs_api = format!("#![rustfmt::skip]\n{}", generate_rs_api(&ir)?);
     let rs_api_impl = generate_rs_api_impl(&ir)?;
+
     Ok(Bindings { rs_api, rs_api_impl })
 }
 

@@ -2,8 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::bail;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use proc_macro2::TokenStream;
 use proc_macro2::TokenTree;
 use std::fmt::Write as _;
@@ -102,11 +101,7 @@ fn rustfmt(input: String) -> Result<String> {
         bail!("Unable to format output with rustfmt");
     }
 
-    // The code is formatted with a non-default rustfmt configuration. Prevent
-    // downstream workflows from reformatting with a different configuration.
-    let mut result = "#![rustfmt::skip]\n".to_string();
-    result += &*String::from_utf8_lossy(&output.stdout);
-    Ok(result)
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
 #[cfg(test)]
