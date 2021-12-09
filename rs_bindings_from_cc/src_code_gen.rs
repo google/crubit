@@ -11,11 +11,10 @@ use quote::format_ident;
 use quote::quote;
 use std::collections::{BTreeSet, HashMap};
 use std::convert::TryInto;
-use std::io::Write;
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
-use std::process::{Command, Stdio};
+use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
 
 /// FFI equivalent of `Bindings`.
 #[repr(C)]
@@ -465,47 +464,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
          #( #assertions __NEWLINE__ __NEWLINE__ )*
     };
 
-    rustfmt(token_stream_printer::tokens_to_string(result)?)
-}
-
-fn rustfmt(input: String) -> Result<String> {
-    // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is
-    // fixed.
-
-    let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
-
-    let mut child = Command::new(rustfmt)
-        .args(&[
-            // TODO(forster): Add a way to specify this as a command line parameter.
-            "--config-path=external/rustfmt/rustfmt.toml",
-            // We are representing doc comments as attributes in the token stream and use rustfmt
-            // to unpack them again.
-            "--config=normalize_doc_attributes=true",
-            // We don't want rustfmt to reflow C++ doc comments, so we turn off wrapping globally
-            // and reflow generated comments manually.
-            "--config=wrap_comments=false",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect(&format!("Failed to spawn rustfmt at '{}'", rustfmt));
-
-    let mut stdin = child.stdin.take().expect("Failed to open rustfmt stdin");
-    std::thread::spawn(move || {
-        stdin.write_all(input.as_bytes()).expect("Failed to write to rustfmt stdin");
-    });
-    let output = child.wait_with_output().expect("Failed to read rustfmt stdout");
-
-    if !output.status.success() {
-        // The rustfmt error message has already been printed to stderr.
-        bail!("Unable to format output with rustfmt");
-    }
-
-    // The code is formatted with a non-default rustfmt configuration. Prevent
-    // downstream workflows from reformatting with a different configuration.
-    let mut result = "#![rustfmt::skip]\n".to_string();
-    result += &*String::from_utf8_lossy(&output.stdout);
-    Ok(result)
+    rs_tokens_to_formatted_string(result)
 }
 
 fn make_ident(ident: &str) -> Ident {
@@ -721,7 +680,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
         __NEWLINE__
     };
 
-    token_stream_printer::tokens_to_string(result)
+    tokens_to_string(result)
 }
 
 #[cfg(test)]
@@ -736,7 +695,7 @@ mod tests {
     use token_stream_printer::tokens_to_string;
 
     fn assert_code_contains(code: &TokenStream, snippet: &str) {
-        let code_str = rustfmt(tokens_to_string(code.clone()).unwrap()).unwrap();
+        let code_str = rs_tokens_to_formatted_string(code.clone()).unwrap();
         assert!(code_str.contains(snippet), "{}", code_str);
     }
 
@@ -768,7 +727,7 @@ mod tests {
         })])?;
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {
+            rs_tokens_to_formatted_string(quote! {
                 #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 #[inline(always)]
@@ -785,7 +744,7 @@ mod tests {
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
                 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?)?
+            })?
         );
 
         let rs_api = generate_rs_api_impl(&ir)?;
@@ -819,7 +778,7 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {
+            rs_tokens_to_formatted_string(quote! {
                 #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 #[inline(always)]
@@ -835,7 +794,7 @@ mod tests {
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
                 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?)?
+            })?
         );
 
         assert_eq!(
@@ -862,7 +821,7 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {
+            rs_tokens_to_formatted_string(quote! {
                 #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 #[inline(always)]
@@ -880,7 +839,7 @@ mod tests {
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
                 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?)?
+            })?
         );
 
         assert_eq!(
@@ -939,7 +898,7 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {
+            rs_tokens_to_formatted_string(quote! {
                 #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 use memoffset_unstable_const::offset_of; __NEWLINE__ __NEWLINE__
@@ -959,7 +918,7 @@ mod tests {
                 const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
                 const _: () = assert!(offset_of!(SomeStruct, protected_int) * 8 == 32usize);
                 const _: () = assert!(offset_of!(SomeStruct, private_int) * 8 == 64usize);
-            })?)?
+            })?
         );
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
@@ -983,11 +942,11 @@ mod tests {
 
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {
+            rs_tokens_to_formatted_string(quote! {
               #![feature(custom_inner_attributes)]
               __NEWLINE__ __NEWLINE__
               const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?)?
+            })?
         );
         assert_eq!(
             generate_rs_api_impl(&ir)?.trim(),
@@ -1117,7 +1076,7 @@ mod tests {
         })])?;
         assert_eq!(
             generate_rs_api(&ir)?,
-            rustfmt(tokens_to_string(quote! {
+            rs_tokens_to_formatted_string(quote! {
                 #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 #[inline(always)]
@@ -1133,7 +1092,7 @@ mod tests {
                 } // mod detail
                 __NEWLINE__ __NEWLINE__
                 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?)?
+            })?
         );
 
         assert_eq!(

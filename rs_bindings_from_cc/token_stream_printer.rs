@@ -6,14 +6,16 @@ use anyhow::bail;
 use anyhow::Result;
 use proc_macro2::TokenStream;
 use proc_macro2::TokenTree;
+use std::fmt::Write as _;
+use std::io::Write as _;
+use std::process::{Command, Stdio};
 
-use std::fmt::Write;
-
-fn is_ident_or_literal(tt: &TokenTree) -> bool {
-    matches!(tt, TokenTree::Ident(_) | TokenTree::Literal(_))
+/// Like `tokens_to_string` but also runs the result through rustfmt.
+pub fn rs_tokens_to_formatted_string(tokens: TokenStream) -> Result<String> {
+    rustfmt(tokens_to_string(tokens)?)
 }
 
-/// Produces C++ source code out of the token stream.
+/// Produces source code out of the token stream.
 ///
 /// Notable features:
 /// * quote! cannot produce a single `#` token (that is not immediately followed
@@ -60,6 +62,50 @@ pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
             }
         }
     }
+    Ok(result)
+}
+
+fn is_ident_or_literal(tt: &TokenTree) -> bool {
+    matches!(tt, TokenTree::Ident(_) | TokenTree::Literal(_))
+}
+
+fn rustfmt(input: String) -> Result<String> {
+    // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is
+    // fixed.
+
+    let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
+
+    let mut child = Command::new(rustfmt)
+        .args(&[
+            // TODO(forster): Add a way to specify this as a command line parameter.
+            "--config-path=external/rustfmt/rustfmt.toml",
+            // We are representing doc comments as attributes in the token stream and use rustfmt
+            // to unpack them again.
+            "--config=normalize_doc_attributes=true",
+            // We don't want rustfmt to reflow C++ doc comments, so we turn off wrapping globally
+            // and reflow generated comments manually.
+            "--config=wrap_comments=false",
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at '{}'", rustfmt));
+
+    let mut stdin = child.stdin.take().expect("Failed to open rustfmt stdin");
+    std::thread::spawn(move || {
+        stdin.write_all(input.as_bytes()).expect("Failed to write to rustfmt stdin");
+    });
+    let output = child.wait_with_output().expect("Failed to read rustfmt stdout");
+
+    if !output.status.success() {
+        // The rustfmt error message has already been printed to stderr.
+        bail!("Unable to format output with rustfmt");
+    }
+
+    // The code is formatted with a non-default rustfmt configuration. Prevent
+    // downstream workflows from reformatting with a different configuration.
+    let mut result = "#![rustfmt::skip]\n".to_string();
+    result += &*String::from_utf8_lossy(&output.stdout);
     Ok(result)
 }
 
