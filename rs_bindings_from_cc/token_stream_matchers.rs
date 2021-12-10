@@ -34,7 +34,7 @@ pub use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
 /// ```
 #[macro_export]
 macro_rules! assert_cc_matches {
-    ($input:expr, $pattern:expr) => {
+    ($input:expr, $pattern:expr $(,)*) => {
         $crate::match_tokens(&$input, &$pattern, $crate::tokens_to_string)
             .expect("input unexpectedly didn't match the pattern");
     };
@@ -44,7 +44,7 @@ macro_rules! assert_cc_matches {
 /// using rustfmt.
 #[macro_export]
 macro_rules! assert_rs_matches {
-    ($input:expr, $pattern:expr) => {
+    ($input:expr, $pattern:expr $(,)*) => {
         $crate::match_tokens(&$input, &$pattern, $crate::rs_tokens_to_formatted_string)
             .expect("input unexpectedly didn't match the pattern");
     };
@@ -55,7 +55,7 @@ macro_rules! assert_rs_matches {
 /// Pattern can use `...` wildcard. See `assert_cc_matches` for details.
 #[macro_export]
 macro_rules! assert_cc_not_matches {
-    ($input:expr, $pattern:expr) => {
+    ($input:expr, $pattern:expr $(,)*) => {
         $crate::match_tokens(&$input, &$pattern, tokens_to_string)
             .expect_err("input unexpectedly matched the pattern");
     };
@@ -65,7 +65,7 @@ macro_rules! assert_cc_not_matches {
 /// message using rustfmt.
 #[macro_export]
 macro_rules! assert_rs_not_matches {
-    ($input:expr, $pattern:expr) => {
+    ($input:expr, $pattern:expr $(,)*) => {
         $crate::match_tokens(&$input, &$pattern, rs_tokens_to_formatted_string)
             .expect_err("input unexpectedly matched the pattern");
     };
@@ -251,10 +251,22 @@ mod tests {
     use quote::quote;
 
     macro_rules! assert_rs_cc_matches {
-        ($input:expr, $pattern:expr) => {
+        ($input:expr, $pattern:expr $(,)*) => {
             $crate::assert_cc_matches!($input, $pattern);
             $crate::assert_rs_matches!($input, $pattern);
         };
+    }
+
+    #[test]
+    fn test_optional_trailing_comma() {
+        assert_rs_matches!(quote! {x}, quote! {x});
+        assert_rs_matches!(quote! {x}, quote! {x},);
+        assert_cc_matches!(quote! {x}, quote! {x});
+        assert_cc_matches!(quote! {x}, quote! {x},);
+        assert_rs_not_matches!(quote! {x}, quote! {y});
+        assert_rs_not_matches!(quote! {x}, quote! {y},);
+        assert_cc_not_matches!(quote! {x}, quote! {y});
+        assert_cc_not_matches!(quote! {x}, quote! {y},);
     }
 
     #[test]
