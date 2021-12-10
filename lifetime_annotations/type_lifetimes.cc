@@ -12,6 +12,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/TemplateBase.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
 
 namespace devtools_rust {
 
@@ -113,15 +114,21 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
     // template arguments, if the struct is a template.
     for (const clang::TemplateArgument& arg : GetTemplateArgs(type)) {
       if (arg.getKind() == clang::TemplateArgument::Type) {
-        // TODO(veluca): handle new template arguments correctly; see also
-        // the StructNoTemplateInnerTemplate test.
-        // For now, clang::cast will assert-fail; we need to instead create a
-        // sequence of lifetimes of the same lifetime as the struct as new
-        // template arguments.
-        auto templ_arg =
-            clang::cast<clang::SubstTemplateTypeParmType>(arg.getAsType());
-        ret.value_lifetimes_.template_argument_lifetimes_.push_back(
-            value_lifetimes_.GetTemplateArgumentLifetimes(templ_arg));
+        if (auto templ_arg = clang::dyn_cast<clang::SubstTemplateTypeParmType>(
+                arg.getAsType())) {
+          ret.value_lifetimes_.template_argument_lifetimes_.push_back(
+              value_lifetimes_.GetTemplateArgumentLifetimes(templ_arg));
+        } else {
+          // Create a new ValueLifetimes of the type of the template parameter,
+          // with lifetime `lifetime_`.
+          // TODO(veluca): we need to propagate lifetime parameters here.
+          TypeLifetimes type_lifetimes = CreateLifetimesForType(
+              arg.getAsType(), [this]() { return this->lifetime_; });
+          TypeLifetimesRef type_lifetimes_ref(type_lifetimes);
+          ret.value_lifetimes_.template_argument_lifetimes_.push_back(
+              ValueLifetimes::FromTypeLifetimes(type_lifetimes_ref,
+                                                arg.getAsType()));
+        }
       } else {
         ret.value_lifetimes_.template_argument_lifetimes_.push_back(
             std::nullopt);
