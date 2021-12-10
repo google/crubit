@@ -73,7 +73,8 @@ macro_rules! assert_rs_not_matches {
 
 #[derive(Debug)]
 enum MatchInfo {
-    Match,
+    // Successful match with the suffix of the `input` stream that follows the match.
+    Match { input_suffix: TokenStream },
     Mismatch(Mismatch),
 }
 
@@ -101,8 +102,8 @@ where
     while let Some(mut iter) = stack.pop() {
         loop {
             match match_prefix(iter.clone(), pattern.clone()) {
-                (MatchInfo::Match, _) => return Ok(()),
-                (MatchInfo::Mismatch(mismatch), _) => {
+                MatchInfo::Match { input_suffix: _ } => return Ok(()),
+                MatchInfo::Mismatch(mismatch) => {
                     if best_mismatch.match_length < mismatch.match_length {
                         best_mismatch = mismatch
                     }
@@ -135,9 +136,7 @@ fn is_wildcard(group: &Group) -> bool {
     format!("{}", group.stream()) == "..."
 }
 
-/// Returns `MatchInfo` and the suffix of the `input` token stream that follows
-/// the (partial) match.
-fn match_prefix(input: token_stream::IntoIter, pattern: TokenStream) -> (MatchInfo, TokenStream) {
+fn match_prefix(input: token_stream::IntoIter, pattern: TokenStream) -> MatchInfo {
     let mut input_iter = input.clone().peekable();
     let mut pattern_iter = pattern.clone().into_iter().peekable();
     let mut match_counter = 0;
@@ -154,36 +153,29 @@ fn match_prefix(input: token_stream::IntoIter, pattern: TokenStream) -> (MatchIn
                     input.collect::<TokenStream>()
                 ));
                 mismatch.match_length += match_counter;
-                return (
-                    MatchInfo::Mismatch(mismatch),
-                    iter::once(actual_token).chain(input_iter).collect::<TokenStream>(),
-                );
+                return MatchInfo::Mismatch(mismatch);
             }
         } else {
-            return (
-                MatchInfo::Match,
-                iter::once(actual_token).chain(input_iter).collect::<TokenStream>(),
-            );
+            return MatchInfo::Match {
+                input_suffix: iter::once(actual_token).chain(input_iter).collect::<TokenStream>(),
+            };
         }
         match_counter += 1;
     }
 
     return if pattern_iter.peek().is_none() {
-        (MatchInfo::Match, TokenStream::new())
+        MatchInfo::Match { input_suffix: TokenStream::new() }
     } else {
-        (
-            MatchInfo::Mismatch(Mismatch {
-                match_length: match_counter,
-                messages: vec![
-                    format!(
-                        "expected '{}' but the input already ended",
-                        pattern_iter.collect::<TokenStream>()
-                    ),
-                    format!("expected '{}' got '{}'", pattern, input.collect::<TokenStream>()),
-                ],
-            }),
-            TokenStream::new(),
-        )
+        MatchInfo::Mismatch(Mismatch {
+            match_length: match_counter,
+            messages: vec![
+                format!(
+                    "expected '{}' but the input already ended",
+                    pattern_iter.collect::<TokenStream>()
+                ),
+                format!("expected '{}' got '{}'", pattern, input.collect::<TokenStream>()),
+            ],
+        })
     };
 }
 
@@ -203,13 +195,13 @@ fn match_tree(actual_token: &TokenTree, pattern_token: &TokenTree) -> MatchInfo 
                 });
             }
             if is_wildcard(pattern_group) {
-                return MatchInfo::Match;
+                return MatchInfo::Match { input_suffix: TokenStream::new() };
             }
-            let (match_info, actual_group_suffix) =
+            let match_info =
                 match_prefix(actual_group.stream().into_iter(), pattern_group.stream());
             match match_info {
-                MatchInfo::Match => {
-                    if actual_group_suffix
+                MatchInfo::Match { input_suffix } => {
+                    if input_suffix
                         .clone()
                         .into_iter()
                         .filter(|token| !is_newline_token(token))
@@ -220,11 +212,11 @@ fn match_tree(actual_token: &TokenTree, pattern_token: &TokenTree) -> MatchInfo 
                             match_length: 0,
                             messages: vec![format!(
                                 "matched the entire pattern but the input still contained '{}'",
-                                actual_group_suffix
+                                input_suffix
                             )],
                         })
                     } else {
-                        MatchInfo::Match
+                        MatchInfo::Match { input_suffix: TokenStream::new() }
                     }
                 }
                 mismatch => mismatch,
@@ -234,7 +226,7 @@ fn match_tree(actual_token: &TokenTree, pattern_token: &TokenTree) -> MatchInfo 
             let actual_src = format!("{}", actual);
             let pattern_src = format!("{}", pattern);
             if actual_src == pattern_src {
-                MatchInfo::Match
+                MatchInfo::Match { input_suffix: TokenStream::new() }
             } else {
                 MatchInfo::Mismatch(Mismatch {
                     match_length: 0,
