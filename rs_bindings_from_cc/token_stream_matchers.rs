@@ -21,13 +21,16 @@ pub use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
 ///    assert_cc_matches!(
 ///       quote!{ void foo() {} },
 ///       quote!{ foo() });
+///    assert_cc_matches!(
+///       quote!{ void foo() { bar(); baz(); } },
+///       quote!{ void foo() { ... } });
 /// ```
 ///
 /// Example where matching fails:
 /// ```rust
 ///    assert_cc_matches!(
 ///       quote!{ void foo() { bar(); baz(); } },
-///       quote!{ void foo() {...} });
+///       quote!{ void foo() { bar(); } });
 /// ```
 #[macro_export]
 macro_rules! assert_cc_matches {
