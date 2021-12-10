@@ -290,7 +290,6 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     // stabilized or find an alternative. For more details, see
     // b/200120034#comment15
     assertion_features.insert(make_ident("const_ptr_offset_from"));
-    assertion_features.insert(make_ident("const_maybe_uninit_as_ptr"));
 
     let derives = generate_copy_derives(record);
     let derives = if derives.is_empty() {
@@ -903,7 +902,7 @@ mod tests {
         assert_eq!(
             generate_rs_api(&ir)?,
             rs_tokens_to_formatted_string(quote! {
-                #![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+                #![feature(const_ptr_offset_from, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
 
                 use memoffset_unstable_const::offset_of; __NEWLINE__ __NEWLINE__
 

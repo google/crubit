@@ -3,7 +3,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(const_maybe_uninit_as_ptr, const_ptr_offset_from, custom_inner_attributes)]
+#![feature(const_ptr_offset_from, custom_inner_attributes)]
 
 use memoffset_unstable_const::offset_of;
 
