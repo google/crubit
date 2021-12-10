@@ -175,4 +175,32 @@ mod tests {
         assert!(tokens_to_string(quote! { __COMMENT__ ident }).is_err());
         Ok(())
     }
+
+    #[test]
+    fn test_doc_comment() -> Result<()> {
+        // token_stream_printer (and rustfmt) don't put a space between /// and the doc
+        // comment, if the space is desired, it has to appear in the annotation.
+        assert_eq!(
+            rs_tokens_to_formatted_string(quote! { #[doc = "hello"] struct X {} })?,
+            "///hello\nstruct X {}\n"
+        );
+        assert_eq!(
+            rs_tokens_to_formatted_string(quote! { #[doc = "hello\nworld"] struct X {} })?,
+            "///hello\n///world\nstruct X {}\n"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_doc_comment_leading_spaces() -> Result<()> {
+        assert_eq!(
+            rs_tokens_to_formatted_string(quote! { #[doc = " hello"] struct X {} })?,
+            "/// hello\nstruct X {}\n"
+        );
+        assert_eq!(
+            rs_tokens_to_formatted_string(quote! { #[doc = " hello\n world"] struct X {} })?,
+            "/// hello\n/// world\nstruct X {}\n"
+        );
+        Ok(())
+    }
 }

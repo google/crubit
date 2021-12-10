@@ -65,8 +65,9 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
 
     // The code is formatted with a non-default rustfmt configuration. Prevent
     // downstream workflows from reformatting with a different configuration.
-    let rs_api = format!("#![rustfmt::skip]\n{}", generate_rs_api(&ir)?);
-    let rs_api_impl = generate_rs_api_impl(&ir)?;
+    let rs_api =
+        format!("#![rustfmt::skip]\n{}", rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?);
+    let rs_api_impl = tokens_to_string(generate_rs_api_impl(&ir)?)?;
 
     Ok(Bindings { rs_api, rs_api_impl })
 }
@@ -231,6 +232,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
 fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
     match comment {
         Some(text) => {
+            // token_stream_printer (and rustfmt) don't put a space between /// and the doc
+            // comment, let's add it here so our comments are pretty.
             let doc = format!(" {}", text.replace("\n", "\n "));
             quote! {#[doc=#doc]}
         }
@@ -380,7 +383,7 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #text })
 }
 
-fn generate_rs_api(ir: &IR) -> Result<String> {
+fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     let mut items = vec![];
     let mut thunks = vec![];
     let mut assertions = vec![];
@@ -456,7 +459,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         }
     };
 
-    let result = quote! {
+    Ok(quote! {
         #features __NEWLINE__ __NEWLINE__
         #imports __NEWLINE__ __NEWLINE__
 
@@ -465,9 +468,7 @@ fn generate_rs_api(ir: &IR) -> Result<String> {
         #mod_detail __NEWLINE__ __NEWLINE__
 
          #( #assertions __NEWLINE__ __NEWLINE__ )*
-    };
-
-    rs_tokens_to_formatted_string(result)
+    })
 }
 
 fn make_ident(ident: &str) -> Ident {
@@ -614,7 +615,7 @@ fn thunk_ident(func: &Func) -> Ident {
     format_ident!("__rust_thunk__{}", func.mangled_name)
 }
 
-fn generate_rs_api_impl(ir: &IR) -> Result<String> {
+fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
     // This function uses quote! to generate C++ source code out of convenience.
     // This is a bold idea so we have to continously evaluate if it still makes
     // sense or the cost of working around differences in Rust and C++ tokens is
@@ -671,7 +672,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
     // access declarations from public headers of the C++ library.
     let includes = ir.used_headers().map(|i| &i.name);
 
-    let result = quote! {
+    Ok(quote! {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
         #( __HASH_TOKEN__ include #includes __NEWLINE__)* __NEWLINE__
 
@@ -681,26 +682,18 @@ fn generate_rs_api_impl(ir: &IR) -> Result<String> {
 
         // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
         __NEWLINE__
-    };
-
-    tokens_to_string(result)
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use ir_testing::{
-        ir_from_cc, ir_from_cc_dependency, ir_func, ir_id, ir_int, ir_int_param,
-        ir_public_trivial_special, ir_record, retrieve_func,
+    use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_func, ir_record};
+    use token_stream_matchers::{
+        assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
-    use quote::quote;
     use token_stream_printer::tokens_to_string;
-
-    fn assert_code_contains(code: &TokenStream, snippet: &str) {
-        let code_str = rs_tokens_to_formatted_string(code.clone()).unwrap();
-        assert!(code_str.contains(snippet), "{}", code_str);
-    }
 
     #[test]
     // TODO(hlopko): Move this test to a more principled place where it can access
@@ -717,100 +710,67 @@ mod tests {
 
     #[test]
     fn test_simple_function() -> Result<()> {
-        let ir = make_ir_from_items([Item::Func(Func {
-            name: UnqualifiedIdentifier::Identifier(ir_id("add")),
-            owning_target: ir::TESTING_TARGET.into(),
-            mangled_name: "_Z3Addii".to_string(),
-            doc_comment: None,
-            return_type: ir_int(),
-            params: vec![ir_int_param("a"), ir_int_param("b")],
-            lifetime_params: vec![],
-            is_inline: false,
-            member_func_metadata: None,
-        })])?;
-        assert_eq!(
-            generate_rs_api(&ir)?,
-            rs_tokens_to_formatted_string(quote! {
-                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
-
+        let ir = ir_from_cc("int Add(int a, int b);")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 #[inline(always)]
-                pub fn add(a: i32, b: i32) -> i32 {
+                pub fn Add(a: i32, b: i32) -> i32 {
                     unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
-                } __NEWLINE__ __NEWLINE__
-
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 mod detail {
                     use super::*;
                     extern "C" {
                         #[link_name = "_Z3Addii"]
                         pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
-                    } // extern
-                } // mod detail
-                __NEWLINE__ __NEWLINE__
-                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?
+                    }
+                }
+            }
         );
 
-        let rs_api = generate_rs_api_impl(&ir)?;
-        assert_eq!(rs_api.trim(), "#include<memory>");
-        assert!(rs_api.ends_with("\n"));
+        assert_cc_not_matches!(generate_rs_api_impl(&ir)?, quote! {__rust_thunk___Z3Addii});
 
         Ok(())
     }
 
     #[test]
     fn test_inline_function() -> Result<()> {
-        let ir = make_ir_from_parts(
-            vec![Item::Func(Func {
-                name: UnqualifiedIdentifier::Identifier(ir_id("add")),
-                owning_target: ir::TESTING_TARGET.into(),
-                mangled_name: "_Z3Addii".to_string(),
-                doc_comment: None,
-                return_type: ir_int(),
-                params: vec![ir_int_param("a"), ir_int_param("b")],
-                lifetime_params: vec![],
-                is_inline: true,
-                member_func_metadata: None,
-            })],
-            /* used_headers= */
-            vec![
-                HeaderName { name: "foo/bar.h".to_string() },
-                HeaderName { name: "foo/baz.h".to_string() },
-            ],
-            /* current_target= */ "//foo:bar".into(),
-        )?;
-
-        assert_eq!(
-            generate_rs_api(&ir)?,
-            rs_tokens_to_formatted_string(quote! {
-                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
-
+        let ir = ir_from_cc("inline int Add(int a, int b);")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 #[inline(always)]
-                pub fn add(a: i32, b: i32) -> i32 {
+                pub fn Add(a: i32, b: i32) -> i32 {
                     unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
-                } __NEWLINE__ __NEWLINE__
-
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 mod detail {
                     use super::*;
                     extern "C" {
                         pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
-                    } // extern
-                } // mod detail
-                __NEWLINE__ __NEWLINE__
-                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?
+                    }
+                }
+            }
         );
 
-        assert_eq!(
-            generate_rs_api_impl(&ir)?.trim(),
-            tokens_to_string(quote! {
-                __HASH_TOKEN__ include <memory> __NEWLINE__
-                __HASH_TOKEN__ include "foo/bar.h" __NEWLINE__
-                __HASH_TOKEN__ include "foo/baz.h" __NEWLINE__ __NEWLINE__
-
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
                 extern "C" int __rust_thunk___Z3Addii(int a, int b) {
-                    return add(a, b);
+                    return Add(a, b);
                 }
-            })?
+            }
         );
         Ok(())
     }
@@ -822,119 +782,94 @@ mod tests {
             "struct ReturnStruct {}; struct ParamStruct {};",
         )?;
 
-        assert_eq!(
-            generate_rs_api(&ir)?,
-            rs_tokens_to_formatted_string(quote! {
-                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
-
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 #[inline(always)]
                 pub fn DoSomething(param: dependency::ParamStruct)
-                  -> dependency::ReturnStruct {
+                    -> dependency::ReturnStruct {
                     unsafe { crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(param) }
-                } __NEWLINE__ __NEWLINE__
-
-                mod detail {
-                    use super::*;
-                    extern "C" {
-                        pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(param: dependency::ParamStruct)
-                          -> dependency::ReturnStruct;
-                    } // extern
-                } // mod detail
-                __NEWLINE__ __NEWLINE__
-                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+            mod detail {
+                use super::*;
+                extern "C" {
+                    pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(param: dependency::ParamStruct)
+                        -> dependency::ReturnStruct;
+                }
+            }}
         );
 
-        assert_eq!(
-            generate_rs_api_impl(&ir)?.trim(),
-            tokens_to_string(quote! {
-                __HASH_TOKEN__ include <cstddef> __NEWLINE__
-                __HASH_TOKEN__ include <memory> __NEWLINE__
-                __HASH_TOKEN__ include "ir_from_cc_virtual_header.h" __NEWLINE__ __NEWLINE__
-
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
                 extern "C" ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(ParamStruct param) {
                     return DoSomething(param);
                 }
-            })?
+            }
         );
         Ok(())
     }
 
     #[test]
     fn test_simple_struct() -> Result<()> {
-        let ir = make_ir_from_items([Item::Record(Record {
-            identifier: ir_id("SomeStruct"),
-            id: DeclId(42),
-            owning_target: ir::TESTING_TARGET.into(),
-            doc_comment: None,
-            fields: vec![
-                Field {
-                    identifier: ir_id("public_int"),
-                    doc_comment: None,
-                    type_: ir_int(),
-                    access: AccessSpecifier::Public,
-                    offset: 0,
-                },
-                Field {
-                    identifier: ir_id("protected_int"),
-                    doc_comment: None,
-                    type_: ir_int(),
-                    access: AccessSpecifier::Protected,
-                    offset: 32,
-                },
-                Field {
-                    identifier: ir_id("private_int"),
-                    doc_comment: None,
-                    type_: ir_int(),
-                    access: AccessSpecifier::Private,
-                    offset: 64,
-                },
-            ],
-            lifetime_params: vec![],
-            size: 12,
-            alignment: 4,
-            copy_constructor: ir_public_trivial_special(),
-            move_constructor: ir_public_trivial_special(),
-            destructor: ir_public_trivial_special(),
-            is_trivial_abi: true,
-        })])?;
+        let ir = ir_from_cc(&tokens_to_string(quote! {
+            struct SomeStruct {
+                int public_int;
+              protected:
+                int protected_int;
+              private:
+               int private_int;
+            };
+        })?)?;
 
-        assert_eq!(
-            generate_rs_api(&ir)?,
-            rs_tokens_to_formatted_string(quote! {
-                #![feature(const_ptr_offset_from, custom_inner_attributes)] __NEWLINE__ __NEWLINE__
-
-                use memoffset_unstable_const::offset_of; __NEWLINE__ __NEWLINE__
-
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub struct SomeStruct {
                     pub public_int: i32,
                     protected_int: i32,
                     private_int: i32,
-                } __NEWLINE__ __NEWLINE__
-
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-                __NEWLINE__ __NEWLINE__
                 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 12usize);
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4usize);
                 const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
                 const _: () = assert!(offset_of!(SomeStruct, protected_int) * 8 == 32usize);
                 const _: () = assert!(offset_of!(SomeStruct, private_int) * 8 == 64usize);
-            })?
+            }
         );
-        assert_eq!(
-            generate_rs_api_impl(&ir)?.trim(),
-            tokens_to_string(quote! {
-                __HASH_TOKEN__ include <cstddef> __NEWLINE__
-                __HASH_TOKEN__ include <memory> __NEWLINE__
-                __NEWLINE__ __NEWLINE__ __NEWLINE__
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___ZN10SomeStructD1Ev(SomeStruct * __this) {
+                    return std :: destroy_at (__this) ;
+                }
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
                 static_assert(sizeof(SomeStruct) == 12);
                 static_assert(alignof(SomeStruct) == 4);
                 static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
                 static_assert(offsetof(SomeStruct, protected_int) * 8 == 32);
                 static_assert(offsetof(SomeStruct, private_int) * 8 == 64);
-            })?
+            }
         );
         Ok(())
     }
@@ -942,23 +877,8 @@ mod tests {
     #[test]
     fn test_struct_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
-
-        assert_eq!(
-            generate_rs_api(&ir)?,
-            rs_tokens_to_formatted_string(quote! {
-              #![feature(custom_inner_attributes)]
-              __NEWLINE__ __NEWLINE__
-              const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?
-        );
-        assert_eq!(
-            generate_rs_api_impl(&ir)?.trim(),
-            tokens_to_string(quote! {
-                __HASH_TOKEN__ include <cstddef> __NEWLINE__
-                __HASH_TOKEN__ include <memory> __NEWLINE__
-                __HASH_TOKEN__ include "ir_from_cc_virtual_header.h"
-            })?
-        );
+        assert_rs_not_matches!(generate_rs_api(&ir)?, quote! { SomeStruct });
+        assert_cc_not_matches!(generate_rs_api_impl(&ir)?, quote! { SomeStruct });
         Ok(())
     }
 
@@ -1007,120 +927,54 @@ mod tests {
 
     #[test]
     fn test_ptr_func() -> Result<()> {
-        let ir = make_ir_from_items([Item::Func(Func {
-            name: UnqualifiedIdentifier::Identifier(Identifier { identifier: "Deref".to_string() }),
-            owning_target: ir::TESTING_TARGET.into(),
-            mangled_name: "_Z5DerefPKPi".to_string(),
-            doc_comment: None,
-            return_type: MappedType {
-                rs_type: RsType {
-                    name: "*mut".to_string().into(),
-                    decl_id: None,
-                    lifetime_args: vec![],
-                    type_args: vec![RsType {
-                        name: "i32".to_string().into(),
-                        lifetime_args: vec![],
-                        type_args: vec![],
-                        decl_id: None,
-                    }],
-                },
-                cc_type: CcType {
-                    name: "*".to_string().into(),
-                    is_const: false,
-                    decl_id: None,
-                    type_args: vec![CcType {
-                        name: "int".to_string().into(),
-                        is_const: false,
-                        type_args: vec![],
-                        decl_id: None,
-                    }],
-                },
-            },
-            params: vec![FuncParam {
-                identifier: Identifier { identifier: "p".to_string() },
-                type_: MappedType {
-                    rs_type: RsType {
-                        name: "*const".to_string().into(),
-                        decl_id: None,
-                        lifetime_args: vec![],
-                        type_args: vec![RsType {
-                            name: "*mut".to_string().into(),
-                            decl_id: None,
-                            lifetime_args: vec![],
-                            type_args: vec![RsType {
-                                name: "i32".to_string().into(),
-                                lifetime_args: vec![],
-                                type_args: vec![],
-                                decl_id: None,
-                            }],
-                        }],
-                    },
-                    cc_type: CcType {
-                        name: "*".to_string().into(),
-                        is_const: false,
-                        decl_id: None,
-                        type_args: vec![CcType {
-                            name: "*".to_string().into(),
-                            is_const: true,
-                            decl_id: None,
-                            type_args: vec![CcType {
-                                name: "int".to_string().into(),
-                                is_const: false,
-                                type_args: vec![],
-                                decl_id: None,
-                            }],
-                        }],
-                    },
-                },
-            }],
-            lifetime_params: vec![],
-            is_inline: true,
-            member_func_metadata: None,
-        })])?;
-        assert_eq!(
-            generate_rs_api(&ir)?,
-            rs_tokens_to_formatted_string(quote! {
-                #![feature(custom_inner_attributes)] __NEWLINE__ __NEWLINE__
+        let ir = ir_from_cc(&tokens_to_string(quote! {
+            inline int* Deref(int*const* p);
+        })?)?;
 
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 #[inline(always)]
                 pub fn Deref(p: *const *mut i32) -> *mut i32 {
                     unsafe { crate::detail::__rust_thunk___Z5DerefPKPi(p) }
-                } __NEWLINE__ __NEWLINE__
-
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 mod detail {
                     use super::*;
                     extern "C" {
                         pub(crate) fn __rust_thunk___Z5DerefPKPi(p: *const *mut i32) -> *mut i32;
-                    } // extern
-                } // mod detail
-                __NEWLINE__ __NEWLINE__
-                const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
-            })?
+                    }
+                }
+            }
         );
 
-        assert_eq!(
-            generate_rs_api_impl(&ir)?.trim(),
-            tokens_to_string(quote! {
-                __HASH_TOKEN__ include <memory> __NEWLINE__
-                __NEWLINE__
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
                 extern "C" int* __rust_thunk___Z5DerefPKPi(int* const * p) {
                     return Deref(p);
                 }
-            })?
+            }
         );
         Ok(())
     }
 
     #[test]
     fn test_item_order() -> Result<()> {
-        let ir = make_ir_from_items([
-            ir_func("first_func").into(),
-            ir_record("FirstStruct").into(),
-            ir_func("second_func").into(),
-            ir_record("SecondStruct").into(),
-        ])?;
+        let ir = ir_from_cc(
+            "int first_func();
+             struct FirstStruct {};
+             int second_func();
+             struct SecondStruct {};",
+        )?;
 
-        let rs_api = generate_rs_api(&ir)?;
+        let rs_api = rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?;
+
         let idx = |s: &str| rs_api.find(s).ok_or(anyhow!("'{}' missing", s));
 
         println!("{:?}", ir);
@@ -1143,21 +997,22 @@ mod tests {
 
     #[test]
     fn test_doc_comment_func() -> Result<()> {
-        let ir = make_ir_from_items([Item::Func(Func {
-            name: UnqualifiedIdentifier::Identifier(ir_id("func")),
-            owning_target: ir::TESTING_TARGET.into(),
-            mangled_name: "foo".to_string(),
-            doc_comment: Some("Doc Comment".to_string()),
-            return_type: ir_int(),
-            params: vec![],
-            lifetime_params: vec![],
-            is_inline: true,
-            member_func_metadata: None,
-        })])?;
+        let ir = ir_from_cc(
+            "
+        // Doc Comment
+        // with two lines
+        int func();",
+        )?;
 
-        assert!(
-            generate_rs_api(&ir)?.contains("/// Doc Comment\n#[inline(always)]\npub fn func"),
-            "func doc comment missing"
+        assert_rs_matches!(
+            generate_rs_api(&ir)?,
+            // leading space is intentional so there is a space between /// and the text of the
+            // comment
+            quote! {
+                #[doc = " Doc Comment\n with two lines"]
+                #[inline(always)]
+                pub fn func
+            }
         );
 
         Ok(())
@@ -1165,34 +1020,28 @@ mod tests {
 
     #[test]
     fn test_doc_comment_record() -> Result<()> {
-        let ir = make_ir_from_items([Item::Record(Record {
-            identifier: ir_id("SomeStruct"),
-            id: DeclId(42),
-            owning_target: ir::TESTING_TARGET.into(),
-            doc_comment: Some("Doc Comment\n\n * with bullet".to_string()),
-            alignment: 0,
-            size: 0,
-            fields: vec![Field {
-                identifier: ir_id("field"),
-                doc_comment: Some("Field doc".to_string()),
-                type_: ir_int(),
-                access: AccessSpecifier::Public,
-                offset: 0,
-            }],
-            lifetime_params: vec![],
-            copy_constructor: ir_public_trivial_special(),
-            move_constructor: ir_public_trivial_special(),
-            destructor: ir_public_trivial_special(),
-            is_trivial_abi: true,
-        })])?;
+        let ir = ir_from_cc(
+            "// Doc Comment\n\
+            //\n\
+            //  * with bullet\n\
+            struct SomeStruct {\n\
+                // Field doc\n\
+                int field;\
+            };",
+        )?;
 
-        let rs_api = generate_rs_api(&ir)?;
-        assert!(
-            rs_api.contains("/// Doc Comment\n///\n///  * with bullet\n"),
-            "struct doc comment missing"
+        assert_rs_matches!(
+            generate_rs_api(&ir)?,
+            quote! {
+                #[doc = " Doc Comment\n \n  * with bullet"]
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub struct SomeStruct {
+                    # [doc = " Field doc"]
+                    pub field: i32,
+                }
+            }
         );
-        assert!(rs_api.contains("/// Field doc\n"), "field doc comment missing");
-
         Ok(())
     }
 
@@ -1201,7 +1050,7 @@ mod tests {
     #[test]
     fn test_no_impl_drop() -> Result<()> {
         let ir = ir_from_cc("struct Trivial {};")?;
-        let rs_api = generate_rs_api(&ir)?;
+        let rs_api = rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?;
         assert!(!rs_api.contains("impl Drop"));
         Ok(())
     }
@@ -1217,9 +1066,10 @@ mod tests {
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        assert!(rs_api.contains("impl Drop"));
-        assert!(!rs_api.contains("fn drop(&mut self) {}"));
-        assert!(rs_api.contains("pub x: std::mem::ManuallyDrop<i32>,"));
+        println!("{}", rs_api);
+        assert_rs_matches!(rs_api, quote! {impl Drop});
+        assert_rs_not_matches!(rs_api, quote! {fn drop(&mut self) {}});
+        assert_rs_matches!(rs_api, quote! {pub x: std::mem::ManuallyDrop<i32>,});
         Ok(())
     }
 
@@ -1241,8 +1091,8 @@ mod tests {
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        assert!(rs_api.contains("fn drop(&mut self) {}"));
-        assert!(rs_api.contains("pub x: i32,"));
+        assert_rs_matches!(rs_api, quote! {fn drop(&mut self) {}});
+        assert_rs_matches!(rs_api, quote! {pub x: i32,});
         Ok(())
     }
 
@@ -1257,8 +1107,8 @@ mod tests {
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        assert!(!rs_api.contains("impl Drop"));
-        assert!(rs_api.contains("pub x: i32,"));
+        assert_rs_not_matches!(rs_api, quote! {impl Drop});
+        assert_rs_matches!(rs_api, quote! {pub x: i32});
         Ok(())
     }
 
@@ -1282,23 +1132,27 @@ mod tests {
     }
 
     #[test]
-    fn test_elided_lifetimes() {
+    fn test_elided_lifetimes() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
           struct S {
             int& f(int& i);
           };"#,
-        )
-        .unwrap();
-        let func = retrieve_func(&ir, "f");
-        let (api, thunk) = generate_func(&func, &ir).unwrap();
-        assert_code_contains(
-            &api.tokens,
-            "pub fn f<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32",
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn f<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32 { ... }
+            }
         );
-        assert_code_contains(
-            &thunk.tokens,
-            "pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32",
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'b mut S, i: &'a mut i32)
+                    -> &'b mut i32;
+            }
         );
+        Ok(())
     }
 }
