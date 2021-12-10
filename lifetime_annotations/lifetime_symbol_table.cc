@@ -63,7 +63,7 @@ static std::string NameFromIndex(int index) {
   std::string name;
   name.reserve(num_chars);
   for (int i = 0; i < num_chars; ++i) {
-    name.insert(0, 1, 'a' + index % 26);
+    name.insert(0, static_cast<size_t>(1), 'a' + index % 26);
     index /= 26;
   }
   return name;

@@ -37,7 +37,7 @@ class LifetimeAnnotationsTest : public testing::Test {
           clang::tooling::FileContentMappings()) {
     absl::StatusOr<NamedFuncLifetimes> result;
     runOnCodeWithLifetimeHandlers(
-        code,
+        llvm::StringRef(code.data(), code.size()),
         [&result](clang::ASTContext& ast_context,
                   const LifetimeAnnotationContext& lifetime_context) {
           using clang::ast_matchers::findAll;
