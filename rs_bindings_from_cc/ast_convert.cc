@@ -42,7 +42,7 @@ static const clang::CXXConstructorDecl* GetMoveCtor(
 }
 
 // Returns true if this class, and all base classes, only define the specified
-// special member implicitly or via =default.
+// special member implicitly or via =default, and only do so non-virtually.
 //
 // Args:
 //   record: the class/struct to check.
@@ -50,12 +50,13 @@ static const clang::CXXConstructorDecl* GetMoveCtor(
 //       returns null if the special member function is implicitly defined.
 bool HasNoUserProvidedSpecialMember(
     const clang::CXXRecordDecl* record,
-    absl::FunctionRef<const clang::FunctionDecl*(const clang::CXXRecordDecl*)>
+    absl::FunctionRef<const clang::CXXMethodDecl*(const clang::CXXRecordDecl*)>
         getter) {
   auto nonrecursive_has_only_defaulted =
       [&getter](const clang::CXXRecordDecl* record) {
-        const clang::FunctionDecl* decl = getter(record);
-        return decl == nullptr || !decl->isUserProvided();
+        const clang::CXXMethodDecl* decl = getter(record);
+        return decl == nullptr ||
+               (!decl->isUserProvided() && !decl->isVirtual());
       };
 
   if (!nonrecursive_has_only_defaulted(record)) {
@@ -66,7 +67,7 @@ bool HasNoUserProvidedSpecialMember(
 
 SpecialMemberFunc GetSpecialMemberFunc(
     const clang::RecordDecl& record_decl,
-    absl::FunctionRef<const clang::FunctionDecl*(const clang::CXXRecordDecl*)>
+    absl::FunctionRef<const clang::CXXMethodDecl*(const clang::CXXRecordDecl*)>
         getter) {
   SpecialMemberFunc smf = {
       .definition = SpecialMemberFunc::Definition::kTrivial,
@@ -79,7 +80,7 @@ SpecialMemberFunc GetSpecialMemberFunc(
     return smf;
   }
 
-  const clang::FunctionDecl* decl = getter(cxx_record_decl);
+  const clang::CXXMethodDecl* decl = getter(cxx_record_decl);
   if (decl == nullptr) {
     smf.definition = SpecialMemberFunc::Definition::kDeleted;
     return smf;

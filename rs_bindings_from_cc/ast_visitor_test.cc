@@ -17,6 +17,7 @@
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "util/task/status_macros.h"
 
 namespace rs_bindings_from_cc {
@@ -638,6 +639,12 @@ TEST(AstVisitorTest, NontrivialUserDefinedDestructor) {
     struct NontrivialSub : public NontrivialUserDefined {};
 
     // Despite having a defaulted destructor, this is not trivially
+    // destructible, because the destructor is virtual.
+    struct VirtualDestructor {
+      virtual ~VirtualDestructor() = default;
+    };
+
+    // Despite having a defaulted destructor, this is not trivially
     // destructible, because the *first* declaration is not defaulted.
     struct NontrivialUserDefinedDefaulted {
       ~NontrivialUserDefinedDefaulted();
@@ -647,7 +654,7 @@ TEST(AstVisitorTest, NontrivialUserDefinedDestructor) {
   )cc";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records, SizeIs(3));
+  EXPECT_THAT(records, SizeIs(4));
   EXPECT_THAT(records,
               Each(Pointee(Destructor(DefinitionIs(
                   SpecialMemberFunc::Definition::kNontrivialUserDefined)))));

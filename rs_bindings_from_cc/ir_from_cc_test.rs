@@ -293,19 +293,17 @@ fn test_member_function_const() {
     );
 }
 
-// TODO(b/202853028): Support virtual functions.
 #[test]
 fn test_member_function_virtual() {
-    let file = r#"
-    struct Struct {
-        virtual void Function();
-    };
-    "#;
-    let ir = ir_from_cc(file).unwrap();
-
-    for func in ir.functions() {
-        assert!(func.name != UnqualifiedIdentifier::Identifier(ir_id("Function")));
-    }
+    assert_member_function_has_instance_method_metadata(
+        "Function",
+        "virtual void Function();",
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::Unqualified,
+            is_const: false,
+            is_virtual: true,
+        }),
+    );
 }
 
 #[test]

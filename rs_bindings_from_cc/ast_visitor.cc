@@ -218,41 +218,30 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
   std::optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    if (method_decl->isVirtual()) {
-      // TODO(b/202853028): implement virtual functions.
-      PushUnsupportedItem(function_decl,
-
-                          "Virtual functions are not supported",
-                          function_decl->getSourceRange());
-      success = false;
-    } else {
-      std::optional<MemberFuncMetadata::InstanceMethodMetadata>
-          instance_metadata;
-      if (method_decl->isInstance()) {
-        MemberFuncMetadata::ReferenceQualification reference;
-        switch (method_decl->getRefQualifier()) {
-          case clang::RQ_LValue:
-            reference = MemberFuncMetadata::kLValue;
-            break;
-          case clang::RQ_RValue:
-            reference = MemberFuncMetadata::kRValue;
-            break;
-          case clang::RQ_None:
-            reference = MemberFuncMetadata::kUnqualified;
-            break;
-        }
-        instance_metadata = MemberFuncMetadata::InstanceMethodMetadata{
-            .reference = reference,
-            .is_const = method_decl->isConst(),
-            .is_virtual =
-                false,  // TODO(b/202853028): implement virtual functions.
-        };
+    std::optional<MemberFuncMetadata::InstanceMethodMetadata> instance_metadata;
+    if (method_decl->isInstance()) {
+      MemberFuncMetadata::ReferenceQualification reference;
+      switch (method_decl->getRefQualifier()) {
+        case clang::RQ_LValue:
+          reference = MemberFuncMetadata::kLValue;
+          break;
+        case clang::RQ_RValue:
+          reference = MemberFuncMetadata::kRValue;
+          break;
+        case clang::RQ_None:
+          reference = MemberFuncMetadata::kUnqualified;
+          break;
       }
-
-      member_func_metadata = MemberFuncMetadata{
-          .record_id = GenerateDeclId(method_decl->getParent()),
-          .instance_method_metadata = instance_metadata};
+      instance_metadata = MemberFuncMetadata::InstanceMethodMetadata{
+          .reference = reference,
+          .is_const = method_decl->isConst(),
+          .is_virtual = method_decl->isVirtual(),
+      };
     }
+
+    member_func_metadata = MemberFuncMetadata{
+        .record_id = GenerateDeclId(method_decl->getParent()),
+        .instance_method_metadata = instance_metadata};
   }
 
   std::optional<UnqualifiedIdentifier> translated_name =
@@ -571,6 +560,10 @@ void AstVisitor::CommentManager::TraverseDecl(clang::Decl* decl) {
   // When we go to a new file we flush the comments from the previous file,
   // because source locations won't be comparable by '<' any more.
   clang::FileID file = ctx_->getSourceManager().getFileID(decl->getBeginLoc());
+  // For example, we hit an invalid FileID for virtual destructor definitions.
+  if (file.isInvalid()) {
+    return;
+  }
   if (file != current_file_) {
     FlushComments();
     current_file_ = file;

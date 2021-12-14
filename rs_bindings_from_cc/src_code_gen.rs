@@ -102,6 +102,8 @@ impl From<TokenStream> for RsSnippet {
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
 /// since we can call the original C++ directly.
 fn can_skip_cc_thunk(func: &Func) -> bool {
+    // ## Inline functions
+    //
     // Inline functions may not be codegenned in the C++ library since Clang doesn't
     // know if Rust calls the function or not. Therefore in order to make inline
     // functions callable from Rust we need to generate a C++ file that defines
@@ -114,7 +116,32 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
     // correct. ThinLTO builds will be able to see through the thunk and inline
     // code across the language boundary. For non-ThinLTO builds we plan to
     // implement <internal link> which removes the runtime performance overhead.
-    !func.is_inline
+    if func.is_inline {
+        return false;
+    }
+    // ## Virtual functions
+    //
+    // When calling virtual `A::Method()`, it's not necessarily the case that we'll
+    // specifically call the concrete `A::Method` impl. For example, if this is
+    // called on something whose dynamic type is some subclass `B` with an
+    // overridden `B::Method`, then we'll call that.
+    //
+    // We must reuse the C++ dynamic dispatching system. In this case, the easiest
+    // way to do it is by resorting to a C++ thunk, whose implementation will do
+    // the lookup.
+    //
+    // In terms of runtime performance, since this only occurs for virtual function
+    // calls, which are already slow, it may not be such a big deal. We can
+    // benchmark it later. :)
+    if let Some(meta) = &func.member_func_metadata {
+        if let Some(inst_meta) = &meta.instance_method_metadata {
+            if inst_meta.is_virtual {
+                return false;
+            }
+        }
+    }
+
+    true
 }
 
 /// Generates Rust source code for a given `Func`.
@@ -1040,6 +1067,19 @@ mod tests {
                     # [doc = " Field doc"]
                     pub field: i32,
                 }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_virtual_thunk() -> Result<()> {
+        let ir = ir_from_cc("struct Polymorphic { virtual void Foo(); };")?;
+
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
+                extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(Polymorphic * __this)
             }
         );
         Ok(())
