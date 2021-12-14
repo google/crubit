@@ -5,8 +5,11 @@
 /// Asserts that the `input` contains the `pattern` as a subtree.
 ///
 /// Pattern can use `...` wildcard in a group, then any content of the
-/// `proc_macro2::Group` will match the pattern. Mixing wildcard and other
-/// tokens within a single `proc_macro2::Group` is not (yet?) supported.
+/// `proc_macro2::Group` will match the pattern. Wildcards cannot match group
+/// delimiters, and that therefore the tokens matched by a wildcard cannot
+/// straddle a group boundary. If the wildcard is mixed with regular tokens the
+/// wildcard can match 0 or many tokens and the matcher will backtrack and try
+/// to find any possible match. Order of regular tokens is significant.
 ///
 /// Examples where matching succeeds:
 /// ```rust
@@ -17,8 +20,12 @@
 ///       quote!{ void foo() {} },
 ///       quote!{ foo() });
 ///    assert_cc_matches!(
-///       quote!{ void foo() { bar(); baz(); } },
-///       quote!{ void foo() { ... } });
+///       quote!{ void foo() { bar(); baz(); qux(); } },
+///       quote!{ void foo() { bar(); ... qux(); } });
+///    // "backtracking example"
+///    assert_cc_matches!(
+///       quote!{ void foo() { a(); b(); c(); d(); c(); a(); },
+///       quote!{ { a(); ... c(); a(); } });
 /// ```
 ///
 /// Example where matching fails:
@@ -26,6 +33,9 @@
 ///    assert_cc_matches!(
 ///       quote!{ void foo() { bar(); baz(); } },
 ///       quote!{ void foo() { bar(); } });
+/// assert_cc_matches!(
+///       quote!{ void foo() { bar(); } },
+///       quote!{ void ... bar() });
 /// ```
 #[macro_export]
 macro_rules! assert_cc_matches {
@@ -79,7 +89,7 @@ pub mod internal {
 
     use anyhow::{anyhow, Result};
     pub use proc_macro2::TokenStream;
-    use proc_macro2::{token_stream, Group, TokenTree};
+    use proc_macro2::TokenTree;
     use std::iter;
     pub use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
 
@@ -96,6 +106,32 @@ pub mod internal {
         messages: Vec<String>,
     }
 
+    impl Mismatch {
+        fn for_no_partial_match() -> Self {
+            Mismatch {
+                match_length: 0,
+                messages: vec![
+                    "not even a partial match of the pattern throughout the input".to_string(),
+                ],
+            }
+        }
+
+        fn for_input_ended(
+            match_length: usize,
+            pattern_suffix: TokenStream,
+            pattern: TokenStream,
+            input: TokenStream,
+        ) -> Self {
+            Mismatch {
+                match_length,
+                messages: vec![
+                    format!("expected '{}' but the input already ended", pattern_suffix),
+                    format!("expected '{}' got '{}'", pattern, input),
+                ],
+            }
+        }
+    }
+
     pub fn match_tokens<ToStringFn>(
         input: &TokenStream,
         pattern: &TokenStream,
@@ -105,12 +141,7 @@ pub mod internal {
         ToStringFn: Fn(TokenStream) -> Result<String>,
     {
         let iter = input.clone().into_iter();
-        let mut best_mismatch = Mismatch {
-            match_length: 0,
-            messages: vec![
-                "not even a trivial match of the pattern throughout the input".to_string(),
-            ],
-        };
+        let mut best_mismatch = Mismatch::for_no_partial_match();
 
         let mut stack = vec![iter];
         while let Some(mut iter) = stack.pop() {
@@ -142,20 +173,47 @@ pub mod internal {
         Err(error)
     }
 
-    fn is_newline_token(token: &TokenTree) -> bool {
-        matches!(token, TokenTree::Ident(ref id) if id == "__NEWLINE__")
-    }
-
-    fn is_wildcard(group: &Group) -> bool {
-        format!("{}", group.stream()) == "..."
-    }
-
-    fn match_prefix(input: token_stream::IntoIter, pattern: TokenStream) -> MatchInfo {
-        let mut input_iter = input.clone().peekable();
+    // This implementation uses naive backtracking algorithm that is in the worst
+    // case O(2^n) in the number of wildcards. In practice this is not so bad
+    // because wildcards only match their current group, they don't descend into
+    // subtrees and they don't match outside. Still, it may be possible to
+    // reimplement this using NFA and end up with simpler, more regular code
+    // while still providing reasonable error messages on mismatch.
+    // TODO(hlopko): Try to reimplement matching using NFA.
+    fn match_prefix(
+        input: impl Iterator<Item = TokenTree> + Clone,
+        pattern: TokenStream,
+    ) -> MatchInfo {
+        let mut input_iter = input.clone();
         let mut pattern_iter = pattern.clone().into_iter().peekable();
         let mut match_counter = 0;
+        let mut best_mismatch = Mismatch::for_no_partial_match();
+        let mut update_best_mismatch = |mismatch: Mismatch| {
+            if mismatch.match_length > best_mismatch.match_length {
+                best_mismatch = mismatch;
+            }
+        };
         while let Some(actual_token) = input_iter.next() {
             if is_newline_token(&actual_token) {
+                continue;
+            }
+
+            if starts_with_wildcard(to_stream(&pattern_iter)) {
+                // branch off to matching the token after the wildcard
+                match match_after_wildcard(
+                    reinsert_token(input_iter.clone(), actual_token).into_iter(),
+                    input.clone(),
+                    skip_wildcard(pattern_iter.clone()),
+                ) {
+                    MatchInfo::Mismatch(mut mismatch) => {
+                        mismatch.match_length += match_counter;
+                        update_best_mismatch(mismatch);
+                    }
+                    match_info => {
+                        return match_info;
+                    }
+                }
+                // and if that didn't work, consume one more token by the wildcard
                 continue;
             }
 
@@ -171,29 +229,76 @@ pub mod internal {
                     return MatchInfo::Mismatch(mismatch);
                 }
             } else {
-                return MatchInfo::Match {
-                    input_suffix: iter::once(actual_token)
-                        .chain(input_iter)
-                        .collect::<TokenStream>(),
-                };
+                return MatchInfo::Match { input_suffix: reinsert_token(input_iter, actual_token) };
             }
             match_counter += 1;
         }
 
-        return if pattern_iter.peek().is_none() {
-            MatchInfo::Match { input_suffix: TokenStream::new() }
-        } else {
-            MatchInfo::Mismatch(Mismatch {
-                match_length: match_counter,
-                messages: vec![
-                    format!(
-                        "expected '{}' but the input already ended",
-                        pattern_iter.collect::<TokenStream>()
-                    ),
-                    format!("expected '{}' got '{}'", pattern, input.collect::<TokenStream>()),
-                ],
-            })
-        };
+        if pattern_iter.peek().is_none() {
+            return MatchInfo::Match { input_suffix: TokenStream::new() };
+        }
+        if is_wildcard(to_stream(&pattern_iter)) {
+            return MatchInfo::Match { input_suffix: TokenStream::new() };
+        }
+
+        update_best_mismatch(Mismatch::for_input_ended(
+            match_counter,
+            to_stream(&pattern_iter),
+            pattern,
+            to_stream(&input),
+        ));
+        MatchInfo::Mismatch(best_mismatch)
+    }
+
+    fn match_after_wildcard(
+        input_iter: impl Iterator<Item = TokenTree> + Clone,
+        input: impl Iterator<Item = TokenTree> + Clone,
+        pattern: TokenStream,
+    ) -> MatchInfo {
+        match match_prefix(input_iter.clone(), pattern.clone()) {
+            MatchInfo::Match { input_suffix } if input_suffix.is_empty() => {
+                MatchInfo::Match { input_suffix }
+            }
+            MatchInfo::Match { input_suffix } => {
+                let match_input_length = input_iter.count() + 1;
+                let suffix_length = input_suffix.into_iter().count();
+                MatchInfo::Mismatch(Mismatch::for_input_ended(
+                    match_input_length - suffix_length,
+                    pattern.clone(),
+                    pattern,
+                    to_stream(&input),
+                ))
+            }
+            mismatch => mismatch,
+        }
+    }
+
+    fn to_stream(iter: &(impl Iterator<Item = TokenTree> + Clone)) -> TokenStream {
+        iter.clone().collect::<TokenStream>()
+    }
+
+    fn reinsert_token(
+        iter: impl Iterator<Item = TokenTree> + Clone,
+        token: TokenTree,
+    ) -> TokenStream {
+        iter::once(token).chain(iter).collect::<TokenStream>()
+    }
+
+    fn is_newline_token(token: &TokenTree) -> bool {
+        matches!(token, TokenTree::Ident(ref id) if id == "__NEWLINE__")
+    }
+
+    fn is_wildcard(pattern: TokenStream) -> bool {
+        format!("{}", pattern) == "..."
+    }
+
+    fn starts_with_wildcard(pattern: TokenStream) -> bool {
+        format!("{}", pattern).starts_with("...")
+    }
+
+    fn skip_wildcard(pattern: impl Iterator<Item = TokenTree> + Clone) -> TokenStream {
+        assert!(starts_with_wildcard(to_stream(&pattern)));
+        pattern.skip(3).collect::<TokenStream>()
     }
 
     fn match_tree(actual_token: &TokenTree, pattern_token: &TokenTree) -> MatchInfo {
@@ -210,9 +315,6 @@ pub mod internal {
                             Into::<TokenStream>::into(actual_token.clone()),
                         )],
                     });
-                }
-                if is_wildcard(pattern_group) {
-                    return MatchInfo::Match { input_suffix: TokenStream::new() };
                 }
                 let match_info =
                     match_prefix(actual_group.stream().into_iter(), pattern_group.stream());
@@ -276,6 +378,7 @@ mod tests {
         assert_cc_matches!(quote! {x}, quote! {x},);
         assert_rs_not_matches!(quote! {x}, quote! {y});
         assert_rs_not_matches!(quote! {x}, quote! {y},);
+
         assert_cc_not_matches!(quote! {x}, quote! {y});
         assert_cc_not_matches!(quote! {x}, quote! {y},);
     }
@@ -495,21 +598,54 @@ Caused by:
     }
 
     #[test]
-    fn test_wildcard_in_the_middle_of_the_group_not_supported_yet() {
+    fn test_wildcard_in_the_beginning_of_the_group() {
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... ] });
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a a ... ] });
+    }
+    #[test]
+    fn test_wildcard_in_the_middle_of_the_group() {
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... c ] });
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ a a ... c c ] });
+    }
+    #[test]
+    fn test_wildcard_in_the_end_of_the_group() {
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ ... c ] });
+        assert_rs_cc_matches!(quote! { [ a a b b c c ] }, quote! { [ ... c c ] });
+    }
+
+    #[test]
+    fn test_wildcard_not_consuming_anything_in_group() {
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ ... a b c ] });
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a ... b c ] });
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a b ... c ] });
+        assert_rs_cc_matches!(quote! { [ a b c ] }, quote! { [ a b c ... ] });
+    }
+
+    #[test]
+    fn test_error_message_shows_the_longest_match_with_wildcards() {
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(
-                    &quote! { fn foo() -> bool { return true; }},
-                    &quote! { fn foo() -> bool { return ... } },
-                    tokens_to_string
-                )
-                .expect_err("unexpected match")
+                match_tokens(&quote! {[ a b b ]}, &quote! { [ a ... c ]}, tokens_to_string)
+                    .expect_err("unexpected match")
             ),
-            "expected '.' but got 'true': \
-            expected 'return ...' got 'return true ;': \
-            expected 'fn foo () -> bool { return ... }' got 'fn foo () -> bool { return true ; }': \
-            input:\n\n```\nfn foo()->bool{ return true ; }\n```"
+            // the error message shows "longer match" with more tokens consumed by the wildcard
+            "expected 'c' but got 'b': \
+            expected 'c' got 'b b': \
+            expected '[a ... c]' got '[a b b]': \
+            input:\n\n```\n[a b b]\n```"
+        );
+        assert_eq!(
+            format!(
+                "{:#}",
+                match_tokens(&quote! {[ a b b ]}, &quote! { [ a ... b c ]}, tokens_to_string)
+                    .expect_err("unexpected match")
+            ),
+            // the error message shows "longer match" with branching off the wildcard earlier
+            "expected 'c' but got 'b': \
+            expected 'b c' got 'b b': \
+            expected '[a ... b c]' got '[a b b]': \
+            input:\n\n```\n[a b b]\n```"
         );
     }
 }
