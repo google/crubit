@@ -55,3 +55,9 @@ If possible follow these recommendations:
 *   Write full executable end to end tests (verifying that interop tools and
     Blaze rules generate outputs that can be built and executed) as small
     projects with a `rust_test` or `cc_test` on top in subpackages of `test`.
+
+## Contributing
+
+Chat room: https://chat.google.com/room/AAAAImO--WA
+
+20% starter projects list: b/hotlists/3645339
