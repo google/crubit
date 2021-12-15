@@ -177,28 +177,34 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         quote! { < #( #lifetimes ),* > }
     };
 
+    let record: Option<&Record> = func
+        .member_func_metadata
+        .as_ref()
+        .and_then(|meta| ir.find_decl(meta.record_id).ok())
+        .and_then(|item| item.try_into().ok());
+
     let mut calls_thunk = true;
     let api_func = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
             let ident = make_ident(&id.identifier);
-            quote! {
+            let fn_def = quote! {
                 #doc_comment
                 #[inline(always)]
                 pub fn #ident #generic_params( #( #param_idents: #param_types ),* ) -> #return_type_name {
                     unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
                 }
+            };
+            match record {
+                None => fn_def,
+                Some(record) => {
+                    let type_name = make_ident(&record.identifier.identifier);
+                    quote! { impl #type_name { #fn_def } }
+                }
             }
         }
 
         UnqualifiedIdentifier::Destructor => {
-            let record: &Record = ir
-                .find_decl(
-                    func.member_func_metadata
-                        .as_ref()
-                        .expect("Destructors must be member functions.")
-                        .record_id,
-                )?
-                .try_into()?;
+            let record: &Record = record.expect("Destructors must be member functions.");
             let type_name = make_ident(&record.identifier.identifier);
             match record.destructor.definition {
                 // TODO(b/202258760): Only omit destructor if `Copy` is specified.

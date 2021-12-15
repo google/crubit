@@ -23,9 +23,11 @@ pub struct S {
 // Error while generating bindings for item 'S::S':
 // Nested classes are not supported yet
 
-#[inline(always)]
-pub fn method<'a, 'b, 'c>(__this: &'c mut S, p1: &'a mut i32, p2: &'b mut i32) -> &'c mut i32 {
-    unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
+impl S {
+    #[inline(always)]
+    pub fn method<'a, 'b, 'c>(__this: &'c mut S, p1: &'a mut i32, p2: &'b mut i32) -> &'c mut i32 {
+        unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
+    }
 }
 
 // rs_bindings_from_cc/test/golden/elided_lifetimes.h;l=8
