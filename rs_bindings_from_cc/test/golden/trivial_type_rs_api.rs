@@ -48,12 +48,12 @@ pub struct TrivialWithDefaulted {
 // Parameter type 'struct TrivialWithDefaulted &&' is not supported
 
 #[inline(always)]
-pub fn TakesByValue(trivial: Trivial) -> () {
+pub fn TakesByValue(trivial: Trivial) {
     unsafe { crate::detail::__rust_thunk___Z12TakesByValue7Trivial(trivial) }
 }
 
 #[inline(always)]
-pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) -> () {
+pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) {
     unsafe {
         crate::detail::__rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(trivial)
     }
@@ -64,24 +64,24 @@ pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) -> () {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: *mut Trivial) -> ();
+        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: *mut Trivial);
         pub(crate) fn __rust_thunk___ZN7TrivialC1ERKS_(
             __this: *mut Trivial,
             __param_0: *const Trivial,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
             __this: *mut TrivialWithDefaulted,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
             __this: *mut TrivialWithDefaulted,
             __param_0: *const TrivialWithDefaulted,
-        ) -> ();
+        );
         #[link_name = "_Z12TakesByValue7Trivial"]
-        pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial) -> ();
+        pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);
         #[link_name = "_Z25TakesWithDefaultedByValue20TrivialWithDefaulted"]
         pub(crate) fn __rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(
             trivial: TrivialWithDefaulted,
-        ) -> ();
+        );
     }
 }
 

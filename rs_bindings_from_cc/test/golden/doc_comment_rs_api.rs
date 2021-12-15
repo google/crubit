@@ -128,35 +128,33 @@ pub fn foo() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(
-            __this: *mut DocCommentSlashes,
-        ) -> ();
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(__this: *mut DocCommentSlashes);
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
             __this: *mut DocCommentSlashes,
             __param_0: *const DocCommentSlashes,
-        ) -> ();
-        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(__this: *mut DocCommentBang) -> ();
+        );
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(__this: *mut DocCommentBang);
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1ERKS_(
             __this: *mut DocCommentBang,
             __param_0: *const DocCommentBang,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
             __this: *mut MultilineCommentTwoStars,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(
             __this: *mut MultilineCommentTwoStars,
             __param_0: *const MultilineCommentTwoStars,
-        ) -> ();
-        pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut LineComment) -> ();
+        );
+        pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut LineComment);
         pub(crate) fn __rust_thunk___ZN11LineCommentC1ERKS_(
             __this: *mut LineComment,
             __param_0: *const LineComment,
-        ) -> ();
-        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(__this: *mut MultilineOneStar) -> ();
+        );
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(__this: *mut MultilineOneStar);
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1ERKS_(
             __this: *mut MultilineOneStar,
             __param_0: *const MultilineOneStar,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }
 }

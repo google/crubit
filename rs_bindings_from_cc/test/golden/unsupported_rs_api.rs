@@ -83,12 +83,12 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1ERKS_(
             __this: *mut NontrivialCustomType,
             __param_0: *const NontrivialCustomType,
-        ) -> ();
-        pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(__this: *mut ContainingStruct) -> ();
+        );
+        pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(__this: *mut ContainingStruct);
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1ERKS_(
             __this: *mut ContainingStruct,
             __param_0: *const ContainingStruct,
-        ) -> ();
+        );
     }
 }
 

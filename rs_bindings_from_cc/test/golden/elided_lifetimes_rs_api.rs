@@ -39,7 +39,7 @@ impl S {
 // Parameter type 'struct S &&' is not supported
 
 #[inline(always)]
-pub fn take_pointer<'a>(p: Option<&'a mut i32>) -> () {
+pub fn take_pointer<'a>(p: Option<&'a mut i32>) {
     unsafe { crate::detail::__rust_thunk___Z12take_pointerPi(p) }
 }
 
@@ -56,11 +56,10 @@ mod detail {
             p1: &'a mut i32,
             p2: &'b mut i32,
         ) -> &'c mut i32;
-        pub(crate) fn __rust_thunk___ZN1SC1Ev<'a>(__this: &'a mut S) -> ();
-        pub(crate) fn __rust_thunk___ZN1SC1ERKS_<'a, 'b>(__this: &'b mut S, __param_0: &'a S)
-        -> ();
+        pub(crate) fn __rust_thunk___ZN1SC1Ev<'a>(__this: &'a mut S);
+        pub(crate) fn __rust_thunk___ZN1SC1ERKS_<'a, 'b>(__this: &'b mut S, __param_0: &'a S);
         #[link_name = "_Z12take_pointerPi"]
-        pub(crate) fn __rust_thunk___Z12take_pointerPi<'a>(p: Option<&'a mut i32>) -> ();
+        pub(crate) fn __rust_thunk___Z12take_pointerPi<'a>(p: Option<&'a mut i32>);
     }
 }
 

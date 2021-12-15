@@ -103,23 +103,21 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial) -> ();
+        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial);
         pub(crate) fn __rust_thunk___ZN10NontrivialC1ERKS_(
             __this: *mut Nontrivial,
             __param_0: *const Nontrivial,
-        ) -> ();
-        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline) -> ();
+        );
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline);
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1ERKS_(
             __this: *mut NontrivialInline,
             __param_0: *const NontrivialInline,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1ERKS_(
             __this: *mut NontrivialMembers,
             __param_0: *const NontrivialMembers,
-        ) -> ();
-        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev(
-            __this: *mut NontrivialMembers,
-        ) -> ();
+        );
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev(__this: *mut NontrivialMembers);
     }
 }
 

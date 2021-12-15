@@ -58,17 +58,17 @@ pub fn second_func() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut FirstStruct) -> ();
+        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut FirstStruct);
         pub(crate) fn __rust_thunk___ZN11FirstStructC1ERKS_(
             __this: *mut FirstStruct,
             __param_0: *const FirstStruct,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
-        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut SecondStruct) -> ();
+        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut SecondStruct);
         pub(crate) fn __rust_thunk___ZN12SecondStructC1ERKS_(
             __this: *mut SecondStruct,
             __param_0: *const SecondStruct,
-        ) -> ();
+        );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
 }

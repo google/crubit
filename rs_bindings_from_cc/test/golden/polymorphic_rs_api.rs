@@ -31,12 +31,12 @@ impl Drop for PolymorphicClass {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev(__this: *mut PolymorphicClass) -> ();
-        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1Ev(__this: *mut PolymorphicClass) -> ();
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev(__this: *mut PolymorphicClass);
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1Ev(__this: *mut PolymorphicClass);
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1ERKS_(
             __this: *mut PolymorphicClass,
             __param_0: *const PolymorphicClass,
-        ) -> ();
+        );
     }
 }
 

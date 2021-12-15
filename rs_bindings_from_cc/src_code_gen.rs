@@ -154,8 +154,12 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
         func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
     );
-    // TODO(hlopko): do not emit `-> ()` when return type is void, it's implicit.
-    let return_type_name = format_rs_type(&func.return_type.rs_type, ir, &lifetime_to_name)?;
+    let return_type_fragment = if func.return_type.rs_type.is_unit_type() {
+        quote! {}
+    } else {
+        let return_type_name = format_rs_type(&func.return_type.rs_type, ir, &lifetime_to_name)?;
+        quote! { -> #return_type_name }
+    };
 
     let param_idents =
         func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
@@ -190,7 +194,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             let fn_def = quote! {
                 #doc_comment
                 #[inline(always)]
-                pub fn #ident #generic_params( #( #param_idents: #param_types ),* ) -> #return_type_name {
+                pub fn #ident #generic_params( #( #param_idents: #param_types ),*
+                ) #return_type_fragment {
                     unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
                 }
             };
@@ -253,7 +258,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
 
         quote! {
             #thunk_attr
-            pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),* ) -> #return_type_name ;
+            pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
+            ) #return_type_fragment ;
         }
     } else {
         quote! {}

@@ -80,6 +80,12 @@ pub struct RsType {
     pub decl_id: Option<DeclId>,
 }
 
+impl RsType {
+    pub fn is_unit_type(&self) -> bool {
+        self.name.as_deref() == Some("()")
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct CcType {
     pub name: Option<String>,
