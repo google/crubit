@@ -12,7 +12,6 @@ struct NontrivialCustomType {
 };
 
 void UnsupportedParamType(NontrivialCustomType n);
-void UnsupportedUnnamedParam(int);
 NontrivialCustomType UnsupportedReturnType();
 
 NontrivialCustomType MultipleReasons(NontrivialCustomType n, int);

@@ -57,4 +57,14 @@ mod tests {
         let i: i32 = 42;
         assert_eq!(*forward_reference(&i), 42);
     }
+
+    #[test]
+    fn test_multiply() {
+        assert_eq!(simple_functions::multiply(42, 123), 42 * 123);
+    }
+
+    #[test]
+    fn test_multiply_with_unnamed_parameters() {
+        assert_eq!(simple_functions::multiply_with_unnamed_parameters(42, 456), 42 * 456);
+    }
 }

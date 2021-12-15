@@ -34,14 +34,6 @@ impl Drop for Nontrivial {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=9
-// Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=9
-// Error while generating bindings for item 'Nontrivial::operator=':
-// Empty parameter names are not supported
-
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
@@ -68,14 +60,6 @@ impl Drop for NontrivialInline {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=20
-// Error while generating bindings for item 'NontrivialInline::NontrivialInline':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=20
-// Error while generating bindings for item 'NontrivialInline::operator=':
-// Empty parameter names are not supported
-
 /// Nontrivial due to member variables.
 ///
 /// This changes how the destructor / drop impl work -- instead of calling
@@ -94,15 +78,7 @@ impl !Unpin for NontrivialMembers {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
-// Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Parameter type 'struct NontrivialMembers &&' is not supported
-
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
-// Error while generating bindings for item 'NontrivialMembers::operator=':
-// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
 // Error while generating bindings for item 'NontrivialMembers::operator=':
@@ -128,7 +104,19 @@ mod detail {
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial) -> ();
+        pub(crate) fn __rust_thunk___ZN10NontrivialC1ERKS_(
+            __this: *mut Nontrivial,
+            __param_0: *const Nontrivial,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline) -> ();
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1ERKS_(
+            __this: *mut NontrivialInline,
+            __param_0: *const NontrivialInline,
+        ) -> ();
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1ERKS_(
+            __this: *mut NontrivialMembers,
+            __param_0: *const NontrivialMembers,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev(
             __this: *mut NontrivialMembers,
         ) -> ();

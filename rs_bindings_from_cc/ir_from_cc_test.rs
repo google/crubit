@@ -49,6 +49,24 @@ fn test_function() {
 }
 
 #[test]
+fn test_function_with_unnamed_parameters() {
+    assert_cc_produces_ir_items_ignoring_decl_ids(
+        "int multiply(int, int);",
+        vec![Item::Func(Func {
+            name: UnqualifiedIdentifier::Identifier(ir_id("multiply")),
+            owning_target: "//test:testing_target".into(),
+            mangled_name: "_Z8multiplyii".to_string(),
+            doc_comment: None,
+            return_type: ir_int(),
+            params: vec![ir_int_param("__param_0"), ir_int_param("__param_1")],
+            lifetime_params: vec![],
+            is_inline: false,
+            member_func_metadata: None,
+        })],
+    );
+}
+
+#[test]
 fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
     let ir = ir_from_cc_dependency("int Add(int a, int b);", "int Multiply(int a, int b);")?;
     let names = ir.functions().map(|i| i.name.identifier_as_str().unwrap()).collect_vec();

@@ -23,14 +23,6 @@ pub struct DocCommentSlashes {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=7
-// Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=7
-// Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Parameter type 'struct DocCommentSlashes &&' is not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
@@ -50,14 +42,6 @@ pub struct DocCommentBang {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=15
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
 // Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=15
-// Error while generating bindings for item 'DocCommentBang::DocCommentBang':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=15
-// Error while generating bindings for item 'DocCommentBang::operator=':
-// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=15
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
@@ -83,14 +67,6 @@ pub struct MultilineCommentTwoStars {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=23
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=23
-// Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=23
-// Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=23
@@ -110,14 +86,6 @@ pub struct LineComment {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=31
 // Error while generating bindings for item 'LineComment::LineComment':
 // Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=31
-// Error while generating bindings for item 'LineComment::LineComment':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=31
-// Error while generating bindings for item 'LineComment::operator=':
-// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=31
 // Error while generating bindings for item 'LineComment::LineComment':
@@ -143,14 +111,6 @@ pub struct MultilineOneStar {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
-// Error while generating bindings for item 'MultilineOneStar::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
-// Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
@@ -171,12 +131,32 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(
             __this: *mut DocCommentSlashes,
         ) -> ();
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
+            __this: *mut DocCommentSlashes,
+            __param_0: *const DocCommentSlashes,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(__this: *mut DocCommentBang) -> ();
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1ERKS_(
+            __this: *mut DocCommentBang,
+            __param_0: *const DocCommentBang,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
             __this: *mut MultilineCommentTwoStars,
         ) -> ();
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(
+            __this: *mut MultilineCommentTwoStars,
+            __param_0: *const MultilineCommentTwoStars,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut LineComment) -> ();
+        pub(crate) fn __rust_thunk___ZN11LineCommentC1ERKS_(
+            __this: *mut LineComment,
+            __param_0: *const LineComment,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(__this: *mut MultilineOneStar) -> ();
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1ERKS_(
+            __this: *mut MultilineOneStar,
+            __param_0: *const MultilineOneStar,
+        ) -> ();
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }
 }

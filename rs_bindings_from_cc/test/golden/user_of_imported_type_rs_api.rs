@@ -26,14 +26,6 @@ pub struct UserOfImportedType {
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
-// Error while generating bindings for item 'UserOfImportedType::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
-// Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Parameter type 'struct UserOfImportedType &&' is not supported
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
@@ -51,6 +43,10 @@ mod detail {
         ) -> trivial_type_cc::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
             __this: *mut UserOfImportedType,
+        ) -> ();
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
+            __this: *mut UserOfImportedType,
+            __param_0: *const UserOfImportedType,
         ) -> ();
     }
 }

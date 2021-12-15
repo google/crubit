@@ -20,14 +20,6 @@ pub struct SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=7
-// Error while generating bindings for item 'SomeStruct::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=7
-// Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Parameter type 'struct SomeStruct &&' is not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
@@ -84,14 +76,6 @@ pub struct FieldTypeTestStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=10
-// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=10
-// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
@@ -109,8 +93,16 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut SomeStruct) -> ();
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1ERKS_(
+            __this: *mut SomeStruct,
+            __param_0: *const SomeStruct,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1Ev(
             __this: *mut FieldTypeTestStruct,
+        ) -> ();
+        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
+            __this: *mut FieldTypeTestStruct,
+            __param_0: *const FieldTypeTestStruct,
         ) -> ();
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv() -> ();
     }

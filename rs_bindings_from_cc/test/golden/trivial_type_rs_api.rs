@@ -21,14 +21,6 @@ pub struct Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
 // Error while generating bindings for item 'Trivial::Trivial':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=6
-// Error while generating bindings for item 'Trivial::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=6
-// Error while generating bindings for item 'Trivial::Trivial':
 // Parameter type 'struct Trivial &&' is not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
@@ -46,14 +38,6 @@ pub struct TrivialWithDefaulted {
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
 // Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=15
-// Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=16
-// Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Empty parameter names are not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=17
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
@@ -81,8 +65,16 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: *mut Trivial) -> ();
+        pub(crate) fn __rust_thunk___ZN7TrivialC1ERKS_(
+            __this: *mut Trivial,
+            __param_0: *const Trivial,
+        ) -> ();
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
             __this: *mut TrivialWithDefaulted,
+        ) -> ();
+        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
+            __this: *mut TrivialWithDefaulted,
+            __param_0: *const TrivialWithDefaulted,
         ) -> ();
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial) -> ();

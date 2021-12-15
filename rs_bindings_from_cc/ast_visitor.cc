@@ -23,6 +23,7 @@
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/cord.h"
+#include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
@@ -159,13 +160,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     }
 
     std::optional<Identifier> param_name = GetTranslatedIdentifier(param);
-    if (!param_name.has_value()) {
-      PushUnsupportedItem(function_decl,
-                          "Empty parameter names are not supported",
-                          param->getBeginLoc());
-      success = false;
-      continue;
-    }
+    CHECK(param_name.has_value());  // No known cases where the above can fail.
     params.push_back({*param_type, *std::move(param_name)});
   }
 
@@ -536,7 +531,13 @@ std::optional<UnqualifiedIdentifier> AstVisitor::GetTranslatedName(
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl->getName());
       if (name.empty()) {
-        // for example, a parameter with no name.
+        if (const clang::ParmVarDecl* param_decl =
+                clang::dyn_cast<clang::ParmVarDecl>(named_decl)) {
+          int param_pos = param_decl->getFunctionScopeIndex();
+          return {Identifier(absl::StrCat("__param_", param_pos))};
+        }
+        // TODO(lukasza): Handle anonymous structs (probably this won't be an
+        // issue until nested types are handled - b/200067824).
         return std::nullopt;
       }
       return {Identifier(std::move(name))};

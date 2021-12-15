@@ -14,5 +14,7 @@ void take_pointer(int* i);
 void take_reference(int& i);
 const int* forward_pointer(const int* i);
 const int& forward_reference(const int& i);
+int multiply(int x, int y);
+int multiply_with_unnamed_parameters(int, int);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_SIMPLE_SIMPLE_FUNCTIONS_H_

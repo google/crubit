@@ -26,14 +26,6 @@ impl Drop for PolymorphicClass {
     }
 }
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=4
-// Error while generating bindings for item 'PolymorphicClass::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=4
-// Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
-// Empty parameter names are not supported
-
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
 
 mod detail {
@@ -41,6 +33,10 @@ mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev(__this: *mut PolymorphicClass) -> ();
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1Ev(__this: *mut PolymorphicClass) -> ();
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1ERKS_(
+            __this: *mut PolymorphicClass,
+            __param_0: *const PolymorphicClass,
+        ) -> ();
     }
 }
 

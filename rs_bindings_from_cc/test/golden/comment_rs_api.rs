@@ -29,14 +29,6 @@ pub struct Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::Foo':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/comment.h;l=11
-// Error while generating bindings for item 'Foo::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/comment.h;l=11
-// Error while generating bindings for item 'Foo::Foo':
 // Parameter type 'struct Foo &&' is not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=11
@@ -68,14 +60,6 @@ pub struct Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::Bar':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/comment.h;l=37
-// Error while generating bindings for item 'Bar::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/comment.h;l=37
-// Error while generating bindings for item 'Bar::Bar':
 // Parameter type 'struct Bar &&' is not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=37
@@ -95,14 +79,6 @@ pub struct HasNoComments {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/comment.h;l=43
-// Error while generating bindings for item 'HasNoComments::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/comment.h;l=43
-// Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Parameter type 'struct HasNoComments &&' is not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
@@ -117,9 +93,15 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN3FooC1Ev(__this: *mut Foo) -> ();
+        pub(crate) fn __rust_thunk___ZN3FooC1ERKS_(__this: *mut Foo, __param_0: *const Foo) -> ();
         pub(crate) fn __rust_thunk___Z3foov() -> ();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev(__this: *mut Bar) -> ();
+        pub(crate) fn __rust_thunk___ZN3BarC1ERKS_(__this: *mut Bar, __param_0: *const Bar) -> ();
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut HasNoComments) -> ();
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1ERKS_(
+            __this: *mut HasNoComments,
+            __param_0: *const HasNoComments,
+        ) -> ();
     }
 }
 

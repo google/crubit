@@ -27,3 +27,7 @@ void take_reference(int& i) { i = 42; }
 const int* forward_pointer(const int* i) { return i; }
 
 const int& forward_reference(const int& i) { return i; }
+
+int multiply(int x, int y) { return x * y; }
+
+int multiply_with_unnamed_parameters(int x, int y) { return x * y; }

@@ -19,14 +19,6 @@ pub struct FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/item_order.h;l=4
-// Error while generating bindings for item 'FirstStruct::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/item_order.h;l=4
-// Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Parameter type 'struct FirstStruct &&' is not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
@@ -50,14 +42,6 @@ pub struct SecondStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
-// Error while generating bindings for item 'SecondStruct::operator=':
-// Empty parameter names are not supported
-
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
-// Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Parameter type 'struct SecondStruct &&' is not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
@@ -75,8 +59,16 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut FirstStruct) -> ();
+        pub(crate) fn __rust_thunk___ZN11FirstStructC1ERKS_(
+            __this: *mut FirstStruct,
+            __param_0: *const FirstStruct,
+        ) -> ();
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut SecondStruct) -> ();
+        pub(crate) fn __rust_thunk___ZN12SecondStructC1ERKS_(
+            __this: *mut SecondStruct,
+            __param_0: *const SecondStruct,
+        ) -> ();
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
 }
