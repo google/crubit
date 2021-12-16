@@ -6,6 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
 
 class PolymorphicClass {
+ public:
   virtual ~PolymorphicClass();
 };
 

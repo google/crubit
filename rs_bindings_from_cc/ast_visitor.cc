@@ -213,6 +213,16 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
   std::optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+    switch (method_decl->getAccess()) {
+      case clang::AS_public:
+        break;
+      case clang::AS_protected:
+      case clang::AS_private:
+      case clang::AS_none:
+        // No need for IR to include Func representing private methods.
+        // TODO(lukasza): Revisit this for protected methods.
+        return true;
+    }
     std::optional<MemberFuncMetadata::InstanceMethodMetadata> instance_metadata;
     if (method_decl->isInstance()) {
       MemberFuncMetadata::ReferenceQualification reference;

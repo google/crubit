@@ -8,12 +8,12 @@ mod tests {
 
     #[test]
     fn test_static_factory_method() {
-        let s: SomeStruct = SomeStruct::static_factory_method(123);
+        let s: SomeClass = SomeClass::static_factory_method(123);
         assert_eq!(123, s.int_var);
     }
 
     #[test]
     fn test_static_method_that_multiplies_its_args() {
-        assert_eq!(42 * 789, SomeStruct::static_method_that_multiplies_its_args(42, 789));
+        assert_eq!(42 * 789, SomeClass::static_method_that_multiplies_its_args(42, 789));
     }
 }
