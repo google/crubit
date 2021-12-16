@@ -674,10 +674,12 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                 let ident = make_ident(&id.identifier);
                 quote! {#ident}
             }
-            // Use destroy_at to avoid needing to spell out the type name. The type name can be
-            // difficult (impossible?) to spell in the general case, but by using destroy_at, we
-            // avoid needing to determine what the correct spelling is, or save that spelling within
-            // the IR.
+            // Use destroy_at to avoid needing to spell out the class name. Destructor identiifers
+            // use the name of the type itself, without namespace qualification, template
+            // parameters, or aliases. We do not need to use that naming scheme anywhere else in
+            // the bindings, and it can be difficult (impossible?) to spell in the general case. By
+            // using destroy_at, we avoid needing to determine or remember what the correct spelling
+            // is.
             UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
             _ => continue, // TODO(b/200066396): handle other cases
         };
