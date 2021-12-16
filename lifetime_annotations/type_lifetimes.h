@@ -55,8 +55,6 @@ class ObjectLifetimes;
 // to query.
 class ValueLifetimes {
  public:
-  ValueLifetimes() = default;
-
   ValueLifetimes(const ValueLifetimes& other) { *this = other; }
 
   ValueLifetimes& operator=(const ValueLifetimes& other);
@@ -73,6 +71,7 @@ class ValueLifetimes {
  private:
   static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
                                           clang::QualType type);
+  explicit ValueLifetimes(clang::QualType type) : type_(type) {}
 
   const std::optional<ValueLifetimes>& GetTemplateArgumentLifetimes(
       const clang::SubstTemplateTypeParmType* targ) const {
@@ -119,7 +118,8 @@ class ObjectLifetimes {
   ObjectLifetimes GetRecordObjectLifetimes(clang::QualType type) const;
 
  private:
-  ObjectLifetimes() = default;
+  ObjectLifetimes(Lifetime lifetime, ValueLifetimes value_lifetimes)
+      : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
 
   friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
   friend class ValueLifetimes;
@@ -137,15 +137,13 @@ namespace llvm {
 template <>
 struct DenseMapInfo<devtools_rust::ValueLifetimes> {
   static devtools_rust::ValueLifetimes getEmptyKey() {
-    devtools_rust::ValueLifetimes ret;
-    ret.type_ = DenseMapInfo<clang::QualType>().getEmptyKey();
-    return ret;
+    return devtools_rust::ValueLifetimes(
+        DenseMapInfo<clang::QualType>().getEmptyKey());
   }
 
   static devtools_rust::ValueLifetimes getTombstoneKey() {
-    devtools_rust::ValueLifetimes ret;
-    ret.type_ = DenseMapInfo<clang::QualType>().getTombstoneKey();
-    return ret;
+    return devtools_rust::ValueLifetimes(
+        DenseMapInfo<clang::QualType>().getTombstoneKey());
   }
 
   static bool isEqual(const devtools_rust::ValueLifetimes& lhs,
@@ -158,15 +156,15 @@ struct DenseMapInfo<devtools_rust::ValueLifetimes> {
 template <>
 struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
   static devtools_rust::ObjectLifetimes getEmptyKey() {
-    devtools_rust::ObjectLifetimes ret;
-    ret.lifetime_ = DenseMapInfo<devtools_rust::Lifetime>().getEmptyKey();
-    return ret;
+    return devtools_rust::ObjectLifetimes(
+        DenseMapInfo<devtools_rust::Lifetime>().getEmptyKey(),
+        DenseMapInfo<devtools_rust::ValueLifetimes>().getEmptyKey());
   }
 
   static devtools_rust::ObjectLifetimes getTombstoneKey() {
-    devtools_rust::ObjectLifetimes ret;
-    ret.lifetime_ = DenseMapInfo<devtools_rust::Lifetime>().getTombstoneKey();
-    return ret;
+    return devtools_rust::ObjectLifetimes(
+        DenseMapInfo<devtools_rust::Lifetime>().getTombstoneKey(),
+        DenseMapInfo<devtools_rust::ValueLifetimes>().getTombstoneKey());
   }
 
   static bool isEqual(const devtools_rust::ObjectLifetimes& lhs,

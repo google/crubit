@@ -91,8 +91,7 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
     TypeLifetimesRef& type_lifetimes, clang::QualType type) {
   assert(!type.isNull());
 
-  ValueLifetimes ret;
-  ret.type_ = type;
+  ValueLifetimes ret(type);
 
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
   if (!template_args.empty()) {
@@ -129,12 +128,10 @@ ObjectLifetimes ObjectLifetimes::FromTypeLifetimes(
     TypeLifetimesRef& type_lifetimes, clang::QualType type) {
   assert(!type_lifetimes.empty());
   assert(!type.isNull());
-  ObjectLifetimes ret;
-  ret.lifetime_ = type_lifetimes.back();
+  Lifetime self_lifetime = type_lifetimes.back();
   type_lifetimes = type_lifetimes.drop_back();
-  ret.value_lifetimes_ =
-      ValueLifetimes::FromTypeLifetimes(type_lifetimes, type);
-  return ret;
+  return ObjectLifetimes(
+      self_lifetime, ValueLifetimes::FromTypeLifetimes(type_lifetimes, type));
 }
 
 std::string ObjectLifetimes::DebugString() const {
@@ -158,14 +155,12 @@ const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
 
 ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
     clang::QualType type) const {
-  ObjectLifetimes ret;
   assert(value_lifetimes_.Type()->isRecordType());
 
   // The object of the `type` (i.e. field or a base class) basically has the
   // same lifetime as the struct.
   // TODO(veluca): this needs adaptation to lifetime parameters.
-  ret.lifetime_ = lifetime_;
-  ret.value_lifetimes_.type_ = type;
+  ObjectLifetimes ret(lifetime_, ValueLifetimes(type));
 
   // `type` is one of a template argument, a struct, a pointer, or a type
   // with no lifetimes (other than its own).
@@ -177,7 +172,7 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
         value_lifetimes_.GetTemplateArgumentLifetimes(targ);
     if (!arg_lifetimes) {
       assert(false);
-      return {};
+      return llvm::DenseMapInfo<ObjectLifetimes>::getEmptyKey();
     }
     ret.value_lifetimes_ = *arg_lifetimes;
   } else if (type->isStructureOrClassType()) {
