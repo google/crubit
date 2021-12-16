@@ -219,7 +219,7 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
 
 namespace llvm {
 
-bool DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
+bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
     const devtools_rust::ValueLifetimes& lhs,
     const devtools_rust::ValueLifetimes& rhs) {
   if (lhs.type_ != rhs.type_) {
@@ -230,7 +230,8 @@ bool DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
     return false;
   }
   if (lhs.pointee_lifetimes_ &&
-      !isEqual(*lhs.pointee_lifetimes_, *rhs.pointee_lifetimes_)) {
+      !DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
+          *lhs.pointee_lifetimes_, *rhs.pointee_lifetimes_)) {
     return false;
   }
   if (lhs.template_argument_lifetimes_.size() !=
@@ -250,19 +251,21 @@ bool DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
   return true;
 }
 
-unsigned DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
-    const devtools_rust::ValueLifetimes& lifetime_node) {
+unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
+    const devtools_rust::ValueLifetimes& value_lifetimes) {
   llvm::hash_code hash = 0;
-  if (lifetime_node.pointee_lifetimes_) {
-    hash = getHashValue(*lifetime_node.pointee_lifetimes_);
+  if (value_lifetimes.pointee_lifetimes_) {
+    hash = DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
+        *value_lifetimes.pointee_lifetimes_);
   }
-  for (const auto& tmpl_lifetime : lifetime_node.template_argument_lifetimes_) {
+  for (const auto& tmpl_lifetime :
+       value_lifetimes.template_argument_lifetimes_) {
     if (tmpl_lifetime) {
       hash = hash_combine(hash, getHashValue(*tmpl_lifetime));
     }
   }
   return hash_combine(
-      hash, DenseMapInfo<clang::QualType>::getHashValue(lifetime_node.type_));
+      hash, DenseMapInfo<clang::QualType>::getHashValue(value_lifetimes.type_));
 }
 
 }  // namespace llvm

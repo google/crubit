@@ -89,7 +89,7 @@ class ValueLifetimes {
   clang::QualType type_;
 
   friend class ObjectLifetimes;
-  friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
+  friend class llvm::DenseMapInfo<devtools_rust::ValueLifetimes>;
 };
 
 // Represents all the lifetimes of an object.
@@ -135,6 +135,27 @@ const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
 namespace llvm {
 
 template <>
+struct DenseMapInfo<devtools_rust::ValueLifetimes> {
+  static devtools_rust::ValueLifetimes getEmptyKey() {
+    devtools_rust::ValueLifetimes ret;
+    ret.type_ = DenseMapInfo<clang::QualType>().getEmptyKey();
+    return ret;
+  }
+
+  static devtools_rust::ValueLifetimes getTombstoneKey() {
+    devtools_rust::ValueLifetimes ret;
+    ret.type_ = DenseMapInfo<clang::QualType>().getTombstoneKey();
+    return ret;
+  }
+
+  static bool isEqual(const devtools_rust::ValueLifetimes& lhs,
+                      const devtools_rust::ValueLifetimes& rhs);
+
+  static unsigned getHashValue(
+      const devtools_rust::ValueLifetimes& value_lifetimes);
+};
+
+template <>
 struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
   static devtools_rust::ObjectLifetimes getEmptyKey() {
     devtools_rust::ObjectLifetimes ret;
@@ -152,22 +173,18 @@ struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
                       const devtools_rust::ObjectLifetimes& rhs) {
     return DenseMapInfo<devtools_rust::Lifetime>::isEqual(lhs.lifetime_,
                                                           rhs.lifetime_) &&
-           isEqual(lhs.value_lifetimes_, rhs.value_lifetimes_);
+           DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
+               lhs.value_lifetimes_, rhs.value_lifetimes_);
   }
 
   static unsigned getHashValue(
       const devtools_rust::ObjectLifetimes& object_lifetimes) {
     unsigned hash = DenseMapInfo<devtools_rust::Lifetime>::getHashValue(
         object_lifetimes.lifetime_);
-    return hash_combine(hash, getHashValue(object_lifetimes.value_lifetimes_));
+    return hash_combine(
+        hash, DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
+                  object_lifetimes.value_lifetimes_));
   }
-
- private:
-  static bool isEqual(const devtools_rust::ValueLifetimes& lhs,
-                      const devtools_rust::ValueLifetimes& rhs);
-
-  static unsigned getHashValue(
-      const devtools_rust::ValueLifetimes& lifetime_node);
 };
 
 }  // namespace llvm
