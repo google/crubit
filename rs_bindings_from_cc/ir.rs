@@ -9,6 +9,7 @@ use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::fmt;
 use std::io::Read;
 
 pub const TESTING_TARGET: &str = "//test:testing_target";
@@ -116,9 +117,15 @@ pub struct MappedType {
     pub cc_type: CcType,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Identifier {
     pub identifier: String,
+}
+
+impl fmt::Debug for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&format!("\"{}\"", &self.identifier))
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
@@ -144,7 +151,7 @@ impl<T: Into<String>> From<T> for Label {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum UnqualifiedIdentifier {
     Identifier(Identifier),
     Constructor,
@@ -156,6 +163,16 @@ impl UnqualifiedIdentifier {
         match self {
             UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.identifier.as_str()),
             _ => None,
+        }
+    }
+}
+
+impl fmt::Debug for UnqualifiedIdentifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            UnqualifiedIdentifier::Identifier(identifier) => fmt::Debug::fmt(identifier, f),
+            UnqualifiedIdentifier::Constructor => f.write_str("Constructor"),
+            UnqualifiedIdentifier::Destructor => f.write_str("Destructor"),
         }
     }
 }
@@ -453,6 +470,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_identifier_debug_print() {
+        assert_eq!(format!("{:?}", Identifier { identifier: "hello".to_string() }), "\"hello\"");
+    }
+
+    #[test]
+    fn test_unqualified_identifier_debug_print() {
+        assert_eq!(
+            format!(
+                "{:?}",
+                UnqualifiedIdentifier::Identifier(Identifier { identifier: "hello".to_string() })
+            ),
+            "\"hello\""
+        );
+        assert_eq!(format!("{:?}", UnqualifiedIdentifier::Constructor), "Constructor");
+        assert_eq!(format!("{:?}", UnqualifiedIdentifier::Destructor), "Destructor");
+    }
+
+    #[test]
     fn test_used_headers() {
         let input = r#"
         {
@@ -465,267 +500,6 @@ mod tests {
             used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
             current_target: "//foo:bar".into(),
             items: vec![],
-        };
-        assert_eq!(ir.flat_ir, expected);
-    }
-
-    #[test]
-    fn test_member_access_specifiers() {
-        let input = r#"
-        {
-            "current_target": "//foo:bar",
-            "items": [
-                { "Record" : {
-                    "identifier": {"identifier": "SomeStruct" },
-                    "id": 42,
-                    "owning_target": "//foo:bar",
-                    "fields": [
-                        {
-                            "identifier": {"identifier": "public_int" },
-                            "type": {
-                                "rs_type": {"name": "i32", "lifetime_args": [], "type_args": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_args": []}
-                            },
-                            "access": "Public",
-                            "offset": 0
-                        },
-                        {
-                            "identifier": {"identifier": "protected_int" },
-                            "type": {
-                                "rs_type": {"name": "i32", "lifetime_args": [], "type_args": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_args": []}
-                            },
-                            "access": "Protected",
-                            "offset": 32
-                        },
-                        {
-                            "identifier": {"identifier": "private_int" },
-                            "type": {
-                                "rs_type": {"name": "i32", "lifetime_args": [], "type_args": []},
-                                "cc_type": {"name": "int", "is_const": false, "type_args": []}
-                            },
-                            "access": "Private",
-                            "offset": 64
-                        }
-                    ],
-                    "lifetime_params": [],
-                    "size": 12,
-                    "alignment": 4,
-                    "copy_constructor": {
-                        "definition": "NontrivialUserDefined",
-                        "access": "Private"
-                    },
-                    "move_constructor": {
-                        "definition": "Deleted",
-                        "access": "Protected"
-                    },
-                    "destructor": {
-                        "definition": "Trivial",
-                        "access": "Public"
-                    },
-                    "is_trivial_abi": true
-                }}
-            ]
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = FlatIR {
-            used_headers: vec![],
-            current_target: "//foo:bar".into(),
-            items: vec![Item::Record(Record {
-                identifier: Identifier { identifier: "SomeStruct".to_string() },
-                id: DeclId(42),
-                owning_target: "//foo:bar".into(),
-                doc_comment: None,
-                fields: vec![
-                    Field {
-                        identifier: Identifier { identifier: "public_int".to_string() },
-                        doc_comment: None,
-                        type_: MappedType {
-                            rs_type: RsType {
-                                name: "i32".to_string().into(),
-                                lifetime_args: vec![],
-                                type_args: vec![],
-                                decl_id: None,
-                            },
-                            cc_type: CcType {
-                                name: "int".to_string().into(),
-                                is_const: false,
-                                type_args: vec![],
-                                decl_id: None,
-                            },
-                        },
-                        access: AccessSpecifier::Public,
-                        offset: 0,
-                    },
-                    Field {
-                        identifier: Identifier { identifier: "protected_int".to_string() },
-                        doc_comment: None,
-                        type_: MappedType {
-                            rs_type: RsType {
-                                name: "i32".to_string().into(),
-                                lifetime_args: vec![],
-                                type_args: vec![],
-                                decl_id: None,
-                            },
-                            cc_type: CcType {
-                                name: "int".to_string().into(),
-                                is_const: false,
-                                type_args: vec![],
-                                decl_id: None,
-                            },
-                        },
-                        access: AccessSpecifier::Protected,
-                        offset: 32,
-                    },
-                    Field {
-                        identifier: Identifier { identifier: "private_int".to_string() },
-                        doc_comment: None,
-                        type_: MappedType {
-                            rs_type: RsType {
-                                name: "i32".to_string().into(),
-                                lifetime_args: vec![],
-                                type_args: vec![],
-                                decl_id: None,
-                            },
-                            cc_type: CcType {
-                                name: "int".to_string().into(),
-                                is_const: false,
-                                type_args: vec![],
-                                decl_id: None,
-                            },
-                        },
-                        access: AccessSpecifier::Private,
-                        offset: 64,
-                    },
-                ],
-                lifetime_params: vec![],
-                size: 12,
-                alignment: 4,
-                copy_constructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::NontrivialUserDefined,
-                    access: AccessSpecifier::Private,
-                },
-                move_constructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::Deleted,
-                    access: AccessSpecifier::Protected,
-                },
-                destructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::Trivial,
-                    access: AccessSpecifier::Public,
-                },
-                is_trivial_abi: true,
-            })],
-        };
-        assert_eq!(ir.flat_ir, expected);
-    }
-
-    #[test]
-    fn test_pointer_member_variable() {
-        let input = r#"
-        {
-            "current_target": "//foo:bar",
-            "items": [
-                { "Record": {
-                    "identifier": {"identifier": "SomeStruct" },
-                    "id": 42,
-                    "owning_target": "//foo:bar",
-                    "fields": [
-                        {
-                            "identifier": {"identifier": "ptr" },
-                            "type": {
-                                "rs_type": {"name": "*mut", "lifetime_args": [], "type_args": [
-                                    {"name": "SomeStruct", "lifetime_args": [], "type_args": [], "decl_id": 42}
-                                ]},
-                                "cc_type": { "name": "*", "is_const": false, "type_args": [
-                                    {
-                                        "name": "SomeStruct",
-                                        "is_const": false,
-                                        "type_args": [],
-                                        "decl_id": 42
-                                    }
-                                ]}
-                            },
-                            "access": "Public",
-                            "offset": 0
-                        }
-                    ],
-                    "lifetime_params": [],
-                    "size": 8,
-                    "alignment": 8,
-                    "copy_constructor": {
-                        "definition": "Trivial",
-                        "access": "Public"
-                    },
-                    "move_constructor": {
-                        "definition": "Trivial",
-                        "access": "Public"
-                    },
-                    "destructor": {
-                        "definition": "Trivial",
-                        "access": "Public"
-                    },
-                    "is_trivial_abi": true
-                }}
-            ]
-        }
-        "#;
-        let ir = deserialize_ir(input.as_bytes()).unwrap();
-        let expected = FlatIR {
-            used_headers: vec![],
-            current_target: "//foo:bar".into(),
-            items: vec![Item::Record(Record {
-                identifier: Identifier { identifier: "SomeStruct".to_string() },
-                id: DeclId(42),
-                owning_target: "//foo:bar".into(),
-                doc_comment: None,
-                fields: vec![Field {
-                    identifier: Identifier { identifier: "ptr".to_string() },
-                    doc_comment: None,
-                    type_: MappedType {
-                        rs_type: RsType {
-                            name: "*mut".to_string().into(),
-                            decl_id: None,
-                            lifetime_args: vec![],
-                            type_args: vec![RsType {
-                                name: "SomeStruct".to_string().into(),
-                                lifetime_args: vec![],
-                                type_args: vec![],
-                                decl_id: Some(DeclId(42)),
-                            }],
-                        },
-                        cc_type: CcType {
-                            name: "*".to_string().into(),
-                            is_const: false,
-                            decl_id: None,
-                            type_args: vec![CcType {
-                                name: "SomeStruct".to_string().into(),
-                                is_const: false,
-                                type_args: vec![],
-                                decl_id: Some(DeclId(42)),
-                            }],
-                        },
-                    },
-                    access: AccessSpecifier::Public,
-                    offset: 0,
-                }],
-                lifetime_params: vec![],
-                size: 8,
-                alignment: 8,
-                move_constructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::Trivial,
-                    access: AccessSpecifier::Public,
-                },
-                copy_constructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::Trivial,
-                    access: AccessSpecifier::Public,
-                },
-                destructor: SpecialMemberFunc {
-                    definition: SpecialMemberDefinition::Trivial,
-                    access: AccessSpecifier::Public,
-                },
-                is_trivial_abi: true,
-            })],
         };
         assert_eq!(ir.flat_ir, expected);
     }

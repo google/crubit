@@ -8,8 +8,10 @@ use anyhow::Result;
 use ir::*;
 use ir_testing::*;
 use itertools::Itertools;
+use quote::quote;
 use std::collections::HashMap;
 use std::iter::Iterator;
+use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches};
 
 // TODO(mboehme): If we start needing to match on parts of the IR in tests,
 // check out the crate https://crates.io/crates/galvanic-assert.
@@ -69,10 +71,143 @@ fn test_function_with_unnamed_parameters() {
 #[test]
 fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
     let ir = ir_from_cc_dependency("int Add(int a, int b);", "int Multiply(int a, int b);")?;
-    let names = ir.functions().map(|i| i.name.identifier_as_str().unwrap()).collect_vec();
-    assert_strings_contain(names.as_slice(), "Add");
-    assert_strings_dont_contain(names.as_slice(), "Multiply");
+    assert_ir_matches!(ir, quote! { Func { name: "Add" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { name: "Multiply" ... } });
     Ok(())
+}
+
+#[test]
+fn test_record_member_variable_access_specifiers() {
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          public:
+            int public_int;
+          protected:
+            int protected_int;
+          private:
+            int private_int;
+        };
+    ",
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                identifier: "SomeStruct" ...
+                fields: [
+                    Field {
+                        identifier: "public_int" ...
+                        access: Public ...
+                    },
+                    Field {
+                        identifier: "protected_int" ...
+                        access: Protected ...
+                    },
+                    Field {
+                        identifier: "private_int" ...
+                        access: Private ...
+                    },
+                ] ...
+            }
+        }
+    );
+}
+
+#[test]
+fn test_record_special_member_access_specifiers() {
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          private:
+            SomeStruct(SomeStruct& s);
+          protected:
+            SomeStruct(SomeStruct&& s);
+          public:
+            ~SomeStruct();
+        };
+    ",
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                identifier: "SomeStruct" ...
+                copy_constructor: SpecialMemberFunc { ... access: Private ... },
+                move_constructor: SpecialMemberFunc { ... access: Protected ... },
+                destructor: SpecialMemberFunc { ... access: Public ... } ...
+            }
+        }
+    );
+}
+
+#[test]
+fn test_record_special_member_definition() {
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          private:
+            SomeStruct(SomeStruct& s);
+          protected:
+            SomeStruct(SomeStruct&& s) = delete;
+        };
+    ",
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                identifier: "SomeStruct" ...
+                copy_constructor: SpecialMemberFunc { definition: NontrivialUserDefined ... },
+                move_constructor: SpecialMemberFunc { definition: Deleted ... },
+                destructor: SpecialMemberFunc { definition: Trivial ... } ...
+            }
+        }
+    );
+}
+
+#[test]
+fn test_pointer_member_variable() {
+    let ir = ir_from_cc(
+        "struct SomeStruct {
+            SomeStruct* ptr;
+        };",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Field {
+                identifier: "ptr" ...
+                type_: MappedType {
+                    rs_type: RsType {
+                        name: Some("*mut") ...
+                        type_args: [RsType {
+                            name: None ...
+                            type_args: [],
+                            decl_id: Some(...),
+                        }],
+                        decl_id: None,
+                    },
+                    cc_type: CcType {
+                        name: Some("*") ...
+                        type_args: [CcType {
+                            name: None ...
+                            type_args: [],
+                            decl_id: Some(...),
+                        }],
+                        decl_id: None,
+                    },
+                } ...
+            }
+        }
+    );
 }
 
 #[test]
