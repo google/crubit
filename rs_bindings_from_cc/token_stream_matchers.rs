@@ -84,14 +84,65 @@ macro_rules! assert_rs_not_matches {
     };
 }
 
+/// Like `assert_cc_matches!`, but expects `IR` instance as input. The macro
+/// converts the instance to its corresponding struct expression and matches the
+/// pattern against that.
+#[macro_export]
+macro_rules! assert_ir_matches {
+    ($ir:expr, $pattern:expr $(,)*) => {
+        $crate::internal::match_ir(&$ir, &$pattern)
+            .expect("input unexpectedly didn't match the pattern");
+    };
+}
+
+/// Like `assert_ir_matches`, but asserts that the pattern does not match the
+/// `IR`.
+#[macro_export]
+macro_rules! assert_ir_not_matches {
+    ($ir:expr, $pattern:expr $(,)*) => {
+        $crate::internal::match_ir(&$ir, &$pattern)
+            .expect_err("input unexpectedly matched the pattern");
+    };
+}
+
 /// Only used to make stuff needed by exported macros available
 pub mod internal {
 
     use anyhow::{anyhow, Result};
+    use ir::IR;
+    use itertools::Itertools;
     pub use proc_macro2::TokenStream;
     use proc_macro2::TokenTree;
+    use quote::quote;
     use std::iter;
     pub use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
+
+    pub fn match_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {
+        // derived debug impl doesn't emit commas after the last element of a group,
+        // (for example `[a, b, c]`), but rustfmt automatically adds it (`[a, b,
+        // c,]`). We use rustfmt to format the failure messages. So to make the
+        // input token stream consistent with failure messages we format the
+        // input token stream with rustfmt as well.
+        let input = ir_to_string(ir.flat_ir_debug_print().parse().unwrap())?.parse().unwrap();
+        match_tokens(&input, pattern, ir_to_string)
+    }
+
+    fn ir_to_string(input: TokenStream) -> Result<String> {
+        // Rustfmt refuses to format some kinds of invalid Rust code. Let's put our IR
+        // struct expression into the body of a function, format it, and then remove
+        // the function.
+        let input_stream = quote! { fn make_rustfmt_happy() { #input } };
+        let formatted = rs_tokens_to_formatted_string(input_stream)?;
+        let snippet = formatted
+            .strip_prefix("fn make_rustfmt_happy() {\n")
+            .unwrap()
+            .strip_suffix("}\n")
+            .unwrap()
+            .lines()
+            .map(|line| &line[4..])
+            .join("\n");
+        Ok(snippet)
+    }
 
     #[derive(Debug)]
     enum MatchInfo {
@@ -361,6 +412,7 @@ pub mod internal {
 mod tests {
     use super::internal::*;
     use super::*;
+    use ir_testing::ir_from_cc;
     use quote::quote;
 
     macro_rules! assert_rs_cc_matches {
@@ -374,19 +426,33 @@ mod tests {
     fn test_optional_trailing_comma() {
         assert_rs_matches!(quote! {x}, quote! {x});
         assert_rs_matches!(quote! {x}, quote! {x},);
+
         assert_cc_matches!(quote! {x}, quote! {x});
         assert_cc_matches!(quote! {x}, quote! {x},);
+
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {});
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {},);
+
         assert_rs_not_matches!(quote! {x}, quote! {y});
         assert_rs_not_matches!(quote! {x}, quote! {y},);
 
         assert_cc_not_matches!(quote! {x}, quote! {y});
         assert_cc_not_matches!(quote! {x}, quote! {y},);
+
+        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
+        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir},);
     }
 
     #[test]
-    fn test_assert_cc_not_matches_accepts_not_matching_pattern() {
+    fn test_assert_ir_matches_assumes_trailing_commas_in_groups() {
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {{... items: [...],}});
+    }
+
+    #[test]
+    fn test_assert_not_matches_accepts_not_matching_pattern() {
         assert_cc_not_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
         assert_rs_not_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
+        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
     }
 
     #[test]
@@ -399,6 +465,12 @@ mod tests {
     #[should_panic]
     fn test_assert_rs_not_matches_panics_on_match() {
         assert_rs_not_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assert_ir_not_matches_panics_on_match() {
+        assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {items});
     }
 
     #[test]
@@ -416,6 +488,12 @@ mod tests {
     #[should_panic]
     fn test_assert_rs_matches_panics_on_mismatch() {
         assert_rs_matches!(quote! { fn foo() {} }, quote! { fn bar() {} });
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_assert_ir_matches_panics_on_mismatch() {
+        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {this pattern is not in the ir});
     }
 
     #[test]

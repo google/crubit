@@ -435,6 +435,17 @@ impl IR {
         // values.
         record.owning_target == self.flat_ir.current_target
     }
+
+    // Returns the standard Debug print string for the `flat_ir`. The reason why we
+    // don't use the debug print of `Self` is that `Self` contains HashMaps, and
+    // their debug print produces content that is not valid Rust code.
+    // `token_stream_matchers` (hacky) implementation parses the debug print and
+    // chokes on HashMaps. Therefore this method.
+    //
+    // Used for `token_stream_matchers`, do not use for anything else.
+    pub fn flat_ir_debug_print(&self) -> String {
+        format!("{:?}", self.flat_ir)
+    }
 }
 
 #[cfg(test)]
