@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "third_party/absl/strings/str_format.h"
 #include "third_party/absl/strings/str_join.h"
@@ -119,6 +120,30 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
   return ret;
 }
 
+ValueLifetimes ValueLifetimes::ForLifetimeLessType(clang::QualType type) {
+  assert(type->getPointeeType().isNull() && !type->isRecordType());
+  return ValueLifetimes(type);
+}
+
+ValueLifetimes ValueLifetimes::ForPointerLikeType(
+    clang::QualType type, const ObjectLifetimes& object_lifetimes) {
+  assert(!type->getPointeeType().isNull());
+  ValueLifetimes result(type);
+  result.pointee_lifetimes_ =
+      std::make_unique<ObjectLifetimes>(object_lifetimes);
+  return result;
+}
+
+ValueLifetimes ValueLifetimes::ForRecord(
+    clang::QualType type,
+    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes) {
+  assert(type->isRecordType());
+  assert(GetTemplateArgs(type).size() == template_argument_lifetimes.size());
+  ValueLifetimes result(type);
+  result.template_argument_lifetimes_ = std::move(template_argument_lifetimes);
+  return result;
+}
+
 const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
   assert(!type_->getPointeeType().isNull());
   return *pointee_lifetimes_;
@@ -160,7 +185,7 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
   // The object of the `type` (i.e. field or a base class) basically has the
   // same lifetime as the struct.
   // TODO(veluca): this needs adaptation to lifetime parameters.
-  ObjectLifetimes ret(lifetime_, ValueLifetimes(type));
+  Lifetime ret_lifetime = lifetime_;
 
   // `type` is one of a template argument, a struct, a pointer, or a type
   // with no lifetimes (other than its own).
@@ -169,21 +194,24 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
   // template argument's lifetimes to the leaf ObjectLifetimes.
   if (auto targ = type->getAs<clang::SubstTemplateTypeParmType>()) {
     const std::optional<ValueLifetimes>& arg_lifetimes =
-        value_lifetimes_.GetTemplateArgumentLifetimes(targ);
+        value_lifetimes_.GetTemplateArgumentLifetimes(
+            targ->getReplacedParameter()->getIndex());
     if (!arg_lifetimes) {
       assert(false);
       return llvm::DenseMapInfo<ObjectLifetimes>::getEmptyKey();
     }
-    ret.value_lifetimes_ = *arg_lifetimes;
+    return ObjectLifetimes(ret_lifetime, *arg_lifetimes);
   } else if (type->isStructureOrClassType()) {
     // Second case: struct. We need to construct potentally reshuffled
     // template arguments, if the struct is a template.
+    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes;
     for (const clang::TemplateArgument& arg : GetTemplateArgs(type)) {
       if (arg.getKind() == clang::TemplateArgument::Type) {
         if (auto templ_arg = clang::dyn_cast<clang::SubstTemplateTypeParmType>(
                 arg.getAsType())) {
-          ret.value_lifetimes_.template_argument_lifetimes_.push_back(
-              value_lifetimes_.GetTemplateArgumentLifetimes(templ_arg));
+          template_argument_lifetimes.push_back(
+              value_lifetimes_.GetTemplateArgumentLifetimes(
+                  templ_arg->getReplacedParameter()->getIndex()));
         } else {
           // Create a new ValueLifetimes of the type of the template parameter,
           // with lifetime `lifetime_`.
@@ -191,23 +219,28 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
           TypeLifetimes type_lifetimes = CreateLifetimesForType(
               arg.getAsType(), [this]() { return this->lifetime_; });
           TypeLifetimesRef type_lifetimes_ref(type_lifetimes);
-          ret.value_lifetimes_.template_argument_lifetimes_.push_back(
+          template_argument_lifetimes.push_back(
               ValueLifetimes::FromTypeLifetimes(type_lifetimes_ref,
                                                 arg.getAsType()));
         }
       } else {
-        ret.value_lifetimes_.template_argument_lifetimes_.push_back(
-            std::nullopt);
+        template_argument_lifetimes.push_back(std::nullopt);
       }
     }
     // TODO(veluca): handle potentially reshuffled lifetime parameters.
+    return ObjectLifetimes(ret_lifetime,
+                           ValueLifetimes::ForRecord(
+                               type, std::move(template_argument_lifetimes)));
   } else if (!type->getPointeeType().isNull()) {
     // Third case: pointer.
-    ret.value_lifetimes_.pointee_lifetimes_ = std::make_unique<ObjectLifetimes>(
-        GetRecordObjectLifetimes(type->getPointeeType()));
+    return ObjectLifetimes(
+        ret_lifetime,
+        ValueLifetimes::ForPointerLikeType(
+            type, GetRecordObjectLifetimes(type->getPointeeType())));
   }
 
-  return ret;
+  return ObjectLifetimes(ret_lifetime,
+                         ValueLifetimes::ForLifetimeLessType(type));
 }
 
 }  // namespace devtools_rust

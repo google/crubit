@@ -7,7 +7,9 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "lifetime_annotations/lifetime.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
@@ -55,6 +57,25 @@ class ObjectLifetimes;
 // to query.
 class ValueLifetimes {
  public:
+  static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
+                                          clang::QualType type);
+
+  // Returns a ValueLifetimes for a lifetime-less type.
+  // `type` must not be a pointer-like type or a record type.
+  static ValueLifetimes ForLifetimeLessType(clang::QualType type);
+
+  // Returns a ValueLifetimes for a pointer-like type that points to an object
+  // having lifetimes `object_lifetimes`.
+  static ValueLifetimes ForPointerLikeType(
+      clang::QualType type, const ObjectLifetimes& object_lifetimes);
+
+  // Returns a ValueLifetimes for a record type. If the record type has template
+  // parameters, pass the corresponding template argument lifetimes in
+  // `template_argument_lifetimes`; otherwise, pass an empty vector.
+  static ValueLifetimes ForRecord(
+      clang::QualType type,
+      std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes);
+
   ValueLifetimes(const ValueLifetimes& other) { *this = other; }
 
   ValueLifetimes& operator=(const ValueLifetimes& other);
@@ -68,17 +89,15 @@ class ValueLifetimes {
   // pointer or reference type.
   const ObjectLifetimes& GetPointeeLifetimes() const;
 
- private:
-  static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
-                                          clang::QualType type);
-  explicit ValueLifetimes(clang::QualType type) : type_(type) {}
-
+  // Returns the lifetimes of the i-th template argument.
   const std::optional<ValueLifetimes>& GetTemplateArgumentLifetimes(
-      const clang::SubstTemplateTypeParmType* targ) const {
-    size_t template_arg_idx = targ->getReplacedParameter()->getIndex();
-    assert(template_arg_idx < template_argument_lifetimes_.size());
-    return template_argument_lifetimes_[template_arg_idx];
+      size_t i) const {
+    assert(type_->isRecordType());
+    return template_argument_lifetimes_.at(i);
   }
+
+ private:
+  explicit ValueLifetimes(clang::QualType type) : type_(type) {}
 
   // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
   // is non-empty.
@@ -87,7 +106,6 @@ class ValueLifetimes {
   // TODO(veluca): add lifetime parameters here.
   clang::QualType type_;
 
-  friend class ObjectLifetimes;
   friend class llvm::DenseMapInfo<devtools_rust::ValueLifetimes>;
 };
 
@@ -122,7 +140,6 @@ class ObjectLifetimes {
       : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
 
   friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
-  friend class ValueLifetimes;
   Lifetime lifetime_;
   ValueLifetimes value_lifetimes_;
 };
