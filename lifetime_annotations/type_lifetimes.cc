@@ -5,6 +5,8 @@
 #include "lifetime_annotations/type_lifetimes.h"
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 #include <string>
 
 #include "third_party/absl/strings/str_format.h"
@@ -50,6 +52,69 @@ TypeLifetimes CreateLifetimesForType(
   if (pointee.isNull()) return {};
   ret = CreateLifetimesForType(pointee, lifetime_factory);
   ret.push_back(lifetime_factory());
+  return ret;
+}
+
+ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
+  template_argument_lifetimes_ = other.template_argument_lifetimes_;
+  pointee_lifetimes_ =
+      other.pointee_lifetimes_
+          ? std::make_unique<ObjectLifetimes>(*other.pointee_lifetimes_)
+          : nullptr;
+  return *this;
+}
+
+std::string ValueLifetimes::DebugString() const {
+  std::string ret;
+  if (!template_argument_lifetimes_.empty()) {
+    std::vector<std::string> tmpl_arg_strings;
+    for (const std::optional<ValueLifetimes>& tmpl_arg :
+         template_argument_lifetimes_) {
+      if (tmpl_arg) {
+        tmpl_arg_strings.push_back(tmpl_arg->DebugString());
+      } else {
+        tmpl_arg_strings.push_back("");
+      }
+    }
+    absl::StrAppend(&ret, "<", absl::StrJoin(tmpl_arg_strings, ", "), ">");
+  }
+  if (pointee_lifetimes_) {
+    absl::StrAppend(&ret, " -> ", pointee_lifetimes_->DebugString());
+  }
+  return ret;
+}
+
+// Here, `type_lifetimes` are the lifetimes of a prvalue of the given `type`,
+// unlike ObjectLifetimes::FromTypeLifetimes, which assumes a glvalue.
+ValueLifetimes ValueLifetimes::FromTypeLifetimes(
+    TypeLifetimesRef& type_lifetimes, clang::QualType type) {
+  assert(!type.isNull());
+
+  ValueLifetimes ret;
+
+  llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
+  if (!template_args.empty()) {
+    // Since we are simulating reversing a post-order visit, we need to
+    // extract template arguments in reverse order.
+    for (size_t i = template_args.size(); i-- > 0;) {
+      const clang::TemplateArgument& arg = template_args[i];
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+        ret.template_argument_lifetimes_.push_back(
+            FromTypeLifetimes(type_lifetimes, arg.getAsType()));
+      } else {
+        ret.template_argument_lifetimes_.push_back(std::nullopt);
+      }
+    }
+    std::reverse(ret.template_argument_lifetimes_.begin(),
+                 ret.template_argument_lifetimes_.end());
+    return ret;
+  }
+
+  clang::QualType pointee_type = type->getPointeeType();
+  if (!pointee_type.isNull()) {
+    ret.pointee_lifetimes_ = std::make_unique<ObjectLifetimes>(
+        ObjectLifetimes::FromTypeLifetimes(type_lifetimes, pointee_type));
+  }
   return ret;
 }
 
@@ -149,68 +214,13 @@ const ObjectLifetimes& ObjectLifetimes::GetPointeeLifetimes() const {
   return *value_lifetimes_.pointee_lifetimes_;
 }
 
-std::string ObjectLifetimes::ValueLifetimes::DebugString() const {
-  std::string ret;
-  if (!template_argument_lifetimes_.empty()) {
-    std::vector<std::string> tmpl_arg_strings;
-    for (const std::optional<ObjectLifetimes::ValueLifetimes>& tmpl_arg :
-         template_argument_lifetimes_) {
-      if (tmpl_arg) {
-        tmpl_arg_strings.push_back(tmpl_arg->DebugString());
-      } else {
-        tmpl_arg_strings.push_back("");
-      }
-    }
-    absl::StrAppend(&ret, "<", absl::StrJoin(tmpl_arg_strings, ", "), ">");
-  }
-  if (pointee_lifetimes_) {
-    absl::StrAppend(&ret, " -> ", pointee_lifetimes_->DebugString());
-  }
-  return ret;
-}
-
-// Here, `type_lifetimes` are the lifetimes of a prvalue of the given `type`,
-// unlike ObjectLifetimes::FromTypeLifetimes, which assumes a glvalue.
-ObjectLifetimes::ValueLifetimes
-ObjectLifetimes::ValueLifetimes::FromTypeLifetimes(
-    TypeLifetimesRef& type_lifetimes, clang::QualType type) {
-  assert(!type.isNull());
-
-  ObjectLifetimes::ValueLifetimes ret;
-
-  llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
-  if (!template_args.empty()) {
-    // Since we are simulating reversing a post-order visit, we need to
-    // extract template arguments in reverse order.
-    for (size_t i = template_args.size(); i-- > 0;) {
-      const clang::TemplateArgument& arg = template_args[i];
-      if (arg.getKind() == clang::TemplateArgument::Type) {
-        ret.template_argument_lifetimes_.push_back(
-            FromTypeLifetimes(type_lifetimes, arg.getAsType()));
-      } else {
-        ret.template_argument_lifetimes_.push_back(std::nullopt);
-      }
-    }
-    std::reverse(ret.template_argument_lifetimes_.begin(),
-                 ret.template_argument_lifetimes_.end());
-    return ret;
-  }
-
-  clang::QualType pointee_type = type->getPointeeType();
-  if (!pointee_type.isNull()) {
-    ret.pointee_lifetimes_ = std::make_unique<ObjectLifetimes>(
-        ObjectLifetimes::FromTypeLifetimes(type_lifetimes, pointee_type));
-  }
-  return ret;
-}
-
 }  // namespace devtools_rust
 
 namespace llvm {
 
 bool DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
-    const devtools_rust::ObjectLifetimes::ValueLifetimes& lhs,
-    const devtools_rust::ObjectLifetimes::ValueLifetimes& rhs) {
+    const devtools_rust::ValueLifetimes& lhs,
+    const devtools_rust::ValueLifetimes& rhs) {
   if ((lhs.pointee_lifetimes_ == nullptr) !=
       (rhs.pointee_lifetimes_ == nullptr)) {
     return false;
@@ -237,7 +247,7 @@ bool DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
 }
 
 unsigned DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
-    const devtools_rust::ObjectLifetimes::ValueLifetimes& lifetime_node) {
+    const devtools_rust::ValueLifetimes& lifetime_node) {
   llvm::hash_code hash = 0;
   if (lifetime_node.pointee_lifetimes_) {
     hash = getHashValue(*lifetime_node.pointee_lifetimes_);

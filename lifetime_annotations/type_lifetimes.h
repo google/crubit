@@ -46,7 +46,47 @@ std::string DebugString(
 TypeLifetimes CreateLifetimesForType(
     clang::QualType type, std::function<Lifetime()> lifetime_factory);
 
+class ObjectLifetimes;
+
+// Represents the lifetimes of a value; these may be 0 for non-reference-like
+// types, 1 for pointers/references, and an arbitrary number for structs with
+// template arguments/lifetime parameters.
+// This is a more structured representation than TypeLifetimes that is easier
+// to query.
+class ValueLifetimes {
+ public:
+  ValueLifetimes() = default;
+
+  ValueLifetimes(const ValueLifetimes& other) { *this = other; }
+
+  ValueLifetimes& operator=(const ValueLifetimes& other);
+
+  std::string DebugString() const;
+
+ private:
+  static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
+                                          clang::QualType type);
+
+  const std::optional<ValueLifetimes>& GetTemplateArgumentLifetimes(
+      const clang::SubstTemplateTypeParmType* targ) const {
+    size_t template_arg_idx = targ->getReplacedParameter()->getIndex();
+    assert(template_arg_idx < template_argument_lifetimes_.size());
+    return template_argument_lifetimes_[template_arg_idx];
+  }
+
+  // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
+  // is non-empty.
+  std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
+  std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes_;
+  // TODO(veluca): add lifetime parameters here.
+
+  friend class ObjectLifetimes;
+  friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
+};
+
 // Represents all the lifetimes of an object.
+// This is a more structured representation than TypeLifetimes that is easier
+// to query.
 class ObjectLifetimes {
  public:
   // Constructs the ObjectLifetimes corresponding to the given `type_lifetimes`
@@ -76,47 +116,6 @@ class ObjectLifetimes {
 
  private:
   ObjectLifetimes() = default;
-
-  // Represents the lifetimes of a value; these may be 0 for non-reference-like
-  // types, 1 for pointers/references, and an arbitrary number for structs with
-  // template arguments/lifetime parameters.
-  class ValueLifetimes {
-   public:
-    ValueLifetimes() = default;
-
-    ValueLifetimes(const ValueLifetimes& other) { *this = other; }
-
-    ValueLifetimes& operator=(const ValueLifetimes& other) {
-      template_argument_lifetimes_ = other.template_argument_lifetimes_;
-      pointee_lifetimes_ =
-          other.pointee_lifetimes_
-              ? std::make_unique<ObjectLifetimes>(*other.pointee_lifetimes_)
-              : nullptr;
-      return *this;
-    }
-
-    std::string DebugString() const;
-
-   private:
-    static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
-                                            clang::QualType type);
-
-    const std::optional<ValueLifetimes>& GetTemplateArgumentLifetimes(
-        const clang::SubstTemplateTypeParmType* targ) const {
-      size_t template_arg_idx = targ->getReplacedParameter()->getIndex();
-      assert(template_arg_idx < template_argument_lifetimes_.size());
-      return template_argument_lifetimes_[template_arg_idx];
-    }
-
-    // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
-    // is non-empty.
-    std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
-    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes_;
-    // TODO(veluca): add lifetime parameters here.
-
-    friend class ObjectLifetimes;
-    friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
-  };
 
   friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
   friend class ValueLifetimes;
@@ -164,12 +163,11 @@ struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
   }
 
  private:
-  static bool isEqual(
-      const devtools_rust::ObjectLifetimes::ValueLifetimes& lhs,
-      const devtools_rust::ObjectLifetimes::ValueLifetimes& rhs);
+  static bool isEqual(const devtools_rust::ValueLifetimes& lhs,
+                      const devtools_rust::ValueLifetimes& rhs);
 
   static unsigned getHashValue(
-      const devtools_rust::ObjectLifetimes::ValueLifetimes& lifetime_node);
+      const devtools_rust::ValueLifetimes& lifetime_node);
 };
 
 }  // namespace llvm
