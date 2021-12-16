@@ -63,6 +63,13 @@ class ValueLifetimes {
 
   std::string DebugString() const;
 
+  // Returns the type of the value.
+  clang::QualType Type() const { return type_; }
+
+  // Returns the ObjectLifetimes of the pointed-to object. Type() must be a
+  // pointer or reference type.
+  const ObjectLifetimes& GetPointeeLifetimes() const;
+
  private:
   static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
                                           clang::QualType type);
@@ -79,6 +86,7 @@ class ValueLifetimes {
   std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
   std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes_;
   // TODO(veluca): add lifetime parameters here.
+  clang::QualType type_;
 
   friend class ObjectLifetimes;
   friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
@@ -96,6 +104,12 @@ class ObjectLifetimes {
   static ObjectLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
                                            clang::QualType type);
 
+  // Returns the lifetime of the object itself.
+  Lifetime GetLifetime() const { return lifetime_; }
+
+  // Returns the lifetime of the contained value.
+  const ValueLifetimes& GetValueLifetimes() const { return value_lifetimes_; }
+
   std::string DebugString() const;
 
   // Returns the ObjectLifetimes for an object of a given type, whose lifetimes
@@ -104,16 +118,6 @@ class ObjectLifetimes {
   // `type` must be a record type (class, struct or union).
   ObjectLifetimes GetRecordObjectLifetimes(clang::QualType type) const;
 
-  // Returns the ObjectLifetimes of the pointed-to object. Type() must be a
-  // pointer or reference type.
-  const ObjectLifetimes& GetPointeeLifetimes() const;
-
-  // Returns the lifetime of the object itself.
-  Lifetime GetLifetime() const { return lifetime_; }
-
-  // Returns the type of the object.
-  clang::QualType Type() const { return type_; }
-
  private:
   ObjectLifetimes() = default;
 
@@ -121,7 +125,6 @@ class ObjectLifetimes {
   friend class ValueLifetimes;
   Lifetime lifetime_;
   ValueLifetimes value_lifetimes_;
-  clang::QualType type_;
 };
 
 const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
@@ -149,17 +152,14 @@ struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
                       const devtools_rust::ObjectLifetimes& rhs) {
     return DenseMapInfo<devtools_rust::Lifetime>::isEqual(lhs.lifetime_,
                                                           rhs.lifetime_) &&
-           isEqual(lhs.value_lifetimes_, rhs.value_lifetimes_) &&
-           lhs.type_ == rhs.type_;
+           isEqual(lhs.value_lifetimes_, rhs.value_lifetimes_);
   }
 
   static unsigned getHashValue(
       const devtools_rust::ObjectLifetimes& object_lifetimes) {
     unsigned hash = DenseMapInfo<devtools_rust::Lifetime>::getHashValue(
         object_lifetimes.lifetime_);
-    hash = hash_combine(hash, getHashValue(object_lifetimes.value_lifetimes_));
-    return hash_combine(hash, DenseMapInfo<clang::QualType>::getHashValue(
-                                  object_lifetimes.type_));
+    return hash_combine(hash, getHashValue(object_lifetimes.value_lifetimes_));
   }
 
  private:

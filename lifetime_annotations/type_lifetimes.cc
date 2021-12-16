@@ -56,6 +56,7 @@ TypeLifetimes CreateLifetimesForType(
 }
 
 ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
+  type_ = other.type_;
   template_argument_lifetimes_ = other.template_argument_lifetimes_;
   pointee_lifetimes_ =
       other.pointee_lifetimes_
@@ -91,6 +92,7 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
   assert(!type.isNull());
 
   ValueLifetimes ret;
+  ret.type_ = type;
 
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
   if (!template_args.empty()) {
@@ -118,12 +120,16 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
   return ret;
 }
 
+const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
+  assert(!type_->getPointeeType().isNull());
+  return *pointee_lifetimes_;
+}
+
 ObjectLifetimes ObjectLifetimes::FromTypeLifetimes(
     TypeLifetimesRef& type_lifetimes, clang::QualType type) {
   assert(!type_lifetimes.empty());
   assert(!type.isNull());
   ObjectLifetimes ret;
-  ret.type_ = type;
   ret.lifetime_ = type_lifetimes.back();
   type_lifetimes = type_lifetimes.drop_back();
   ret.value_lifetimes_ =
@@ -152,14 +158,14 @@ const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
 
 ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
     clang::QualType type) const {
-  assert(type_->isRecordType());
   ObjectLifetimes ret;
+  assert(value_lifetimes_.Type()->isRecordType());
 
   // The object of the `type` (i.e. field or a base class) basically has the
   // same lifetime as the struct.
   // TODO(veluca): this needs adaptation to lifetime parameters.
   ret.lifetime_ = lifetime_;
-  ret.type_ = type;
+  ret.value_lifetimes_.type_ = type;
 
   // `type` is one of a template argument, a struct, a pointer, or a type
   // with no lifetimes (other than its own).
@@ -209,11 +215,6 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
   return ret;
 }
 
-const ObjectLifetimes& ObjectLifetimes::GetPointeeLifetimes() const {
-  assert(!type_->getPointeeType().isNull());
-  return *value_lifetimes_.pointee_lifetimes_;
-}
-
 }  // namespace devtools_rust
 
 namespace llvm {
@@ -221,6 +222,9 @@ namespace llvm {
 bool DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
     const devtools_rust::ValueLifetimes& lhs,
     const devtools_rust::ValueLifetimes& rhs) {
+  if (lhs.type_ != rhs.type_) {
+    return false;
+  }
   if ((lhs.pointee_lifetimes_ == nullptr) !=
       (rhs.pointee_lifetimes_ == nullptr)) {
     return false;
@@ -257,7 +261,8 @@ unsigned DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
       hash = hash_combine(hash, getHashValue(*tmpl_lifetime));
     }
   }
-  return hash;
+  return hash_combine(
+      hash, DenseMapInfo<clang::QualType>::getHashValue(lifetime_node.type_));
 }
 
 }  // namespace llvm
