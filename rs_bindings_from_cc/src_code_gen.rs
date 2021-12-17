@@ -230,6 +230,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                     }
                 }
                 SpecialMemberDefinition::NontrivialUserDefined => {
+                    // Note: to avoid double-destruction of the fields, they are all wrapped in
+                    // ManuallyDrop in this case. See `generate_record`.
                     quote! {
                         #doc_comment
                         impl Drop for #type_name {
