@@ -21,6 +21,14 @@ pub struct DocCommentSlashes {
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Nested classes are not supported yet
 
+impl DocCommentSlashes {
+    /// A static method
+    #[inline(always)]
+    pub fn static_method() -> i32 {
+        unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Parameter type 'struct DocCommentSlashes &&' is not supported
@@ -39,15 +47,23 @@ pub struct DocCommentBang {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=15
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=18
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=15
+impl DocCommentBang {
+    /// A static method
+    #[inline(always)]
+    pub fn static_method() -> i32 {
+        unsafe { crate::detail::__rust_thunk___ZN14DocCommentBang13static_methodEv() }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=18
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
 // Parameter type 'struct DocCommentBang &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=15
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=18
 // Error while generating bindings for item 'DocCommentBang::operator=':
 // Parameter type 'struct DocCommentBang &&' is not supported
 
@@ -61,15 +77,23 @@ pub struct MultilineCommentTwoStars {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=23
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=29
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=23
+impl MultilineCommentTwoStars {
+    /// A static method
+    #[inline(always)]
+    pub fn static_method() -> i32 {
+        unsafe { crate::detail::__rust_thunk___ZN24MultilineCommentTwoStars13static_methodEv() }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=29
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=23
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=29
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
@@ -83,15 +107,23 @@ pub struct LineComment {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=31
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=40
 // Error while generating bindings for item 'LineComment::LineComment':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=31
+impl LineComment {
+    /// A static method
+    #[inline(always)]
+    pub fn static_method() -> i32 {
+        unsafe { crate::detail::__rust_thunk___ZN11LineComment13static_methodEv() }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=40
 // Error while generating bindings for item 'LineComment::LineComment':
 // Parameter type 'struct LineComment &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=31
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=40
 // Error while generating bindings for item 'LineComment::operator=':
 // Parameter type 'struct LineComment &&' is not supported
 
@@ -105,15 +137,23 @@ pub struct MultilineOneStar {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+impl MultilineOneStar {
+    /// A static method
+    #[inline(always)]
+    pub fn static_method() -> i32 {
+        unsafe { crate::detail::__rust_thunk___ZN16MultilineOneStar13static_methodEv() }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'MultilineOneStar::operator=':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 
@@ -128,16 +168,22 @@ pub fn foo() -> i32 {
 mod detail {
     use super::*;
     extern "C" {
+        #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(__this: *mut DocCommentSlashes);
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
             __this: *mut DocCommentSlashes,
             __param_0: *const DocCommentSlashes,
         );
+        #[link_name = "_ZN14DocCommentBang13static_methodEv"]
+        pub(crate) fn __rust_thunk___ZN14DocCommentBang13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(__this: *mut DocCommentBang);
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1ERKS_(
             __this: *mut DocCommentBang,
             __param_0: *const DocCommentBang,
         );
+        #[link_name = "_ZN24MultilineCommentTwoStars13static_methodEv"]
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStars13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
             __this: *mut MultilineCommentTwoStars,
         );
@@ -145,11 +191,15 @@ mod detail {
             __this: *mut MultilineCommentTwoStars,
             __param_0: *const MultilineCommentTwoStars,
         );
+        #[link_name = "_ZN11LineComment13static_methodEv"]
+        pub(crate) fn __rust_thunk___ZN11LineComment13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut LineComment);
         pub(crate) fn __rust_thunk___ZN11LineCommentC1ERKS_(
             __this: *mut LineComment,
             __param_0: *const LineComment,
         );
+        #[link_name = "_ZN16MultilineOneStar13static_methodEv"]
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStar13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(__this: *mut MultilineOneStar);
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1ERKS_(
             __this: *mut MultilineOneStar,

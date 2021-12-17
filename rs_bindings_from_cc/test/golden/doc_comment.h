@@ -9,6 +9,9 @@
 ///
 ///  * with three slashes
 struct DocCommentSlashes {
+  /// A static method
+  static int static_method();
+
   /// A field
   int i;
 };
@@ -17,6 +20,9 @@ struct DocCommentSlashes {
 //!
 //!  * with slashes and bang
 struct DocCommentBang {
+  //! A static method
+  static int static_method();
+
   //! A field
   int i;
 };
@@ -25,6 +31,9 @@ struct DocCommentBang {
 
      * with two stars */
 struct MultilineCommentTwoStars {
+  /** A static method */
+  static int static_method();
+
   /** A field */
   int i;
 };
@@ -33,6 +42,9 @@ struct MultilineCommentTwoStars {
 //
 //  * with two slashes
 struct LineComment {
+  // A static method
+  static int static_method();
+
   // A field
   int i;
 };
@@ -41,6 +53,9 @@ struct LineComment {
 
     * with one star */
 struct MultilineOneStar {
+  /* A static method */
+  static int static_method();
+
   /* A field */
   int i;
 };
