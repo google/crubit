@@ -197,6 +197,17 @@ pub struct MemberFuncMetadata {
     pub instance_method_metadata: Option<InstanceMethodMetadata>,
 }
 
+impl MemberFuncMetadata {
+    pub fn find_record<'a>(&self, ir: &'a IR) -> Result<&'a Record> {
+        ir.find_decl(self.record_id).and_then(|decl| decl.try_into()).with_context(|| {
+            format!(
+                "DeclId {:?} from MemberFuncMetadata::record_id doesn't refer to a Record",
+                self.record_id
+            )
+        })
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]

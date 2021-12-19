@@ -16,4 +16,9 @@ mod tests {
     fn test_static_method_that_multiplies_its_args() {
         assert_eq!(42 * 789, SomeClass::static_method_that_multiplies_its_args(42, 789));
     }
+
+    #[test]
+    fn test_static_inline_method() {
+        assert_eq!(42 * 456, SomeClass::static_inline_method(456));
+    }
 }
