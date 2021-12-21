@@ -117,6 +117,48 @@ fn test_record_member_variable_access_specifiers() {
 }
 
 #[test]
+fn test_record_private_member_functions_not_present() {
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          public:
+            int public_method();
+          protected:
+            int protected_method();
+          private:
+            int private_method();
+        };
+    ",
+    )
+    .unwrap();
+
+    assert_ir_matches!(ir, quote! { Func { name: "public_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { name: "protected_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { name: "private_method" ... } });
+}
+
+#[test]
+fn test_record_private_static_member_functions_not_present() {
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          public:
+            static int public_method();
+          protected:
+            static int protected_method();
+          private:
+            static int private_method();
+        };
+    ",
+    )
+    .unwrap();
+
+    assert_ir_matches!(ir, quote! { Func { name: "public_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { name: "protected_method" ... } });
+    assert_ir_not_matches!(ir, quote! { Func { name: "private_method" ... } });
+}
+
+#[test]
 fn test_record_special_member_access_specifiers() {
     let ir = ir_from_cc(
         "
