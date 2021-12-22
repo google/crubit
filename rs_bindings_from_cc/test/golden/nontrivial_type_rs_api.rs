@@ -80,24 +80,9 @@ impl !Unpin for NontrivialMembers {}
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Parameter type 'struct NontrivialMembers &&' is not supported
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
-// Error while generating bindings for item 'NontrivialMembers::operator=':
-// Parameter type 'struct NontrivialMembers &&' is not supported
-
 impl Drop for NontrivialMembers {
     #[inline(always)]
     fn drop(&mut self) {}
-}
-
-impl Default for NontrivialMembers {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(tmp.as_mut_ptr());
-            tmp.assume_init()
-        }
-    }
 }
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=36
@@ -115,20 +100,7 @@ mod detail {
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial);
-        pub(crate) fn __rust_thunk___ZN10NontrivialC1ERKS_(
-            __this: *mut Nontrivial,
-            __param_0: *const Nontrivial,
-        );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline);
-        pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1ERKS_(
-            __this: *mut NontrivialInline,
-            __param_0: *const NontrivialInline,
-        );
-        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1ERKS_(
-            __this: *mut NontrivialMembers,
-            __param_0: *const NontrivialMembers,
-        );
-        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev(__this: *mut NontrivialMembers);
     }
 }
 

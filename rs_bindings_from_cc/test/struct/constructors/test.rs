@@ -18,6 +18,11 @@ mod tests {
     }
 
     #[test]
+    fn test_deleted_constructors() {
+        assert_not_impl_all!(StructWithDeletedConstructor: Default);
+    }
+
+    #[test]
     fn test_private_constructors() {
         assert_not_impl_all!(StructWithPrivateConstructor: Default);
     }

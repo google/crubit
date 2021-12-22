@@ -85,23 +85,8 @@ pub struct FieldTypeTestStruct {
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
 
-impl Default for FieldTypeTestStruct {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1Ev(tmp.as_mut_ptr());
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Parameter type 'struct FieldTypeTestStruct &&' is not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=10
-// Error while generating bindings for item 'FieldTypeTestStruct::operator=':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
 
 #[inline(always)]
@@ -119,7 +104,6 @@ mod detail {
             __this: *mut SomeStruct,
             __param_0: *const SomeStruct,
         );
-        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1Ev(__this: *mut FieldTypeTestStruct);
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
             __this: *mut FieldTypeTestStruct,
             __param_0: *const FieldTypeTestStruct,

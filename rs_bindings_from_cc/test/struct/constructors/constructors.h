@@ -13,8 +13,11 @@ struct StructWithUserProvidedConstructor {
   int int_field;
 };
 
-// TODO(b/200065650): Add StructWithDeletedConstructors test.
-// Hint: assert_not_impl_all!(StructWithDeletedConstructors: Default);
+struct StructWithDeletedConstructor {
+  StructWithDeletedConstructor() = delete;
+
+  int int_field;
+};
 
 struct StructWithPrivateConstructor {
  private:

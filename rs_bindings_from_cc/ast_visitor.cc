@@ -89,6 +89,7 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   if (!IsFromCurrentTarget(function_decl)) return true;
+  if (function_decl->isDeleted()) return true;
 
   devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
   llvm::Expected<devtools_rust::FunctionLifetimes> lifetimes =

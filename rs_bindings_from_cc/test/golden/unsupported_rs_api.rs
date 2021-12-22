@@ -91,10 +91,6 @@ impl Default for ContainingStruct {
 mod detail {
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1ERKS_(
-            __this: *mut NontrivialCustomType,
-            __param_0: *const NontrivialCustomType,
-        );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(__this: *mut ContainingStruct);
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1ERKS_(
             __this: *mut ContainingStruct,
