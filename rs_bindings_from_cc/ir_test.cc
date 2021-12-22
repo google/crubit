@@ -128,7 +128,8 @@ TEST(IrTest, IR) {
                         "definition": "Trivial",
                         "access": "Public"
                     },
-                    "is_trivial_abi": true
+                    "is_trivial_abi": true,
+                    "is_final": true
                 }}
             ]
         })j");
@@ -175,7 +176,8 @@ TEST(IrTest, IR) {
                                     .definition =
                                         SpecialMemberFunc::Definition::kTrivial,
                                     .access = kPublic},
-                            .is_trivial_abi = true}}};
+                            .is_trivial_abi = true,
+                            .is_final = true}}};
   EXPECT_THAT(ir.ToJson(), EqualsJson(expected));
 }
 

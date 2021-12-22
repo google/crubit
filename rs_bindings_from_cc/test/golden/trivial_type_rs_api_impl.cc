@@ -27,6 +27,14 @@ extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
     TrivialWithDefaulted* __this) {
   std ::destroy_at(__this);
 }
+extern "C" void __rust_thunk___ZN15TrivialNonfinalC1Ev(
+    TrivialNonfinal* __this) {
+  construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN15TrivialNonfinalD1Ev(
+    TrivialNonfinal* __this) {
+  std ::destroy_at(__this);
+}
 
 static_assert(sizeof(Trivial) == 4);
 static_assert(alignof(Trivial) == 4);
@@ -35,3 +43,7 @@ static_assert(offsetof(Trivial, trivial_field) * 8 == 0);
 static_assert(sizeof(TrivialWithDefaulted) == 4);
 static_assert(alignof(TrivialWithDefaulted) == 4);
 static_assert(offsetof(TrivialWithDefaulted, trivial_field) * 8 == 0);
+
+static_assert(sizeof(TrivialNonfinal) == 4);
+static_assert(alignof(TrivialNonfinal) == 4);
+static_assert(offsetof(TrivialNonfinal, trivial_field) * 8 == 0);

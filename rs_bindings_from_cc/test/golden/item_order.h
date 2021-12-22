@@ -5,13 +5,13 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
 
-struct FirstStruct {
+struct FirstStruct final {
   int field;
 };
 
 inline int first_func() { return 42; }
 
-struct SecondStruct {
+struct SecondStruct final {
   int field;
 };
 

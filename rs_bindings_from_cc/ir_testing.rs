@@ -114,7 +114,7 @@ pub fn ir_public_trivial_special() -> SpecialMemberFunc {
 
 /// Creates a simple `Item::Record` with a given name.
 pub fn ir_record(name: &str) -> Record {
-    let ir = ir_from_cc("struct REPLACEME {};").unwrap();
+    let ir = ir_from_cc("struct REPLACEME final {};").unwrap();
     for item in ir.take_items() {
         if let Item::Record(mut record) = item {
             record.identifier = ir_id(name);

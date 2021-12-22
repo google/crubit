@@ -9,7 +9,7 @@
 
 Trivial UsesImportedType(Trivial t);
 
-struct UserOfImportedType {
+struct UserOfImportedType final {
   Trivial* trivial;
 };
 

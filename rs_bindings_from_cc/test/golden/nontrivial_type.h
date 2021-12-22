@@ -10,7 +10,7 @@
 //
 // This makes it nontrivial for calls (so not trivially relocatable), as well
 // as specifically giving it a nontrivial move constructor and destructor.
-struct Nontrivial {
+struct Nontrivial final {
   Nontrivial(Nontrivial&&);
   ~Nontrivial();
 
@@ -21,7 +21,7 @@ struct Nontrivial {
 //
 // This makes it nontrivial for calls (so not trivially relocatable), as well
 // as specifically giving it a nontrivial move constructor and destructor.
-struct NontrivialInline {
+struct NontrivialInline final {
   NontrivialInline(NontrivialInline&&) {}
   ~NontrivialInline() {}
 
@@ -33,7 +33,7 @@ struct NontrivialInline {
 // This changes how the destructor / drop impl work -- instead of calling
 // the destructor for NontrivialMembers, it just calls the destructors for
 // each field.
-struct NontrivialMembers {
+struct NontrivialMembers final {
   Nontrivial nontrivial_member;
 };
 

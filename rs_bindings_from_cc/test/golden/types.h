@@ -8,10 +8,9 @@
 #include <cstddef>
 #include <cstdint>
 
-struct SomeStruct {
-};
+struct SomeStruct final {};
 
-struct FieldTypeTestStruct {
+struct FieldTypeTestStruct final {
   bool bool_field;
   char char_field;
 

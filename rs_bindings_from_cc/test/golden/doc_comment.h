@@ -8,7 +8,7 @@
 /// Doc comment
 ///
 ///  * with three slashes
-struct DocCommentSlashes {
+struct DocCommentSlashes final {
   /// The default constructor
   DocCommentSlashes();
 
@@ -22,7 +22,7 @@ struct DocCommentSlashes {
 //! Doc comment
 //!
 //!  * with slashes and bang
-struct DocCommentBang {
+struct DocCommentBang final {
   //! A field
   int i;
 };
@@ -30,7 +30,7 @@ struct DocCommentBang {
 /** Multiline comment
 
      * with two stars */
-struct MultilineCommentTwoStars {
+struct MultilineCommentTwoStars final {
   /** A field */
   int i;
 };
@@ -38,7 +38,7 @@ struct MultilineCommentTwoStars {
 // Line comment
 //
 //  * with two slashes
-struct LineComment {
+struct LineComment final {
   // A field
   int i;
 };
@@ -46,7 +46,7 @@ struct LineComment {
 /* Multiline comment
 
     * with one star */
-struct MultilineOneStar {
+struct MultilineOneStar final {
   /* A field */
   int i;
 };

@@ -81,11 +81,11 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ref_field: *const SomeStruct,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=10
+// rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/types.h;l=10
+// rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
 

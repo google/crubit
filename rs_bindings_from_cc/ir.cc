@@ -284,6 +284,7 @@ nlohmann::json Record::ToJson() const {
   record["move_constructor"] = move_constructor.ToJson();
   record["destructor"] = destructor.ToJson();
   record["is_trivial_abi"] = is_trivial_abi;
+  record["is_final"] = is_final;
 
   nlohmann::json item;
   item["Record"] = std::move(record);

@@ -7,13 +7,13 @@
 
 // Implicitly defined special member functions are trivial on a struct with
 // only trivial members.
-struct Trivial {
+struct Trivial final {
   int trivial_field;
 };
 
 // Defaulted special member functions are trivial on a struct with only trivial
 // members.
-struct TrivialWithDefaulted {
+struct TrivialWithDefaulted final {
   TrivialWithDefaulted() = default;
 
   TrivialWithDefaulted(const TrivialWithDefaulted&) = default;
@@ -26,8 +26,18 @@ struct TrivialWithDefaulted {
   int trivial_field;
 };
 
-void TakesByValue(Trivial trivial);
+// This struct is trivial, and therefore trivially relocatable etc., but still
+// not safe to pass by reference as it is not final.
+struct TrivialNonfinal {
+  int trivial_field;
+};
 
+void TakesByValue(Trivial trivial);
 void TakesWithDefaultedByValue(TrivialWithDefaulted trivial);
+void TakesTrivialNonfinalByValue(TrivialNonfinal trivial);
+
+void TakesByReference(Trivial& trivial);
+void TakesWithDefaultedByReference(TrivialWithDefaulted& trivial);
+void TakesTrivialNonfinalByReference(TrivialNonfinal& trivial);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_

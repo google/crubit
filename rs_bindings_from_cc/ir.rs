@@ -279,11 +279,45 @@ pub struct Record {
     pub move_constructor: SpecialMemberFunc,
     pub destructor: SpecialMemberFunc,
     pub is_trivial_abi: bool,
+    pub is_final: bool,
 }
 
 impl Record {
     pub fn owning_crate_name(&self) -> Result<&str> {
         self.owning_target.target_name()
+    }
+
+    /// Whether this type has Rust-like object semantics for mutating
+    /// assignment, and can be passed by mut reference as a result.
+    ///
+    /// If a type `T` is mut reference safe, it can be possed as a `&mut T`
+    /// safely. Otherwise, mutable references must use `Pin<&mut T>`.
+    ///
+    /// Conditions:
+    ///
+    /// 1. It is trivially relocatable, and thus can be passed by value and have
+    ///    its memory directly mutated by Rust using memcpy-like
+    ///    assignment/swap.
+    ///
+    /// 2. It cannot overlap with any other objects. In particular, it cannot be
+    ///    inherited from, as inheritance allows for the tail padding to be
+    ///    reused by other objects.
+    ///
+    ///    (In future versions, we could also include types which are POD for
+    ///    the purpose of layout, but this is less predictable to C++ users,
+    ///    and ABI-specific.)
+    ///
+    ///    We are assuming, for the moment, that no object is stored in a
+    ///    `[[no_unique_address]]` variable. Much like packed structs and
+    ///    the like, users of `[[no_unique_address]]` must be very careful
+    ///    when passing mutable references to Rust.
+    ///
+    /// Described in more detail at: docs/unpin
+    ///
+    /// TODO(b/200067242): Actually force mut references to !is_unpin to be
+    /// Pin<&mut T>.
+    pub fn is_unpin(&self) -> bool {
+        self.is_trivial_abi && self.is_final
     }
 }
 

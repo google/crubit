@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_MULTIPLE_TARGETS_DEPENDENCY_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_MULTIPLE_TARGETS_DEPENDENCY_H_
 
-struct Dependency {
+struct Dependency final {
   int magic;
 };
 

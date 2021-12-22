@@ -362,7 +362,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         quote! {#[derive( #(#derives),* )]}
     };
     let unpin_impl;
-    if record.is_trivial_abi {
+    if record.is_unpin() {
         unpin_impl = quote! {};
     } else {
         // negative_impls are necessary for universal initialization due to Rust's
@@ -1017,6 +1017,15 @@ mod tests {
         assert_eq!(generate_copy_derives(&record), &[""; 0]);
     }
 
+    /// A type can be unsafe to pass in mut references from C++, but still
+    /// Clone+Copy when handled by value.
+    #[test]
+    fn test_copy_derives_not_is_mut_reference_safe() {
+        let mut record = ir_record("S");
+        record.is_final = false;
+        assert_eq!(generate_copy_derives(&record), &["Clone", "Copy"]);
+    }
+
     #[test]
     fn test_copy_derives_ctor_nonpublic() {
         let mut record = ir_record("S");
@@ -1177,6 +1186,26 @@ mod tests {
                 extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(Polymorphic * __this)
             }
         );
+        Ok(())
+    }
+
+    /// A trivially relocatable final struct is safe to use in Rust as normal,
+    /// and is Unpin.
+    #[test]
+    fn test_no_negative_impl_unpin() -> Result<()> {
+        let ir = ir_from_cc("struct Trivial final {};")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_not_matches!(rs_api, quote! {impl !Unpin});
+        Ok(())
+    }
+
+    /// A non-final struct, even if it's trivial, is not usable by mut
+    /// reference, and so is !Unpin.
+    #[test]
+    fn test_negative_impl_unpin_nonfinal() -> Result<()> {
+        let ir = ir_from_cc("struct Nonfinal {};")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(rs_api, quote! {impl !Unpin for Nonfinal {}});
         Ok(())
     }
 

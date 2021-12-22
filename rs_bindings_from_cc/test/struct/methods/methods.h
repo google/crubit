@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 
-class SomeClass {
+class SomeClass final {
  public:
   static SomeClass static_factory_method(int int_var_initial_value);
   static int static_method_that_multiplies_its_args(int x, int y);

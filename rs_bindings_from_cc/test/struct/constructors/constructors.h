@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 
-struct StructWithUserProvidedConstructor {
+struct StructWithUserProvidedConstructor final {
   StructWithUserProvidedConstructor();
   // TODO(lukasza): Add a copy constructor (to be mapped to Clone?).
   // TODO(b/208946210): Add a "conversion" constructor (to be mapped to From).
@@ -13,20 +13,20 @@ struct StructWithUserProvidedConstructor {
   int int_field;
 };
 
-struct StructWithDeletedConstructor {
+struct StructWithDeletedConstructor final {
   StructWithDeletedConstructor() = delete;
 
   int int_field;
 };
 
-struct StructWithPrivateConstructor {
+struct StructWithPrivateConstructor final {
  private:
   StructWithPrivateConstructor();
 
   int int_field;
 };
 
-struct StructWithExplicitlyDefaultedConstructor {
+struct StructWithExplicitlyDefaultedConstructor final {
   StructWithExplicitlyDefaultedConstructor() = default;
 
   int field_with_explicit_initializer = 123;

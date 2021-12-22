@@ -9,7 +9,7 @@
 
 int& free_function(int& p1);
 
-struct S {
+struct S final {
   int& method(int& p1, int& p2);
 };
 

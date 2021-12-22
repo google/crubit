@@ -381,6 +381,12 @@ struct Record {
   //  * https://eel.is/c++draft/class.temporary#3
   //  * https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
   bool is_trivial_abi = false;
+
+  // Whether this type is effectively `final`, and cannot be inherited from.
+  //
+  // This can happen because it was explicitly marked final, or because a core
+  // function like the destructor was marked final.
+  bool is_final = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {

@@ -12,7 +12,7 @@
 // a
 
 /// Foo
-struct Foo {
+struct Foo final {
   // Foo a
 
   /// A field
@@ -38,13 +38,13 @@ inline void foo() {
 }
 
 /// Bar
-struct Bar {
+struct Bar final {
   int i;
 };
 
 // d
 
-struct HasNoComments {
+struct HasNoComments final {
   int i;
 };
 

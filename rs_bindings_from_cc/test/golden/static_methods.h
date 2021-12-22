@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_STATIC_METHODS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_STATIC_METHODS_H_
 
-class SomeClass {
+class SomeClass final {
  public:
   // Example of a factory method.
   static SomeClass static_factory_method(int initial_value_of_field);

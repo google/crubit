@@ -298,12 +298,14 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
 
   clang::AccessSpecifier default_access = clang::AS_public;
 
+  bool is_final = true;
   if (auto* cxx_record_decl =
           clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
     sema_.ForceDeclarationOfImplicitMembers(cxx_record_decl);
     if (cxx_record_decl->isClass()) {
       default_access = clang::AS_private;
     }
+    is_final = cxx_record_decl->isEffectivelyFinal();
   }
   std::optional<std::vector<Field>> fields =
       ImportFields(record_decl, default_access);
@@ -326,7 +328,8 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
              .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),
              .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
              .destructor = GetDestructorSpecialMemberFunc(*record_decl),
-             .is_trivial_abi = record_decl->canPassInRegisters()});
+             .is_trivial_abi = record_decl->canPassInRegisters(),
+             .is_final = is_final});
   return true;
 }
 
