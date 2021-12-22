@@ -925,6 +925,25 @@ mod tests {
     }
 
     #[test]
+    fn test_record_static_methods_qualify_call_in_thunk() -> Result<()> {
+        let ir = ir_from_cc(&tokens_to_string(quote! {
+            struct SomeStruct {
+                static inline int some_func() { return 42; }
+            };
+        })?)?;
+
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
+                extern "C" int __rust_thunk___ZN10SomeStruct9some_funcEv() {
+                    return SomeStruct::some_func();
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_struct_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
         assert_rs_not_matches!(generate_rs_api(&ir)?, quote! { SomeStruct });
