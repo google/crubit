@@ -6,15 +6,25 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/types.h"
 
+namespace {
+template <class T, class... Args>
+constexpr T* construct_at(T* p, Args&&... args) {
+  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
+      T(std ::forward<Args>(args)...);
+}
+}  // namespace
+extern "C" void __rust_thunk___ZN10SomeStructC1Ev(SomeStruct* __this) {
+  construct_at(__this);
+}
 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(SomeStruct* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
     FieldTypeTestStruct* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
-  return VoidReturningFunction();
+  VoidReturningFunction();
 }
 
 static_assert(sizeof(SomeStruct) == 1);

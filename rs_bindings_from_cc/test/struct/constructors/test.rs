@@ -26,4 +26,15 @@ mod tests {
     fn test_private_constructors() {
         assert_not_impl_all!(StructWithPrivateConstructor: Default);
     }
+
+    #[test]
+    fn test_explicitly_defaulted_constructor() {
+        assert_impl_all!(StructWithExplicitlyDefaultedConstructor: Default);
+
+        // Default constructor should set uninitialized fields to 0 (real testing here
+        // depends somewhat on MSan).
+        let s: StructWithExplicitlyDefaultedConstructor = Default::default();
+        assert_eq!(0, s.field_with_no_initializer);
+        assert_eq!(123, s.field_with_explicit_initializer);
+    }
 }

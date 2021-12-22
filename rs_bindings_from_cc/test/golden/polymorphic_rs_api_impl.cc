@@ -8,7 +8,18 @@
 
 extern "C" void __rust_thunk___ZN16PolymorphicClassD1Ev(
     PolymorphicClass* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
+}
+namespace {
+template <class T, class... Args>
+constexpr T* construct_at(T* p, Args&&... args) {
+  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
+      T(std ::forward<Args>(args)...);
+}
+}  // namespace
+extern "C" void __rust_thunk___ZN16PolymorphicClassC1Ev(
+    PolymorphicClass* __this) {
+  construct_at(__this);
 }
 
 static_assert(sizeof(PolymorphicClass) == 8);

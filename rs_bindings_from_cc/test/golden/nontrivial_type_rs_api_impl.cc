@@ -8,11 +8,11 @@
 
 extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
     NontrivialInline* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
     NontrivialMembers* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
 }
 
 static_assert(sizeof(Nontrivial) == 4);

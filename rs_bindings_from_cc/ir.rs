@@ -95,6 +95,12 @@ pub struct CcType {
     pub decl_id: Option<DeclId>,
 }
 
+impl CcType {
+    pub fn is_void(&self) -> bool {
+        self.name.as_deref() == Some("void")
+    }
+}
+
 pub trait TypeWithDeclId {
     fn decl_id(&self) -> Option<DeclId>;
 }

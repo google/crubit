@@ -686,6 +686,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
     // See rs_bindings_from_cc/
     // token_stream_printer.rs for a list of supported placeholders.
     let mut thunks = vec![];
+    let mut defined_construct_at = false;
     for func in ir.functions() {
         if can_skip_cc_thunk(&func) {
             continue;
@@ -713,10 +714,40 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             // the bindings, and it can be difficult (impossible?) to spell in the general case. By
             // using destroy_at, we avoid needing to determine or remember what the correct spelling
             // is.
+            UnqualifiedIdentifier::Constructor => {
+                if func.params.len() == 1 {
+                    // Implementation of `construct_at` below has been cargo-culted from
+                    // https://en.cppreference.com/w/cpp/memory/construct_at, because we can't
+                    // always depend on C++20.
+                    // TODO(lukasza): Use `std::construct_at` if generating C++20 or later.
+                    if !defined_construct_at {
+                        defined_construct_at = true;
+                        thunks.push(quote! {
+                            namespace {
+                                template<class T, class... Args>
+                                constexpr T* construct_at( T* p, Args&&... args ) {
+                                    return ::new
+                                        (const_cast<void*>(static_cast<const volatile void*>(p)))
+                                        T(std::forward<Args>(args)...);
+                                }
+                            }  // namespace
+                        })
+                    }
+                    quote! {construct_at}
+                } else {
+                    // TODO(b/208946210): Map some of these constructors to the From trait.
+                    // TODO(b/200066396): Map other constructors (to the Clone trait?).
+                    continue;
+                }
+            }
             UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
-            _ => continue, // TODO(b/200066396): handle other cases
         };
         let return_type_name = format_cc_type(&func.return_type.cc_type, ir)?;
+        let return_stmt = if func.return_type.cc_type.is_void() {
+            quote! {}
+        } else {
+            quote! { return }
+        };
 
         let param_idents =
             func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
@@ -729,7 +760,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
 
         thunks.push(quote! {
             extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
-                return #implementation_function( #( #param_idents ),* );
+                #return_stmt #implementation_function( #( #param_idents ),* );
             }
         });
     }
@@ -931,7 +962,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(SomeStruct * __this) {
-                    return std :: destroy_at (__this) ;
+                    std :: destroy_at (__this) ;
                 }
             }
         );
@@ -1213,6 +1244,43 @@ mod tests {
         let rs_api = generate_rs_api(&ir)?;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_matches!(rs_api, quote! {pub x: i32});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"struct DefaultedConstructor {
+                DefaultedConstructor() = default;
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl Default for DefaultedConstructor {
+                    #[inline(always)]
+                    fn default() -> Self {
+                        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(
+                                tmp.as_mut_ptr());
+                            tmp.assume_init()
+                        }
+                    }
+                }
+            }
+        );
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
+                        DefaultedConstructor* __this) {
+                    construct_at (__this) ;
+                }
+            }
+        );
         Ok(())
     }
 

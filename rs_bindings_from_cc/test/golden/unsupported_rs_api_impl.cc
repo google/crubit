@@ -8,11 +8,22 @@
 
 extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
     NontrivialCustomType* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
+}
+namespace {
+template <class T, class... Args>
+constexpr T* construct_at(T* p, Args&&... args) {
+  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
+      T(std ::forward<Args>(args)...);
+}
+}  // namespace
+extern "C" void __rust_thunk___ZN16ContainingStructC1Ev(
+    ContainingStruct* __this) {
+  construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN16ContainingStructD1Ev(
     ContainingStruct* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
 }
 
 static_assert(sizeof(NontrivialCustomType) == 4);

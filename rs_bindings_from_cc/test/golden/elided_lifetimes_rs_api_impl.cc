@@ -6,9 +6,15 @@
 #include <memory>
 #include "rs_bindings_from_cc/test/golden/elided_lifetimes.h"
 
-extern "C" void __rust_thunk___ZN1SD1Ev(S* __this) {
-  return std ::destroy_at(__this);
+namespace {
+template <class T, class... Args>
+constexpr T* construct_at(T* p, Args&&... args) {
+  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
+      T(std ::forward<Args>(args)...);
 }
+}  // namespace
+extern "C" void __rust_thunk___ZN1SC1Ev(S* __this) { construct_at(__this); }
+extern "C" void __rust_thunk___ZN1SD1Ev(S* __this) { std ::destroy_at(__this); }
 
 static_assert(sizeof(S) == 1);
 static_assert(alignof(S) == 1);

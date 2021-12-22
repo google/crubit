@@ -8,21 +8,42 @@
 
 extern "C" void __rust_thunk___ZN17DocCommentSlashesD1Ev(
     DocCommentSlashes* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
+}
+namespace {
+template <class T, class... Args>
+constexpr T* construct_at(T* p, Args&&... args) {
+  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
+      T(std ::forward<Args>(args)...);
+}
+}  // namespace
+extern "C" void __rust_thunk___ZN14DocCommentBangC1Ev(DocCommentBang* __this) {
+  construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangD1Ev(DocCommentBang* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
+}
+extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
+    MultilineCommentTwoStars* __this) {
+  construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsD1Ev(
     MultilineCommentTwoStars* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
+}
+extern "C" void __rust_thunk___ZN11LineCommentC1Ev(LineComment* __this) {
+  construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN11LineCommentD1Ev(LineComment* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
+}
+extern "C" void __rust_thunk___ZN16MultilineOneStarC1Ev(
+    MultilineOneStar* __this) {
+  construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarD1Ev(
     MultilineOneStar* __this) {
-  return std ::destroy_at(__this);
+  std ::destroy_at(__this);
 }
 extern "C" int __rust_thunk___Z3foov() { return foo(); }
 

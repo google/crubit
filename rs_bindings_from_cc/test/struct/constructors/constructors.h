@@ -26,7 +26,13 @@ struct StructWithPrivateConstructor {
   int int_field;
 };
 
-// TODO(lukasza): Add StructWithExplicitlyDefaultedConstructor test.
+struct StructWithExplicitlyDefaultedConstructor {
+  StructWithExplicitlyDefaultedConstructor() = default;
+
+  int field_with_explicit_initializer = 123;
+  int field_with_no_initializer;
+};
+
 // TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is
 //                that just testing the compiler and therefore not useful?).
 
