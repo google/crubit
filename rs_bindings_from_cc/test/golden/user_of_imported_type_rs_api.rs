@@ -24,6 +24,17 @@ pub struct UserOfImportedType {
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Nested classes are not supported yet
 
+impl Default for UserOfImportedType {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Parameter type 'struct UserOfImportedType &&' is not supported

@@ -180,6 +180,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         quote! { < #( #lifetimes ),* > }
     };
 
+    let record: Option<&Record> =
+        func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
+
     let mut calls_thunk = true;
     let api_func = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
@@ -202,11 +205,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         }
 
         UnqualifiedIdentifier::Destructor => {
-            let record = func
-                .member_func_metadata
-                .as_ref()
-                .ok_or_else(|| anyhow!("Destructors must be member functions."))?
-                .find_record(ir)?;
+            let record = record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             let type_name = make_ident(&record.identifier.identifier);
             match record.destructor.definition {
                 // TODO(b/202258760): Only omit destructor if `Copy` is specified.
@@ -245,7 +244,31 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             }
         }
 
-        _ => quote! {}, // TODO(b/200066396): define these.
+        UnqualifiedIdentifier::Constructor => {
+            let record = record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
+            let type_name = make_ident(&record.identifier.identifier);
+            match func.params.len() {
+                0 => bail!("Constructor should have at least 1 parameter (__this)"),
+                1 => quote! {
+                    #doc_comment
+                    impl Default for #type_name {
+                        #[inline(always)]
+                        fn default() -> Self {
+                            let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+                            unsafe {
+                                crate::detail::#thunk_ident(tmp.as_mut_ptr());
+                                tmp.assume_init()
+                            }
+                        }
+                    }
+                },
+                _ => {
+                    // TODO(b/208946210): Map some of these constructors to the From trait.
+                    // TODO(b/200066396): Map other constructors (to the Clone trait?).
+                    quote! {}
+                }
+            }
+        }
     };
 
     let thunk = if calls_thunk {
@@ -355,7 +378,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let empty_struct_placeholder_field = if record.fields.is_empty() {
         quote! {
           /// Prevent empty C++ struct being zero-size in Rust.
-          placeholder: core::mem::MaybeUninit<u8>,
+          placeholder: std::mem::MaybeUninit<u8>,
         }
     } else {
         quote! {}

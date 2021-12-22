@@ -41,6 +41,17 @@ impl SomeClass {
     }
 }
 
+impl Default for SomeClass {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/static_methods.h;l=4
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Parameter type 'class SomeClass &&' is not supported

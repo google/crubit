@@ -17,6 +17,17 @@ pub struct FirstStruct {
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Nested classes are not supported yet
 
+impl Default for FirstStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/item_order.h;l=4
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Parameter type 'struct FirstStruct &&' is not supported
@@ -39,6 +50,17 @@ pub struct SecondStruct {
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Nested classes are not supported yet
+
+impl Default for SecondStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'SecondStruct::SecondStruct':

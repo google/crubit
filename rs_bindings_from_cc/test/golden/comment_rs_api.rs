@@ -27,6 +27,17 @@ pub struct Foo {
 // Error while generating bindings for item 'Foo::Foo':
 // Nested classes are not supported yet
 
+impl Default for Foo {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::Foo':
 // Parameter type 'struct Foo &&' is not supported
@@ -58,6 +69,17 @@ pub struct Bar {
 // Error while generating bindings for item 'Bar::Bar':
 // Nested classes are not supported yet
 
+impl Default for Bar {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3BarC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::Bar':
 // Parameter type 'struct Bar &&' is not supported
@@ -76,6 +98,17 @@ pub struct HasNoComments {
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Nested classes are not supported yet
+
+impl Default for HasNoComments {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::HasNoComments':

@@ -89,6 +89,17 @@ impl Drop for NontrivialMembers {
     fn drop(&mut self) {}
 }
 
+impl Default for NontrivialMembers {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=36
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a parameter

@@ -11,12 +11,23 @@ use memoffset_unstable_const::offset_of;
 #[repr(C)]
 pub struct SomeStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: core::mem::MaybeUninit<u8>,
+    placeholder: std::mem::MaybeUninit<u8>,
 }
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Nested classes are not supported yet
+
+impl Default for SomeStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
@@ -73,6 +84,17 @@ pub struct FieldTypeTestStruct {
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
+
+impl Default for FieldTypeTestStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/types.h;l=10
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':

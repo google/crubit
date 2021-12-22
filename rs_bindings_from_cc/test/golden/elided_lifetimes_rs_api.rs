@@ -16,7 +16,7 @@ pub fn free_function<'a>(p1: &'a mut i32) -> &'a mut i32 {
 #[repr(C)]
 pub struct S {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: core::mem::MaybeUninit<u8>,
+    placeholder: std::mem::MaybeUninit<u8>,
 }
 
 // rs_bindings_from_cc/test/golden/elided_lifetimes.h;l=8
@@ -27,6 +27,17 @@ impl S {
     #[inline(always)]
     pub fn method<'a, 'b, 'c>(__this: &'c mut S, p1: &'a mut i32, p2: &'b mut i32) -> &'c mut i32 {
         unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
+    }
+}
+
+impl Default for S {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
     }
 }
 

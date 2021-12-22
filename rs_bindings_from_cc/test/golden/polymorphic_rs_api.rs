@@ -10,7 +10,7 @@ use memoffset_unstable_const::offset_of;
 #[repr(C)]
 pub struct PolymorphicClass {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: core::mem::MaybeUninit<u8>,
+    placeholder: std::mem::MaybeUninit<u8>,
 }
 
 impl !Unpin for PolymorphicClass {}
@@ -23,6 +23,17 @@ impl Drop for PolymorphicClass {
     #[inline(always)]
     fn drop(&mut self) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicClassD1Ev(self) }
+    }
+}
+
+impl Default for PolymorphicClass {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16PolymorphicClassC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
     }
 }
 

@@ -19,6 +19,17 @@ pub struct Trivial {
 // Error while generating bindings for item 'Trivial::Trivial':
 // Nested classes are not supported yet
 
+impl Default for Trivial {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN7TrivialC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=6
 // Error while generating bindings for item 'Trivial::Trivial':
 // Parameter type 'struct Trivial &&' is not supported
@@ -38,6 +49,17 @@ pub struct TrivialWithDefaulted {
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
 // Nested classes are not supported yet
+
+impl Default for TrivialWithDefaulted {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=17
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':

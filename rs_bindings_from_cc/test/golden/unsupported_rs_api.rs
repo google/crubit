@@ -52,7 +52,7 @@ impl !Unpin for NontrivialCustomType {}
 #[repr(C)]
 pub struct ContainingStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: core::mem::MaybeUninit<u8>,
+    placeholder: std::mem::MaybeUninit<u8>,
 }
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=20
@@ -66,6 +66,17 @@ pub struct ContainingStruct {
 // rs_bindings_from_cc/test/golden/unsupported.h;l=21
 // Error while generating bindings for item 'ContainingStruct::NestedStruct::NestedStruct':
 // Nested classes are not supported yet
+
+impl Default for ContainingStruct {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(tmp.as_mut_ptr());
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=20
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
