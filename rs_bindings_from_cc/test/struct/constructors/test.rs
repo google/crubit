@@ -37,4 +37,9 @@ mod tests {
         assert_eq!(0, s.field_with_no_initializer);
         assert_eq!(123, s.field_with_explicit_initializer);
     }
+
+    #[test]
+    fn test_nontrivial_struct() {
+        assert_not_impl_all!(NonTrivialStructWithConstructors: Default);
+    }
 }

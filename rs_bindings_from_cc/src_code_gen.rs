@@ -147,6 +147,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 ///
 /// Returns the generated function or trait impl, and the thunk, as a tuple.
 fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
+    let empty_result = Ok((quote! {}.into(), quote! {}.into()));
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func);
     let doc_comment = generate_doc_comment(&func.doc_comment);
@@ -210,8 +211,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             match record.destructor.definition {
                 // TODO(b/202258760): Only omit destructor if `Copy` is specified.
                 SpecialMemberDefinition::Trivial => {
-                    calls_thunk = false;
-                    quote! {}
+                    return empty_result;
                 }
                 SpecialMemberDefinition::NontrivialMembers => {
                     calls_thunk = false;
@@ -246,6 +246,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
 
         UnqualifiedIdentifier::Constructor => {
             let record = record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
+            if !record.is_trivial_abi {
+                return empty_result;
+            }
             let type_name = make_ident(&record.identifier.identifier);
             match func.params.len() {
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
@@ -265,7 +268,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 _ => {
                     // TODO(b/208946210): Map some of these constructors to the From trait.
                     // TODO(b/200066396): Map other constructors (to the Clone trait?).
-                    quote! {}
+                    return empty_result;
                 }
             }
         }
@@ -1310,6 +1313,19 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_default_non_trivial_struct() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"struct NonTrivialStructWithConstructors {
+                NonTrivialStructWithConstructors();
+                ~NonTrivialStructWithConstructors();  // Non-trivial
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_not_matches!(rs_api, quote! {impl Default});
         Ok(())
     }
 

@@ -92,10 +92,6 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(__this: *mut ContainingStruct);
-        pub(crate) fn __rust_thunk___ZN16ContainingStructC1ERKS_(
-            __this: *mut ContainingStruct,
-            __param_0: *const ContainingStruct,
-        );
     }
 }
 

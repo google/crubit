@@ -8,3 +8,8 @@ StructWithUserProvidedConstructor::StructWithUserProvidedConstructor()
     : int_field(42) {}
 
 StructWithPrivateConstructor::StructWithPrivateConstructor() : int_field(42) {}
+
+NonTrivialStructWithConstructors::NonTrivialStructWithConstructors()
+    : int_field(43) {}
+
+NonTrivialStructWithConstructors::~NonTrivialStructWithConstructors() {}

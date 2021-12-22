@@ -36,6 +36,13 @@ struct StructWithExplicitlyDefaultedConstructor final {
 // TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is
 //                that just testing the compiler and therefore not useful?).
 
-// TODO(lukasza): Add NonTrivialStructWithConstructors test.
+struct NonTrivialStructWithConstructors {
+  NonTrivialStructWithConstructors();
+
+  // Presence of a user-defined destructor makes this struct non-trivial.
+  ~NonTrivialStructWithConstructors();
+
+  int int_field;
+};
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_

@@ -148,22 +148,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: *mut Trivial);
-        pub(crate) fn __rust_thunk___ZN7TrivialC1ERKS_(
-            __this: *mut Trivial,
-            __param_0: *const Trivial,
-        );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
             __this: *mut TrivialWithDefaulted,
         );
-        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
-            __this: *mut TrivialWithDefaulted,
-            __param_0: *const TrivialWithDefaulted,
-        );
         pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1Ev(__this: *mut TrivialNonfinal);
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_(
-            __this: *mut TrivialNonfinal,
-            __param_0: *const TrivialNonfinal,
-        );
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);
         #[link_name = "_Z25TakesWithDefaultedByValue20TrivialWithDefaulted"]

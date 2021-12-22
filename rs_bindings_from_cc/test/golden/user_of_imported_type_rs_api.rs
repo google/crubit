@@ -53,10 +53,6 @@ mod detail {
             t: trivial_type_cc::Trivial,
         ) -> trivial_type_cc::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(__this: *mut UserOfImportedType);
-        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
-            __this: *mut UserOfImportedType,
-            __param_0: *const UserOfImportedType,
-        );
     }
 }
 

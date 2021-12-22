@@ -126,15 +126,9 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN3FooC1Ev(__this: *mut Foo);
-        pub(crate) fn __rust_thunk___ZN3FooC1ERKS_(__this: *mut Foo, __param_0: *const Foo);
         pub(crate) fn __rust_thunk___Z3foov();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev(__this: *mut Bar);
-        pub(crate) fn __rust_thunk___ZN3BarC1ERKS_(__this: *mut Bar, __param_0: *const Bar);
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut HasNoComments);
-        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1ERKS_(
-            __this: *mut HasNoComments,
-            __param_0: *const HasNoComments,
-        );
     }
 }
 

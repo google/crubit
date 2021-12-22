@@ -61,10 +61,6 @@ mod detail {
         #[link_name = "_ZN9SomeClass20public_static_methodEv"]
         pub(crate) fn __rust_thunk___ZN9SomeClass20public_static_methodEv();
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut SomeClass);
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1ERKS_(
-            __this: *mut SomeClass,
-            __param_0: *const SomeClass,
-        );
     }
 }
 

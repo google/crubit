@@ -26,28 +26,12 @@ impl Drop for PolymorphicClass {
     }
 }
 
-impl Default for PolymorphicClass {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            crate::detail::__rust_thunk___ZN16PolymorphicClassC1Ev(tmp.as_mut_ptr());
-            tmp.assume_init()
-        }
-    }
-}
-
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
 
 mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev(__this: *mut PolymorphicClass);
-        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1Ev(__this: *mut PolymorphicClass);
-        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1ERKS_(
-            __this: *mut PolymorphicClass,
-            __param_0: *const PolymorphicClass,
-        );
     }
 }
 

@@ -100,14 +100,6 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut SomeStruct);
-        pub(crate) fn __rust_thunk___ZN10SomeStructC1ERKS_(
-            __this: *mut SomeStruct,
-            __param_0: *const SomeStruct,
-        );
-        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
-            __this: *mut FieldTypeTestStruct,
-            __param_0: *const FieldTypeTestStruct,
-        );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
 }

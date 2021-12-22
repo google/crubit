@@ -75,10 +75,6 @@ mod detail {
             y: i32,
         ) -> i32;
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut SomeClass);
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1ERKS_(
-            __this: *mut SomeClass,
-            __param_0: *const SomeClass,
-        );
     }
 }
 
