@@ -656,15 +656,16 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     let record_ident = make_ident(&record.identifier.identifier);
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
-    let field_assertions = record.fields.iter().map(|field| {
-        let field_ident = make_ident(&field.identifier.identifier);
-        let offset = Literal::usize_unsuffixed(field.offset);
-        // The IR contains the offset in bits, while C++'s offsetof()
-        // returns the offset in bytes, so we need to convert.
-        quote! {
-            static_assert(offsetof(#record_ident, #field_ident) * 8 == #offset);
-        }
-    });
+    let field_assertions =
+        record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
+            let field_ident = make_ident(&field.identifier.identifier);
+            let offset = Literal::usize_unsuffixed(field.offset);
+            // The IR contains the offset in bits, while C++'s offsetof()
+            // returns the offset in bytes, so we need to convert.
+            quote! {
+                static_assert(offsetof(#record_ident, #field_ident) * 8 == #offset);
+            }
+        });
     quote! {
         static_assert(sizeof(#record_ident) == #size);
         static_assert(alignof(#record_ident) == #alignment);
@@ -940,8 +941,6 @@ mod tests {
                 static_assert(sizeof(SomeStruct) == 12);
                 static_assert(alignof(SomeStruct) == 4);
                 static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
-                static_assert(offsetof(SomeStruct, protected_int) * 8 == 32);
-                static_assert(offsetof(SomeStruct, private_int) * 8 == 64);
             }
         );
         Ok(())

@@ -12,4 +12,3 @@ extern "C" void __rust_thunk___ZN9SomeClassD1Ev(SomeClass* __this) {
 
 static_assert(sizeof(SomeClass) == 4);
 static_assert(alignof(SomeClass) == 4);
-static_assert(offsetof(SomeClass, field_) * 8 == 0);

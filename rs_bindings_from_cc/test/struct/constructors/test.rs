@@ -16,4 +16,9 @@ mod tests {
         let s: StructWithUserProvidedConstructor = Default::default();
         assert_eq!(42, s.int_field);
     }
+
+    #[test]
+    fn test_private_constructors() {
+        assert_not_impl_all!(StructWithPrivateConstructor: Default);
+    }
 }

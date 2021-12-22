@@ -14,8 +14,14 @@ struct StructWithUserProvidedConstructor {
 };
 
 // TODO(b/200065650): Add StructWithDeletedConstructors test.
-// TODO(b/200065654): Add StructWithPrivateConstructors test.
 // Hint: assert_not_impl_all!(StructWithDeletedConstructors: Default);
+
+struct StructWithPrivateConstructor {
+ private:
+  StructWithPrivateConstructor();
+
+  int int_field;
+};
 
 // TODO(lukasza): Add StructWithExplicitlyDefaultedConstructor test.
 // TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is

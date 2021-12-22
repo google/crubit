@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod tests {
-    use simple_struct::SomeStruct;
+    use fields::*;
 
     #[test]
     fn test_simple_struct() {

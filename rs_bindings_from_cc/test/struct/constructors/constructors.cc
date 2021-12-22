@@ -6,3 +6,5 @@
 
 StructWithUserProvidedConstructor::StructWithUserProvidedConstructor()
     : int_field(42) {}
+
+StructWithPrivateConstructor::StructWithPrivateConstructor() : int_field(42) {}
