@@ -173,13 +173,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let lifetimes = func
         .lifetime_params
         .iter()
-        .map(|l| syn::Lifetime::new(&format!("'{}", l.name), proc_macro2::Span::call_site()))
-        .collect_vec();
-    let generic_params = if lifetimes.is_empty() {
-        quote! {}
-    } else {
-        quote! { < #( #lifetimes ),* > }
-    };
+        .map(|l| syn::Lifetime::new(&format!("'{}", l.name), proc_macro2::Span::call_site()));
+    let generic_params = format_generic_params(lifetimes);
 
     let record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
@@ -304,6 +299,16 @@ fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
         None => quote! {},
     }
 }
+
+fn format_generic_params<T: quote::ToTokens>(params: impl IntoIterator<Item = T>) -> TokenStream {
+    let mut params = params.into_iter().peekable();
+    if params.peek().is_none() {
+        quote! {}
+    } else {
+        quote! { < #( #params ),* > }
+    }
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
@@ -608,15 +613,12 @@ fn format_rs_type(
         }
         TypeKind::Other(name) => {
             let ident = make_ident(name);
-            let type_args = if ty.type_args.is_empty() {
-                quote! {}
-            } else {
-                let mut formatted_args = vec![];
-                for type_arg in ty.type_args.iter() {
-                    formatted_args.push(format_rs_type(type_arg, ir, lifetime_to_name)?);
-                }
-                quote! { < #( #formatted_args ),* > }
-            };
+            let type_args = format_generic_params(
+                ty.type_args
+                    .iter()
+                    .map(|type_arg| format_rs_type(type_arg, ir, lifetime_to_name))
+                    .collect::<Result<Vec<_>>>()?,
+            );
             Ok(quote! {#ident #type_args})
         }
     }
@@ -1370,6 +1372,21 @@ mod tests {
                     -> &'b mut i32;
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_format_generic_params() -> Result<()> {
+        assert_rs_matches!(format_generic_params(std::iter::empty::<syn::Ident>()), quote! {});
+
+        let idents = ["T1", "T2"].iter().map(|s| make_ident(s));
+        assert_rs_matches!(format_generic_params(idents), quote! { < T1, T2 > });
+
+        let lifetimes = ["a", "b"]
+            .iter()
+            .map(|s| syn::Lifetime::new(&format!("'{}", s), proc_macro2::Span::call_site()));
+        assert_rs_matches!(format_generic_params(lifetimes), quote! { < 'a, 'b > });
+
         Ok(())
     }
 }
