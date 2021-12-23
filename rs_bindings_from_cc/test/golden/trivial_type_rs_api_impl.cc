@@ -4,24 +4,18 @@
 
 #include <cstddef>
 #include <memory>
+#include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/trivial_type.h"
 
-namespace {
-template <class T, class... Args>
-constexpr T* construct_at(T* p, Args&&... args) {
-  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
-      T(std ::forward<Args>(args)...);
-}
-}  // namespace
 extern "C" void __rust_thunk___ZN7TrivialC1Ev(Trivial* __this) {
-  construct_at(__this);
+  rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN7TrivialD1Ev(Trivial* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
     TrivialWithDefaulted* __this) {
-  construct_at(__this);
+  rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
     TrivialWithDefaulted* __this) {
@@ -29,7 +23,7 @@ extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalC1Ev(
     TrivialNonfinal* __this) {
-  construct_at(__this);
+  rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalD1Ev(
     TrivialNonfinal* __this) {

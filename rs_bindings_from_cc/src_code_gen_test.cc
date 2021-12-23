@@ -46,6 +46,9 @@ TEST(SrcGenTest, FFIIntegration) {
 
   EXPECT_THAT(bindings.rs_api_impl,
               StrEq("#include <memory>\n"
+                    "#include "
+                    "\"rs_bindings_from_cc/support/"
+                    "cxx20_backports.h\"\n"
                     "#include \"foo/bar.h\"\n"
                     "\n"
                     "extern \"C\" int __rust_thunk__mangled_name(int arg) { "

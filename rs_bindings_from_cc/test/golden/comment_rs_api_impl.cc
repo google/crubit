@@ -4,26 +4,24 @@
 
 #include <cstddef>
 #include <memory>
+#include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/comment.h"
 
-namespace {
-template <class T, class... Args>
-constexpr T* construct_at(T* p, Args&&... args) {
-  return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
-      T(std ::forward<Args>(args)...);
+extern "C" void __rust_thunk___ZN3FooC1Ev(Foo* __this) {
+  rs_api_impl_support ::construct_at(__this);
 }
-}  // namespace
-extern "C" void __rust_thunk___ZN3FooC1Ev(Foo* __this) { construct_at(__this); }
 extern "C" void __rust_thunk___ZN3FooD1Ev(Foo* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___Z3foov() { foo(); }
-extern "C" void __rust_thunk___ZN3BarC1Ev(Bar* __this) { construct_at(__this); }
+extern "C" void __rust_thunk___ZN3BarC1Ev(Bar* __this) {
+  rs_api_impl_support ::construct_at(__this);
+}
 extern "C" void __rust_thunk___ZN3BarD1Ev(Bar* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN13HasNoCommentsC1Ev(HasNoComments* __this) {
-  construct_at(__this);
+  rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN13HasNoCommentsD1Ev(HasNoComments* __this) {
   std ::destroy_at(__this);

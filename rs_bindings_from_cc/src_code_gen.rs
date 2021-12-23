@@ -691,7 +691,6 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
     // See rs_bindings_from_cc/
     // token_stream_printer.rs for a list of supported placeholders.
     let mut thunks = vec![];
-    let mut defined_construct_at = false;
     for func in ir.functions() {
         if can_skip_cc_thunk(&func) {
             continue;
@@ -721,24 +720,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             // is.
             UnqualifiedIdentifier::Constructor => {
                 if func.params.len() == 1 {
-                    // Implementation of `construct_at` below has been cargo-culted from
-                    // https://en.cppreference.com/w/cpp/memory/construct_at, because we can't
-                    // always depend on C++20.
-                    // TODO(lukasza): Use `std::construct_at` if generating C++20 or later.
-                    if !defined_construct_at {
-                        defined_construct_at = true;
-                        thunks.push(quote! {
-                            namespace {
-                                template<class T, class... Args>
-                                constexpr T* construct_at( T* p, Args&&... args ) {
-                                    return ::new
-                                        (const_cast<void*>(static_cast<const volatile void*>(p)))
-                                        T(std::forward<Args>(args)...);
-                                }
-                            }  // namespace
-                        })
-                    }
-                    quote! {construct_at}
+                    quote! { rs_api_impl_support::construct_at }
                 } else {
                     // TODO(b/208946210): Map some of these constructors to the From trait.
                     // TODO(b/200066396): Map other constructors (to the Clone trait?).
@@ -778,9 +760,12 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         standard_headers.insert(make_ident("cstddef"));
     };
 
+    let mut includes =
+        vec!["rs_bindings_from_cc/support/cxx20_backports.h"];
+
     // In order to generate C++ thunk in all the cases Clang needs to be able to
     // access declarations from public headers of the C++ library.
-    let includes = ir.used_headers().map(|i| &i.name);
+    includes.extend(ir.used_headers().map(|i| &i.name as &str));
 
     Ok(quote! {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
@@ -1311,7 +1296,7 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
                         DefaultedConstructor* __this) {
-                    construct_at (__this) ;
+                    rs_api_impl_support::construct_at (__this) ;
                 }
             }
         );
