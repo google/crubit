@@ -72,8 +72,8 @@ absl::StatusOr<IR> IrFromCc(
   args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
   args_as_strings.push_back(std::string(kVirtualInputPath));
 
-  if (IR ir; devtools::cymbal::RunToolWithClangFlagsOnCode(
-          args_as_strings, file_contents,
+  if (IR ir; devtools::cymbal::RunToolOnCode(
+          devtools::cymbal::ClangArguments(args_as_strings), file_contents,
           std::make_unique<FrontendAction>(current_target, entrypoint_headers,
                                            &headers_to_targets, &ir))) {
     return ir;
