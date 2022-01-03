@@ -144,4 +144,37 @@ void AddLifetimeAnnotationHandlers(
       "clang", new LifetimeElisionPragmaHandler(context));
 }
 
+llvm::SmallVector<clang::TypeLoc> GetTemplateArgs(clang::TypeLoc type_loc) {
+  llvm::SmallVector<clang::TypeLoc> args;
+  if (auto template_specialization_type_loc =
+          type_loc.getAs<clang::TemplateSpecializationTypeLoc>()) {
+    for (unsigned i = 0; i < template_specialization_type_loc.getNumArgs();
+         ++i) {
+      args.push_back(template_specialization_type_loc.getArgLoc(i)
+                         .getTypeSourceInfo()
+                         ->getTypeLoc());
+    }
+  } else if (auto dependent_template_specialization_type_loc =
+                 type_loc
+                     .getAs<clang::DependentTemplateSpecializationTypeLoc>()) {
+    // TODO(mboehme): Where does this occur exactly? Do we need to be handling
+    // it?
+    // AFAICT, this happens if we're looking at a dependent template name
+    // (https://en.cppreference.com/w/cpp/language/dependent_name), which
+    // probably means that this can only happen in template definitions (as
+    // opposed to template instantiations), and we aren't analyzing those for
+    // now. At the least, I haven't been able to trigger this case from a test.
+    // Putting an assertion in here so that we notice this case if it does come
+    // up.
+    assert(false);
+    for (unsigned i = 0;
+         i < dependent_template_specialization_type_loc.getNumArgs(); ++i) {
+      args.push_back(dependent_template_specialization_type_loc.getArgLoc(i)
+                         .getTypeSourceInfo()
+                         ->getTypeLoc());
+    }
+  }
+  return args;
+}
+
 }  // namespace devtools_rust
