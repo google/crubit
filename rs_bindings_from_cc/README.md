@@ -52,9 +52,12 @@ If possible follow these recommendations:
     Run
     [`rs_bindings_from_cc/test/golden/update.sh`](/rs_bindings_from_cc/test/golden/update.sh)
     to regenerate checked-in files.
-*   Write full executable end to end tests (verifying that interop tools and
+*   Write full executable end-to-end tests (verifying that interop tools and
     Blaze rules generate outputs that can be built and executed) as small
     projects with a `rust_test` or `cc_test` on top in subpackages of `test`.
+
+To get Rust backtraces for `rs_bindings_from_cc` when running end-to-end tests,
+use `bazel test --action_env=RUST_BACKTRACE=1` to run the tests.
 
 ## Contributing
 
