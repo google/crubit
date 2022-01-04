@@ -590,6 +590,22 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
+    // We will have to rewrite this test to use something else that is unsupported
+    // once we start importing structs from namespaces.
+    let ir = ir_from_cc(
+        r#"namespace my_namespace { struct Unsupported {}; }
+           void f(my_namespace::Unsupported* unsupported);
+           struct S { my_namespace::Unsupported unsupported; };"#,
+    )?;
+    let names = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
+    assert_strings_contain(&names, "my_namespace::Unsupported");
+    assert_strings_contain(&names, "f");
+    assert_strings_contain(&names, "S");
+    Ok(())
+}
+
 fn assert_strings_contain(strings: &[&str], expected_string: &str) {
     assert!(
         strings.iter().any(|s| *s == expected_string),

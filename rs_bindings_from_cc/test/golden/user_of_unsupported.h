@@ -9,4 +9,6 @@
 
 void UseNontrivialCustomType(NontrivialCustomType non_trivial_custom_type);
 
+void UseUnsupportedType(ns::StructInNamespace* unsupported_type);
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_

@@ -323,13 +323,19 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     }
     is_final = cxx_record_decl->isEffectivelyFinal();
   }
+  std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
+  if (!record_name.has_value()) {
+    return true;
+  }
+  // Provisionally assume that we know this RecordDecl so that we'll be able
+  // to import fields whose type contains the record itself.
+  known_tag_decls_.insert(record_decl);
   std::optional<std::vector<Field>> fields =
       ImportFields(record_decl, default_access);
   if (!fields.has_value()) {
-    return true;
-  }
-  std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
-  if (!record_name.has_value()) {
+    // Importing a field failed, so note that we didn't import this RecordDecl
+    // after all.
+    known_tag_decls_.erase(record_decl);
     return true;
   }
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
@@ -463,13 +469,14 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
         }
     }
   } else if (const auto* tag_type = qual_type->getAs<clang::TagType>()) {
-    // TODO(b/202692734): If tag_type is un-importable, fail here.
     clang::TagDecl* tag_decl = tag_type->getDecl();
 
-    if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
-      std::string ident(id->Ident());
-      DeclId decl_id = GenerateDeclId(tag_decl);
-      type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+    if (known_tag_decls_.contains(tag_decl)) {
+      if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
+        std::string ident(id->Ident());
+        DeclId decl_id = GenerateDeclId(tag_decl);
+        type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+      }
     }
   }
 
@@ -495,7 +502,10 @@ std::optional<std::vector<Field>> AstVisitor::ImportFields(
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     auto type = ConvertType(field_decl->getType());
     if (!type.ok()) {
-      // TODO(b/200239975):  Add diagnostics for declarations we can't import
+      PushUnsupportedItem(record_decl,
+                          absl::Substitute("Field type '$0' is not supported",
+                                           field_decl->getType().getAsString()),
+                          field_decl->getBeginLoc());
       return std::nullopt;
     }
     clang::AccessSpecifier access = field_decl->getAccess();
@@ -505,6 +515,11 @@ std::optional<std::vector<Field>> AstVisitor::ImportFields(
 
     std::optional<Identifier> field_name = GetTranslatedIdentifier(field_decl);
     if (!field_name.has_value()) {
+      PushUnsupportedItem(
+          record_decl,
+          absl::Substitute("Cannot translate name for field '$0'",
+                           field_decl->getNameAsString()),
+          field_decl->getBeginLoc());
       return std::nullopt;
     }
     fields.push_back(
