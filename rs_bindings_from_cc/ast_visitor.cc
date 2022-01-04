@@ -57,7 +57,10 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
     return true;
   }
 
-  if (!seen_decls_.insert(decl->getCanonicalDecl()).second) {
+  // Skip declarations that we've already seen, except for namespaces, which
+  // can and typically will contain new declarations when they are "reopened".
+  if (!seen_decls_.insert(decl->getCanonicalDecl()).second &&
+      !clang::isa<clang::NamespaceDecl>(decl)) {
     return true;
   }
 

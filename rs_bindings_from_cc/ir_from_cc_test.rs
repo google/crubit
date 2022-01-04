@@ -577,6 +577,23 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
 }
 
 #[test]
+fn test_unsupported_items_are_emitted_from_reopened_namespace() -> Result<()> {
+    // Once we actually support namespaces, change this test to check that we
+    // emit the struct from the reopened namespace.
+    let ir = ir_from_cc(
+        r#"namespace my_namespace {}
+         namespace my_namespace {
+           struct StructFromNamespaceIsUnsupported {};
+         }"#,
+    )?;
+    assert_strings_contain(
+        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
+        "my_namespace::StructFromNamespaceIsUnsupported",
+    );
+    Ok(())
+}
+
+#[test]
 fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
     // We will have to rewrite this test to use something else that is unsupported
     // once we start importing structs from namespaces.
