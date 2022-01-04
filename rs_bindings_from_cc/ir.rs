@@ -205,12 +205,15 @@ pub struct MemberFuncMetadata {
 
 impl MemberFuncMetadata {
     pub fn find_record<'a>(&self, ir: &'a IR) -> Result<&'a Record> {
-        ir.find_decl(self.record_id).and_then(|decl| decl.try_into()).with_context(|| {
-            format!(
-                "DeclId {:?} from MemberFuncMetadata::record_id doesn't refer to a Record",
-                self.record_id
-            )
-        })
+        ir.find_decl(self.record_id)
+            .context("Failed to retrieve Record for MemberFuncMetadata")
+            .and_then(|decl| decl.try_into())
+            .with_context(|| {
+                format!(
+                    "DeclId {:?} from MemberFuncMetadata::record_id doesn't refer to a Record",
+                    self.record_id
+                )
+            })
     }
 }
 
@@ -484,7 +487,9 @@ impl IR {
         T: TypeWithDeclId + std::fmt::Debug,
     {
         if let Some(decl_id) = ty.decl_id() {
-            self.find_decl(decl_id)?.try_into()
+            self.find_decl(decl_id)
+                .with_context(|| format!("Failed to retrieve record for type {:?}", ty))?
+                .try_into()
         } else {
             bail!("Type {:?} does not have an associated record.", ty)
         }

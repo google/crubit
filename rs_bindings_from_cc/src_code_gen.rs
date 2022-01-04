@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -157,7 +157,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let return_type_fragment = if func.return_type.rs_type.is_unit_type() {
         quote! {}
     } else {
-        let return_type_name = format_rs_type(&func.return_type.rs_type, ir, &lifetime_to_name)?;
+        let return_type_name = format_rs_type(&func.return_type.rs_type, ir, &lifetime_to_name)
+            .with_context(|| format!("Failed to format return type for {:?}", func))?;
         quote! { -> #return_type_name }
     };
 
@@ -167,7 +168,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let param_types = func
         .params
         .iter()
-        .map(|p| format_rs_type(&p.type_.rs_type, ir, &lifetime_to_name))
+        .map(|p| {
+            format_rs_type(&p.type_.rs_type, ir, &lifetime_to_name).with_context(|| {
+                format!("Failed to format type for parameter {:?} on {:?}", p, func)
+            })
+        })
         .collect::<Result<Vec<_>>>()?;
 
     let lifetimes = func
@@ -322,7 +327,10 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .fields
         .iter()
         .map(|f| {
-            let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())?;
+            let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())
+                .with_context(|| {
+                    format!("Failed to format type for field {:?} on record {:?}", f, record)
+                })?;
             if record.destructor.definition == SpecialMemberDefinition::NontrivialUserDefined {
                 formatted = quote! {
                     std::mem::ManuallyDrop<#formatted>
@@ -566,7 +574,9 @@ fn format_rs_type(
             _ => TypeKind::Other(name),
         }
     } else {
-        let record = ir.record_for_type(ty)?;
+        let record = ir
+            .record_for_type(ty)
+            .with_context(|| format!("Failed to format Rust type {:?}", ty))?;
         let ident = make_ident(record.identifier.identifier.as_str());
         let path: TokenStream = if ir.is_in_current_target(record) {
             quote! {#ident}
@@ -649,7 +659,13 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
             }
         }
     } else {
-        let ident = make_ident(ir.record_for_type(ty)?.identifier.identifier.as_str());
+        let ident = make_ident(
+            ir.record_for_type(ty)
+                .with_context(|| format!("Failed to format C++ type {:?}", ty))?
+                .identifier
+                .identifier
+                .as_str(),
+        );
         Ok(quote! {#ident})
     }
 }
