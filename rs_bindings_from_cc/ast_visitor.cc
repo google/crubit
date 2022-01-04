@@ -49,6 +49,14 @@ static DeclId GenerateDeclId(const clang::Decl* decl) {
 }
 
 bool AstVisitor::TraverseDecl(clang::Decl* decl) {
+  // TODO(mboehme): I'm not sure if TraverseDecl() is supposed to be called with
+  // null pointers or whether this is a bug in RecursiveASTVisitor, but I've
+  // seen null pointers occur here in practice. In the case where this occurred,
+  // TraverseDecl was being called from TraverseTemplateTemplateParmDecl().
+  if (!decl) {
+    return true;
+  }
+
   if (!seen_decls_.insert(decl->getCanonicalDecl()).second) {
     return true;
   }
