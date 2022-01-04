@@ -414,6 +414,12 @@ fn test_type_conversion() -> Result<()> {
 }
 
 #[test]
+fn test_struct_forward_declaration() {
+    let ir = ir_from_cc("struct Struct;").unwrap();
+    assert!(!ir.records().any(|r| r.identifier.identifier == "Struct"));
+}
+
+#[test]
 fn test_member_function_params() {
     let ir = ir_from_cc(
         r#"

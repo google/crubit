@@ -296,6 +296,14 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     return true;
   }
 
+  // Make sure the record has a definition that we'll be able to call
+  // ASTContext::getASTRecordLayout() on.
+  record_decl = record_decl->getDefinition();
+  if (!record_decl || record_decl->isInvalidDecl() ||
+      !record_decl->isCompleteDefinition()) {
+    return true;
+  }
+
   clang::AccessSpecifier default_access = clang::AS_public;
 
   bool is_final = true;
