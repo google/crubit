@@ -10,9 +10,20 @@ StructWithUserProvidedConstructors::StructWithUserProvidedConstructors()
 StructWithUserProvidedConstructors::StructWithUserProvidedConstructors(int i)
     : int_field(i) {}
 
-StructWithPrivateConstructor::StructWithPrivateConstructor() : int_field(42) {}
+StructWithPrivateConstructors::StructWithPrivateConstructors()
+    : int_field(42) {}
+
+StructWithPrivateConstructors::StructWithPrivateConstructors(
+    const StructWithPrivateConstructors& other)
+    : int_field(1000 + other.int_field) {}
+
+StructWithPrivateConstructors::StructWithPrivateConstructors(int i)
+    : int_field(i) {}
 
 NonTrivialStructWithConstructors::NonTrivialStructWithConstructors()
     : int_field(43) {}
+
+NonTrivialStructWithConstructors::NonTrivialStructWithConstructors(int i)
+    : int_field(i) {}
 
 NonTrivialStructWithConstructors::~NonTrivialStructWithConstructors() {}

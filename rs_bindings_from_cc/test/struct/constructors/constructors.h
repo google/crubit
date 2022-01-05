@@ -19,21 +19,27 @@ struct StructWithUserProvidedConstructors final {
 
 // TODO(lukasza): StructWithInlinedConstructors (to force thunk generation).
 
-struct StructWithDeletedConstructor final {
-  StructWithDeletedConstructor() = delete;
+struct StructWithDeletedConstructors final {
+  StructWithDeletedConstructors() = delete;
+  StructWithDeletedConstructors(const StructWithDeletedConstructors&) = delete;
+  explicit StructWithDeletedConstructors(int) = delete;
 
   int int_field;
 };
 
-struct StructWithPrivateConstructor final {
+struct StructWithPrivateConstructors final {
  private:
-  StructWithPrivateConstructor();
+  StructWithPrivateConstructors();
+  StructWithPrivateConstructors(const StructWithPrivateConstructors&);
+  explicit StructWithPrivateConstructors(int);
 
   int int_field;
 };
 
-struct StructWithExplicitlyDefaultedConstructor final {
-  StructWithExplicitlyDefaultedConstructor() = default;
+struct StructWithExplicitlyDefaultedConstructors final {
+  StructWithExplicitlyDefaultedConstructors() = default;
+  StructWithExplicitlyDefaultedConstructors(
+      const StructWithExplicitlyDefaultedConstructors&) = default;
 
   int field_with_explicit_initializer = 123;
   int field_with_no_initializer;
@@ -44,6 +50,9 @@ struct StructWithExplicitlyDefaultedConstructor final {
 
 struct NonTrivialStructWithConstructors {
   NonTrivialStructWithConstructors();
+  explicit NonTrivialStructWithConstructors(int);
+
+  // TODO(lukasza): Add a copy constructor (to be mapped to Clone?)
 
   // Presence of a user-defined destructor makes this struct non-trivial.
   ~NonTrivialStructWithConstructors();
