@@ -131,7 +131,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
     if (llvm::Error err =
             GetThisLifetimes(method, symbol_table, elided_lifetime_factory)
                 .moveInto(result.this_lifetimes)) {
-      return err;
+      return std::move(err);
     }
   }
 
@@ -144,7 +144,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
             param->getTypeSourceInfo()->getTypeLoc(), symbol_table,
             elided_lifetime_factory, func->getASTContext(),
             result.param_lifetimes[i])) {
-      return err;
+      return std::move(err);
     }
 
     all_input_lifetimes.append(result.param_lifetimes[i]);
