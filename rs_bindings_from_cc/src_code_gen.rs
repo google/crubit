@@ -684,6 +684,13 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 let nested_type = format_cc_type(&ty.type_args[0], ir)?;
                 Ok(quote! {#nested_type * #const_fragment})
             }
+            "&" => {
+                if ty.type_args.len() != 1 {
+                    bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
+                }
+                let nested_type = format_cc_type(&ty.type_args[0], ir)?;
+                Ok(quote! {#nested_type &})
+            }
             ident => {
                 if !ty.type_args.is_empty() {
                     bail!("Type not yet supported: {:?}", ty);
@@ -700,7 +707,7 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 .identifier
                 .as_str(),
         );
-        Ok(quote! {#ident})
+        Ok(quote! {#const_fragment #ident})
     }
 }
 
@@ -1012,6 +1019,36 @@ mod tests {
                 static_assert(sizeof(SomeStruct) == 12);
                 static_assert(alignof(SomeStruct) == 4);
                 static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
+        let ir = ir_from_cc("struct S{}; inline void foo(S& s) {} ")?;
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z3fooR1S(S& s) {
+                    foo(s);
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
+        let ir = ir_from_cc("struct S{}; inline void foo(const S& s) {} ")?;
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z3fooRK1S(const S& s) {
+                    foo(s);
+                }
             }
         );
         Ok(())
