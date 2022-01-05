@@ -46,11 +46,9 @@ mod tests {
     #[test]
     #[allow(clippy::clone_on_copy)]
     fn test_explicitly_defaulted_constructors() {
-        // Default constructor should set uninitialized fields to 0 (real testing here
-        // depends somewhat on MSan).
         assert_impl_all!(StructWithExplicitlyDefaultedConstructors: Default);
         let s: StructWithExplicitlyDefaultedConstructors = Default::default();
-        assert_eq!(0, s.field_with_no_initializer);
+        assert_eq!(0, s.field_with_no_initializer); // Using `MaybeUninit<T>::zeroed()`.
         assert_eq!(123, s.field_with_explicit_initializer);
 
         // In some scenarios the bindings generator may be able to ask Rust to

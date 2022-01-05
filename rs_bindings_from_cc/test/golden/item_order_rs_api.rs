@@ -20,7 +20,7 @@ pub struct FirstStruct {
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11FirstStructC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -54,7 +54,7 @@ pub struct SecondStruct {
 impl Default for SecondStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12SecondStructC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()

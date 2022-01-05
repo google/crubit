@@ -27,7 +27,7 @@ pub struct UserOfImportedType {
 impl Default for UserOfImportedType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()

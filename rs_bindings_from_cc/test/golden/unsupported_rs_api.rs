@@ -70,7 +70,7 @@ pub struct ContainingStruct {
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()

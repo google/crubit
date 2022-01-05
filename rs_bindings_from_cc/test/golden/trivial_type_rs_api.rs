@@ -22,7 +22,7 @@ pub struct Trivial {
 impl Default for Trivial {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN7TrivialC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -53,7 +53,7 @@ pub struct TrivialWithDefaulted {
 impl Default for TrivialWithDefaulted {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -86,7 +86,7 @@ impl !Unpin for TrivialNonfinal {}
 impl Default for TrivialNonfinal {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()

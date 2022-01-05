@@ -26,7 +26,7 @@ pub struct DocCommentSlashes {
 impl Default for DocCommentSlashes {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -39,7 +39,7 @@ impl Default for DocCommentSlashes {
 impl From<i32> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: i32) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(tmp.as_mut_ptr(), __param_0);
             tmp.assume_init()
@@ -80,7 +80,7 @@ pub struct DocCommentBang {
 impl Default for DocCommentBang {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -113,7 +113,7 @@ pub struct MultilineCommentTwoStars {
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -146,7 +146,7 @@ pub struct LineComment {
 impl Default for LineComment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11LineCommentC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -179,7 +179,7 @@ pub struct MultilineOneStar {
 impl Default for MultilineOneStar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()

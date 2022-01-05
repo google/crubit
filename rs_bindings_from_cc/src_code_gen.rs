@@ -283,14 +283,21 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 param_idents.iter().skip(1).collect_vec(),
                 param_types.iter().skip(1).collect_vec(),
             );
-
+            // SAFETY: A user-defined constructor is not guaranteed to
+            // initialize all the fields. To make the `assume_init()` call
+            // below safe, the memory is zero-initialized first. This is safer,
+            // because zero-initialized memory represents a valid value for the
+            // currently supported field types (this may change once the
+            // bindings generator starts supporting reference fields).
+            // TODO(b/213243309): Double-check if zero-initialization is
+            // desirable here.
             let struct_name = make_ident(&record.identifier.identifier);
             quote! {
                 #doc_comment
                 impl #trait_name for #struct_name {
                     #[inline(always)]
                     fn #method_name #generic_params( #( #param_idents: #param_types ),* ) -> Self {
-                        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+                        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::#thunk_ident(tmp.as_mut_ptr() #( , #param_idents )* );
                             tmp.assume_init()
@@ -1323,7 +1330,7 @@ mod tests {
                 impl Default for DefaultedConstructor {
                     #[inline(always)]
                     fn default() -> Self {
-                        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+                        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(
                                 tmp.as_mut_ptr());

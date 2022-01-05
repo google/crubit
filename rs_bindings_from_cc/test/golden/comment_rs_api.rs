@@ -30,7 +30,7 @@ pub struct Foo {
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -72,7 +72,7 @@ pub struct Bar {
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
@@ -102,7 +102,7 @@ pub struct HasNoComments {
 impl Default for HasNoComments {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(tmp.as_mut_ptr());
             tmp.assume_init()
