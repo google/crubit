@@ -414,6 +414,24 @@ fn test_type_conversion() -> Result<()> {
 }
 
 #[test]
+fn test_typedef() -> Result<()> {
+    // TODO(b/213158446): This test documents that, in general, typedefs -- except
+    // for the various standard integer types tested in test_type_conversion --
+    // are currently unsupported.
+    let ir = ir_from_cc(
+        r#"
+            typedef int MyTypedefDecl;
+            using MyTypeAliasDecl = int;
+        "#,
+    )?;
+    let unsupported = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
+    assert_strings_contain(&unsupported, "MyTypedefDecl");
+    assert_strings_contain(&unsupported, "MyTypeAliasDecl");
+
+    Ok(())
+}
+
+#[test]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
     assert!(!ir.records().any(|r| r.identifier.identifier == "Struct"));

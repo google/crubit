@@ -358,6 +358,14 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   return true;
 }
 
+bool AstVisitor::VisitTypedefNameDecl(
+    clang::TypedefNameDecl* typedef_name_decl) {
+  PushUnsupportedItem(typedef_name_decl,
+                      "Typedef-name declarations are not supported yet",
+                      typedef_name_decl->getBeginLoc());
+  return true;
+}
+
 std::optional<std::string> AstVisitor::GetComment(
     const clang::Decl* decl) const {
   // This does currently not distinguish between different types of comments.
