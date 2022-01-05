@@ -4,8 +4,11 @@
 
 #include "rs_bindings_from_cc/test/struct/constructors/constructors.h"
 
-StructWithUserProvidedConstructor::StructWithUserProvidedConstructor()
+StructWithUserProvidedConstructors::StructWithUserProvidedConstructors()
     : int_field(42) {}
+
+StructWithUserProvidedConstructors::StructWithUserProvidedConstructors(int i)
+    : int_field(i) {}
 
 StructWithPrivateConstructor::StructWithPrivateConstructor() : int_field(42) {}
 

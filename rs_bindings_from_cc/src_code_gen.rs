@@ -245,30 +245,57 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         }
 
         UnqualifiedIdentifier::Constructor => {
+            // TODO(lukasza): Also allow mapping constructors to inherent static methods
+            // (e.g. if named via a bindings-generator-recognized C++
+            // attribute).
             let record = record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             if !record.is_trivial_abi {
                 return empty_result;
             }
-            let type_name = make_ident(&record.identifier.identifier);
-            match func.params.len() {
+            let (trait_name, method_name) = match func.params.len() {
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
-                1 => quote! {
-                    #doc_comment
-                    impl Default for #type_name {
-                        #[inline(always)]
-                        fn default() -> Self {
-                            let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
-                            unsafe {
-                                crate::detail::#thunk_ident(tmp.as_mut_ptr());
-                                tmp.assume_init()
-                            }
+                1 => (quote! { Default }, quote! { default }),
+                2 => {
+                    let param_type = &func.params[1].type_;
+                    if param_type.cc_type.is_const_ref_to(record) {
+                        // TODO(b/200066396): Map copy constructor to `impl Clone`.
+                        // TODO(lukasza): Do something smart with move constructor.
+                        return empty_result;
+                    } else {
+                        let quoted_param_type = &param_types[1];
+                        (quote! { From< #quoted_param_type > }, quote! { from })
+                    }
+                }
+                _ => {
+                    // TODO(b/200066396): Map other constructors to something.
+                    return empty_result;
+                }
+            };
+            // Skip the first parameter in the public function definition. C++ constructors
+            // (and the thunk) take `__this` as the first parameter, but Rust
+            // translation returns a `Self` instead (in Clone, Default, and From
+            // traits, as well as in static methods).
+            let (param_idents, param_types) = (
+                // TODO(lukasza): We should also trim `generic_params` so that
+                // 1) the generated Rust code is easier to read and 2) to avoid
+                // running into unused lifetime parameters warning (see also
+                // https://github.com/rust-lang/rust/issues/41960).
+                param_idents.iter().skip(1).collect_vec(),
+                param_types.iter().skip(1).collect_vec(),
+            );
+
+            let struct_name = make_ident(&record.identifier.identifier);
+            quote! {
+                #doc_comment
+                impl #trait_name for #struct_name {
+                    #[inline(always)]
+                    fn #method_name #generic_params( #( #param_idents: #param_types ),* ) -> Self {
+                        let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
+                        unsafe {
+                            crate::detail::#thunk_ident(tmp.as_mut_ptr() #( , #param_idents )* );
+                            tmp.assume_init()
                         }
                     }
-                },
-                _ => {
-                    // TODO(b/208946210): Map some of these constructors to the From trait.
-                    // TODO(b/200066396): Map other constructors (to the Clone trait?).
-                    return empty_result;
                 }
             }
         }

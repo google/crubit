@@ -9,13 +9,18 @@
 ///
 ///  * with three slashes
 struct DocCommentSlashes final {
-  /// The default constructor
+  /// The default constructor which will get translated into
+  /// `impl Default for DocCommentSlashes`.
   DocCommentSlashes();
 
-  /// A static method
+  /// A conversion constructor which will get translated into
+  /// `impl From<int> for DocCommentSlashes`.
+  explicit DocCommentSlashes(int);
+
+  /// A static method.
   static int static_method();
 
-  /// A field
+  /// A field.
   int i;
 };
 

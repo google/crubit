@@ -32,7 +32,7 @@ impl S {
 
 impl Default for S {
     #[inline(always)]
-    fn default() -> Self {
+    fn default<'a>() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::uninit();
         unsafe {
             crate::detail::__rust_thunk___ZN1SC1Ev(tmp.as_mut_ptr());

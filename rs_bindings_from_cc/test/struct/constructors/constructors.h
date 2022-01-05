@@ -5,13 +5,19 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 
-struct StructWithUserProvidedConstructor final {
-  StructWithUserProvidedConstructor();
-  // TODO(lukasza): Add a copy constructor (to be mapped to Clone?).
-  // TODO(b/208946210): Add a "conversion" constructor (to be mapped to From).
+struct StructWithUserProvidedConstructors final {
+  // `impl Default for StructWithUserProvidedConstructors { ... }`.
+  StructWithUserProvidedConstructors();
+
+  // TODO(lukasza): Add a copy constructor (to be mapped to Clone?)
+
+  // `impl From<int> for StructWithUserProvidedConstructors { ... }`.
+  explicit StructWithUserProvidedConstructors(int);
 
   int int_field;
 };
+
+// TODO(lukasza): StructWithInlinedConstructors (to force thunk generation).
 
 struct StructWithDeletedConstructor final {
   StructWithDeletedConstructor() = delete;

@@ -11,10 +11,14 @@ mod tests {
 
     #[test]
     fn test_user_provided_constructors() {
-        assert_impl_all!(StructWithUserProvidedConstructor: Default);
+        assert_impl_all!(StructWithUserProvidedConstructors: From<i32>);
+        assert_impl_all!(StructWithUserProvidedConstructors: Default);
 
-        let s: StructWithUserProvidedConstructor = Default::default();
+        let s: StructWithUserProvidedConstructors = Default::default();
         assert_eq!(42, s.int_field);
+
+        let i: StructWithUserProvidedConstructors = 123.into();
+        assert_eq!(123, i.int_field);
     }
 
     #[test]
