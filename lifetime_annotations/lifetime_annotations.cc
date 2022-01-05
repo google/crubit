@@ -16,49 +16,191 @@
 
 namespace devtools_rust {
 
-static std::optional<FunctionLifetimes> ElidedLifetimes(
-    const clang::FunctionDecl* func,
-    std::function<Lifetime()> lifetime_factory) {
+namespace {
+
+llvm::Expected<llvm::SmallVector<Lifetime>> GetAnnotatedOrElidedLifetimes(
+    llvm::ArrayRef<const clang::Attr*> /*attrs*/, int num_expected,
+    LifetimeSymbolTable& /*symbol_table*/,
+    const std::function<llvm::Expected<Lifetime>()>& elided_lifetime_factory,
+    const clang::ASTContext& /*ast_context*/) {
+  assert(num_expected > 0);
+
+  llvm::SmallVector<Lifetime> lifetimes;
+  lifetimes.reserve(num_expected);
+
+  // TODO(mboehme): Extract lifetime annotations from `attrs` if present.
+
+  // No lifetime annoations: Use elided lifetimes.
+  for (int i = 0; i < num_expected; ++i) {
+    llvm::Expected<Lifetime> maybe_lifetime = elided_lifetime_factory();
+    if (maybe_lifetime) {
+      lifetimes.push_back(maybe_lifetime.get());
+    } else {
+      return maybe_lifetime.takeError();
+    }
+  }
+  return lifetimes;
+}
+
+llvm::Error AddLifetimeAnnotationsForType(
+    clang::TypeLoc type_loc, LifetimeSymbolTable& symbol_table,
+    const std::function<llvm::Expected<Lifetime>()>& elided_lifetime_factory,
+    const clang::ASTContext& ast_context, TypeLifetimes& lifetimes) {
+  assert(type_loc);
+  assert(elided_lifetime_factory);
+
+  llvm::SmallVector<const clang::Attr*> attrs;
+
+  clang::TypeLoc next_type_loc = type_loc.getNextTypeLoc();
+  if (next_type_loc) {
+    if (llvm::Error err = AddLifetimeAnnotationsForType(
+            next_type_loc, symbol_table, elided_lifetime_factory, ast_context,
+            lifetimes)) {
+      return err;
+    }
+  }
+
+  llvm::SmallVector<clang::TypeLoc> template_args = GetTemplateArgs(type_loc);
+  if (!template_args.empty()) {
+    for (size_t i = 0; i < template_args.size(); ++i) {
+      if (llvm::Error err = AddLifetimeAnnotationsForType(
+              template_args[i], symbol_table, elided_lifetime_factory,
+              ast_context, lifetimes)) {
+        return err;
+      }
+    }
+    return llvm::Error::success();
+  }
+
+  if (type_loc.getAs<clang::PointerTypeLoc>() ||
+      type_loc.getAs<clang::ReferenceTypeLoc>()) {
+    llvm::Expected<llvm::SmallVector<Lifetime>> maybe_pointee_lifetime =
+        GetAnnotatedOrElidedLifetimes(attrs, 1, symbol_table,
+                                      elided_lifetime_factory, ast_context);
+    if (maybe_pointee_lifetime) {
+      lifetimes.append(maybe_pointee_lifetime.get());
+    } else {
+      return maybe_pointee_lifetime.takeError();
+    }
+  }
+
+  return llvm::Error::success();
+}
+
+llvm::Expected<llvm::SmallVector<Lifetime>> GetThisLifetimes(
+    const clang::CXXMethodDecl* method, LifetimeSymbolTable& symbol_table,
+    const std::function<llvm::Expected<Lifetime>()>& elided_lifetime_factory) {
+  llvm::ArrayRef<const clang::Attr*> attrs;
+  if (method->hasAttrs()) {
+    attrs = method->getAttrs();
+  }
+  return GetAnnotatedOrElidedLifetimes(
+      attrs, 1, symbol_table, elided_lifetime_factory, method->getASTContext());
+}
+
+llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
+    const clang::FunctionDecl* func, LifetimeSymbolTable& symbol_table,
+    bool elision_enabled) {
   FunctionLifetimes result;
 
-  // Every input lifetime is assigned a distinct lifetime.
-  result.param_lifetimes.resize(func->getNumParams());
+  if (!func->getTypeSourceInfo()) {
+    // TODO(mboehme): At least try to do lifetime elision.
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        absl::StrCat("Can't extract lifetimes as '", func->getNameAsString(),
+                     "' appears to be a generated function"));
+  }
+
+  std::function<llvm::Expected<Lifetime>()> elided_lifetime_factory;
+  if (elision_enabled) {
+    elided_lifetime_factory = [&symbol_table]() -> llvm::Expected<Lifetime> {
+      Lifetime lifetime = Lifetime::CreateVariable();
+      symbol_table.LookupLifetimeAndMaybeDeclare(lifetime);
+      return lifetime;
+    };
+  } else {
+    elided_lifetime_factory = [func]() -> llvm::Expected<Lifetime> {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          absl::StrCat("Lifetime elision not enabled for '",
+                       func->getNameAsString(), "'"));
+    };
+  }
+
+  if (const auto* method = clang::dyn_cast<clang::CXXMethodDecl>(func)) {
+    if (llvm::Error err =
+            GetThisLifetimes(method, symbol_table, elided_lifetime_factory)
+                .moveInto(result.this_lifetimes)) {
+      return err;
+    }
+  }
+
   llvm::SmallVector<Lifetime> all_input_lifetimes;
+  result.param_lifetimes.resize(func->getNumParams());
   for (unsigned i = 0; i < func->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = func->getParamDecl(i);
 
-    result.param_lifetimes[i] =
-        CreateLifetimesForType(param->getType(), lifetime_factory);
+    if (llvm::Error err = AddLifetimeAnnotationsForType(
+            param->getTypeSourceInfo()->getTypeLoc(), symbol_table,
+            elided_lifetime_factory, func->getASTContext(),
+            result.param_lifetimes[i])) {
+      return err;
+    }
+
     all_input_lifetimes.append(result.param_lifetimes[i]);
   }
 
-  if (clang::isa<clang::CXXMethodDecl>(func)) {
-    Lifetime this_lifetime = lifetime_factory();
-    result.this_lifetimes.push_back(this_lifetime);
-
+  std::function<llvm::Expected<Lifetime>()> elided_return_lifetime_factory;
+  if (!elision_enabled) {
+    elided_return_lifetime_factory = [func]() -> llvm::Expected<Lifetime> {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          absl::StrCat("Lifetime elision not enabled for '",
+                       func->getNameAsString(), "'"));
+    };
+  } else if (!result.this_lifetimes.empty()) {
     // If we have an implicit `this` parameter, its lifetime is assigned to all
     // output lifetimes.
-    result.return_lifetimes = CreateLifetimesForType(
-        func->getReturnType(), [this_lifetime]() { return this_lifetime; });
-    return result;
+    elided_return_lifetime_factory =
+        [this_lifetime =
+             result.this_lifetimes.back()]() -> llvm::Expected<Lifetime> {
+      return this_lifetime;
+    };
+  } else if (all_input_lifetimes.size() == 1) {
+    // If we have a single input lifetime, its lifetime is assigned to all
+    // output lifetimes.
+    // Otherwise, elided_return_lifetime_factory remains empty, and we get an
+    // error if there are any elided lifetimes in the return type.
+    elided_return_lifetime_factory =
+        [return_lifetime =
+             all_input_lifetimes[0]]() -> llvm::Expected<Lifetime> {
+      return return_lifetime;
+    };
+  } else {
+    elided_return_lifetime_factory = [func]() -> llvm::Expected<Lifetime> {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          absl::StrCat(
+              "Cannot elide output lifetimes for '", func->getNameAsString(),
+              "' because it is a non-member function that does not have "
+              "exactly one input lifetime"));
+    };
   }
 
-  // If we have no output lifetimes, there's nothing left to do.
-  if (CreateLifetimesForType(func->getReturnType(), Lifetime::Static).empty()) {
-    return result;
+  if (llvm::Error err = AddLifetimeAnnotationsForType(
+          func->getTypeSourceInfo()
+              ->getTypeLoc()
+              .getAsAdjusted<clang::FunctionTypeLoc>()
+              .getReturnLoc(),
+          symbol_table, elided_return_lifetime_factory, func->getASTContext(),
+          result.return_lifetimes)) {
+    return err;
   }
 
-  // If we have a single input lifetime, its lifetime is assigned to all output
-  // lifetimes.
-  if (all_input_lifetimes.size() == 1) {
-    result.return_lifetimes = CreateLifetimesForType(
-        func->getReturnType(),
-        [&all_input_lifetimes]() { return all_input_lifetimes[0]; });
-    return result;
-  }
-
-  return std::nullopt;
+  return result;
 }
+
+}  // namespace
 
 llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     const clang::FunctionDecl* func, const LifetimeAnnotationContext& context,
@@ -69,49 +211,17 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
   // - If we have multiple declarations of a function, make sure they are all
   //   annotated with the same lifetimes.
 
-  // For the time being, we only return elided lifetimes.
+  clang::SourceManager& source_manager =
+      func->getASTContext().getSourceManager();
+  clang::FileID file_id =
+      source_manager.getFileID(func->getSourceRange().getBegin());
+  bool elision_enabled = context.lifetime_elision_files.contains(file_id);
 
-  // See whether there are any lifetimes to be elided at all.
-  std::optional<FunctionLifetimes> elided_lifetimes =
-      ElidedLifetimes(func, Lifetime::Static);
-
-  if (!elided_lifetimes.has_value()) {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
-        absl::StrCat("Cannot determine output lifetimes for '",
-                     func->getNameAsString(),
-                     "' because it does not have exactly one input lifetime"));
+  LifetimeSymbolTable throw_away_symbol_table;
+  if (!symbol_table) {
+    symbol_table = &throw_away_symbol_table;
   }
-
-  // If the function has any elided lifetimes, we need to check if lifetime
-  // elision is enabled.
-  if (elided_lifetimes->ContainsLifetimes()) {
-    clang::SourceManager& source_manager =
-        func->getASTContext().getSourceManager();
-    clang::FileID file_id =
-        source_manager.getFileID(func->getSourceRange().getBegin());
-    if (!context.lifetime_elision_files.contains(file_id)) {
-      return llvm::createStringError(
-          llvm::inconvertibleErrorCode(),
-          absl::StrCat("Lifetime elision not enabled for '",
-                       func->getNameAsString(), "'"));
-    }
-  }
-
-  // We know we're allowed to elide lifetimes, so produce the elided lifetimes
-  // again, but this time create new variables for the elided lifetimes.
-  if (symbol_table) {
-    elided_lifetimes = ElidedLifetimes(func, [symbol_table]() {
-      Lifetime lifetime = Lifetime::CreateVariable();
-      symbol_table->LookupLifetimeAndMaybeDeclare(lifetime);
-      return lifetime;
-    });
-  } else {
-    elided_lifetimes = ElidedLifetimes(func, Lifetime::CreateVariable);
-  }
-
-  assert(elided_lifetimes.has_value());
-  return std::move(elided_lifetimes).value();
+  return GetLifetimeAnnotationsInternal(func, *symbol_table, elision_enabled);
 }
 
 namespace {

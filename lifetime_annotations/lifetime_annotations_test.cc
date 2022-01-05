@@ -87,6 +87,16 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsNoLifetimeElision) {
                        StartsWith("Lifetime elision not enabled")));
 }
 
+TEST_F(LifetimeAnnotationsTest, Failure_NoOutputAnnotationNoLifetimeElision) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        int* f();
+  )"),
+              StatusIs(absl::StatusCode::kUnknown,
+                       // We specifically want to see this error message rather
+                       // than "Cannot elide output lifetimes".
+                       StartsWith("Lifetime elision not enabled")));
+}
+
 TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
@@ -132,7 +142,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Method) {
           int** method(int *, int *);
         };
   )"),
-              IsOkAndHolds(LifetimesAre({{"S::method", "c: a, b -> (c, c)"}})));
+              IsOkAndHolds(LifetimesAre({{"S::method", "a: b, c -> (a, a)"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
@@ -141,7 +151,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
         int* f();
   )"),
               StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Cannot determine output lifetimes")));
+                       StartsWith("Cannot elide output lifetimes")));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
@@ -150,7 +160,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
         int* f(int**);
   )"),
               StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Cannot determine output lifetimes")));
+                       StartsWith("Cannot elide output lifetimes")));
 }
 
 }  // namespace

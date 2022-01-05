@@ -1436,14 +1436,14 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub fn f<'a, 'b>(__this: &'b mut S, i: &'a mut i32) -> &'b mut i32 { ... }
+                pub fn f<'a, 'b>(__this: &'a mut S, i: &'b mut i32) -> &'a mut i32 { ... }
             }
         );
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'b mut S, i: &'a mut i32)
-                    -> &'b mut i32;
+                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut S, i: &'b mut i32)
+                    -> &'a mut i32;
             }
         );
         Ok(())

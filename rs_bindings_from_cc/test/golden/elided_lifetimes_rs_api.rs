@@ -25,14 +25,14 @@ pub struct S {
 
 impl S {
     #[inline(always)]
-    pub fn method<'a, 'b, 'c>(__this: &'c mut S, p1: &'a mut i32, p2: &'b mut i32) -> &'c mut i32 {
+    pub fn method<'a, 'b, 'c>(__this: &'a mut S, p1: &'b mut i32, p2: &'c mut i32) -> &'a mut i32 {
         unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
     }
 }
 
 impl Default for S {
     #[inline(always)]
-    fn default<'a>() -> Self {
+    fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN1SC1Ev(tmp.as_mut_ptr());
@@ -63,11 +63,11 @@ mod detail {
         pub(crate) fn __rust_thunk___Z13free_functionRi<'a>(p1: &'a mut i32) -> &'a mut i32;
         #[link_name = "_ZN1S6methodERiS0_"]
         pub(crate) fn __rust_thunk___ZN1S6methodERiS0_<'a, 'b, 'c>(
-            __this: &'c mut S,
-            p1: &'a mut i32,
-            p2: &'b mut i32,
-        ) -> &'c mut i32;
-        pub(crate) fn __rust_thunk___ZN1SC1Ev<'a>(__this: &'a mut S);
+            __this: &'a mut S,
+            p1: &'b mut i32,
+            p2: &'c mut i32,
+        ) -> &'a mut i32;
+        pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: *mut S);
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi<'a>(p: Option<&'a mut i32>);
     }
