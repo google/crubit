@@ -38,6 +38,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
+#include "util/gtl/flat_map.h"
 
 namespace rs_bindings_from_cc {
 
@@ -420,12 +421,38 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
     clang::QualType qual_type,
     std::optional<devtools_rust::TypeLifetimes> lifetimes,
     bool nullable) const {
+  // A mapping of C++ standard types to their equivalent Rust types.
+  // To produce more idiomatic results, these types receive special handling
+  // instead of using the generic type mapping mechanism.
+  static constexpr auto well_known_types =
+      gtl::fixed_flat_map_of<absl::string_view, absl::string_view>({
+          {"ptrdiff_t", "isize"},
+          {"intptr_t", "isize"},
+          {"size_t", "usize"},
+          {"uintptr_t", "usize"},
+          {"int8_t", "i8"},
+          {"uint8_t", "u8"},
+          {"int16_t", "i16"},
+          {"uint16_t", "u16"},
+          {"int32_t", "i32"},
+          {"uint32_t", "u32"},
+          {"int64_t", "i64"},
+          {"uint64_t", "u64"},
+          {"char16_t", "u16"},
+          {"char32_t", "u32"},
+          {"wchar_t", "i32"},
+      });
+
   std::optional<MappedType> type = std::nullopt;
   // When converting the type to a string, don't include qualifiers -- we handle
   // these separately.
   std::string type_string = qual_type.getUnqualifiedType().getAsString();
 
-  if (const auto* pointer_type = qual_type->getAs<clang::PointerType>()) {
+  if (auto iter = well_known_types.find(type_string);
+      iter != well_known_types.end()) {
+    type = MappedType::Simple(std::string(iter->second), type_string);
+  } else if (const auto* pointer_type =
+                 qual_type->getAs<clang::PointerType>()) {
     std::optional<LifetimeId> lifetime;
     if (lifetimes.has_value()) {
       CHECK(!lifetimes->empty());
@@ -450,7 +477,9 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
       type = MappedType::LValueReferenceTo(*pointee_type, lifetime);
     }
   } else if (const auto* builtin_type =
-                 qual_type->getAs<clang::BuiltinType>()) {
+                 // Use getAsAdjusted instead of getAs so we don't desugar
+                 // typedefs.
+             qual_type->getAsAdjusted<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
         type = MappedType::Simple("bool", "bool");
@@ -467,13 +496,7 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
       default:
         if (builtin_type->isIntegerType()) {
           auto size = ctx_->getTypeSize(builtin_type);
-          if (size == 64 &&
-              (type_string == "ptrdiff_t" || type_string == "intptr_t")) {
-            type = MappedType::Simple("isize", type_string);
-          } else if (size == 64 &&
-                     (type_string == "size_t" || type_string == "uintptr_t")) {
-            type = MappedType::Simple("usize", type_string);
-          } else if (size == 8 || size == 16 || size == 32 || size == 64) {
+          if (size == 8 || size == 16 || size == 32 || size == 64) {
             type = MappedType::Simple(
                 absl::Substitute(
                     "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),

@@ -432,6 +432,27 @@ fn test_typedef() -> Result<()> {
 }
 
 #[test]
+fn test_integer_typedef_usage() -> Result<()> {
+    // This is a regression test. We used to incorrectly desugar typedefs of
+    // builtin types and treat them as if they were the underlying builtin type.
+    // As a result, this test would produce a binding for f(MyTypedef) (with an
+    // `int` parameter), even though we currently don't support typedefs.
+    // Once we add support for typedefs, this test should be converted to a
+    // code generation test that verifies that the binding for f() has a
+    // parameter of type `MyTypedef`.
+    let ir = ir_from_cc(
+        r#"
+            typedef int MyTypedef;
+            void f(MyTypedef my_typedef);
+        "#,
+    )?;
+    let unsupported = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
+    assert_strings_contain(&unsupported, "f");
+
+    Ok(())
+}
+
+#[test]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
     assert!(!ir.records().any(|r| r.identifier.identifier == "Struct"));
