@@ -421,7 +421,9 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
     std::optional<devtools_rust::TypeLifetimes> lifetimes,
     bool nullable) const {
   std::optional<MappedType> type = std::nullopt;
-  std::string type_string = qual_type.getAsString();
+  // When converting the type to a string, don't include qualifiers -- we handle
+  // these separately.
+  std::string type_string = qual_type.getUnqualifiedType().getAsString();
 
   if (const auto* pointer_type = qual_type->getAs<clang::PointerType>()) {
     std::optional<LifetimeId> lifetime;

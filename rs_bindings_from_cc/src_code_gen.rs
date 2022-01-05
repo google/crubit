@@ -1136,6 +1136,45 @@ mod tests {
     }
 
     #[test]
+    fn test_const_char_ptr_func() -> Result<()> {
+        // This is a regression test: We used to include the "const" in the name
+        // of the CcType, which caused a panic in the code generator
+        // ('"const char" is not a valid Ident').
+        // It's therefore important that f() is inline so that we need to
+        // generate a thunk for it (where we then process the CcType).
+        let ir = ir_from_cc(&tokens_to_string(quote! {
+            inline void f(const char *str);
+        })?)?;
+
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn f(str: *const i8) {
+                    unsafe { crate::detail::__rust_thunk___Z1fPKc(str) }
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                extern "C" {
+                    pub(crate) fn __rust_thunk___Z1fPKc(str: *const i8);
+                }
+            }
+        );
+
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
+                extern "C" void __rust_thunk___Z1fPKc(char const * str){ f(str) ; }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_item_order() -> Result<()> {
         let ir = ir_from_cc(
             "int first_func();
