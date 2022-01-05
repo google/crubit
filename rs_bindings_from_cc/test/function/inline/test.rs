@@ -16,4 +16,9 @@ mod tests {
         let s = SomeStruct { int_field: 789 };
         assert_eq!(789, take_struct_by_const_ref(&s));
     }
+
+    #[test]
+    fn test_double_unsigned_int() {
+        assert_eq!(double_unsigned_int(123), 246);
+    }
 }

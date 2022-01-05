@@ -691,12 +691,12 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 let nested_type = format_cc_type(&ty.type_args[0], ir)?;
                 Ok(quote! {#nested_type &})
             }
-            ident => {
+            cc_type_name => {
                 if !ty.type_args.is_empty() {
                     bail!("Type not yet supported: {:?}", ty);
                 }
-                let ident = make_ident(ident);
-                Ok(quote! {#ident #const_fragment})
+                let idents = cc_type_name.split_whitespace().map(make_ident);
+                Ok(quote! {#( #idents )* #const_fragment})
             }
         }
     } else {
@@ -1048,6 +1048,21 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___Z3fooRK1S(const S& s) {
                     foo(s);
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_unsigned_int_in_thunk_impls() -> Result<()> {
+        let ir = ir_from_cc("inline void foo(unsigned int i) {} ")?;
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z3fooj(unsigned int i) {
+                    foo(i);
                 }
             }
         );

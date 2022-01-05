@@ -14,4 +14,9 @@ struct SomeStruct {
 };
 inline int take_struct_by_const_ref(const SomeStruct& s) { return s.int_field; }
 
+// This testcase helps verify that thunks correctly work with primitive types
+// that have multi-word type names (e.g. `unsigned int`). Using an 'inline'
+// method forces generation of a C++ thunk.
+inline unsigned int double_unsigned_int(unsigned int i) { return 2 * i; }
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
