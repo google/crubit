@@ -1415,6 +1415,10 @@ mod tests {
         let rs_api = generate_rs_api(&ir)?;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_matches!(rs_api, quote! {pub x: i32});
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        // TODO(b/213326125): Avoid generating thunk impls that are never called.
+        // (The test assertion below should be reversed once this bug is fixed.)
+        assert_cc_matches!(rs_api_impl, quote! { std::destroy_at });
         Ok(())
     }
 
