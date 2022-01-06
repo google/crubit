@@ -194,7 +194,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
               .getReturnLoc(),
           symbol_table, elided_return_lifetime_factory, func->getASTContext(),
           result.return_lifetimes)) {
-    return err;
+    return std::move(err);
   }
 
   return result;
