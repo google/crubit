@@ -184,7 +184,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
 
-    let mut calls_thunk = true;
     let api_func = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
             let ident = make_ident(&id.identifier);
@@ -213,19 +212,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 SpecialMemberDefinition::Trivial => {
                     return empty_result;
                 }
-                SpecialMemberDefinition::NontrivialMembers => {
-                    calls_thunk = false;
-                    quote! {
-                        #doc_comment
-                        impl Drop for #type_name {
-                            #[inline(always)]
-                            fn drop(&mut self) {
-                                /* the destructors of the members can be invoked instead */
-                            }
-                        }
-                    }
-                }
-                SpecialMemberDefinition::NontrivialUserDefined => {
+                SpecialMemberDefinition::NontrivialMembers
+                | SpecialMemberDefinition::NontrivialUserDefined => {
                     // Note: to avoid double-destruction of the fields, they are all wrapped in
                     // ManuallyDrop in this case. See `generate_record`.
                     quote! {
@@ -308,7 +296,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         }
     };
 
-    let thunk = if calls_thunk {
+    let thunk = {
         let thunk_attr = if can_skip_cc_thunk(func) {
             quote! {#[link_name = #mangled_name]}
         } else {
@@ -320,8 +308,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
             ) #return_type_fragment ;
         }
-    } else {
-        quote! {}
     };
 
     Ok((api_func.into(), thunk.into()))
@@ -361,15 +347,20 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .fields
         .iter()
         .map(|f| {
-            let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())
-                .with_context(|| {
+            let formatted =
+                format_rs_type(&f.type_.rs_type, ir, &HashMap::new()).with_context(|| {
                     format!("Failed to format type for field {:?} on record {:?}", f, record)
                 })?;
-            if record.destructor.definition == SpecialMemberDefinition::NontrivialUserDefined {
-                formatted = quote! {
-                    std::mem::ManuallyDrop<#formatted>
-                };
-            }
+            let formatted = match record.destructor.definition {
+                // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop if
+                // we can ask Rust to preserve field destruction order in
+                // NontrivialMembers case.
+                SpecialMemberDefinition::NontrivialMembers
+                | SpecialMemberDefinition::NontrivialUserDefined => {
+                    quote! { std::mem::ManuallyDrop<#formatted> }
+                }
+                _ => formatted,
+            };
             Ok(formatted)
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1239,8 +1230,6 @@ mod tests {
 
         let idx = |s: &str| rs_api.find(s).ok_or(anyhow!("'{}' missing", s));
 
-        println!("{:?}", ir);
-
         let f1 = idx("fn first_func")?;
         let f2 = idx("fn second_func")?;
         let s1 = idx("struct FirstStruct")?;
@@ -1361,15 +1350,23 @@ mod tests {
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        println!("{}", rs_api);
-        assert_rs_matches!(rs_api, quote! {impl Drop});
-        assert_rs_not_matches!(rs_api, quote! {fn drop(&mut self) {}});
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl Drop for UserDefinedDestructor {
+                    #[inline(always)]
+                    fn drop(&mut self) {
+                        unsafe { crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self) }
+                    }
+                }
+            }
+        );
         assert_rs_matches!(rs_api, quote! {pub x: std::mem::ManuallyDrop<i32>,});
         Ok(())
     }
 
-    /// nontrivial types without user-defined destructors must have an empty
-    /// drop definition.
+    /// nontrivial types without user-defined destructors should invoke
+    /// the C++ destructor to preserve the order of field destructions.
     #[test]
     fn test_impl_drop_nontrivial_member_destructor() -> Result<()> {
         // TODO(jeanpierreda): This would be cleaner if the UserDefinedDestructor code were
@@ -1386,8 +1383,22 @@ mod tests {
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        assert_rs_matches!(rs_api, quote! {fn drop(&mut self) {}});
-        assert_rs_matches!(rs_api, quote! {pub x: i32,});
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl Drop for NontrivialMembers {
+                    #[inline(always)]
+                    fn drop(&mut self) {
+                        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
+                    }
+                }
+            }
+        );
+        assert_rs_matches!(rs_api, quote! {pub x: std::mem::ManuallyDrop<i32>,});
+        assert_rs_matches!(
+            rs_api,
+            quote! {pub udd: std::mem::ManuallyDrop<UserDefinedDestructor>,}
+        );
         Ok(())
     }
 

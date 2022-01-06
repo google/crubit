@@ -13,10 +13,8 @@ mod tests {
         let field2_value = 2;
         let field3_value = 3;
 
-        // TODO(lukasza): Fix the product code to ensure that the C++ and Rust
-        // expectations below match.
         let expected_destruction_order_in_cpp = 321;
-        let expected_destruction_order_in_rust = 123;
+        let expected_destruction_order_in_rust = 321;
 
         // The 3 statements below just confirm what C++ documentation says in
         // https://en.cppreference.com/w/cpp/language/destructor: For both
@@ -40,9 +38,15 @@ mod tests {
             // The code below constructs the same FieldDestructionOrderTester object
             // as done internally in DestructFromCpp above.
             let tester = FieldDestructionOrderTester {
-                field1: DestructionOrderRecorder { int_field: ManuallyDrop::new(field1_value) },
-                field2: DestructionOrderRecorder { int_field: ManuallyDrop::new(field2_value) },
-                field3: DestructionOrderRecorder { int_field: ManuallyDrop::new(field3_value) },
+                field1: ManuallyDrop::new(DestructionOrderRecorder {
+                    int_field: ManuallyDrop::new(field1_value),
+                }),
+                field2: ManuallyDrop::new(DestructionOrderRecorder {
+                    int_field: ManuallyDrop::new(field2_value),
+                }),
+                field3: ManuallyDrop::new(DestructionOrderRecorder {
+                    int_field: ManuallyDrop::new(field3_value),
+                }),
             };
             // Dropping the `tester` should invoke destructors of field1/2/3 in the
             // same order as C++ (e.g. by calling into the C++ destructor of
