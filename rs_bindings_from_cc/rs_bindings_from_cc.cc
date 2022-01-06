@@ -101,10 +101,17 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  rs_bindings_from_cc::Label current_target =
-      headers_to_targets
-          .find(rs_bindings_from_cc::HeaderName(public_headers[0]))
-          ->second;
+  rs_bindings_from_cc::Label current_target;
+  {
+    auto it = headers_to_targets.find(
+        rs_bindings_from_cc::HeaderName(public_headers[0]));
+    QCHECK(it != headers_to_targets.end())
+        << "Couldn't find header '" << public_headers[0] << "' in "
+        << "the `headers_to_target` map derived from the "
+        << "--targets_and_headers cmdline argument";
+    current_target = it->second;
+  }
+
   for (const auto& public_header : public_headers) {
     rs_bindings_from_cc::Label header_target =
         headers_to_targets.find(rs_bindings_from_cc::HeaderName(public_header))
