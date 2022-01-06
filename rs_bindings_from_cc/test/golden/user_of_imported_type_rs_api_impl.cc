@@ -11,6 +11,10 @@ extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
     UserOfImportedType* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
+    UserOfImportedType* __this, const UserOfImportedType& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
     UserOfImportedType* __this) {
   std ::destroy_at(__this);

@@ -7,12 +7,20 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
+extern "C" void __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
+    DocCommentSlashes* __this, const DocCommentSlashes& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN17DocCommentSlashesD1Ev(
     DocCommentSlashes* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangC1Ev(DocCommentBang* __this) {
   rs_api_impl_support ::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN14DocCommentBangC1ERKS_(
+    DocCommentBang* __this, const DocCommentBang& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangD1Ev(DocCommentBang* __this) {
   std ::destroy_at(__this);
@@ -21,6 +29,11 @@ extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
     MultilineCommentTwoStars* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(
+    MultilineCommentTwoStars* __this,
+    const MultilineCommentTwoStars& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsD1Ev(
     MultilineCommentTwoStars* __this) {
   std ::destroy_at(__this);
@@ -28,12 +41,20 @@ extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsD1Ev(
 extern "C" void __rust_thunk___ZN11LineCommentC1Ev(LineComment* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN11LineCommentC1ERKS_(
+    LineComment* __this, const LineComment& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN11LineCommentD1Ev(LineComment* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarC1Ev(
     MultilineOneStar* __this) {
   rs_api_impl_support ::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN16MultilineOneStarC1ERKS_(
+    MultilineOneStar* __this, const MultilineOneStar& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarD1Ev(
     MultilineOneStar* __this) {

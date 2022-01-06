@@ -28,6 +28,26 @@ mod tests {
     }
 
     #[test]
+    fn test_inline_constructors() {
+        assert_impl_all!(StructWithInlineConstructors: Default);
+        let s: StructWithInlineConstructors = Default::default();
+        assert_eq!(123, s.int_field);
+
+        // TODO(lukasza): Implement and test a user-defined copy constructor / impl
+        // Clone.
+
+        // Trivial-ABI structs implement the Copy trait, even if they have user-defined
+        // constructors.
+        assert_impl_all!(StructWithUserProvidedConstructors: Copy);
+        let s3 = s;
+        assert_eq!(123, s3.int_field);
+
+        assert_impl_all!(StructWithInlineConstructors: From<i32>);
+        let i: StructWithInlineConstructors = 456.into();
+        assert_eq!(456, i.int_field);
+    }
+
+    #[test]
     fn test_deleted_constructors() {
         assert_not_impl_all!(StructWithDeletedConstructors: Clone);
         assert_not_impl_all!(StructWithDeletedConstructors: Copy);

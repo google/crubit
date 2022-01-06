@@ -10,12 +10,20 @@
 extern "C" void __rust_thunk___ZN7TrivialC1Ev(Trivial* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN7TrivialC1ERKS_(Trivial* __this,
+                                                 const Trivial& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN7TrivialD1Ev(Trivial* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
     TrivialWithDefaulted* __this) {
   rs_api_impl_support ::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
+    TrivialWithDefaulted* __this, const TrivialWithDefaulted& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
     TrivialWithDefaulted* __this) {
@@ -24,6 +32,10 @@ extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
 extern "C" void __rust_thunk___ZN15TrivialNonfinalC1Ev(
     TrivialNonfinal* __this) {
   rs_api_impl_support ::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN15TrivialNonfinalC1ERKS_(
+    TrivialNonfinal* __this, const TrivialNonfinal& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalD1Ev(
     TrivialNonfinal* __this) {

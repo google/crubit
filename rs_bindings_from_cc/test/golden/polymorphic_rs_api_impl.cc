@@ -15,6 +15,10 @@ extern "C" void __rust_thunk___ZN16PolymorphicClassC1Ev(
     PolymorphicClass* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN16PolymorphicClassC1ERKS_(
+    PolymorphicClass* __this, const PolymorphicClass& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 
 static_assert(sizeof(PolymorphicClass) == 8);
 static_assert(alignof(PolymorphicClass) == 8);

@@ -15,6 +15,10 @@ extern "C" void __rust_thunk___ZN16ContainingStructC1Ev(
     ContainingStruct* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN16ContainingStructC1ERKS_(
+    ContainingStruct* __this, const ContainingStruct& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN16ContainingStructD1Ev(
     ContainingStruct* __this) {
   std ::destroy_at(__this);

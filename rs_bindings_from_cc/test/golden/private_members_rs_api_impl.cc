@@ -10,6 +10,10 @@
 extern "C" void __rust_thunk___ZN9SomeClassC1Ev(SomeClass* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN9SomeClassC1ERKS_(SomeClass* __this,
+                                                   const SomeClass& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN9SomeClassD1Ev(SomeClass* __this) {
   std ::destroy_at(__this);
 }

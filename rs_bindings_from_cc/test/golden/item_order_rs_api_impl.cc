@@ -10,12 +10,20 @@
 extern "C" void __rust_thunk___ZN11FirstStructC1Ev(FirstStruct* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN11FirstStructC1ERKS_(
+    FirstStruct* __this, const FirstStruct& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN11FirstStructD1Ev(FirstStruct* __this) {
   std ::destroy_at(__this);
 }
 extern "C" int __rust_thunk___Z10first_funcv() { return first_func(); }
 extern "C" void __rust_thunk___ZN12SecondStructC1Ev(SecondStruct* __this) {
   rs_api_impl_support ::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN12SecondStructC1ERKS_(
+    SecondStruct* __this, const SecondStruct& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN12SecondStructD1Ev(SecondStruct* __this) {
   std ::destroy_at(__this);

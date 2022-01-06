@@ -10,6 +10,9 @@
 extern "C" void __rust_thunk___ZN1SC1Ev(S* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
+extern "C" void __rust_thunk___ZN1SC1ERKS_(S* __this, const S& __param_0) {
+  rs_api_impl_support ::construct_at(__this, __param_0);
+}
 extern "C" void __rust_thunk___ZN1SD1Ev(S* __this) { std ::destroy_at(__this); }
 
 static_assert(sizeof(S) == 1);

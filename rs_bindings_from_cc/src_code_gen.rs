@@ -760,20 +760,14 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                     }
                 }
             }
-            // Use destroy_at to avoid needing to spell out the class name. Destructor identiifers
+            // Use `destroy_at` to avoid needing to spell out the class name. Destructor identiifers
             // use the name of the type itself, without namespace qualification, template
             // parameters, or aliases. We do not need to use that naming scheme anywhere else in
             // the bindings, and it can be difficult (impossible?) to spell in the general case. By
             // using destroy_at, we avoid needing to determine or remember what the correct spelling
-            // is.
+            // is. Similar arguments apply to `construct_at`.
             UnqualifiedIdentifier::Constructor => {
-                if func.params.len() == 1 {
-                    quote! { rs_api_impl_support::construct_at }
-                } else {
-                    // TODO(b/208946210): Map some of these constructors to the From trait.
-                    // TODO(b/200066396): Map other constructors (to the Clone trait?).
-                    continue;
-                }
+                quote! { rs_api_impl_support::construct_at }
             }
             UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
         };

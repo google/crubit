@@ -17,7 +17,14 @@ struct StructWithUserProvidedConstructors final {
   int int_field;
 };
 
-// TODO(lukasza): StructWithInlinedConstructors (to force thunk generation).
+// Inline-defined constructors test that thunks are properly implemented by
+// `generate_rs_api_impl`.
+struct StructWithInlineConstructors final {
+  StructWithInlineConstructors() : int_field(123) {}
+  // TODO(lukasza): Add a copy constructor (to be mapped to Clone?)
+  explicit StructWithInlineConstructors(int i) : int_field(i) {}
+  int int_field;
+};
 
 struct StructWithDeletedConstructors final {
   StructWithDeletedConstructors() = delete;
