@@ -9,7 +9,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
@@ -143,11 +143,52 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
     true
 }
 
+/// Uniquely identifies a generated Rust function.
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct FunctionId {
+    // If the function is on a trait impl, contains the name of the Self type for
+    // which the trait is being implemented.
+    self_type: Option<syn::Path>,
+    // Fully qualified path of the function. For functions in impl blocks, this
+    // includes the name of the type or trait on which the function is being
+    // implemented, e.g. `Default::default`.
+    function_path: syn::Path,
+}
+
+/// Returns the name of `func` in C++ synatx.
+fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
+    let record: Option<&str> = func
+        .member_func_metadata
+        .as_ref()
+        .map(|meta| meta.find_record(ir))
+        .transpose()?
+        .map(|r| &*r.identifier.identifier);
+
+    let func_name = match &func.name {
+        UnqualifiedIdentifier::Identifier(id) => id.identifier.clone(),
+        UnqualifiedIdentifier::Destructor => {
+            format!("~{}", record.expect("destructor must be associated with a record"))
+        }
+        UnqualifiedIdentifier::Constructor => {
+            format!("~{}", record.expect("constructor must be associated with a record"))
+        }
+    };
+
+    if let Some(record_name) = record {
+        Ok(format!("{}::{}", record_name, func_name))
+    } else {
+        Ok(func_name)
+    }
+}
+
 /// Generates Rust source code for a given `Func`.
 ///
-/// Returns the generated function or trait impl, and the thunk, as a tuple.
-fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
-    let empty_result = Ok((quote! {}.into(), quote! {}.into()));
+/// Returns None if no code was generated for the function; otherwise, returns
+/// a tuple containing:
+/// - The generated function or trait impl
+/// - The thunk
+/// - A `FunctionId` identifying the generated Rust function
+fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func);
     let doc_comment = generate_doc_comment(&func.doc_comment);
@@ -184,7 +225,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
 
-    let api_func = match &func.name {
+    let api_func: TokenStream;
+    let function_id: FunctionId;
+    match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
             let ident = make_ident(&id.identifier);
             let fn_def = quote! {
@@ -196,12 +239,19 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 }
             };
             match &func.member_func_metadata {
-                None => fn_def,
+                None => {
+                    api_func = fn_def;
+                    function_id = FunctionId { self_type: None, function_path: ident.into() };
+                }
                 Some(meta) => {
                     let type_name = make_ident(&meta.find_record(ir)?.identifier.identifier);
-                    quote! { impl #type_name { #fn_def } }
+                    api_func = quote! { impl #type_name { #fn_def } };
+                    function_id = FunctionId {
+                        self_type: None,
+                        function_path: syn::parse2(quote! { #type_name :: #ident })?,
+                    };
                 }
-            }
+            };
         }
 
         UnqualifiedIdentifier::Destructor => {
@@ -210,13 +260,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             match record.destructor.definition {
                 // TODO(b/202258760): Only omit destructor if `Copy` is specified.
                 SpecialMemberDefinition::Trivial => {
-                    return empty_result;
+                    return Ok(None);
                 }
                 SpecialMemberDefinition::NontrivialMembers
                 | SpecialMemberDefinition::NontrivialUserDefined => {
                     // Note: to avoid double-destruction of the fields, they are all wrapped in
                     // ManuallyDrop in this case. See `generate_record`.
-                    quote! {
+                    api_func = quote! {
                         #doc_comment
                         impl Drop for #type_name {
                             #[inline(always)]
@@ -224,7 +274,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                                 unsafe { crate::detail::#thunk_ident(self) }
                             }
                         }
-                    }
+                    };
+                    function_id = FunctionId {
+                        self_type: Some(type_name.into()),
+                        function_path: syn::parse2(quote! {Drop::drop})?,
+                    };
                 }
                 SpecialMemberDefinition::Deleted => {
                     bail!("Deleted destructors can't be called") // TODO(b/200066399): handle this?
@@ -238,7 +292,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             // attribute).
             let record = record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             if !record.is_trivial_abi {
-                return empty_result;
+                return Ok(None);
             }
             let (trait_name, method_name) = match func.params.len() {
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
@@ -248,7 +302,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                     if param_type.cc_type.is_const_ref_to(record) {
                         // TODO(b/200066396): Map copy constructor to `impl Clone`.
                         // TODO(lukasza): Do something smart with move constructor.
-                        return empty_result;
+                        return Ok(None);
                     } else {
                         let quoted_param_type = &param_types[1];
                         (quote! { From< #quoted_param_type > }, quote! { from })
@@ -256,7 +310,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 }
                 _ => {
                     // TODO(b/200066396): Map other constructors to something.
-                    return empty_result;
+                    return Ok(None);
                 }
             };
             // Skip the first parameter in the public function definition. C++ constructors
@@ -280,7 +334,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             // TODO(b/213243309): Double-check if zero-initialization is
             // desirable here.
             let struct_name = make_ident(&record.identifier.identifier);
-            quote! {
+            api_func = quote! {
                 #doc_comment
                 impl #trait_name for #struct_name {
                     #[inline(always)]
@@ -292,7 +346,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                         }
                     }
                 }
-            }
+            };
+            function_id = FunctionId {
+                self_type: Some(struct_name.into()),
+                function_path: syn::parse2(quote! { #trait_name :: #method_name })?,
+            };
         }
     };
 
@@ -310,7 +368,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         }
     };
 
-    Ok((api_func.into(), thunk.into()))
+    Ok(Some((api_func.into(), thunk.into(), function_id)))
 }
 
 fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
@@ -507,14 +565,35 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     // For #![rustfmt::skip].
     features.insert(make_ident("custom_inner_attributes"));
 
+    // Identify all functions having overloads that we can't import (yet).
+    // TODO(b/213280424): Implement support for overloaded functions.
+    let mut seen_funcs = HashSet::new();
+    let mut overloaded_funcs = HashSet::new();
+    for func in ir.functions() {
+        if let Some((_, _, function_id)) = generate_func(func, ir)? {
+            if !seen_funcs.insert(function_id.clone()) {
+                overloaded_funcs.insert(function_id);
+            }
+        }
+    }
+
     for item in ir.items() {
         match item {
             Item::Func(func) => {
-                let (snippet, thunk) = generate_func(func, ir)?;
-                features.extend(snippet.features);
-                features.extend(thunk.features);
-                items.push(snippet.tokens);
-                thunks.push(thunk.tokens);
+                if let Some((snippet, thunk, function_id)) = generate_func(func, ir)? {
+                    if overloaded_funcs.contains(&function_id) {
+                        items.push(generate_unsupported(&UnsupportedItem {
+                            name: cxx_function_name(func, ir)?,
+                            message: "Cannot generate bindings for overloaded function".to_string(),
+                            source_loc: func.source_loc.clone(),
+                        })?);
+                        continue;
+                    }
+                    features.extend(snippet.features);
+                    features.extend(thunk.features);
+                    items.push(snippet.tokens);
+                    thunks.push(thunk.tokens);
+                }
             }
             Item::Record(record) => {
                 if !ir.is_in_current_target(record) {
@@ -1522,6 +1601,50 @@ mod tests {
             .map(|s| syn::Lifetime::new(&format!("'{}", s), proc_macro2::Span::call_site()));
         assert_rs_matches!(format_generic_params(lifetimes), quote! { < 'a, 'b > });
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_overloaded_functions() -> Result<()> {
+        // TODO(b/213280424): We don't support creating bindings for overloaded
+        // functions yet, except in the case of overloaded constructors with a
+        // single parameter.
+        let ir = ir_from_cc(
+            r#"
+                void f();
+                void f(int i);
+                struct S1 {
+                  void f();
+                  void f(int i);
+                };
+                struct S2 {
+                  void f();
+                };
+                struct S3 {
+                  S3(int i);
+                  S3(double d);
+                };
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        let rs_api_str = tokens_to_string(rs_api.clone())?;
+
+        // Cannot overload free functions.
+        assert!(rs_api_str.contains("Error while generating bindings for item 'f'"));
+        assert_rs_not_matches!(rs_api, quote! {pub fn f()});
+        assert_rs_not_matches!(rs_api, quote! {pub fn f(i: i32)});
+
+        // Cannot overload member functions.
+        assert!(rs_api_str.contains("Error while generating bindings for item 'S1::f'"));
+        assert_rs_not_matches!(rs_api, quote! {pub fn f(... S1 ...)});
+
+        // But we can import member functions that have the same name as a free
+        // function.
+        assert_rs_matches!(rs_api, quote! {pub fn f(__this: *mut S2)});
+
+        // We can also import overloaded single-parameter constructors.
+        assert_rs_matches!(rs_api, quote! {impl From<i32> for S3});
+        assert_rs_matches!(rs_api, quote! {impl From<f64> for S3});
         Ok(())
     }
 }
