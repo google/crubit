@@ -67,7 +67,7 @@ impl Drop for NontrivialInline {
 /// each field.
 #[repr(C)]
 pub struct NontrivialMembers {
-    pub nontrivial_member: Nontrivial,
+    pub nontrivial_member: std::mem::ManuallyDrop<Nontrivial>,
 }
 
 impl !Unpin for NontrivialMembers {}
@@ -82,7 +82,9 @@ impl !Unpin for NontrivialMembers {}
 
 impl Drop for NontrivialMembers {
     #[inline(always)]
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
+    }
 }
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=36
@@ -101,6 +103,7 @@ mod detail {
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial);
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline);
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev(__this: *mut NontrivialMembers);
     }
 }
 
