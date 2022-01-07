@@ -46,6 +46,11 @@ fn test_function() {
             lifetime_params: vec![],
             is_inline: false,
             member_func_metadata: None,
+            source_loc: SourceLoc {
+                filename: "ir_from_cc_virtual_header.h".to_string(),
+                line: 3,
+                column: 1,
+            },
         })],
     );
 }
@@ -64,6 +69,11 @@ fn test_function_with_unnamed_parameters() {
             lifetime_params: vec![],
             is_inline: false,
             member_func_metadata: None,
+            source_loc: SourceLoc {
+                filename: "ir_from_cc_virtual_header.h".to_string(),
+                line: 3,
+                column: 1,
+            },
         })],
     );
 }

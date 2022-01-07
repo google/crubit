@@ -208,6 +208,7 @@ nlohmann::json Func::ToJson() const {
   if (member_func_metadata.has_value()) {
     func["member_func_metadata"] = member_func_metadata->ToJson();
   }
+  func["source_loc"] = source_loc.ToJson();
 
   nlohmann::json item;
   item["Func"] = std::move(func);

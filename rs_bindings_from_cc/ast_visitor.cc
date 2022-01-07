@@ -275,6 +275,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         .lifetime_params = std::move(lifetime_params),
         .is_inline = function_decl->isInlined(),
         .member_func_metadata = std::move(member_func_metadata),
+        .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
     });
   }
 

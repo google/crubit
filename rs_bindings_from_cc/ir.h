@@ -272,6 +272,19 @@ struct MemberFuncMetadata {
   std::optional<InstanceMethodMetadata> instance_method_metadata;
 };
 
+// Source code location
+struct SourceLoc {
+  nlohmann::json ToJson() const;
+
+  std::string filename;
+  uint64 line;
+  uint64 column;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const SourceLoc& r) {
+  return o << std::setw(internal::kJsonIndent) << r.ToJson();
+}
+
 // A function involved in the bindings.
 struct Func {
   nlohmann::json ToJson() const;
@@ -286,6 +299,7 @@ struct Func {
   bool is_inline;
   // If null, this is not a member function.
   std::optional<MemberFuncMetadata> member_func_metadata;
+  SourceLoc source_loc;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -390,19 +404,6 @@ struct Record {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
-  return o << std::setw(internal::kJsonIndent) << r.ToJson();
-}
-
-// Source code location
-struct SourceLoc {
-  nlohmann::json ToJson() const;
-
-  std::string filename;
-  uint64 line;
-  uint64 column;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const SourceLoc& r) {
   return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
 

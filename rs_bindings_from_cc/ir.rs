@@ -242,6 +242,7 @@ pub struct Func {
     pub lifetime_params: Vec<Lifetime>,
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
+    pub source_loc: SourceLoc,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
