@@ -5,6 +5,10 @@
 
 #![feature(custom_inner_attributes)]
 
+// <unknown location>
+// Error while generating bindings for item '__builtin_ms_va_list':
+// Cannot generate bindings for type aliases
+
 // namespace ns
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

@@ -267,10 +267,26 @@ auto FieldType(const Args&... matchers) {
   return testing::Field("type", &Field::type, AllOf(matchers...));
 }
 
+// Return the items from `ir` without predefined builtin types.
+decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
+  decltype(IR::items) items;
+
+  for (const auto& item : ir.items) {
+    if (const auto* type_alias = std::get_if<TypeAlias>(&item)) {
+      if (type_alias->identifier.Ident() == "__builtin_ms_va_list") {
+        continue;
+      }
+    }
+    items.push_back(item);
+  }
+
+  return items;
+}
+
 TEST(AstVisitorTest, Noop) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("// nothing interesting there."));
 
-  EXPECT_THAT(ir.items, IsEmpty());
+  EXPECT_THAT(ItemsWithoutBuiltins(ir), IsEmpty());
 }
 
 TEST(AstVisitorTest, ErrorOnInvalidInput) {
@@ -280,15 +296,16 @@ TEST(AstVisitorTest, ErrorOnInvalidInput) {
 
 TEST(AstVisitorTest, FuncWithVoidReturnType) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo();"));
-  EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(
-                            AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
-                                  ReturnType(IsVoid()), ParamsAre()))));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              ElementsAre(VariantWith<Func>(
+                  AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
+                        ReturnType(IsVoid()), ParamsAre()))));
 }
 
 TEST(AstVisitorTest, TwoFuncs) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Bar();"));
   EXPECT_THAT(
-      ir.items,
+      ItemsWithoutBuiltins(ir),
       ElementsAre(
           VariantWith<Func>(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
                                   ReturnType(IsVoid()), ParamsAre())),
@@ -309,33 +326,35 @@ TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
                           {HeaderName("test/testing_header_1.h"),
                            BlazeLabel{"//two_funcs:one_target"}},
                       }));
-  EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
-                                    VariantWith<Func>(IdentifierIs("Bar"))));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
+                          VariantWith<Func>(IdentifierIs("Bar"))));
 }
 
 TEST(AstVisitorTest, NonInlineFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo() {}"));
-  EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(
-                            AllOf(IdentifierIs("Foo"), Not(IsInline())))));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              ElementsAre(VariantWith<Func>(
+                  AllOf(IdentifierIs("Foo"), Not(IsInline())))));
 }
 
 TEST(AstVisitorTest, InlineFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("inline void Foo() {}"));
   EXPECT_THAT(
-      ir.items,
+      ItemsWithoutBuiltins(ir),
       ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
 TEST(AstVisitorTest, FuncJustOnce) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Foo();"));
-  EXPECT_THAT(ir.items,
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
 TEST(AstVisitorTest, TestImportPointerFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int* Foo(int* a);"));
 
-  EXPECT_THAT(ir.items,
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(AllOf(
                   ReturnType(IsIntPtr()), ParamsAre(ParamType(IsIntPtr()))))));
 }
@@ -359,7 +378,7 @@ TEST(AstVisitorTest, TestImportConstStructPointerFunc) {
 TEST(AstVisitorTest, TestImportReferenceFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int& Foo(int& a);"));
 
-  EXPECT_THAT(ir.items,
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(AllOf(
                   ReturnType(IsIntRef()), ParamsAre(ParamType(IsIntRef()))))));
 }

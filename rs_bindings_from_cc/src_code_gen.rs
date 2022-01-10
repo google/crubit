@@ -1655,4 +1655,19 @@ mod tests {
         assert_rs_matches!(rs_api, quote! {impl From<f64> for S3});
         Ok(())
     }
+
+    #[test]
+    fn test_type_alias() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+                typedef int MyTypedefDecl;
+                using MyTypeAliasDecl = int;
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        let rs_api_str = tokens_to_string(rs_api)?;
+        assert!(rs_api_str.contains("Error while generating bindings for item 'MyTypedefDecl'"));
+        assert!(rs_api_str.contains("Error while generating bindings for item 'MyTypeAliasDecl'"));
+        Ok(())
+    }
 }

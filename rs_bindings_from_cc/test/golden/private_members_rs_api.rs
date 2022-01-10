@@ -7,6 +7,10 @@
 
 use memoffset_unstable_const::offset_of;
 
+// <unknown location>
+// Error while generating bindings for item '__builtin_ms_va_list':
+// Cannot generate bindings for type aliases
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeClass {

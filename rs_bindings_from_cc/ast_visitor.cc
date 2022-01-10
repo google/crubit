@@ -334,13 +334,13 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   }
   // Provisionally assume that we know this RecordDecl so that we'll be able
   // to import fields whose type contains the record itself.
-  known_tag_decls_.insert(record_decl);
+  known_type_decls_.insert(record_decl);
   std::optional<std::vector<Field>> fields =
       ImportFields(record_decl, default_access);
   if (!fields.has_value()) {
     // Importing a field failed, so note that we didn't import this RecordDecl
     // after all.
-    known_tag_decls_.erase(record_decl);
+    known_type_decls_.erase(record_decl);
     return true;
   }
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
@@ -362,9 +362,39 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
 
 bool AstVisitor::VisitTypedefNameDecl(
     clang::TypedefNameDecl* typedef_name_decl) {
-  PushUnsupportedItem(typedef_name_decl,
-                      "Typedef-name declarations are not supported yet",
-                      typedef_name_decl->getBeginLoc());
+  const clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
+  if (decl_context) {
+    if (decl_context->isFunctionOrMethod()) {
+      return true;
+    }
+    if (decl_context->isRecord()) {
+      PushUnsupportedItem(typedef_name_decl,
+                          "Typedefs nested in classes are not supported yet",
+                          typedef_name_decl->getBeginLoc());
+      return true;
+    }
+  }
+
+  std::optional<Identifier> identifier =
+      GetTranslatedIdentifier(typedef_name_decl);
+  if (!identifier.has_value()) {
+    // This should never happen.
+    LOG(FATAL) << "Couldn't get identifier for TypedefNameDecl";
+    return true;
+  }
+  absl::StatusOr<MappedType> underlying_type =
+      ConvertType(typedef_name_decl->getUnderlyingType());
+  if (underlying_type.ok()) {
+    known_type_decls_.insert(typedef_name_decl);
+    ir_.items.push_back(
+        TypeAlias{.identifier = *identifier,
+                  .id = GenerateDeclId(typedef_name_decl),
+                  .owning_target = GetOwningTarget(typedef_name_decl),
+                  .underlying_type = *underlying_type});
+  } else {
+    PushUnsupportedItem(typedef_name_decl, underlying_type.status().ToString(),
+                        typedef_name_decl->getBeginLoc());
+  }
   return true;
 }
 
@@ -508,10 +538,22 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
   } else if (const auto* tag_type = qual_type->getAs<clang::TagType>()) {
     clang::TagDecl* tag_decl = tag_type->getDecl();
 
-    if (known_tag_decls_.contains(tag_decl)) {
+    if (known_type_decls_.contains(tag_decl)) {
       if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
         std::string ident(id->Ident());
         DeclId decl_id = GenerateDeclId(tag_decl);
+        type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+      }
+    }
+  } else if (const auto* typedef_type =
+                 qual_type->getAs<clang::TypedefType>()) {
+    clang::TypedefNameDecl* typedef_name_decl = typedef_type->getDecl();
+
+    if (known_type_decls_.contains(typedef_name_decl)) {
+      if (std::optional<Identifier> id =
+              GetTranslatedIdentifier(typedef_name_decl)) {
+        std::string ident(id->Ident());
+        DeclId decl_id = GenerateDeclId(typedef_name_decl);
         type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
       }
     }

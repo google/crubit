@@ -7,6 +7,10 @@
 
 use memoffset_unstable_const::offset_of;
 
+// <unknown location>
+// Error while generating bindings for item '__builtin_ms_va_list':
+// Cannot generate bindings for type aliases
+
 #[inline(always)]
 pub fn free_function<'a>(p1: &'a mut i32) -> &'a mut i32 {
     unsafe { crate::detail::__rust_thunk___Z13free_functionRi(p1) }

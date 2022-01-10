@@ -29,7 +29,16 @@ fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec
         }
     }
 
-    assert_eq!(actual.items().collect_vec(), expected.iter().collect_vec());
+    // Filter out predefined builtin types.
+    let actual_items = actual
+        .items()
+        .filter(|i| {
+            !matches!(i, Item::TypeAlias(typedef)
+                if typedef.identifier.identifier == "__builtin_ms_va_list")
+        })
+        .collect_vec();
+
+    assert_eq!(actual_items, expected.iter().collect_vec());
 }
 
 #[test]
@@ -425,39 +434,104 @@ fn test_type_conversion() -> Result<()> {
 
 #[test]
 fn test_typedef() -> Result<()> {
-    // TODO(b/213158446): This test documents that, in general, typedefs -- except
-    // for the various standard integer types tested in test_type_conversion --
-    // are currently unsupported.
     let ir = ir_from_cc(
         r#"
             typedef int MyTypedefDecl;
             using MyTypeAliasDecl = int;
         "#,
     )?;
-    let unsupported = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
-    assert_strings_contain(&unsupported, "MyTypedefDecl");
-    assert_strings_contain(&unsupported, "MyTypeAliasDecl");
+
+    let int = quote! {
+      MappedType {
+        rs_type: RsType {
+          name: Some("i32"),
+          lifetime_args: [],
+          type_args: [],
+          decl_id: None,
+        },
+        cc_type: CcType {
+          name: Some("int"),
+          is_const: false,
+          type_args: [],
+          decl_id: None,
+        },
+      }
+    };
+    assert_ir_matches!(
+        ir,
+        quote! {
+          TypeAlias {
+            identifier: "MyTypedefDecl",
+            id: DeclId(...),
+            owning_target: BlazeLabel("//test:testing_target"),
+            underlying_type: #int,
+          }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+          TypeAlias {
+            identifier: "MyTypeAliasDecl",
+            id: DeclId(...),
+            owning_target: BlazeLabel("//test:testing_target"),
+            underlying_type: #int,
+          }
+        }
+    );
 
     Ok(())
+}
+
+#[test]
+fn test_dont_import_typedef_nested_in_func() {
+    let ir = ir_from_cc("inline void f() { typedef int MyTypedefDecl; }").unwrap();
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyTypedefDecl" ... } });
+}
+
+#[test]
+fn test_typedef_nested_in_record_not_supported() {
+    let ir = ir_from_cc("struct S { typedef int MyTypedefDecl; };").unwrap();
+    assert_strings_contain(
+        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
+        "S::MyTypedefDecl",
+    );
 }
 
 #[test]
 fn test_integer_typedef_usage() -> Result<()> {
     // This is a regression test. We used to incorrectly desugar typedefs of
     // builtin types and treat them as if they were the underlying builtin type.
-    // As a result, this test would produce a binding for f(MyTypedef) (with an
-    // `int` parameter), even though we currently don't support typedefs.
-    // Once we add support for typedefs, this test should be converted to a
-    // code generation test that verifies that the binding for f() has a
-    // parameter of type `MyTypedef`.
+    // As a result, this test would produce a binding for f(MyTypedef) with a
+    // parameter of type `int` instead of `MyTypedef`. This test therefore
+    // checks that the type has a `decl_id` but doesn't have a `name`. More
+    // specific checks are done in the code generation tests.
     let ir = ir_from_cc(
         r#"
             typedef int MyTypedef;
             void f(MyTypedef my_typedef);
         "#,
     )?;
-    let unsupported = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
-    assert_strings_contain(&unsupported, "f");
+    assert_ir_matches!(
+        ir,
+        quote! { Func {
+         name: "f", ...
+         params: [
+           FuncParam {
+             type_: MappedType {
+               rs_type: RsType {
+                 name: None, ...
+                 decl_id: Some(...), ...
+               },
+               cc_type: CcType {
+                 name: None, ...
+                 decl_id: Some(...), ...
+               },
+             },
+             identifier: "my_typedef",
+           }], ...
+        } }
+    );
 
     Ok(())
 }

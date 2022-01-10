@@ -134,7 +134,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_set<const clang::Decl*> seen_decls_;
-  absl::flat_hash_set<const clang::TagDecl*> known_tag_decls_;
+  absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 
   // A component that keeps track of all comments and emits IR for all top-level
   // comments that are not doc comments.
