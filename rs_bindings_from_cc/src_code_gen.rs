@@ -606,6 +606,14 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
                 assertions.push(assertions_snippet.tokens);
                 has_record = true;
             }
+            Item::TypeAlias(type_alias) => {
+                // TODO(b/213158446): Implement support for type aliases.
+                items.push(generate_unsupported(&UnsupportedItem {
+                    name: type_alias.identifier.identifier.clone(),
+                    message: "Cannot generate bindings for type aliases".to_string(),
+                    source_loc: SourceLoc { filename: String::new(), line: 0, column: 0 },
+                })?);
+            }
             Item::UnsupportedItem(unsupported) => items.push(generate_unsupported(unsupported)?),
             Item::Comment(comment) => items.push(generate_comment(comment)?),
         }

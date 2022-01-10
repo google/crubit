@@ -407,6 +407,20 @@ inline std::ostream& operator<<(std::ostream& o, const Record& r) {
   return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
 
+// A type alias (defined either using `typedef` or `using`).
+struct TypeAlias {
+  nlohmann::json ToJson() const;
+
+  Identifier identifier;
+  DeclId id;
+  BlazeLabel owning_target;
+  MappedType underlying_type;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
+  return o << std::setw(internal::kJsonIndent) << t.ToJson();
+}
+
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {
   nlohmann::json ToJson() const;
@@ -457,7 +471,8 @@ struct IR {
   // is generated from.
   std::vector<HeaderName> used_headers;
   BlazeLabel current_target;
-  std::vector<std::variant<Func, Record, UnsupportedItem, Comment>> items;
+  std::vector<std::variant<Func, Record, TypeAlias, UnsupportedItem, Comment>>
+      items;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {

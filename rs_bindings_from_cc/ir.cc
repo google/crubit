@@ -291,6 +291,19 @@ nlohmann::json Record::ToJson() const {
   item["Record"] = std::move(record);
   return item;
 }
+
+nlohmann::json TypeAlias::ToJson() const {
+  nlohmann::json type_alias;
+  type_alias["identifier"] = identifier.ToJson();
+  type_alias["id"] = id.value();
+  type_alias["owning_target"] = owning_target.value();
+  type_alias["underlying_type"] = underlying_type.ToJson();
+
+  nlohmann::json item;
+  item["TypeAlias"] = std::move(type_alias);
+  return item;
+}
+
 nlohmann::json SourceLoc::ToJson() const {
   nlohmann::json source_loc;
   source_loc["filename"] = filename;

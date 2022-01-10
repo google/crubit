@@ -333,6 +333,14 @@ impl Record {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct TypeAlias {
+    pub identifier: Identifier,
+    pub id: DeclId,
+    pub owning_target: BlazeLabel,
+    pub underlying_type: MappedType,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct SourceLoc {
     pub filename: String,
     pub line: u64,
@@ -355,6 +363,7 @@ pub struct Comment {
 pub enum Item {
     Func(Func),
     Record(Record),
+    TypeAlias(TypeAlias),
     UnsupportedItem(UnsupportedItem),
     Comment(Comment),
 }
