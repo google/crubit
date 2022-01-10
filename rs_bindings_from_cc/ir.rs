@@ -35,7 +35,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
 pub fn make_ir_from_parts(
     items: Vec<Item>,
     used_headers: Vec<HeaderName>,
-    current_target: Label,
+    current_target: BlazeLabel,
 ) -> Result<IR> {
     make_ir(FlatIR { used_headers, current_target, items })
 }
@@ -147,9 +147,9 @@ pub struct DeclId(pub usize);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]
-pub struct Label(pub String);
+pub struct BlazeLabel(pub String);
 
-impl Label {
+impl BlazeLabel {
     pub fn target_name(&self) -> Result<&str> {
         match self.0.split_once(":") {
             Some((_package, target_name)) => Ok(target_name),
@@ -158,7 +158,7 @@ impl Label {
     }
 }
 
-impl<T: Into<String>> From<T> for Label {
+impl<T: Into<String>> From<T> for BlazeLabel {
     fn from(label: T) -> Self {
         Self(label.into())
     }
@@ -234,7 +234,7 @@ pub struct FuncParam {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
-    pub owning_target: Label,
+    pub owning_target: BlazeLabel,
     pub mangled_name: String,
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
@@ -280,7 +280,7 @@ pub struct SpecialMemberFunc {
 pub struct Record {
     pub identifier: Identifier,
     pub id: DeclId,
-    pub owning_target: Label,
+    pub owning_target: BlazeLabel,
     pub doc_comment: Option<String>,
     pub fields: Vec<Field>,
     pub lifetime_params: Vec<Lifetime>,
@@ -437,7 +437,7 @@ impl<'a> TryFrom<&'a Item> for &'a Comment {
 struct FlatIR {
     #[serde(default)]
     used_headers: Vec<HeaderName>,
-    current_target: Label,
+    current_target: BlazeLabel,
     #[serde(default)]
     items: Vec<Item>,
 }

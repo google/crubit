@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
   QCHECK(!targets_and_headers_json.empty())
       << "please specify --targets_and_headers";
   absl::flat_hash_map<const rs_bindings_from_cc::HeaderName,
-                      const rs_bindings_from_cc::Label>
+                      const rs_bindings_from_cc::BlazeLabel>
       headers_to_targets;
   if (!targets_and_headers_json.empty()) {
     nlohmann::json targets_and_headers =
@@ -87,21 +87,21 @@ int main(int argc, char* argv[]) {
     QCHECK(targets_and_headers.is_array())
         << "Expected `--targets_and_headers` to be a Json array of objects";
     for (const auto& target_and_headers : targets_and_headers) {
-      rs_bindings_from_cc::Label target =
-          rs_bindings_from_cc::Label{target_and_headers["t"]};
+      rs_bindings_from_cc::BlazeLabel target =
+          rs_bindings_from_cc::BlazeLabel{target_and_headers["t"]};
       QCHECK(target_and_headers["h"].is_array())
           << "Expected `h` fields of `--targets_and_headers` "
              "to be an array of strings";
       for (std::string header : target_and_headers["h"]) {
         headers_to_targets.insert(
             std::pair<const rs_bindings_from_cc::HeaderName,
-                      const rs_bindings_from_cc::Label>(
+                      const rs_bindings_from_cc::BlazeLabel>(
                 rs_bindings_from_cc::HeaderName(header), target));
       }
     }
   }
 
-  rs_bindings_from_cc::Label current_target;
+  rs_bindings_from_cc::BlazeLabel current_target;
   {
     auto it = headers_to_targets.find(
         rs_bindings_from_cc::HeaderName(public_headers[0]));
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
   }
 
   for (const auto& public_header : public_headers) {
-    rs_bindings_from_cc::Label header_target =
+    rs_bindings_from_cc::BlazeLabel header_target =
         headers_to_targets.find(rs_bindings_from_cc::HeaderName(public_header))
             ->second;
     QCHECK(current_target == header_target)

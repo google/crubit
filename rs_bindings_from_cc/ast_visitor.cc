@@ -282,7 +282,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   return true;
 }
 
-Label AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
+BlazeLabel AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
   clang::SourceManager& source_manager = ctx_->getSourceManager();
   llvm::StringRef filename = source_manager.getFilename(decl->getLocation());
 
@@ -292,7 +292,7 @@ Label AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
     // TODO(b/208377928): replace this hack with a
     // CHECK(target_iterator != headers_to_targets_.end()) once we generate
     // bindings for headers in Clang's resource dir.
-    return Label("//:virtual_clang_resource_dir_target");
+    return BlazeLabel("//:virtual_clang_resource_dir_target");
   }
   return target_iterator->second;
 }

@@ -290,7 +290,7 @@ struct Func {
   nlohmann::json ToJson() const;
 
   UnqualifiedIdentifier name;
-  Label owning_target;
+  BlazeLabel owning_target;
   std::optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
@@ -373,7 +373,7 @@ struct Record {
 
   Identifier identifier;
   DeclId id;
-  Label owning_target;
+  BlazeLabel owning_target;
   std::optional<std::string> doc_comment;
   std::vector<Field> fields;
   std::vector<Lifetime> lifetime_params;
@@ -456,7 +456,7 @@ struct IR {
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers;
-  Label current_target;
+  BlazeLabel current_target;
   std::vector<std::variant<Func, Record, UnsupportedItem, Comment>> items;
 };
 

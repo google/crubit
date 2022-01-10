@@ -24,13 +24,14 @@ namespace rs_bindings_from_cc {
 // generates the intermediate representation (`IR`).
 class AstConsumer : public clang::ASTConsumer {
  public:
-  explicit AstConsumer(clang::CompilerInstance& instance, Label current_target,
-                       absl::Span<const HeaderName> public_header_names,
-                       const absl::flat_hash_map<const HeaderName, const Label>*
-                           headers_to_targets,
-                       IR* ir,
-                       std::shared_ptr<devtools_rust::LifetimeAnnotationContext>
-                           lifetime_context)
+  explicit AstConsumer(
+      clang::CompilerInstance& instance, BlazeLabel current_target,
+      absl::Span<const HeaderName> public_header_names,
+      const absl::flat_hash_map<const HeaderName, const BlazeLabel>*
+          headers_to_targets,
+      IR* ir,
+      std::shared_ptr<devtools_rust::LifetimeAnnotationContext>
+          lifetime_context)
       : instance_(instance),
         current_target_(current_target),
         public_header_names_(public_header_names),
@@ -42,9 +43,10 @@ class AstConsumer : public clang::ASTConsumer {
 
  private:
   clang::CompilerInstance& instance_;
-  Label current_target_;
+  BlazeLabel current_target_;
   absl::Span<const HeaderName> public_header_names_;
-  const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
+  const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+      headers_to_targets_;
   IR& ir_;
   std::shared_ptr<devtools_rust::LifetimeAnnotationContext> lifetime_context_;
 };  // class AstConsumer

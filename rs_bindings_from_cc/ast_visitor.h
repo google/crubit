@@ -40,9 +40,9 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   using Base = clang::RecursiveASTVisitor<AstVisitor>;
 
   explicit AstVisitor(
-      clang::Sema& sema, Label current_target,
+      clang::Sema& sema, BlazeLabel current_target,
       absl::Span<const HeaderName> public_header_names,
-      const absl::flat_hash_map<const HeaderName, const Label>*
+      const absl::flat_hash_map<const HeaderName, const BlazeLabel>*
           headers_to_targets,
       IR* ir, const devtools_rust::LifetimeAnnotationContext& lifetime_context)
       : sema_(sema),
@@ -74,7 +74,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
-  Label GetOwningTarget(const clang::Decl* decl) const;
+  BlazeLabel GetOwningTarget(const clang::Decl* decl) const;
 
   // Checks if the given decl belongs to the current target. Does not look into
   // other redeclarations of the decl.
@@ -126,9 +126,10 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 
   clang::Sema& sema_;
-  Label current_target_;
+  BlazeLabel current_target_;
   absl::Span<const HeaderName> public_header_names_;
-  const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
+  const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+      headers_to_targets_;
   IR& ir_;
   clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;

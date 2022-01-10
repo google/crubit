@@ -133,51 +133,46 @@ TEST(IrTest, IR) {
                 }}
             ]
         })j");
-  IR ir = {.used_headers = {HeaderName("foo/bar.h")},
-           .current_target = Label(std::string("//foo:bar")),
-           .items = {Record{.identifier = Identifier("SomeStruct"),
-                            .id = DeclId(42),
-                            .owning_target = Label(std::string("//foo:bar")),
-                            .fields =
-                                {
-                                    Field{
-                                        .identifier = Identifier("public_int"),
-                                        .type =
-                                            MappedType::Simple("i32", "int"),
-                                        .access = kPublic,
-                                        .offset = 0},
-                                    Field{.identifier =
-                                              Identifier("protected_int"),
-                                          .type = MappedType::Simple("i32",
-                                                                     "int"),
-                                          .access = kProtected,
-                                          .offset = 32},
-                                    Field{
-                                        .identifier = Identifier("private_int"),
-                                        .type = MappedType::Simple("i32",
-                                                                   "int"),
-                                        .access = kPrivate,
-                                        .offset = 64},
-                                },
-                            .size = 12,
-                            .alignment = 4,
-                            .copy_constructor =
-                                SpecialMemberFunc{
-                                    .definition = SpecialMemberFunc::
-                                        Definition::kNontrivialUserDefined,
-                                    .access = kPrivate},
-                            .move_constructor =
-                                SpecialMemberFunc{
-                                    .definition =
-                                        SpecialMemberFunc::Definition::kDeleted,
-                                    .access = kProtected},
-                            .destructor =
-                                SpecialMemberFunc{
-                                    .definition =
-                                        SpecialMemberFunc::Definition::kTrivial,
-                                    .access = kPublic},
-                            .is_trivial_abi = true,
-                            .is_final = true}}};
+  IR ir = {
+      .used_headers = {HeaderName("foo/bar.h")},
+      .current_target = BlazeLabel(std::string("//foo:bar")),
+      .items = {Record{.identifier = Identifier("SomeStruct"),
+                       .id = DeclId(42),
+                       .owning_target = BlazeLabel(std::string("//foo:bar")),
+                       .fields =
+                           {
+                               Field{.identifier = Identifier("public_int"),
+                                     .type = MappedType::Simple("i32", "int"),
+                                     .access = kPublic,
+                                     .offset = 0},
+                               Field{.identifier = Identifier("protected_int"),
+                                     .type = MappedType::Simple("i32", "int"),
+                                     .access = kProtected,
+                                     .offset = 32},
+                               Field{.identifier = Identifier("private_int"),
+                                     .type = MappedType::Simple("i32", "int"),
+                                     .access = kPrivate,
+                                     .offset = 64},
+                           },
+                       .size = 12,
+                       .alignment = 4,
+                       .copy_constructor =
+                           SpecialMemberFunc{.definition =
+                                                 SpecialMemberFunc::Definition::
+                                                     kNontrivialUserDefined,
+                                             .access = kPrivate},
+                       .move_constructor =
+                           SpecialMemberFunc{
+                               .definition =
+                                   SpecialMemberFunc::Definition::kDeleted,
+                               .access = kProtected},
+                       .destructor =
+                           SpecialMemberFunc{
+                               .definition =
+                                   SpecialMemberFunc::Definition::kTrivial,
+                               .access = kPublic},
+                       .is_trivial_abi = true,
+                       .is_final = true}}};
   EXPECT_THAT(ir.ToJson(), EqualsJson(expected));
 }
 

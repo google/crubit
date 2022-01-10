@@ -11,7 +11,7 @@
 namespace rs_bindings_from_cc {
 
 // Representation of a Blaze label (for example //foo/bar:baz).
-DEFINE_STRING_TYPE(Label);
+DEFINE_STRING_TYPE(BlazeLabel);
 
 }  // namespace rs_bindings_from_cc
 

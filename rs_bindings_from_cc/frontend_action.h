@@ -24,8 +24,9 @@ namespace rs_bindings_from_cc {
 class FrontendAction : public clang::ASTFrontendAction {
  public:
   explicit FrontendAction(
-      Label current_target, absl::Span<const HeaderName> public_header_names,
-      const absl::flat_hash_map<const HeaderName, const Label>*
+      BlazeLabel current_target,
+      absl::Span<const HeaderName> public_header_names,
+      const absl::flat_hash_map<const HeaderName, const BlazeLabel>*
           headers_to_targets,
       IR* ir)
       : current_target_(current_target),
@@ -39,9 +40,10 @@ class FrontendAction : public clang::ASTFrontendAction {
       clang::CompilerInstance& instance, llvm::StringRef) override;
 
  private:
-  Label current_target_;
+  BlazeLabel current_target_;
   absl::Span<const HeaderName> public_header_names_;
-  const absl::flat_hash_map<const HeaderName, const Label>& headers_to_targets_;
+  const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+      headers_to_targets_;
   IR& ir_;
   std::shared_ptr<devtools_rust::LifetimeAnnotationContext> lifetime_context_;
 };

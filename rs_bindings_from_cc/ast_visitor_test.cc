@@ -298,16 +298,16 @@ TEST(AstVisitorTest, TwoFuncs) {
 
 TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
   ASSERT_OK_AND_ASSIGN(
-      IR ir, IrFromCc("", Label{"//two_funcs:one_target"},
+      IR ir, IrFromCc("", BlazeLabel{"//two_funcs:one_target"},
                       {HeaderName("test/testing_header_0.h"),
                        HeaderName("test/testing_header_1.h")},
                       {{HeaderName("test/testing_header_0.h"), "void Foo();"},
                        {HeaderName("test/testing_header_1.h"), "void Bar();"}},
                       {
                           {HeaderName("test/testing_header_0.h"),
-                           Label{"//two_funcs:one_target"}},
+                           BlazeLabel{"//two_funcs:one_target"}},
                           {HeaderName("test/testing_header_1.h"),
-                           Label{"//two_funcs:one_target"}},
+                           BlazeLabel{"//two_funcs:one_target"}},
                       }));
   EXPECT_THAT(ir.items, ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
                                     VariantWith<Func>(IdentifierIs("Bar"))));
