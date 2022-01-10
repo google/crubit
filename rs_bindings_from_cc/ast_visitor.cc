@@ -303,10 +303,15 @@ bool AstVisitor::IsFromCurrentTarget(const clang::Decl* decl) const {
 
 bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
-  if (decl_context && decl_context->isRecord()) {
-    PushUnsupportedItem(record_decl, "Nested classes are not supported yet",
-                        record_decl->getBeginLoc());
-    return true;
+  if (decl_context) {
+    if (decl_context->isFunctionOrMethod()) {
+      return true;
+    }
+    if (decl_context->isRecord()) {
+      PushUnsupportedItem(record_decl, "Nested classes are not supported yet",
+                          record_decl->getBeginLoc());
+      return true;
+    }
   }
 
   // Make sure the record has a definition that we'll be able to call

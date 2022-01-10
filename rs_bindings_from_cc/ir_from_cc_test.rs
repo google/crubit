@@ -96,6 +96,12 @@ fn test_functions_from_dependency_are_not_emitted() -> Result<()> {
 }
 
 #[test]
+fn test_dont_import_record_nested_in_func() {
+    let ir = ir_from_cc("inline void f() { struct S{}; }").unwrap();
+    assert_ir_not_matches!(ir, quote! { Record { identifier: "S" ... } });
+}
+
+#[test]
 fn test_record_member_variable_access_specifiers() {
     let ir = ir_from_cc(
         "
