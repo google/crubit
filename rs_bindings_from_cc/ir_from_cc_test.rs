@@ -102,6 +102,13 @@ fn test_dont_import_record_nested_in_func() {
 }
 
 #[test]
+fn test_dont_import_class_template_or_specialization() {
+    let ir = ir_from_cc("template <class T> struct Template{}; template<> struct Template<int>{};")
+        .unwrap();
+    assert_ir_not_matches!(ir, quote! { Record { identifier: "Template" ... } });
+}
+
+#[test]
 fn test_record_member_variable_access_specifiers() {
     let ir = ir_from_cc(
         "

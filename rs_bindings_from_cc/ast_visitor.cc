@@ -29,6 +29,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
@@ -327,6 +328,13 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   bool is_final = true;
   if (auto* cxx_record_decl =
           clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
+    if (cxx_record_decl->getDescribedClassTemplate() ||
+        clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl)) {
+      PushUnsupportedItem(record_decl, "Class templates are not supported yet",
+                          record_decl->getBeginLoc());
+      return true;
+    }
+
     sema_.ForceDeclarationOfImplicitMembers(cxx_record_decl);
     if (cxx_record_decl->isClass()) {
       default_access = clang::AS_private;
