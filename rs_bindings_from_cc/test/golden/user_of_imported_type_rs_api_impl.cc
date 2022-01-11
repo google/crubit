@@ -8,18 +8,19 @@
 #include "rs_bindings_from_cc/test/golden/user_of_imported_type.h"
 
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
-    UserOfImportedType* __this) {
+    class UserOfImportedType* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
-    UserOfImportedType* __this, const UserOfImportedType& __param_0) {
+    class UserOfImportedType* __this,
+    const class UserOfImportedType& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
-    UserOfImportedType* __this) {
+    class UserOfImportedType* __this) {
   std ::destroy_at(__this);
 }
 
-static_assert(sizeof(UserOfImportedType) == 8);
-static_assert(alignof(UserOfImportedType) == 8);
-static_assert(offsetof(UserOfImportedType, trivial) * 8 == 0);
+static_assert(sizeof(class UserOfImportedType) == 8);
+static_assert(alignof(class UserOfImportedType) == 8);
+static_assert(offsetof(class UserOfImportedType, trivial) * 8 == 0);

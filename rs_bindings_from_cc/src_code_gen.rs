@@ -785,7 +785,7 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 .identifier
                 .as_str(),
         );
-        Ok(quote! {#const_fragment #ident})
+        Ok(quote! {#const_fragment class #ident})
     }
 }
 
@@ -803,12 +803,12 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
             // The IR contains the offset in bits, while C++'s offsetof()
             // returns the offset in bytes, so we need to convert.
             quote! {
-                static_assert(offsetof(#record_ident, #field_ident) * 8 == #offset);
+                static_assert(offsetof(class #record_ident, #field_ident) * 8 == #offset);
             }
         });
     quote! {
-        static_assert(sizeof(#record_ident) == #size);
-        static_assert(alignof(#record_ident) == #alignment);
+        static_assert(sizeof(class #record_ident) == #size);
+        static_assert(alignof(class #record_ident) == #alignment);
         #( #field_assertions )*
     }
 }
@@ -1032,7 +1032,7 @@ mod tests {
         assert_cc_matches!(
             generate_rs_api_impl(&ir)?,
             quote! {
-                extern "C" ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(ParamStruct param) {
+                extern "C" class ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(class ParamStruct param) {
                     return DoSomething(param);
                 }
             }
@@ -1080,7 +1080,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___ZN10SomeStructD1Ev(SomeStruct * __this) {
+                extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct * __this) {
                     std :: destroy_at (__this) ;
                 }
             }
@@ -1088,9 +1088,9 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                static_assert(sizeof(SomeStruct) == 12);
-                static_assert(alignof(SomeStruct) == 4);
-                static_assert(offsetof(SomeStruct, public_int) * 8 == 0);
+                static_assert(sizeof(class SomeStruct) == 12);
+                static_assert(alignof(class SomeStruct) == 4);
+                static_assert(offsetof(class SomeStruct, public_int) * 8 == 0);
             }
         );
         Ok(())
@@ -1098,12 +1098,12 @@ mod tests {
 
     #[test]
     fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
-        let ir = ir_from_cc("struct S{}; inline void foo(S& s) {} ")?;
+        let ir = ir_from_cc("struct S{}; inline void foo(class S& s) {} ")?;
         let rs_api_impl = generate_rs_api_impl(&ir)?;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z3fooR1S(S& s) {
+                extern "C" void __rust_thunk___Z3fooR1S(class S& s) {
                     foo(s);
                 }
             }
@@ -1113,12 +1113,12 @@ mod tests {
 
     #[test]
     fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
-        let ir = ir_from_cc("struct S{}; inline void foo(const S& s) {} ")?;
+        let ir = ir_from_cc("struct S{}; inline void foo(const class S& s) {} ")?;
         let rs_api_impl = generate_rs_api_impl(&ir)?;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z3fooRK1S(const S& s) {
+                extern "C" void __rust_thunk___Z3fooRK1S(const class S& s) {
                     foo(s);
                 }
             }
@@ -1384,7 +1384,7 @@ mod tests {
         assert_cc_matches!(
             generate_rs_api_impl(&ir)?,
             quote! {
-                extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(Polymorphic * __this)
+                extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(class Polymorphic * __this)
             }
         );
         Ok(())
@@ -1532,7 +1532,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
-                        DefaultedConstructor* __this) {
+                        class DefaultedConstructor* __this) {
                     rs_api_impl_support::construct_at (__this) ;
                 }
             }

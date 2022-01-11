@@ -8,25 +8,25 @@
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
 extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
-    NontrivialCustomType* __this) {
+    class NontrivialCustomType* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN16ContainingStructC1Ev(
-    ContainingStruct* __this) {
+    class ContainingStruct* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN16ContainingStructC1ERKS_(
-    ContainingStruct* __this, const ContainingStruct& __param_0) {
+    class ContainingStruct* __this, const class ContainingStruct& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN16ContainingStructD1Ev(
-    ContainingStruct* __this) {
+    class ContainingStruct* __this) {
   std ::destroy_at(__this);
 }
 
-static_assert(sizeof(NontrivialCustomType) == 4);
-static_assert(alignof(NontrivialCustomType) == 4);
-static_assert(offsetof(NontrivialCustomType, i) * 8 == 0);
+static_assert(sizeof(class NontrivialCustomType) == 4);
+static_assert(alignof(class NontrivialCustomType) == 4);
+static_assert(offsetof(class NontrivialCustomType, i) * 8 == 0);
 
-static_assert(sizeof(ContainingStruct) == 1);
-static_assert(alignof(ContainingStruct) == 1);
+static_assert(sizeof(class ContainingStruct) == 1);
+static_assert(alignof(class ContainingStruct) == 1);

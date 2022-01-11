@@ -8,76 +8,78 @@
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
 extern "C" void __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
-    DocCommentSlashes* __this, const DocCommentSlashes& __param_0) {
+    class DocCommentSlashes* __this, const class DocCommentSlashes& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN17DocCommentSlashesD1Ev(
-    DocCommentSlashes* __this) {
+    class DocCommentSlashes* __this) {
   std ::destroy_at(__this);
 }
-extern "C" void __rust_thunk___ZN14DocCommentBangC1Ev(DocCommentBang* __this) {
+extern "C" void __rust_thunk___ZN14DocCommentBangC1Ev(
+    class DocCommentBang* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangC1ERKS_(
-    DocCommentBang* __this, const DocCommentBang& __param_0) {
+    class DocCommentBang* __this, const class DocCommentBang& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
-extern "C" void __rust_thunk___ZN14DocCommentBangD1Ev(DocCommentBang* __this) {
+extern "C" void __rust_thunk___ZN14DocCommentBangD1Ev(
+    class DocCommentBang* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
-    MultilineCommentTwoStars* __this) {
+    class MultilineCommentTwoStars* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(
-    MultilineCommentTwoStars* __this,
-    const MultilineCommentTwoStars& __param_0) {
+    class MultilineCommentTwoStars* __this,
+    const class MultilineCommentTwoStars& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsD1Ev(
-    MultilineCommentTwoStars* __this) {
+    class MultilineCommentTwoStars* __this) {
   std ::destroy_at(__this);
 }
-extern "C" void __rust_thunk___ZN11LineCommentC1Ev(LineComment* __this) {
+extern "C" void __rust_thunk___ZN11LineCommentC1Ev(class LineComment* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN11LineCommentC1ERKS_(
-    LineComment* __this, const LineComment& __param_0) {
+    class LineComment* __this, const class LineComment& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
-extern "C" void __rust_thunk___ZN11LineCommentD1Ev(LineComment* __this) {
+extern "C" void __rust_thunk___ZN11LineCommentD1Ev(class LineComment* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarC1Ev(
-    MultilineOneStar* __this) {
+    class MultilineOneStar* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarC1ERKS_(
-    MultilineOneStar* __this, const MultilineOneStar& __param_0) {
+    class MultilineOneStar* __this, const class MultilineOneStar& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarD1Ev(
-    MultilineOneStar* __this) {
+    class MultilineOneStar* __this) {
   std ::destroy_at(__this);
 }
 extern "C" int __rust_thunk___Z3foov() { return foo(); }
 
-static_assert(sizeof(DocCommentSlashes) == 4);
-static_assert(alignof(DocCommentSlashes) == 4);
-static_assert(offsetof(DocCommentSlashes, i) * 8 == 0);
+static_assert(sizeof(class DocCommentSlashes) == 4);
+static_assert(alignof(class DocCommentSlashes) == 4);
+static_assert(offsetof(class DocCommentSlashes, i) * 8 == 0);
 
-static_assert(sizeof(DocCommentBang) == 4);
-static_assert(alignof(DocCommentBang) == 4);
-static_assert(offsetof(DocCommentBang, i) * 8 == 0);
+static_assert(sizeof(class DocCommentBang) == 4);
+static_assert(alignof(class DocCommentBang) == 4);
+static_assert(offsetof(class DocCommentBang, i) * 8 == 0);
 
-static_assert(sizeof(MultilineCommentTwoStars) == 4);
-static_assert(alignof(MultilineCommentTwoStars) == 4);
-static_assert(offsetof(MultilineCommentTwoStars, i) * 8 == 0);
+static_assert(sizeof(class MultilineCommentTwoStars) == 4);
+static_assert(alignof(class MultilineCommentTwoStars) == 4);
+static_assert(offsetof(class MultilineCommentTwoStars, i) * 8 == 0);
 
-static_assert(sizeof(LineComment) == 4);
-static_assert(alignof(LineComment) == 4);
-static_assert(offsetof(LineComment, i) * 8 == 0);
+static_assert(sizeof(class LineComment) == 4);
+static_assert(alignof(class LineComment) == 4);
+static_assert(offsetof(class LineComment, i) * 8 == 0);
 
-static_assert(sizeof(MultilineOneStar) == 4);
-static_assert(alignof(MultilineOneStar) == 4);
-static_assert(offsetof(MultilineOneStar, i) * 8 == 0);
+static_assert(sizeof(class MultilineOneStar) == 4);
+static_assert(alignof(class MultilineOneStar) == 4);
+static_assert(offsetof(class MultilineOneStar, i) * 8 == 0);

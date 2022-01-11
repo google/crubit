@@ -8,22 +8,22 @@
 #include "rs_bindings_from_cc/test/golden/nontrivial_type.h"
 
 extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
-    NontrivialInline* __this) {
+    class NontrivialInline* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
-    NontrivialMembers* __this) {
+    class NontrivialMembers* __this) {
   std ::destroy_at(__this);
 }
 
-static_assert(sizeof(Nontrivial) == 4);
-static_assert(alignof(Nontrivial) == 4);
-static_assert(offsetof(Nontrivial, field) * 8 == 0);
+static_assert(sizeof(class Nontrivial) == 4);
+static_assert(alignof(class Nontrivial) == 4);
+static_assert(offsetof(class Nontrivial, field) * 8 == 0);
 
-static_assert(sizeof(NontrivialInline) == 4);
-static_assert(alignof(NontrivialInline) == 4);
-static_assert(offsetof(NontrivialInline, field) * 8 == 0);
+static_assert(sizeof(class NontrivialInline) == 4);
+static_assert(alignof(class NontrivialInline) == 4);
+static_assert(offsetof(class NontrivialInline, field) * 8 == 0);
 
-static_assert(sizeof(NontrivialMembers) == 4);
-static_assert(alignof(NontrivialMembers) == 4);
-static_assert(offsetof(NontrivialMembers, nontrivial_member) * 8 == 0);
+static_assert(sizeof(class NontrivialMembers) == 4);
+static_assert(alignof(class NontrivialMembers) == 4);
+static_assert(offsetof(class NontrivialMembers, nontrivial_member) * 8 == 0);

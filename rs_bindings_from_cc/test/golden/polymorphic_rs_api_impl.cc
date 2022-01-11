@@ -8,17 +8,17 @@
 #include "rs_bindings_from_cc/test/golden/polymorphic.h"
 
 extern "C" void __rust_thunk___ZN16PolymorphicClassD1Ev(
-    PolymorphicClass* __this) {
+    class PolymorphicClass* __this) {
   std ::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN16PolymorphicClassC1Ev(
-    PolymorphicClass* __this) {
+    class PolymorphicClass* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN16PolymorphicClassC1ERKS_(
-    PolymorphicClass* __this, const PolymorphicClass& __param_0) {
+    class PolymorphicClass* __this, const class PolymorphicClass& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
 
-static_assert(sizeof(PolymorphicClass) == 8);
-static_assert(alignof(PolymorphicClass) == 8);
+static_assert(sizeof(class PolymorphicClass) == 8);
+static_assert(alignof(class PolymorphicClass) == 8);

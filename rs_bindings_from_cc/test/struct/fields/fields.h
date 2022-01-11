@@ -10,6 +10,13 @@ struct SomeStruct final {
   int int_var;
 };
 
+// Make sure we can deal with the case where a variable declaration shadows the
+// struct declaration.
+// There's a fairly common case where this happens in real-world code:
+// <time.h> defines `extern long timezone`, while <sys/time.h> defines
+// `struct timezone`.
+extern int SomeStruct;
+
 class SomeClass final {
  public:
   int public_field = 0;

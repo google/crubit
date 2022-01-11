@@ -7,17 +7,17 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/private_members.h"
 
-extern "C" void __rust_thunk___ZN9SomeClassC1Ev(SomeClass* __this) {
+extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
-extern "C" void __rust_thunk___ZN9SomeClassC1ERKS_(SomeClass* __this,
-                                                   const SomeClass& __param_0) {
+extern "C" void __rust_thunk___ZN9SomeClassC1ERKS_(
+    class SomeClass* __this, const class SomeClass& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
-extern "C" void __rust_thunk___ZN9SomeClassD1Ev(SomeClass* __this) {
+extern "C" void __rust_thunk___ZN9SomeClassD1Ev(class SomeClass* __this) {
   std ::destroy_at(__this);
 }
 
-static_assert(sizeof(SomeClass) == 8);
-static_assert(alignof(SomeClass) == 4);
-static_assert(offsetof(SomeClass, public_member_variable_) * 8 == 0);
+static_assert(sizeof(class SomeClass) == 8);
+static_assert(alignof(class SomeClass) == 4);
+static_assert(offsetof(class SomeClass, public_member_variable_) * 8 == 0);
