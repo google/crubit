@@ -43,7 +43,7 @@ pub fn make_ir_from_parts(
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
     let mut used_decl_ids = HashMap::new();
     for item in &flat_ir.items {
-        if let Some(Record { id, .. }) = item.as_record() {
+        if let Some(id) = item.id() {
             if let Some(existing_decl) = used_decl_ids.insert(id, item) {
                 bail!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
             }
@@ -53,7 +53,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
         .items
         .iter()
         .enumerate()
-        .filter_map(|(idx, item)| item.as_record().map(|record| (record.id, idx)))
+        .filter_map(|(idx, item)| item.id().map(|id| (id, idx)))
         .collect::<HashMap<_, _>>();
     Ok(IR { flat_ir, decl_id_to_item_idx })
 }
@@ -294,10 +294,6 @@ pub struct Record {
 }
 
 impl Record {
-    pub fn owning_crate_name(&self) -> Result<&str> {
-        self.owning_target.target_name()
-    }
-
     /// Whether this type has Rust-like object semantics for mutating
     /// assignment, and can be passed by mut reference as a result.
     ///
@@ -369,9 +365,10 @@ pub enum Item {
 }
 
 impl Item {
-    fn as_record(&self) -> Option<&Record> {
+    fn id(&self) -> Option<DeclId> {
         match self {
-            Item::Record(record) => Some(record),
+            Item::Record(record) => Some(record.id),
+            Item::TypeAlias(type_alias) => Some(type_alias.id),
             _ => None,
         }
     }
@@ -499,16 +496,15 @@ impl IR {
         })
     }
 
-    pub fn record_for_type<T>(&self, ty: &T) -> Result<&Record>
+    pub fn item_for_type<T>(&self, ty: &T) -> Result<&Item>
     where
         T: TypeWithDeclId + std::fmt::Debug,
     {
         if let Some(decl_id) = ty.decl_id() {
             self.find_decl(decl_id)
-                .with_context(|| format!("Failed to retrieve record for type {:?}", ty))?
-                .try_into()
+                .with_context(|| format!("Failed to retrieve item for type {:?}", ty))
         } else {
-            bail!("Type {:?} does not have an associated record.", ty)
+            bail!("Type {:?} does not have an associated item.", ty)
         }
     }
 
@@ -520,10 +516,26 @@ impl IR {
         self.flat_ir.items.get(idx).with_context(|| format!("Couldn't find an item at idx {}", idx))
     }
 
-    pub fn is_in_current_target(&self, record: &Record) -> bool {
+    // Returns whether `target` is the current target.
+    pub fn is_current_target(&self, target: &BlazeLabel) -> bool {
         // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
         // values.
-        record.owning_target == self.flat_ir.current_target
+        *target == self.flat_ir.current_target
+    }
+
+    // Returns whether `target` is the target that corresponds to the C++
+    // standard library.
+    pub fn is_stdlib_target(&self, target: &BlazeLabel) -> bool {
+        // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
+        // values.
+        // TODO(b/208377928): We don't yet have an actual target for the standard
+        // library, so instead we're just testing against the "virtual target" that
+        // AstVisitor::GetOwningTarget() returns if it can't find the header in the
+        // header-to-target map.
+        // Once we do have an actual target for the standard library, we may need to
+        // query `self` to find out what it is, so we have a `self` parameter on this
+        // method even though we currently don't use it.
+        target.0 == "//:virtual_clang_resource_dir_target"
     }
 
     // Returns the standard Debug print string for the `flat_ir`. The reason why we

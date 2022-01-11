@@ -7,9 +7,7 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-// <unknown location>
-// Error while generating bindings for item '__builtin_ms_va_list':
-// Cannot generate bindings for type aliases
+pub type __builtin_ms_va_list = *mut u8;
 
 // namespace ns
 

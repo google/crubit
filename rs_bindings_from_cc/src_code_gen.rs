@@ -519,6 +519,13 @@ fn generate_copy_derives(record: &Record) -> Vec<Ident> {
     }
 }
 
+fn generate_type_alias(type_alias: &TypeAlias, ir: &IR) -> Result<TokenStream> {
+    let ident = make_ident(&type_alias.identifier.identifier);
+    let underlying_type = format_rs_type(&type_alias.underlying_type.rs_type, ir, &HashMap::new())
+        .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
+    Ok(quote! {pub type #ident = #underlying_type;})
+}
+
 /// Generates Rust source code for a given `UnsupportedItem`.
 fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
     let location = if item.source_loc.filename.is_empty() {
@@ -596,7 +603,9 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
                 }
             }
             Item::Record(record) => {
-                if !ir.is_in_current_target(record) {
+                if !ir.is_current_target(&record.owning_target)
+                    && !ir.is_stdlib_target(&record.owning_target)
+                {
                     continue;
                 }
                 let (snippet, assertions_snippet) = generate_record(record, ir)?;
@@ -607,12 +616,12 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
                 has_record = true;
             }
             Item::TypeAlias(type_alias) => {
-                // TODO(b/213158446): Implement support for type aliases.
-                items.push(generate_unsupported(&UnsupportedItem {
-                    name: type_alias.identifier.identifier.clone(),
-                    message: "Cannot generate bindings for type aliases".to_string(),
-                    source_loc: SourceLoc { filename: String::new(), line: 0, column: 0 },
-                })?);
+                if !ir.is_current_target(&type_alias.owning_target)
+                    && !ir.is_stdlib_target(&type_alias.owning_target)
+                {
+                    continue;
+                }
+                items.push(generate_type_alias(type_alias, ir)?);
             }
             Item::UnsupportedItem(unsupported) => items.push(generate_unsupported(unsupported)?),
             Item::Comment(comment) => items.push(generate_comment(comment)?),
@@ -668,6 +677,21 @@ fn make_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
+fn rs_type_name_for_target_and_identifier(
+    owning_target: &BlazeLabel,
+    identifier: &ir::Identifier,
+    ir: &IR,
+) -> Result<TokenStream> {
+    let ident = make_ident(identifier.identifier.as_str());
+
+    if ir.is_current_target(owning_target) || ir.is_stdlib_target(owning_target) {
+        Ok(quote! {#ident})
+    } else {
+        let owning_crate = make_ident(owning_target.target_name()?);
+        Ok(quote! {#owning_crate::#ident})
+    }
+}
+
 fn format_rs_type(
     ty: &ir::RsType,
     ir: &IR,
@@ -676,7 +700,8 @@ fn format_rs_type(
     enum TypeKind<'a> {
         Pointer(TokenStream),
         Reference(TokenStream),
-        Record(TokenStream),
+        Record(&'a ir::Record),
+        TypeAlias(&'a ir::TypeAlias),
         Unit,
         Other(&'a str),
     }
@@ -690,17 +715,12 @@ fn format_rs_type(
             _ => TypeKind::Other(name),
         }
     } else {
-        let record = ir
-            .record_for_type(ty)
-            .with_context(|| format!("Failed to format Rust type {:?}", ty))?;
-        let ident = make_ident(record.identifier.identifier.as_str());
-        let path: TokenStream = if ir.is_in_current_target(record) {
-            quote! {#ident}
-        } else {
-            let owning_crate = make_ident(record.owning_crate_name()?);
-            quote! {#owning_crate::#ident}
-        };
-        TypeKind::Record(path)
+        let item = ir.item_for_type(ty)?;
+        match item {
+            Item::Record(record) => TypeKind::Record(record),
+            Item::TypeAlias(type_alias) => TypeKind::TypeAlias(type_alias),
+            _ => bail!("Item does not define a type: {:?}", item),
+        }
     };
     match kind {
         TypeKind::Pointer(mutability) => {
@@ -725,11 +745,21 @@ fn format_rs_type(
             );
             Ok(quote! {& #lifetime #mutability #nested_type})
         }
-        TypeKind::Record(path) => {
+        TypeKind::Record(record) => {
             if !ty.type_args.is_empty() {
                 bail!("Type arguments on records are not yet supported: {:?}", ty);
             }
-            Ok(path)
+            rs_type_name_for_target_and_identifier(&record.owning_target, &record.identifier, ir)
+        }
+        TypeKind::TypeAlias(type_alias) => {
+            if !ty.type_args.is_empty() {
+                bail!("Type aliases must not have type arguments: {:?}", ty);
+            }
+            rs_type_name_for_target_and_identifier(
+                &type_alias.owning_target,
+                &type_alias.identifier,
+                ir,
+            )
         }
         TypeKind::Unit => {
             if !ty.type_args.is_empty() {
@@ -748,6 +778,17 @@ fn format_rs_type(
             Ok(quote! {#ident #type_args})
         }
     }
+}
+
+fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
+    let (disambiguator_fragment, identifier) = match item {
+        Item::Record(record) => (quote! { class }, &record.identifier),
+        Item::TypeAlias(type_alias) => (quote! {}, &type_alias.identifier),
+        _ => bail!("Item does not define a type: {:?}", item),
+    };
+
+    let ident = make_ident(identifier.identifier.as_str());
+    Ok(quote! { #disambiguator_fragment #ident })
 }
 
 fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
@@ -782,19 +823,14 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
             }
         }
     } else {
-        let ident = make_ident(
-            ir.record_for_type(ty)
-                .with_context(|| format!("Failed to format C++ type {:?}", ty))?
-                .identifier
-                .identifier
-                .as_str(),
-        );
-        Ok(quote! {#const_fragment class #ident})
+        let item = ir.item_for_type(ty)?;
+        let type_name = cc_type_name_for_item(item)?;
+        Ok(quote! {#const_fragment #type_name})
     }
 }
 
 fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
-    if !ir.is_in_current_target(record) {
+    if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
         return quote! {};
     }
     let record_ident = make_ident(&record.identifier.identifier);
@@ -1670,12 +1706,28 @@ mod tests {
             r#"
                 typedef int MyTypedefDecl;
                 using MyTypeAliasDecl = int;
+                using MyTypeAliasDecl_Alias = MyTypeAliasDecl;
+
+                struct S{};
+                using S_Alias = S;
+                using S_Alias_Alias = S_Alias;
+
+                inline void f(MyTypedefDecl t) {}
             "#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        let rs_api_str = tokens_to_string(rs_api)?;
-        assert!(rs_api_str.contains("Error while generating bindings for item 'MyTypedefDecl'"));
-        assert!(rs_api_str.contains("Error while generating bindings for item 'MyTypeAliasDecl'"));
+        assert_rs_matches!(rs_api, quote! { pub type MyTypedefDecl = i32; });
+        assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = i32; });
+        assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl_Alias = MyTypeAliasDecl; });
+        assert_rs_matches!(rs_api, quote! { pub type S_Alias = S; });
+        assert_rs_matches!(rs_api, quote! { pub type S_Alias_Alias = S_Alias; });
+        assert_rs_matches!(rs_api, quote! { pub fn f(t: MyTypedefDecl) });
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
+                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t){ f (t) ; }
+            }
+        );
         Ok(())
     }
 }

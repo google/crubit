@@ -9,9 +9,7 @@
 
 use memoffset_unstable_const::offset_of;
 
-// <unknown location>
-// Error while generating bindings for item '__builtin_ms_va_list':
-// Cannot generate bindings for type aliases
+pub type __builtin_ms_va_list = *mut u8;
 
 /// Implicitly defined special member functions are trivial on a struct with
 /// only trivial members.

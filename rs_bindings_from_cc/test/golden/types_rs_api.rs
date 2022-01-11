@@ -9,293 +9,149 @@
 
 use memoffset_unstable_const::offset_of;
 
-// <unknown location>
-// Error while generating bindings for item '__builtin_ms_va_list':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__u_char':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__u_short':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__u_int':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__u_long':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__int8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__uint8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__int16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__uint16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__int32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__uint32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__int64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__uint64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__quad_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__u_quad_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__intmax_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__uintmax_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__dev_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__uid_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__gid_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__ino_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__ino64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__mode_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__nlink_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__off_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__off64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__pid_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__clock_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__rlim_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__rlim64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__id_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__time_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__useconds_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__suseconds_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__daddr_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__key_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__clockid_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__timer_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__blksize_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__blkcnt_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__blkcnt64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__fsblkcnt_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__fsblkcnt64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__fsfilcnt_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__fsfilcnt64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__fsword_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__ssize_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__syscall_slong_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__syscall_ulong_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__loff_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__caddr_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__intptr_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__socklen_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item '__sig_atomic_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_least8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_least16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_least32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_least64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_least8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_least16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_least32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_least64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_fast8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_fast16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_fast32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int_fast64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_fast8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_fast16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_fast32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint_fast64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'intmax_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uintmax_t':
-// Cannot generate bindings for type aliases
+pub type __builtin_ms_va_list = *mut u8;
+
+pub type __u_char = u8;
+
+pub type __u_short = u16;
+
+pub type __u_int = u32;
+
+pub type __u_long = u64;
+
+pub type __int8_t = i8;
+
+pub type __uint8_t = u8;
+
+pub type __int16_t = i16;
+
+pub type __uint16_t = u16;
+
+pub type __int32_t = i32;
+
+pub type __uint32_t = u32;
+
+pub type __int64_t = i64;
+
+pub type __uint64_t = u64;
+
+pub type __quad_t = i64;
+
+pub type __u_quad_t = u64;
+
+pub type __intmax_t = i64;
+
+pub type __uintmax_t = u64;
+
+pub type __dev_t = u64;
+
+pub type __uid_t = u32;
+
+pub type __gid_t = u32;
+
+pub type __ino_t = u64;
+
+pub type __ino64_t = u64;
+
+pub type __mode_t = u32;
+
+pub type __nlink_t = u64;
+
+pub type __off_t = i64;
+
+pub type __off64_t = i64;
+
+pub type __pid_t = i32;
+
+pub type __clock_t = i64;
+
+pub type __rlim_t = u64;
+
+pub type __rlim64_t = u64;
+
+pub type __id_t = u32;
+
+pub type __time_t = i64;
+
+pub type __useconds_t = u32;
+
+pub type __suseconds_t = i64;
+
+pub type __daddr_t = i32;
+
+pub type __key_t = i32;
+
+pub type __clockid_t = i32;
+
+pub type __timer_t = *mut ();
+
+pub type __blksize_t = i64;
+
+pub type __blkcnt_t = i64;
+
+pub type __blkcnt64_t = i64;
+
+pub type __fsblkcnt_t = u64;
+
+pub type __fsblkcnt64_t = u64;
+
+pub type __fsfilcnt_t = u64;
+
+pub type __fsfilcnt64_t = u64;
+
+pub type __fsword_t = i64;
+
+pub type __ssize_t = i64;
+
+pub type __syscall_slong_t = i64;
+
+pub type __syscall_ulong_t = u64;
+
+pub type __loff_t = __off64_t;
+
+pub type __caddr_t = *mut u8;
+
+pub type __intptr_t = i64;
+
+pub type __socklen_t = u32;
+
+pub type __sig_atomic_t = i32;
+
+pub type int_least8_t = i8;
+
+pub type int_least16_t = i16;
+
+pub type int_least32_t = i32;
+
+pub type int_least64_t = i64;
+
+pub type uint_least8_t = u8;
+
+pub type uint_least16_t = u16;
+
+pub type uint_least32_t = u32;
+
+pub type uint_least64_t = u64;
+
+pub type int_fast8_t = i8;
+
+pub type int_fast16_t = i64;
+
+pub type int_fast32_t = i64;
+
+pub type int_fast64_t = i64;
+
+pub type uint_fast8_t = u8;
+
+pub type uint_fast16_t = u64;
+
+pub type uint_fast32_t = u64;
+
+pub type uint_fast64_t = u64;
+
+pub type intmax_t = __intmax_t;
+
+pub type uintmax_t = __uintmax_t;
 
 #[derive(Clone, Copy)]
 #[repr(C)]

@@ -554,7 +554,8 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
           }
         }
     }
-  } else if (const auto* tag_type = qual_type->getAs<clang::TagType>()) {
+  } else if (const auto *tag_type =
+                 qual_type->getAsAdjusted<clang::TagType>()) {
     clang::TagDecl* tag_decl = tag_type->getDecl();
 
     if (known_type_decls_.contains(tag_decl)) {
@@ -564,8 +565,8 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
         type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
       }
     }
-  } else if (const auto* typedef_type =
-                 qual_type->getAs<clang::TypedefType>()) {
+  } else if (const auto *typedef_type =
+                 qual_type->getAsAdjusted<clang::TypedefType>()) {
     clang::TypedefNameDecl* typedef_name_decl = typedef_type->getDecl();
 
     if (known_type_decls_.contains(typedef_name_decl)) {
