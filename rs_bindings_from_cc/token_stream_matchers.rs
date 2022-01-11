@@ -40,7 +40,7 @@
 #[macro_export]
 macro_rules! assert_cc_matches {
     ($input:expr, $pattern:expr $(,)*) => {
-        $crate::internal::match_tokens(&$input, &$pattern, $crate::internal::tokens_to_string)
+        $crate::internal::match_tokens(&$input, &$pattern, &$crate::internal::tokens_to_string)
             .expect("input unexpectedly didn't match the pattern");
     };
 }
@@ -53,7 +53,7 @@ macro_rules! assert_rs_matches {
         $crate::internal::match_tokens(
             &$input,
             &$pattern,
-            $crate::internal::rs_tokens_to_formatted_string,
+            &$crate::internal::rs_tokens_to_formatted_string,
         )
         .expect("input unexpectedly didn't match the pattern");
     };
@@ -65,8 +65,8 @@ macro_rules! assert_rs_matches {
 #[macro_export]
 macro_rules! assert_cc_not_matches {
     ($input:expr, $pattern:expr $(,)*) => {
-        $crate::internal::match_tokens(&$input, &$pattern, $crate::internal::tokens_to_string)
-            .expect_err("input unexpectedly matched the pattern");
+        $crate::internal::mismatch_tokens(&$input, &$pattern, &$crate::internal::tokens_to_string)
+            .unwrap();
     };
 }
 
@@ -75,12 +75,12 @@ macro_rules! assert_cc_not_matches {
 #[macro_export]
 macro_rules! assert_rs_not_matches {
     ($input:expr, $pattern:expr $(,)*) => {
-        $crate::internal::match_tokens(
+        $crate::internal::mismatch_tokens(
             &$input,
             &$pattern,
-            $crate::internal::rs_tokens_to_formatted_string,
+            &$crate::internal::rs_tokens_to_formatted_string,
         )
-        .expect_err("input unexpectedly matched the pattern");
+        .unwrap();
     };
 }
 
@@ -100,8 +100,7 @@ macro_rules! assert_ir_matches {
 #[macro_export]
 macro_rules! assert_ir_not_matches {
     ($ir:expr, $pattern:expr $(,)*) => {
-        $crate::internal::match_ir(&$ir, &$pattern)
-            .expect_err("input unexpectedly matched the pattern");
+        $crate::internal::mismatch_ir(&$ir, &$pattern).unwrap();
     };
 }
 
@@ -118,13 +117,20 @@ pub mod internal {
     pub use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
 
     pub fn match_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {
+        match_tokens(&ir_to_token_stream(ir)?, pattern, &ir_to_string)
+    }
+
+    pub fn mismatch_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {
+        mismatch_tokens(&ir_to_token_stream(ir)?, pattern, &ir_to_string)
+    }
+
+    fn ir_to_token_stream(ir: &IR) -> Result<TokenStream> {
         // derived debug impl doesn't emit commas after the last element of a group,
         // (for example `[a, b, c]`), but rustfmt automatically adds it (`[a, b,
         // c,]`). We use rustfmt to format the failure messages. So to make the
         // input token stream consistent with failure messages we format the
         // input token stream with rustfmt as well.
-        let input = ir_to_string(ir.flat_ir_debug_print().parse().unwrap())?.parse().unwrap();
-        match_tokens(&input, pattern, ir_to_string)
+        Ok(ir_to_string(ir.flat_ir_debug_print().parse().unwrap())?.parse().unwrap())
     }
 
     fn ir_to_string(input: TokenStream) -> Result<String> {
@@ -186,7 +192,7 @@ pub mod internal {
     pub fn match_tokens<ToStringFn>(
         input: &TokenStream,
         pattern: &TokenStream,
-        to_string_fn: ToStringFn,
+        to_string_fn: &ToStringFn,
     ) -> Result<()>
     where
         ToStringFn: Fn(TokenStream) -> Result<String>,
@@ -222,6 +228,25 @@ pub mod internal {
             error = error.context(msg);
         }
         Err(error)
+    }
+
+    pub fn mismatch_tokens<ToStringFn>(
+        input: &TokenStream,
+        pattern: &TokenStream,
+        to_string_fn: &ToStringFn,
+    ) -> Result<()>
+    where
+        ToStringFn: Fn(TokenStream) -> Result<String>,
+    {
+        if match_tokens(input, pattern, to_string_fn).is_ok() {
+            let input_string = to_string_fn(input.clone())?;
+            Err(anyhow!(format!(
+                "input unexpectedly matched the pattern. input:\n\n```\n{}\n```",
+                input_string
+            )))
+        } else {
+            Ok(())
+        }
     }
 
     // This implementation uses naive backtracking algorithm that is in the worst
@@ -456,19 +481,19 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "input:\n\n```\nfn foo(){ }\n")]
     fn test_assert_cc_not_matches_panics_on_match() {
         assert_cc_not_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "input:\n\n```\nfn foo() {}\n\n```")]
     fn test_assert_rs_not_matches_panics_on_match() {
         assert_rs_not_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "input:\n\n```\nFlatIR {")]
     fn test_assert_ir_not_matches_panics_on_match() {
         assert_ir_not_matches!(ir_from_cc("").unwrap(), quote! {items});
     }
@@ -529,7 +554,7 @@ mod tests {
                 match_tokens(
                     &quote! {struct A { int a; int b; };},
                     &quote! {struct B},
-                    tokens_to_string
+                    &tokens_to_string
                 )
                 .expect_err("unexpected match")
             ),
@@ -551,7 +576,7 @@ Caused by:
                 match_tokens(
                     &quote! {struct A { a: i64, b: i64 }},
                     &quote! {struct B},
-                    rs_tokens_to_formatted_string
+                    &rs_tokens_to_formatted_string
                 )
                 .expect_err("unexpected match")
             ),
@@ -575,7 +600,7 @@ Caused by:
                 match_tokens(
                     &quote! {fn foo() {}},
                     &quote! {fn foo() {} struct X {}},
-                    tokens_to_string
+                    &tokens_to_string
                 )
                 .expect_err("unexpected match")
             ),
@@ -590,7 +615,7 @@ Caused by:
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(&quote! {fn foo() ()}, &quote! {fn foo() {}}, tokens_to_string)
+                match_tokens(&quote! {fn foo() ()}, &quote! {fn foo() {}}, &tokens_to_string)
                     .expect_err("unexpected match")
             ),
             "expected delimiter Brace for group '{ }' but got Parenthesis for group '()': \
@@ -607,7 +632,7 @@ Caused by:
                 match_tokens(
                     &quote! {fn foo() { a: i64, b: i64 }},
                     &quote! {fn foo() { a: i64, c: i64 }},
-                    tokens_to_string
+                    &tokens_to_string
                 )
                 .expect_err("unexpected match")
             ),
@@ -643,7 +668,7 @@ Caused by:
                 match_tokens(
                     &quote! {impl Drop { fn drop(&mut self) { drop_impl(); }}},
                     &quote! {fn drop(&mut self) {}},
-                    tokens_to_string
+                    &tokens_to_string
                 )
                 .expect_err("unexpected match")
             ),
@@ -657,7 +682,7 @@ Caused by:
                 match_tokens(
                     &quote! {impl Drop { fn drop(&mut self) { drop_impl1(); drop_impl2(); }}},
                     &quote! {fn drop(&mut self) { drop_impl1(); }},
-                    tokens_to_string
+                    &tokens_to_string
                 )
                 .expect_err("unexpected match")
             ),
@@ -704,7 +729,7 @@ Caused by:
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(&quote! {[ a b b ]}, &quote! { [ a ... c ]}, tokens_to_string)
+                match_tokens(&quote! {[ a b b ]}, &quote! { [ a ... c ]}, &tokens_to_string)
                     .expect_err("unexpected match")
             ),
             // the error message shows "longer match" with more tokens consumed by the wildcard
@@ -716,7 +741,7 @@ Caused by:
         assert_eq!(
             format!(
                 "{:#}",
-                match_tokens(&quote! {[ a b b ]}, &quote! { [ a ... b c ]}, tokens_to_string)
+                match_tokens(&quote! {[ a b b ]}, &quote! { [ a ... b c ]}, &tokens_to_string)
                     .expect_err("unexpected match")
             ),
             // the error message shows "longer match" with branching off the wildcard earlier
