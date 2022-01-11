@@ -102,22 +102,50 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn test_elided_lifetimes() {
         assert_impl_all!(ElidedLifetimes: Default);
         let s: ElidedLifetimes = Default::default();
         assert_eq!(456, s.int_field);
 
-        // TODO(lukasza): Implement and test a user-defined copy constructor / impl
-        // Clone.
+        assert_impl_all!(ElidedLifetimes: Clone);
+        let s_clone = s.clone();
+        assert_eq!(10456, s_clone.int_field);
 
-        // Trivial-ABI structs implement the Copy trait, even if they have user-defined
-        // constructors.
-        assert_impl_all!(ElidedLifetimes: Copy);
-        let s_copy = s;
-        assert_eq!(456, s_copy.int_field);
+        // In theory a POD struct with only trivial members can always derive
+        // the Copy trait. OTOH, having a different behavior in Copy vs Clone
+        // traits would seem confusing. Therefore, when the generated bindings
+        // implement the Clone trait then automatic deriving of the Copy trait
+        // is suppressed. The suppression also avoids clippy::clone_on_copy
+        // warning.
+        assert_not_impl_all!(ElidedLifetimes: Copy);
 
         assert_impl_all!(ElidedLifetimes: From<i32>);
         let i: ElidedLifetimes = 123.into();
+        assert_eq!(123, i.int_field);
+    }
+
+    #[test]
+    #[allow(clippy::redundant_clone)]
+    fn test_elided_lifetimes_with_inline_constructors() {
+        assert_impl_all!(ElidedLifetimesWithInlineConstructors: Default);
+        let s: ElidedLifetimesWithInlineConstructors = Default::default();
+        assert_eq!(321, s.int_field);
+
+        assert_impl_all!(ElidedLifetimesWithInlineConstructors: Clone);
+        let s_clone = s.clone();
+        assert_eq!(20321, s_clone.int_field);
+
+        // In theory a POD struct with only trivial members can always derive
+        // the Copy trait. OTOH, having a different behavior in Copy vs Clone
+        // traits would seem confusing. Therefore, when the generated bindings
+        // implement the Clone trait then automatic deriving of the Copy trait
+        // is suppressed. The suppression also avoids clippy::clone_on_copy
+        // warning.
+        assert_not_impl_all!(ElidedLifetimesWithInlineConstructors: Copy);
+
+        assert_impl_all!(ElidedLifetimesWithInlineConstructors: From<i32>);
+        let i: ElidedLifetimesWithInlineConstructors = 123.into();
         assert_eq!(123, i.int_field);
     }
 }

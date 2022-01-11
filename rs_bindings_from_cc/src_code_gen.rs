@@ -294,18 +294,38 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             if !record.is_trivial_abi {
                 return Ok(None);
             }
-            let (trait_name, method_name) = match func.params.len() {
+            let trait_name: TokenStream;
+            let method_name: TokenStream;
+            let param_decls: TokenStream;
+            let extra_arg_expressions: TokenStream;
+            match func.params.len() {
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
-                1 => (quote! { Default }, quote! { default }),
+                1 => {
+                    trait_name = quote! { Default };
+                    method_name = quote! { default };
+                    param_decls = quote! {};
+                    extra_arg_expressions = quote! {};
+                }
                 2 => {
                     let param_type = &func.params[1].type_;
+                    // TODO(lukasza): Do something smart with move constructor.
                     if param_type.cc_type.is_const_ref_to(record) {
-                        // TODO(b/200066396): Map copy constructor to `impl Clone`.
-                        // TODO(lukasza): Do something smart with move constructor.
-                        return Ok(None);
+                        // Copy constructor
+                        if should_derive_clone(record) {
+                            return Ok(None);
+                        } else {
+                            trait_name = quote! { Clone };
+                            method_name = quote! { clone };
+                            param_decls = quote! { &self };
+                            extra_arg_expressions = quote! { , self };
+                        }
                     } else {
-                        let quoted_param_type = &param_types[1];
-                        (quote! { From< #quoted_param_type > }, quote! { from })
+                        let param_ident = &param_idents[1];
+                        let param_type = &param_types[1];
+                        trait_name = quote! { From< #param_type > };
+                        method_name = quote! { from };
+                        param_decls = quote! { #param_ident: #param_type };
+                        extra_arg_expressions = quote! { , #param_ident };
                     }
                 }
                 _ => {
@@ -313,18 +333,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     return Ok(None);
                 }
             };
-            // Skip `__this` parameter in the public function definition,
-            // because C++ constructor thunks take `__this` as the first
-            // parameter, but Rust translation returns a `Self` instead (in
-            // Clone, Default, and From traits, as well as in static methods).
-            let (param_idents, param_types) = (
-                // TODO(lukasza): We should also trim `generic_params` so that
-                // 1) the generated Rust code is easier to read and 2) to avoid
-                // running into unused lifetime parameters warning (see also
-                // https://github.com/rust-lang/rust/issues/41960).
-                param_idents.iter().skip(1).collect_vec(),
-                param_types.iter().skip(1).collect_vec(),
-            );
             // SAFETY: A user-defined constructor is not guaranteed to
             // initialize all the fields. To make the `assume_init()` call
             // below safe, the memory is zero-initialized first. This is safer,
@@ -338,10 +346,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 #doc_comment
                 impl #trait_name for #struct_name {
                     #[inline(always)]
-                    fn #method_name #generic_params( #( #param_idents: #param_types ),* ) -> Self {
+                    fn #method_name #generic_params( #param_decls ) -> Self {
                         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::#thunk_ident(&mut tmp #( , #param_idents )* );
+                            crate::detail::#thunk_ident(&mut tmp #extra_arg_expressions );
                             tmp.assume_init()
                         }
                     }
@@ -517,11 +525,14 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     ))
 }
 
-fn generate_copy_derives(record: &Record) -> Vec<Ident> {
-    if record.is_trivial_abi
+fn should_derive_clone(record: &Record) -> bool {
+    record.is_trivial_abi
         && record.copy_constructor.access == ir::AccessSpecifier::Public
         && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
-    {
+}
+
+fn generate_copy_derives(record: &Record) -> Vec<Ident> {
+    if should_derive_clone(record) {
         // TODO(b/202258760): Make `Copy` inclusion configurable.
         vec![make_ident("Clone"), make_ident("Copy")]
     } else {
