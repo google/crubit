@@ -33,7 +33,7 @@ impl Default for UserOfImportedType {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -57,7 +57,9 @@ mod detail {
         pub(crate) fn __rust_thunk___Z16UsesImportedType7Trivial(
             t: trivial_type_cc::Trivial,
         ) -> trivial_type_cc::Trivial;
-        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(__this: *mut UserOfImportedType);
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
+            __this: &mut std::mem::MaybeUninit<UserOfImportedType>,
+        );
     }
 }
 

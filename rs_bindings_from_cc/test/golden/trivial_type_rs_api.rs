@@ -28,7 +28,7 @@ impl Default for Trivial {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7TrivialC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN7TrivialC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -59,7 +59,7 @@ impl Default for TrivialWithDefaulted {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -92,7 +92,7 @@ impl Default for TrivialNonfinal {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -152,11 +152,13 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: *mut Trivial);
+        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: &mut std::mem::MaybeUninit<Trivial>);
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
-            __this: *mut TrivialWithDefaulted,
+            __this: &mut std::mem::MaybeUninit<TrivialWithDefaulted>,
         );
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1Ev(__this: *mut TrivialNonfinal);
+        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1Ev(
+            __this: &mut std::mem::MaybeUninit<TrivialNonfinal>,
+        );
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);
         #[link_name = "_Z25TakesWithDefaultedByValue20TrivialWithDefaulted"]

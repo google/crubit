@@ -76,7 +76,7 @@ impl Default for ContainingStruct {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -96,7 +96,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(__this: *mut ContainingStruct);
+        pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(
+            __this: &mut std::mem::MaybeUninit<ContainingStruct>,
+        );
     }
 }
 

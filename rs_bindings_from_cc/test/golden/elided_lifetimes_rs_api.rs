@@ -39,7 +39,7 @@ impl Default for S {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN1SC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN1SC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -72,7 +72,7 @@ mod detail {
             p1: &'b mut i32,
             p2: &'c mut i32,
         ) -> &'a mut i32;
-        pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: *mut S);
+        pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: &mut std::mem::MaybeUninit<S>);
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi<'a>(p: Option<&'a mut i32>);
     }

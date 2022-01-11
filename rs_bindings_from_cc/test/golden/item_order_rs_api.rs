@@ -26,7 +26,7 @@ impl Default for FirstStruct {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -60,7 +60,7 @@ impl Default for SecondStruct {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -85,9 +85,13 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(__this: *mut FirstStruct);
+        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(
+            __this: &mut std::mem::MaybeUninit<FirstStruct>,
+        );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
-        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(__this: *mut SecondStruct);
+        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(
+            __this: &mut std::mem::MaybeUninit<SecondStruct>,
+        );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
 }

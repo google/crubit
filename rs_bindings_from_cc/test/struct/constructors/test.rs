@@ -8,6 +8,7 @@ extern crate static_assertions;
 #[cfg(test)]
 mod tests {
     use constructors::*;
+    use elided_lifetimes::*;
 
     #[test]
     fn test_user_provided_constructors() {
@@ -39,8 +40,8 @@ mod tests {
         // Trivial-ABI structs implement the Copy trait, even if they have user-defined
         // constructors.
         assert_impl_all!(StructWithUserProvidedConstructors: Copy);
-        let s3 = s;
-        assert_eq!(123, s3.int_field);
+        let s_copy = s;
+        assert_eq!(123, s_copy.int_field);
 
         assert_impl_all!(StructWithInlineConstructors: From<i32>);
         let i: StructWithInlineConstructors = 456.into();
@@ -78,9 +79,9 @@ mod tests {
         // below may mostly be testing/exercising how Rust derives Clone.  This
         // should be okay.
         assert_impl_all!(StructWithExplicitlyDefaultedConstructors: Clone);
-        let s2 = s.clone();
-        assert_eq!(0, s2.field_with_no_initializer);
-        assert_eq!(123, s2.field_with_explicit_initializer);
+        let s_clone = s.clone();
+        assert_eq!(0, s_clone.field_with_no_initializer);
+        assert_eq!(123, s_clone.field_with_explicit_initializer);
 
         assert_impl_all!(StructWithExplicitlyDefaultedConstructors: Copy);
     }
@@ -98,5 +99,25 @@ mod tests {
 
         // TODO(b/200067242): Support constructing non-trivially-relocatable
         // types. See also <internal link>.
+    }
+
+    #[test]
+    fn test_elided_lifetimes() {
+        assert_impl_all!(ElidedLifetimes: Default);
+        let s: ElidedLifetimes = Default::default();
+        assert_eq!(456, s.int_field);
+
+        // TODO(lukasza): Implement and test a user-defined copy constructor / impl
+        // Clone.
+
+        // Trivial-ABI structs implement the Copy trait, even if they have user-defined
+        // constructors.
+        assert_impl_all!(ElidedLifetimes: Copy);
+        let s_copy = s;
+        assert_eq!(456, s_copy.int_field);
+
+        assert_impl_all!(ElidedLifetimes: From<i32>);
+        let i: ElidedLifetimes = 123.into();
+        assert_eq!(123, i.int_field);
     }
 }

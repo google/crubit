@@ -32,7 +32,7 @@ impl Default for DocCommentSlashes {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -45,7 +45,7 @@ impl From<i32> for DocCommentSlashes {
     fn from(__param_0: i32) -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(tmp.as_mut_ptr(), __param_0);
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -86,7 +86,7 @@ impl Default for DocCommentBang {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -119,7 +119,7 @@ impl Default for MultilineCommentTwoStars {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -152,7 +152,7 @@ impl Default for LineComment {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11LineCommentC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN11LineCommentC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -185,7 +185,7 @@ impl Default for MultilineOneStar {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -212,20 +212,28 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(__this: *mut DocCommentSlashes);
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(
+            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
+        );
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei(
-            __this: *mut DocCommentSlashes,
+            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
             __param_0: i32,
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
-        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(__this: *mut DocCommentBang);
-        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
-            __this: *mut MultilineCommentTwoStars,
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(
+            __this: &mut std::mem::MaybeUninit<DocCommentBang>,
         );
-        pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(__this: *mut LineComment);
-        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(__this: *mut MultilineOneStar);
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
+            __this: &mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
+        );
+        pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(
+            __this: &mut std::mem::MaybeUninit<LineComment>,
+        );
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(
+            __this: &mut std::mem::MaybeUninit<MultilineOneStar>,
+        );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }
 }

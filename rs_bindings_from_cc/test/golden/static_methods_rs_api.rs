@@ -50,7 +50,7 @@ impl Default for SomeClass {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -79,7 +79,9 @@ mod detail {
             x: i32,
             y: i32,
         ) -> i32;
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(__this: *mut SomeClass);
+        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(
+            __this: &mut std::mem::MaybeUninit<SomeClass>,
+        );
     }
 }
 

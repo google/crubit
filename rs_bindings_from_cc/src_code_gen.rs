@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -313,10 +313,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     return Ok(None);
                 }
             };
-            // Skip the first parameter in the public function definition. C++ constructors
-            // (and the thunk) take `__this` as the first parameter, but Rust
-            // translation returns a `Self` instead (in Clone, Default, and From
-            // traits, as well as in static methods).
+            // Skip `__this` parameter in the public function definition,
+            // because C++ constructor thunks take `__this` as the first
+            // parameter, but Rust translation returns a `Self` instead (in
+            // Clone, Default, and From traits, as well as in static methods).
             let (param_idents, param_types) = (
                 // TODO(lukasza): We should also trim `generic_params` so that
                 // 1) the generated Rust code is easier to read and 2) to avoid
@@ -341,7 +341,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     fn #method_name #generic_params( #( #param_idents: #param_types ),* ) -> Self {
                         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::#thunk_ident(tmp.as_mut_ptr() #( , #param_idents )* );
+                            crate::detail::#thunk_ident(&mut tmp #( , #param_idents )* );
                             tmp.assume_init()
                         }
                     }
@@ -360,6 +360,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         } else {
             quote! {}
         };
+
+        // For constructors inject MaybeUninit into the type of `__this_` parameter.
+        let mut param_types = param_types;
+        if func.name == UnqualifiedIdentifier::Constructor {
+            if param_types.is_empty() || func.params.is_empty() {
+                bail!("Constructors should have at least one parameter (__this)");
+            }
+            param_types[0] = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
+                .format_constructor_this_param(ir, &lifetime_to_name)?;
+        }
 
         quote! {
             #thunk_attr
@@ -692,92 +702,196 @@ fn rs_type_name_for_target_and_identifier(
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
+enum Mutability {
+    Const,
+    Mut,
+}
+
+impl Mutability {
+    fn format_for_pointer(&self) -> TokenStream {
+        match self {
+            Mutability::Mut => quote! {mut},
+            Mutability::Const => quote! {const},
+        }
+    }
+
+    fn format_for_reference(&self) -> TokenStream {
+        match self {
+            Mutability::Mut => quote! {mut},
+            Mutability::Const => quote! {},
+        }
+    }
+}
+
+// TODO(b/213947473): Instead of having a separate RsTypeKind here, consider
+// changing ir::RsType into a similar `enum`, with fields that contain
+// references (e.g. &'ir Record`) instead of DeclIds.
+#[derive(Debug)]
+enum RsTypeKind<'ir> {
+    Pointer { pointee: Box<RsTypeKind<'ir>>, mutability: Mutability },
+    Reference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime_id: LifetimeId },
+    Record(&'ir Record),
+    TypeAlias(&'ir TypeAlias),
+    Unit,
+    Other { name: &'ir str, type_args: Vec<RsTypeKind<'ir>> },
+}
+
+impl<'ir> RsTypeKind<'ir> {
+    pub fn new(ty: &'ir ir::RsType, ir: &'ir IR) -> Result<Self> {
+        // The lambdas deduplicate code needed by multiple `match` branches.
+        let get_type_args = || -> Result<Vec<RsTypeKind<'ir>>> {
+            ty.type_args.iter().map(|type_arg| RsTypeKind::<'ir>::new(type_arg, ir)).collect()
+        };
+        let get_pointee = || -> Result<Box<RsTypeKind<'ir>>> {
+            if ty.type_args.len() != 1 {
+                bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
+            }
+            Ok(Box::new(get_type_args()?.remove(0)))
+        };
+        let get_lifetime = || -> Result<LifetimeId> {
+            if ty.lifetime_args.len() != 1 {
+                bail!("Missing reference lifetime (need exactly 1 lifetime argument): {:?}", ty);
+            }
+            Ok(ty.lifetime_args[0])
+        };
+
+        let result = match ty.name.as_deref() {
+            None => {
+                ensure!(
+                    ty.type_args.is_empty(),
+                    "Type arguments on records nor type aliases are not yet supported: {:?}",
+                    ty
+                );
+                match ir.item_for_type(ty)? {
+                    Item::Record(record) => RsTypeKind::Record(record),
+                    Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias(type_alias),
+                    other_item => bail!("Item does not define a type: {:?}", other_item),
+                }
+            }
+            Some(name) => match name {
+                "()" => {
+                    if !ty.type_args.is_empty() {
+                        bail!("Unit type must not have type arguments: {:?}", ty);
+                    }
+                    RsTypeKind::Unit
+                }
+                "*mut" => {
+                    RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Mut }
+                }
+                "*const" => {
+                    RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Const }
+                }
+                "&mut" => RsTypeKind::Reference {
+                    referent: get_pointee()?,
+                    mutability: Mutability::Mut,
+                    lifetime_id: get_lifetime()?,
+                },
+                "&" => RsTypeKind::Reference {
+                    referent: get_pointee()?,
+                    mutability: Mutability::Const,
+                    lifetime_id: get_lifetime()?,
+                },
+                name => RsTypeKind::Other { name, type_args: get_type_args()? },
+            },
+        };
+        Ok(result)
+    }
+
+    pub fn format(
+        &self,
+        ir: &IR,
+        lifetime_to_name: &HashMap<LifetimeId, String>,
+    ) -> Result<TokenStream> {
+        let result = match self {
+            RsTypeKind::Pointer { pointee, mutability } => {
+                let mutability = mutability.format_for_pointer();
+                let nested_type = pointee.format(ir, lifetime_to_name)?;
+                quote! {* #mutability #nested_type}
+            }
+            RsTypeKind::Reference { referent, mutability, lifetime_id } => {
+                let mutability = mutability.format_for_reference();
+                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
+                let nested_type = referent.format(ir, lifetime_to_name)?;
+                quote! {& #lifetime #mutability #nested_type}
+            }
+            RsTypeKind::Record(record) => rs_type_name_for_target_and_identifier(
+                &record.owning_target,
+                &record.identifier,
+                ir,
+            )?,
+            RsTypeKind::TypeAlias(type_alias) => rs_type_name_for_target_and_identifier(
+                &type_alias.owning_target,
+                &type_alias.identifier,
+                ir,
+            )?,
+            RsTypeKind::Unit => quote! {()},
+            RsTypeKind::Other { name, type_args } => {
+                let ident = make_ident(name);
+                let generic_params = format_generic_params(
+                    type_args
+                        .iter()
+                        .map(|type_arg| type_arg.format(ir, lifetime_to_name))
+                        .collect::<Result<Vec<_>>>()?,
+                );
+                quote! {#ident #generic_params}
+            }
+        };
+        Ok(result)
+    }
+
+    /// Formats the Rust type of `__this` parameter of a constructor - injecting
+    /// MaybeUninit to return something like `&'a mut MaybeUninit<SomeStruct>`.
+    pub fn format_constructor_this_param(
+        &self,
+        ir: &IR,
+        lifetime_to_name: &HashMap<LifetimeId, String>,
+    ) -> Result<TokenStream> {
+        let nested_type = match self {
+            RsTypeKind::Pointer {
+                pointee: pointee_or_referent,
+                mutability: Mutability::Mut,
+                ..
+            }
+            | RsTypeKind::Reference {
+                referent: pointee_or_referent,
+                mutability: Mutability::Mut,
+                ..
+            } => pointee_or_referent.format(ir, lifetime_to_name)?,
+            _ => bail!("Unexpected type of `__this` parameter in a constructor: {:?}", self),
+        };
+        let lifetime = match self {
+            RsTypeKind::Pointer { .. } => quote! {},
+            RsTypeKind::Reference { lifetime_id, .. } => {
+                Self::format_lifetime(lifetime_id, lifetime_to_name)?
+            }
+            _ => unreachable!(), // Because of the earlier `match`.
+        };
+        // `mut` can be hardcoded, because of the `match` patterns above.
+        Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
+    }
+
+    fn format_lifetime(
+        lifetime_id: &LifetimeId,
+        lifetime_to_name: &HashMap<LifetimeId, String>,
+    ) -> Result<TokenStream> {
+        let lifetime_name = lifetime_to_name.get(lifetime_id).ok_or_else(|| {
+            anyhow!("`lifetime_to_name` doesn't have an entry for {:?}", lifetime_id)
+        })?;
+        let lifetime =
+            syn::Lifetime::new(&format!("'{}", lifetime_name), proc_macro2::Span::call_site());
+        Ok(quote! { #lifetime })
+    }
+}
+
 fn format_rs_type(
     ty: &ir::RsType,
     ir: &IR,
     lifetime_to_name: &HashMap<LifetimeId, String>,
 ) -> Result<TokenStream> {
-    enum TypeKind<'a> {
-        Pointer(TokenStream),
-        Reference(TokenStream),
-        Record(&'a ir::Record),
-        TypeAlias(&'a ir::TypeAlias),
-        Unit,
-        Other(&'a str),
-    }
-    let kind = if let Some(ref name) = ty.name {
-        match name.as_str() {
-            "*mut" => TypeKind::Pointer(quote! {mut}),
-            "*const" => TypeKind::Pointer(quote! {const}),
-            "&mut" => TypeKind::Reference(quote! {mut}),
-            "&" => TypeKind::Reference(quote! {}),
-            "()" => TypeKind::Unit,
-            _ => TypeKind::Other(name),
-        }
-    } else {
-        let item = ir.item_for_type(ty)?;
-        match item {
-            Item::Record(record) => TypeKind::Record(record),
-            Item::TypeAlias(type_alias) => TypeKind::TypeAlias(type_alias),
-            _ => bail!("Item does not define a type: {:?}", item),
-        }
-    };
-    match kind {
-        TypeKind::Pointer(mutability) => {
-            if ty.type_args.len() != 1 {
-                bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
-            }
-            let nested_type = format_rs_type(&ty.type_args[0], ir, lifetime_to_name)?;
-            Ok(quote! {* #mutability #nested_type})
-        }
-        TypeKind::Reference(mutability) => {
-            if ty.lifetime_args.len() != 1 || ty.type_args.len() != 1 {
-                bail!(
-                    "Invalid reference type (need exactly 1 lifetime argument and 1 type argument): {:?}",
-                    ty
-                );
-            }
-            let nested_type = format_rs_type(&ty.type_args[0], ir, lifetime_to_name)?;
-            let lifetime_id = &ty.lifetime_args[0];
-            let lifetime = syn::Lifetime::new(
-                &format!("'{}", lifetime_to_name.get(lifetime_id).unwrap()),
-                proc_macro2::Span::call_site(),
-            );
-            Ok(quote! {& #lifetime #mutability #nested_type})
-        }
-        TypeKind::Record(record) => {
-            if !ty.type_args.is_empty() {
-                bail!("Type arguments on records are not yet supported: {:?}", ty);
-            }
-            rs_type_name_for_target_and_identifier(&record.owning_target, &record.identifier, ir)
-        }
-        TypeKind::TypeAlias(type_alias) => {
-            if !ty.type_args.is_empty() {
-                bail!("Type aliases must not have type arguments: {:?}", ty);
-            }
-            rs_type_name_for_target_and_identifier(
-                &type_alias.owning_target,
-                &type_alias.identifier,
-                ir,
-            )
-        }
-        TypeKind::Unit => {
-            if !ty.type_args.is_empty() {
-                bail!("Unit type must not have type arguments: {:?}", ty);
-            }
-            Ok(quote! {()})
-        }
-        TypeKind::Other(name) => {
-            let ident = make_ident(name);
-            let type_args = format_generic_params(
-                ty.type_args
-                    .iter()
-                    .map(|type_arg| format_rs_type(type_arg, ir, lifetime_to_name))
-                    .collect::<Result<Vec<_>>>()?,
-            );
-            Ok(quote! {#ident #type_args})
-        }
-    }
+    RsTypeKind::new(ty, ir)
+        .and_then(|kind| kind.format(ir, lifetime_to_name))
+        .with_context(|| format!("Failed to format Rust type {:?}", ty))
 }
 
 fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
@@ -1563,8 +1677,7 @@ mod tests {
                     fn default() -> Self {
                         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(
-                                tmp.as_mut_ptr());
+                            crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&mut tmp);
                             tmp.assume_init()
                         }
                     }

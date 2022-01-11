@@ -36,7 +36,7 @@ impl Default for Foo {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -78,7 +78,7 @@ impl Default for Bar {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3BarC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -108,7 +108,7 @@ impl Default for HasNoComments {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -130,10 +130,12 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN3FooC1Ev(__this: *mut Foo);
+        pub(crate) fn __rust_thunk___ZN3FooC1Ev(__this: &mut std::mem::MaybeUninit<Foo>);
         pub(crate) fn __rust_thunk___Z3foov();
-        pub(crate) fn __rust_thunk___ZN3BarC1Ev(__this: *mut Bar);
-        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev(__this: *mut HasNoComments);
+        pub(crate) fn __rust_thunk___ZN3BarC1Ev(__this: &mut std::mem::MaybeUninit<Bar>);
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev(
+            __this: &mut std::mem::MaybeUninit<HasNoComments>,
+        );
     }
 }
 

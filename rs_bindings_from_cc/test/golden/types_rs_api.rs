@@ -169,7 +169,7 @@ impl Default for SomeStruct {
     fn default() -> Self {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(tmp.as_mut_ptr());
+            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -246,7 +246,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev(__this: *mut SomeStruct);
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev(
+            __this: &mut std::mem::MaybeUninit<SomeStruct>,
+        );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
 }
