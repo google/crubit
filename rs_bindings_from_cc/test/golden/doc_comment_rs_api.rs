@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #![feature(const_ptr_offset_from, custom_inner_attributes)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 use memoffset_unstable_const::offset_of;
 
@@ -208,6 +210,7 @@ pub fn foo() -> i32 {
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
 
 mod detail {
+    #[allow(unused_imports)]
     use super::*;
     extern "C" {
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]

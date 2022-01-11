@@ -28,6 +28,8 @@ TEST(SrcGenTest, FFIIntegration) {
       StrEq(
           "#![rustfmt::skip]\n"
           "#![feature(custom_inner_attributes)]\n"
+          "#![allow(non_camel_case_types)]\n"
+          "#![allow(non_snake_case)]\n"
           "\n"
           "#[inline(always)]\n"
           "pub fn hello_world(arg: i32) -> i32 {\n"
@@ -35,6 +37,7 @@ TEST(SrcGenTest, FFIIntegration) {
           "}\n"
           "\n"
           "mod detail {\n"
+          "    #[allow(unused_imports)]\n"
           "    use super::*;\n"
           "    extern \"C\" {\n"
           "        pub(crate) fn __rust_thunk__mangled_name(arg: i32) -> i32;\n"

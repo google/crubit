@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 use memoffset_unstable_const::offset_of;
 
@@ -93,6 +95,7 @@ impl Default for ContainingStruct {
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
 mod detail {
+    #[allow(unused_imports)]
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(__this: *mut ContainingStruct);

@@ -4,6 +4,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #![feature(custom_inner_attributes)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 // <unknown location>
 // Error while generating bindings for item '__builtin_ms_va_list':

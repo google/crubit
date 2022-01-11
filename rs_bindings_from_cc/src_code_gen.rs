@@ -624,6 +624,7 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     } else {
         quote! {
             mod detail {
+                #[allow(unused_imports)]
                 use super::*;
                 extern "C" {
                     #( #thunks )*
@@ -649,7 +650,10 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     };
 
     Ok(quote! {
-        #features __NEWLINE__ __NEWLINE__
+        #features __NEWLINE__
+        #![allow(non_camel_case_types)] __NEWLINE__
+        #![allow(non_snake_case)] __NEWLINE__ __NEWLINE__
+
         #imports __NEWLINE__ __NEWLINE__
 
         #( #items __NEWLINE__ __NEWLINE__ )*
@@ -949,6 +953,7 @@ mod tests {
             rs_api,
             quote! {
                 mod detail {
+                    #[allow(unused_imports)]
                     use super::*;
                     extern "C" {
                         #[link_name = "_Z3Addii"]
@@ -980,6 +985,7 @@ mod tests {
             rs_api,
             quote! {
                 mod detail {
+                    #[allow(unused_imports)]
                     use super::*;
                     extern "C" {
                         pub(crate) fn __rust_thunk___Z3Addii(a: i32, b: i32) -> i32;
@@ -1021,6 +1027,7 @@ mod tests {
             rs_api,
             quote! {
             mod detail {
+                #[allow(unused_imports)]
                 use super::*;
                 extern "C" {
                     pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(param: dependency::ParamStruct)
@@ -1240,6 +1247,7 @@ mod tests {
             rs_api,
             quote! {
                 mod detail {
+                    #[allow(unused_imports)]
                     use super::*;
                     extern "C" {
                         pub(crate) fn __rust_thunk___Z5DerefPKPi(p: *const *mut i32) -> *mut i32;
