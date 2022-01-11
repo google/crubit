@@ -497,6 +497,30 @@ fn test_typedef() -> Result<()> {
 }
 
 #[test]
+fn test_well_known_types_check_namespaces() -> Result<()> {
+    // Check that we don't treat a type called `int32_t` in a user-defined
+    // namespace as if it was the standard type `int32_t`.
+    // Because we don't support namespaces yet, the outcome of this should be
+    // that `f()` is unsupported, rather than being imported with a parameter
+    // type of `i32`.
+    // Once we support namespaces, change this test to check that `f()` is
+    // imported with the correct paramter type `my_namespace::int32_t`.
+    let ir = ir_from_cc(
+        r#"
+            namespace my_namespace {
+              using int32_t = int;
+            }
+            void f(my_namespace::int32_t i);
+        "#,
+    )?;
+    assert_strings_contain(
+        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
+        "f",
+    );
+    Ok(())
+}
+
+#[test]
 fn test_dont_import_typedef_nested_in_func() {
     let ir = ir_from_cc("inline void f() { typedef int MyTypedefDecl; }").unwrap();
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyTypedefDecl" ... } });

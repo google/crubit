@@ -46,6 +46,28 @@ namespace rs_bindings_from_cc {
 constexpr std::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
+// A mapping of C++ standard types to their equivalent Rust types.
+// To produce more idiomatic results, these types receive special handling
+// instead of using the generic type mapping mechanism.
+static constexpr auto kWellKnownTypes =
+    gtl::fixed_flat_map_of<absl::string_view, absl::string_view>({
+        {"ptrdiff_t", "isize"},
+        {"intptr_t", "isize"},
+        {"size_t", "usize"},
+        {"uintptr_t", "usize"},
+        {"int8_t", "i8"},
+        {"uint8_t", "u8"},
+        {"int16_t", "i16"},
+        {"uint16_t", "u16"},
+        {"int32_t", "i32"},
+        {"uint32_t", "u32"},
+        {"int64_t", "i64"},
+        {"uint64_t", "u64"},
+        {"char16_t", "u16"},
+        {"char32_t", "u32"},
+        {"wchar_t", "i32"},
+    });
+
 static DeclId GenerateDeclId(const clang::Decl* decl) {
   return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
@@ -388,6 +410,12 @@ bool AstVisitor::VisitTypedefNameDecl(
     }
   }
 
+  clang::QualType type =
+      typedef_name_decl->getASTContext().getTypedefType(typedef_name_decl);
+  if (kWellKnownTypes.contains(type.getAsString())) {
+    return true;
+  }
+
   std::optional<Identifier> identifier =
       GetTranslatedIdentifier(typedef_name_decl);
   if (!identifier.has_value()) {
@@ -465,35 +493,13 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
     clang::QualType qual_type,
     std::optional<devtools_rust::TypeLifetimes> lifetimes,
     bool nullable) const {
-  // A mapping of C++ standard types to their equivalent Rust types.
-  // To produce more idiomatic results, these types receive special handling
-  // instead of using the generic type mapping mechanism.
-  static constexpr auto well_known_types =
-      gtl::fixed_flat_map_of<absl::string_view, absl::string_view>({
-          {"ptrdiff_t", "isize"},
-          {"intptr_t", "isize"},
-          {"size_t", "usize"},
-          {"uintptr_t", "usize"},
-          {"int8_t", "i8"},
-          {"uint8_t", "u8"},
-          {"int16_t", "i16"},
-          {"uint16_t", "u16"},
-          {"int32_t", "i32"},
-          {"uint32_t", "u32"},
-          {"int64_t", "i64"},
-          {"uint64_t", "u64"},
-          {"char16_t", "u16"},
-          {"char32_t", "u32"},
-          {"wchar_t", "i32"},
-      });
-
   std::optional<MappedType> type = std::nullopt;
   // When converting the type to a string, don't include qualifiers -- we handle
   // these separately.
   std::string type_string = qual_type.getUnqualifiedType().getAsString();
 
-  if (auto iter = well_known_types.find(type_string);
-      iter != well_known_types.end()) {
+  if (auto iter = kWellKnownTypes.find(type_string);
+      iter != kWellKnownTypes.end()) {
     type = MappedType::Simple(std::string(iter->second), type_string);
   } else if (const auto* pointer_type =
                  qual_type->getAs<clang::PointerType>()) {

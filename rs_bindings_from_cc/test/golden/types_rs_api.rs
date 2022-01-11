@@ -12,14 +12,6 @@ use memoffset_unstable_const::offset_of;
 // Cannot generate bindings for type aliases
 
 // <unknown location>
-// Error while generating bindings for item 'ptrdiff_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'size_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
 // Error while generating bindings for item '__u_char':
 // Cannot generate bindings for type aliases
 
@@ -232,38 +224,6 @@ use memoffset_unstable_const::offset_of;
 // Cannot generate bindings for type aliases
 
 // <unknown location>
-// Error while generating bindings for item 'int8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'int64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint8_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint16_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint32_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uint64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
 // Error while generating bindings for item 'int_least8_t':
 // Cannot generate bindings for type aliases
 
@@ -325,14 +285,6 @@ use memoffset_unstable_const::offset_of;
 
 // <unknown location>
 // Error while generating bindings for item 'uint_fast64_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'intptr_t':
-// Cannot generate bindings for type aliases
-
-// <unknown location>
-// Error while generating bindings for item 'uintptr_t':
 // Cannot generate bindings for type aliases
 
 // <unknown location>
