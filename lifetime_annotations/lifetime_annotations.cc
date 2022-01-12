@@ -247,11 +247,11 @@ class LifetimeElisionPragmaHandler : public clang::PragmaHandler {
 }  // namespace
 
 void AddLifetimeAnnotationHandlers(
-    clang::CompilerInstance& compiler,
+    clang::Preprocessor& preprocessor,
     std::shared_ptr<LifetimeAnnotationContext> context) {
   // Preprocessor takes ownership of the handler.
-  compiler.getPreprocessor().AddPragmaHandler(
-      "clang", new LifetimeElisionPragmaHandler(context));
+  preprocessor.AddPragmaHandler("clang",
+                                new LifetimeElisionPragmaHandler(context));
 }
 
 llvm::SmallVector<clang::TypeLoc> GetTemplateArgs(clang::TypeLoc type_loc) {

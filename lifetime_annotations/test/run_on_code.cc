@@ -42,7 +42,8 @@ class RunOnCodeAction : public clang::ASTFrontendAction {
 
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance& compiler, llvm::StringRef) override {
-    AddLifetimeAnnotationHandlers(compiler, lifetime_context_);
+    AddLifetimeAnnotationHandlers(compiler.getPreprocessor(),
+                                  lifetime_context_);
     return std::make_unique<RunOnCodeASTConsumer>(operation_,
                                                   lifetime_context_);
   }

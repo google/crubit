@@ -36,11 +36,11 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     const clang::FunctionDecl* func, const LifetimeAnnotationContext& context,
     LifetimeSymbolTable* symbol_table = nullptr);
 
-// Adds handlers to `compiler` to populate `context`.
+// Adds handlers to `preprocessor` to populate `context`.
 // To be able to use GetLifetimeAnnotations(), call this function to add the
 // necessary handlers before compiling any code.
 void AddLifetimeAnnotationHandlers(
-    clang::CompilerInstance& compiler,
+    clang::Preprocessor& preprocessor,
     std::shared_ptr<LifetimeAnnotationContext> context);
 
 // Returns any template arguments present on `type_loc`. If `type_loc` does not
