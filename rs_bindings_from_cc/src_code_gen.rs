@@ -229,11 +229,38 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     let function_id: FunctionId;
     match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
+            // Change `__this: &'a SomeStruct` into `&'a self` for instance methods.
+            // (This only affects params of the public API function.  Thunk params can
+            // continue using `__this`.)
+            let mut param_idents = param_idents.clone();
+            let mut param_decls = param_idents
+                .iter()
+                .zip(param_types.iter())
+                .map(|(ident, type_)| quote! { #ident : #type_ })
+                .collect_vec();
+            if func.is_instance_method() {
+                ensure!(
+                    !func.params.is_empty() && !param_decls.is_empty() && !param_idents.is_empty(),
+                    "Instance methods should have at least one parameter (__this): {:?}",
+                    func,
+                );
+                let record = record.unwrap(); // Ok because of `func.is_instance_method()` above.
+                let self_decl = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
+                    .format_as_self_param_for_instance_method(record, &lifetime_to_name)
+                    .with_context(|| {
+                        format!("Failed to format as `self` param: {:?}", func.params[0])
+                    })?;
+                if let Some(new_decl) = self_decl {
+                    param_decls[0] = new_decl;
+                    param_idents[0] = make_ident("self");
+                }
+            }
+
             let ident = make_ident(&id.identifier);
             let fn_def = quote! {
                 #doc_comment
                 #[inline(always)]
-                pub fn #ident #generic_params( #( #param_idents: #param_types ),*
+                pub fn #ident #generic_params( #( #param_decls ),*
                 ) #return_type_fragment {
                     unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
                 }
@@ -376,7 +403,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 bail!("Constructors should have at least one parameter (__this)");
             }
             param_types[0] = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
-                .format_constructor_this_param(ir, &lifetime_to_name)?;
+                .format_as_this_param_for_constructor_thunk(ir, &lifetime_to_name)
+                .with_context(|| {
+                    format!("Failed to format `__this` param for a thunk: {:?}", func.params[0])
+                })?;
         }
 
         quote! {
@@ -853,7 +883,7 @@ impl<'ir> RsTypeKind<'ir> {
 
     /// Formats the Rust type of `__this` parameter of a constructor - injecting
     /// MaybeUninit to return something like `&'a mut MaybeUninit<SomeStruct>`.
-    pub fn format_constructor_this_param(
+    pub fn format_as_this_param_for_constructor_thunk(
         &self,
         ir: &IR,
         lifetime_to_name: &HashMap<LifetimeId, String>,
@@ -880,6 +910,51 @@ impl<'ir> RsTypeKind<'ir> {
         };
         // `mut` can be hardcoded, because of the `match` patterns above.
         Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
+    }
+
+    /// Formats this RsTypeKind as either `&'a self` or `&'a mut self`.
+    ///
+    /// When this RsTypeKind represents a pointer (without lifetime
+    /// annotations), then `Ok(None)` is returned.
+    /// TODO(lukasza): Stop generating bindings when such pointer is used.  For
+    /// example:
+    /// - In C++ non-static member functions where (without lifetime
+    ///   annotations) `__this` will have an `RsType` representing a pointer
+    ///   (rather than a reference).
+    /// - In C++ copy constructors where (without lifetime annotations) the
+    ///   `other` parameter will have an `RsType` representing a pointer (rather
+    ///   than a reference).
+    pub fn format_as_self_param_for_instance_method(
+        &self,
+        expected_record: &Record,
+        lifetime_to_name: &HashMap<LifetimeId, String>,
+    ) -> Result<Option<TokenStream>> {
+        let nested_type = match self {
+            RsTypeKind::Pointer { pointee: nested_type, .. }
+            | RsTypeKind::Reference { referent: nested_type, .. } => nested_type,
+            _ => bail!("Unexpected type of `self` parameter in an instance method: {:?}", self),
+        };
+        let actual_record = match **nested_type {
+            RsTypeKind::Record(record) => record,
+            _ => bail!("`self` reference unexpectedly doesn't point to a Record: {:?}", self),
+        };
+        if actual_record != expected_record {
+            bail!(
+                "`self` refers to an unexpected record type. Actual: {:?}. Expected: {:?}.",
+                actual_record,
+                expected_record
+            );
+        }
+
+        match self {
+            RsTypeKind::Pointer { .. } => Ok(None),
+            RsTypeKind::Reference { mutability, lifetime_id, .. } => {
+                let mutability = mutability.format_for_reference();
+                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
+                Ok(Some(quote! { & #lifetime #mutability self }))
+            }
+            _ => unreachable!(), // Because of the the 1st `match` in this function.
+        }
     }
 
     fn format_lifetime(
@@ -1752,7 +1827,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub fn f<'a, 'b>(__this: &'a mut S, i: &'b mut i32) -> &'a mut i32 { ... }
+                pub fn f<'a, 'b>(&'a mut self, i: &'b mut i32) -> &'a mut i32 { ... }
             }
         );
         assert_rs_matches!(

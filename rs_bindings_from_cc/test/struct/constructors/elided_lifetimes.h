@@ -5,10 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_ELIDED_LIFETIMES_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_ELIDED_LIFETIMES_H_
 
-// With `#pragma clang lifetime_elision` the `rs_type` representation of
-// constructor parameters in the IR will change as follows:
-// - s/ *SomeStruct / &mut 'a SomeStruct /  (the `__this` parameter)
-// - s/ *const SomeStruct / &'b SomeStruct /  (the copy constructor parameter)
 #pragma clang lifetime_elision
 
 // Only trivially relocatable structs may implement Rust's Default, From<T>, or

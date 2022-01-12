@@ -29,8 +29,15 @@ pub struct S {
 
 impl S {
     #[inline(always)]
-    pub fn method<'a, 'b, 'c>(__this: &'a mut S, p1: &'b mut i32, p2: &'c mut i32) -> &'a mut i32 {
-        unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
+    pub fn const_method<'a, 'b, 'c>(&'a self, p1: &'b mut i32, p2: &'c mut i32) -> &'a mut i32 {
+        unsafe { crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(self, p1, p2) }
+    }
+}
+
+impl S {
+    #[inline(always)]
+    pub fn method<'a, 'b, 'c>(&'a mut self, p1: &'b mut i32, p2: &'c mut i32) -> &'a mut i32 {
+        unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(self, p1, p2) }
     }
 }
 
@@ -66,6 +73,12 @@ mod detail {
     extern "C" {
         #[link_name = "_Z13free_functionRi"]
         pub(crate) fn __rust_thunk___Z13free_functionRi<'a>(p1: &'a mut i32) -> &'a mut i32;
+        #[link_name = "_ZNK1S12const_methodERiS0_"]
+        pub(crate) fn __rust_thunk___ZNK1S12const_methodERiS0_<'a, 'b, 'c>(
+            __this: &'a S,
+            p1: &'b mut i32,
+            p2: &'c mut i32,
+        ) -> &'a mut i32;
         #[link_name = "_ZN1S6methodERiS0_"]
         pub(crate) fn __rust_thunk___ZN1S6methodERiS0_<'a, 'b, 'c>(
             __this: &'a mut S,

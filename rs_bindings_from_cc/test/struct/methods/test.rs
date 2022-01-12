@@ -4,7 +4,21 @@
 
 #[cfg(test)]
 mod tests {
+    use elided_lifetimes::*;
     use methods::*;
+
+    #[test]
+    fn test_instance_const_method() {
+        let s = ElidedLifetimes { int_field: 124 };
+        assert_eq!(124, s.get_int_field());
+    }
+
+    #[test]
+    fn test_instance_nonconst_method() {
+        let mut s = ElidedLifetimes { int_field: 123 };
+        s.set_int_field(457);
+        assert_eq!(457, s.int_field);
+    }
 
     #[test]
     fn test_static_factory_method() {

@@ -17,6 +17,12 @@ struct DocCommentSlashes final {
   /// `impl From<int> for DocCommentSlashes`.
   explicit DocCommentSlashes(int);
 
+  /// A non-static member function (`const` flavor).
+  int get_field_value() const;
+
+  /// A non-static member function (non-`const` flavor).
+  void set_field_value(int new_value);
+
   /// A static method.
   static int static_method();
 

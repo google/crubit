@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod tests {
-    use destructors::*;
+    use field_destruction_order::*;
     use std::mem::ManuallyDrop;
 
     #[test]

@@ -7,6 +7,8 @@
 
 class SomeClass final {
  public:
+  // TODO(lukasza): Add tests for instance methods in absence of lifetimes.
+
   static SomeClass static_factory_method(int int_var_initial_value);
   static int static_method_that_multiplies_its_args(int x, int y);
   int int_var;

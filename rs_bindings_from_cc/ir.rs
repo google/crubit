@@ -245,6 +245,15 @@ pub struct Func {
     pub source_loc: SourceLoc,
 }
 
+impl Func {
+    pub fn is_instance_method(&self) -> bool {
+        self.member_func_metadata
+            .as_ref()
+            .filter(|meta| meta.instance_method_metadata.is_some())
+            .is_some()
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
 pub enum AccessSpecifier {
     Public,

@@ -10,6 +10,7 @@
 int& free_function(int& p1);
 
 struct S final {
+  int& const_method(int& p1, int& p2) const;
   int& method(int& p1, int& p2);
 };
 
