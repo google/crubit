@@ -38,15 +38,9 @@ mod tests {
             // The code below constructs the same FieldDestructionOrderTester object
             // as done internally in DestructFromCpp above.
             let tester = FieldDestructionOrderTester {
-                field1: ManuallyDrop::new(DestructionOrderRecorder {
-                    int_field: ManuallyDrop::new(field1_value),
-                }),
-                field2: ManuallyDrop::new(DestructionOrderRecorder {
-                    int_field: ManuallyDrop::new(field2_value),
-                }),
-                field3: ManuallyDrop::new(DestructionOrderRecorder {
-                    int_field: ManuallyDrop::new(field3_value),
-                }),
+                field1: ManuallyDrop::new(DestructionOrderRecorder { int_field: field1_value }),
+                field2: ManuallyDrop::new(DestructionOrderRecorder { int_field: field2_value }),
+                field3: ManuallyDrop::new(DestructionOrderRecorder { int_field: field3_value }),
             };
             // Dropping the `tester` should invoke destructors of field1/2/3 in the
             // same order as C++ (e.g. by calling into the C++ destructor of

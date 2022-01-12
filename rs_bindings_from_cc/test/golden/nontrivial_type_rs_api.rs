@@ -18,7 +18,7 @@ pub type __builtin_ms_va_list = *mut u8;
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[repr(C)]
 pub struct Nontrivial {
-    pub field: std::mem::ManuallyDrop<i32>,
+    pub field: i32,
 }
 
 impl !Unpin for Nontrivial {}
@@ -44,7 +44,7 @@ impl Drop for Nontrivial {
 /// as specifically giving it a nontrivial move constructor and destructor.
 #[repr(C)]
 pub struct NontrivialInline {
-    pub field: std::mem::ManuallyDrop<i32>,
+    pub field: i32,
 }
 
 impl !Unpin for NontrivialInline {}

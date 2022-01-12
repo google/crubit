@@ -2,6 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[cfg(test)]
+#[macro_use]
+extern crate static_assertions;
+
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use ffi_types::*;
 use ir::*;
@@ -284,33 +288,24 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         UnqualifiedIdentifier::Destructor => {
             let record = record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             let type_name = make_ident(&record.identifier.identifier);
-            match record.destructor.definition {
-                // TODO(b/202258760): Only omit destructor if `Copy` is specified.
-                SpecialMemberDefinition::Trivial => {
-                    return Ok(None);
-                }
-                SpecialMemberDefinition::NontrivialMembers
-                | SpecialMemberDefinition::NontrivialUserDefined => {
-                    // Note: to avoid double-destruction of the fields, they are all wrapped in
-                    // ManuallyDrop in this case. See `generate_record`.
-                    api_func = quote! {
-                        #doc_comment
-                        impl Drop for #type_name {
-                            #[inline(always)]
-                            fn drop(&mut self) {
-                                unsafe { crate::detail::#thunk_ident(self) }
-                            }
-                        }
-                    };
-                    function_id = FunctionId {
-                        self_type: Some(type_name.into()),
-                        function_path: syn::parse2(quote! {Drop::drop})?,
-                    };
-                }
-                SpecialMemberDefinition::Deleted => {
-                    bail!("Deleted destructors can't be called") // TODO(b/200066399): handle this?
-                }
+            if !should_implement_drop(record) {
+                return Ok(None);
             }
+            // Note: to avoid double-destruction of the fields, they are all wrapped in
+            // ManuallyDrop in this case. See `generate_record`.
+            api_func = quote! {
+                #doc_comment
+                impl Drop for #type_name {
+                    #[inline(always)]
+                    fn drop(&mut self) {
+                        unsafe { crate::detail::#thunk_ident(self) }
+                    }
+                }
+            };
+            function_id = FunctionId {
+                self_type: Some(type_name.into()),
+                function_path: syn::parse2(quote! {Drop::drop})?,
+            };
         }
 
         UnqualifiedIdentifier::Constructor => {
@@ -440,6 +435,51 @@ fn format_generic_params<T: quote::ToTokens>(params: impl IntoIterator<Item = T>
     }
 }
 
+fn should_implement_drop(record: &Record) -> bool {
+    match record.destructor.definition {
+        // TODO(b/202258760): Only omit destructor if `Copy` is specified.
+        SpecialMemberDefinition::Trivial => false,
+
+        // TODO(b/212690698): Avoid calling into the C++ destructor (e.g. let
+        // Rust drive `drop`-ing) to avoid (somewhat unergonomic) ManuallyDrop
+        // if we can ask Rust to preserve C++ field destruction order in
+        // NontrivialMembers case.
+        SpecialMemberDefinition::NontrivialMembers => true,
+
+        // The `impl Drop` for NontrivialUserDefined needs to call into the
+        // user-defined destructor on C++ side.
+        SpecialMemberDefinition::NontrivialUserDefined => true,
+
+        // TODO(b/213516512): Today the IR doesn't contain Func entries for
+        // deleted functions/destructors/etc. But, maybe we should generate
+        // `impl Drop` in this case? With `unreachable!`? With
+        // `std::mem::forget`?
+        SpecialMemberDefinition::Deleted => false,
+    }
+}
+
+/// Returns whether fields of type `ty` need to be wrapped in `ManuallyDrop<T>`
+/// to prevent the fields from being destructed twice (once by the C++
+/// destructor calkled from the `impl Drop` of the struct and once by `drop` on
+/// the Rust side).
+///
+/// A type is safe to destroy twice if it implements `Copy`. Fields of such
+/// don't need to be wrapped in `ManuallyDrop<T>` even if the struct
+/// containing the fields provides an `impl Drop` that calles into a C++
+/// destructor (in addition to dropping the fields on the Rust side).
+///
+/// Note that it is not enough to just be `!needs_drop<T>()`: Rust only
+/// guarantees that it is safe to use-after-destroy for `Copy` types. See
+/// e.g. the documentation for
+/// [`drop_in_place`](https://doc.rust-lang.org/std/ptr/fn.drop_in_place.html):
+///
+/// > if `T` is not `Copy`, using the pointed-to value after calling
+/// > `drop_in_place` can cause undefined behavior
+fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
+    let ty_implements_copy = RsTypeKind::new(ty, ir)?.implements_copy();
+    Ok(!ty_implements_copy)
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
@@ -453,19 +493,18 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .fields
         .iter()
         .map(|f| {
-            let formatted =
-                format_rs_type(&f.type_.rs_type, ir, &HashMap::new()).with_context(|| {
+            let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())
+                .with_context(|| {
                     format!("Failed to format type for field {:?} on record {:?}", f, record)
                 })?;
-            let formatted = match record.destructor.definition {
-                // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop if
-                // we can ask Rust to preserve field destruction order in
-                // NontrivialMembers case.
-                SpecialMemberDefinition::NontrivialMembers
-                | SpecialMemberDefinition::NontrivialUserDefined => {
-                    quote! { std::mem::ManuallyDrop<#formatted> }
-                }
-                _ => formatted,
+            // TODO(b/212696226): Verify cases where ManuallyDrop<T> is skipped
+            // via static asserts in the generated code.
+            if should_implement_drop(record) && needs_manually_drop(&f.type_.rs_type, ir)? {
+                // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
+                // if we can ask Rust to preserve field destruction order if the
+                // destructor is the SpecialMemberDefinition::NontrivialMembers
+                // case.
+                formatted = quote! { std::mem::ManuallyDrop<#formatted> }
             };
             Ok(formatted)
         })
@@ -502,7 +541,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     // b/200120034#comment15
     assertion_features.insert(make_ident("const_ptr_offset_from"));
 
-    let derives = generate_copy_derives(record);
+    let derives = generate_derives(record);
     let derives = if derives.is_empty() {
         quote! {}
     } else {
@@ -561,13 +600,20 @@ fn should_derive_clone(record: &Record) -> bool {
         && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
 }
 
-fn generate_copy_derives(record: &Record) -> Vec<Ident> {
+fn should_derive_copy(record: &Record) -> bool {
+    // TODO(b/202258760): Make `Copy` inclusion configurable.
+    should_derive_clone(record)
+}
+
+fn generate_derives(record: &Record) -> Vec<Ident> {
+    let mut derives = vec![];
     if should_derive_clone(record) {
-        // TODO(b/202258760): Make `Copy` inclusion configurable.
-        vec![make_ident("Clone"), make_ident("Copy")]
-    } else {
-        vec![]
+        derives.push(make_ident("Clone"));
     }
+    if should_derive_copy(record) {
+        derives.push(make_ident("Copy"));
+    }
+    derives
 }
 
 fn generate_type_alias(type_alias: &TypeAlias, ir: &IR) -> Result<TokenStream> {
@@ -773,7 +819,7 @@ enum RsTypeKind<'ir> {
     Pointer { pointee: Box<RsTypeKind<'ir>>, mutability: Mutability },
     Reference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime_id: LifetimeId },
     Record(&'ir Record),
-    TypeAlias(&'ir TypeAlias),
+    TypeAlias { type_alias: &'ir TypeAlias, underlying_type: Box<RsTypeKind<'ir>> },
     Unit,
     Other { name: &'ir str, type_args: Vec<RsTypeKind<'ir>> },
 }
@@ -806,7 +852,13 @@ impl<'ir> RsTypeKind<'ir> {
                 );
                 match ir.item_for_type(ty)? {
                     Item::Record(record) => RsTypeKind::Record(record),
-                    Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias(type_alias),
+                    Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
+                        type_alias,
+                        underlying_type: Box::new(RsTypeKind::new(
+                            &type_alias.underlying_type.rs_type,
+                            ir,
+                        )?),
+                    },
                     other_item => bail!("Item does not define a type: {:?}", other_item),
                 }
             }
@@ -861,7 +913,7 @@ impl<'ir> RsTypeKind<'ir> {
                 &record.identifier,
                 ir,
             )?,
-            RsTypeKind::TypeAlias(type_alias) => rs_type_name_for_target_and_identifier(
+            RsTypeKind::TypeAlias { type_alias, .. } => rs_type_name_for_target_and_identifier(
                 &type_alias.owning_target,
                 &type_alias.identifier,
                 ir,
@@ -967,6 +1019,24 @@ impl<'ir> RsTypeKind<'ir> {
         let lifetime =
             syn::Lifetime::new(&format!("'{}", lifetime_name), proc_macro2::Span::call_site());
         Ok(quote! { #lifetime })
+    }
+
+    fn implements_copy(&self) -> bool {
+        // TODO(b/212696226): Verify results of `implements_copy` via static
+        // assertions in the generated Rust code (because incorrect results
+        // can silently lead to unsafe behavior).
+        match self {
+            RsTypeKind::Unit => true,
+            RsTypeKind::Pointer { .. } => true,
+            RsTypeKind::Reference { mutability: Mutability::Const, .. } => true,
+            RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
+            RsTypeKind::Record(record) => should_derive_copy(record),
+            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
+            RsTypeKind::Other { .. } => {
+                // All "other" primitive types (e.g. i32) implement `Copy`.
+                true
+            }
+        }
     }
 }
 
@@ -1455,14 +1525,14 @@ mod tests {
     #[test]
     fn test_copy_derives() {
         let record = ir_record("S");
-        assert_eq!(generate_copy_derives(&record), &["Clone", "Copy"]);
+        assert_eq!(generate_derives(&record), &["Clone", "Copy"]);
     }
 
     #[test]
     fn test_copy_derives_not_is_trivial_abi() {
         let mut record = ir_record("S");
         record.is_trivial_abi = false;
-        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+        assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     /// A type can be unsafe to pass in mut references from C++, but still
@@ -1471,7 +1541,7 @@ mod tests {
     fn test_copy_derives_not_is_mut_reference_safe() {
         let mut record = ir_record("S");
         record.is_final = false;
-        assert_eq!(generate_copy_derives(&record), &["Clone", "Copy"]);
+        assert_eq!(generate_derives(&record), &["Clone", "Copy"]);
     }
 
     #[test]
@@ -1479,7 +1549,7 @@ mod tests {
         let mut record = ir_record("S");
         for access in [ir::AccessSpecifier::Protected, ir::AccessSpecifier::Private] {
             record.copy_constructor.access = access;
-            assert_eq!(generate_copy_derives(&record), &[""; 0]);
+            assert_eq!(generate_derives(&record), &[""; 0]);
         }
     }
 
@@ -1487,21 +1557,21 @@ mod tests {
     fn test_copy_derives_ctor_deleted() {
         let mut record = ir_record("S");
         record.copy_constructor.definition = ir::SpecialMemberDefinition::Deleted;
-        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+        assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nontrivial_members() {
         let mut record = ir_record("S");
         record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialMembers;
-        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+        assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nontrivial_self() {
         let mut record = ir_record("S");
         record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialUserDefined;
-        assert_eq!(generate_copy_derives(&record), &[""; 0]);
+        assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     #[test]
@@ -1710,9 +1780,11 @@ mod tests {
     #[test]
     fn test_impl_drop_user_defined_destructor() -> Result<()> {
         let ir = ir_from_cc(
-            r#"struct UserDefinedDestructor {
+            r#" struct NontrivialStruct { ~NontrivialStruct(); };
+            struct UserDefinedDestructor {
                 ~UserDefinedDestructor();
                 int x;
+                NontrivialStruct nts;
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
@@ -1727,7 +1799,8 @@ mod tests {
                 }
             }
         );
-        assert_rs_matches!(rs_api, quote! {pub x: std::mem::ManuallyDrop<i32>,});
+        assert_rs_matches!(rs_api, quote! {pub x: i32,});
+        assert_rs_matches!(rs_api, quote! {pub nts: std::mem::ManuallyDrop<NontrivialStruct>,});
         Ok(())
     }
 
@@ -1742,9 +1815,10 @@ mod tests {
             r#"struct UserDefinedDestructor {
                 ~UserDefinedDestructor();
             };
-
+            struct TrivialStruct { int i; };
             struct NontrivialMembers {
                 UserDefinedDestructor udd;
+                TrivialStruct ts;
                 int x;
             };"#,
         )?;
@@ -1760,7 +1834,8 @@ mod tests {
                 }
             }
         );
-        assert_rs_matches!(rs_api, quote! {pub x: std::mem::ManuallyDrop<i32>,});
+        assert_rs_matches!(rs_api, quote! {pub x: i32,});
+        assert_rs_matches!(rs_api, quote! {pub ts: TrivialStruct,});
         assert_rs_matches!(
             rs_api,
             quote! {pub udd: std::mem::ManuallyDrop<UserDefinedDestructor>,}
@@ -1968,6 +2043,53 @@ mod tests {
                 extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t){ f (t) ; }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_implements_copy() -> Result<()> {
+        let template = r#" #pragma clang lifetime_elision
+            struct [[clang::trivial_abi]] TrivialStruct { int i; };
+            struct [[clang::trivial_abi]] UserDefinedCopyConstructor {
+                UserDefinedCopyConstructor(const UserDefinedCopyConstructor&);
+            };
+            using IntAlias = int;
+            using TrivialAlias = TrivialStruct;
+            using NonTrivialAlias = UserDefinedCopyConstructor;
+            void func(PARAM_TYPE some_param);
+        "#;
+        assert_impl_all!(i32: Copy);
+        assert_impl_all!(&i32: Copy);
+        assert_not_impl_all!(&mut i32: Copy);
+        assert_impl_all!(*const i32: Copy);
+        assert_impl_all!(*mut i32: Copy);
+        let tests = vec![
+            // Validity of the next few tests is verified via
+            // `assert_[not_]impl_all!` static assertions above.
+            ("int", true),
+            ("const int&", true),
+            ("int&", false),
+            ("const int*", true),
+            ("int*", true),
+            // Tests below have been thought-through and verified "manually".
+            ("TrivialStruct", true), // Trivial C++ structs are expected to derive Copy.
+            ("UserDefinedCopyConstructor", false),
+            ("IntAlias", true),
+            ("TrivialAlias", true),
+            ("NonTrivialAlias", false),
+        ];
+        for (type_str, is_copy_expected) in tests.iter() {
+            let ir = ir_from_cc(&template.replace("PARAM_TYPE", type_str))?;
+            let f = ir
+                .functions()
+                .find(|f| match &f.name {
+                    UnqualifiedIdentifier::Identifier(id) => id.identifier == "func",
+                    _ => false,
+                })
+                .expect("IR should contain a function named 'func'");
+            let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
+            assert_eq!(*is_copy_expected, t.implements_copy(), "Testing '{}'", type_str);
+        }
         Ok(())
     }
 }
