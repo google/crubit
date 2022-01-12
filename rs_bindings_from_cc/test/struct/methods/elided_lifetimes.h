@@ -10,9 +10,11 @@
 struct ElidedLifetimes {
   int get_int_field() const;
   void set_int_field(int new_value);
+
+  inline int inline_get_int_field() const { return int_field; }
+  inline void inline_set_int_field(int new_value) { int_field = new_value; }
+
   int int_field;
 };
-
-// TODO(lukasza): ElidedLifetimesWithInlineMethods (forcing thunk impls).
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_ELIDED_LIFETIMES_H_

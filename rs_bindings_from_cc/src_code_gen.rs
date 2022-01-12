@@ -1114,9 +1114,30 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             .map(|p| format_cc_type(&p.type_.cc_type, ir))
             .collect::<Result<Vec<_>>>()?;
 
+        let needs_this_deref = match &func.member_func_metadata {
+            None => false,
+            Some(meta) => match &func.name {
+                UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => false,
+                UnqualifiedIdentifier::Identifier(_) => meta.instance_method_metadata.is_some(),
+            },
+        };
+        let (implementation_function, arg_expressions) = if !needs_this_deref {
+            (implementation_function, param_idents.clone())
+        } else {
+            let this_param = func
+                .params
+                .first()
+                .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
+            let this_arg = make_ident(&this_param.identifier.identifier);
+            (
+                quote! { #this_arg -> #implementation_function},
+                param_idents.iter().skip(1).cloned().collect_vec(),
+            )
+        };
+
         thunks.push(quote! {
             extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
-                #return_stmt #implementation_function( #( #param_idents ),* );
+                #return_stmt #implementation_function( #( #arg_expressions ),* );
             }
         });
     }
@@ -1397,6 +1418,26 @@ mod tests {
             quote! {
                 extern "C" int __rust_thunk___ZN10SomeStruct9some_funcEv() {
                     return SomeStruct::some_func();
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
+        let ir = ir_from_cc(&tokens_to_string(quote! {
+            struct SomeStruct {
+                inline int some_func(int arg) const { return 42 + arg; }
+            };
+        })?)?;
+
+        assert_cc_matches!(
+            generate_rs_api_impl(&ir)?,
+            quote! {
+                extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
+                        const class SomeStruct* __this, int arg) {
+                    return __this->some_func(arg);
                 }
             }
         );
