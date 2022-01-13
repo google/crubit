@@ -347,6 +347,25 @@ fn test_type_conversion() -> Result<()> {
             #include <stdint.h>
             #include <stddef.h>
 
+            // We mock types from the C++ standard library because it's hard to
+            // make headers that aren't part of the compiler available to a unit test.
+            namespace std {
+              using ::int8_t;
+              using ::int16_t;
+              using ::int32_t;
+              using ::int64_t;
+
+              using ::uint8_t;
+              using ::uint16_t;
+              using ::uint32_t;
+              using ::uint64_t;
+
+              using ::ptrdiff_t;
+              using ::size_t;
+              using ::intptr_t;
+              using ::uintptr_t;
+            }
+
             struct S {
                 bool b;
 
@@ -376,16 +395,28 @@ fn test_type_conversion() -> Result<()> {
                 int16_t i16;
                 int32_t i32;
                 int64_t i64;
+                std::int8_t std_i8;
+                std::int16_t std_i16;
+                std::int32_t std_i32;
+                std::int64_t std_i64;
 
                 uint8_t u8;
                 uint16_t u16;
                 uint32_t u32;
                 uint64_t u64;
+                std::uint8_t std_u8;
+                std::uint16_t std_u16;
+                std::uint32_t std_u32;
+                std::uint64_t std_u64;
 
                 ptrdiff_t pt;
                 size_t st;
                 intptr_t ip;
                 uintptr_t up;
+                std::ptrdiff_t std_pt;
+                std::size_t std_st;
+                std::intptr_t std_ip;
+                std::uintptr_t std_up;
 
                 float f;
                 double d;
@@ -432,16 +463,28 @@ fn test_type_conversion() -> Result<()> {
     assert_eq!(type_mapping["int16_t"], "i16");
     assert_eq!(type_mapping["int32_t"], "i32");
     assert_eq!(type_mapping["int64_t"], "i64");
+    assert_eq!(type_mapping["std::int8_t"], "i8");
+    assert_eq!(type_mapping["std::int16_t"], "i16");
+    assert_eq!(type_mapping["std::int32_t"], "i32");
+    assert_eq!(type_mapping["std::int64_t"], "i64");
 
     assert_eq!(type_mapping["uint8_t"], "u8");
     assert_eq!(type_mapping["uint16_t"], "u16");
     assert_eq!(type_mapping["uint32_t"], "u32");
     assert_eq!(type_mapping["uint64_t"], "u64");
+    assert_eq!(type_mapping["std::uint8_t"], "u8");
+    assert_eq!(type_mapping["std::uint16_t"], "u16");
+    assert_eq!(type_mapping["std::uint32_t"], "u32");
+    assert_eq!(type_mapping["std::uint64_t"], "u64");
 
     assert_eq!(type_mapping["ptrdiff_t"], "isize");
     assert_eq!(type_mapping["size_t"], "usize");
     assert_eq!(type_mapping["intptr_t"], "isize");
     assert_eq!(type_mapping["uintptr_t"], "usize");
+    assert_eq!(type_mapping["std::ptrdiff_t"], "isize");
+    assert_eq!(type_mapping["std::size_t"], "usize");
+    assert_eq!(type_mapping["std::intptr_t"], "isize");
+    assert_eq!(type_mapping["std::uintptr_t"], "usize");
 
     assert_eq!(type_mapping["float"], "f32");
     assert_eq!(type_mapping["double"], "f64");
