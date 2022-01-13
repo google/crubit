@@ -338,6 +338,10 @@ fn test_doc_comment() -> Result<()> {
 
 #[test]
 fn test_type_conversion() -> Result<()> {
+    // TODO(mboehme): Add tests for the corresponding versions of the types in
+    // the `std` namespace. We currently can't do this because we can't include
+    // C++ standard library headers such as <cstdint>, only builtin headers such
+    // as <stdint.h> (see b/214344126).
     let ir = ir_from_cc(
         r#"
             #include <stdint.h>

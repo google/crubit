@@ -209,14 +209,26 @@ pub struct FieldTypeTestStruct {
     pub int16_t_field: i16,
     pub int32_t_field: i32,
     pub int64_t_field: i64,
+    pub std_int8_t_field: i8,
+    pub std_int16_t_field: i16,
+    pub std_int32_t_field: i32,
+    pub std_int64_t_field: i64,
     pub uint8_t_field: u8,
     pub uint16_t_field: u16,
     pub uint32_t_field: u32,
     pub uint64_t_field: u64,
+    pub std_uint8_t_field: u8,
+    pub std_uint16_t_field: u16,
+    pub std_uint32_t_field: u32,
+    pub std_uint64_t_field: u64,
     pub ptrdiff_t_field: isize,
     pub size_t_field: usize,
     pub intptr_t_field: isize,
     pub uintptr_t_field: usize,
+    pub std_ptrdiff_t_field: isize,
+    pub std_size_t_field: usize,
+    pub std_intptr_t_field: isize,
+    pub std_uintptr_t_field: usize,
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut i32,
@@ -258,7 +270,7 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 1usize);
 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 1usize);
 
-const _: () = assert!(std::mem::size_of::<FieldTypeTestStruct>() == 216usize);
+const _: () = assert!(std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
 const _: () = assert!(std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, bool_field) * 8 == 0usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, char_field) * 8 == 8usize);
@@ -283,19 +295,31 @@ const _: () = assert!(offset_of!(FieldTypeTestStruct, int8_t_field) * 8 == 704us
 const _: () = assert!(offset_of!(FieldTypeTestStruct, int16_t_field) * 8 == 720usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, int32_t_field) * 8 == 736usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, int64_t_field) * 8 == 768usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint8_t_field) * 8 == 832usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint16_t_field) * 8 == 848usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint32_t_field) * 8 == 864usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint64_t_field) * 8 == 896usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, ptrdiff_t_field) * 8 == 960usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, size_t_field) * 8 == 1024usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, intptr_t_field) * 8 == 1088usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uintptr_t_field) * 8 == 1152usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, float_field) * 8 == 1216usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, double_field) * 8 == 1280usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, ptr_field) * 8 == 1344usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_field) * 8 == 1408usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8 == 1472usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8 == 1536usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ref_field) * 8 == 1600usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 8 == 1664usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int8_t_field) * 8 == 832usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int16_t_field) * 8 == 848usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int32_t_field) * 8 == 864usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int64_t_field) * 8 == 896usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, uint8_t_field) * 8 == 960usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, uint16_t_field) * 8 == 976usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, uint32_t_field) * 8 == 992usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, uint64_t_field) * 8 == 1024usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint8_t_field) * 8 == 1088usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint16_t_field) * 8 == 1104usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint32_t_field) * 8 == 1120usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint64_t_field) * 8 == 1152usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, ptrdiff_t_field) * 8 == 1216usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, size_t_field) * 8 == 1280usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, intptr_t_field) * 8 == 1344usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, uintptr_t_field) * 8 == 1408usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_ptrdiff_t_field) * 8 == 1472usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_size_t_field) * 8 == 1536usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_intptr_t_field) * 8 == 1600usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uintptr_t_field) * 8 == 1664usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, float_field) * 8 == 1728usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, double_field) * 8 == 1792usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, ptr_field) * 8 == 1856usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_field) * 8 == 1920usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8 == 1984usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8 == 2048usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ref_field) * 8 == 2112usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 8 == 2176usize);

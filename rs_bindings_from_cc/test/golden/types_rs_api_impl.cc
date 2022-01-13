@@ -33,7 +33,7 @@ extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
 static_assert(sizeof(class SomeStruct) == 1);
 static_assert(alignof(class SomeStruct) == 1);
 
-static_assert(sizeof(class FieldTypeTestStruct) == 216);
+static_assert(sizeof(class FieldTypeTestStruct) == 280);
 static_assert(alignof(class FieldTypeTestStruct) == 8);
 static_assert(offsetof(class FieldTypeTestStruct, bool_field) * 8 == 0);
 static_assert(offsetof(class FieldTypeTestStruct, char_field) * 8 == 8);
@@ -67,23 +67,46 @@ static_assert(offsetof(class FieldTypeTestStruct, int8_t_field) * 8 == 704);
 static_assert(offsetof(class FieldTypeTestStruct, int16_t_field) * 8 == 720);
 static_assert(offsetof(class FieldTypeTestStruct, int32_t_field) * 8 == 736);
 static_assert(offsetof(class FieldTypeTestStruct, int64_t_field) * 8 == 768);
-static_assert(offsetof(class FieldTypeTestStruct, uint8_t_field) * 8 == 832);
-static_assert(offsetof(class FieldTypeTestStruct, uint16_t_field) * 8 == 848);
-static_assert(offsetof(class FieldTypeTestStruct, uint32_t_field) * 8 == 864);
-static_assert(offsetof(class FieldTypeTestStruct, uint64_t_field) * 8 == 896);
-static_assert(offsetof(class FieldTypeTestStruct, ptrdiff_t_field) * 8 == 960);
-static_assert(offsetof(class FieldTypeTestStruct, size_t_field) * 8 == 1024);
-static_assert(offsetof(class FieldTypeTestStruct, intptr_t_field) * 8 == 1088);
-static_assert(offsetof(class FieldTypeTestStruct, uintptr_t_field) * 8 == 1152);
-static_assert(offsetof(class FieldTypeTestStruct, float_field) * 8 == 1216);
-static_assert(offsetof(class FieldTypeTestStruct, double_field) * 8 == 1280);
-static_assert(offsetof(class FieldTypeTestStruct, ptr_field) * 8 == 1344);
-static_assert(offsetof(class FieldTypeTestStruct, struct_field) * 8 == 1408);
-static_assert(offsetof(class FieldTypeTestStruct, struct_ptr_field) * 8 ==
+static_assert(offsetof(class FieldTypeTestStruct, std_int8_t_field) * 8 == 832);
+static_assert(offsetof(class FieldTypeTestStruct, std_int16_t_field) * 8 ==
+              848);
+static_assert(offsetof(class FieldTypeTestStruct, std_int32_t_field) * 8 ==
+              864);
+static_assert(offsetof(class FieldTypeTestStruct, std_int64_t_field) * 8 ==
+              896);
+static_assert(offsetof(class FieldTypeTestStruct, uint8_t_field) * 8 == 960);
+static_assert(offsetof(class FieldTypeTestStruct, uint16_t_field) * 8 == 976);
+static_assert(offsetof(class FieldTypeTestStruct, uint32_t_field) * 8 == 992);
+static_assert(offsetof(class FieldTypeTestStruct, uint64_t_field) * 8 == 1024);
+static_assert(offsetof(class FieldTypeTestStruct, std_uint8_t_field) * 8 ==
+              1088);
+static_assert(offsetof(class FieldTypeTestStruct, std_uint16_t_field) * 8 ==
+              1104);
+static_assert(offsetof(class FieldTypeTestStruct, std_uint32_t_field) * 8 ==
+              1120);
+static_assert(offsetof(class FieldTypeTestStruct, std_uint64_t_field) * 8 ==
+              1152);
+static_assert(offsetof(class FieldTypeTestStruct, ptrdiff_t_field) * 8 == 1216);
+static_assert(offsetof(class FieldTypeTestStruct, size_t_field) * 8 == 1280);
+static_assert(offsetof(class FieldTypeTestStruct, intptr_t_field) * 8 == 1344);
+static_assert(offsetof(class FieldTypeTestStruct, uintptr_t_field) * 8 == 1408);
+static_assert(offsetof(class FieldTypeTestStruct, std_ptrdiff_t_field) * 8 ==
               1472);
-static_assert(offsetof(class FieldTypeTestStruct, const_struct_ptr_field) * 8 ==
+static_assert(offsetof(class FieldTypeTestStruct, std_size_t_field) * 8 ==
               1536);
-static_assert(offsetof(class FieldTypeTestStruct, struct_ref_field) * 8 ==
+static_assert(offsetof(class FieldTypeTestStruct, std_intptr_t_field) * 8 ==
               1600);
-static_assert(offsetof(class FieldTypeTestStruct, const_struct_ref_field) * 8 ==
+static_assert(offsetof(class FieldTypeTestStruct, std_uintptr_t_field) * 8 ==
               1664);
+static_assert(offsetof(class FieldTypeTestStruct, float_field) * 8 == 1728);
+static_assert(offsetof(class FieldTypeTestStruct, double_field) * 8 == 1792);
+static_assert(offsetof(class FieldTypeTestStruct, ptr_field) * 8 == 1856);
+static_assert(offsetof(class FieldTypeTestStruct, struct_field) * 8 == 1920);
+static_assert(offsetof(class FieldTypeTestStruct, struct_ptr_field) * 8 ==
+              1984);
+static_assert(offsetof(class FieldTypeTestStruct, const_struct_ptr_field) * 8 ==
+              2048);
+static_assert(offsetof(class FieldTypeTestStruct, struct_ref_field) * 8 ==
+              2112);
+static_assert(offsetof(class FieldTypeTestStruct, const_struct_ref_field) * 8 ==
+              2176);

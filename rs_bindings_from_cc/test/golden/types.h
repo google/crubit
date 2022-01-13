@@ -39,16 +39,28 @@ struct FieldTypeTestStruct final {
   int16_t int16_t_field;
   int32_t int32_t_field;
   int64_t int64_t_field;
+  std::int8_t std_int8_t_field;
+  std::int16_t std_int16_t_field;
+  std::int32_t std_int32_t_field;
+  std::int64_t std_int64_t_field;
 
   uint8_t uint8_t_field;
   uint16_t uint16_t_field;
   uint32_t uint32_t_field;
   uint64_t uint64_t_field;
+  std::uint8_t std_uint8_t_field;
+  std::uint16_t std_uint16_t_field;
+  std::uint32_t std_uint32_t_field;
+  std::uint64_t std_uint64_t_field;
 
   ptrdiff_t ptrdiff_t_field;
   size_t size_t_field;
   intptr_t intptr_t_field;
   uintptr_t uintptr_t_field;
+  std::ptrdiff_t std_ptrdiff_t_field;
+  std::size_t std_size_t_field;
+  std::intptr_t std_intptr_t_field;
+  std::uintptr_t std_uintptr_t_field;
 
   float float_field;
   double double_field;
