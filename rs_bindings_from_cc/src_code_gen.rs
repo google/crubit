@@ -226,184 +226,183 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         .map(|l| syn::Lifetime::new(&format!("'{}", l.name), proc_macro2::Span::call_site()));
     let generic_params = format_generic_params(lifetimes);
 
-    let record: Option<&Record> =
+    let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
 
-    let api_func: TokenStream;
-    let function_id: FunctionId;
+    // Figure out 1) the name and trait of the API function to generate and 2)
+    // whether its first param should be spelled `&self` or `&mut self`.
+    enum ImplKind {
+        None,               // No `impl` needed
+        Struct,             // e.g. `impl SomeStruct { ... }`
+        Trait(TokenStream), // e.g. `impl From<int> for SomeStruct { ... }`
+    }
+    let impl_kind: ImplKind;
+    let func_name: syn::Ident;
+    let format_first_param_as_self: bool;
     match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
-            // Change `__this: &'a SomeStruct` into `&'a self` for instance methods.
-            // (This only affects params of the public API function.  Thunk params can
-            // continue using `__this`.)
-            let mut param_idents = param_idents.clone();
-            let mut param_decls = param_idents
-                .iter()
-                .zip(param_types.iter())
-                .map(|(ident, type_)| quote! { #ident : #type_ })
-                .collect_vec();
-            if func.is_instance_method() {
-                ensure!(
-                    !func.params.is_empty() && !param_decls.is_empty() && !param_idents.is_empty(),
-                    "Instance methods should have at least one parameter (__this): {:?}",
-                    func,
-                );
-                // TODO(lukasza): Deduplicate calls to `format_as_self...`.
-                let self_decl = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
-                    .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
-                    .with_context(|| {
-                        format!("Failed to format as `self` param: {:?}", func.params[0])
-                    })?;
-                if let Some(new_decl) = self_decl {
-                    param_decls[0] = new_decl;
-                    param_idents[0] = make_ident("self");
-                }
-            }
-
-            let ident = make_ident(&id.identifier);
-            let fn_def = quote! {
-                #doc_comment
-                #[inline(always)]
-                pub fn #ident #generic_params( #( #param_decls ),*
-                ) #return_type_fragment {
-                    unsafe { crate::detail::#thunk_ident( #( #param_idents ),* ) }
-                }
+            impl_kind = match maybe_record {
+                None => ImplKind::None,
+                Some(_) => ImplKind::Struct,
             };
-            match &func.member_func_metadata {
-                None => {
-                    api_func = fn_def;
-                    function_id = FunctionId { self_type: None, function_path: ident.into() };
-                }
-                Some(meta) => {
-                    let type_name = make_ident(&meta.find_record(ir)?.identifier.identifier);
-                    api_func = quote! { impl #type_name { #fn_def } };
-                    function_id = FunctionId {
-                        self_type: None,
-                        function_path: syn::parse2(quote! { #type_name :: #ident })?,
-                    };
-                }
-            };
+            func_name = make_ident(&id.identifier);
+            format_first_param_as_self = func.is_instance_method();
         }
-
         UnqualifiedIdentifier::Destructor => {
-            if func.params.len() != 1 {
-                bail!("Unexpected number of parameters in a destructor: {:?}", func);
-            }
-            let record = record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
-            let type_name = make_ident(&record.identifier.identifier);
+            // Note: to avoid double-destruction of the fields, they are all wrapped in
+            // ManuallyDrop in this case. See `generate_record`.
+            let record =
+                maybe_record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             if !should_implement_drop(record) {
                 return Ok(None);
             }
-            // TODO(lukasza): Deduplicate calls to `format_as_self...`.
-            let self_decl = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
-                .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
-                .with_context(|| format!("Failed to format as `self` param: {:?}", func.params[0]))?
-                .expect("Destructors should always use `&mut self`, even without lifetimes");
-            // Note: to avoid double-destruction of the fields, they are all wrapped in
-            // ManuallyDrop in this case. See `generate_record`.
-            api_func = quote! {
-                #doc_comment
-                impl Drop for #type_name {
-                    #[inline(always)]
-                    fn drop(#self_decl) {
-                        unsafe { crate::detail::#thunk_ident(self) }
-                    }
-                }
-            };
-            function_id = FunctionId {
-                self_type: Some(type_name.into()),
-                function_path: syn::parse2(quote! {Drop::drop})?,
-            };
+            impl_kind = ImplKind::Trait(quote! {Drop});
+            func_name = make_ident("drop");
+            format_first_param_as_self = true;
         }
-
         UnqualifiedIdentifier::Constructor => {
-            // TODO(lukasza): Also allow mapping constructors to inherent static methods
-            // (e.g. if named via a bindings-generator-recognized C++
-            // attribute).
-            let record = record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
+            let record =
+                maybe_record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             if !record.is_trivial_abi {
+                // TODO: Handle <internal link>
                 return Ok(None);
             }
-            let trait_name: TokenStream;
-            let method_name: TokenStream;
-            let param_decls: TokenStream;
-            let extra_arg_expressions: TokenStream;
             match func.params.len() {
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
                 1 => {
-                    trait_name = quote! { Default };
-                    method_name = quote! { default };
-                    param_decls = quote! {};
-                    extra_arg_expressions = quote! {};
+                    impl_kind = ImplKind::Trait(quote! {Default});
+                    func_name = make_ident("default");
+                    format_first_param_as_self = false;
                 }
                 2 => {
-                    let param_rs_type_kind = RsTypeKind::new(&func.params[1].type_.rs_type, ir)?;
                     // TODO(lukasza): Do something smart with move constructor.
+                    let param_rs_type_kind = RsTypeKind::new(&func.params[1].type_.rs_type, ir)?;
                     if param_rs_type_kind.is_shared_ref_to(record) {
                         // Copy constructor
                         if should_derive_clone(record) {
                             return Ok(None);
                         } else {
-                            trait_name = quote! { Clone };
-                            method_name = quote! { clone };
-                            // TODO(lukasza): Deduplicate calls to `format_as_self...`.
-                            param_decls = param_rs_type_kind
-                                .format_as_self_param_for_instance_method(
-                                    func,
-                                    ir,
-                                    &lifetime_to_name,
-                                )
-                                .with_context(|| {
-                                    format!(
-                                        "Failed to format as `self` param: {:?}",
-                                        func.params[1]
-                                    )
-                                })?
-                                .expect("`is_shared_ref_to` above guarantees success");
-                            extra_arg_expressions = quote! { , self };
+                            impl_kind = ImplKind::Trait(quote! { Clone });
+                            func_name = make_ident("clone");
+                            format_first_param_as_self = true;
                         }
                     } else {
-                        let param_ident = &param_idents[1];
                         let param_type = &param_types[1];
-                        trait_name = quote! { From< #param_type > };
-                        method_name = quote! { from };
-                        param_decls = quote! { #param_ident: #param_type };
-                        extra_arg_expressions = quote! { , #param_ident };
+                        impl_kind = ImplKind::Trait(quote! {From< #param_type >});
+                        func_name = make_ident("from");
+                        format_first_param_as_self = false;
                     }
                 }
                 _ => {
-                    // TODO(b/200066396): Map other constructors to something.
+                    // TODO(b/200066396): Map other constructors to something
+                    // (maybe to static method if named via a
+                    // bindings-generator-recognized C++ attribute).
                     return Ok(None);
                 }
-            };
-            // SAFETY: A user-defined constructor is not guaranteed to
-            // initialize all the fields. To make the `assume_init()` call
-            // below safe, the memory is zero-initialized first. This is safer,
-            // because zero-initialized memory represents a valid value for the
-            // currently supported field types (this may change once the
-            // bindings generator starts supporting reference fields).
-            // TODO(b/213243309): Double-check if zero-initialization is
-            // desirable here.
-            let struct_name = make_ident(&record.identifier.identifier);
-            api_func = quote! {
-                #doc_comment
-                impl #trait_name for #struct_name {
-                    #[inline(always)]
-                    fn #method_name #generic_params( #param_decls ) -> Self {
-                        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-                        unsafe {
-                            crate::detail::#thunk_ident(&mut tmp #extra_arg_expressions );
-                            tmp.assume_init()
-                        }
+            }
+        }
+    }
+
+    let api_func_def = {
+        let mut return_type_fragment = return_type_fragment.clone();
+        let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
+        let mut api_params = param_idents
+            .iter()
+            .zip(param_types.iter())
+            .map(|(ident, type_)| quote! { #ident : #type_ })
+            .collect_vec();
+        let mut maybe_first_api_param = func.params.get(0);
+
+        if func.name == UnqualifiedIdentifier::Constructor {
+            return_type_fragment = quote! { -> Self };
+
+            // Drop `__this` parameter from the public Rust API.
+            // TODO(lukasza): Also trim `generic_params` to avoid running into a
+            // (future) unused lifetime parameters warning (see also
+            // https://github.com/rust-lang/rust/issues/41960).
+            api_params.remove(0); // Presence of element #0 is indirectly verified
+            thunk_args.remove(0); // by one of `match` statements above.
+            maybe_first_api_param = func.params.get(1);
+        }
+
+        // Change `__this: &'a SomeStruct` into `&'a self` if needed.
+        if format_first_param_as_self {
+            let first_api_param = maybe_first_api_param
+                .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
+            let self_decl = RsTypeKind::new(&first_api_param.type_.rs_type, ir)?
+                .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
+                .with_context(|| {
+                    format!("Failed to format as `self` param: {:?}", first_api_param)
+                })?;
+            if let Some(new_decl) = self_decl {
+                api_params[0] = new_decl; // Presence of element #0 is verified by
+                thunk_args[0] = quote! { self }; // `ok_or_else` on `maybe_first_api_param` above.
+            }
+        }
+
+        let func_body = match &func.name {
+            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Destructor => {
+                quote! { unsafe { crate::detail::#thunk_ident( #( #thunk_args ),* ) } }
+            }
+            UnqualifiedIdentifier::Constructor => {
+                // SAFETY: A user-defined constructor is not guaranteed to
+                // initialize all the fields. To make the `assume_init()` call
+                // below safe, the memory is zero-initialized first. This is a
+                // bit safer, because zero-initialized memory represents a valid
+                // value for the currently supported field types (this may
+                // change once the bindings generator starts supporting
+                // reference fields). TODO(b/213243309): Double-check if
+                // zero-initialization is desirable here.
+                quote! {
+                    let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+                    unsafe {
+                        crate::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
+                        tmp.assume_init()
                     }
                 }
-            };
-            function_id = FunctionId {
-                self_type: Some(struct_name.into()),
-                function_path: syn::parse2(quote! { #trait_name :: #method_name })?,
-            };
+            }
+        };
+
+        let pub_ = match impl_kind {
+            ImplKind::None | ImplKind::Struct => quote! { pub },
+            ImplKind::Trait(_) => quote! {},
+        };
+
+        quote! {
+            #[inline(always)]
+            #pub_ fn #func_name #generic_params( #( #api_params ),* ) #return_type_fragment {
+                #func_body
+            }
         }
     };
+
+    let api_func: TokenStream;
+    let function_id: FunctionId;
+    let maybe_record_name = maybe_record.map(|r| make_ident(&r.identifier.identifier));
+    match impl_kind {
+        ImplKind::None => {
+            api_func = quote! { #doc_comment #api_func_def };
+            function_id = FunctionId { self_type: None, function_path: func_name.into() };
+        }
+        ImplKind::Struct => {
+            let record_name =
+                maybe_record_name.ok_or_else(|| anyhow!("Struct methods must have records"))?;
+            api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
+            function_id = FunctionId {
+                self_type: None,
+                function_path: syn::parse2(quote! { #record_name :: #func_name })?,
+            };
+        }
+        ImplKind::Trait(trait_name) => {
+            let record_name =
+                maybe_record_name.ok_or_else(|| anyhow!("Trait methods must have records"))?;
+            api_func = quote! { #doc_comment impl #trait_name for #record_name { #api_func_def } };
+            function_id = FunctionId {
+                self_type: Some(record_name.into()),
+                function_path: syn::parse2(quote! { #trait_name :: #func_name })?,
+            };
+        }
+    }
 
     let thunk = {
         let thunk_attr = if can_skip_cc_thunk(func) {
