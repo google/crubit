@@ -42,6 +42,17 @@ impl Default for Foo {
     }
 }
 
+impl From<*const Foo> for Foo {
+    #[inline(always)]
+    fn from(__param_0: *const Foo) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/comment.h;l=11
 // Error while generating bindings for item 'Foo::Foo':
 // Parameter type 'struct Foo &&' is not supported
@@ -84,6 +95,17 @@ impl Default for Bar {
     }
 }
 
+impl From<*const Bar> for Bar {
+    #[inline(always)]
+    fn from(__param_0: *const Bar) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3BarC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/comment.h;l=37
 // Error while generating bindings for item 'Bar::Bar':
 // Parameter type 'struct Bar &&' is not supported
@@ -114,6 +136,17 @@ impl Default for HasNoComments {
     }
 }
 
+impl From<*const HasNoComments> for HasNoComments {
+    #[inline(always)]
+    fn from(__param_0: *const HasNoComments) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Parameter type 'struct HasNoComments &&' is not supported
@@ -131,10 +164,22 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN3FooC1Ev(__this: &mut std::mem::MaybeUninit<Foo>);
+        pub(crate) fn __rust_thunk___ZN3FooC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<Foo>,
+            __param_0: *const Foo,
+        );
         pub(crate) fn __rust_thunk___Z3foov();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev(__this: &mut std::mem::MaybeUninit<Bar>);
+        pub(crate) fn __rust_thunk___ZN3BarC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<Bar>,
+            __param_0: *const Bar,
+        );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev(
             __this: &mut std::mem::MaybeUninit<HasNoComments>,
+        );
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<HasNoComments>,
+            __param_0: *const HasNoComments,
         );
     }
 }

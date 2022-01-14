@@ -175,6 +175,17 @@ impl Default for SomeStruct {
     }
 }
 
+impl From<*const SomeStruct> for SomeStruct {
+    #[inline(always)]
+    fn from(__param_0: *const SomeStruct) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/types.h;l=7
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Parameter type 'struct SomeStruct &&' is not supported
@@ -243,6 +254,17 @@ pub struct FieldTypeTestStruct {
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
 
+impl From<*const FieldTypeTestStruct> for FieldTypeTestStruct {
+    #[inline(always)]
+    fn from(__param_0: *const FieldTypeTestStruct) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
@@ -260,6 +282,14 @@ mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev(
             __this: &mut std::mem::MaybeUninit<SomeStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<SomeStruct>,
+            __param_0: *const SomeStruct,
+        );
+        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<FieldTypeTestStruct>,
+            __param_0: *const FieldTypeTestStruct,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }

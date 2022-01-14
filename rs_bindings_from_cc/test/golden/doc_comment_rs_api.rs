@@ -79,6 +79,17 @@ impl DocCommentSlashes {
     }
 }
 
+impl From<*const DocCommentSlashes> for DocCommentSlashes {
+    #[inline(always)]
+    fn from(__param_0: *const DocCommentSlashes) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=7
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Parameter type 'struct DocCommentSlashes &&' is not supported
@@ -107,6 +118,17 @@ impl Default for DocCommentBang {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl From<*const DocCommentBang> for DocCommentBang {
+    #[inline(always)]
+    fn from(__param_0: *const DocCommentBang) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DocCommentBangC1ERKS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -145,6 +167,17 @@ impl Default for MultilineCommentTwoStars {
     }
 }
 
+impl From<*const MultilineCommentTwoStars> for MultilineCommentTwoStars {
+    #[inline(always)]
+    fn from(__param_0: *const MultilineCommentTwoStars) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=40
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
@@ -178,6 +211,17 @@ impl Default for LineComment {
     }
 }
 
+impl From<*const LineComment> for LineComment {
+    #[inline(always)]
+    fn from(__param_0: *const LineComment) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11LineCommentC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=48
 // Error while generating bindings for item 'LineComment::LineComment':
 // Parameter type 'struct LineComment &&' is not supported
@@ -206,6 +250,17 @@ impl Default for MultilineOneStar {
         let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl From<*const MultilineOneStar> for MultilineOneStar {
+    #[inline(always)]
+    fn from(__param_0: *const MultilineOneStar) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16MultilineOneStarC1ERKS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -251,17 +306,37 @@ mod detail {
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
+            __param_0: *const DocCommentSlashes,
+        );
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(
             __this: &mut std::mem::MaybeUninit<DocCommentBang>,
+        );
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<DocCommentBang>,
+            __param_0: *const DocCommentBang,
         );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
             __this: &mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
         );
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
+            __param_0: *const MultilineCommentTwoStars,
+        );
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev(
             __this: &mut std::mem::MaybeUninit<LineComment>,
         );
+        pub(crate) fn __rust_thunk___ZN11LineCommentC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<LineComment>,
+            __param_0: *const LineComment,
+        );
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev(
             __this: &mut std::mem::MaybeUninit<MultilineOneStar>,
+        );
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<MultilineOneStar>,
+            __param_0: *const MultilineOneStar,
         );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }

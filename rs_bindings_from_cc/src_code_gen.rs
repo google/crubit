@@ -329,9 +329,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     extra_arg_expressions = quote! {};
                 }
                 2 => {
-                    let param_type = &func.params[1].type_;
+                    let param_rs_type_kind = RsTypeKind::new(&func.params[1].type_.rs_type, ir)?;
                     // TODO(lukasza): Do something smart with move constructor.
-                    if param_type.cc_type.is_const_ref_to(record) {
+                    if param_rs_type_kind.is_shared_ref_to(record) {
                         // Copy constructor
                         if should_derive_clone(record) {
                             return Ok(None);
@@ -968,14 +968,10 @@ impl<'ir> RsTypeKind<'ir> {
     ///
     /// When this RsTypeKind represents a pointer (without lifetime
     /// annotations), then `Ok(None)` is returned.
-    /// TODO(lukasza): Stop generating bindings when such pointer is used.  For
-    /// example:
-    /// - In C++ non-static member functions where (without lifetime
-    ///   annotations) `__this` will have an `RsType` representing a pointer
-    ///   (rather than a reference).
-    /// - In C++ copy constructors where (without lifetime annotations) the
-    ///   `other` parameter will have an `RsType` representing a pointer (rather
-    ///   than a reference).
+    /// TODO(b/214244223): Stop generating bindings when such pointer is used.
+    /// (For example in in C++ non-static member functions where (without
+    /// lifetime annotations) `__this` will have an `RsType` representing a
+    /// pointer (rather than a reference).)
     pub fn format_as_self_param_for_instance_method(
         &self,
         expected_record: &Record,
@@ -1021,7 +1017,7 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(quote! { #lifetime })
     }
 
-    fn implements_copy(&self) -> bool {
+    pub fn implements_copy(&self) -> bool {
         // TODO(b/212696226): Verify results of `implements_copy` via static
         // assertions in the generated Rust code (because incorrect results
         // can silently lead to unsafe behavior).
@@ -1036,6 +1032,18 @@ impl<'ir> RsTypeKind<'ir> {
                 // All "other" primitive types (e.g. i32) implement `Copy`.
                 true
             }
+        }
+    }
+
+    pub fn is_shared_ref_to(&self, expected_record: &Record) -> bool {
+        match self {
+            RsTypeKind::Reference { referent, mutability: Mutability::Const, .. } => {
+                match **referent {
+                    RsTypeKind::Record(actual_record) => actual_record.id == expected_record.id,
+                    _ => false,
+                }
+            }
+            _ => false,
         }
     }
 }
@@ -2090,6 +2098,75 @@ mod tests {
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
             assert_eq!(*is_copy_expected, t.implements_copy(), "Testing '{}'", type_str);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_is_shared_ref_to_with_lifetimes() -> Result<()> {
+        let ir = ir_from_cc(
+            "#pragma clang lifetime_elision
+             struct SomeStruct {};
+             void foo(const SomeStruct& foo_param);
+             void bar(SomeStruct& bar_param);",
+        )?;
+        let record = ir.records().next().unwrap();
+        let foo_func = ir
+            .functions()
+            .find(|f| {
+                matches!(&f.name, UnqualifiedIdentifier::Identifier(id)
+                                  if id.identifier == "foo")
+            })
+            .unwrap();
+        let bar_func = ir
+            .functions()
+            .find(|f| {
+                matches!(&f.name, UnqualifiedIdentifier::Identifier(id)
+                                  if id.identifier == "bar")
+            })
+            .unwrap();
+
+        // const-ref + lifetimes in C++  ===>  shared-ref in Rust
+        assert_eq!(foo_func.params.len(), 1);
+        let foo_param = &foo_func.params[0];
+        assert_eq!(&foo_param.identifier.identifier, "foo_param");
+        let foo_type = RsTypeKind::new(&foo_param.type_.rs_type, &ir)?;
+        assert!(foo_type.is_shared_ref_to(record));
+        assert!(matches!(foo_type, RsTypeKind::Reference { mutability: Mutability::Const, .. }));
+
+        // non-const-ref + lifetimes in C++  ===>  mutable-ref in Rust
+        assert_eq!(bar_func.params.len(), 1);
+        let bar_param = &bar_func.params[0];
+        assert_eq!(&bar_param.identifier.identifier, "bar_param");
+        let bar_type = RsTypeKind::new(&bar_param.type_.rs_type, &ir)?;
+        assert!(!bar_type.is_shared_ref_to(record));
+        assert!(matches!(bar_type, RsTypeKind::Reference { mutability: Mutability::Mut, .. }));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_is_shared_ref_to_without_lifetimes() -> Result<()> {
+        let ir = ir_from_cc(
+            "struct SomeStruct {};
+             void foo(const SomeStruct& foo_param);",
+        )?;
+        let record = ir.records().next().unwrap();
+        let foo_func = ir
+            .functions()
+            .find(|f| {
+                matches!(&f.name, UnqualifiedIdentifier::Identifier(id)
+                                  if id.identifier == "foo")
+            })
+            .unwrap();
+
+        // const-ref + *no* lifetimes in C++  ===>  const-pointer in Rust
+        assert_eq!(foo_func.params.len(), 1);
+        let foo_param = &foo_func.params[0];
+        assert_eq!(&foo_param.identifier.identifier, "foo_param");
+        let foo_type = RsTypeKind::new(&foo_param.type_.rs_type, &ir)?;
+        assert!(!foo_type.is_shared_ref_to(record));
+        assert!(matches!(foo_type, RsTypeKind::Pointer { mutability: Mutability::Const, .. }));
+
         Ok(())
     }
 }

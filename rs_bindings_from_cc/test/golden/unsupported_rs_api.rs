@@ -82,6 +82,17 @@ impl Default for ContainingStruct {
     }
 }
 
+impl From<*const ContainingStruct> for ContainingStruct {
+    #[inline(always)]
+    fn from(__param_0: *const ContainingStruct) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16ContainingStructC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/unsupported.h;l=20
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
 // Parameter type 'struct ContainingStruct &&' is not supported
@@ -98,6 +109,10 @@ mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev(
             __this: &mut std::mem::MaybeUninit<ContainingStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN16ContainingStructC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<ContainingStruct>,
+            __param_0: *const ContainingStruct,
         );
     }
 }

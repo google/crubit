@@ -99,13 +99,6 @@ impl CcType {
     pub fn is_void(&self) -> bool {
         self.name.as_deref() == Some("void")
     }
-
-    pub fn is_const_ref_to(&self, record: &Record) -> bool {
-        self.name.as_deref() == Some("&")
-            && self.type_args.first().map_or(false, |type_arg| {
-                type_arg.is_const && type_arg.name.is_none() && type_arg.decl_id == Some(record.id)
-            })
-    }
 }
 
 pub trait TypeWithDeclId {

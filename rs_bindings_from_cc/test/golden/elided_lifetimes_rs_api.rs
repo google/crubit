@@ -52,6 +52,17 @@ impl Default for S {
     }
 }
 
+impl From<*const S> for S {
+    #[inline(always)]
+    fn from(__param_0: *const S) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN1SC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/elided_lifetimes.h;l=8
 // Error while generating bindings for item 'S::S':
 // Parameter type 'struct S &&' is not supported
@@ -86,6 +97,10 @@ mod detail {
             p2: &'c mut i32,
         ) -> &'a mut i32;
         pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: &mut std::mem::MaybeUninit<S>);
+        pub(crate) fn __rust_thunk___ZN1SC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<S>,
+            __param_0: *const S,
+        );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi<'a>(p: Option<&'a mut i32>);
     }

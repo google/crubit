@@ -39,6 +39,17 @@ impl Default for UserOfImportedType {
     }
 }
 
+impl From<*const UserOfImportedType> for UserOfImportedType {
+    #[inline(always)]
+    fn from(__param_0: *const UserOfImportedType) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Parameter type 'struct UserOfImportedType &&' is not supported
@@ -59,6 +70,10 @@ mod detail {
         ) -> trivial_type_cc::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev(
             __this: &mut std::mem::MaybeUninit<UserOfImportedType>,
+        );
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<UserOfImportedType>,
+            __param_0: *const UserOfImportedType,
         );
     }
 }

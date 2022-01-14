@@ -772,23 +772,6 @@ fn test_destructor_function_name() {
 }
 
 #[test]
-fn test_copy_constructor_properties() {
-    let ir = ir_from_cc(
-        "struct SomeStruct {
-            SomeStruct() = delete;
-            SomeStruct(const SomeStruct&);
-            SomeStruct(const SomeStruct&&) = delete;
-            ~SomeStruct() = delete;
-        };",
-    )
-    .unwrap();
-    let func = ir.functions().next().unwrap();
-    let rec = ir.records().next().unwrap();
-    assert_eq!(2, func.params.len());
-    assert!(func.params[1].type_.cc_type.is_const_ref_to(rec));
-}
-
-#[test]
 fn test_unsupported_items_are_emitted() -> Result<()> {
     // We will have to rewrite this test to use something else that is unsupported
     // once we start importing structs from namespaces.

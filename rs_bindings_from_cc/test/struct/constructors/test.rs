@@ -16,12 +16,15 @@ mod tests {
         let s: StructWithUserProvidedConstructors = Default::default();
         assert_eq!(42, s.int_field);
 
-        // TODO(lukasza): Implement and test a user-defined copy constructor / impl
-        // Clone.
+        // Without lifetime annotations the `other` parameter of the copy
+        // constructor cannot be translated into a `&self` reference (it should
+        // instead be spelled as `other: *const StructWith...`). Because of this
+        // we shouldn't get the `impl Clone` here.  See also b/214244223.
+        assert_not_impl_all!(StructWithUserProvidedConstructors: Clone);
 
-        // Trivial-ABI structs implement the Copy trait, even if they have user-defined
-        // constructors.
-        assert_impl_all!(StructWithUserProvidedConstructors: Copy);
+        // Trivial-ABI structs should not implement the Copy trait, if they have a
+        // user-defined copy constructor (aka a non-trivial copy constructor).
+        assert_not_impl_all!(StructWithUserProvidedConstructors: Copy);
 
         assert_impl_all!(StructWithUserProvidedConstructors: From<i32>);
         let i: StructWithUserProvidedConstructors = 123.into();
@@ -39,7 +42,7 @@ mod tests {
 
         // Trivial-ABI structs implement the Copy trait, even if they have user-defined
         // constructors.
-        assert_impl_all!(StructWithUserProvidedConstructors: Copy);
+        assert_impl_all!(StructWithInlineConstructors: Copy);
         let s_copy = s;
         assert_eq!(123, s_copy.int_field);
 
