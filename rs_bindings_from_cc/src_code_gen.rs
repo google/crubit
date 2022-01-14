@@ -248,9 +248,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     "Instance methods should have at least one parameter (__this): {:?}",
                     func,
                 );
-                let record = record.unwrap(); // Ok because of `func.is_instance_method()` above.
+                // TODO(lukasza): Deduplicate calls to `format_as_self...`.
                 let self_decl = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
-                    .format_as_self_param_for_instance_method(record, &lifetime_to_name)
+                    .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
                     .with_context(|| {
                         format!("Failed to format as `self` param: {:?}", func.params[0])
                     })?;
@@ -286,18 +286,26 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         }
 
         UnqualifiedIdentifier::Destructor => {
+            if func.params.len() != 1 {
+                bail!("Unexpected number of parameters in a destructor: {:?}", func);
+            }
             let record = record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             let type_name = make_ident(&record.identifier.identifier);
             if !should_implement_drop(record) {
                 return Ok(None);
             }
+            // TODO(lukasza): Deduplicate calls to `format_as_self...`.
+            let self_decl = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
+                .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
+                .with_context(|| format!("Failed to format as `self` param: {:?}", func.params[0]))?
+                .expect("Destructors should always use `&mut self`, even without lifetimes");
             // Note: to avoid double-destruction of the fields, they are all wrapped in
             // ManuallyDrop in this case. See `generate_record`.
             api_func = quote! {
                 #doc_comment
                 impl Drop for #type_name {
                     #[inline(always)]
-                    fn drop(&mut self) {
+                    fn drop(#self_decl) {
                         unsafe { crate::detail::#thunk_ident(self) }
                     }
                 }
@@ -338,7 +346,20 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                         } else {
                             trait_name = quote! { Clone };
                             method_name = quote! { clone };
-                            param_decls = quote! { &self };
+                            // TODO(lukasza): Deduplicate calls to `format_as_self...`.
+                            param_decls = param_rs_type_kind
+                                .format_as_self_param_for_instance_method(
+                                    func,
+                                    ir,
+                                    &lifetime_to_name,
+                                )
+                                .with_context(|| {
+                                    format!(
+                                        "Failed to format as `self` param: {:?}",
+                                        func.params[1]
+                                    )
+                                })?
+                                .expect("`is_shared_ref_to` above guarantees success");
                             extra_arg_expressions = quote! { , self };
                         }
                     } else {
@@ -796,6 +817,10 @@ enum Mutability {
 }
 
 impl Mutability {
+    fn is_mut(&self) -> bool {
+        *self == Mutability::Mut
+    }
+
     fn format_for_pointer(&self) -> TokenStream {
         match self {
             Mutability::Mut => quote! {mut},
@@ -974,28 +999,52 @@ impl<'ir> RsTypeKind<'ir> {
     /// pointer (rather than a reference).)
     pub fn format_as_self_param_for_instance_method(
         &self,
-        expected_record: &Record,
+        func: &Func,
+        ir: &IR,
         lifetime_to_name: &HashMap<LifetimeId, String>,
     ) -> Result<Option<TokenStream>> {
+        let record_from_func = func
+            .member_func_metadata
+            .as_ref()
+            .ok_or_else(|| {
+                anyhow!(
+                    "Unexpectedly formatting `self` parameter in a non-member function: {:?}",
+                    func
+                )
+            })?
+            .find_record(ir)?;
         let nested_type = match self {
             RsTypeKind::Pointer { pointee: nested_type, .. }
             | RsTypeKind::Reference { referent: nested_type, .. } => nested_type,
             _ => bail!("Unexpected type of `self` parameter in an instance method: {:?}", self),
         };
-        let actual_record = match **nested_type {
+        let record_from_self = match **nested_type {
             RsTypeKind::Record(record) => record,
             _ => bail!("`self` reference unexpectedly doesn't point to a Record: {:?}", self),
         };
-        if actual_record != expected_record {
+        if record_from_func != record_from_self {
             bail!(
-                "`self` refers to an unexpected record type. Actual: {:?}. Expected: {:?}.",
-                actual_record,
-                expected_record
+                "`self` refers to an unexpected record type. \
+                Parameter type refers to: {:?}. Function refers to: {:?}.",
+                record_from_self,
+                record_from_func
             );
         }
 
         match self {
-            RsTypeKind::Pointer { .. } => Ok(None),
+            RsTypeKind::Pointer { mutability, .. } => {
+                if mutability.is_mut() && matches!(func.name, UnqualifiedIdentifier::Destructor) {
+                    // Even in C++ it is UB to retain `this` pointer and
+                    // dereference it after a destructor runs. Therefore it is
+                    // safe to use `&self` or `&mut self` in Rust even if IR
+                    // represents `__this` as a Rust pointer (e.g. when lifetime
+                    // annotations are missing - lifetime annotations are
+                    // required to represent it as a Rust reference).
+                    Ok(Some(quote! { &mut self }))
+                } else {
+                    Ok(None)
+                }
+            }
             RsTypeKind::Reference { mutability, lifetime_id, .. } => {
                 let mutability = mutability.format_for_reference();
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
