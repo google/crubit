@@ -263,7 +263,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         UnqualifiedIdentifier::Constructor => {
             let record =
                 maybe_record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
-            if !record.is_trivial_abi {
+            if !record.is_unpin() {
                 // TODO: Handle <internal link>
                 return Ok(None);
             }
@@ -615,7 +615,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
 }
 
 fn should_derive_clone(record: &Record) -> bool {
-    record.is_trivial_abi
+    record.is_unpin()
         && record.copy_constructor.access == ir::AccessSpecifier::Public
         && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
 }
@@ -1433,7 +1433,7 @@ mod tests {
     #[test]
     fn test_simple_struct() -> Result<()> {
         let ir = ir_from_cc(&tokens_to_string(quote! {
-            struct SomeStruct {
+            struct SomeStruct final {
                 int public_int;
               protected:
                 int protected_int;
@@ -1591,13 +1591,17 @@ mod tests {
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
-    /// A type can be unsafe to pass in mut references from C++, but still
-    /// Clone+Copy when handled by value.
+    /// Even if it's trivially relocatable, !Unpin C++ type cannot be
+    /// cloned/copied or otherwise used by value, because values would allow
+    /// assignment into the Pin.
+    ///
+    /// All !Unpin C++ types, not just non trivially relocatable ones, are
+    /// unsafe to assign in the Rust sense.
     #[test]
-    fn test_copy_derives_not_is_mut_reference_safe() {
+    fn test_copy_derives_not_final() {
         let mut record = ir_record("S");
         record.is_final = false;
-        assert_eq!(generate_derives(&record), &["Clone", "Copy"]);
+        assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     #[test]
@@ -1767,7 +1771,7 @@ mod tests {
             "// Doc Comment\n\
             //\n\
             //  * with bullet\n\
-            struct SomeStruct {\n\
+            struct SomeStruct final {\n\
                 // Field doc\n\
                 int field;\
             };",
@@ -1868,11 +1872,11 @@ mod tests {
         // omitted. For example, we simulate it so that UserDefinedDestructor
         // comes from another library.
         let ir = ir_from_cc(
-            r#"struct UserDefinedDestructor {
+            r#"struct UserDefinedDestructor final {
                 ~UserDefinedDestructor();
             };
-            struct TrivialStruct { int i; };
-            struct NontrivialMembers {
+            struct TrivialStruct final { int i; };
+            struct NontrivialMembers final {
                 UserDefinedDestructor udd;
                 TrivialStruct ts;
                 int x;
@@ -1904,7 +1908,7 @@ mod tests {
     #[test]
     fn test_impl_drop_trivial() -> Result<()> {
         let ir = ir_from_cc(
-            r#"struct Trivial {
+            r#"struct Trivial final {
                 ~Trivial() = default;
                 int x;
             };"#,
@@ -1922,7 +1926,7 @@ mod tests {
     #[test]
     fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
         let ir = ir_from_cc(
-            r#"struct DefaultedConstructor {
+            r#"struct DefaultedConstructor final {
                 DefaultedConstructor() = default;
             };"#,
         )?;
@@ -1958,7 +1962,7 @@ mod tests {
     #[test]
     fn test_impl_default_non_trivial_struct() -> Result<()> {
         let ir = ir_from_cc(
-            r#"struct NonTrivialStructWithConstructors {
+            r#"struct NonTrivialStructWithConstructors final {
                 NonTrivialStructWithConstructors();
                 ~NonTrivialStructWithConstructors();  // Non-trivial
             };"#,
@@ -1991,7 +1995,7 @@ mod tests {
     fn test_elided_lifetimes() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
-          struct S {
+          struct S final {
             int& f(int& i);
           };"#,
         )?;
@@ -2036,14 +2040,14 @@ mod tests {
             r#"
                 void f();
                 void f(int i);
-                struct S1 {
+                struct S1 final {
                   void f();
                   void f(int i);
                 };
-                struct S2 {
+                struct S2 final {
                   void f();
                 };
-                struct S3 {
+                struct S3 final {
                   S3(int i);
                   S3(double d);
                 };
@@ -2079,7 +2083,7 @@ mod tests {
                 using MyTypeAliasDecl = int;
                 using MyTypeAliasDecl_Alias = MyTypeAliasDecl;
 
-                struct S{};
+                struct S final {};
                 using S_Alias = S;
                 using S_Alias_Alias = S_Alias;
 
@@ -2105,8 +2109,8 @@ mod tests {
     #[test]
     fn test_rs_type_kind_implements_copy() -> Result<()> {
         let template = r#" #pragma clang lifetime_elision
-            struct [[clang::trivial_abi]] TrivialStruct { int i; };
-            struct [[clang::trivial_abi]] UserDefinedCopyConstructor {
+            struct [[clang::trivial_abi]] TrivialStruct final { int i; };
+            struct [[clang::trivial_abi]] UserDefinedCopyConstructor final {
                 UserDefinedCopyConstructor(const UserDefinedCopyConstructor&);
             };
             using IntAlias = int;

@@ -97,7 +97,6 @@ impl From<*const TrivialWithDefaulted> for TrivialWithDefaulted {
 
 /// This struct is trivial, and therefore trivially relocatable etc., but still
 /// not safe to pass by reference as it is not final.
-#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TrivialNonfinal {
     pub trivial_field: i32,
@@ -108,28 +107,6 @@ impl !Unpin for TrivialNonfinal {}
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=27
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Nested classes are not supported yet
-
-impl Default for TrivialNonfinal {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(&mut tmp);
-            tmp.assume_init()
-        }
-    }
-}
-
-impl From<*const TrivialNonfinal> for TrivialNonfinal {
-    #[inline(always)]
-    fn from(__param_0: *const TrivialNonfinal) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=27
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
@@ -196,13 +173,6 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
             __this: &mut std::mem::MaybeUninit<TrivialWithDefaulted>,
             __param_0: *const TrivialWithDefaulted,
-        );
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1Ev(
-            __this: &mut std::mem::MaybeUninit<TrivialNonfinal>,
-        );
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<TrivialNonfinal>,
-            __param_0: *const TrivialNonfinal,
         );
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);

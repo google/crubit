@@ -12,14 +12,14 @@
 // need to use the [[clang::trivial_abi]] attribute (because otherwise the
 // presence of a user-defined copy constructor might mean that the struct is
 // not trivially relocatable).
-struct [[clang::trivial_abi]] ElidedLifetimes {
+struct [[clang::trivial_abi]] ElidedLifetimes final {
   ElidedLifetimes();
   ElidedLifetimes(const ElidedLifetimes& other);
   explicit ElidedLifetimes(int i);
   int int_field;
 };
 
-struct [[clang::trivial_abi]] ElidedLifetimesWithInlineConstructors {
+struct [[clang::trivial_abi]] ElidedLifetimesWithInlineConstructors final {
   ElidedLifetimesWithInlineConstructors() : int_field(321) {}
   ElidedLifetimesWithInlineConstructors(
       const ElidedLifetimesWithInlineConstructors& other)

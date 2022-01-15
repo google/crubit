@@ -72,7 +72,7 @@ struct StructWithExplicitlyDefaultedConstructors final {
 // TODO(lukasza): Add StructWithImplicitlyDefaultedConstructor test (or is
 //                that just testing the compiler and therefore not useful?).
 
-struct NonTrivialStructWithConstructors {
+struct NonTrivialStructWithConstructors final {
   NonTrivialStructWithConstructors();
   explicit NonTrivialStructWithConstructors(int);
 
