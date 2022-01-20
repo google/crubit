@@ -5,7 +5,7 @@
 """A rule that generates bindings source files for a given C++ library."""
 
 load(
-    "//bazel_support:rust_bindings_from_cc_aspect.bzl",
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
     "GeneratedBindingsInfo",
     "rust_bindings_from_cc_aspect",
 )
