@@ -19,7 +19,7 @@ pub struct Trivial {
     pub trivial_field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=6
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::Trivial':
 // Nested classes are not supported yet
 
@@ -45,11 +45,11 @@ impl From<*const Trivial> for Trivial {
     }
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=6
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::Trivial':
 // Parameter type 'struct Trivial &&' is not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=6
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::operator=':
 // Parameter type 'struct Trivial &&' is not supported
 
@@ -61,7 +61,7 @@ pub struct TrivialWithDefaulted {
     pub trivial_field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=14
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
 // Nested classes are not supported yet
 
@@ -76,22 +76,11 @@ impl Default for TrivialWithDefaulted {
     }
 }
 
-impl From<*const TrivialWithDefaulted> for TrivialWithDefaulted {
-    #[inline(always)]
-    fn from(__param_0: *const TrivialWithDefaulted) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=17
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=19
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
 // Parameter type 'struct TrivialWithDefaulted &&' is not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=18
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=20
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
 // Parameter type 'struct TrivialWithDefaulted &&' is not supported
 
@@ -104,15 +93,15 @@ pub struct TrivialNonfinal {
 
 impl !Unpin for TrivialNonfinal {}
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=27
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=27
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Parameter type 'struct TrivialNonfinal &&' is not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=27
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
 // Parameter type 'struct TrivialNonfinal &&' is not supported
 
@@ -136,12 +125,12 @@ pub fn TakesTrivialNonfinalByValue(trivial: TrivialNonfinal) {
 }
 
 #[inline(always)]
-pub fn TakesByReference(trivial: *mut Trivial) {
+pub fn TakesByReference<'a>(trivial: &'a mut Trivial) {
     unsafe { crate::detail::__rust_thunk___Z16TakesByReferenceR7Trivial(trivial) }
 }
 
 #[inline(always)]
-pub fn TakesWithDefaultedByReference(trivial: *mut TrivialWithDefaulted) {
+pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut TrivialWithDefaulted) {
     unsafe {
         crate::detail::__rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted(
             trivial,
@@ -150,7 +139,7 @@ pub fn TakesWithDefaultedByReference(trivial: *mut TrivialWithDefaulted) {
 }
 
 #[inline(always)]
-pub fn TakesTrivialNonfinalByReference(trivial: *mut TrivialNonfinal) {
+pub fn TakesTrivialNonfinalByReference<'a>(trivial: &'a mut TrivialNonfinal) {
     unsafe {
         crate::detail::__rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(trivial)
     }
@@ -167,12 +156,8 @@ mod detail {
             __this: &mut std::mem::MaybeUninit<Trivial>,
             __param_0: *const Trivial,
         );
-        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
-            __this: &mut std::mem::MaybeUninit<TrivialWithDefaulted>,
-        );
-        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<TrivialWithDefaulted>,
-            __param_0: *const TrivialWithDefaulted,
+        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev<'a>(
+            __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,
         );
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);
@@ -185,14 +170,14 @@ mod detail {
             trivial: TrivialNonfinal,
         );
         #[link_name = "_Z16TakesByReferenceR7Trivial"]
-        pub(crate) fn __rust_thunk___Z16TakesByReferenceR7Trivial(trivial: *mut Trivial);
+        pub(crate) fn __rust_thunk___Z16TakesByReferenceR7Trivial<'a>(trivial: &'a mut Trivial);
         #[link_name = "_Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted"]
-        pub(crate) fn __rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted(
-            trivial: *mut TrivialWithDefaulted,
+        pub(crate) fn __rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted<'a>(
+            trivial: &'a mut TrivialWithDefaulted,
         );
         #[link_name = "_Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal"]
-        pub(crate) fn __rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(
-            trivial: *mut TrivialNonfinal,
+        pub(crate) fn __rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal<'a>(
+            trivial: &'a mut TrivialNonfinal,
         );
     }
 }

@@ -19,13 +19,13 @@ pub struct PolymorphicClass {
 
 impl !Unpin for PolymorphicClass {}
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=4
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
 // Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
 // Nested classes are not supported yet
 
 impl Drop for PolymorphicClass {
     #[inline(always)]
-    fn drop(&mut self) {
+    fn drop<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN16PolymorphicClassD1Ev(self) }
     }
 }
@@ -36,7 +36,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev(__this: *mut PolymorphicClass);
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev<'a>(__this: &'a mut PolymorphicClass);
     }
 }
 

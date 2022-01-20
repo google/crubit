@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
+#pragma clang lifetime_elision
+
 // Nontrivial due to (declared, but not yet defined) user-specified constructor
 // and destructor.
 //

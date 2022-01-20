@@ -18,14 +18,14 @@ pub struct SomeClass {
     private_member_variable_: i32,
 }
 
-// rs_bindings_from_cc/test/golden/private_members.h;l=4
+// rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Nested classes are not supported yet
 
 impl SomeClass {
     #[inline(always)]
-    pub fn public_method(__this: *mut SomeClass) {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass13public_methodEv(__this) }
+    pub fn public_method<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
     }
 }
 
@@ -58,11 +58,11 @@ impl From<*const SomeClass> for SomeClass {
     }
 }
 
-// rs_bindings_from_cc/test/golden/private_members.h;l=4
+// rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Parameter type 'class SomeClass &&' is not supported
 
-// rs_bindings_from_cc/test/golden/private_members.h;l=4
+// rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::operator=':
 // Parameter type 'class SomeClass &&' is not supported
 
@@ -73,7 +73,7 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN9SomeClass13public_methodEv"]
-        pub(crate) fn __rust_thunk___ZN9SomeClass13public_methodEv(__this: *mut SomeClass);
+        pub(crate) fn __rust_thunk___ZN9SomeClass13public_methodEv<'a>(__this: &'a mut SomeClass);
         #[link_name = "_ZN9SomeClass20public_static_methodEv"]
         pub(crate) fn __rust_thunk___ZN9SomeClass20public_static_methodEv();
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(

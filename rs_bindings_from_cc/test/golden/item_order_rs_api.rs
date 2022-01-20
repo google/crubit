@@ -17,7 +17,7 @@ pub struct FirstStruct {
     pub field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Nested classes are not supported yet
 
@@ -43,11 +43,11 @@ impl From<*const FirstStruct> for FirstStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Parameter type 'struct FirstStruct &&' is not supported
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=4
+// rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::operator=':
 // Parameter type 'struct FirstStruct &&' is not supported
 
@@ -62,7 +62,7 @@ pub struct SecondStruct {
     pub field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Nested classes are not supported yet
 
@@ -88,11 +88,11 @@ impl From<*const SecondStruct> for SecondStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Parameter type 'struct SecondStruct &&' is not supported
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::operator=':
 // Parameter type 'struct SecondStruct &&' is not supported
 

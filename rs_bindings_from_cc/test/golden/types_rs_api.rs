@@ -160,7 +160,7 @@ pub struct SomeStruct {
     placeholder: std::mem::MaybeUninit<u8>,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=7
+// rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Nested classes are not supported yet
 
@@ -186,11 +186,11 @@ impl From<*const SomeStruct> for SomeStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=7
+// rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Parameter type 'struct SomeStruct &&' is not supported
 
-// rs_bindings_from_cc/test/golden/types.h;l=7
+// rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter type 'struct SomeStruct &&' is not supported
 
@@ -250,7 +250,7 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ref_field: *const SomeStruct,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=9
+// rs_bindings_from_cc/test/golden/types.h;l=11
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
 
@@ -265,7 +265,7 @@ impl From<*const FieldTypeTestStruct> for FieldTypeTestStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=9
+// rs_bindings_from_cc/test/golden/types.h;l=11
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
 

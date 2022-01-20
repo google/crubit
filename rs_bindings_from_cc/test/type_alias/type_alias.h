@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
 
+#pragma clang lifetime_elision
+
 using Int = int;
 
 // Use `inline` to force a thunk to be generated so we can test that it

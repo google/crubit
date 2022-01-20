@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_FIELDS_FIELDS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_FIELDS_FIELDS_H_
 
+#pragma clang lifetime_elision
+
 struct SomeStruct final {
   char char_var;
   int int_var;

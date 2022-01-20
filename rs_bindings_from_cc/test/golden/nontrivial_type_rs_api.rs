@@ -23,17 +23,17 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=9
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=10
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=12
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'struct Nontrivial &&' is not supported
 
 impl Drop for Nontrivial {
     #[inline(always)]
-    fn drop(&mut self) {
+    fn drop<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
@@ -49,17 +49,17 @@ pub struct NontrivialInline {
 
 impl !Unpin for NontrivialInline {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=20
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=22
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=21
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=23
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
 // Parameter type 'struct NontrivialInline &&' is not supported
 
 impl Drop for NontrivialInline {
     #[inline(always)]
-    fn drop(&mut self) {
+    fn drop<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
     }
 }
@@ -76,11 +76,11 @@ pub struct NontrivialMembers {
 
 impl !Unpin for NontrivialMembers {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=34
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=34
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Parameter type 'struct NontrivialMembers &&' is not supported
 
@@ -91,11 +91,11 @@ impl Drop for NontrivialMembers {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=36
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a parameter
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=37
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=39
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as a parameter
 
@@ -106,8 +106,8 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev(__this: *mut Nontrivial);
-        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev(__this: *mut NontrivialInline);
+        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: &'a mut Nontrivial);
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: &'a mut NontrivialInline);
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev(__this: *mut NontrivialMembers);
     }
 }

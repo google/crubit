@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_DESTRUCTORS_FIELD_DESTRUCTION_ORDER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_DESTRUCTORS_FIELD_DESTRUCTION_ORDER_H_
 
+#pragma clang lifetime_elision
+
 struct DestructionOrderRecorder {
   ~DestructionOrderRecorder() { RecordDestruction(int_field); }
   int int_field;

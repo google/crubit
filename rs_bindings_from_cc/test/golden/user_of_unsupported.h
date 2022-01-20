@@ -7,6 +7,8 @@
 
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
+#pragma clang lifetime_elision
+
 void UseNontrivialCustomType(NontrivialCustomType non_trivial_custom_type);
 
 void UseUnsupportedType(ns::StructInNamespace* unsupported_type);

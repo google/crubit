@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
 
+#pragma clang lifetime_elision
+
 // Implicitly defined special member functions are trivial on a struct with
 // only trivial members.
 struct Trivial final {

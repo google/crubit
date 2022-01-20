@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
 
+#pragma clang lifetime_elision
+
 inline int hello_world_inline() { return 42; }
 
 // This testcase helps verify that thunks correctly work with const-ref

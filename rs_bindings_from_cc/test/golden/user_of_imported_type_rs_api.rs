@@ -24,7 +24,7 @@ pub struct UserOfImportedType {
     pub trivial: *mut trivial_type_cc::Trivial,
 }
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Nested classes are not supported yet
 
@@ -50,11 +50,11 @@ impl From<*const UserOfImportedType> for UserOfImportedType {
     }
 }
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Parameter type 'struct UserOfImportedType &&' is not supported
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=8
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // Parameter type 'struct UserOfImportedType &&' is not supported
 

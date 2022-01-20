@@ -27,7 +27,7 @@ pub struct Foo {
     pub j: i32,
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=11
+// rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::Foo':
 // Nested classes are not supported yet
 
@@ -53,11 +53,11 @@ impl From<*const Foo> for Foo {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=11
+// rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::Foo':
 // Parameter type 'struct Foo &&' is not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=11
+// rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::operator=':
 // Parameter type 'struct Foo &&' is not supported
 
@@ -80,7 +80,7 @@ pub struct Bar {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=37
+// rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::Bar':
 // Nested classes are not supported yet
 
@@ -106,11 +106,11 @@ impl From<*const Bar> for Bar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=37
+// rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::Bar':
 // Parameter type 'struct Bar &&' is not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=37
+// rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::operator=':
 // Parameter type 'struct Bar &&' is not supported
 
@@ -121,7 +121,7 @@ pub struct HasNoComments {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=43
+// rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Nested classes are not supported yet
 
@@ -147,11 +147,11 @@ impl From<*const HasNoComments> for HasNoComments {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=43
+// rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Parameter type 'struct HasNoComments &&' is not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=43
+// rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::operator=':
 // Parameter type 'struct HasNoComments &&' is not supported
 

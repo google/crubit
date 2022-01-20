@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#pragma clang lifetime_elision
+
 struct SomeStruct final {};
 
 struct FieldTypeTestStruct final {

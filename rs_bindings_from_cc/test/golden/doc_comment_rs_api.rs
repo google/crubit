@@ -21,7 +21,7 @@ pub struct DocCommentSlashes {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=7
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Nested classes are not supported yet
 
@@ -54,19 +54,17 @@ impl From<i32> for DocCommentSlashes {
 impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
-    pub fn get_field_value(__this: *const DocCommentSlashes) -> i32 {
-        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(__this) }
+    pub fn get_field_value<'a>(&'a self) -> i32 {
+        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
     }
 }
 
 impl DocCommentSlashes {
     /// A non-static member function (non-`const` flavor).
     #[inline(always)]
-    pub fn set_field_value(__this: *mut DocCommentSlashes, new_value: i32) {
+    pub fn set_field_value<'a>(&'a mut self, new_value: i32) {
         unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(
-                __this, new_value,
-            )
+            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
         }
     }
 }
@@ -90,11 +88,11 @@ impl From<*const DocCommentSlashes> for DocCommentSlashes {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=7
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Parameter type 'struct DocCommentSlashes &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=7
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
 // Parameter type 'struct DocCommentSlashes &&' is not supported
 
@@ -108,7 +106,7 @@ pub struct DocCommentBang {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=32
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=34
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
 // Nested classes are not supported yet
 
@@ -134,11 +132,11 @@ impl From<*const DocCommentBang> for DocCommentBang {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=32
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=34
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
 // Parameter type 'struct DocCommentBang &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=32
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=34
 // Error while generating bindings for item 'DocCommentBang::operator=':
 // Parameter type 'struct DocCommentBang &&' is not supported
 
@@ -152,7 +150,7 @@ pub struct MultilineCommentTwoStars {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=40
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=42
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Nested classes are not supported yet
 
@@ -178,11 +176,11 @@ impl From<*const MultilineCommentTwoStars> for MultilineCommentTwoStars {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=40
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=42
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=40
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=42
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
@@ -196,7 +194,7 @@ pub struct LineComment {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=48
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=50
 // Error while generating bindings for item 'LineComment::LineComment':
 // Nested classes are not supported yet
 
@@ -222,11 +220,11 @@ impl From<*const LineComment> for LineComment {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=48
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=50
 // Error while generating bindings for item 'LineComment::LineComment':
 // Parameter type 'struct LineComment &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=48
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=50
 // Error while generating bindings for item 'LineComment::operator=':
 // Parameter type 'struct LineComment &&' is not supported
 
@@ -240,7 +238,7 @@ pub struct MultilineOneStar {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=56
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=58
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Nested classes are not supported yet
 
@@ -266,11 +264,11 @@ impl From<*const MultilineOneStar> for MultilineOneStar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=56
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=58
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=56
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=58
 // Error while generating bindings for item 'MultilineOneStar::operator=':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 
@@ -287,21 +285,21 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev(
-            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
+            __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei(
-            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei<'a>(
+            __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
             __param_0: i32,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
-        pub(crate) fn __rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(
-            __this: *const DocCommentSlashes,
+        pub(crate) fn __rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv<'a>(
+            __this: &'a DocCommentSlashes,
         ) -> i32;
         #[link_name = "_ZN17DocCommentSlashes15set_field_valueEi"]
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(
-            __this: *mut DocCommentSlashes,
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashes15set_field_valueEi<'a>(
+            __this: &'a mut DocCommentSlashes,
             new_value: i32,
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
