@@ -220,12 +220,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let lifetimes = func
-        .lifetime_params
-        .iter()
-        .map(|l| syn::Lifetime::new(&format!("'{}", l.name), proc_macro2::Span::call_site()));
-    let generic_params = format_generic_params(lifetimes);
-
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
 
@@ -304,6 +298,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     }
 
     let api_func_def = {
+        // Clone params, return type, etc - we may need to mutate them in the
+        // API func, but we want to retain the originals for the thunk.
         let mut return_type_fragment = return_type_fragment.clone();
         let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
         let mut api_params = param_idents
@@ -311,17 +307,26 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             .zip(param_types.iter())
             .map(|(ident, type_)| quote! { #ident : #type_ })
             .collect_vec();
+        let mut lifetimes = func.lifetime_params.iter().collect_vec();
         let mut maybe_first_api_param = func.params.get(0);
 
         if func.name == UnqualifiedIdentifier::Constructor {
             return_type_fragment = quote! { -> Self };
 
             // Drop `__this` parameter from the public Rust API.
-            // TODO(lukasza): Also trim `generic_params` to avoid running into a
-            // (future) unused lifetime parameters warning (see also
-            // https://github.com/rust-lang/rust/issues/41960).
-            api_params.remove(0); // Presence of element #0 is indirectly verified
-            thunk_args.remove(0); // by one of `match` statements above.
+            api_params.remove(0); // Presence of element #0 and `maybe_first_api_param` is
+            thunk_args.remove(0); // indirectly verified by one of `match` statements above.
+
+            // TODO(lukasza): Avoid incorrectly trimming the lifetimes when a
+            // lifetime of `__this` is also used in another parameter:
+            // fn constructor<'a>(__this: &'a mut Self, x: &'a i32)
+            let maybe_first_lifetime =
+                maybe_first_api_param.unwrap().type_.rs_type.lifetime_args.first();
+            if let Some(no_longer_needed_lifetime_id) = maybe_first_lifetime {
+                lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
+            }
+
+            // Rebind `maybe_first_api_param` to the next param after `__this`.
             maybe_first_api_param = func.params.get(1);
         }
 
@@ -367,6 +372,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             ImplKind::None | ImplKind::Struct => quote! { pub },
             ImplKind::Trait(_) => quote! {},
         };
+
+        let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
+        let generic_params = format_generic_params(lifetimes);
 
         quote! {
             #[inline(always)]
@@ -423,6 +431,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     format!("Failed to format `__this` param for a thunk: {:?}", func.params[0])
                 })?;
         }
+
+        let lifetimes = func.lifetime_params.iter().map(|l| format_lifetime_name(&l.name));
+        let generic_params = format_generic_params(lifetimes);
 
         quote! {
             #thunk_attr
@@ -1060,9 +1071,7 @@ impl<'ir> RsTypeKind<'ir> {
         let lifetime_name = lifetime_to_name.get(lifetime_id).ok_or_else(|| {
             anyhow!("`lifetime_to_name` doesn't have an entry for {:?}", lifetime_id)
         })?;
-        let lifetime =
-            syn::Lifetime::new(&format!("'{}", lifetime_name), proc_macro2::Span::call_site());
-        Ok(quote! { #lifetime })
+        Ok(format_lifetime_name(lifetime_name))
     }
 
     pub fn implements_copy(&self) -> bool {
@@ -1094,6 +1103,12 @@ impl<'ir> RsTypeKind<'ir> {
             _ => false,
         }
     }
+}
+
+fn format_lifetime_name(lifetime_name: &str) -> TokenStream {
+    let lifetime =
+        syn::Lifetime::new(&format!("'{}", lifetime_name), proc_macro2::Span::call_site());
+    quote! { #lifetime }
 }
 
 fn format_rs_type(
@@ -1926,7 +1941,8 @@ mod tests {
     #[test]
     fn test_impl_default_explicitly_defaulted_constructor() -> Result<()> {
         let ir = ir_from_cc(
-            r#"struct DefaultedConstructor final {
+            r#"#pragma clang lifetime_elision
+            struct DefaultedConstructor final {
                 DefaultedConstructor() = default;
             };"#,
         )?;
