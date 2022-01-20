@@ -13,3 +13,6 @@ SomeClass SomeClass::static_factory_method(int int_var_initial_value) {
 int SomeClass::static_method_that_multiplies_its_args(int x, int y) {
   return x * y;
 }
+
+int InstanceMethods::get_int_field() const { return int_field; }
+void InstanceMethods::set_int_field(int new_value) { int_field = new_value; }

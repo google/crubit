@@ -8,19 +8,18 @@ extern crate static_assertions;
 #[cfg(test)]
 mod tests {
     use constructors::*;
-    use elided_lifetimes::*;
+    use no_elided_lifetimes::*;
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn test_user_provided_constructors() {
         assert_impl_all!(StructWithUserProvidedConstructors: Default);
         let s: StructWithUserProvidedConstructors = Default::default();
         assert_eq!(42, s.int_field);
 
-        // Without lifetime annotations the `other` parameter of the copy
-        // constructor cannot be translated into a `&self` reference (it should
-        // instead be spelled as `other: *const StructWith...`). Because of this
-        // we shouldn't get the `impl Clone` here.  See also b/214244223.
-        assert_not_impl_all!(StructWithUserProvidedConstructors: Clone);
+        assert_impl_all!(StructWithUserProvidedConstructors: Clone);
+        let s_clone = s.clone();
+        assert_eq!(10042, s_clone.int_field);
 
         // Trivial-ABI structs should not implement the Copy trait, if they have a
         // user-defined copy constructor (aka a non-trivial copy constructor).
@@ -32,19 +31,19 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::redundant_clone)]
     fn test_inline_constructors() {
         assert_impl_all!(StructWithInlineConstructors: Default);
         let s: StructWithInlineConstructors = Default::default();
         assert_eq!(123, s.int_field);
 
-        // TODO(lukasza): Implement and test a user-defined copy constructor / impl
-        // Clone.
+        assert_impl_all!(StructWithInlineConstructors: Clone);
+        let s_clone = s.clone();
+        assert_eq!(20123, s_clone.int_field);
 
-        // Trivial-ABI structs implement the Copy trait, even if they have user-defined
-        // constructors.
-        assert_impl_all!(StructWithInlineConstructors: Copy);
-        let s_copy = s;
-        assert_eq!(123, s_copy.int_field);
+        // Trivial-ABI structs should not implement the Copy trait, if they have a
+        // user-defined copy constructor (aka a non-trivial copy constructor).
+        assert_not_impl_all!(StructWithInlineConstructors: Copy);
 
         assert_impl_all!(StructWithInlineConstructors: From<i32>);
         let i: StructWithInlineConstructors = 456.into();
@@ -105,50 +104,22 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::redundant_clone)]
-    fn test_elided_lifetimes() {
-        assert_impl_all!(ElidedLifetimes: Default);
-        let s: ElidedLifetimes = Default::default();
-        assert_eq!(456, s.int_field);
+    fn test_no_elided_lifetimes() {
+        // TODO(b/214244223): No bindings should be generated for any of the
+        // constructors if no lifetimes are present on `__this` parameter of
+        // C++ constructors.  When this is fixed, the test assertions below
+        // should be "reversed" / negated.
+        assert_impl_all!(StructWithConstructorsWithoutLifetimes: Default);
+        assert_impl_all!(StructWithConstructorsWithoutLifetimes: From<i32>);
 
-        assert_impl_all!(ElidedLifetimes: Clone);
-        let s_clone = s.clone();
-        assert_eq!(10456, s_clone.int_field);
+        // Without lifetime annotations the `other` parameter of the copy
+        // constructor cannot be translated into a `&self` reference (it should
+        // instead be spelled as `other: *const StructWith...`). Because of this
+        // we shouldn't get the `impl Clone` here.  See also b/214244223.
+        assert_not_impl_all!(StructWithConstructorsWithoutLifetimes: Clone);
 
-        // In theory a POD struct with only trivial members can always derive
-        // the Copy trait. OTOH, having a different behavior in Copy vs Clone
-        // traits would seem confusing. Therefore, when the generated bindings
-        // implement the Clone trait then automatic deriving of the Copy trait
-        // is suppressed. The suppression also avoids clippy::clone_on_copy
-        // warning.
-        assert_not_impl_all!(ElidedLifetimes: Copy);
-
-        assert_impl_all!(ElidedLifetimes: From<i32>);
-        let i: ElidedLifetimes = 123.into();
-        assert_eq!(123, i.int_field);
-    }
-
-    #[test]
-    #[allow(clippy::redundant_clone)]
-    fn test_elided_lifetimes_with_inline_constructors() {
-        assert_impl_all!(ElidedLifetimesWithInlineConstructors: Default);
-        let s: ElidedLifetimesWithInlineConstructors = Default::default();
-        assert_eq!(321, s.int_field);
-
-        assert_impl_all!(ElidedLifetimesWithInlineConstructors: Clone);
-        let s_clone = s.clone();
-        assert_eq!(20321, s_clone.int_field);
-
-        // In theory a POD struct with only trivial members can always derive
-        // the Copy trait. OTOH, having a different behavior in Copy vs Clone
-        // traits would seem confusing. Therefore, when the generated bindings
-        // implement the Clone trait then automatic deriving of the Copy trait
-        // is suppressed. The suppression also avoids clippy::clone_on_copy
-        // warning.
-        assert_not_impl_all!(ElidedLifetimesWithInlineConstructors: Copy);
-
-        assert_impl_all!(ElidedLifetimesWithInlineConstructors: From<i32>);
-        let i: ElidedLifetimesWithInlineConstructors = 123.into();
-        assert_eq!(123, i.int_field);
+        // Trivial-ABI structs should not implement the Copy trait, if they have a
+        // user-defined copy constructor (aka a non-trivial copy constructor).
+        assert_not_impl_all!(StructWithConstructorsWithoutLifetimes: Copy);
     }
 }

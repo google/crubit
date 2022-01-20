@@ -5,21 +5,17 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_CONSTRUCTORS_H_
 
-// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't get
-// in the way of generating a binding for `Clone::clone` - we want to test
-// that `Clone::clone` is skipped not because of `!is_trivial_abi`, but because
-// of a missing lifetime annotation for the parameter of the copy constructor.
-// TODO(b/214244223): No bindings should be generated for any of the
-// constructors here (because there are no lifetime annotations).
-// (Currently only the copy constructor is skipped.)
+#pragma clang lifetime_elision
+
+// `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't prevent
+// generating bindings for constructors, even though the presence of a
+// user-defined copy constructor technically means that the struct below
+// is non-trivial.
 struct [[clang::trivial_abi]] StructWithUserProvidedConstructors final {
   // `impl Default for StructWithUserProvidedConstructors { ... }`.
   StructWithUserProvidedConstructors();
 
-  // No `impl Copy for StructWithUserProvidedConstructors` is expected, because
-  // without lifetimes (e.g. without `#pragma clang lifetime_elision`) we should
-  // not translate the `other` parameter into `&self` in `Clone::clone()`
-  // (without lifetimes `other` should be `*const StructWithUser...`).
+  // `impl Clone for StructWithUserProvidedConstructors { ... }`.
   StructWithUserProvidedConstructors(const StructWithUserProvidedConstructors&);
 
   // `impl From<int> for StructWithUserProvidedConstructors { ... }`.
@@ -30,15 +26,10 @@ struct [[clang::trivial_abi]] StructWithUserProvidedConstructors final {
 
 // Inline-defined constructors test that thunks are properly implemented by
 // `generate_rs_api_impl`.
-// TODO(b/214244223): Move this and other test scenarios below into
-// `elided_lifetimes.h`.  (Maybe renaming these files along the way?)
-struct StructWithInlineConstructors final {
+struct [[clang::trivial_abi]] StructWithInlineConstructors final {
   StructWithInlineConstructors() : int_field(123) {}
-
-  // TODO(lukasza): Cover copy constructor (may need [[clang::trivial_abi]]).
-  // This is desirable mostly for completness / parity with
-  // StructWithUserProvidedConstructors.
-
+  StructWithInlineConstructors(const StructWithInlineConstructors& other)
+      : int_field(20000 + other.int_field) {}
   explicit StructWithInlineConstructors(int i) : int_field(i) {}
   int int_field;
 };

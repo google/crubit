@@ -5,10 +5,10 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
 
+#pragma clang lifetime_elision
+
 class SomeClass final {
  public:
-  // TODO(lukasza): Add tests for instance methods in absence of lifetimes.
-
   static SomeClass static_factory_method(int int_var_initial_value);
   static int static_method_that_multiplies_its_args(int x, int y);
   int int_var;
@@ -22,6 +22,16 @@ class SomeClass final {
 
  private:
   static inline int private_static_inline_method(int arg) { return arg * 42; }
+};
+
+struct InstanceMethods {
+  int get_int_field() const;
+  void set_int_field(int new_value);
+
+  inline int inline_get_int_field() const { return int_field; }
+  inline void inline_set_int_field(int new_value) { int_field = new_value; }
+
+  int int_field;
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_METHODS_METHODS_H_
