@@ -38,6 +38,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 #include "util/gtl/flat_map.h"
 
@@ -322,17 +323,36 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
 BlazeLabel AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
   clang::SourceManager& source_manager = ctx_->getSourceManager();
-  llvm::StringRef filename = source_manager.getFilename(decl->getLocation());
+  auto source_location = decl->getLocation();
+  auto id = source_manager.getFileID(source_location);
 
-  if (filename.startswith("./")) filename = filename.substr(2);
-  auto target_iterator = headers_to_targets_.find(HeaderName(filename.str()));
-  if (target_iterator == headers_to_targets_.end()) {
-    // TODO(b/208377928): replace this hack with a
-    // CHECK(target_iterator != headers_to_targets_.end()) once we generate
-    // bindings for headers in Clang's resource dir.
-    return BlazeLabel("//:virtual_clang_resource_dir_target");
+  // If the header this decl comes from is not associated with a target we
+  // consider it a textual header. In that case we go up the include stack
+  // until we find a header that has an owning target.
+
+  // TODO(b/208377928): We currently don't have a target for the headers in
+  // Clang's resource directory, so for the time being we return a fictional
+  // "//:virtual_clang_resource_dir_target" for system headers.
+  while (source_location.isValid() &&
+         !source_manager.isInSystemHeader(source_location)) {
+    llvm::Optional<llvm::StringRef> filename =
+        source_manager.getNonBuiltinFilenameForID(id);
+    if (!filename) {
+      return BlazeLabel("//:builtin");
+    }
+    if (filename->startswith("./")) {
+      filename = filename->substr(2);
+    }
+    auto target_iterator =
+        headers_to_targets_.find(HeaderName(filename->str()));
+    if (target_iterator != headers_to_targets_.end()) {
+      return target_iterator->second;
+    }
+    source_location = source_manager.getIncludeLoc(id);
+    id = source_manager.getFileID(source_location);
   }
-  return target_iterator->second;
+
+  return BlazeLabel("//:virtual_clang_resource_dir_target");
 }
 
 bool AstVisitor::IsFromCurrentTarget(const clang::Decl* decl) const {
