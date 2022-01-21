@@ -43,7 +43,7 @@
 
 namespace rs_bindings_from_cc {
 
-constexpr std::string_view kTypeStatusPayloadUrl =
+constexpr absl::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
 // A mapping of C++ standard types to their equivalent Rust types.
