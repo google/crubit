@@ -45,6 +45,13 @@ TypeLifetimes CreateLifetimesForType(
     for (const clang::TemplateArgument& arg : template_args) {
       if (arg.getKind() == clang::TemplateArgument::Type) {
         ret.append(CreateLifetimesForType(arg.getAsType(), lifetime_factory));
+      } else if (arg.getKind() == clang::TemplateArgument::Pack) {
+        for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
+          if (inner_arg.getKind() == clang::TemplateArgument::Type) {
+            ret.append(CreateLifetimesForType(inner_arg.getAsType(),
+                                              lifetime_factory));
+          }
+        }
       }
     }
     return ret;
@@ -86,6 +93,22 @@ std::string ValueLifetimes::DebugString() const {
   return ret;
 }
 
+void ValueLifetimes::ReverseVisitTemplateArgs(
+    llvm::ArrayRef<clang::TemplateArgument> template_args,
+    TypeLifetimesRef& type_lifetimes, ValueLifetimes& out) {
+  for (size_t i = template_args.size(); i-- > 0;) {
+    const clang::TemplateArgument& arg = template_args[i];
+    if (arg.getKind() == clang::TemplateArgument::Type) {
+      out.template_argument_lifetimes_.push_back(
+          FromTypeLifetimes(type_lifetimes, arg.getAsType()));
+    } else if (arg.getKind() == clang::TemplateArgument::Pack) {
+      ReverseVisitTemplateArgs(arg.getPackAsArray(), type_lifetimes, out);
+    } else {
+      out.template_argument_lifetimes_.push_back(std::nullopt);
+    }
+  }
+}
+
 // Here, `type_lifetimes` are the lifetimes of a prvalue of the given `type`,
 // unlike ObjectLifetimes::FromTypeLifetimes, which assumes a glvalue.
 ValueLifetimes ValueLifetimes::FromTypeLifetimes(
@@ -98,15 +121,7 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
   if (!template_args.empty()) {
     // Since we are simulating reversing a post-order visit, we need to
     // extract template arguments in reverse order.
-    for (size_t i = template_args.size(); i-- > 0;) {
-      const clang::TemplateArgument& arg = template_args[i];
-      if (arg.getKind() == clang::TemplateArgument::Type) {
-        ret.template_argument_lifetimes_.push_back(
-            FromTypeLifetimes(type_lifetimes, arg.getAsType()));
-      } else {
-        ret.template_argument_lifetimes_.push_back(std::nullopt);
-      }
-    }
+    ReverseVisitTemplateArgs(template_args, type_lifetimes, ret);
     std::reverse(ret.template_argument_lifetimes_.begin(),
                  ret.template_argument_lifetimes_.end());
     return ret;

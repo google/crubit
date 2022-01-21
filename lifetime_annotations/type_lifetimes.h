@@ -104,6 +104,10 @@ class ValueLifetimes {
  private:
   explicit ValueLifetimes(clang::QualType type) : type_(type) {}
 
+  static void ReverseVisitTemplateArgs(
+      llvm::ArrayRef<clang::TemplateArgument> template_args,
+      TypeLifetimesRef& type_lifetimes, ValueLifetimes& out);
+
   // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
   // is non-empty.
   std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
