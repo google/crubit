@@ -84,7 +84,7 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
 ///
 /// ```
 /// RsSnippet {
-///   features: btree_set![make_ident("vec_into_raw_parts")],
+///   features: btree_set![make_rs_ident("vec_into_raw_parts")],
 ///   tokens: quote!{vec![].into_raw_parts()},
 /// }
 /// ```
@@ -208,7 +208,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     };
 
     let param_idents =
-        func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
+        func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
 
     let param_type_kinds = func
         .params
@@ -247,7 +247,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 None => ImplKind::None,
                 Some(_) => ImplKind::Struct,
             };
-            func_name = make_ident(&id.identifier);
+            func_name = make_rs_ident(&id.identifier);
             format_first_param_as_self = func.is_instance_method();
         }
         UnqualifiedIdentifier::Destructor => {
@@ -259,7 +259,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 return Ok(None);
             }
             impl_kind = ImplKind::Trait(quote! {Drop});
-            func_name = make_ident("drop");
+            func_name = make_rs_ident("drop");
             format_first_param_as_self = true;
         }
         UnqualifiedIdentifier::Constructor => {
@@ -273,7 +273,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
                 1 => {
                     impl_kind = ImplKind::Trait(quote! {Default});
-                    func_name = make_ident("default");
+                    func_name = make_rs_ident("default");
                     format_first_param_as_self = false;
                 }
                 2 => {
@@ -284,13 +284,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                             return Ok(None);
                         } else {
                             impl_kind = ImplKind::Trait(quote! { Clone });
-                            func_name = make_ident("clone");
+                            func_name = make_rs_ident("clone");
                             format_first_param_as_self = true;
                         }
                     } else {
                         let param_type = &param_types[1];
                         impl_kind = ImplKind::Trait(quote! {From< #param_type >});
-                        func_name = make_ident("from");
+                        func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
                     }
                 }
@@ -416,7 +416,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
     let api_func: TokenStream;
     let function_id: FunctionId;
-    let maybe_record_name = maybe_record.map(|r| make_ident(&r.identifier.identifier));
+    let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.identifier.identifier));
     match impl_kind {
         ImplKind::None => {
             api_func = quote! { #doc_comment #api_func_def };
@@ -544,10 +544,10 @@ fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
-    let ident = make_ident(&record.identifier.identifier);
+    let ident = make_rs_ident(&record.identifier.identifier);
     let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
-        record.fields.iter().map(|f| make_ident(&f.identifier.identifier)).collect_vec();
+        record.fields.iter().map(|f| make_rs_ident(&f.identifier.identifier)).collect_vec();
     let field_doc_coments =
         record.fields.iter().map(|f| generate_doc_comment(&f.doc_comment)).collect_vec();
     let field_types = record
@@ -600,7 +600,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     // prototype, but longer-term we want to either get those features
     // stabilized or find an alternative. For more details, see
     // b/200120034#comment15
-    assertion_features.insert(make_ident("const_ptr_offset_from"));
+    assertion_features.insert(make_rs_ident("const_ptr_offset_from"));
 
     let derives = generate_derives(record);
     let derives = if derives.is_empty() {
@@ -615,7 +615,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
-        record_features.insert(make_ident("negative_impls"));
+        record_features.insert(make_rs_ident("negative_impls"));
         unpin_impl = quote! {
             __NEWLINE__  __NEWLINE__
             impl !Unpin for #ident {}
@@ -669,16 +669,16 @@ fn should_derive_copy(record: &Record) -> bool {
 fn generate_derives(record: &Record) -> Vec<Ident> {
     let mut derives = vec![];
     if should_derive_clone(record) {
-        derives.push(make_ident("Clone"));
+        derives.push(make_rs_ident("Clone"));
     }
     if should_derive_copy(record) {
-        derives.push(make_ident("Copy"));
+        derives.push(make_rs_ident("Copy"));
     }
     derives
 }
 
 fn generate_type_alias(type_alias: &TypeAlias, ir: &IR) -> Result<TokenStream> {
-    let ident = make_ident(&type_alias.identifier.identifier);
+    let ident = make_rs_ident(&type_alias.identifier.identifier);
     let underlying_type = format_rs_type(&type_alias.underlying_type.rs_type, ir, &HashMap::new())
         .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
     Ok(quote! {pub type #ident = #underlying_type;})
@@ -728,7 +728,7 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     let mut features = BTreeSet::new();
 
     // For #![rustfmt::skip].
-    features.insert(make_ident("custom_inner_attributes"));
+    features.insert(make_rs_ident("custom_inner_attributes"));
 
     // Identify all functions having overloads that we can't import (yet).
     // TODO(b/213280424): Implement support for overloaded functions.
@@ -831,7 +831,22 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     })
 }
 
-fn make_ident(ident: &str) -> Ident {
+/// Makes an 'Ident' to be used in the Rust source code. Escapes Rust keywords.
+fn make_rs_ident(ident: &str) -> Ident {
+    // TODO(https://github.com/dtolnay/syn/pull/1098): Remove the hardcoded list once syn recognizes
+    // 2018 and 2021 keywords.
+    if ["async", "await", "try", "dyn"].contains(&ident) {
+        return format_ident!("r#{}", ident);
+    }
+    match syn::parse_str::<syn::Ident>(ident) {
+        Ok(_) => format_ident!("{}", ident),
+        Err(_) => format_ident!("r#{}", ident),
+    }
+}
+
+/// Makes an `Ident` to be used in the C++ source code. Does not escape C++
+/// keywords.
+fn make_cc_ident(ident: &str) -> Ident {
     format_ident!("{}", ident)
 }
 
@@ -840,12 +855,12 @@ fn rs_type_name_for_target_and_identifier(
     identifier: &ir::Identifier,
     ir: &IR,
 ) -> Result<TokenStream> {
-    let ident = make_ident(identifier.identifier.as_str());
+    let ident = make_rs_ident(identifier.identifier.as_str());
 
     if ir.is_current_target(owning_target) || ir.is_stdlib_target(owning_target) {
         Ok(quote! {#ident})
     } else {
-        let owning_crate = make_ident(owning_target.target_name()?);
+        let owning_crate = make_rs_ident(owning_target.target_name()?);
         Ok(quote! {#owning_crate::#ident})
     }
 }
@@ -985,7 +1000,7 @@ impl<'ir> RsTypeKind<'ir> {
             )?,
             RsTypeKind::Unit => quote! {()},
             RsTypeKind::Other { name, type_args } => {
-                let ident = make_ident(name);
+                let ident = make_rs_ident(name);
                 let generic_params = format_generic_params(
                     type_args
                         .iter()
@@ -1158,7 +1173,7 @@ fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
         _ => bail!("Item does not define a type: {:?}", item),
     };
 
-    let ident = make_ident(identifier.identifier.as_str());
+    let ident = make_cc_ident(identifier.identifier.as_str());
     Ok(quote! { #disambiguator_fragment #ident })
 }
 
@@ -1189,7 +1204,7 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 if !ty.type_args.is_empty() {
                     bail!("Type not yet supported: {:?}", ty);
                 }
-                let idents = cc_type_name.split_whitespace().map(make_ident);
+                let idents = cc_type_name.split_whitespace().map(make_cc_ident);
                 Ok(quote! {#( #idents )* #const_fragment})
             }
         }
@@ -1204,12 +1219,12 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
         return quote! {};
     }
-    let record_ident = make_ident(&record.identifier.identifier);
+    let record_ident = make_cc_ident(&record.identifier.identifier);
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_assertions =
         record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
-            let field_ident = make_ident(&field.identifier.identifier);
+            let field_ident = make_cc_ident(&field.identifier.identifier);
             let offset = Literal::usize_unsuffixed(field.offset);
             // The IR contains the offset in bits, while C++'s offsetof()
             // returns the offset in bytes, so we need to convert.
@@ -1245,7 +1260,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         let thunk_ident = thunk_ident(func);
         let implementation_function = match &func.name {
             UnqualifiedIdentifier::Identifier(id) => {
-                let fn_ident = make_ident(&id.identifier);
+                let fn_ident = make_cc_ident(&id.identifier);
                 let static_method_metadata = func
                     .member_func_metadata
                     .as_ref()
@@ -1253,7 +1268,8 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                 match static_method_metadata {
                     None => quote! {#fn_ident},
                     Some(meta) => {
-                        let record_ident = make_ident(&meta.find_record(ir)?.identifier.identifier);
+                        let record_ident =
+                            make_cc_ident(&meta.find_record(ir)?.identifier.identifier);
                         quote! { #record_ident :: #fn_ident }
                     }
                 }
@@ -1277,7 +1293,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         };
 
         let param_idents =
-            func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
+            func.params.iter().map(|p| make_cc_ident(&p.identifier.identifier)).collect_vec();
 
         let param_types = func
             .params
@@ -1299,7 +1315,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                 .params
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
-            let this_arg = make_ident(&this_param.identifier.identifier);
+            let this_arg = make_cc_ident(&this_param.identifier.identifier);
             (
                 quote! { #this_arg -> #implementation_function},
                 param_idents.iter().skip(1).cloned().collect_vec(),
@@ -1316,9 +1332,9 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
     let layout_assertions = ir.records().map(|record| cc_struct_layout_assertion(record, ir));
 
     let mut standard_headers = <BTreeSet<Ident>>::new();
-    standard_headers.insert(make_ident("memory")); // ubiquitous.
+    standard_headers.insert(make_cc_ident("memory")); // ubiquitous.
     if ir.records().next().is_some() {
-        standard_headers.insert(make_ident("cstddef"));
+        standard_headers.insert(make_cc_ident("cstddef"));
     };
 
     let mut includes =
@@ -2021,7 +2037,7 @@ mod tests {
     #[test]
     fn test_thunk_ident_function() {
         let func = ir_func("foo");
-        assert_eq!(thunk_ident(&func), make_ident("__rust_thunk___Z3foov"));
+        assert_eq!(thunk_ident(&func), make_rs_ident("__rust_thunk___Z3foov"));
     }
 
     #[test]
@@ -2030,11 +2046,11 @@ mod tests {
 
         let destructor =
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
-        assert_eq!(thunk_ident(&destructor), make_ident("__rust_thunk___ZN5ClassD1Ev"));
+        assert_eq!(thunk_ident(&destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));
 
         let constructor =
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Constructor).unwrap();
-        assert_eq!(thunk_ident(&constructor), make_ident("__rust_thunk___ZN5ClassC1Ev"));
+        assert_eq!(thunk_ident(&constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
     }
 
     #[test]
@@ -2066,7 +2082,7 @@ mod tests {
     fn test_format_generic_params() -> Result<()> {
         assert_rs_matches!(format_generic_params(std::iter::empty::<syn::Ident>()), quote! {});
 
-        let idents = ["T1", "T2"].iter().map(|s| make_ident(s));
+        let idents = ["T1", "T2"].iter().map(|s| make_rs_ident(s));
         assert_rs_matches!(format_generic_params(idents), quote! { < T1, T2 > });
 
         let lifetimes = ["a", "b"]
@@ -2264,6 +2280,22 @@ mod tests {
         assert!(!foo_type.is_shared_ref_to(record));
         assert!(matches!(foo_type, RsTypeKind::Pointer { mutability: Mutability::Const, .. }));
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
+        let ir = ir_from_cc("struct type { int dyn; };")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: i32 ... } });
+        Ok(())
+    }
+
+    #[test]
+    fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
+        let ir = ir_from_cc("struct type { int dyn; };")?;
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(offsetof(class type, dyn) ... ) });
         Ok(())
     }
 }
