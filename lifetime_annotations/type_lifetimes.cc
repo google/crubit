@@ -205,13 +205,24 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
     // Second case: struct. We need to construct potentally reshuffled
     // template arguments, if the struct is a template.
     std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes;
+    size_t parameter_pack_expansion_index = 0;
     for (const clang::TemplateArgument& arg : GetTemplateArgs(type)) {
       if (arg.getKind() == clang::TemplateArgument::Type) {
         if (auto templ_arg = clang::dyn_cast<clang::SubstTemplateTypeParmType>(
                 arg.getAsType())) {
+          // Template parameter packs get the index of the *pack*, not the index
+          // of the type inside the pack itself. As they must appear last, we
+          // can just increase the counter at every occurrence and wraparound
+          // when we run out of template arguments.
+          size_t index = templ_arg->getReplacedParameter()->getIndex();
+          if (templ_arg->getReplacedParameter()->isParameterPack()) {
+            index += parameter_pack_expansion_index++;
+            if (index + 1 >= value_lifetimes_.GetNumTemplateArguments()) {
+              parameter_pack_expansion_index = 0;
+            }
+          }
           template_argument_lifetimes.push_back(
-              value_lifetimes_.GetTemplateArgumentLifetimes(
-                  templ_arg->getReplacedParameter()->getIndex()));
+              value_lifetimes_.GetTemplateArgumentLifetimes(index));
         } else {
           // Create a new ValueLifetimes of the type of the template parameter,
           // with lifetime `lifetime_`.

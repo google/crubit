@@ -96,6 +96,11 @@ class ValueLifetimes {
     return template_argument_lifetimes_.at(i);
   }
 
+  size_t GetNumTemplateArguments() const {
+    assert(type_->isRecordType());
+    return template_argument_lifetimes_.size();
+  }
+
  private:
   explicit ValueLifetimes(clang::QualType type) : type_(type) {}
 
