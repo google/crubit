@@ -12,8 +12,8 @@ use memoffset_unstable_const::offset_of;
 pub type __builtin_ms_va_list = *mut u8;
 
 #[inline(always)]
-pub fn free_function(p1: *mut i32) -> *mut i32 {
-    unsafe { crate::detail::__rust_thunk___Z13free_functionRi(p1) }
+pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
+    crate::detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
 #[derive(Clone, Copy)]
@@ -29,15 +29,15 @@ pub struct S {
 
 impl S {
     #[inline(always)]
-    pub fn const_method(__this: *const S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
-        unsafe { crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2) }
+    pub unsafe fn const_method(__this: *const S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
 }
 
 impl S {
     #[inline(always)]
-    pub fn method(__this: *mut S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
-        unsafe { crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2) }
+    pub unsafe fn method(__this: *mut S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
 
@@ -72,8 +72,8 @@ impl From<*const S> for S {
 // Parameter type 'struct S &&' is not supported
 
 #[inline(always)]
-pub fn take_pointer(p: *mut i32) {
-    unsafe { crate::detail::__rust_thunk___Z12take_pointerPi(p) }
+pub unsafe fn take_pointer(p: *mut i32) {
+    crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_

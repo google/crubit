@@ -210,15 +210,23 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     let param_idents =
         func.params.iter().map(|p| make_ident(&p.identifier.identifier)).collect_vec();
 
-    let param_types = func
+    let param_type_kinds = func
         .params
         .iter()
         .map(|p| {
-            format_rs_type(&p.type_.rs_type, ir, &lifetime_to_name).with_context(|| {
-                format!("Failed to format type for parameter {:?} on {:?}", p, func)
+            RsTypeKind::new(&p.type_.rs_type, ir).with_context(|| {
+                format!("Failed to process type of parameter {:?} on {:?}", p, func)
             })
         })
         .collect::<Result<Vec<_>>>()?;
+    let param_types = param_type_kinds
+        .iter()
+        .map(|t| {
+            t.format(ir, &lifetime_to_name)
+                .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let is_unsafe = param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
 
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
@@ -270,8 +278,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 }
                 2 => {
                     // TODO(lukasza): Do something smart with move constructor.
-                    let param_rs_type_kind = RsTypeKind::new(&func.params[1].type_.rs_type, ir)?;
-                    if param_rs_type_kind.is_shared_ref_to(record) {
+                    if param_type_kinds[1].is_shared_ref_to(record) {
                         // Copy constructor
                         if should_derive_clone(record) {
                             return Ok(None);
@@ -308,7 +315,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             .map(|(ident, type_)| quote! { #ident : #type_ })
             .collect_vec();
         let mut lifetimes = func.lifetime_params.iter().collect_vec();
-        let mut maybe_first_api_param = func.params.get(0);
+        let mut maybe_first_api_param = param_type_kinds.get(0);
 
         if func.name == UnqualifiedIdentifier::Constructor {
             return_type_fragment = quote! { -> Self };
@@ -320,21 +327,22 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             // TODO(lukasza): Avoid incorrectly trimming the lifetimes when a
             // lifetime of `__this` is also used in another parameter:
             // fn constructor<'a>(__this: &'a mut Self, x: &'a i32)
-            let maybe_first_lifetime =
-                maybe_first_api_param.unwrap().type_.rs_type.lifetime_args.first();
+            // TODO(lukasza): Should be able to guarantee presence of the
+            // lifetime once skipping generating unsafe constructor bindings.
+            let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
             if let Some(no_longer_needed_lifetime_id) = maybe_first_lifetime {
                 lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
             }
 
             // Rebind `maybe_first_api_param` to the next param after `__this`.
-            maybe_first_api_param = func.params.get(1);
+            maybe_first_api_param = param_type_kinds.get(1);
         }
 
         // Change `__this: &'a SomeStruct` into `&'a self` if needed.
         if format_first_param_as_self {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            let self_decl = RsTypeKind::new(&first_api_param.type_.rs_type, ir)?
+            let self_decl = first_api_param
                 .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
                 .with_context(|| {
                     format!("Failed to format as `self` param: {:?}", first_api_param)
@@ -346,7 +354,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         }
 
         let func_body = match &func.name {
-            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Destructor => {
+            UnqualifiedIdentifier::Identifier(_) => {
+                let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
+                // Only need to wrap everything in an `unsafe { ... }` block if
+                // the *whole* api function is safe.
+                if !is_unsafe {
+                    body = quote! { unsafe { #body } };
+                }
+                body
+            }
+            UnqualifiedIdentifier::Destructor => {
                 quote! { unsafe { crate::detail::#thunk_ident( #( #thunk_args ),* ) } }
             }
             UnqualifiedIdentifier::Constructor => {
@@ -368,9 +385,22 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             }
         };
 
-        let pub_ = match impl_kind {
-            ImplKind::None | ImplKind::Struct => quote! { pub },
-            ImplKind::Trait(_) => quote! {},
+        let (pub_, unsafe_) = match impl_kind {
+            ImplKind::None | ImplKind::Struct => (
+                quote! { pub },
+                if is_unsafe {
+                    quote! {unsafe}
+                } else {
+                    quote! {}
+                },
+            ),
+            ImplKind::Trait(_) => (
+                quote! {},
+                // TODO(b/214244223): Correctly handle `is_unsafe` when
+                // generating trait impls (treat destructors as safe, skip
+                // bindings for constructors and things like PartialEq).
+                quote! {},
+            ),
         };
 
         let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
@@ -378,7 +408,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
         quote! {
             #[inline(always)]
-            #pub_ fn #func_name #generic_params( #( #api_params ),* ) #return_type_fragment {
+            #pub_ #unsafe_ fn #func_name #generic_params( #( #api_params ),* ) #return_type_fragment {
                 #func_body
             }
         }
@@ -425,7 +455,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             if param_types.is_empty() || func.params.is_empty() {
                 bail!("Constructors should have at least one parameter (__this)");
             }
-            param_types[0] = RsTypeKind::new(&func.params[0].type_.rs_type, ir)?
+            param_types[0] = param_type_kinds[0]
                 .format_as_this_param_for_constructor_thunk(ir, &lifetime_to_name)
                 .with_context(|| {
                     format!("Failed to format `__this` param for a thunk: {:?}", func.params[0])
@@ -1660,8 +1690,8 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn Deref(p: *const *mut i32) -> *mut i32 {
-                    unsafe { crate::detail::__rust_thunk___Z5DerefPKPi(p) }
+                pub unsafe fn Deref(p: *const *mut i32) -> *mut i32 {
+                    crate::detail::__rust_thunk___Z5DerefPKPi(p)
                 }
             }
         );
@@ -1705,8 +1735,8 @@ mod tests {
             rs_api,
             quote! {
                 #[inline(always)]
-                pub fn f(str: *const i8) {
-                    unsafe { crate::detail::__rust_thunk___Z1fPKc(str) }
+                pub unsafe fn f(str: *const i8) {
+                    crate::detail::__rust_thunk___Z1fPKc(str)
                 }
             }
         );
@@ -2053,8 +2083,7 @@ mod tests {
         // functions yet, except in the case of overloaded constructors with a
         // single parameter.
         let ir = ir_from_cc(
-            r#"
-                void f();
+            r#" void f();
                 void f(int i);
                 struct S1 final {
                   void f();
@@ -2083,7 +2112,7 @@ mod tests {
 
         // But we can import member functions that have the same name as a free
         // function.
-        assert_rs_matches!(rs_api, quote! {pub fn f(__this: *mut S2)});
+        assert_rs_matches!(rs_api, quote! {pub unsafe fn f(__this: *mut S2)});
 
         // We can also import overloaded single-parameter constructors.
         assert_rs_matches!(rs_api, quote! {impl From<i32> for S3});
