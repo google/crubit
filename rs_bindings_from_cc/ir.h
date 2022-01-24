@@ -471,8 +471,9 @@ struct IR {
   // is generated from.
   std::vector<HeaderName> used_headers;
   BlazeLabel current_target;
-  std::vector<std::variant<Func, Record, TypeAlias, UnsupportedItem, Comment>>
-      items;
+
+  using Item = std::variant<Func, Record, TypeAlias, UnsupportedItem, Comment>;
+  std::vector<Item> items;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {

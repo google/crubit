@@ -21,30 +21,6 @@ pub struct SomeClass {
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Nested classes are not supported yet
 
-impl SomeClass {
-    /// Example of a factory method.
-    #[inline(always)]
-    pub fn static_factory_method(initial_value_of_field: i32) -> SomeClass {
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
-                initial_value_of_field,
-            )
-        }
-    }
-}
-
-impl SomeClass {
-    /// Static method working on primitive types (and unrelated to the struct).
-    #[inline(always)]
-    pub fn static_method_that_multiplies_its_args(x: i32, y: i32) -> i32 {
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
-                x, y,
-            )
-        }
-    }
-}
-
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
@@ -75,12 +51,43 @@ impl From<*const SomeClass> for SomeClass {
 // Error while generating bindings for item 'SomeClass::operator=':
 // Parameter type 'class SomeClass &&' is not supported
 
+impl SomeClass {
+    /// Example of a factory method.
+    #[inline(always)]
+    pub fn static_factory_method(initial_value_of_field: i32) -> SomeClass {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
+                initial_value_of_field,
+            )
+        }
+    }
+}
+
+impl SomeClass {
+    /// Static method working on primitive types (and unrelated to the struct).
+    #[inline(always)]
+    pub fn static_method_that_multiplies_its_args(x: i32, y: i32) -> i32 {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
+                x, y,
+            )
+        }
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_STATIC_METHODS_H_
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(
+            __this: &mut std::mem::MaybeUninit<SomeClass>,
+        );
+        pub(crate) fn __rust_thunk___ZN9SomeClassC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<SomeClass>,
+            __param_0: *const SomeClass,
+        );
         #[link_name = "_ZN9SomeClass21static_factory_methodEi"]
         pub(crate) fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
             initial_value_of_field: i32,
@@ -90,13 +97,6 @@ mod detail {
             x: i32,
             y: i32,
         ) -> i32;
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(
-            __this: &mut std::mem::MaybeUninit<SomeClass>,
-        );
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<SomeClass>,
-            __param_0: *const SomeClass,
-        );
     }
 }
 

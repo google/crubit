@@ -63,14 +63,6 @@ pub struct ContainingStruct {
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=23
-// Error while generating bindings for item 'ContainingStruct::NestedStruct':
-// Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=23
-// Error while generating bindings for item 'ContainingStruct::NestedStruct::NestedStruct':
-// Nested classes are not supported yet
-
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -100,6 +92,14 @@ impl From<*const ContainingStruct> for ContainingStruct {
 // rs_bindings_from_cc/test/golden/unsupported.h;l=22
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // Parameter type 'struct ContainingStruct &&' is not supported
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=23
+// Error while generating bindings for item 'ContainingStruct::NestedStruct':
+// Nested classes are not supported yet
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=23
+// Error while generating bindings for item 'ContainingStruct::NestedStruct::NestedStruct':
+// Nested classes are not supported yet
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 

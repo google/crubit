@@ -27,20 +27,6 @@ pub struct S {
 // Error while generating bindings for item 'S::S':
 // Nested classes are not supported yet
 
-impl S {
-    #[inline(always)]
-    pub unsafe fn const_method(__this: *const S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
-        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
-    }
-}
-
-impl S {
-    #[inline(always)]
-    pub unsafe fn method(__this: *mut S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
-        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
-    }
-}
-
 impl Default for S {
     #[inline(always)]
     fn default() -> Self {
@@ -71,6 +57,20 @@ impl From<*const S> for S {
 // Error while generating bindings for item 'S::operator=':
 // Parameter type 'struct S &&' is not supported
 
+impl S {
+    #[inline(always)]
+    pub unsafe fn const_method(__this: *const S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
+    }
+}
+
+impl S {
+    #[inline(always)]
+    pub unsafe fn method(__this: *mut S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
+    }
+}
+
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut i32) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
@@ -84,6 +84,11 @@ mod detail {
     extern "C" {
         #[link_name = "_Z13free_functionRi"]
         pub(crate) fn __rust_thunk___Z13free_functionRi(p1: *mut i32) -> *mut i32;
+        pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: &mut std::mem::MaybeUninit<S>);
+        pub(crate) fn __rust_thunk___ZN1SC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<S>,
+            __param_0: *const S,
+        );
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const S,
@@ -96,11 +101,6 @@ mod detail {
             p1: *mut i32,
             p2: *mut i32,
         ) -> *mut i32;
-        pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: &mut std::mem::MaybeUninit<S>);
-        pub(crate) fn __rust_thunk___ZN1SC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<S>,
-            __param_0: *const S,
-        );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut i32);
     }

@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -99,7 +100,7 @@ bool AstVisitor::TraverseDecl(clang::Decl* decl) {
 
   // Skip declarations that we've already seen, except for namespaces, which
   // can and typically will contain new declarations when they are "reopened".
-  if (!seen_decls_.insert(decl->getCanonicalDecl()).second &&
+  if (seen_decls_.contains(decl->getCanonicalDecl()) &&
       !clang::isa<clang::NamespaceDecl>(decl)) {
     return true;
   }
@@ -135,7 +136,62 @@ bool AstVisitor::TraverseTranslationUnitDecl(
   // Emit comments after the last decl
   comment_manager_.FlushComments();
 
+  EmitIRItems();
+
   return result;
+}
+
+void AstVisitor::EmitIRItems() {
+  std::vector<std::tuple<clang::SourceLocation, int, IR::Item>> items;
+
+  // We emit IR items in the order of the decls they were generated for.
+  // For decls that emit multiple items we use a stable, but arbitrary order.
+
+  for (const auto& [decl, decl_items] : seen_decls_) {
+    for (const auto& decl_item : decl_items) {
+      int local_order;
+
+      if (clang::isa<clang::RecordDecl>(decl)) {
+        local_order = decl->getDeclContext()->isRecord() ? 1 : 0;
+      } else if (auto ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl)) {
+        local_order = ctor->isDefaultConstructor() ? 2
+                      : ctor->isCopyConstructor()  ? 3
+                      : ctor->isMoveConstructor()  ? 4
+                                                   : 5;
+      } else if (clang::isa<clang::CXXDestructorDecl>(decl)) {
+        local_order = 6;
+      } else {
+        local_order = 7;
+      }
+
+      items.push_back(
+          std::make_tuple(decl->getBeginLoc(), local_order, decl_item));
+    }
+  }
+
+  clang::SourceManager& sm = ctx_->getSourceManager();
+  for (auto comment : comment_manager_.comments()) {
+    items.push_back(std::make_tuple(
+        comment->getBeginLoc(), 0,
+        Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())}));
+  }
+
+  std::stable_sort(items.begin(), items.end(),
+                   [&](const auto& a, const auto& b) {
+                     auto aloc = std::get<0>(a);
+                     auto bloc = std::get<0>(b);
+
+                     if (!aloc.isValid() || !bloc.isValid()) {
+                       return !aloc.isValid() && bloc.isValid();
+                     }
+
+                     return sm.isBeforeInTranslationUnit(aloc, bloc) ||
+                            (aloc == bloc && std::get<1>(a) < std::get<1>(b));
+                   });
+
+  for (const auto& item : items) {
+    ir_.items.push_back(std::get<2>(item));
+  }
 }
 
 bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
@@ -304,7 +360,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
   if (success && translated_name.has_value()) {
-    ir_.items.push_back(Func{
+    seen_decls_[function_decl->getCanonicalDecl()].push_back(Func{
         .name = *translated_name,
         .owning_target = GetOwningTarget(function_decl),
         .doc_comment = GetComment(function_decl),
@@ -414,7 +470,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     return true;
   }
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
-  ir_.items.push_back(
+  seen_decls_[record_decl->getCanonicalDecl()].push_back(
       Record{.identifier = *record_name,
              .id = GenerateDeclId(record_decl),
              .owning_target = GetOwningTarget(record_decl),
@@ -462,7 +518,7 @@ bool AstVisitor::VisitTypedefNameDecl(
       ConvertType(typedef_name_decl->getUnderlyingType());
   if (underlying_type.ok()) {
     known_type_decls_.insert(typedef_name_decl);
-    ir_.items.push_back(
+    seen_decls_[typedef_name_decl->getCanonicalDecl()].push_back(
         TypeAlias{.identifier = *identifier,
                   .id = GenerateDeclId(typedef_name_decl),
                   .owning_target = GetOwningTarget(typedef_name_decl),
@@ -499,7 +555,7 @@ void AstVisitor::PushUnsupportedItem(const clang::Decl* decl,
   if (const auto* named_decl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  ir_.items.push_back(UnsupportedItem{
+  seen_decls_[decl->getCanonicalDecl()].push_back(UnsupportedItem{
       .name = std::move(name),
       .message = std::move(message),
       .source_loc = ConvertSourceLocation(std::move(source_location))});
@@ -589,7 +645,7 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
           }
         }
     }
-  } else if (const auto *tag_type =
+  } else if (const auto* tag_type =
                  qual_type->getAsAdjusted<clang::TagType>()) {
     clang::TagDecl* tag_decl = tag_type->getDecl();
 
@@ -600,7 +656,7 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
         type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
       }
     }
-  } else if (const auto *typedef_type =
+  } else if (const auto* typedef_type =
                  qual_type->getAsAdjusted<clang::TypedefType>()) {
     clang::TypedefNameDecl* typedef_name_decl = typedef_type->getDecl();
 
@@ -791,10 +847,8 @@ void AstVisitor::CommentManager::FlushComments() {
 }
 
 void AstVisitor::CommentManager::VisitTopLevelComment(
-    clang::RawComment* comment) {
-  clang::SourceManager& sm = ctx_->getSourceManager();
-  ir_.items.push_back(
-      Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())});
+    const clang::RawComment* comment) {
+  comments_.push_back(comment);
 }
 
 }  // namespace rs_bindings_from_cc

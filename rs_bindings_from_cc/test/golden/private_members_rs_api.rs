@@ -22,20 +22,6 @@ pub struct SomeClass {
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Nested classes are not supported yet
 
-impl SomeClass {
-    #[inline(always)]
-    pub fn public_method<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
-    }
-}
-
-impl SomeClass {
-    #[inline(always)]
-    pub fn public_static_method() {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass20public_static_methodEv() }
-    }
-}
-
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
@@ -66,16 +52,26 @@ impl From<*const SomeClass> for SomeClass {
 // Error while generating bindings for item 'SomeClass::operator=':
 // Parameter type 'class SomeClass &&' is not supported
 
+impl SomeClass {
+    #[inline(always)]
+    pub fn public_method<'a>(&'a mut self) {
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
+    }
+}
+
+impl SomeClass {
+    #[inline(always)]
+    pub fn public_static_method() {
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass20public_static_methodEv() }
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_MEMBERS_H_
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        #[link_name = "_ZN9SomeClass13public_methodEv"]
-        pub(crate) fn __rust_thunk___ZN9SomeClass13public_methodEv<'a>(__this: &'a mut SomeClass);
-        #[link_name = "_ZN9SomeClass20public_static_methodEv"]
-        pub(crate) fn __rust_thunk___ZN9SomeClass20public_static_methodEv();
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(
             __this: &mut std::mem::MaybeUninit<SomeClass>,
         );
@@ -83,6 +79,10 @@ mod detail {
             __this: &mut std::mem::MaybeUninit<SomeClass>,
             __param_0: *const SomeClass,
         );
+        #[link_name = "_ZN9SomeClass13public_methodEv"]
+        pub(crate) fn __rust_thunk___ZN9SomeClass13public_methodEv<'a>(__this: &'a mut SomeClass);
+        #[link_name = "_ZN9SomeClass20public_static_methodEv"]
+        pub(crate) fn __rust_thunk___ZN9SomeClass20public_static_methodEv();
     }
 }
 

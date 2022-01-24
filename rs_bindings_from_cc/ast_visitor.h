@@ -51,7 +51,6 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
         headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
         ir_(*ABSL_DIE_IF_NULL(ir)),
         ctx_(nullptr),
-        comment_manager_(*ABSL_DIE_IF_NULL(ir)),
         lifetime_context_(lifetime_context) {}
 
   // These functions are called by the base class while visiting the different
@@ -72,6 +71,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
  private:
   std::optional<std::vector<Field>> ImportFields(
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
+  void EmitIRItems();
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
   BlazeLabel GetOwningTarget(const clang::Decl* decl) const;
@@ -133,15 +133,13 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   IR& ir_;
   clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;
-  absl::flat_hash_set<const clang::Decl*> seen_decls_;
+  absl::flat_hash_map<const clang::Decl*, std::vector<IR::Item>> seen_decls_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 
-  // A component that keeps track of all comments and emits IR for all top-level
-  // comments that are not doc comments.
+  // A component that keeps track of all top-level comments that are not doc
+  // comments.
   class CommentManager {
    public:
-    explicit CommentManager(IR& ir) : ir_(ir) {}
-
     // Notify the comment manager that we the visitor is traversing a decl.
     // This will emit IR for all preceding comments.
     void TraverseDecl(clang::Decl* decl);
@@ -149,15 +147,20 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
     // Emit IR for the remaining comments after the last decl.
     void FlushComments();
 
+    // Return the found comments.
+    const std::vector<const clang::RawComment*>& comments() const {
+      return comments_;
+    }
+
    private:
     void LoadComments();
-    void VisitTopLevelComment(clang::RawComment* comment);
+    void VisitTopLevelComment(const clang::RawComment* comment);
 
-    IR& ir_;
     clang::ASTContext* ctx_;
     clang::FileID current_file_;
-    std::vector<clang::RawComment*> file_comments_;
-    std::vector<clang::RawComment*>::iterator next_comment_;
+    std::vector<const clang::RawComment*> file_comments_;
+    std::vector<const clang::RawComment*>::iterator next_comment_;
+    std::vector<const clang::RawComment*> comments_;
   };
 
   CommentManager comment_manager_;

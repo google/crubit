@@ -25,6 +25,25 @@ pub struct DocCommentSlashes {
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
 // Nested classes are not supported yet
 
+impl From<*const DocCommentSlashes> for DocCommentSlashes {
+    #[inline(always)]
+    fn from(__param_0: *const DocCommentSlashes) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1ERKS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
+// Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
+// Parameter type 'struct DocCommentSlashes &&' is not supported
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
+// Error while generating bindings for item 'DocCommentSlashes::operator=':
+// Parameter type 'struct DocCommentSlashes &&' is not supported
+
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
 impl Default for DocCommentSlashes {
@@ -76,25 +95,6 @@ impl DocCommentSlashes {
         unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }
-
-impl From<*const DocCommentSlashes> for DocCommentSlashes {
-    #[inline(always)]
-    fn from(__param_0: *const DocCommentSlashes) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
-// Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
-// Parameter type 'struct DocCommentSlashes &&' is not supported
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
-// Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Parameter type 'struct DocCommentSlashes &&' is not supported
 
 /// Doc comment
 ///
@@ -284,6 +284,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
+            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
+            __param_0: *const DocCommentSlashes,
+        );
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
@@ -304,10 +308,6 @@ mod detail {
         );
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
-        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<DocCommentSlashes>,
-            __param_0: *const DocCommentSlashes,
-        );
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev(
             __this: &mut std::mem::MaybeUninit<DocCommentBang>,
         );
