@@ -12,6 +12,8 @@
 
 struct SomeStruct final {};
 
+union SomeUnion {};
+
 struct FieldTypeTestStruct final {
   bool bool_field;
   char char_field;

@@ -428,6 +428,12 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     }
   }
 
+  if (record_decl->isUnion()) {
+    PushUnsupportedItem(record_decl, "Unions are not supported yet",
+                        record_decl->getBeginLoc());
+    return true;
+  }
+
   // Make sure the record has a definition that we'll be able to call
   // ASTContext::getASTRecordLayout() on.
   record_decl = record_decl->getDefinition();

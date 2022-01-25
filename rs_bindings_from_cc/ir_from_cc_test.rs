@@ -109,6 +109,19 @@ fn test_dont_import_class_template_or_specialization() {
 }
 
 #[test]
+fn test_union_not_supported_yet() {
+    let ir = ir_from_cc("union SomeUnion {};").unwrap();
+    assert_ir_not_matches!(ir, quote! { Record { identifier: "SomeUnion" ... } });
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+            name: "SomeUnion",
+            message: "Unions are not supported yet" ...
+        }}
+    );
+}
+
+#[test]
 fn test_record_member_variable_access_specifiers() {
     let ir = ir_from_cc(
         "

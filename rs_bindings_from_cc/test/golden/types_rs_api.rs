@@ -194,6 +194,14 @@ impl From<*const SomeStruct> for SomeStruct {
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter type 'struct SomeStruct &&' is not supported
 
+// rs_bindings_from_cc/test/golden/types.h;l=11
+// Error while generating bindings for item 'SomeUnion':
+// Unions are not supported yet
+
+// rs_bindings_from_cc/test/golden/types.h;l=11
+// Error while generating bindings for item 'SomeUnion::SomeUnion':
+// Nested classes are not supported yet
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FieldTypeTestStruct {
@@ -250,7 +258,7 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ref_field: *const SomeStruct,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=11
+// rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Nested classes are not supported yet
 
@@ -265,7 +273,7 @@ impl From<*const FieldTypeTestStruct> for FieldTypeTestStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=11
+// rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Parameter type 'struct FieldTypeTestStruct &&' is not supported
 
