@@ -43,11 +43,6 @@ void AddLifetimeAnnotationHandlers(
     clang::Preprocessor& preprocessor,
     std::shared_ptr<LifetimeAnnotationContext> context);
 
-// Returns any template arguments present on `type_loc`. If `type_loc` does not
-// have template arguments, returns an empty vector.
-// This helper function is placed here to be able to share it with clang-tidy.
-llvm::SmallVector<clang::TypeLoc> GetTemplateArgs(clang::TypeLoc type_loc);
-
 }  // namespace devtools_rust
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_

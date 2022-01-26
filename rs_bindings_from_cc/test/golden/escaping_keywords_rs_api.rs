@@ -28,17 +28,6 @@ impl Default for r#type {
     }
 }
 
-impl From<*const r#type> for r#type {
-    #[inline(always)]
-    fn from(__param_0: *const r#type) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN4typeC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::type':
 // Parameter type 'struct type &&' is not supported
@@ -74,11 +63,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN4typeC1Ev(__this: &mut std::mem::MaybeUninit<r#type>);
-        pub(crate) fn __rust_thunk___ZN4typeC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<r#type>,
-            __param_0: *const r#type,
-        );
+        pub(crate) fn __rust_thunk___ZN4typeC1Ev<'a>(__this: &'a mut std::mem::MaybeUninit<r#type>);
         #[link_name = "_Z4impli"]
         pub(crate) fn __rust_thunk___Z4impli(r#match: i32);
     }

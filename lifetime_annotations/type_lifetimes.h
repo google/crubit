@@ -153,6 +153,9 @@ class ObjectLifetimes {
   ValueLifetimes value_lifetimes_;
 };
 
+// TODO(lukasza): Try deduplicating GetTemplateArgs(QualType) vs
+// GetTemplateArgs(TypeLoc) in
+// google3/devtools/cymbal/clang_tidy/runtime/lifetimes.cc
 const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
     clang::QualType type);
 

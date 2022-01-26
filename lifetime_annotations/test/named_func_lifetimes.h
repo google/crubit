@@ -16,6 +16,9 @@
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringMap.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
 
 namespace devtools_rust {
 
@@ -42,12 +45,19 @@ class NamedFuncLifetimes {
   NamedFuncLifetimes& operator=(NamedFuncLifetimes&&) = default;
 
   NamedFuncLifetimes(
-      std::initializer_list<std::pair<llvm::StringRef, std::string>> values)
-      : lifetimes_(std::move(values)) {}
+      std::initializer_list<std::pair<llvm::StringRef, std::string>> values) {
+    for (const auto& pair : values) Add(pair.first, pair.second);
+  }
 
   // Associates the function called `func` with the named lifetimes `lifetimes`.
   void Add(llvm::StringRef func, llvm::StringRef lifetimes) {
-    lifetimes_.try_emplace(func, lifetimes);
+    bool did_insert = false;
+    std::tie(std::ignore, did_insert) = lifetimes_.try_emplace(func, lifetimes);
+    if (!did_insert) {
+      llvm::report_fatal_error(llvm::formatv(
+          "Calling `Add('{0}', ...)` clobbered an existing lifetimes entry",
+          func));
+    }
   }
 
   // Returns the named lifetimes for the function called `func`.

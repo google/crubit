@@ -927,3 +927,48 @@ fn test_elided_lifetimes() {
     assert_eq!(func.params[1].type_.rs_type.name, Some("&mut".to_string()));
     assert_eq!(func.params[1].type_.rs_type.lifetime_args, vec![b_id]);
 }
+
+fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
+    let r = ir.records().next().expect("IR should contain `struct S`");
+    assert_eq!(r.identifier, ir_id("S"));
+    assert!(r.is_trivial_abi);
+
+    let f = ir
+        .functions()
+        .find(|f| matches!(&f.name, UnqualifiedIdentifier::Constructor) && f.params.len() == 1)
+        .expect("IR should contain the default constructor");
+    assert_eq!(f.lifetime_params.len(), 1);
+
+    let p = f.params.first().expect("IR should contain `__this` parameter");
+    assert_eq!(p.identifier, ir_id("__this"));
+
+    let t = &p.type_.rs_type;
+    assert_eq!(t.lifetime_args.len(), 1);
+    assert_eq!(t.lifetime_args[0], f.lifetime_params[0].id);
+    assert_eq!(t.name, Some("&mut".to_string()));
+}
+
+#[test]
+fn test_elided_lifetimes_in_default_constructor_with_implicit_default() {
+    let ir = ir_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct S {
+          int i;
+        };"#,
+    )
+    .unwrap();
+    verify_elided_lifetimes_in_default_constructor(&ir);
+}
+
+#[test]
+fn test_elided_lifetimes_in_default_constructor_with_explicit_default() {
+    let ir = ir_from_cc(
+        r#"#pragma clang lifetime_elision
+        struct S {
+          S() = default;
+          int i;
+        };"#,
+    )
+    .unwrap();
+    verify_elided_lifetimes_in_default_constructor(&ir);
+}

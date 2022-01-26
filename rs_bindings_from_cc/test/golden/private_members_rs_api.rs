@@ -29,17 +29,6 @@ impl Default for SomeClass {
     }
 }
 
-impl From<*const SomeClass> for SomeClass {
-    #[inline(always)]
-    fn from(__param_0: *const SomeClass) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::SomeClass':
 // Parameter type 'class SomeClass &&' is not supported
@@ -68,12 +57,8 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev(
-            __this: &mut std::mem::MaybeUninit<SomeClass>,
-        );
-        pub(crate) fn __rust_thunk___ZN9SomeClassC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<SomeClass>,
-            __param_0: *const SomeClass,
+        pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
+            __this: &'a mut std::mem::MaybeUninit<SomeClass>,
         );
         #[link_name = "_ZN9SomeClass13public_methodEv"]
         pub(crate) fn __rust_thunk___ZN9SomeClass13public_methodEv<'a>(__this: &'a mut SomeClass);

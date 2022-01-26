@@ -28,17 +28,6 @@ impl Default for FirstStruct {
     }
 }
 
-impl From<*const FirstStruct> for FirstStruct {
-    #[inline(always)]
-    fn from(__param_0: *const FirstStruct) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Parameter type 'struct FirstStruct &&' is not supported
@@ -69,17 +58,6 @@ impl Default for SecondStruct {
     }
 }
 
-impl From<*const SecondStruct> for SecondStruct {
-    #[inline(always)]
-    fn from(__param_0: *const SecondStruct) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Parameter type 'struct SecondStruct &&' is not supported
@@ -99,20 +77,12 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev(
-            __this: &mut std::mem::MaybeUninit<FirstStruct>,
-        );
-        pub(crate) fn __rust_thunk___ZN11FirstStructC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<FirstStruct>,
-            __param_0: *const FirstStruct,
+        pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
+            __this: &'a mut std::mem::MaybeUninit<FirstStruct>,
         );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
-        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev(
-            __this: &mut std::mem::MaybeUninit<SecondStruct>,
-        );
-        pub(crate) fn __rust_thunk___ZN12SecondStructC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<SecondStruct>,
-            __param_0: *const SecondStruct,
+        pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
+            __this: &'a mut std::mem::MaybeUninit<SecondStruct>,
         );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }

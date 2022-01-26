@@ -30,17 +30,6 @@ impl Default for Trivial {
     }
 }
 
-impl From<*const Trivial> for Trivial {
-    #[inline(always)]
-    fn from(__param_0: *const Trivial) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN7TrivialC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::Trivial':
 // Parameter type 'struct Trivial &&' is not supported
@@ -139,10 +128,8 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev(__this: &mut std::mem::MaybeUninit<Trivial>);
-        pub(crate) fn __rust_thunk___ZN7TrivialC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<Trivial>,
-            __param_0: *const Trivial,
+        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev<'a>(
+            __this: &'a mut std::mem::MaybeUninit<Trivial>,
         );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,

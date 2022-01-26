@@ -13,6 +13,7 @@
 #include "testing/base/public/gunit.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchFinder.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchers.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 
 namespace devtools_rust {
 namespace {
@@ -21,10 +22,17 @@ using testing::StartsWith;
 using testing::status::IsOkAndHolds;
 using testing::status::StatusIs;
 
+bool IsOverloaded(const clang::FunctionDecl* func) {
+  return !func->getDeclContext()->lookup(func->getDeclName()).isSingleResult();
+}
+
 std::string QualifiedName(const clang::FunctionDecl* func) {
   std::string str;
   llvm::raw_string_ostream ostream(str);
   func->printQualifiedName(ostream);
+  if (IsOverloaded(func)) {
+    ostream << "[" << func->getType().getAsString() << "]";
+  }
   ostream.flush();
   return str;
 }
@@ -58,9 +66,25 @@ class LifetimeAnnotationsTest : public testing::Test {
                     llvm::toString(func_lifetimes.takeError()));
                 return;
               }
-              named_func_lifetimes.Add(
-                  QualifiedName(func),
-                  NameLifetimes(*func_lifetimes, symbol_table));
+              std::string func_name = QualifiedName(func);
+              std::string new_entry =
+                  NameLifetimes(*func_lifetimes, symbol_table);
+              std::optional<llvm::StringRef> old_entry =
+                  named_func_lifetimes.Get(func_name);
+              if (old_entry.has_value()) {
+                if (new_entry != old_entry.value()) {
+                  result = absl::UnknownError(
+                      llvm::formatv(
+                          "Unexpectedly different lifetimes for function '{0}'."
+                          "Old: '{1}'. New: '{2}'.",
+                          func_name, old_entry.value(), new_entry)
+                          .str());
+                  return;
+                }
+              } else {
+                named_func_lifetimes.Add(std::move(func_name),
+                                         std::move(new_entry));
+              }
             }
           }
 
@@ -258,6 +282,28 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsInvalid_WrongNumber) {
   )"),
               StatusIs(absl::StatusCode::kUnknown,
                        StartsWith("Invalid lifetime annotation")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_ExplicitlyDefaultedCtor) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+          #pragma clang lifetime_elision
+          struct S {
+            S() = default;
+          };)"),
+              IsOkAndHolds(LifetimesAre({{"S::S", "a:"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_ImplicitlyDefaultedCtor) {
+  // Implicitly-defaulted constructors don't have associated `TypeSourceInfo`.
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(R"(
+          #pragma clang lifetime_elision
+          struct S {};
+          // We need to use the implicitly-defaulted constructors to make
+          // them appear in the AST so that we can process them.
+          void foo() { S s; }
+          )"),
+      IsOkAndHolds(LifetimesContain({{"S::S[void (void) noexcept]", "a:"}})));
 }
 
 }  // namespace
