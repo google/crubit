@@ -148,6 +148,28 @@ def _compile_rust(ctx, src, extra_deps):
         build_info = None,
     )
 
+public_headers_to_remove = {
+    "//base:base": [
+        "base/callback.h",  # //base:callback
+        "base/callback-specializations.h",  # //base:callback
+        "base/callback-types.h",  # //base:callback
+        "base/file_toc.h",  # //base:file_toc
+    ],
+}
+
+def _collect_hdrs(ctx):
+    public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
+    private_hdrs = _filter_hdrs(ctx.rule.files.srcs) if hasattr(ctx.rule.attr, "srcs") else []
+    label = str(ctx.label)
+    public_hdrs = [
+        h
+        for h in public_hdrs
+        if h.short_path not in public_headers_to_remove.get(label, [])
+    ]
+
+    all_standalone_hdrs = public_hdrs + private_hdrs
+    return public_hdrs, all_standalone_hdrs
+
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
@@ -161,10 +183,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if not hasattr(ctx.rule.attr, "hdrs"):
         return []
 
-    public_hdrs = _filter_hdrs(ctx.rule.files.hdrs)
-    private_hdrs = _filter_hdrs(ctx.rule.files.srcs) if hasattr(ctx.rule.attr, "srcs") else []
-
-    all_standalone_hdrs = public_hdrs + private_hdrs
+    public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
 
     targets_and_headers = depset(
         direct = [
