@@ -21,10 +21,16 @@ attach_aspect = rule(
     },
 )
 
+def _get_targets_and_headers(tut):
+    return [
+        json.decode(x)
+        for x in tut[RustBindingsFromCcInfo].targets_and_headers.to_list()
+    ]
+
 def _no_targets_and_headers_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    targets_and_headers = target_under_test[RustBindingsFromCcInfo].targets_and_headers.to_list()
+    targets_and_headers = _get_targets_and_headers(target_under_test)
 
     asserts.equals(env, len(targets_and_headers), 0)
 
@@ -43,17 +49,17 @@ def _test_no_targets_and_headers():
 def _targets_and_headers_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    targets_and_headers = target_under_test[RustBindingsFromCcInfo].targets_and_headers.to_list()
+    targets_and_headers = _get_targets_and_headers(target_under_test)
 
     asserts.equals(env, len(targets_and_headers), 1)
     asserts.equals(
         env,
-        targets_and_headers[0].t,
+        targets_and_headers[0]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:mylib",
     )
     asserts.equals(
         env,
-        targets_and_headers[0].h,
+        targets_and_headers[0]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/lib.h"],
     )
 
@@ -73,29 +79,29 @@ def _test_targets_and_headers():
 def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    targets_and_headers = target_under_test[RustBindingsFromCcInfo].targets_and_headers.to_list()
+    targets_and_headers = _get_targets_and_headers(target_under_test)
 
     asserts.equals(env, len(targets_and_headers), 2)
 
     asserts.equals(
         env,
-        targets_and_headers[0].t,
+        targets_and_headers[0]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:bottom",
     )
     asserts.equals(
         env,
-        targets_and_headers[0].h,
+        targets_and_headers[0]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/lib.h"],
     )
 
     asserts.equals(
         env,
-        targets_and_headers[1].t,
+        targets_and_headers[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:top",
     )
     asserts.equals(
         env,
-        targets_and_headers[1].h,
+        targets_and_headers[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/top.h"],
     )
 
@@ -119,13 +125,13 @@ def _test_targets_and_headers_propagate_with_cc_infos():
 def _textual_hdrs_not_in_targets_and_hdrs_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
-    targets_and_headers = target_under_test[RustBindingsFromCcInfo].targets_and_headers.to_list()
+    targets_and_headers = _get_targets_and_headers(target_under_test)
 
     # Check that none of the textual headers made it into the targets_and_headers provider.
     asserts.equals(env, len(targets_and_headers), 1)
     asserts.equals(
         env,
-        targets_and_headers[0].h,
+        targets_and_headers[0]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/nontextual.h"],
     )
 

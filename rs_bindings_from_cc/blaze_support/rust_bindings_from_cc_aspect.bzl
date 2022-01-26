@@ -24,15 +24,8 @@ RustBindingsFromCcInfo = provider(
         "cc_info": "A CcInfo provider for the implementation of the API projection.",
         "dep_variant_info": ("A DepVariantInfo provider that carries information from the " +
                              "compiled `.rs` file."),
-        "targets_and_headers": "A depset of TargetAndHeadersInfo.",
-    },
-)
-
-TargetAndHeadersInfo = provider(
-    """A provider used to store information about which headers belong to which target.""",
-    fields = {
-        "t": "a label of the target owning headers",
-        "h": "list of header paths",
+        "targets_and_headers": ("A depset of strings, each one representing mapping of target to " +
+                                "its headers in json format."),
     },
 )
 
@@ -187,12 +180,18 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
 
     public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
 
+    # At execution time we convert this depset to a json array that gets passed to our tool through
+    # the --targets_and_headers flag.
+    # We can improve upon this solution if:
+    # 1. we use a library for parsing command line flags that allows repeated flags.
+    # 2. instead of json string, we use a struct that will be expanded to flags at execution time.
+    #    This requires changes to Blaze.
     targets_and_headers = depset(
         direct = [
-            TargetAndHeadersInfo(
-                t = str(ctx.label),
-                h = [h.path for h in all_standalone_hdrs],
-            ),
+            json.encode({
+                "t": str(ctx.label),
+                "h": [h.path for h in all_standalone_hdrs],
+            }),
         ] if all_standalone_hdrs else [],
         transitive = [
             t[RustBindingsFromCcInfo].targets_and_headers
@@ -212,8 +211,6 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     hdrs_command_line = []
     if public_hdrs:
         hdrs_command_line.append("--public_headers=" + (",".join([x.short_path for x in public_hdrs])))
-    if targets_and_headers:
-        hdrs_command_line.append("--targets_and_headers=" + json.encode(targets_and_headers.to_list()))
 
     header_includes = []
     for hdr in public_hdrs:
@@ -259,6 +256,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                 "--cc_out",
                 cc_output.path,
             ] + hdrs_command_line,
+            "targets_and_headers": targets_and_headers,
         },
     )
 
