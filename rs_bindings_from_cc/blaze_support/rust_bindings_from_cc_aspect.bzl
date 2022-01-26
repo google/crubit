@@ -154,6 +154,8 @@ public_headers_to_remove = {
         "base/callback-specializations.h",  # //base:callback
         "base/callback-types.h",  # //base:callback
         "base/file_toc.h",  # //base:file_toc
+        "base/googleinit.h",  # //base:googleinit
+        "base/logging.h",  # //base:logging
     ],
 }
 
