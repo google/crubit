@@ -109,6 +109,18 @@ fn test_dont_import_class_template_or_specialization() {
 }
 
 #[test]
+fn test_function_template_not_supported_yet() {
+    let ir = ir_from_cc("template<typename SomeParam> void SomeFunctionTemplate() {};").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "SomeFunctionTemplate",
+          message: "Function templates are not supported yet" ...
+        }}
+    );
+}
+
+#[test]
 fn test_union_not_supported_yet() {
     let ir = ir_from_cc("union SomeUnion {};").unwrap();
     assert_ir_not_matches!(ir, quote! { Record { identifier: "SomeUnion" ... } });
