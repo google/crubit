@@ -142,11 +142,30 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 }
 
 void AstVisitor::EmitIRItems() {
-  std::vector<std::tuple<clang::SourceLocation, int, IR::Item>> items;
+  using OrderedItem = std::tuple<clang::SourceRange, int, IR::Item>;
+  clang::SourceManager& sm = ctx_->getSourceManager();
+  auto is_less_than = [&sm](const OrderedItem& a, const OrderedItem& b) {
+    auto a_range = std::get<0>(a);
+    auto b_range = std::get<0>(b);
+
+    if (!a_range.isValid() || !b_range.isValid()) {
+      if (a_range.isValid() != b_range.isValid())
+        return !a_range.isValid() && b_range.isValid();
+    } else {
+      if (a_range.getBegin() != b_range.getBegin()) {
+        return sm.isBeforeInTranslationUnit(a_range.getBegin(),
+                                            b_range.getBegin());
+      }
+      if (a_range.getEnd() != b_range.getEnd()) {
+        return sm.isBeforeInTranslationUnit(a_range.getEnd(), b_range.getEnd());
+      }
+    }
+    return std::get<1>(a) < std::get<1>(b);
+  };
 
   // We emit IR items in the order of the decls they were generated for.
   // For decls that emit multiple items we use a stable, but arbitrary order.
-
+  std::vector<OrderedItem> items;
   for (const auto& [decl, decl_items] : seen_decls_) {
     for (const auto& decl_item : decl_items) {
       int local_order;
@@ -165,29 +184,15 @@ void AstVisitor::EmitIRItems() {
       }
 
       items.push_back(
-          std::make_tuple(decl->getBeginLoc(), local_order, decl_item));
+          std::make_tuple(decl->getSourceRange(), local_order, decl_item));
     }
   }
-
-  clang::SourceManager& sm = ctx_->getSourceManager();
   for (auto comment : comment_manager_.comments()) {
     items.push_back(std::make_tuple(
-        comment->getBeginLoc(), 0,
+        comment->getSourceRange(), 0 /* local_order */,
         Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())}));
   }
-
-  std::stable_sort(items.begin(), items.end(),
-                   [&](const auto& a, const auto& b) {
-                     auto aloc = std::get<0>(a);
-                     auto bloc = std::get<0>(b);
-
-                     if (!aloc.isValid() || !bloc.isValid()) {
-                       return !aloc.isValid() && bloc.isValid();
-                     }
-
-                     return sm.isBeforeInTranslationUnit(aloc, bloc) ||
-                            (aloc == bloc && std::get<1>(a) < std::get<1>(b));
-                   });
+  std::stable_sort(items.begin(), items.end(), is_less_than);
 
   for (const auto& item : items) {
     ir_.items.push_back(std::get<2>(item));
