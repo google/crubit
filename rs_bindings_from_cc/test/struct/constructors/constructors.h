@@ -18,8 +18,20 @@ struct [[clang::trivial_abi]] StructWithUserProvidedConstructors final {
   // `impl Clone for StructWithUserProvidedConstructors { ... }`.
   StructWithUserProvidedConstructors(const StructWithUserProvidedConstructors&);
 
-  // `impl From<int> for StructWithUserProvidedConstructors { ... }`.
-  explicit StructWithUserProvidedConstructors(int);
+  int int_field;
+};
+
+struct StructWithExplicitConversionConstructor final {
+  // Testing `impl From<int> for ...` when the constructor is `explicit`.
+  explicit StructWithExplicitConversionConstructor(int i) : int_field(i) {}
+
+  int int_field;
+};
+
+struct StructWithImplicitConversionConstructor final {
+  // Testing `impl From<int> for ...` when the constructor is *not* `explicit`.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  StructWithImplicitConversionConstructor(int i) : int_field(i) {}
 
   int int_field;
 };
@@ -30,7 +42,8 @@ struct [[clang::trivial_abi]] StructWithInlineConstructors final {
   StructWithInlineConstructors() : int_field(123) {}
   StructWithInlineConstructors(const StructWithInlineConstructors& other)
       : int_field(20000 + other.int_field) {}
-  explicit StructWithInlineConstructors(int i) : int_field(i) {}
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  StructWithInlineConstructors(int i) : int_field(i) {}
   int int_field;
 };
 

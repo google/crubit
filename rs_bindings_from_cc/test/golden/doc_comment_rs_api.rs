@@ -42,8 +42,9 @@ impl Default for DocCommentSlashes {
     }
 }
 
-/// A conversion constructor which will get translated into
-/// `impl From<int> for DocCommentSlashes`.
+/// An implicit conversion constructor which will get translated into `impl
+/// From<int> for DocCommentSlashes`.
+/// NOLINTNEXTLINE(google-explicit-constructor)
 impl From<i32> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: i32) -> Self {
@@ -102,11 +103,11 @@ impl Default for DocCommentBang {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=34
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=35
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
 // Parameter type 'struct DocCommentBang &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=34
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=35
 // Error while generating bindings for item 'DocCommentBang::operator=':
 // Parameter type 'struct DocCommentBang &&' is not supported
 
@@ -131,11 +132,11 @@ impl Default for MultilineCommentTwoStars {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=42
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=42
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
 // Parameter type 'struct MultilineCommentTwoStars &&' is not supported
 
@@ -160,11 +161,11 @@ impl Default for LineComment {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=50
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'LineComment::LineComment':
 // Parameter type 'struct LineComment &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=50
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'LineComment::operator=':
 // Parameter type 'struct LineComment &&' is not supported
 
@@ -189,11 +190,11 @@ impl Default for MultilineOneStar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=58
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=58
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::operator=':
 // Parameter type 'struct MultilineOneStar &&' is not supported
 

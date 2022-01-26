@@ -24,7 +24,8 @@ struct [[clang::trivial_abi]] StructWithConstructorsWithoutLifetimes final {
       const StructWithConstructorsWithoutLifetimes&);
 
   // `impl From<int> for StructWithUserProvidedConstructors { ... }`.
-  explicit StructWithConstructorsWithoutLifetimes(int);
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  StructWithConstructorsWithoutLifetimes(int);
 
   int int_field;
 };

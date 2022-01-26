@@ -15,9 +15,10 @@ struct DocCommentSlashes final {
   /// `impl Default for DocCommentSlashes`.
   DocCommentSlashes();
 
-  /// A conversion constructor which will get translated into
-  /// `impl From<int> for DocCommentSlashes`.
-  explicit DocCommentSlashes(int);
+  /// An implicit conversion constructor which will get translated into `impl
+  /// From<int> for DocCommentSlashes`.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  DocCommentSlashes(int);
 
   /// A non-static member function (`const` flavor).
   int get_field_value() const;

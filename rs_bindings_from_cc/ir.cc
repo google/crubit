@@ -182,6 +182,7 @@ nlohmann::json MemberFuncMetadata::ToJson() const {
     instance["reference"] = reference;
     instance["is_const"] = instance_method_metadata->is_const;
     instance["is_virtual"] = instance_method_metadata->is_virtual;
+    instance["is_explicit_ctor"] = instance_method_metadata->is_explicit_ctor;
 
     meta["instance_method_metadata"] = std::move(instance);
   }

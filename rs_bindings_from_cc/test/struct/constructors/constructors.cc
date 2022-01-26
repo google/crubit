@@ -11,9 +11,6 @@ StructWithUserProvidedConstructors::StructWithUserProvidedConstructors(
     const StructWithUserProvidedConstructors& other)
     : int_field(10000 + other.int_field) {}
 
-StructWithUserProvidedConstructors::StructWithUserProvidedConstructors(int i)
-    : int_field(i) {}
-
 StructWithPrivateConstructors::StructWithPrivateConstructors()
     : int_field(42) {}
 

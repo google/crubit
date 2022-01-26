@@ -255,10 +255,17 @@ struct MemberFuncMetadata {
     kUnqualified,  // void Foo();
   };
 
+  // TODO(lukasza): Consider extracting a separate ConstructorMetadata struct to
+  // account for the fact that 1) `is_explicit_ctor` applies only to
+  // constructors and 2) `is_const` and `is_virtual` never applies to
+  // constructors.
   struct InstanceMethodMetadata {
     ReferenceQualification reference = kUnqualified;
     bool is_const = false;
     bool is_virtual = false;
+
+    // If the member function was a constructor with an `explicit` specifier.
+    bool is_explicit_ctor = false;
   };
 
   nlohmann::json ToJson() const;

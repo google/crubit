@@ -263,8 +263,18 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             format_first_param_as_self = true;
         }
         UnqualifiedIdentifier::Constructor => {
-            let record =
-                maybe_record.ok_or_else(|| anyhow!("Constructors must be member functions."))?;
+            let member_func_metadata = func
+                .member_func_metadata
+                .as_ref()
+                .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
+            let record = maybe_record
+                .ok_or_else(|| anyhow!("Constructors must be associated with a record."))?;
+            let instance_method_metadata =
+                member_func_metadata
+                    .instance_method_metadata
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("Constructors must be instance methods."))?;
+
             if !record.is_unpin() {
                 // TODO: Handle <internal link>
                 return Ok(None);
@@ -287,11 +297,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                             func_name = make_rs_ident("clone");
                             format_first_param_as_self = true;
                         }
-                    } else {
+                    } else if !instance_method_metadata.is_explicit_ctor {
                         let param_type = &param_types[1];
                         impl_kind = ImplKind::Trait(quote! {From< #param_type >});
                         func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
+                    } else {
+                        return Ok(None);
                     }
                 }
                 _ => {
@@ -2024,13 +2036,58 @@ mod tests {
     #[test]
     fn test_impl_default_non_trivial_struct() -> Result<()> {
         let ir = ir_from_cc(
-            r#"struct NonTrivialStructWithConstructors final {
+            r#"#pragma clang lifetime_elision
+            struct NonTrivialStructWithConstructors final {
                 NonTrivialStructWithConstructors();
                 ~NonTrivialStructWithConstructors();  // Non-trivial
             };"#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
         assert_rs_not_matches!(rs_api, quote! {impl Default});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_from_for_explicit_conversion_constructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                explicit SomeStruct(int i);
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        // As discussed in b/214020567 for now we only generate `From::from` bindings
+        // for *implicit* C++ conversion constructors.
+        assert_rs_not_matches!(rs_api, quote! {impl From});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_from_for_implicit_conversion_constructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                SomeStruct(int i);  // implicit - no `explicit` keyword
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        // As discussed in b/214020567 we generate `From::from` bindings for
+        // *implicit* C++ conversion constructors.
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl From<i32> for SomeStruct {
+                    #[inline(always)]
+                    fn from(i: i32) -> Self {
+                        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
+                            tmp.assume_init()
+                        }
+                    }
+                }
+            }
+        );
         Ok(())
     }
 

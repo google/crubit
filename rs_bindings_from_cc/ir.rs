@@ -195,6 +195,9 @@ pub struct InstanceMethodMetadata {
     pub reference: ReferenceQualification,
     pub is_const: bool,
     pub is_virtual: bool,
+
+    /// If the member function was a constructor with an `explicit` specifier.
+    pub is_explicit_ctor: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

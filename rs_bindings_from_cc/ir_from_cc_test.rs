@@ -697,6 +697,24 @@ fn test_member_function_params() {
     assert_eq!(param_names, vec!["__this", "x", "y"]);
 }
 
+fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&Func) -> bool>(
+    ir: &IR,
+    record_name: &str,
+    mut func_predicate: F,
+    expected_metadata: &Option<ir::InstanceMethodMetadata>,
+) {
+    let record =
+        ir.records().find(|r| r.identifier.identifier == record_name).expect("Struct not found");
+    let function = ir.functions().find(|f| func_predicate(*f));
+    let meta = function
+        .expect("Function not found")
+        .member_func_metadata
+        .as_ref()
+        .expect("Member function should specify member_func_metadata");
+    assert_eq!(meta.record_id, record.id);
+    assert_eq!(&meta.instance_method_metadata, expected_metadata);
+}
+
 fn assert_member_function_has_instance_method_metadata(
     name: &str,
     definition: &str,
@@ -708,17 +726,12 @@ fn assert_member_function_has_instance_method_metadata(
     file += "\n};";
     let ir = ir_from_cc(&file).unwrap();
 
-    let record =
-        ir.records().find(|r| r.identifier.identifier == "Struct").expect("Struct not found");
-    let function =
-        ir.functions().find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id(name)));
-    let meta = function
-        .expect("Function not found")
-        .member_func_metadata
-        .as_ref()
-        .expect("Member function should specify member_func_metadata");
-    assert_eq!(meta.record_id, record.id);
-    assert_eq!(&meta.instance_method_metadata, expected_metadata);
+    assert_member_function_with_predicate_has_instance_method_metadata(
+        &ir,
+        "Struct",
+        |f| f.name == UnqualifiedIdentifier::Identifier(ir_id(name)),
+        expected_metadata,
+    );
 }
 
 #[test]
@@ -739,6 +752,7 @@ fn test_member_function() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: false,
             is_virtual: false,
+            is_explicit_ctor: false,
         }),
     );
 }
@@ -752,6 +766,7 @@ fn test_member_function_const() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: true,
             is_virtual: false,
+            is_explicit_ctor: false,
         }),
     );
 }
@@ -765,6 +780,7 @@ fn test_member_function_virtual() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: false,
             is_virtual: true,
+            is_explicit_ctor: false,
         }),
     );
 }
@@ -778,6 +794,7 @@ fn test_member_function_lvalue() {
             reference: ir::ReferenceQualification::LValue,
             is_const: false,
             is_virtual: false,
+            is_explicit_ctor: false,
         }),
     );
 }
@@ -791,6 +808,55 @@ fn test_member_function_rvalue() {
             reference: ir::ReferenceQualification::RValue,
             is_const: false,
             is_virtual: false,
+            is_explicit_ctor: false,
+        }),
+    );
+}
+
+#[test]
+fn test_member_function_explicit_constructor() {
+    let ir = ir_from_cc(
+        r#"
+        struct SomeStruct {
+          explicit SomeStruct(int i);
+          SomeStruct() = delete;
+          SomeStruct(const SomeStruct&) = delete;
+        }; "#,
+    )
+    .unwrap();
+    assert_member_function_with_predicate_has_instance_method_metadata(
+        &ir,
+        "SomeStruct",
+        |f| f.name == UnqualifiedIdentifier::Constructor,
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::Unqualified,
+            is_const: false,
+            is_virtual: false,
+            is_explicit_ctor: true,
+        }),
+    );
+}
+
+#[test]
+fn test_member_function_implicit_constructor() {
+    let ir = ir_from_cc(
+        r#"
+        struct SomeStruct {
+          SomeStruct(int i);
+          SomeStruct() = delete;
+          SomeStruct(const SomeStruct&) = delete;
+        }; "#,
+    )
+    .unwrap();
+    assert_member_function_with_predicate_has_instance_method_metadata(
+        &ir,
+        "SomeStruct",
+        |f| f.name == UnqualifiedIdentifier::Constructor,
+        &Some(ir::InstanceMethodMetadata {
+            reference: ir::ReferenceQualification::Unqualified,
+            is_const: false,
+            is_virtual: false,
+            is_explicit_ctor: false,
         }),
     );
 }

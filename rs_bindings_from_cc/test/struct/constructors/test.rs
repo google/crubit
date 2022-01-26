@@ -24,10 +24,22 @@ mod tests {
         // Trivial-ABI structs should not implement the Copy trait, if they have a
         // user-defined copy constructor (aka a non-trivial copy constructor).
         assert_not_impl_all!(StructWithUserProvidedConstructors: Copy);
+    }
 
-        assert_impl_all!(StructWithUserProvidedConstructors: From<i32>);
-        let i: StructWithUserProvidedConstructors = 123.into();
-        assert_eq!(123, i.int_field);
+    #[test]
+    fn test_explicit_conversion_constructor() {
+        // As discussed in b/214020567 for now we only generate `From::from` bindings
+        // for *implicit* C++ conversion constructors.
+        assert_not_impl_all!(StructWithExplicitConversionConstructor: From<i32>);
+    }
+
+    #[test]
+    fn test_implicit_conversion_constructor() {
+        // As discussed in b/214020567 we generate `From::from` bindings for
+        // *implicit* C++ conversion constructors.
+        assert_impl_all!(StructWithImplicitConversionConstructor: From<i32>);
+        let i: StructWithImplicitConversionConstructor = 125.into();
+        assert_eq!(125, i.int_field);
     }
 
     #[test]
