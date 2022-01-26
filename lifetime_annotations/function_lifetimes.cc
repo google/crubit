@@ -6,9 +6,12 @@
 
 #include <string>
 
+#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_join.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/LLVM.h"
 
 namespace devtools_rust {
 namespace {
@@ -112,6 +115,32 @@ std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
   }
 
   return result;
+}
+
+bool FunctionLifetimes::Validate(const clang::FunctionDecl* func) const {
+  if (auto method = clang::dyn_cast<clang::CXXMethodDecl>(func)) {
+    if (CreateLifetimesForType(method->getThisType(), Lifetime::CreateLocal)
+            .size() != this_lifetimes.size()) {
+      return false;
+    }
+  } else if (!this_lifetimes.empty()) {
+    return false;
+  }
+  if (CreateLifetimesForType(func->getReturnType(), Lifetime::CreateLocal)
+          .size() != return_lifetimes.size()) {
+    return false;
+  }
+  if (param_lifetimes.size() != func->getNumParams()) {
+    return false;
+  }
+  for (size_t i = 0; i < param_lifetimes.size(); i++) {
+    if (CreateLifetimesForType(func->getParamDecl(i)->getType(),
+                               Lifetime::CreateLocal)
+            .size() != param_lifetimes[i].size()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::ostream& operator<<(std::ostream& os,

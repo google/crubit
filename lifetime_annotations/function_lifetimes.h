@@ -9,6 +9,7 @@
 #include <string>
 
 #include "lifetime_annotations/type_lifetimes.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 
 namespace devtools_rust {
@@ -35,6 +36,10 @@ struct FunctionLifetimes {
   // structure if unique vs reoccuring Lifetimes in `this` and `other` are found
   // in the same positions.
   bool IsIsomorphic(const FunctionLifetimes& other) const;
+
+  // Returns true if this FunctionLifetimes object is valid for the given
+  // function.
+  bool Validate(const clang::FunctionDecl* func) const;
 
   // Returns a human-readable representation of `func_lifetimes`. Formats
   // lifetimes using `formatter`, or Lifetime::DebugString() if `formatter` is

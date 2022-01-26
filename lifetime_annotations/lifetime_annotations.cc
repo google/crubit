@@ -6,13 +6,23 @@
 
 #include <functional>
 #include <optional>
+#include <string>
 #include <utility>
 
+#include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/absl/strings/str_cat.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/APValue.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Attr.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/PrettyPrinter.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/LangOptions.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Lex/Pragma.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Lex/Preprocessor.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 
 namespace devtools_rust {
 
@@ -30,7 +40,7 @@ llvm::Expected<llvm::SmallVector<Lifetime>> GetAnnotatedOrElidedLifetimes(
 
   // TODO(mboehme): Extract lifetime annotations from `attrs` if present.
 
-  // No lifetime annoations: Use elided lifetimes.
+  // No lifetime annotations: Use elided lifetimes.
   for (int i = 0; i < num_expected; ++i) {
     llvm::Expected<Lifetime> maybe_lifetime = elided_lifetime_factory();
     if (maybe_lifetime) {
@@ -98,16 +108,133 @@ llvm::Expected<llvm::SmallVector<Lifetime>> GetThisLifetimes(
       attrs, 1, symbol_table, elided_lifetime_factory, method->getASTContext());
 }
 
+// Parse a "(a, b): (a, b), (), a -> b"-style annotation into a
+// FunctionLifetimes.
+// TODO(veluca): this is a temporary solution.
+llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
+    const clang::FunctionDecl* func, LifetimeSymbolTable& symbol_table,
+    llvm::StringRef annotation, clang::SourceLocation source_loc) {
+  // The lexer requires a null character at the end of the string.
+  std::string annotation_str(annotation.data(), annotation.size());
+  clang::Lexer lexer(source_loc, clang::LangOptions(), annotation_str.data(),
+                     annotation_str.data(),
+                     annotation_str.data() + annotation_str.size());
+
+  const char* end = annotation_str.data() + annotation_str.size();
+
+  auto error = [func]() {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        absl::StrCat("Invalid lifetime annotation for function ",
+                     func->getNameAsString()));
+  };
+
+  auto tok = [&]() -> llvm::StringRef {
+    clang::Token token;
+    if (lexer.getBufferLocation() != end) {
+      lexer.LexFromRawLexer(token);
+      return llvm::StringRef(annotation.data() +
+                                 token.getLocation().getRawEncoding() -
+                                 source_loc.getRawEncoding(),
+                             token.getLength());
+    }
+    return "";
+  };
+
+  // Consume the "lifetimes =" initial part.
+  if (tok() != "lifetimes" || tok() != "=") {
+    return error();
+  }
+
+  llvm::SmallVector<TypeLifetimes> fn_lifetimes;
+  bool has_this_lifetimes = false;
+  bool has_return_lifetimes = false;
+
+  for (llvm::StringRef token; !(token = tok()).empty();) {
+    if (token == ",") {
+      continue;
+    }
+    if (has_return_lifetimes) {
+      return error();
+    }
+    if (token == ":") {
+      if (has_this_lifetimes || fn_lifetimes.size() != 1) {
+        return error();
+      }
+      has_this_lifetimes = true;
+      continue;
+    }
+    // Skip the -> and parse return lifetimes. No more lifetimes should be
+    // parsed afterwards.
+    if (token == "->") {
+      has_return_lifetimes = true;
+      token = tok();
+    }
+    fn_lifetimes.emplace_back();
+    if (token == "(") {
+      for (; (token = tok()) != ")" && !token.empty();) {
+        if (token == ",") continue;
+        fn_lifetimes.back().push_back(
+            symbol_table.LookupNameAndMaybeDeclare(token));
+      }
+    } else {
+      fn_lifetimes.back().push_back(
+          symbol_table.LookupNameAndMaybeDeclare(token));
+    }
+  }
+
+  FunctionLifetimes function_lifetimes;
+  size_t param_start = 0;
+  if (has_this_lifetimes) {
+    function_lifetimes.this_lifetimes = fn_lifetimes[0];
+    param_start = 1;
+  }
+  size_t param_end = fn_lifetimes.size();
+  if (has_return_lifetimes) {
+    function_lifetimes.return_lifetimes = fn_lifetimes.back();
+    param_end -= 1;
+  }
+  function_lifetimes.param_lifetimes.assign(fn_lifetimes.begin() + param_start,
+                                            fn_lifetimes.begin() + param_end);
+
+  if (function_lifetimes.Validate(func)) {
+    return function_lifetimes;
+  }
+  return error();
+}
+
 llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
     const clang::FunctionDecl* func, LifetimeSymbolTable& symbol_table,
     bool elision_enabled) {
   FunctionLifetimes result;
 
+  const clang::AnnotateAttr* lifetime_annotation = nullptr;
+  for (const clang::Attr* attr : func->attrs()) {
+    if (auto annotate = clang::dyn_cast<clang::AnnotateAttr>(attr)) {
+      if (annotate->getAnnotation().startswith("lifetimes")) {
+        if (lifetime_annotation != nullptr) {
+          return llvm::createStringError(
+              llvm::inconvertibleErrorCode(),
+              absl::StrCat("Can't extract lifetimes as '",
+                           func->getNameAsString(),
+                           "' has multiple lifetime annotations"));
+        }
+        lifetime_annotation = annotate;
+      }
+    }
+  }
+  if (lifetime_annotation) {
+    return ParseLifetimeAnnotations(func, symbol_table,
+                                    lifetime_annotation->getAnnotation(),
+                                    lifetime_annotation->getLoc());
+  }
+
   if (!func->getTypeSourceInfo()) {
     // TODO(mboehme): At least try to do lifetime elision.
     return llvm::createStringError(
         llvm::inconvertibleErrorCode(),
-        absl::StrCat("Can't extract lifetimes as '", func->getNameAsString(),
+        absl::StrCat("Can't extract lifetimes because '",
+                     func->getNameAsString(),
                      "' appears to be a generated function"));
   }
 
@@ -205,11 +332,11 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
 llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     const clang::FunctionDecl* func, const LifetimeAnnotationContext& context,
     LifetimeSymbolTable* symbol_table) {
-  // TODO(mboehme):
-  // - Add support for retrieving actual lifetime annotations (not just
-  //   lifetimes implied by elision).
-  // - If we have multiple declarations of a function, make sure they are all
-  //   annotated with the same lifetimes.
+  // TODO(mboehme): if we have multiple declarations of a function, make sure
+  // they are all annotated with the same lifetimes.
+  // TODO(veluca): the syntax we are using for lifetime annotations here is just
+  // a placeholder. Adapt this to the actual syntax once the clang-side support
+  // is there.
 
   clang::SourceManager& source_manager =
       func->getASTContext().getSourceManager();
