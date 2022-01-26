@@ -19,10 +19,6 @@ pub struct Trivial {
     pub trivial_field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
-// Error while generating bindings for item 'Trivial::Trivial':
-// Nested classes are not supported yet
-
 impl Default for Trivial {
     #[inline(always)]
     fn default() -> Self {
@@ -61,10 +57,6 @@ pub struct TrivialWithDefaulted {
     pub trivial_field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=14
-// Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
-// Nested classes are not supported yet
-
 impl Default for TrivialWithDefaulted {
     #[inline(always)]
     fn default() -> Self {
@@ -92,10 +84,6 @@ pub struct TrivialNonfinal {
 }
 
 impl !Unpin for TrivialNonfinal {}
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
-// Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Nested classes are not supported yet
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':

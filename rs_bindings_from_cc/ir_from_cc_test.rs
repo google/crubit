@@ -596,6 +596,36 @@ fn test_typedef_nested_in_record_not_supported() {
 }
 
 #[test]
+fn test_records_nested_in_records_not_supported_yet() {
+    let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "SomeStruct::NestedStruct",
+          message: "Nested classes are not supported yet" ...
+        }}
+    );
+}
+
+#[test]
+fn test_dont_import_injected_class_name() {
+    let ir = ir_from_cc("struct SomeStruct {};").unwrap();
+    let names = ir.records().map(|r| &r.identifier.identifier).filter(|n| n.contains("SomeStruct"));
+    // if we do support nested structs, we should not emit record for injected class
+    // name
+    assert_eq!(names.count(), 1);
+    // if we don't support nested structs, we should not emit unsupported item for
+    // injected class name
+    assert_ir_not_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "SomeStruct::SomeStruct",
+          message: "Nested classes are not supported yet" ...
+        }}
+    );
+}
+
+#[test]
 fn test_integer_typedef_usage() -> Result<()> {
     // This is a regression test. We used to incorrectly desugar typedefs of
     // builtin types and treat them as if they were the underlying builtin type.

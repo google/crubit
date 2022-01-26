@@ -21,10 +21,6 @@ pub struct DocCommentSlashes {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
-// Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
-// Nested classes are not supported yet
-
 impl From<*const DocCommentSlashes> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: *const DocCommentSlashes) -> Self {
@@ -106,10 +102,6 @@ pub struct DocCommentBang {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=34
-// Error while generating bindings for item 'DocCommentBang::DocCommentBang':
-// Nested classes are not supported yet
-
 impl Default for DocCommentBang {
     #[inline(always)]
     fn default() -> Self {
@@ -149,10 +141,6 @@ pub struct MultilineCommentTwoStars {
     /// A field
     pub i: i32,
 }
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=42
-// Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Nested classes are not supported yet
 
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
@@ -194,10 +182,6 @@ pub struct LineComment {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=50
-// Error while generating bindings for item 'LineComment::LineComment':
-// Nested classes are not supported yet
-
 impl Default for LineComment {
     #[inline(always)]
     fn default() -> Self {
@@ -237,10 +221,6 @@ pub struct MultilineOneStar {
     /// A field
     pub i: i32,
 }
-
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=58
-// Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
-// Nested classes are not supported yet
 
 impl Default for MultilineOneStar {
     #[inline(always)]

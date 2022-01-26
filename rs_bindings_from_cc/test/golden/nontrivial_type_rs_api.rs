@@ -23,10 +23,6 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=11
-// Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Nested classes are not supported yet
-
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=12
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter type 'struct Nontrivial &&' is not supported
@@ -48,10 +44,6 @@ pub struct NontrivialInline {
 }
 
 impl !Unpin for NontrivialInline {}
-
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=22
-// Error while generating bindings for item 'NontrivialInline::NontrivialInline':
-// Nested classes are not supported yet
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=23
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
@@ -75,10 +67,6 @@ pub struct NontrivialMembers {
 }
 
 impl !Unpin for NontrivialMembers {}
-
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=34
-// Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
-// Nested classes are not supported yet
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=34
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':

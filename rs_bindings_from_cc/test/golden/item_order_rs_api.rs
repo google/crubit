@@ -17,10 +17,6 @@ pub struct FirstStruct {
     pub field: i32,
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=6
-// Error while generating bindings for item 'FirstStruct::FirstStruct':
-// Nested classes are not supported yet
-
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -61,10 +57,6 @@ pub fn first_func() -> i32 {
 pub struct SecondStruct {
     pub field: i32,
 }
-
-// rs_bindings_from_cc/test/golden/item_order.h;l=12
-// Error while generating bindings for item 'SecondStruct::SecondStruct':
-// Nested classes are not supported yet
 
 impl Default for SecondStruct {
     #[inline(always)]

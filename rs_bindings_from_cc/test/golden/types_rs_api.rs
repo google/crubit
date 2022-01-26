@@ -160,10 +160,6 @@ pub struct SomeStruct {
     placeholder: std::mem::MaybeUninit<u8>,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=9
-// Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Nested classes are not supported yet
-
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -197,10 +193,6 @@ impl From<*const SomeStruct> for SomeStruct {
 // rs_bindings_from_cc/test/golden/types.h;l=11
 // Error while generating bindings for item 'SomeUnion':
 // Unions are not supported yet
-
-// rs_bindings_from_cc/test/golden/types.h;l=11
-// Error while generating bindings for item 'SomeUnion::SomeUnion':
-// Nested classes are not supported yet
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -257,10 +249,6 @@ pub struct FieldTypeTestStruct {
     pub struct_ref_field: *mut SomeStruct,
     pub const_struct_ref_field: *const SomeStruct,
 }
-
-// rs_bindings_from_cc/test/golden/types.h;l=13
-// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Nested classes are not supported yet
 
 impl From<*const FieldTypeTestStruct> for FieldTypeTestStruct {
     #[inline(always)]

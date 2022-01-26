@@ -18,10 +18,6 @@ pub struct SomeClass {
     private_member_variable_: i32,
 }
 
-// rs_bindings_from_cc/test/golden/private_members.h;l=6
-// Error while generating bindings for item 'SomeClass::SomeClass':
-// Nested classes are not supported yet
-
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {

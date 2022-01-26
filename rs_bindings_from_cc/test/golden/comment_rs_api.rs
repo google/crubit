@@ -27,10 +27,6 @@ pub struct Foo {
     pub j: i32,
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=13
-// Error while generating bindings for item 'Foo::Foo':
-// Nested classes are not supported yet
-
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
@@ -80,10 +76,6 @@ pub struct Bar {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=39
-// Error while generating bindings for item 'Bar::Bar':
-// Nested classes are not supported yet
-
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
@@ -120,10 +112,6 @@ impl From<*const Bar> for Bar {
 pub struct HasNoComments {
     pub i: i32,
 }
-
-// rs_bindings_from_cc/test/golden/comment.h;l=45
-// Error while generating bindings for item 'HasNoComments::HasNoComments':
-// Nested classes are not supported yet
 
 impl Default for HasNoComments {
     #[inline(always)]

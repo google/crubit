@@ -18,10 +18,6 @@ pub struct NontrivialCustomType {
 
 impl !Unpin for NontrivialCustomType {}
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=6
-// Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Nested classes are not supported yet
-
 // rs_bindings_from_cc/test/golden/unsupported.h;l=7
 // Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
 // Parameter type 'struct NontrivialCustomType &&' is not supported
@@ -59,10 +55,6 @@ pub struct ContainingStruct {
     placeholder: std::mem::MaybeUninit<u8>,
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=22
-// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Nested classes are not supported yet
-
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -95,10 +87,6 @@ impl From<*const ContainingStruct> for ContainingStruct {
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=23
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
-// Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=23
-// Error while generating bindings for item 'ContainingStruct::NestedStruct::NestedStruct':
 // Nested classes are not supported yet
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

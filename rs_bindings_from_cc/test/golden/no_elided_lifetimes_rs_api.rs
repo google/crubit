@@ -23,10 +23,6 @@ pub struct S {
     placeholder: std::mem::MaybeUninit<u8>,
 }
 
-// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
-// Error while generating bindings for item 'S::S':
-// Nested classes are not supported yet
-
 impl Default for S {
     #[inline(always)]
     fn default() -> Self {

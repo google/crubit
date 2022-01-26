@@ -19,10 +19,6 @@ pub struct PolymorphicClass {
 
 impl !Unpin for PolymorphicClass {}
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
-// Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
-// Nested classes are not supported yet
-
 impl Drop for PolymorphicClass {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {

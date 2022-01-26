@@ -421,6 +421,9 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
     if (decl_context->isFunctionOrMethod()) {
       return true;
     }
+    if (record_decl->isInjectedClassName()) {
+      return true;
+    }
     if (decl_context->isRecord()) {
       PushUnsupportedItem(record_decl, "Nested classes are not supported yet",
                           record_decl->getBeginLoc());

@@ -17,10 +17,6 @@ pub struct r#type {
     pub r#dyn: i32,
 }
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
-// Error while generating bindings for item 'type::type':
-// Nested classes are not supported yet
-
 impl Default for r#type {
     #[inline(always)]
     fn default() -> Self {
@@ -59,10 +55,6 @@ pub fn r#impl(r#match: i32) {
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=13
 // Error while generating bindings for item 'await':
 // Class templates are not supported yet
-
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=13
-// Error while generating bindings for item 'await::await':
-// Nested classes are not supported yet
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=18
 // Error while generating bindings for item 'become':
