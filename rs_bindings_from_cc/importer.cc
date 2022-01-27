@@ -443,6 +443,7 @@ Importer::LookupResult Importer::ImportFunction(
 
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
+  CHECK(return_type.ok());  // Silence ClangTidy, checked above.
   if (translated_name.has_value()) {
     return LookupResult(Func{
         .name = *translated_name,
