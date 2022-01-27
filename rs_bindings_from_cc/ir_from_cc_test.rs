@@ -618,6 +618,45 @@ fn test_records_nested_in_records_not_supported_yet() {
         }}
     );
 }
+#[test]
+fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
+    // only using nested struct as an example of a record we cannot import yet.
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          struct NestedStruct {
+            static void StaticMemberFunction();
+          };
+        };",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "SomeStruct::NestedStruct::StaticMemberFunction" ...
+        }}
+    );
+}
+
+#[test]
+fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet() {
+    // only using nested struct as an example of a record we cannot import yet.
+    let ir = ir_from_cc(
+        "
+        struct SomeStruct {
+          struct NestedStruct {
+            void NonStaticMemberFunction();
+          };
+        };",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "SomeStruct::NestedStruct::NonStaticMemberFunction" ...
+        }}
+    );
+}
 
 #[test]
 fn test_dont_import_injected_class_name() {

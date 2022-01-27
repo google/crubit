@@ -20,11 +20,17 @@ NontrivialCustomType MultipleReasons(NontrivialCustomType n, int);
 
 namespace ns {
 void FunctionInNamespace();
-struct StructInNamespace final {};
+struct StructInNamespace final {
+  void NonStaticMemberFunction();
+  void StaticMemberFunction();
+};
 }  // namespace ns
 
 struct ContainingStruct final {
-  struct NestedStruct final {};
+  struct NestedStruct final {
+    void NonStaticMemberFunction();
+    void StaticMemberFunction();
+  };
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

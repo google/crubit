@@ -216,8 +216,16 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
 
   std::vector<FuncParam> params;
   bool success = true;
-  // non-static member functions receive an implicit `this` parameter.
+
   if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+    if (!known_type_decls_.contains(
+            method_decl->getParent()->getCanonicalDecl())) {
+      PushUnsupportedItem(function_decl, "Couldn't import the parent",
+                          method_decl->getBeginLoc());
+      return true;
+    }
+
+    // non-static member functions receive an implicit `this` parameter.
     if (method_decl->isInstance()) {
       std::optional<devtools_rust::TypeLifetimes> this_lifetimes;
       if (lifetimes) {

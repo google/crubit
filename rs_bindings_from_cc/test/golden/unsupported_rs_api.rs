@@ -66,17 +66,25 @@ impl Default for ContainingStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=22
+// rs_bindings_from_cc/test/golden/unsupported.h;l=25
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
 // Parameter type 'struct ContainingStruct &&' is not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=22
+// rs_bindings_from_cc/test/golden/unsupported.h;l=25
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // Parameter type 'struct ContainingStruct &&' is not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=23
+// rs_bindings_from_cc/test/golden/unsupported.h;l=26
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=27
+// Error while generating bindings for item 'ContainingStruct::NestedStruct::NonStaticMemberFunction':
+// Couldn't import the parent
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=28
+// Error while generating bindings for item 'ContainingStruct::NestedStruct::StaticMemberFunction':
+// Couldn't import the parent
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
