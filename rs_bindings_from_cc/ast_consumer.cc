@@ -5,7 +5,7 @@
 #include "rs_bindings_from_cc/ast_consumer.h"
 
 #include "base/logging.h"
-#include "rs_bindings_from_cc/ast_visitor.h"
+#include "rs_bindings_from_cc/importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/types/span.h"
@@ -26,10 +26,9 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
   CHECK(instance_.hasSema());
   CHECK(!public_header_names_.empty());
   CHECK(!headers_to_targets_.empty());
-  AstVisitor ast_visitor(instance_.getSema(), current_target_,
-                         public_header_names_, &headers_to_targets_, &ir_,
-                         *lifetime_context_);
-  ast_visitor.TraverseDecl(ast_context.getTranslationUnitDecl());
+  Importer importer(instance_.getSema(), current_target_, public_header_names_,
+                    &headers_to_targets_, &ir_, *lifetime_context_);
+  importer.Import(ast_context.getTranslationUnitDecl());
 }
 
 }  // namespace rs_bindings_from_cc

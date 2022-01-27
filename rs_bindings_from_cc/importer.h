@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_VISITOR_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_AST_VISITOR_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
 
 #include <memory>
 #include <optional>
@@ -35,11 +35,9 @@ namespace rs_bindings_from_cc {
 // Iterates over the AST created from `public_header_names` (a collection of
 // paths in the format suitable for a google3-relative quote include) and
 // creates an intermediate representation of the import (`IR`).
-class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
+class Importer {
  public:
-  using Base = clang::RecursiveASTVisitor<AstVisitor>;
-
-  explicit AstVisitor(
+  explicit Importer(
       clang::Sema& sema, BlazeLabel current_target,
       absl::Span<const HeaderName> public_header_names,
       const absl::flat_hash_map<const HeaderName, const BlazeLabel>*
@@ -53,23 +51,45 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
         ctx_(nullptr),
         lifetime_context_(lifetime_context) {}
 
-  // These functions are called by the base class while visiting the different
-  // parts of the AST. The API follows the rules of the base class which is
-  // responsible for the traversal of the AST.
-  bool TraverseTranslationUnitDecl(
-      clang::TranslationUnitDecl* translation_unit_decl);
-  bool TraverseDecl(clang::Decl* decl);
-
-  bool VisitFunctionDecl(clang::FunctionDecl* function_decl);
-  bool VisitRecordDecl(clang::RecordDecl* record_decl);
-  bool VisitTypedefNameDecl(clang::TypedefNameDecl* typedef_name_decl);
-
-  // We don't care about the syntax, but the semantics, and so need to visit
-  // even implicitly generated header items such as implicit destructors etc.
-  bool shouldVisitImplicitCode() const { return true; }
+  // Import all visible declarations from a translation unit.
+  void Import(clang::TranslationUnitDecl* decl);
 
  private:
-  std::optional<std::vector<Field>> ImportFields(
+  // The result of looking up a decl. This may either contain an item that was
+  // imported or a vector of errors that occurred. Both are empty for decls that
+  // don't get imported on purpose.
+  class LookupResult {
+    std::optional<IR::Item> item_;
+    std::vector<std::string> errors_;
+
+   public:
+    LookupResult() {}
+    explicit LookupResult(IR::Item item) : item_(item) {}
+    explicit LookupResult(std::string error) : errors_({error}) {}
+    explicit LookupResult(std::vector<std::string> errors) : errors_(errors) {}
+
+    const std::optional<IR::Item>& item() const { return item_; }
+    const std::vector<std::string>& errors() const { return errors_; }
+  };
+
+  // Imports all decls contained in a `DeclContext`.
+  void ImportDeclsFromDeclContext(const clang::DeclContext* decl_context);
+
+  // Looks up a decl, either from the cache, or by importing it and updating the
+  // cache.
+  LookupResult LookupDecl(clang::Decl* decl);
+
+  // Imports a decl and creates an IR item (or error messages).
+  // Does not use or update the cache.
+  LookupResult ImportDecl(clang::Decl* decl);
+
+  // These functions import specific `Decl` subtypes. They use `LookupDecl` to
+  // lookup dependencies. They don't use or update the cache themselves.
+  LookupResult ImportFunction(clang::FunctionDecl* function_decl);
+  LookupResult ImportRecord(clang::RecordDecl* record_decl);
+  LookupResult ImportTypedefName(clang::TypedefNameDecl* typedef_name_decl);
+
+  absl::StatusOr<std::vector<Field>> ImportFields(
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
   void EmitIRItems();
 
@@ -119,10 +139,6 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
       std::optional<devtools_rust::TypeLifetimes> lifetimes = std::nullopt,
       bool nullable = true) const;
 
-  void PushUnsupportedItem(const clang::Decl* decl, std::string message,
-                           clang::SourceLocation source_location);
-  void PushUnsupportedItem(const clang::Decl* decl, std::string message,
-                           clang::SourceRange source_range);
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 
   clang::Sema& sema_;
@@ -133,7 +149,7 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
   IR& ir_;
   clang::ASTContext* ctx_;
   std::unique_ptr<clang::MangleContext> mangler_;
-  absl::flat_hash_map<const clang::Decl*, std::vector<IR::Item>> seen_decls_;
+  absl::flat_hash_map<const clang::Decl*, LookupResult> lookup_cache_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 
   // A component that keeps track of all top-level comments that are not doc
@@ -169,4 +185,4 @@ class AstVisitor : public clang::RecursiveASTVisitor<AstVisitor> {
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_AST_VISITOR_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_

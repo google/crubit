@@ -35,13 +35,13 @@ If possible follow these recommendations:
         [`assert_cc_matches!/assert_rs_matches!/assert_cc_not_matches!/assert_rs_not_matches!`](/rs_bindings_from_cc/token_stream_matchers.rs)
         macros
 *   Unit tests for the
-    [`ast_visitor`](/rs_bindings_from_cc/ast_visitor.h)
+    [`importer`](/rs_bindings_from_cc/importer.h)
     should be:
     *   written in Rust
         ([`ir_from_cc_test.rs`](/rs_bindings_from_cc/ir_from_cc_test.rs))
         so they cover both AST logic and IR serialization/deserialization, but
         C++ tests (thanks to its nice matchers) are also OK at the moment
-        ([`ast_visitor_test.cc`](/rs_bindings_from_cc/ast_visitor_test.cc))
+        ([`importer_test.cc`](/rs_bindings_from_cc/importer_test.cc))
     *   have snippets of C++ as input
     *   make assertions on the content of the IR
 *   Write tests for the command line interface of interop tools in

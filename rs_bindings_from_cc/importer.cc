@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "rs_bindings_from_cc/ast_visitor.h"
+#include "rs_bindings_from_cc/importer.h"
 
 #include <stdint.h>
 
@@ -89,39 +89,7 @@ static DeclId GenerateDeclId(const clang::Decl* decl) {
   return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
 
-bool AstVisitor::TraverseDecl(clang::Decl* decl) {
-  // TODO(mboehme): I'm not sure if TraverseDecl() is supposed to be called with
-  // null pointers or whether this is a bug in RecursiveASTVisitor, but I've
-  // seen null pointers occur here in practice. In the case where this occurred,
-  // TraverseDecl was being called from TraverseTemplateTemplateParmDecl().
-  if (!decl) {
-    return true;
-  }
-
-  // Skip declarations that we've already seen, except for namespaces, which
-  // can and typically will contain new declarations when they are "reopened".
-  if (seen_decls_.contains(decl->getCanonicalDecl()) &&
-      !clang::isa<clang::NamespaceDecl>(decl)) {
-    return true;
-  }
-
-  const clang::DeclContext* decl_context = decl->getDeclContext();
-  if (decl_context && decl_context->isNamespace()) {
-    PushUnsupportedItem(decl,
-                        "Items contained in namespaces are not supported yet",
-                        decl->getBeginLoc());
-
-    return true;
-  }
-
-  // Emit all comments in the current file before the decl
-  comment_manager_.TraverseDecl(decl);
-
-  return Base::TraverseDecl(decl);
-}
-
-bool AstVisitor::TraverseTranslationUnitDecl(
-    clang::TranslationUnitDecl* translation_unit_decl) {
+void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   ctx_ = &translation_unit_decl->getASTContext();
   mangler_.reset(ctx_->createMangleContext());
 
@@ -131,17 +99,15 @@ bool AstVisitor::TraverseTranslationUnitDecl(
 
   ir_.current_target = current_target_;
 
-  bool result = Base::TraverseTranslationUnitDecl(translation_unit_decl);
+  ImportDeclsFromDeclContext(translation_unit_decl);
 
   // Emit comments after the last decl
   comment_manager_.FlushComments();
 
   EmitIRItems();
-
-  return result;
 }
 
-void AstVisitor::EmitIRItems() {
+void Importer::EmitIRItems() {
   using OrderedItem = std::tuple<clang::SourceRange, int, IR::Item>;
   clang::SourceManager& sm = ctx_->getSourceManager();
   auto is_less_than = [&sm](const OrderedItem& a, const OrderedItem& b) {
@@ -166,27 +132,43 @@ void AstVisitor::EmitIRItems() {
   // We emit IR items in the order of the decls they were generated for.
   // For decls that emit multiple items we use a stable, but arbitrary order.
   std::vector<OrderedItem> items;
-  for (const auto& [decl, decl_items] : seen_decls_) {
-    for (const auto& decl_item : decl_items) {
-      int local_order;
+  for (const auto& [decl, result] : lookup_cache_) {
+    int local_order;
 
-      if (clang::isa<clang::RecordDecl>(decl)) {
-        local_order = decl->getDeclContext()->isRecord() ? 1 : 0;
-      } else if (auto ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl)) {
-        local_order = ctor->isDefaultConstructor() ? 2
-                      : ctor->isCopyConstructor()  ? 3
-                      : ctor->isMoveConstructor()  ? 4
-                                                   : 5;
-      } else if (clang::isa<clang::CXXDestructorDecl>(decl)) {
-        local_order = 6;
-      } else {
-        local_order = 7;
-      }
+    if (clang::isa<clang::RecordDecl>(decl)) {
+      local_order = decl->getDeclContext()->isRecord() ? 1 : 0;
+    } else if (auto ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl)) {
+      local_order = ctor->isDefaultConstructor() ? 2
+                    : ctor->isCopyConstructor()  ? 3
+                    : ctor->isMoveConstructor()  ? 4
+                                                 : 5;
+    } else if (clang::isa<clang::CXXDestructorDecl>(decl)) {
+      local_order = 6;
+    } else {
+      local_order = 7;
+    }
 
+    auto item = result.item();
+    if (item) {
       items.push_back(
-          std::make_tuple(decl->getSourceRange(), local_order, decl_item));
+          std::make_tuple(decl->getSourceRange(), local_order, *item));
+    }
+    if (IsFromCurrentTarget(decl)) {
+      for (const auto& error : result.errors()) {
+        std::string name = "unnamed";
+        if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
+          name = named_decl->getQualifiedNameAsString();
+        }
+        items.push_back(std::make_tuple(
+            decl->getSourceRange(), local_order,
+            UnsupportedItem{
+                .name = std::move(name),
+                .message = error,
+                .source_loc = ConvertSourceLocation(decl->getBeginLoc())}));
+      }
     }
   }
+
   for (auto comment : comment_manager_.comments()) {
     items.push_back(std::make_tuple(
         comment->getSourceRange(), 0 /* local_order */,
@@ -199,14 +181,62 @@ void AstVisitor::EmitIRItems() {
   }
 }
 
-bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
-  if (!IsFromCurrentTarget(function_decl)) return true;
-  if (function_decl->isDeleted()) return true;
+void Importer::ImportDeclsFromDeclContext(
+    const clang::DeclContext* decl_context) {
+  for (auto decl : decl_context->decls()) {
+    // Emit all comments in the current file before the decl
+    comment_manager_.TraverseDecl(decl);
+
+    LookupDecl(decl->getCanonicalDecl());
+
+    if (auto* nested_context = clang::dyn_cast<clang::DeclContext>(decl)) {
+      if (nested_context->isNamespace())
+        ImportDeclsFromDeclContext(nested_context);
+    }
+  }
+}
+
+Importer::LookupResult Importer::LookupDecl(clang::Decl* decl) {
+  if (!lookup_cache_.contains(decl)) {
+    lookup_cache_.insert({decl, ImportDecl(decl)});
+  }
+
+  return lookup_cache_[decl];
+}
+
+Importer::LookupResult Importer::ImportDecl(clang::Decl* decl) {
+  if (decl->getDeclContext()->isNamespace()) {
+    return LookupResult("Items contained in namespaces are not supported yet");
+  }
+
+  if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
+    return ImportFunction(function_decl);
+  } else if (auto* function_template_decl =
+                 clang::dyn_cast<clang::FunctionTemplateDecl>(decl)) {
+    return ImportFunction(function_template_decl->getTemplatedDecl());
+  } else if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl)) {
+    auto result = ImportRecord(record_decl);
+    // TODO(forster): Should we even visit the nested decl if we couldn't
+    // import the parent? For now we have tests that check that we generate
+    // error messages for those decls, so we're visiting.
+    ImportDeclsFromDeclContext(record_decl);
+    return result;
+  } else if (auto* typedef_name_decl =
+                 clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
+    return ImportTypedefName(typedef_name_decl);
+  } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
+    return LookupResult("Class templates are not supported yet");
+  } else {
+    return LookupResult();
+  }
+}
+
+Importer::LookupResult Importer::ImportFunction(
+    clang::FunctionDecl* function_decl) {
+  if (!IsFromCurrentTarget(function_decl)) return LookupResult();
+  if (function_decl->isDeleted()) return LookupResult();
   if (function_decl->isTemplated()) {
-    PushUnsupportedItem(function_decl,
-                        "Function templates are not supported yet",
-                        function_decl->getBeginLoc());
-    return true;
+    return LookupResult("Function templates are not supported yet");
   }
 
   devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
@@ -216,14 +246,12 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
 
   std::vector<FuncParam> params;
-  bool success = true;
-
-  if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+  std::vector<std::string> errors;
+  if (auto* method_decl =
+          clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!known_type_decls_.contains(
             method_decl->getParent()->getCanonicalDecl())) {
-      PushUnsupportedItem(function_decl, "Couldn't import the parent",
-                          method_decl->getBeginLoc());
-      return true;
+      return LookupResult("Couldn't import the parent");
     }
 
     // non-static member functions receive an implicit `this` parameter.
@@ -236,10 +264,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       auto param_type = ConvertType(method_decl->getThisType(), this_lifetimes,
                                     /*nullable=*/false);
       if (!param_type.ok()) {
-        PushUnsupportedItem(function_decl, param_type.status().ToString(),
-                            method_decl->getBeginLoc());
-
-        success = false;
+        errors.push_back(std::string(param_type.status().message()));
       } else {
         params.push_back({*std::move(param_type), Identifier("__this")});
       }
@@ -258,30 +283,23 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     }
     auto param_type = ConvertType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
-      PushUnsupportedItem(
-          function_decl,
-          absl::Substitute("Parameter type '$0' is not supported",
-                           param->getType().getAsString()),
-          param->getBeginLoc());
-      success = false;
+      errors.push_back(absl::Substitute("Parameter type '$0' is not supported",
+                                        param->getType().getAsString()));
       continue;
     }
 
     if (const clang::RecordType* record_type =
-            llvm::dyn_cast<clang::RecordType>(param->getType())) {
+            clang::dyn_cast<clang::RecordType>(param->getType())) {
       if (clang::RecordDecl* record_decl =
-              llvm::dyn_cast<clang::RecordDecl>(record_type->getDecl())) {
+              clang::dyn_cast<clang::RecordDecl>(record_type->getDecl())) {
         // TODO(b/200067242): non-trivial_abi structs, when passed by value,
         // have a different representation which needs special support. We
         // currently do not support it.
         if (!record_decl->canPassInRegisters()) {
-          PushUnsupportedItem(
-              function_decl,
+          errors.push_back(
               absl::Substitute("Non-trivial_abi type '$0' is not "
                                "supported by value as a parameter",
-                               param->getType().getAsString()),
-              param->getBeginLoc());
-          success = false;
+                               param->getType().getAsString()));
         }
       }
     }
@@ -292,20 +310,17 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   }
 
   if (const clang::RecordType* record_return_type =
-          llvm::dyn_cast<clang::RecordType>(function_decl->getReturnType())) {
+          clang::dyn_cast<clang::RecordType>(function_decl->getReturnType())) {
     if (clang::RecordDecl* record_decl =
-            llvm::dyn_cast<clang::RecordDecl>(record_return_type->getDecl())) {
+            clang::dyn_cast<clang::RecordDecl>(record_return_type->getDecl())) {
       // TODO(b/200067242): non-trivial_abi structs, when passed by value,
       // have a different representation which needs special support. We
       // currently do not support it.
       if (!record_decl->canPassInRegisters()) {
-        PushUnsupportedItem(
-            function_decl,
+        errors.push_back(
             absl::Substitute("Non-trivial_abi type '$0' is not supported "
                              "by value as a return type",
-                             function_decl->getReturnType().getAsString()),
-            function_decl->getReturnTypeSourceRange());
-        success = false;
+                             function_decl->getReturnType().getAsString()));
       }
     }
   }
@@ -318,12 +333,9 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
   auto return_type =
       ConvertType(function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
-    PushUnsupportedItem(
-        function_decl,
+    errors.push_back(
         absl::Substitute("Return type '$0' is not supported",
-                         function_decl->getReturnType().getAsString()),
-        function_decl->getReturnTypeSourceRange());
-    success = false;
+                         function_decl->getReturnType().getAsString()));
   }
 
   std::vector<Lifetime> lifetime_params;
@@ -339,7 +351,8 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       [](const Lifetime& l1, const Lifetime& l2) { return l1.name < l2.name; });
 
   std::optional<MemberFuncMetadata> member_func_metadata;
-  if (auto* method_decl = llvm::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+  if (auto* method_decl =
+          clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     switch (method_decl->getAccess()) {
       case clang::AS_public:
         break;
@@ -348,7 +361,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
       case clang::AS_none:
         // No need for IR to include Func representing private methods.
         // TODO(lukasza): Revisit this for protected methods.
-        return true;
+        return LookupResult();
     }
     std::optional<MemberFuncMetadata::InstanceMethodMetadata> instance_metadata;
     if (method_decl->isInstance()) {
@@ -371,7 +384,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
           .is_explicit_ctor = false,
       };
       if (auto* ctor_decl =
-              llvm::dyn_cast<clang::CXXConstructorDecl>(function_decl)) {
+              clang::dyn_cast<clang::CXXConstructorDecl>(function_decl)) {
         instance_metadata->is_explicit_ctor = ctor_decl->isExplicit();
       }
     }
@@ -381,10 +394,14 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         .instance_method_metadata = instance_metadata};
   }
 
+  if (!errors.empty()) {
+    return LookupResult(errors);
+  }
+
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
-  if (success && translated_name.has_value()) {
-    seen_decls_[function_decl->getCanonicalDecl()].push_back(Func{
+  if (translated_name.has_value()) {
+    return LookupResult(Func{
         .name = *translated_name,
         .owning_target = GetOwningTarget(function_decl),
         .doc_comment = GetComment(function_decl),
@@ -397,11 +414,10 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
         .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
     });
   }
-
-  return true;
+  return LookupResult();
 }
 
-BlazeLabel AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
+BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   clang::SourceManager& source_manager = ctx_->getSourceManager();
   auto source_location = decl->getLocation();
   auto id = source_manager.getFileID(source_location);
@@ -435,30 +451,25 @@ BlazeLabel AstVisitor::GetOwningTarget(const clang::Decl* decl) const {
   return BlazeLabel("//:virtual_clang_resource_dir_target");
 }
 
-bool AstVisitor::IsFromCurrentTarget(const clang::Decl* decl) const {
+bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return current_target_ == GetOwningTarget(decl);
 }
 
-bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
+Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context) {
     if (decl_context->isFunctionOrMethod()) {
-      return true;
+      return LookupResult();
     }
     if (record_decl->isInjectedClassName()) {
-      return true;
-    }
-    if (decl_context->isRecord()) {
-      PushUnsupportedItem(record_decl, "Nested classes are not supported yet",
-                          record_decl->getBeginLoc());
-      return true;
+      return LookupResult();
     }
   }
-
+  if (decl_context->isRecord()) {
+    return LookupResult("Nested classes are not supported yet");
+  }
   if (record_decl->isUnion()) {
-    PushUnsupportedItem(record_decl, "Unions are not supported yet",
-                        record_decl->getBeginLoc());
-    return true;
+    return LookupResult("Unions are not supported yet");
   }
 
   // Make sure the record has a definition that we'll be able to call
@@ -466,7 +477,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   record_decl = record_decl->getDefinition();
   if (!record_decl || record_decl->isInvalidDecl() ||
       !record_decl->isCompleteDefinition()) {
-    return true;
+    return LookupResult();
   }
 
   clang::AccessSpecifier default_access = clang::AS_public;
@@ -476,9 +487,7 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
           clang::dyn_cast<clang::CXXRecordDecl>(record_decl)) {
     if (cxx_record_decl->getDescribedClassTemplate() ||
         clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl)) {
-      PushUnsupportedItem(record_decl, "Class templates are not supported yet",
-                          record_decl->getBeginLoc());
-      return true;
+      return LookupResult("Class templates are not supported yet");
     }
 
     sema_.ForceDeclarationOfImplicitMembers(cxx_record_decl);
@@ -489,21 +498,22 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
   }
   std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
   if (!record_name.has_value()) {
-    return true;
+    return LookupResult();
   }
   // Provisionally assume that we know this RecordDecl so that we'll be able
   // to import fields whose type contains the record itself.
   known_type_decls_.insert(record_decl);
-  std::optional<std::vector<Field>> fields =
+  absl::StatusOr<std::vector<Field>> fields =
       ImportFields(record_decl, default_access);
-  if (!fields.has_value()) {
+  if (!fields.ok()) {
     // Importing a field failed, so note that we didn't import this RecordDecl
     // after all.
     known_type_decls_.erase(record_decl);
-    return true;
+    return LookupResult("Importing field failed");
   }
+
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
-  seen_decls_[record_decl->getCanonicalDecl()].push_back(
+  return LookupResult(
       Record{.identifier = *record_name,
              .id = GenerateDeclId(record_decl),
              .owning_target = GetOwningTarget(record_decl),
@@ -516,28 +526,24 @@ bool AstVisitor::VisitRecordDecl(clang::RecordDecl* record_decl) {
              .destructor = GetDestructorSpecialMemberFunc(*record_decl),
              .is_trivial_abi = record_decl->canPassInRegisters(),
              .is_final = is_final});
-  return true;
 }
 
-bool AstVisitor::VisitTypedefNameDecl(
+Importer::LookupResult Importer::ImportTypedefName(
     clang::TypedefNameDecl* typedef_name_decl) {
   const clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
   if (decl_context) {
     if (decl_context->isFunctionOrMethod()) {
-      return true;
+      return LookupResult();
     }
     if (decl_context->isRecord()) {
-      PushUnsupportedItem(typedef_name_decl,
-                          "Typedefs nested in classes are not supported yet",
-                          typedef_name_decl->getBeginLoc());
-      return true;
+      return LookupResult("Typedefs nested in classes are not supported yet");
     }
   }
 
   clang::QualType type =
       typedef_name_decl->getASTContext().getTypedefType(typedef_name_decl);
   if (kWellKnownTypes.contains(type.getAsString())) {
-    return true;
+    return LookupResult();
   }
 
   std::optional<Identifier> identifier =
@@ -545,26 +551,22 @@ bool AstVisitor::VisitTypedefNameDecl(
   if (!identifier.has_value()) {
     // This should never happen.
     LOG(FATAL) << "Couldn't get identifier for TypedefNameDecl";
-    return true;
   }
   absl::StatusOr<MappedType> underlying_type =
       ConvertType(typedef_name_decl->getUnderlyingType());
   if (underlying_type.ok()) {
     known_type_decls_.insert(typedef_name_decl);
-    seen_decls_[typedef_name_decl->getCanonicalDecl()].push_back(
+    return LookupResult(
         TypeAlias{.identifier = *identifier,
                   .id = GenerateDeclId(typedef_name_decl),
                   .owning_target = GetOwningTarget(typedef_name_decl),
                   .underlying_type = *underlying_type});
   } else {
-    PushUnsupportedItem(typedef_name_decl, underlying_type.status().ToString(),
-                        typedef_name_decl->getBeginLoc());
+    return LookupResult(std::string(underlying_type.status().message()));
   }
-  return true;
 }
 
-std::optional<std::string> AstVisitor::GetComment(
-    const clang::Decl* decl) const {
+std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   // This does currently not distinguish between different types of comments.
   // In general it is not possible in C++ to reliably only extract doc comments.
   // This is going to be a heuristic that needs to be tuned over time.
@@ -579,28 +581,7 @@ std::optional<std::string> AstVisitor::GetComment(
   }
 }
 
-void AstVisitor::PushUnsupportedItem(const clang::Decl* decl,
-                                     std::string message,
-                                     clang::SourceLocation source_location) {
-  if (!IsFromCurrentTarget(decl)) return;
-
-  std::string name = "unnamed";
-  if (const auto* named_decl = llvm::dyn_cast<clang::NamedDecl>(decl)) {
-    name = named_decl->getQualifiedNameAsString();
-  }
-  seen_decls_[decl->getCanonicalDecl()].push_back(UnsupportedItem{
-      .name = std::move(name),
-      .message = std::move(message),
-      .source_loc = ConvertSourceLocation(std::move(source_location))});
-}
-
-void AstVisitor::PushUnsupportedItem(const clang::Decl* decl,
-                                     std::string message,
-                                     clang::SourceRange source_range) {
-  PushUnsupportedItem(decl, message, source_range.getBegin());
-}
-
-SourceLoc AstVisitor::ConvertSourceLocation(clang::SourceLocation loc) const {
+SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   auto& sm = ctx_->getSourceManager();
 
   clang::StringRef filename = sm.getFilename(loc);
@@ -613,7 +594,7 @@ SourceLoc AstVisitor::ConvertSourceLocation(clang::SourceLocation loc) const {
                    .column = sm.getSpellingColumnNumber(loc)};
 }
 
-absl::StatusOr<MappedType> AstVisitor::ConvertType(
+absl::StatusOr<MappedType> Importer::ConvertType(
     clang::QualType qual_type,
     std::optional<devtools_rust::TypeLifetimes> lifetimes,
     bool nullable) const {
@@ -718,18 +699,16 @@ absl::StatusOr<MappedType> AstVisitor::ConvertType(
   return *std::move(type);
 }
 
-std::optional<std::vector<Field>> AstVisitor::ImportFields(
+absl::StatusOr<std::vector<Field>> Importer::ImportFields(
     clang::RecordDecl* record_decl, clang::AccessSpecifier default_access) {
   std::vector<Field> fields;
   const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     auto type = ConvertType(field_decl->getType());
     if (!type.ok()) {
-      PushUnsupportedItem(record_decl,
-                          absl::Substitute("Field type '$0' is not supported",
-                                           field_decl->getType().getAsString()),
-                          field_decl->getBeginLoc());
-      return std::nullopt;
+      return absl::UnimplementedError(
+          absl::Substitute("Field type '$0' is not supported",
+                           field_decl->getType().getAsString()));
     }
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {
@@ -738,12 +717,9 @@ std::optional<std::vector<Field>> AstVisitor::ImportFields(
 
     std::optional<Identifier> field_name = GetTranslatedIdentifier(field_decl);
     if (!field_name.has_value()) {
-      PushUnsupportedItem(
-          record_decl,
+      return absl::UnimplementedError(
           absl::Substitute("Cannot translate name for field '$0'",
-                           field_decl->getNameAsString()),
-          field_decl->getBeginLoc());
-      return std::nullopt;
+                           field_decl->getNameAsString()));
     }
     fields.push_back(
         {.identifier = *std::move(field_name),
@@ -755,8 +731,7 @@ std::optional<std::vector<Field>> AstVisitor::ImportFields(
   return fields;
 }
 
-std::string AstVisitor::GetMangledName(
-    const clang::NamedDecl* named_decl) const {
+std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
   clang::GlobalDecl decl;
 
   // There are only three named decl types that don't work with the GlobalDecl
@@ -777,10 +752,10 @@ std::string AstVisitor::GetMangledName(
   //
   // It was hard to piece this together, so writing it down here to explain why
   // we magically picked the *_Complete variants.
-  if (auto dtor = llvm::dyn_cast<clang::CXXDestructorDecl>(named_decl)) {
+  if (auto dtor = clang::dyn_cast<clang::CXXDestructorDecl>(named_decl)) {
     decl = clang::GlobalDecl(dtor, clang::CXXDtorType::Dtor_Complete);
   } else if (auto ctor =
-                 llvm::dyn_cast<clang::CXXConstructorDecl>(named_decl)) {
+                 clang::dyn_cast<clang::CXXConstructorDecl>(named_decl)) {
     decl = clang::GlobalDecl(ctor, clang::CXXCtorType::Ctor_Complete);
   } else {
     decl = clang::GlobalDecl(named_decl);
@@ -793,7 +768,7 @@ std::string AstVisitor::GetMangledName(
   return name;
 }
 
-std::optional<UnqualifiedIdentifier> AstVisitor::GetTranslatedName(
+std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
@@ -823,7 +798,7 @@ std::optional<UnqualifiedIdentifier> AstVisitor::GetTranslatedName(
   }
 }
 
-void AstVisitor::CommentManager::TraverseDecl(clang::Decl* decl) {
+void Importer::CommentManager::TraverseDecl(clang::Decl* decl) {
   ctx_ = &decl->getASTContext();
 
   // When we go to a new file we flush the comments from the previous file,
@@ -861,7 +836,7 @@ void AstVisitor::CommentManager::TraverseDecl(clang::Decl* decl) {
   }
 }
 
-void AstVisitor::CommentManager::LoadComments() {
+void Importer::CommentManager::LoadComments() {
   auto comments = ctx_->Comments.getCommentsInFile(current_file_);
   if (comments) {
     for (auto [_, comment] : *comments) {
@@ -871,7 +846,7 @@ void AstVisitor::CommentManager::LoadComments() {
   next_comment_ = file_comments_.begin();
 }
 
-void AstVisitor::CommentManager::FlushComments() {
+void Importer::CommentManager::FlushComments() {
   while (next_comment_ != file_comments_.end()) {
     VisitTopLevelComment(*next_comment_);
     next_comment_++;
@@ -879,7 +854,7 @@ void AstVisitor::CommentManager::FlushComments() {
   file_comments_.clear();
 }
 
-void AstVisitor::CommentManager::VisitTopLevelComment(
+void Importer::CommentManager::VisitTopLevelComment(
     const clang::RawComment* comment) {
   comments_.push_back(comment);
 }

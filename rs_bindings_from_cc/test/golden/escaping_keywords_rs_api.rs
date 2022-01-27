@@ -41,11 +41,11 @@ pub fn r#impl(r#match: i32) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
 }
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=13
+// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=12
 // Error while generating bindings for item 'await':
 // Class templates are not supported yet
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=18
+// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=17
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 

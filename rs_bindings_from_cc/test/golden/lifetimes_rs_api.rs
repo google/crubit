@@ -15,7 +15,7 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=6
 // Error while generating bindings for item 'FunctionPointer':
-// UNIMPLEMENTED: Unsupported type 'void (*)(void)' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='void (*)(void)']
+// Unsupported type 'void (*)(void)'
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=7
 // Error while generating bindings for item 'AddHookWithTypedef':
@@ -27,7 +27,7 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=11
 // Error while generating bindings for item 'FunctionReference':
-// UNIMPLEMENTED: Unsupported type 'void (&)(void)' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='void (&)(void)']
+// Unsupported type 'void (&)(void)'
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=12
 // Error while generating bindings for item 'AddAnotherHookWithTypedef':
@@ -40,7 +40,7 @@ pub unsafe fn ConsumeArray(pair: *mut i32) {
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=16
 // Error while generating bindings for item 'Arr':
-// UNIMPLEMENTED: Unsupported type 'int[2]' [type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type='int[2]']
+// Unsupported type 'int[2]'
 
 #[inline(always)]
 pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut i32) {

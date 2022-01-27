@@ -970,7 +970,7 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
     )?;
     let names = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
     assert_strings_dont_contain(names.as_slice(), "my_namespace::StructFromNamespaceIsUnsupported");
-    assert_strings_contain(names.as_slice(), "MyOtherStruct::MyOtherStruct");
+    assert_strings_contain(names.as_slice(), "MyOtherStruct");
     Ok(())
 }
 
