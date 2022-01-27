@@ -117,17 +117,10 @@ mod tests {
 
     #[test]
     fn test_no_elided_lifetimes() {
-        // TODO(b/214244223): No bindings should be generated for any of the
-        // constructors if no lifetimes are present on `__this` parameter of
-        // C++ constructors.  When this is fixed, the test assertions below
-        // should be "reversed" / negated.
-        assert_impl_all!(StructWithConstructorsWithoutLifetimes: Default);
-        assert_impl_all!(StructWithConstructorsWithoutLifetimes: From<i32>);
-
-        // Without lifetime annotations the `other` parameter of the copy
-        // constructor cannot be translated into a `&self` reference (it should
-        // instead be spelled as `other: *const StructWith...`). Because of this
-        // we shouldn't get the `impl Clone` here.  See also b/214244223.
+        // b/214244223: No bindings should be generated for any of the
+        // constructors if no lifetimes are present on `this` parameter in C++.
+        assert_not_impl_all!(StructWithConstructorsWithoutLifetimes: Default);
+        assert_not_impl_all!(StructWithConstructorsWithoutLifetimes: From<i32>);
         assert_not_impl_all!(StructWithConstructorsWithoutLifetimes: Clone);
 
         // Trivial-ABI structs should not implement the Copy trait, if they have a

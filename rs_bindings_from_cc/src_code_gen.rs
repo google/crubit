@@ -279,6 +279,12 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 // TODO: Handle <internal link>
                 return Ok(None);
             }
+            if is_unsafe {
+                // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
+                // translating C++ constructors into static methods in Rust).
+                return Ok(None);
+            }
+
             match func.params.len() {
                 0 => bail!("Constructor should have at least 1 parameter (__this)"),
                 1 => {
@@ -307,9 +313,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     }
                 }
                 _ => {
-                    // TODO(b/200066396): Map other constructors to something
-                    // (maybe to static method if named via a
-                    // bindings-generator-recognized C++ attribute).
+                    // TODO(b/216648347): Support bindings for other constructors.
                     return Ok(None);
                 }
             }
@@ -338,27 +342,26 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
             // Remove the lifetime associated with `__this`.
             let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
-            if let Some(no_longer_needed_lifetime_id) = maybe_first_lifetime {
-                lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
-
-                // TODO(lukasza): Also cover the case where the lifetime of `__this`
-                // is also used *deep* in another parameter:
-                // fn constructor<'a>(__this: &'a mut Self, x: SomeStruct<'a>)
-                if let Some(type_still_dependent_on_removed_lifetime) = param_type_kinds
-                    .iter()
-                    .skip(1) // Skipping `__this`
-                    .find(|t| {
-                        matches!(t, RsTypeKind::Reference{ lifetime_id, .. }
-                                            if *lifetime_id == *no_longer_needed_lifetime_id)
-                    })
-                {
-                    bail!(
-                        "The lifetime of `__this` is unexpectedly also used by another \
-                        parameter {:?} in function {:?}",
-                        type_still_dependent_on_removed_lifetime,
-                        func.name
-                    );
-                }
+            let no_longer_needed_lifetime_id = maybe_first_lifetime
+                .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
+            lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
+            // TODO(lukasza): Also cover the case where the lifetime of `__this`
+            // is also used *deep* in another parameter:
+            // fn constructor<'a>(__this: &'a mut Self, x: SomeStruct<'a>)
+            if let Some(type_still_dependent_on_removed_lifetime) = param_type_kinds
+                .iter()
+                .skip(1) // Skipping `__this`
+                .find(|t| {
+                    matches!(t, RsTypeKind::Reference{ lifetime_id, .. }
+                                if *lifetime_id == *no_longer_needed_lifetime_id)
+                })
+            {
+                bail!(
+                    "The lifetime of `__this` is unexpectedly also used by another \
+                    parameter {:?} in function {:?}",
+                    type_still_dependent_on_removed_lifetime,
+                    func.name
+                );
             }
 
             // Rebind `maybe_first_api_param` to the next param after `__this`.
@@ -421,13 +424,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     quote! {}
                 },
             ),
-            ImplKind::Trait(_) => (
-                quote! {},
-                // TODO(b/214244223): Correctly handle `is_unsafe` when
-                // generating trait impls (treat destructors as safe, skip
-                // bindings for constructors and things like PartialEq).
-                quote! {},
-            ),
+            ImplKind::Trait(_) => {
+                // Currently supported bindings have no unsafe trait functions.
+                assert!(!is_unsafe || func.name == UnqualifiedIdentifier::Destructor);
+                (quote! {}, quote! {})
+            }
         };
 
         let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
@@ -2224,7 +2225,8 @@ mod tests {
         // functions yet, except in the case of overloaded constructors with a
         // single parameter.
         let ir = ir_from_cc(
-            r#" void f();
+            r#" #pragma clang lifetime_elision
+                void f();
                 void f(int i);
                 struct S1 final {
                   void f();
@@ -2253,7 +2255,7 @@ mod tests {
 
         // But we can import member functions that have the same name as a free
         // function.
-        assert_rs_matches!(rs_api, quote! {pub unsafe fn f(__this: *mut S2)});
+        assert_rs_matches!(rs_api, quote! {pub fn f<'a>(&'a mut self)});
 
         // We can also import overloaded single-parameter constructors.
         assert_rs_matches!(rs_api, quote! {impl From<i32> for S3});

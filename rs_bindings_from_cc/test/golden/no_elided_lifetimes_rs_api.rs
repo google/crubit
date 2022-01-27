@@ -23,28 +23,6 @@ pub struct S {
     placeholder: std::mem::MaybeUninit<u8>,
 }
 
-impl Default for S {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN1SC1Ev(&mut tmp);
-            tmp.assume_init()
-        }
-    }
-}
-
-impl From<*const S> for S {
-    #[inline(always)]
-    fn from(__param_0: *const S) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN1SC1ERKS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::S':
 // Parameter type 'struct S &&' is not supported
@@ -80,11 +58,6 @@ mod detail {
     extern "C" {
         #[link_name = "_Z13free_functionRi"]
         pub(crate) fn __rust_thunk___Z13free_functionRi(p1: *mut i32) -> *mut i32;
-        pub(crate) fn __rust_thunk___ZN1SC1Ev(__this: &mut std::mem::MaybeUninit<S>);
-        pub(crate) fn __rust_thunk___ZN1SC1ERKS_(
-            __this: &mut std::mem::MaybeUninit<S>,
-            __param_0: *const S,
-        );
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) fn __rust_thunk___ZNK1S12const_methodERiS0_(
             __this: *const S,
