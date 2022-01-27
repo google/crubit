@@ -141,6 +141,57 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_OneInputLifetime) {
               IsOkAndHolds(LifetimesAre({{"f", "a -> (a, a)"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, FunctionPointerLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        void f(void (*)());
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, FunctionPointerAsTypedefLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        typedef void (*FunctionPointer)();
+        void f(FunctionPointer hook);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, FunctionReferenceLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        typedef void (&FunctionReference)();
+        void f(FunctionReference hook);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, FunctionReferenceAsTypedefLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        void f(void (&)());
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, ArrayParamLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        void f(int pair[2]);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, ArrayParamAsTypedefLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        typesef int Arr[2];
+        void f(Arr);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_NoOutputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
