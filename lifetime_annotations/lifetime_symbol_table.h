@@ -43,6 +43,12 @@ class LifetimeSymbolTable {
   // symbol table.
   llvm::StringRef LookupLifetimeAndMaybeDeclare(Lifetime lifetime);
 
+  // Associates a lifetime to a given name.
+  // The name must not be already used.
+  // Calling this function with a lifetime that is already used will cause calls
+  // to LookupLifetime() to have undefined behaviour.
+  void Add(llvm::StringRef name, Lifetime lifetime);
+
  private:
   llvm::StringMap<Lifetime> name_to_lifetime_;
   llvm::DenseMap<Lifetime, std::string> lifetime_to_name_;

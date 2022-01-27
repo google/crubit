@@ -12,11 +12,13 @@
 #include <vector>
 
 #include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_symbol_table.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/TypeOrdering.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMapInfo.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 
 namespace devtools_rust {
 
@@ -45,6 +47,12 @@ std::string DebugString(
       return l.DebugString();
     });
 
+// Extracts the lifetime parameters of the given record type.
+// TODO(veluca): for now, lifetime parameters are extracted from an attribute on
+// the LIFETIMES() method on the record type. This is a temporary hack.
+llvm::SmallVector<std::string> GetLifetimeParameters(
+    const clang::CXXRecordDecl* cxx_record);
+
 TypeLifetimes CreateLifetimesForType(
     clang::QualType type, std::function<Lifetime()> lifetime_factory);
 
@@ -72,9 +80,11 @@ class ValueLifetimes {
   // Returns a ValueLifetimes for a record type. If the record type has template
   // parameters, pass the corresponding template argument lifetimes in
   // `template_argument_lifetimes`; otherwise, pass an empty vector.
+  // Similarly, pass any lifetime parameters in `lifetime_parameters`.
   static ValueLifetimes ForRecord(
       clang::QualType type,
-      std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes);
+      std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes,
+      LifetimeSymbolTable lifetime_parameters);
 
   ValueLifetimes(const ValueLifetimes& other) { *this = other; }
 
@@ -101,6 +111,14 @@ class ValueLifetimes {
     return template_argument_lifetimes_.size();
   }
 
+  // Returns the lifetime associated with the given named lifetime parameter.
+  Lifetime GetLifetimeParameter(llvm::StringRef param) const {
+    std::optional<Lifetime> ret =
+        lifetime_parameters_by_name_.LookupName(param);
+    assert(ret.has_value());
+    return ret.value();
+  }
+
  private:
   explicit ValueLifetimes(clang::QualType type) : type_(type) {}
 
@@ -112,8 +130,25 @@ class ValueLifetimes {
   // is non-empty.
   std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
   std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes_;
-  // TODO(veluca): add lifetime parameters here.
   clang::QualType type_;
+
+  // Tracks the mapping from the names of the lifetimes on the struct/class
+  // definition to the associated `Lifetime`s. For example, in the following
+  // code
+  //
+  // class string_view LIFETIME_PARAM(d) { ... };
+  //
+  // string_view $a drop_last(string_view $a in) {
+  //   string_view result;
+  //   ...
+  //   return result;
+  // }
+  //
+  // the value stored in `result`/`in` has 1 lifetime argument. This lifetime
+  // has a local name "a" (it is not possible to retrieve this mapping from this
+  // ValueLifetimes object). This lifetime substitutes lifetime "d" from
+  // string_view (this mapping is tracked by lifetime_parameters_by_name_).
+  LifetimeSymbolTable lifetime_parameters_by_name_;
 
   friend class llvm::DenseMapInfo<devtools_rust::ValueLifetimes>;
 };
@@ -138,13 +173,22 @@ class ObjectLifetimes {
 
   std::string DebugString() const;
 
-  // Returns the ObjectLifetimes for an object of a given type, whose lifetimes
-  // are scoped within or derived from the object that this lifetimes
-  // represents, i.e. it is a field or a base class of the object.
-  // `type` must be a record type (class, struct or union).
-  ObjectLifetimes GetRecordObjectLifetimes(clang::QualType type) const;
+  // Returns the ObjectLifetimes for a base class or a field of the given type.
+  ObjectLifetimes GetFieldOrBaseLifetimes(
+      clang::QualType type,
+      llvm::SmallVector<std::string> type_lifetime_args) const;
 
  private:
+  // Returns the ObjectLifetimes for an object of a given type, whose lifetimes
+  // are scoped within or derived from the object that `this`
+  // represents, i.e. it is a field or a base class of the object.
+  // `value_lifetimes_.Type()` must be a record type (class, struct or union).
+  // TODO(veluca): ideally, `type_lifetime_args` should not be needed, but
+  // rather extracted from attributes on the `type`.
+  ObjectLifetimes GetObjectLifetimesForTypeInContext(
+      clang::QualType type, llvm::SmallVector<std::string> type_lifetime_args,
+      llvm::StringRef object_lifetime_parameter) const;
+
   ObjectLifetimes(Lifetime lifetime, ValueLifetimes value_lifetimes)
       : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
 

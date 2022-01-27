@@ -10,12 +10,22 @@
 #include <string>
 #include <utility>
 
+#include "lifetime_annotations/lifetime_symbol_table.h"
 #include "third_party/absl/strings/str_format.h"
 #include "third_party/absl/strings/str_join.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Attr.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/TemplateBase.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Lex/Pragma.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Lex/Preprocessor.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 
 namespace devtools_rust {
 
@@ -34,12 +44,74 @@ std::string DebugString(const TypeLifetimes& lifetimes,
   return absl::StrFormat("(%s)", absl::StrJoin(parts, ", "));
 }
 
+llvm::SmallVector<std::string> GetLifetimeParameters(
+    const clang::CXXRecordDecl* cxx_record) {
+  const clang::AnnotateAttr* lifetime_params_attr = nullptr;
+  for (auto annotate : cxx_record->specific_attrs<clang::AnnotateAttr>()) {
+    if (annotate->getAnnotation().startswith("lifetime_params")) {
+      if (lifetime_params_attr) {
+        llvm::report_fatal_error("repeated lifetime annotation");
+      }
+      lifetime_params_attr = annotate;
+    }
+  }
+  if (!lifetime_params_attr) {
+    return {};
+  }
+
+  // The lexer requires a null character at the end of the string.
+  std::string annotation(lifetime_params_attr->getAnnotation().data(),
+                         lifetime_params_attr->getAnnotationLength());
+
+  const char* end = annotation.data() + annotation.size();
+
+  clang::SourceLocation source_loc = lifetime_params_attr->getLoc();
+
+  clang::Lexer lexer(source_loc, clang::LangOptions(), annotation.data(),
+                     annotation.data(), end);
+
+  auto tok = [&]() -> llvm::StringRef {
+    clang::Token token;
+    if (lexer.getBufferLocation() != end) {
+      lexer.LexFromRawLexer(token);
+      return llvm::StringRef(annotation.data() +
+                                 token.getLocation().getRawEncoding() -
+                                 source_loc.getRawEncoding(),
+                             token.getLength());
+    }
+    return "";
+  };
+
+  // Consume the "lifetime_params =" initial part.
+  if (tok() != "lifetime_params" || tok() != "=") {
+    llvm::report_fatal_error("invalid lifetime annotation");
+  }
+
+  llvm::SmallVector<std::string> ret;
+
+  for (llvm::StringRef token; !(token = tok()).empty();) {
+    if (token == ",") {
+      continue;
+    }
+    ret.push_back(token.str());
+  }
+
+  return ret;
+}
+
 TypeLifetimes CreateLifetimesForType(
     clang::QualType type, std::function<Lifetime()> lifetime_factory) {
   assert(!type.isNull());
   TypeLifetimes ret;
+  if (auto record = type->getAs<clang::RecordType>()) {
+    if (auto cxx_record = record->getAsCXXRecordDecl()) {
+      for (const auto& lftm_param : GetLifetimeParameters(cxx_record)) {
+        (void)lftm_param;
+        ret.push_back(lifetime_factory());
+      }
+    }
+  }
   // Add implicit lifetime parameters for type template parameters.
-  // TODO(veluca): we'll need to handle explicit lifetime parameters too.
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
   if (!template_args.empty()) {
     for (const clang::TemplateArgument& arg : template_args) {
@@ -57,7 +129,7 @@ TypeLifetimes CreateLifetimesForType(
     return ret;
   }
   clang::QualType pointee = type->getPointeeType();
-  if (pointee.isNull()) return {};
+  if (pointee.isNull()) return ret;
   ret = CreateLifetimesForType(pointee, lifetime_factory);
   ret.push_back(lifetime_factory());
   return ret;
@@ -66,6 +138,7 @@ TypeLifetimes CreateLifetimesForType(
 ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
   type_ = other.type_;
   template_argument_lifetimes_ = other.template_argument_lifetimes_;
+  lifetime_parameters_by_name_ = other.lifetime_parameters_by_name_;
   pointee_lifetimes_ =
       other.pointee_lifetimes_
           ? std::make_unique<ObjectLifetimes>(*other.pointee_lifetimes_)
@@ -74,6 +147,7 @@ ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
 }
 
 std::string ValueLifetimes::DebugString() const {
+  // TODO(veluca): add lifetime parameters here.
   std::string ret;
   if (!template_argument_lifetimes_.empty()) {
     std::vector<std::string> tmpl_arg_strings;
@@ -117,6 +191,20 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
 
   ValueLifetimes ret(type);
 
+  if (auto record = type->getAs<clang::RecordType>()) {
+    if (auto cxx_record = record->getAsCXXRecordDecl()) {
+      llvm::SmallVector<std::string> params = GetLifetimeParameters(cxx_record);
+      // Visit in reverse order, as we are doing a post-order traversal.
+      for (size_t i = params.size(); i-- > 0;) {
+        if (ret.lifetime_parameters_by_name_.LookupName(params[i])) {
+          llvm::report_fatal_error("duplicate lifetime parameter name");
+        }
+        ret.lifetime_parameters_by_name_.Add(params[i], type_lifetimes.back());
+        type_lifetimes = type_lifetimes.drop_back();
+      }
+    }
+  }
+
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
   if (!template_args.empty()) {
     // Since we are simulating reversing a post-order visit, we need to
@@ -151,11 +239,13 @@ ValueLifetimes ValueLifetimes::ForPointerLikeType(
 
 ValueLifetimes ValueLifetimes::ForRecord(
     clang::QualType type,
-    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes) {
+    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes,
+    LifetimeSymbolTable lifetime_parameters) {
   assert(type->isRecordType());
   assert(GetTemplateArgs(type).size() == template_argument_lifetimes.size());
   ValueLifetimes result(type);
   result.template_argument_lifetimes_ = std::move(template_argument_lifetimes);
+  result.lifetime_parameters_by_name_ = lifetime_parameters;
   return result;
 }
 
@@ -193,14 +283,19 @@ const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
   return {};
 }
 
-ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
-    clang::QualType type) const {
+ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
+    clang::QualType type, llvm::SmallVector<std::string> type_lifetime_args,
+    llvm::StringRef object_lifetime_parameter) const {
   assert(value_lifetimes_.Type()->isRecordType());
 
   // The object of the `type` (i.e. field or a base class) basically has the
   // same lifetime as the struct.
-  // TODO(veluca): this needs adaptation to lifetime parameters.
   Lifetime ret_lifetime = lifetime_;
+  // ... unless the field has lifetime parameters.
+  if (!object_lifetime_parameter.empty()) {
+    ret_lifetime =
+        value_lifetimes_.GetLifetimeParameter(object_lifetime_parameter);
+  }
 
   // `type` is one of a template argument, a struct, a pointer, or a type
   // with no lifetimes (other than its own).
@@ -217,8 +312,24 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
     }
     return ObjectLifetimes(ret_lifetime, *arg_lifetimes);
   } else if (type->isStructureOrClassType()) {
-    // Second case: struct. We need to construct potentally reshuffled
+    // Second case: struct.
+    // Resolve lifetime parameters for the struct, if it has any.
+    LifetimeSymbolTable lifetime_params;
+    llvm::SmallVector<std::string> params = GetLifetimeParameters(
+        type->getAs<clang::RecordType>()->getAsCXXRecordDecl());
+    for (size_t i = params.size(); i-- > 0;) {
+      assert(!type_lifetime_args.empty());
+      auto lftm_arg = type_lifetime_args.back();
+      type_lifetime_args.pop_back();
+      lifetime_params.Add(params[i],
+                          value_lifetimes_.GetLifetimeParameter(lftm_arg));
+    }
+
+    // We need to construct potentally reshuffled
     // template arguments, if the struct is a template.
+
+    // TODO(veluca): mixing lifetimes and template parameters is not supported
+    // yet.
     std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes;
     size_t parameter_pack_expansion_index = 0;
     for (const clang::TemplateArgument& arg : GetTemplateArgs(type)) {
@@ -253,20 +364,35 @@ ObjectLifetimes ObjectLifetimes::GetRecordObjectLifetimes(
         template_argument_lifetimes.push_back(std::nullopt);
       }
     }
-    // TODO(veluca): handle potentially reshuffled lifetime parameters.
-    return ObjectLifetimes(ret_lifetime,
-                           ValueLifetimes::ForRecord(
-                               type, std::move(template_argument_lifetimes)));
+
+    return ObjectLifetimes(
+        ret_lifetime,
+        ValueLifetimes::ForRecord(type, std::move(template_argument_lifetimes),
+                                  std::move(lifetime_params)));
   } else if (!type->getPointeeType().isNull()) {
+    std::string object_lifetime_parameter;
+    if (!type_lifetime_args.empty()) {
+      object_lifetime_parameter = std::move(type_lifetime_args.back());
+      type_lifetime_args.pop_back();
+    }
     // Third case: pointer.
     return ObjectLifetimes(
         ret_lifetime,
         ValueLifetimes::ForPointerLikeType(
-            type, GetRecordObjectLifetimes(type->getPointeeType())));
+            type, GetObjectLifetimesForTypeInContext(
+                      type->getPointeeType(), std::move(type_lifetime_args),
+                      object_lifetime_parameter)));
   }
 
   return ObjectLifetimes(ret_lifetime,
                          ValueLifetimes::ForLifetimeLessType(type));
+}
+
+ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(
+    clang::QualType type,
+    llvm::SmallVector<std::string> type_lifetime_args) const {
+  return GetObjectLifetimesForTypeInContext(type, std::move(type_lifetime_args),
+                                            "");
 }
 
 }  // namespace devtools_rust
@@ -276,6 +402,7 @@ namespace llvm {
 bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
     const devtools_rust::ValueLifetimes& lhs,
     const devtools_rust::ValueLifetimes& rhs) {
+  // TODO(veluca): add lifetime parameters.
   if (lhs.type_ != rhs.type_) {
     return false;
   }
@@ -307,6 +434,7 @@ bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
 
 unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
     const devtools_rust::ValueLifetimes& value_lifetimes) {
+  // TODO(veluca): add lifetime parameters.
   llvm::hash_code hash = 0;
   if (value_lifetimes.pointee_lifetimes_) {
     hash = DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(

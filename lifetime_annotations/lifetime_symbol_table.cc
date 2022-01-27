@@ -4,8 +4,11 @@
 
 #include "lifetime_annotations/lifetime_symbol_table.h"
 
+#include <iostream>
 #include <optional>
 #include <string>
+
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 
 namespace devtools_rust {
 
@@ -89,6 +92,14 @@ llvm::StringRef LifetimeSymbolTable::LookupLifetimeAndMaybeDeclare(
       return name_to_lifetime_iter->first();
     }
   }
+}
+
+void LifetimeSymbolTable::Add(llvm::StringRef name, Lifetime lifetime) {
+  auto [_, inserted] = name_to_lifetime_.try_emplace(name, lifetime);
+  if (!inserted) {
+    llvm::report_fatal_error("duplicate lifetime parameter");
+  }
+  lifetime_to_name_[lifetime] = name;
 }
 
 }  // namespace devtools_rust
