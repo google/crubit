@@ -336,14 +336,29 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             api_params.remove(0); // Presence of element #0 and `maybe_first_api_param` is
             thunk_args.remove(0); // indirectly verified by one of `match` statements above.
 
-            // TODO(lukasza): Avoid incorrectly trimming the lifetimes when a
-            // lifetime of `__this` is also used in another parameter:
-            // fn constructor<'a>(__this: &'a mut Self, x: &'a i32)
-            // TODO(lukasza): Should be able to guarantee presence of the
-            // lifetime once skipping generating unsafe constructor bindings.
+            // Remove the lifetime associated with `__this`.
             let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
             if let Some(no_longer_needed_lifetime_id) = maybe_first_lifetime {
                 lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
+
+                // TODO(lukasza): Also cover the case where the lifetime of `__this`
+                // is also used *deep* in another parameter:
+                // fn constructor<'a>(__this: &'a mut Self, x: SomeStruct<'a>)
+                if let Some(type_still_dependent_on_removed_lifetime) = param_type_kinds
+                    .iter()
+                    .skip(1) // Skipping `__this`
+                    .find(|t| {
+                        matches!(t, RsTypeKind::Reference{ lifetime_id, .. }
+                                            if *lifetime_id == *no_longer_needed_lifetime_id)
+                    })
+                {
+                    bail!(
+                        "The lifetime of `__this` is unexpectedly also used by another \
+                        parameter {:?} in function {:?}",
+                        type_still_dependent_on_removed_lifetime,
+                        func.name
+                    );
+                }
             }
 
             // Rebind `maybe_first_api_param` to the next param after `__this`.
@@ -2033,6 +2048,55 @@ mod tests {
                     rs_api_impl_support::construct_at (__this) ;
                 }
             }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_clone_that_propagates_lifetime() -> Result<()> {
+        // This test covers the case where a single lifetime applies to 1)
+        // the `__this` parameter and 2) other constructor parameters. For
+        // example, maybe the newly constructed object needs to have the
+        // same lifetime as the constructor's parameter. (This might require
+        // annotating the whole C++ struct with a lifetime, so maybe the
+        // example below is not fully realistic/accurate...).
+        let mut ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct Foo final {
+                [[clang::annotate("lifetimes = a: a")]]
+                Foo(const int& i);
+            };"#,
+        )?;
+        let ctor: &mut Func = ir
+            .items_mut()
+            .filter_map(|item| match item {
+                Item::Func(func) => Some(func),
+                _ => None,
+            })
+            .find(|f| {
+                matches!(&f.name, UnqualifiedIdentifier::Constructor)
+                    && f.params.get(1).map(|p| p.identifier.identifier == "i").unwrap_or_default()
+            })
+            .unwrap();
+        {
+            // Double-check that the test scenario set up above uses the same lifetime
+            // for both of the constructor's parameters: `__this` and `i`.
+            assert_eq!(ctor.params.len(), 2);
+            let this_lifetime: LifetimeId =
+                *ctor.params[0].type_.rs_type.lifetime_args.first().unwrap();
+            let i_lifetime: LifetimeId =
+                *ctor.params[1].type_.rs_type.lifetime_args.first_mut().unwrap();
+            assert_eq!(i_lifetime, this_lifetime);
+        }
+
+        // Before cl/423346348 the generated Rust code would incorrectly look
+        // like this (note the mismatched 'a and 'b lifetimes):
+        //     fn from<'b>(i: &'a i32) -> Self
+        // After this CL, this scenario will result in an explicit error.
+        let err = generate_rs_api(&ir).unwrap_err();
+        let msg = format!("{}", err);
+        assert!(
+            msg.contains("The lifetime of `__this` is unexpectedly also used by another parameter")
         );
         Ok(())
     }
