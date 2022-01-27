@@ -283,18 +283,18 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
   return items;
 }
 
-TEST(AstVisitorTest, Noop) {
+TEST(ImporterTest, Noop) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("// nothing interesting there."));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir), IsEmpty());
 }
 
-TEST(AstVisitorTest, ErrorOnInvalidInput) {
+TEST(ImporterTest, ErrorOnInvalidInput) {
   ASSERT_THAT(IrFromCc("int foo(); But this is not C++"),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(AstVisitorTest, FuncWithVoidReturnType) {
+TEST(ImporterTest, FuncWithVoidReturnType) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo();"));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(
@@ -302,7 +302,7 @@ TEST(AstVisitorTest, FuncWithVoidReturnType) {
                         ReturnType(IsVoid()), ParamsAre()))));
 }
 
-TEST(AstVisitorTest, TwoFuncs) {
+TEST(ImporterTest, TwoFuncs) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Bar();"));
   EXPECT_THAT(
       ItemsWithoutBuiltins(ir),
@@ -313,7 +313,7 @@ TEST(AstVisitorTest, TwoFuncs) {
                                   ReturnType(IsVoid()), ParamsAre()))));
 }
 
-TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
+TEST(ImporterTest, TwoFuncsFromTwoHeaders) {
   ASSERT_OK_AND_ASSIGN(
       IR ir, IrFromCc("", BlazeLabel{"//two_funcs:one_target"},
                       {HeaderName("test/testing_header_0.h"),
@@ -331,27 +331,27 @@ TEST(AstVisitorTest, TwoFuncsFromTwoHeaders) {
                           VariantWith<Func>(IdentifierIs("Bar"))));
 }
 
-TEST(AstVisitorTest, NonInlineFunc) {
+TEST(ImporterTest, NonInlineFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo() {}"));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(
                   AllOf(IdentifierIs("Foo"), Not(IsInline())))));
 }
 
-TEST(AstVisitorTest, InlineFunc) {
+TEST(ImporterTest, InlineFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("inline void Foo() {}"));
   EXPECT_THAT(
       ItemsWithoutBuiltins(ir),
       ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
-TEST(AstVisitorTest, FuncJustOnce) {
+TEST(ImporterTest, FuncJustOnce) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Foo();"));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
-TEST(AstVisitorTest, TestImportPointerFunc) {
+TEST(ImporterTest, TestImportPointerFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int* Foo(int* a);"));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
@@ -359,7 +359,7 @@ TEST(AstVisitorTest, TestImportPointerFunc) {
                   ReturnType(IsIntPtr()), ParamsAre(ParamType(IsIntPtr()))))));
 }
 
-TEST(AstVisitorTest, TestImportConstStructPointerFunc) {
+TEST(ImporterTest, TestImportConstStructPointerFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir,
                        IrFromCc("struct S{}; const S* Foo(const S* s);"));
 
@@ -375,7 +375,7 @@ TEST(AstVisitorTest, TestImportConstStructPointerFunc) {
                             ParamsAre(ParamType(is_ptr_to_const_s))))));
 }
 
-TEST(AstVisitorTest, TestImportReferenceFunc) {
+TEST(ImporterTest, TestImportReferenceFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int& Foo(int& a);"));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
@@ -383,7 +383,7 @@ TEST(AstVisitorTest, TestImportReferenceFunc) {
                   ReturnType(IsIntRef()), ParamsAre(ParamType(IsIntRef()))))));
 }
 
-TEST(AstVisitorTest, Struct) {
+TEST(ImporterTest, Struct) {
   ASSERT_OK_AND_ASSIGN(
       IR ir,
       IrFromCc("struct SomeStruct { int first_field; int second_field; };"));
@@ -398,7 +398,7 @@ TEST(AstVisitorTest, Struct) {
                                   FieldType(IsInt()), OffsetIs(32)))))));
 }
 
-TEST(AstVisitorTest, TrivialCopyConstructor) {
+TEST(ImporterTest, TrivialCopyConstructor) {
   absl::string_view file = R"cc(
     struct Implicit {};
     struct Defaulted {
@@ -413,7 +413,7 @@ TEST(AstVisitorTest, TrivialCopyConstructor) {
                            SpecialMemberFunc::Definition::kTrivial)))));
 }
 
-TEST(AstVisitorTest, NontrivialUserDefinedCopyConstructor) {
+TEST(ImporterTest, NontrivialUserDefinedCopyConstructor) {
   absl::string_view file = R"cc(
     struct NontrivialUserDefined {
       NontrivialUserDefined(const NontrivialUserDefined&);
@@ -437,7 +437,7 @@ TEST(AstVisitorTest, NontrivialUserDefinedCopyConstructor) {
                   SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
 }
 
-TEST(AstVisitorTest, NontrivialMembersCopyConstructor) {
+TEST(ImporterTest, NontrivialMembersCopyConstructor) {
   absl::string_view file = R"cc(
     struct NontrivialUserDefined {
       NontrivialUserDefined(const NontrivialUserDefined&);
@@ -463,7 +463,7 @@ TEST(AstVisitorTest, NontrivialMembersCopyConstructor) {
               SpecialMemberFunc::Definition::kNontrivialMembers))))));
 }
 
-TEST(AstVisitorTest, DeletedCopyConstructor) {
+TEST(ImporterTest, DeletedCopyConstructor) {
   absl::string_view file = R"cc(
     struct Deleted {
       Deleted(const Deleted&) = delete;
@@ -482,7 +482,7 @@ TEST(AstVisitorTest, DeletedCopyConstructor) {
                            SpecialMemberFunc::Definition::kDeleted)))));
 }
 
-TEST(AstVisitorTest, PublicCopyConstructor) {
+TEST(ImporterTest, PublicCopyConstructor) {
   absl::string_view file = R"cc(
     class Implicit {};
     struct Defaulted {
@@ -500,7 +500,7 @@ TEST(AstVisitorTest, PublicCopyConstructor) {
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPublic)))));
 }
 
-TEST(AstVisitorTest, PrivateCopyConstructor) {
+TEST(ImporterTest, PrivateCopyConstructor) {
   absl::string_view file = R"cc(
     class Defaulted {
       Defaulted(const Defaulted&) = default;
@@ -517,7 +517,7 @@ TEST(AstVisitorTest, PrivateCopyConstructor) {
   EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPrivate)))));
 }
 
-TEST(AstVisitorTest, TrivialMoveConstructor) {
+TEST(ImporterTest, TrivialMoveConstructor) {
   absl::string_view file = R"cc(
     struct Implicit {};
     struct Defaulted {
@@ -532,7 +532,7 @@ TEST(AstVisitorTest, TrivialMoveConstructor) {
                            SpecialMemberFunc::Definition::kTrivial)))));
 }
 
-TEST(AstVisitorTest, NontrivialUserDefinedMoveConstructor) {
+TEST(ImporterTest, NontrivialUserDefinedMoveConstructor) {
   absl::string_view file = R"cc(
     struct NontrivialUserDefined {
       NontrivialUserDefined(NontrivialUserDefined&&);
@@ -555,7 +555,7 @@ TEST(AstVisitorTest, NontrivialUserDefinedMoveConstructor) {
                   SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
 }
 
-TEST(AstVisitorTest, NontrivialMembersMoveConstructor) {
+TEST(ImporterTest, NontrivialMembersMoveConstructor) {
   absl::string_view file = R"cc(
     struct NontrivialUserDefined {
       NontrivialUserDefined(NontrivialUserDefined&&);
@@ -581,7 +581,7 @@ TEST(AstVisitorTest, NontrivialMembersMoveConstructor) {
               SpecialMemberFunc::Definition::kNontrivialMembers))))));
 }
 
-TEST(AstVisitorTest, DeletedMoveConstructor) {
+TEST(ImporterTest, DeletedMoveConstructor) {
   absl::string_view file = R"cc(
     struct Deleted {
       Deleted(Deleted&&) = delete;
@@ -600,7 +600,7 @@ TEST(AstVisitorTest, DeletedMoveConstructor) {
                            SpecialMemberFunc::Definition::kDeleted)))));
 }
 
-TEST(AstVisitorTest, PublicMoveConstructor) {
+TEST(ImporterTest, PublicMoveConstructor) {
   absl::string_view file = R"cc(
     class Implicit {};
     struct Defaulted {
@@ -618,7 +618,7 @@ TEST(AstVisitorTest, PublicMoveConstructor) {
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPublic)))));
 }
 
-TEST(AstVisitorTest, PrivateMoveConstructor) {
+TEST(ImporterTest, PrivateMoveConstructor) {
   absl::string_view file = R"cc(
     class Defaulted {
       Defaulted(Defaulted&&) = default;
@@ -635,7 +635,7 @@ TEST(AstVisitorTest, PrivateMoveConstructor) {
   EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPrivate)))));
 }
 
-TEST(AstVisitorTest, TrivialDestructor) {
+TEST(ImporterTest, TrivialDestructor) {
   absl::string_view file = R"cc(
     struct Implicit {};
     struct Defaulted {
@@ -650,7 +650,7 @@ TEST(AstVisitorTest, TrivialDestructor) {
                            SpecialMemberFunc::Definition::kTrivial)))));
 }
 
-TEST(AstVisitorTest, NontrivialUserDefinedDestructor) {
+TEST(ImporterTest, NontrivialUserDefinedDestructor) {
   absl::string_view file = R"cc(
     struct NontrivialUserDefined {
       ~NontrivialUserDefined();
@@ -679,7 +679,7 @@ TEST(AstVisitorTest, NontrivialUserDefinedDestructor) {
                   SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
 }
 
-TEST(AstVisitorTest, NontrivialMembersDestructor) {
+TEST(ImporterTest, NontrivialMembersDestructor) {
   absl::string_view file = R"cc(
     struct NontrivialUserDefined {
       ~NontrivialUserDefined();
@@ -705,7 +705,7 @@ TEST(AstVisitorTest, NontrivialMembersDestructor) {
               SpecialMemberFunc::Definition::kNontrivialMembers))))));
 }
 
-TEST(AstVisitorTest, DeletedDestructor) {
+TEST(ImporterTest, DeletedDestructor) {
   absl::string_view file = R"cc(
     struct Deleted {
       ~Deleted() = delete;
@@ -722,7 +722,7 @@ TEST(AstVisitorTest, DeletedDestructor) {
                            SpecialMemberFunc::Definition::kDeleted)))));
 }
 
-TEST(AstVisitorTest, PublicDestructor) {
+TEST(ImporterTest, PublicDestructor) {
   absl::string_view file = R"cc(
     class Implicit {};
     struct Defaulted {
@@ -740,7 +740,7 @@ TEST(AstVisitorTest, PublicDestructor) {
   EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPublic)))));
 }
 
-TEST(AstVisitorTest, PrivateDestructor) {
+TEST(ImporterTest, PrivateDestructor) {
   absl::string_view file = R"cc(
     class Defaulted {
       ~Defaulted() = default;
@@ -757,7 +757,7 @@ TEST(AstVisitorTest, PrivateDestructor) {
   EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPrivate)))));
 }
 
-TEST(AstVisitorTest, TrivialAbi) {
+TEST(ImporterTest, TrivialAbi) {
   absl::string_view file = R"cc(
     struct Empty {};
     struct Defaulted {
@@ -774,7 +774,7 @@ TEST(AstVisitorTest, TrivialAbi) {
   EXPECT_THAT(records, Each(Pointee(IsTrivialAbi())));
 }
 
-TEST(AstVisitorTest, NotTrivialAbi) {
+TEST(ImporterTest, NotTrivialAbi) {
   absl::string_view file = R"cc(
     struct Nontrivial {
       Nontrivial(const Nontrivial&) {}
@@ -787,7 +787,7 @@ TEST(AstVisitorTest, NotTrivialAbi) {
   EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
 }
 
-TEST(AstVisitorTest, MemberVariableAccessSpecifiers) {
+TEST(ImporterTest, MemberVariableAccessSpecifiers) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({R"(
     struct SomeStruct {
       int default_access_int;
