@@ -101,7 +101,9 @@ def _compile_rust(ctx, src, extra_deps):
     toolchain = ctx.toolchains["//third_party/bazel_rules/rules_rust/rust:toolchain"]
 
     output_hash = repr(hash(src.path))
-    crate_name = ctx.label.name
+
+    # TODO(b/216587072): Remove this hacky escaping and use the import! macro once available
+    crate_name = ctx.label.name.replace("-", "_")
 
     lib_name = "{prefix}{name}-{lib_hash}{extension}".format(
         prefix = "lib",
