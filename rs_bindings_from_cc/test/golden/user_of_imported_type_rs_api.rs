@@ -11,8 +11,6 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
-
 #[inline(always)]
 pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial {
     unsafe { crate::detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }

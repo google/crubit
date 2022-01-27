@@ -35,6 +35,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
@@ -101,10 +102,55 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 
   ImportDeclsFromDeclContext(translation_unit_decl);
 
-  // Emit comments after the last decl
-  comment_manager_.FlushComments();
-
   EmitIRItems();
+}
+
+std::vector<clang::RawComment*> Importer::ImportFreeComments() {
+  clang::SourceManager& sm = ctx_->getSourceManager();
+
+  // We put all comments into an ordered set in source order. Later we'll remove
+  // the comments that we don't want or that we get by other means.
+  auto source_order = [&sm](const clang::SourceLocation& a,
+                            const clang::SourceLocation& b) {
+    return b.isValid() && (a.isInvalid() || sm.isBeforeInTranslationUnit(a, b));
+  };
+  auto ordered_comments = std::map<clang::SourceLocation, clang::RawComment*,
+                                   decltype(source_order)>(source_order);
+
+  // We start off by getting the comments from all public header files...
+  for (const auto& header : public_header_names_) {
+    if (auto file = sm.getFileManager().getFile(header.IncludePath())) {
+      if (auto comments = ctx_->Comments.getCommentsInFile(
+              sm.getOrCreateFileID(*file, clang::SrcMgr::C_User))) {
+        for (const auto& [_, comment] : *comments) {
+          ordered_comments.insert({comment->getBeginLoc(), comment});
+        }
+      }
+    }
+  }
+
+  // ... and then we remove those that "conflict" with an IR item.
+  for (const auto& [decl, result] : lookup_cache_) {
+    if (result.item()) {
+      // Remove doc comments of imported items.
+      if (auto raw_comment = ctx_->getRawCommentForDeclNoCache(decl)) {
+        ordered_comments.erase(raw_comment->getBeginLoc());
+      }
+      // Remove comments that are within a visited decl.
+      // TODO(forster): We should retain floating comments in decls like
+      // records and namespaces.
+      ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
+                             ordered_comments.upper_bound(decl->getEndLoc()));
+    }
+  }
+
+  // Return the remaining comments as a `std::vector`.
+  std::vector<clang::RawComment*> result;
+  result.reserve(ordered_comments.size());
+  for (auto& [_, comment] : ordered_comments) {
+    result.push_back(comment);
+  }
+  return result;
 }
 
 void Importer::EmitIRItems() {
@@ -169,7 +215,7 @@ void Importer::EmitIRItems() {
     }
   }
 
-  for (auto comment : comment_manager_.comments()) {
+  for (auto comment : ImportFreeComments()) {
     items.push_back(std::make_tuple(
         comment->getSourceRange(), 0 /* local_order */,
         Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())}));
@@ -184,9 +230,6 @@ void Importer::EmitIRItems() {
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext* decl_context) {
   for (auto decl : decl_context->decls()) {
-    // Emit all comments in the current file before the decl
-    comment_manager_.TraverseDecl(decl);
-
     LookupDecl(decl->getCanonicalDecl());
 
     if (auto* nested_context = clang::dyn_cast<clang::DeclContext>(decl)) {
@@ -796,67 +839,6 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
       return std::nullopt;
   }
-}
-
-void Importer::CommentManager::TraverseDecl(clang::Decl* decl) {
-  ctx_ = &decl->getASTContext();
-
-  // When we go to a new file we flush the comments from the previous file,
-  // because source locations won't be comparable by '<' any more.
-  clang::FileID file = ctx_->getSourceManager().getFileID(decl->getBeginLoc());
-  // For example, we hit an invalid FileID for virtual destructor definitions.
-  if (file.isInvalid()) {
-    return;
-  }
-  if (file != current_file_) {
-    FlushComments();
-    current_file_ = file;
-    LoadComments();
-  }
-
-  // Visit all comments from the current file up to the current decl.
-  clang::RawComment* decl_comment = ctx_->getRawCommentForDeclNoCache(decl);
-  while (next_comment_ != file_comments_.end() &&
-         (*next_comment_)->getBeginLoc() < decl->getBeginLoc()) {
-    // Skip the decl's doc comment, which will be emitted as part of the decl.
-    if (*next_comment_ != decl_comment) {
-      VisitTopLevelComment(*next_comment_);
-    }
-    ++next_comment_;
-  }
-
-  // Skip comments that are within the decl, e.g., comments in the body of an
-  // inline function
-  // TODO(forster): We should retain floating comments within `Record`s
-  if (!clang::isa<clang::NamespaceDecl>(decl)) {
-    while (next_comment_ != file_comments_.end() &&
-           (*next_comment_)->getBeginLoc() < decl->getEndLoc()) {
-      ++next_comment_;
-    }
-  }
-}
-
-void Importer::CommentManager::LoadComments() {
-  auto comments = ctx_->Comments.getCommentsInFile(current_file_);
-  if (comments) {
-    for (auto [_, comment] : *comments) {
-      file_comments_.push_back(comment);
-    }
-  }
-  next_comment_ = file_comments_.begin();
-}
-
-void Importer::CommentManager::FlushComments() {
-  while (next_comment_ != file_comments_.end()) {
-    VisitTopLevelComment(*next_comment_);
-    next_comment_++;
-  }
-  file_comments_.clear();
-}
-
-void Importer::CommentManager::VisitTopLevelComment(
-    const clang::RawComment* comment) {
-  comments_.push_back(comment);
 }
 
 }  // namespace rs_bindings_from_cc

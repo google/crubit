@@ -284,7 +284,9 @@ decltype(IR::items) ItemsWithoutBuiltins(const IR& ir) {
 }
 
 TEST(ImporterTest, Noop) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("// nothing interesting there."));
+  // Nothing interesting there, but also not empty, so that the header gets
+  // generated.
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(" "));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir), IsEmpty());
 }

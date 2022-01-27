@@ -91,6 +91,7 @@ class Importer {
 
   absl::StatusOr<std::vector<Field>> ImportFields(
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
+  std::vector<clang::RawComment*> ImportFreeComments();
   void EmitIRItems();
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
@@ -151,35 +152,6 @@ class Importer {
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_map<const clang::Decl*, LookupResult> lookup_cache_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
-
-  // A component that keeps track of all top-level comments that are not doc
-  // comments.
-  class CommentManager {
-   public:
-    // Notify the comment manager that we the visitor is traversing a decl.
-    // This will emit IR for all preceding comments.
-    void TraverseDecl(clang::Decl* decl);
-
-    // Emit IR for the remaining comments after the last decl.
-    void FlushComments();
-
-    // Return the found comments.
-    const std::vector<const clang::RawComment*>& comments() const {
-      return comments_;
-    }
-
-   private:
-    void LoadComments();
-    void VisitTopLevelComment(const clang::RawComment* comment);
-
-    clang::ASTContext* ctx_;
-    clang::FileID current_file_;
-    std::vector<const clang::RawComment*> file_comments_;
-    std::vector<const clang::RawComment*>::iterator next_comment_;
-    std::vector<const clang::RawComment*> comments_;
-  };
-
-  CommentManager comment_manager_;
   const devtools_rust::LifetimeAnnotationContext& lifetime_context_;
 };  // class AstVisitor
 

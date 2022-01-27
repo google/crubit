@@ -9,10 +9,6 @@
 
 pub type __builtin_ms_va_list = *mut u8;
 
-// namespace ns
-
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
-
 // rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=8
 // Error while generating bindings for item 'UseNontrivialCustomType':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
