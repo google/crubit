@@ -49,14 +49,6 @@ pub fn r#impl(r#match: i32) {
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=18
-// Error while generating bindings for item 'become':
-// Parameter type 'Self' is not supported
-
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=18
-// Error while generating bindings for item 'become':
-// Return type 'Self' is not supported
-
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ESCAPING_KEYWORDS_H_
 
 mod detail {

@@ -206,6 +206,7 @@ bool AstVisitor::VisitFunctionDecl(clang::FunctionDecl* function_decl) {
     PushUnsupportedItem(function_decl,
                         "Function templates are not supported yet",
                         function_decl->getBeginLoc());
+    return true;
   }
 
   devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
