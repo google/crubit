@@ -362,6 +362,56 @@ fn test_doc_comment() -> Result<()> {
 }
 
 #[test]
+fn test_doc_comment_vs_tooling_directives() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" // Doc comment for `f1`
+            // NOLINTNEXTLINE(google3-readability-pass-trivial-by-value)
+            void f1();
+
+            // Doc comment for `f2`
+            // // NOLINT
+            void f2();
+
+            // // NOLINT
+            static void f3();
+
+            // Mid-sentence usage: [...] this is why we need NOLINT / virtual [...].
+            void f4();
+
+            // No closing paren still suppresses
+            // NOLINTNEXTLINE(google3-readability
+            void f5();
+
+            // Multiple, comma-separated directives listed in parens
+            // NOLINTNEXTLINE(foo,bar)
+            void f6();
+        "#,
+    )?;
+
+    let comments: HashMap<&str, Option<&str>> = ir
+        .functions()
+        .map(|f| {
+            if let UnqualifiedIdentifier::Identifier(id) = &f.name {
+                (id.identifier.as_str(), f.doc_comment.as_deref())
+            } else {
+                panic!("No constructors/destructors expected in this test.")
+            }
+        })
+        .collect();
+
+    assert_eq!(comments["f1"], Some("Doc comment for `f1`"));
+    assert_eq!(comments["f2"], Some("Doc comment for `f2`"));
+    assert_eq!(comments["f3"], None);
+    assert_eq!(
+        comments["f4"],
+        Some("Mid-sentence usage: [...] this is why we need NOLINT / virtual [...].")
+    );
+    assert_eq!(comments["f5"], Some("No closing paren still suppresses"));
+    assert_eq!(comments["f6"], Some("Multiple, comma-separated directives listed in parens"));
+    Ok(())
+}
+
+#[test]
 fn test_type_conversion() -> Result<()> {
     // TODO(mboehme): Add tests for the corresponding versions of the types in
     // the `std` namespace. We currently can't do this because we can't include

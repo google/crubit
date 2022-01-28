@@ -44,7 +44,6 @@ impl Default for DocCommentSlashes {
 
 /// An implicit conversion constructor which will get translated into `impl
 /// From<int> for DocCommentSlashes`.
-/// NOLINTNEXTLINE(google-explicit-constructor)
 impl From<i32> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: i32) -> Self {

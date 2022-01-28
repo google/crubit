@@ -24,6 +24,7 @@
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/cord.h"
 #include "third_party/absl/strings/str_cat.h"
+#include "third_party/absl/strings/str_join.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
@@ -41,6 +42,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
 #include "util/gtl/flat_map.h"
 
 namespace rs_bindings_from_cc {
@@ -596,6 +598,16 @@ Importer::LookupResult Importer::ImportTypedefName(
   }
 }
 
+static bool ShouldKeepCommentLine(absl::string_view line) {
+  // Based on https://clang.llvm.org/extra/clang-tidy/:
+  llvm::Regex patterns_to_ignore(
+      "^[[:space:]/]*"  // Whitespace, or extra //
+      "(NOLINT|NOLINTNEXTLINE|NOLINTBEGIN|NOLINTEND)"
+      "(\\([^)[:space:]]*\\)?)?"  // Optional (...)
+      "[[:space:]]*$");           // Whitespace
+  return !patterns_to_ignore.match(line);
+}
+
 std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   // This does currently not distinguish between different types of comments.
   // In general it is not possible in C++ to reliably only extract doc comments.
@@ -606,9 +618,15 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
 
   if (raw_comment == nullptr) {
     return {};
-  } else {
-    return raw_comment->getFormattedText(sm, sm.getDiagnostics());
   }
+
+  std::string raw_comment_text =
+      raw_comment->getFormattedText(sm, sm.getDiagnostics());
+  std::string cleaned_comment_text = absl::StrJoin(
+      absl::StrSplit(raw_comment_text, '\n', ShouldKeepCommentLine), "\n");
+  return cleaned_comment_text.empty()
+             ? std::nullopt
+             : std::optional<std::string>(std::move(cleaned_comment_text));
 }
 
 SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
