@@ -6,11 +6,7 @@
 
 #include "base/logging.h"
 #include "rs_bindings_from_cc/importer.h"
-#include "rs_bindings_from_cc/ir.h"
-#include "third_party/absl/container/flat_hash_map.h"
-#include "third_party/absl/types/span.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 
 namespace rs_bindings_from_cc {
@@ -24,10 +20,7 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
     return;
   }
   CHECK(instance_.hasSema());
-  CHECK(!public_header_names_.empty());
-  CHECK(!headers_to_targets_.empty());
-  Importer importer(instance_.getSema(), current_target_, public_header_names_,
-                    &headers_to_targets_, &ir_, *lifetime_context_);
+  Importer importer(invocation_, ast_context, instance_.getSema());
   importer.Import(ast_context.getTranslationUnitDecl());
 }
 

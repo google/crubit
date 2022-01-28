@@ -12,7 +12,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "base/logging.h"
@@ -90,23 +89,8 @@ static DeclId GenerateDeclId(const clang::Decl* decl) {
   return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
 
-void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
-  ctx_ = &translation_unit_decl->getASTContext();
-  mangler_.reset(ctx_->createMangleContext());
-
-  for (const HeaderName& header_name : public_header_names_) {
-    ir_.used_headers.push_back(header_name);
-  }
-
-  ir_.current_target = current_target_;
-
-  ImportDeclsFromDeclContext(translation_unit_decl);
-
-  EmitIRItems();
-}
-
 std::vector<clang::RawComment*> Importer::ImportFreeComments() {
-  clang::SourceManager& sm = ctx_->getSourceManager();
+  clang::SourceManager& sm = ctx_.getSourceManager();
 
   // We put all comments into an ordered set in source order. Later we'll remove
   // the comments that we don't want or that we get by other means.
@@ -117,10 +101,10 @@ std::vector<clang::RawComment*> Importer::ImportFreeComments() {
   auto ordered_comments = std::map<clang::SourceLocation, clang::RawComment*,
                                    decltype(source_order)>(source_order);
 
-  // We start off by getting the comments from all public header files...
-  for (const auto& header : public_header_names_) {
+  // We start off by getting the comments from all entry header files...
+  for (const auto& header : invocation_.entry_headers_) {
     if (auto file = sm.getFileManager().getFile(header.IncludePath())) {
-      if (auto comments = ctx_->Comments.getCommentsInFile(
+      if (auto comments = ctx_.Comments.getCommentsInFile(
               sm.getOrCreateFileID(*file, clang::SrcMgr::C_User))) {
         for (const auto& [_, comment] : *comments) {
           ordered_comments.insert({comment->getBeginLoc(), comment});
@@ -133,7 +117,7 @@ std::vector<clang::RawComment*> Importer::ImportFreeComments() {
   for (const auto& [decl, result] : lookup_cache_) {
     if (result.item()) {
       // Remove doc comments of imported items.
-      if (auto raw_comment = ctx_->getRawCommentForDeclNoCache(decl)) {
+      if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
         ordered_comments.erase(raw_comment->getBeginLoc());
       }
       // Remove comments that are within a visited decl.
@@ -153,9 +137,11 @@ std::vector<clang::RawComment*> Importer::ImportFreeComments() {
   return result;
 }
 
-void Importer::EmitIRItems() {
+void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
+  ImportDeclsFromDeclContext(translation_unit_decl);
+
   using OrderedItem = std::tuple<clang::SourceRange, int, IR::Item>;
-  clang::SourceManager& sm = ctx_->getSourceManager();
+  clang::SourceManager& sm = ctx_.getSourceManager();
   auto is_less_than = [&sm](const OrderedItem& a, const OrderedItem& b) {
     auto a_range = std::get<0>(a);
     auto b_range = std::get<0>(b);
@@ -223,7 +209,7 @@ void Importer::EmitIRItems() {
   std::stable_sort(items.begin(), items.end(), is_less_than);
 
   for (const auto& item : items) {
-    ir_.items.push_back(std::get<2>(item));
+    invocation_.ir_.items.push_back(std::get<2>(item));
   }
 }
 
@@ -284,7 +270,8 @@ Importer::LookupResult Importer::ImportFunction(
 
   devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
   llvm::Expected<devtools_rust::FunctionLifetimes> lifetimes =
-      devtools_rust::GetLifetimeAnnotations(function_decl, lifetime_context_,
+      devtools_rust::GetLifetimeAnnotations(function_decl,
+                                            *invocation_.lifetime_context_,
                                             &lifetime_symbol_table);
   llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
 
@@ -462,7 +449,7 @@ Importer::LookupResult Importer::ImportFunction(
 }
 
 BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
-  clang::SourceManager& source_manager = ctx_->getSourceManager();
+  clang::SourceManager& source_manager = ctx_.getSourceManager();
   auto source_location = decl->getLocation();
   auto id = source_manager.getFileID(source_location);
 
@@ -483,10 +470,9 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     if (filename->startswith("./")) {
       filename = filename->substr(2);
     }
-    auto target_iterator =
-        headers_to_targets_.find(HeaderName(filename->str()));
-    if (target_iterator != headers_to_targets_.end()) {
-      return target_iterator->second;
+
+    if (auto target = invocation_.header_target(HeaderName(filename->str()))) {
+      return *target;
     }
     source_location = source_manager.getIncludeLoc(id);
     id = source_manager.getFileID(source_location);
@@ -496,7 +482,7 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
 }
 
 bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
-  return current_target_ == GetOwningTarget(decl);
+  return invocation_.target_ == GetOwningTarget(decl);
 }
 
 Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
@@ -556,7 +542,7 @@ Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
     return LookupResult("Importing field failed");
   }
 
-  const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
+  const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   return LookupResult(
       Record{.identifier = *record_name,
              .id = GenerateDeclId(record_decl),
@@ -615,8 +601,8 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   // In general it is not possible in C++ to reliably only extract doc comments.
   // This is going to be a heuristic that needs to be tuned over time.
 
-  clang::SourceManager& sm = ctx_->getSourceManager();
-  clang::RawComment* raw_comment = ctx_->getRawCommentForDeclNoCache(decl);
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  clang::RawComment* raw_comment = ctx_.getRawCommentForDeclNoCache(decl);
 
   if (raw_comment == nullptr) {
     return {};
@@ -626,7 +612,7 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
 }
 
 SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
-  auto& sm = ctx_->getSourceManager();
+  auto& sm = ctx_.getSourceManager();
 
   clang::StringRef filename = sm.getFilename(loc);
   if (filename.startswith("./")) {
@@ -694,7 +680,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         break;
       default:
         if (builtin_type->isIntegerType()) {
-          auto size = ctx_->getTypeSize(builtin_type);
+          auto size = ctx_.getTypeSize(builtin_type);
           if (size == 8 || size == 16 || size == 32 || size == 64) {
             type = MappedType::Simple(
                 absl::Substitute(
@@ -746,7 +732,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 absl::StatusOr<std::vector<Field>> Importer::ImportFields(
     clang::RecordDecl* record_decl, clang::AccessSpecifier default_access) {
   std::vector<Field> fields;
-  const clang::ASTRecordLayout& layout = ctx_->getASTRecordLayout(record_decl);
+  const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     auto type = ConvertType(field_decl->getType());
     if (!type.ok()) {

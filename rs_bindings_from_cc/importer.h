@@ -24,7 +24,6 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/RecursiveASTVisitor.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
@@ -32,24 +31,60 @@
 
 namespace rs_bindings_from_cc {
 
-// Iterates over the AST created from `public_header_names` (a collection of
-// paths in the format suitable for a google3-relative quote include) and
-// creates an intermediate representation of the import (`IR`).
+// Iterates over the AST created from the invocation's entry headers and
+// creates an intermediate representation of the import (`IR`) into the
+// invocation object.
 class Importer {
  public:
-  explicit Importer(
-      clang::Sema& sema, BlazeLabel current_target,
-      absl::Span<const HeaderName> public_header_names,
-      const absl::flat_hash_map<const HeaderName, const BlazeLabel>*
-          headers_to_targets,
-      IR* ir, const devtools_rust::LifetimeAnnotationContext& lifetime_context)
-      : sema_(sema),
-        current_target_(current_target),
-        public_header_names_(public_header_names),
-        headers_to_targets_(*ABSL_DIE_IF_NULL(headers_to_targets)),
-        ir_(*ABSL_DIE_IF_NULL(ir)),
-        ctx_(nullptr),
-        lifetime_context_(lifetime_context) {}
+  // Top-level parameters as well as return value of an importer invocation.
+  class Invocation {
+   public:
+    Invocation(BlazeLabel target, absl::Span<const HeaderName> entry_headers,
+               const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+                   header_targets)
+        : target_(target),
+          entry_headers_(entry_headers),
+          lifetime_context_(
+              std::make_shared<devtools_rust::LifetimeAnnotationContext>()),
+          header_targets_(header_targets) {
+      CHECK(!entry_headers_.empty());
+      CHECK(!header_targets_.empty());
+      ir_.used_headers.insert(ir_.used_headers.end(), entry_headers_.begin(),
+                              entry_headers.end());
+      ir_.current_target = target_;
+    }
+
+    // Returns the target of a header, if any.
+    std::optional<BlazeLabel> header_target(const HeaderName header) const {
+      auto it = header_targets_.find(header);
+      return (it != header_targets_.end()) ? std::optional(it->second)
+                                           : std::nullopt;
+    }
+
+    // The main target from which we are importing.
+    const BlazeLabel target_;
+
+    // The headers from which the import starts (a collection of
+    // paths in the format suitable for a google3-relative quote include).
+    const absl::Span<const HeaderName> entry_headers_;
+
+    const std::shared_ptr<devtools_rust::LifetimeAnnotationContext>
+        lifetime_context_;
+
+    // The main output of the import process
+    IR ir_;
+
+   private:
+    const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+        header_targets_;
+  };
+
+  explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
+                    clang::Sema& sema)
+      : invocation_(invocation),
+        ctx_(ctx),
+        sema_(sema),
+        mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())) {}
 
   // Import all visible declarations from a translation unit.
   void Import(clang::TranslationUnitDecl* decl);
@@ -92,7 +127,6 @@ class Importer {
   absl::StatusOr<std::vector<Field>> ImportFields(
       clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
   std::vector<clang::RawComment*> ImportFreeComments();
-  void EmitIRItems();
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
   BlazeLabel GetOwningTarget(const clang::Decl* decl) const;
@@ -142,18 +176,15 @@ class Importer {
 
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 
+  Invocation& invocation_;
+
+  clang::ASTContext& ctx_;
   clang::Sema& sema_;
-  BlazeLabel current_target_;
-  absl::Span<const HeaderName> public_header_names_;
-  const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
-      headers_to_targets_;
-  IR& ir_;
-  clang::ASTContext* ctx_;
+
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_map<const clang::Decl*, LookupResult> lookup_cache_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
-  const devtools_rust::LifetimeAnnotationContext& lifetime_context_;
-};  // class AstVisitor
+};  // class Importer
 
 }  // namespace rs_bindings_from_cc
 

@@ -12,6 +12,7 @@
 #include "devtools/cymbal/common/clang_tool.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/frontend_action.h"
+#include "rs_bindings_from_cc/importer.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/status/status.h"
@@ -72,11 +73,12 @@ absl::StatusOr<IR> IrFromCc(
   args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
   args_as_strings.push_back(std::string(kVirtualInputPath));
 
-  if (IR ir; devtools::cymbal::RunToolOnCode(
+  if (Importer::Invocation invocation(current_target, entrypoint_headers,
+                                      headers_to_targets);
+      devtools::cymbal::RunToolOnCode(
           devtools::cymbal::ClangArguments(args_as_strings), file_contents,
-          std::make_unique<FrontendAction>(current_target, entrypoint_headers,
-                                           &headers_to_targets, &ir))) {
-    return ir;
+          std::make_unique<FrontendAction>(invocation))) {
+    return invocation.ir_;
   } else {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not compile header contents");

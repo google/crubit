@@ -14,10 +14,9 @@ namespace rs_bindings_from_cc {
 
 std::unique_ptr<clang::ASTConsumer> FrontendAction::CreateASTConsumer(
     clang::CompilerInstance& instance, llvm::StringRef) {
-  AddLifetimeAnnotationHandlers(instance.getPreprocessor(), lifetime_context_);
-  return std::make_unique<AstConsumer>(
-      instance, current_target_, public_header_names_, &headers_to_targets_,
-      &ir_, lifetime_context_);
+  AddLifetimeAnnotationHandlers(instance.getPreprocessor(),
+                                invocation_.lifetime_context_);
+  return std::make_unique<AstConsumer>(instance, invocation_);
 }
 
 }  // namespace rs_bindings_from_cc
