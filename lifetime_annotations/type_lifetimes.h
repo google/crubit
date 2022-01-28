@@ -48,8 +48,6 @@ std::string DebugString(
     });
 
 // Extracts the lifetime parameters of the given record type.
-// TODO(veluca): for now, lifetime parameters are extracted from an attribute on
-// the LIFETIMES() method on the record type. This is a temporary hack.
 llvm::SmallVector<std::string> GetLifetimeParameters(
     const clang::CXXRecordDecl* cxx_record);
 
