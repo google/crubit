@@ -243,12 +243,24 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     let format_first_param_as_self: bool;
     match &func.name {
         UnqualifiedIdentifier::Identifier(id) => {
-            impl_kind = match maybe_record {
-                None => ImplKind::None,
-                Some(_) => ImplKind::Struct,
-            };
             func_name = make_rs_ident(&id.identifier);
-            format_first_param_as_self = func.is_instance_method();
+            match maybe_record {
+                None => {
+                    impl_kind = ImplKind::None;
+                    format_first_param_as_self = false;
+                }
+                Some(record) => {
+                    impl_kind = ImplKind::Struct;
+                    if func.is_instance_method() {
+                        let first_param = param_type_kinds.first().ok_or_else(|| {
+                            anyhow!("Missing `__this` parameter in an instance method: {:?}", func)
+                        })?;
+                        format_first_param_as_self = first_param.is_ref_to(record)
+                    } else {
+                        format_first_param_as_self = false;
+                    }
+                }
+            };
         }
         UnqualifiedIdentifier::Destructor => {
             // Note: to avoid double-destruction of the fields, they are all wrapped in
@@ -286,7 +298,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             }
 
             match func.params.len() {
-                0 => bail!("Constructor should have at least 1 parameter (__this)"),
+                0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                 1 => {
                     impl_kind = ImplKind::Trait(quote! {Default});
                     func_name = make_rs_ident("default");
@@ -336,9 +348,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         if func.name == UnqualifiedIdentifier::Constructor {
             return_type_fragment = quote! { -> Self };
 
-            // Drop `__this` parameter from the public Rust API.
-            api_params.remove(0); // Presence of element #0 and `maybe_first_api_param` is
-            thunk_args.remove(0); // indirectly verified by one of `match` statements above.
+            // Drop `__this` parameter from the public Rust API. Presence of
+            // element #0 is indirectly verified by a `Constructor`-related
+            // `match` branch a little bit above.
+            api_params.remove(0);
+            thunk_args.remove(0);
 
             // Remove the lifetime associated with `__this`.
             let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
@@ -377,10 +391,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 .with_context(|| {
                     format!("Failed to format as `self` param: {:?}", first_api_param)
                 })?;
-            if let Some(new_decl) = self_decl {
-                api_params[0] = new_decl; // Presence of element #0 is verified by
-                thunk_args[0] = quote! { self }; // `ok_or_else` on `maybe_first_api_param` above.
-            }
+            // Presence of element #0 is verified by `ok_or_else` on
+            // `maybe_first_api_param` above.
+            api_params[0] = self_decl;
+            thunk_args[0] = quote! { self };
         }
 
         let func_body = match &func.name {
@@ -904,10 +918,6 @@ enum Mutability {
 }
 
 impl Mutability {
-    fn is_mut(&self) -> bool {
-        *self == Mutability::Mut
-    }
-
     fn format_for_pointer(&self) -> TokenStream {
         match self {
             Mutability::Mut => quote! {mut},
@@ -1077,67 +1087,37 @@ impl<'ir> RsTypeKind<'ir> {
     }
 
     /// Formats this RsTypeKind as either `&'a self` or `&'a mut self`.
-    ///
-    /// When this RsTypeKind represents a pointer (without lifetime
-    /// annotations), then `Ok(None)` is returned.
-    /// TODO(b/214244223): Stop generating bindings when such pointer is used.
-    /// (For example in in C++ non-static member functions where (without
-    /// lifetime annotations) `__this` will have an `RsType` representing a
-    /// pointer (rather than a reference).)
     pub fn format_as_self_param_for_instance_method(
         &self,
         func: &Func,
         ir: &IR,
         lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<Option<TokenStream>> {
-        let record_from_func = func
+    ) -> Result<TokenStream> {
+        let record = func
             .member_func_metadata
             .as_ref()
             .ok_or_else(|| {
-                anyhow!(
-                    "Unexpectedly formatting `self` parameter in a non-member function: {:?}",
-                    func
-                )
+                anyhow!("Formatting `self` parameter in a non-member function: {:?}", func)
             })?
             .find_record(ir)?;
-        let nested_type = match self {
-            RsTypeKind::Pointer { pointee: nested_type, .. }
-            | RsTypeKind::Reference { referent: nested_type, .. } => nested_type,
-            _ => bail!("Unexpected type of `self` parameter in an instance method: {:?}", self),
-        };
-        let record_from_self = match **nested_type {
-            RsTypeKind::Record(record) => record,
-            _ => bail!("`self` reference unexpectedly doesn't point to a Record: {:?}", self),
-        };
-        if record_from_func != record_from_self {
-            bail!(
-                "`self` refers to an unexpected record type. \
-                Parameter type refers to: {:?}. Function refers to: {:?}.",
-                record_from_self,
-                record_from_func
-            );
+
+        if self.is_mut_ptr_to(record) && func.name == UnqualifiedIdentifier::Destructor {
+            // Even in C++ it is UB to retain `this` pointer and dereference it
+            // after a destructor runs. Therefore it is safe to use `&self` or
+            // `&mut self` in Rust even if IR represents `__this` as a Rust
+            // pointer (e.g. when lifetime annotations are missing - lifetime
+            // annotations are required to represent it as a Rust reference).
+            return Ok(quote! { &mut self });
         }
+        ensure!(self.is_ref_to(record), "Unexpected type of `self` parameter: {:?}", self);
 
         match self {
-            RsTypeKind::Pointer { mutability, .. } => {
-                if mutability.is_mut() && matches!(func.name, UnqualifiedIdentifier::Destructor) {
-                    // Even in C++ it is UB to retain `this` pointer and
-                    // dereference it after a destructor runs. Therefore it is
-                    // safe to use `&self` or `&mut self` in Rust even if IR
-                    // represents `__this` as a Rust pointer (e.g. when lifetime
-                    // annotations are missing - lifetime annotations are
-                    // required to represent it as a Rust reference).
-                    Ok(Some(quote! { &mut self }))
-                } else {
-                    Ok(None)
-                }
-            }
             RsTypeKind::Reference { mutability, lifetime_id, .. } => {
                 let mutability = mutability.format_for_reference();
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
-                Ok(Some(quote! { & #lifetime #mutability self }))
+                Ok(quote! { & #lifetime #mutability self })
             }
-            _ => unreachable!(), // Because of the the 1st `match` in this function.
+            _ => unreachable!(), // Because of the `ensure!` and `is_const_ptr_to` above.
         }
     }
 
@@ -1169,14 +1149,34 @@ impl<'ir> RsTypeKind<'ir> {
         }
     }
 
+    pub fn is_mut_ptr_to(&self, expected_record: &Record) -> bool {
+        match self {
+            RsTypeKind::Pointer { pointee, mutability: Mutability::Mut, .. } => {
+                pointee.is_record(expected_record)
+            }
+            _ => false,
+        }
+    }
+
+    pub fn is_ref_to(&self, expected_record: &Record) -> bool {
+        match self {
+            RsTypeKind::Reference { referent, .. } => referent.is_record(expected_record),
+            _ => false,
+        }
+    }
+
     pub fn is_shared_ref_to(&self, expected_record: &Record) -> bool {
         match self {
             RsTypeKind::Reference { referent, mutability: Mutability::Const, .. } => {
-                match **referent {
-                    RsTypeKind::Record(actual_record) => actual_record.id == expected_record.id,
-                    _ => false,
-                }
+                referent.is_record(expected_record)
             }
+            _ => false,
+        }
+    }
+
+    pub fn is_record(&self, expected_record: &Record) -> bool {
+        match self {
+            RsTypeKind::Record(actual_record) => actual_record.id == expected_record.id,
             _ => false,
         }
     }
