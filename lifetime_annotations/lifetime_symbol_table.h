@@ -49,6 +49,11 @@ class LifetimeSymbolTable {
   // to LookupLifetime() to have undefined behaviour.
   void Add(llvm::StringRef name, Lifetime lifetime);
 
+  // Accessor for hashing/debugging purposes.
+  const llvm::StringMap<Lifetime>& GetMapping() const {
+    return name_to_lifetime_;
+  }
+
  private:
   llvm::StringMap<Lifetime> name_to_lifetime_;
   llvm::DenseMap<Lifetime, std::string> lifetime_to_name_;

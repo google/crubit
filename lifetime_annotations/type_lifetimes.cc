@@ -10,7 +10,9 @@
 #include <string>
 #include <utility>
 
+#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
+#include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_format.h"
 #include "third_party/absl/strings/str_join.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attr.h"
@@ -23,6 +25,8 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Lex/Pragma.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Lex/Preprocessor.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMapInfo.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Hashing.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
@@ -147,8 +151,14 @@ ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
 }
 
 std::string ValueLifetimes::DebugString() const {
-  // TODO(veluca): add lifetime parameters here.
   std::string ret;
+  if (!lifetime_parameters_by_name_.GetMapping().empty()) {
+    std::vector<std::string> lftm_args_strings;
+    for (const auto& lftm_arg : lifetime_parameters_by_name_.GetMapping()) {
+      lftm_args_strings.push_back(lftm_arg.second.DebugString());
+    }
+    absl::StrAppend(&ret, "(", absl::StrJoin(lftm_args_strings, ", "), ")");
+  }
   if (!template_argument_lifetimes_.empty()) {
     std::vector<std::string> tmpl_arg_strings;
     for (const std::optional<ValueLifetimes>& tmpl_arg :
@@ -402,7 +412,6 @@ namespace llvm {
 bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
     const devtools_rust::ValueLifetimes& lhs,
     const devtools_rust::ValueLifetimes& rhs) {
-  // TODO(veluca): add lifetime parameters.
   if (lhs.type_ != rhs.type_) {
     return false;
   }
@@ -429,12 +438,15 @@ bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
       return false;
     }
   }
+  if (lhs.lifetime_parameters_by_name_.GetMapping() !=
+      rhs.lifetime_parameters_by_name_.GetMapping()) {
+    return false;
+  }
   return true;
 }
 
 unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
     const devtools_rust::ValueLifetimes& value_lifetimes) {
-  // TODO(veluca): add lifetime parameters.
   llvm::hash_code hash = 0;
   if (value_lifetimes.pointee_lifetimes_) {
     hash = DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
@@ -445,6 +457,14 @@ unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
     if (tmpl_lifetime) {
       hash = hash_combine(hash, getHashValue(*tmpl_lifetime));
     }
+  }
+  for (const auto& lifetime_arg :
+       value_lifetimes.lifetime_parameters_by_name_.GetMapping()) {
+    hash = hash_combine(hash, DenseMapInfo<llvm::StringRef>::getHashValue(
+                                  lifetime_arg.first()));
+    hash =
+        hash_combine(hash, DenseMapInfo<devtools_rust::Lifetime>::getHashValue(
+                               lifetime_arg.second));
   }
   return hash_combine(
       hash, DenseMapInfo<clang::QualType>::getHashValue(value_lifetimes.type_));
