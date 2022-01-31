@@ -411,7 +411,8 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
     Ok(())
 }
 
-#[test]
+// TOOD(rosica): Reenable once b/208377928 is fixed
+// #[test]
 fn test_type_conversion() -> Result<()> {
     // TODO(mboehme): Add tests for the corresponding versions of the types in
     // the `std` namespace. We currently can't do this because we can't include

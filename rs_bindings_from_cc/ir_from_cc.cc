@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "devtools/cymbal/common/clang_tool.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/importer.h"
@@ -20,7 +19,10 @@
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/absl/types/span.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileManager.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileSystemOptions.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Tooling/Tooling.h"
 
 namespace rs_bindings_from_cc {
 
@@ -38,14 +40,14 @@ absl::StatusOr<IR> IrFromCc(
     absl::Span<const absl::string_view> args) {
   std::vector<const HeaderName> entrypoint_headers(public_headers.begin(),
                                                    public_headers.end());
-  absl::flat_hash_map<std::string, std::string> file_contents;
+  clang::tooling::FileContentMappings file_contents;
 
   for (auto const& name_and_content : virtual_headers_contents) {
-    file_contents.insert({std::string(name_and_content.first.IncludePath()),
-                          name_and_content.second});
+    file_contents.push_back({std::string(name_and_content.first.IncludePath()),
+                             name_and_content.second});
   }
   if (!extra_source_code.empty()) {
-    file_contents.insert(
+    file_contents.push_back(
         {std::string(kVirtualHeaderPath), std::string(extra_source_code)});
     HeaderName header_name = HeaderName(std::string(kVirtualHeaderPath));
     entrypoint_headers.push_back(header_name);
@@ -57,27 +59,19 @@ absl::StatusOr<IR> IrFromCc(
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
                               header_name.IncludePath());
   }
-  file_contents.insert(
-      {std::string(kVirtualInputPath), virtual_input_file_content});
 
   std::vector<std::string> args_as_strings{
-      // This includes the path of the binary that we're pretending to be.
-      // TODO(forster): Find out where to point this. Should we use the
-      // production crosstool for this? See
-      // http://google3/devtools/cymbal/common/clang_tool.cc;l=171;rcl=385188113
-      "clang",
-      // We only need the AST.
-      "-fsyntax-only",
-      // Parse non-doc comments that are used as documention.
+      // Parse non-doc comments that are used as documention
       "-fparse-all-comments"};
   args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
-  args_as_strings.push_back(std::string(kVirtualInputPath));
 
   if (Importer::Invocation invocation(current_target, entrypoint_headers,
                                       headers_to_targets);
-      devtools::cymbal::RunToolOnCode(
-          devtools::cymbal::ClangArguments(args_as_strings), file_contents,
-          std::make_unique<FrontendAction>(invocation))) {
+      clang::tooling::runToolOnCodeWithArgs(
+          std::make_unique<FrontendAction>(invocation),
+          virtual_input_file_content, args_as_strings, kVirtualInputPath,
+          "rs_bindings_from_cc",
+          std::make_shared<clang::PCHContainerOperations>(), file_contents)) {
     return invocation.ir_;
   } else {
     return absl::Status(absl::StatusCode::kInvalidArgument,
