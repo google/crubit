@@ -7,9 +7,9 @@
 #include <string>
 #include <utility>
 
-#include "devtools/cymbal/data_flow/testing_support.h"
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 #include "lifetime_annotations/test/run_on_code.h"
+#include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchFinder.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchers.h"
