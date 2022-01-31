@@ -489,13 +489,11 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
 
 Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
-  if (decl_context) {
-    if (decl_context->isFunctionOrMethod()) {
-      return LookupResult();
-    }
-    if (record_decl->isInjectedClassName()) {
-      return LookupResult();
-    }
+  if (decl_context->isFunctionOrMethod()) {
+    return LookupResult();
+  }
+  if (record_decl->isInjectedClassName()) {
+    return LookupResult();
   }
   if (decl_context->isRecord()) {
     return LookupResult("Nested classes are not supported yet");
