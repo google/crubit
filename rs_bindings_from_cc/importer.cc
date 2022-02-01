@@ -453,7 +453,6 @@ Importer::LookupResult Importer::ImportFunction(
 BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   clang::SourceManager& source_manager = ctx_.getSourceManager();
   auto source_location = decl->getLocation();
-  auto id = source_manager.getFileID(source_location);
 
   // If the header this decl comes from is not associated with a target we
   // consider it a textual header. In that case we go up the include stack
@@ -464,6 +463,10 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   // "//:virtual_clang_resource_dir_target" for system headers.
   while (source_location.isValid() &&
          !source_manager.isInSystemHeader(source_location)) {
+    if (source_location.isMacroID()) {
+      source_location = source_manager.getExpansionLoc(source_location);
+    }
+    auto id = source_manager.getFileID(source_location);
     llvm::Optional<llvm::StringRef> filename =
         source_manager.getNonBuiltinFilenameForID(id);
     if (!filename) {
@@ -477,7 +480,6 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
       return *target;
     }
     source_location = source_manager.getIncludeLoc(id);
-    id = source_manager.getFileID(source_location);
   }
 
   return BlazeLabel("//:virtual_clang_resource_dir_target");
