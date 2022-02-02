@@ -7,8 +7,11 @@
 load("//third_party/bazel_skylib/lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
-    "RustBindingsFromCcInfo",
     "rust_bindings_from_cc_aspect",
+)
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
+    "RustBindingsFromCcInfo",
 )
 
 def _attach_aspect_impl(ctx):
