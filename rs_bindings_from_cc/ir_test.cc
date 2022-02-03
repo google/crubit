@@ -72,6 +72,7 @@ TEST(IrTest, IR) {
                     "identifier": { "identifier": "SomeStruct" },
                     "id": 42,
                     "owning_target": "//foo:bar",
+                    "unambiguous_public_bases": [],
                     "fields": [
                     {
                         "identifier": { "identifier": "public_int" },

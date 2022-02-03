@@ -209,6 +209,21 @@ pub struct Derived {
     __base_class_subobjects: [std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
+impl<'a> From<&'a Derived> for &'a Base0 {
+    fn from(x: &'a Derived) -> Self {
+        unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base0) }
+    }
+}
+impl<'a> From<&'a Derived> for &'a Base1 {
+    fn from(x: &'a Derived) -> Self {
+        unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base1) }
+    }
+}
+impl<'a> From<&'a Derived> for &'a Base2 {
+    fn from(x: &'a Derived) -> Self {
+        unsafe { &*((x as *const _ as *const u8).offset(10) as *const Base2) }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Derived::Derived':

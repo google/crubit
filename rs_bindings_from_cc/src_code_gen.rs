@@ -691,6 +691,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         quote! {}
     };
 
+    let base_class_into = cc_struct_upcast_impl(record, ir)?;
+
     let record_tokens = quote! {
         #doc_comment
         #derives
@@ -700,6 +702,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
             #empty_struct_placeholder_field
         }
+
+        #base_class_into
 
         #unpin_impl
     };
@@ -1290,6 +1294,46 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     }
 }
 
+/// Returns the implementation of base class conversions, for converting a type
+/// to its unambiguous public base classes.
+///
+/// TODO(b/216195042): Implement this in terms of a supporting trait which casts
+/// raw pointers. Then, we would have blanket impls for reference, pinned mut
+/// reference, etc. conversion. The current version is just enough to test the
+/// logic in importer.
+//
+// TODO(b/216195042): Should this use, like, AsRef/AsMut (and some equivalent
+// for Pin)?
+fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<TokenStream> {
+    let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
+    for base in &record.unambiguous_public_bases {
+        let base_record: &Record = ir.find_decl(base.base_record_id)?.try_into()?;
+        if let Some(offset) = base.offset {
+            let offset = Literal::i64_unsuffixed(offset);
+            // TODO(b/216195042): Correctly handle imported records, lifetimes.
+            let base_name = make_rs_ident(&base_record.identifier.identifier);
+            let derived_name = make_rs_ident(&record.identifier.identifier);
+            impls.push(quote! {
+                impl<'a> From<&'a #derived_name> for &'a #base_name {
+                    fn from(x: &'a #derived_name) -> Self {
+                        unsafe {
+                            &*((x as *const _ as *const u8).offset(#offset) as *const #base_name)
+                        }
+                    }
+                }
+            });
+        } else {
+            // TODO(b/216195042): determine offset dynamically / use a dynamic
+            // cast. This requires a new C++ function to be
+            // generated, so that we have something to call.
+        }
+    }
+
+    Ok(quote! {
+        #(#impls)*
+    })
+}
+
 fn thunk_ident(func: &Func) -> Ident {
     format_ident!("__rust_thunk__{}", func.mangled_name)
 }
@@ -1860,8 +1904,8 @@ mod tests {
             r#"
             // We use a class here to force `Derived::z` to live inside the tail padding of `Base`.
             // On the Itanium ABI, this would not happen if `Base` were a POD type.
-            class Base {long x; char y;};
-            struct Derived final : Base {short z;};
+            class Base {__INT64_TYPE__ x; char y;};
+            struct Derived final : Base {__INT16_TYPE__ z;};
         "#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
@@ -1884,9 +1928,9 @@ mod tests {
     fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
-            class Base1 {long x;};
+            class Base1 {__INT64_TYPE__ x;};
             class Base2 {char y;};
-            struct Derived final : Base1, Base2 {short z;};
+            struct Derived final : Base1, Base2 {__INT16_TYPE__ z;};
         "#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
@@ -1909,9 +1953,9 @@ mod tests {
     fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
-            class Base1 {long x;};
+            class Base1 {__INT64_TYPE__ x;};
             class Base2 : Base1 {char y;};
-            struct Derived final : Base2 {short z;};
+            struct Derived final : Base2 {__INT16_TYPE__ z;};
         "#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
@@ -1934,7 +1978,7 @@ mod tests {
     fn test_base_class_subobject_fieldless_layout() -> Result<()> {
         let ir = ir_from_cc(
             r#"
-            class Base {long x; char y;};
+            class Base {__INT64_TYPE__ x; char y;};
             struct Derived final : Base {};
         "#,
         )?;
@@ -2044,6 +2088,58 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_unambiguous_public_bases() -> Result<()> {
+        let ir = ir_from_cc_dependency(
+            "
+            struct VirtualBase {};
+            struct PrivateBase {};
+            struct ProtectedBase {};
+            struct UnambiguousPublicBase {};
+            struct AmbiguousPublicBase {};
+            struct MultipleInheritance : UnambiguousPublicBase, AmbiguousPublicBase {};
+            struct Derived : private PrivateBase, protected ProtectedBase, MultipleInheritance, AmbiguousPublicBase, virtual VirtualBase {};
+        ",
+            "",
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        // TODO(b/216195042): virtual bases.
+        assert_rs_not_matches!(rs_api, quote! { From<&'a Derived> for &'a VirtualBase });
+        assert_rs_matches!(rs_api, quote! { From<&'a Derived> for &'a UnambiguousPublicBase });
+        assert_rs_matches!(rs_api, quote! { From<&'a Derived> for &'a MultipleInheritance });
+        assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a PrivateBase});
+        assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a ProtectedBase});
+        assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a AmbiguousPublicBase});
+        Ok(())
+    }
+
+    /// Contrary to intuitions: a base class conversion is ambiguous even if the
+    /// ambiguity is from a private base class cast that you can't even
+    /// perform.
+    ///
+    /// Explanation (courtesy James Dennett):
+    ///
+    /// > Once upon a time, there was a rule in C++ that changing all access
+    /// > specifiers to "public" would not change the meaning of code.
+    /// > That's no longer true, but some of its effects can still be seen.
+    ///
+    /// So, we need to be sure to not allow casting to privately-ambiguous
+    /// bases.
+    #[test]
+    fn test_unambiguous_public_bases_private_ambiguity() -> Result<()> {
+        let ir = ir_from_cc_dependency(
+            "
+            struct Base {};
+            struct Intermediate : public Base {};
+            struct Derived : Base, private Intermediate {};
+        ",
+            "",
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_not_matches!(rs_api, quote! { From<&'a Derived> for &'a Base });
         Ok(())
     }
 

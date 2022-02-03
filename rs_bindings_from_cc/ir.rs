@@ -276,6 +276,12 @@ pub enum SpecialMemberDefinition {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct BaseClass {
+    pub base_record_id: DeclId,
+    pub offset: Option<i64>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct SpecialMemberFunc {
     pub definition: SpecialMemberDefinition,
     pub access: AccessSpecifier,
@@ -287,6 +293,7 @@ pub struct Record {
     pub id: DeclId,
     pub owning_target: BlazeLabel,
     pub doc_comment: Option<String>,
+    pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,
     pub lifetime_params: Vec<Lifetime>,
     pub size: usize,

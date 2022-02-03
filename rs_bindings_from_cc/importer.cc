@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
@@ -28,6 +29,7 @@
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/CXXInheritance.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
@@ -41,11 +43,13 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallPtrSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
 #include "util/gtl/flat_map.h"
 
 namespace rs_bindings_from_cc {
+namespace {
 
 constexpr absl::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
@@ -53,7 +57,7 @@ constexpr absl::string_view kTypeStatusPayloadUrl =
 // A mapping of C++ standard types to their equivalent Rust types.
 // To produce more idiomatic results, these types receive special handling
 // instead of using the generic type mapping mechanism.
-static constexpr auto kWellKnownTypes =
+constexpr auto kWellKnownTypes =
     gtl::fixed_flat_map_of<absl::string_view, absl::string_view>({
         {"ptrdiff_t", "isize"},
         {"intptr_t", "isize"},
@@ -76,6 +80,7 @@ static constexpr auto kWellKnownTypes =
         {"uint8_t", "u8"},
         {"uint16_t", "u16"},
         {"uint32_t", "u32"},
+
         {"uint64_t", "u64"},
         {"std::uint8_t", "u8"},
         {"std::uint16_t", "u16"},
@@ -87,9 +92,89 @@ static constexpr auto kWellKnownTypes =
         {"wchar_t", "i32"},
     });
 
-static DeclId GenerateDeclId(const clang::Decl* decl) {
+DeclId GenerateDeclId(const clang::Decl* decl) {
   return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
+
+std::vector<BaseClass> GetUnambiguousPublicBases(
+    const clang::RecordDecl& record_decl, const clang::ASTContext& ctx) {
+  const clang::CXXRecordDecl* cxx_record_decl =
+      llvm::cast<clang::CXXRecordDecl>(&record_decl);
+  if (cxx_record_decl == nullptr) {
+    return {};
+  }
+
+  // This function is unfortunate: the only way to correctly get information
+  // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
+  // e.g. correctly determining virtual base paths, etc.
+  //
+  // However, lookupInBases does not recurse into a class once it's found.
+  // So we need to call lookupInBases once per class, making this O(N^4).
+
+  llvm::SmallPtrSet<const clang::CXXRecordDecl*, 4> seen;
+  std::vector<BaseClass> bases;
+  clang::CXXBasePaths paths;
+  // the const cast is a common pattern, apparently, see e.g.
+  // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
+  paths.setOrigin(const_cast<clang::CXXRecordDecl*>(cxx_record_decl));
+
+  auto next_class = [&]() {
+    const clang::CXXRecordDecl* found = nullptr;
+
+    // Matches the first new class it encounters (and adds it to `seen`, so
+    // that future runs don't rediscover it.)
+    auto is_new_class = [&](const clang::CXXBaseSpecifier* base_specifier,
+                            clang::CXXBasePath&) {
+      const auto* record_decl = base_specifier->getType()->getAsCXXRecordDecl();
+      if (found) {
+        return record_decl == found;
+      }
+
+      if (record_decl && seen.insert(record_decl).second) {
+        found = record_decl;
+        return true;
+      }
+      return false;
+    };
+    return cxx_record_decl->lookupInBases(is_new_class, paths);
+  };
+
+  for (; next_class(); paths.clear()) {
+    for (const clang::CXXBasePath& path : paths) {
+      if (path.Access != clang::AS_public) {
+        continue;
+      }
+      const clang::CXXBaseSpecifier& base_specifier =
+          *path[path.size() - 1].Base;
+      const clang::QualType& base = base_specifier.getType();
+      if (paths.isAmbiguous(ctx.getCanonicalType(base))) {
+        continue;
+      }
+      const clang::CXXRecordDecl* base_record_decl =
+          ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+      std::optional<int64_t> offset = {0};
+      for (const clang::CXXBasePathElement& base_path_element : path) {
+        if (base_path_element.Base->isVirtual()) {
+          offset = std::nullopt;
+          break;
+        }
+        *offset +=
+            {ctx.getASTRecordLayout(base_path_element.Class)
+                 .getBaseClassOffset(ABSL_DIE_IF_NULL(
+                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
+                 .getQuantity()};
+      }
+      DCHECK(!offset.has_value() || *offset >= 0)
+          << "Concrete base classes should have non-negative offsets.";
+      bases.push_back(
+          BaseClass{.base_record_id = GenerateDeclId(base_record_decl),
+                    .offset = offset});
+      break;
+    }
+  }
+  return bases;
+}
+}  // namespace
 
 std::vector<clang::RawComment*> Importer::ImportFreeComments() {
   clang::SourceManager& sm = ctx_.getSourceManager();
@@ -562,21 +647,22 @@ Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
     return LookupResult("Importing field failed");
   }
 
-  return LookupResult(
-      Record{.identifier = *record_name,
-             .id = GenerateDeclId(record_decl),
-             .owning_target = GetOwningTarget(record_decl),
-             .doc_comment = GetComment(record_decl),
-             .fields = *std::move(fields),
-             .size = layout.getSize().getQuantity(),
-             .alignment = layout.getAlignment().getQuantity(),
-             .base_size = base_size,
-             .override_alignment = override_alignment,
-             .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),
-             .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
-             .destructor = GetDestructorSpecialMemberFunc(*record_decl),
-             .is_trivial_abi = record_decl->canPassInRegisters(),
-             .is_final = is_final});
+  return LookupResult(Record{
+      .identifier = *record_name,
+      .id = GenerateDeclId(record_decl),
+      .owning_target = GetOwningTarget(record_decl),
+      .doc_comment = GetComment(record_decl),
+      .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl, ctx_),
+      .fields = *std::move(fields),
+      .size = layout.getSize().getQuantity(),
+      .alignment = layout.getAlignment().getQuantity(),
+      .base_size = base_size,
+      .override_alignment = override_alignment,
+      .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),
+      .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
+      .destructor = GetDestructorSpecialMemberFunc(*record_decl),
+      .is_trivial_abi = record_decl->canPassInRegisters(),
+      .is_final = is_final});
 }
 
 Importer::LookupResult Importer::ImportTypedefName(

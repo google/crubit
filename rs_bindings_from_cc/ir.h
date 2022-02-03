@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 
+#include <cstddef>
 #include <iomanip>
 #include <optional>
 #include <string>
@@ -374,6 +375,17 @@ inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
   return o << std::setw(internal::kJsonIndent) << f.ToJson();
 }
 
+// A base class subobject of a struct or class.
+struct BaseClass {
+  nlohmann::json ToJson() const;
+  DeclId base_record_id;
+
+  // The offset the base class subobject is located at. This is always nonempty
+  // for nonvirtual inheritance, and always empty if a virtual base class is
+  // anywhere in the inheritance chain.
+  std::optional<int64_t> offset;
+};
+
 // A record (struct, class, union).
 struct Record {
   nlohmann::json ToJson() const;
@@ -382,6 +394,7 @@ struct Record {
   DeclId id;
   BlazeLabel owning_target;
   std::optional<std::string> doc_comment;
+  std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
   std::vector<Lifetime> lifetime_params;
   // Size and alignment in bytes.

@@ -270,6 +270,14 @@ nlohmann::json SpecialMemberFunc::ToJson() const {
   return result;
 }
 
+nlohmann::json BaseClass::ToJson() const {
+  nlohmann::json base;
+  base["base_record_id"] = base_record_id.value();
+  if (offset.has_value()) {
+    base["offset"] = *offset;
+  }
+  return base;
+}
 nlohmann::json Record::ToJson() const {
   nlohmann::json record;
   record["identifier"] = identifier.ToJson();
@@ -278,6 +286,7 @@ nlohmann::json Record::ToJson() const {
   if (doc_comment) {
     record["doc_comment"] = *doc_comment;
   }
+  record["unambiguous_public_bases"] = VectorToJson(unambiguous_public_bases);
   record["fields"] = VectorToJson(fields);
   record["lifetime_params"] = VectorToJson(lifetime_params);
   record["size"] = size;
