@@ -291,6 +291,8 @@ pub struct Record {
     pub lifetime_params: Vec<Lifetime>,
     pub size: usize,
     pub alignment: usize,
+    pub base_size: Option<usize>,
+    pub override_alignment: bool,
     pub copy_constructor: SpecialMemberFunc,
     pub move_constructor: SpecialMemberFunc,
     pub destructor: SpecialMemberFunc,

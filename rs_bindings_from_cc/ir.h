@@ -388,6 +388,23 @@ struct Record {
   int64_t size;
   int64_t alignment;
 
+  // The size of the base class subobjects, or null if there are none.
+  //
+  // More information: docs/struct_layout
+  std::optional<size_t> base_size = std::nullopt;
+
+  // True if the alignment may differ from what the fields would imply.
+  //
+  // For example, a base class or [[no_unique_address]] of alignment 8 should
+  // cause the record to have alignment at least 8. Since the field cannot be
+  // aligned due to layout issues, the parent struct must instead receive an
+  // alignment adjustment as necessary, via .override_alignment=true.
+  //
+  // TODO(b/216726709): use this for [[no_unique_address]].
+  //
+  // More information: docs/struct_layout
+  bool override_alignment = false;
+
   // Special member functions.
   SpecialMemberFunc copy_constructor = {};
   SpecialMemberFunc move_constructor = {};

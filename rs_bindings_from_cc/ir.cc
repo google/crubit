@@ -282,6 +282,10 @@ nlohmann::json Record::ToJson() const {
   record["lifetime_params"] = VectorToJson(lifetime_params);
   record["size"] = size;
   record["alignment"] = alignment;
+  if (base_size) {
+    record["base_size"] = *base_size;
+  }
+  record["override_alignment"] = override_alignment;
   record["copy_constructor"] = copy_constructor.ToJson();
   record["move_constructor"] = move_constructor.ToJson();
   record["destructor"] = destructor.ToJson();

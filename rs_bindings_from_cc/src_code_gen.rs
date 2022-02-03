@@ -664,7 +664,25 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         };
     }
 
-    let empty_struct_placeholder_field = if record.fields.is_empty() {
+    let mut repr_attributes = vec![quote! {C}];
+    if record.override_alignment && record.alignment > 1 {
+        let alignment = Literal::usize_unsuffixed(record.alignment);
+        repr_attributes.push(quote! {align(#alignment)});
+    }
+
+    // Adjust the struct to also include base class subobjects. We use an opaque
+    // field because subobjects can live in the alignment of base class
+    // subobjects.
+    let base_subobjects_field = if let Some(base_size) = record.base_size {
+        let n = proc_macro2::Literal::usize_unsuffixed(base_size);
+        quote! {
+            __base_class_subobjects: [std::mem::MaybeUninit<u8>; #n],
+        }
+    } else {
+        quote! {}
+    };
+
+    let empty_struct_placeholder_field = if record.fields.is_empty() && record.base_size.unwrap_or(0) == 0 {
         quote! {
           /// Prevent empty C++ struct being zero-size in Rust.
           placeholder: std::mem::MaybeUninit<u8>,
@@ -676,8 +694,9 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let record_tokens = quote! {
         #doc_comment
         #derives
-        #[repr(C)]
+        #[repr(#( #repr_attributes ),*)]
         pub struct #ident {
+            #base_subobjects_field
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
             #empty_struct_placeholder_field
         }
@@ -1832,6 +1851,149 @@ mod tests {
         assert!(s2 < t1);
         assert!(t1 < t2);
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_base_class_subobject_layout() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            // We use a class here to force `Derived::z` to live inside the tail padding of `Base`.
+            // On the Itanium ABI, this would not happen if `Base` were a POD type.
+            class Base {long x; char y;};
+            struct Derived final : Base {short z;};
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(8))]
+                pub struct Derived {
+                    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 10],
+                    pub z: i16,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// The same as test_base_class_subobject_layout, but with multiple
+    /// inheritance.
+    #[test]
+    fn test_base_class_multiple_inheritance_subobject_layout() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Base1 {long x;};
+            class Base2 {char y;};
+            struct Derived final : Base1, Base2 {short z;};
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(8))]
+                pub struct Derived {
+                    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 10],
+                    pub z: i16,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// The same as test_base_class_subobject_layout, but with a chain of
+    /// inheritance.
+    #[test]
+    fn test_base_class_deep_inheritance_subobject_layout() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Base1 {long x;};
+            class Base2 : Base1 {char y;};
+            struct Derived final : Base2 {short z;};
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(8))]
+                pub struct Derived {
+                    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 10],
+                    pub z: i16,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// For derived classes with no data members, we can't use the offset of the
+    /// first member to determine the size of the base class subobjects.
+    #[test]
+    fn test_base_class_subobject_fieldless_layout() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Base {long x; char y;};
+            struct Derived final : Base {};
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(8))]
+                pub struct Derived {
+                    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 9],
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_base_class_subobject_empty_fieldless() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Base {};
+            struct Derived final : Base {};
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C)]
+                pub struct Derived {
+                    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 0],
+                    /// Prevent empty C++ struct being zero-size in Rust.
+                    placeholder: std::mem::MaybeUninit<u8>,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_base_class_subobject_empty() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Base {};
+            struct Derived final : Base {};
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C)]
+                pub struct Derived {
+                    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 0],
+                    /// Prevent empty C++ struct being zero-size in Rust.
+                    placeholder: std::mem::MaybeUninit<u8>,
+                }
+            }
+        );
         Ok(())
     }
 

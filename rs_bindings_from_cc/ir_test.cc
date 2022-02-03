@@ -116,6 +116,7 @@ TEST(IrTest, IR) {
                     "lifetime_params": [],
                     "size": 12,
                     "alignment": 4,
+                    "override_alignment": false,
                     "copy_constructor": {
                         "definition": "NontrivialUserDefined",
                         "access": "Private"
