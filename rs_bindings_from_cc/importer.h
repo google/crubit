@@ -121,11 +121,11 @@ class Importer {
   // These functions import specific `Decl` subtypes. They use `LookupDecl` to
   // lookup dependencies. They don't use or update the cache themselves.
   LookupResult ImportFunction(clang::FunctionDecl* function_decl);
-  LookupResult ImportRecord(clang::RecordDecl* record_decl);
+  LookupResult ImportRecord(clang::CXXRecordDecl* record_decl);
   LookupResult ImportTypedefName(clang::TypedefNameDecl* typedef_name_decl);
 
   absl::StatusOr<std::vector<Field>> ImportFields(
-      clang::RecordDecl* record_decl, clang::AccessSpecifier default_access);
+      clang::CXXRecordDecl* record_decl);
   std::vector<clang::RawComment*> ImportFreeComments();
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;

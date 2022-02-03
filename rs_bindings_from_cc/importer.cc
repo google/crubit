@@ -97,13 +97,7 @@ DeclId GenerateDeclId(const clang::Decl* decl) {
 }
 
 std::vector<BaseClass> GetUnambiguousPublicBases(
-    const clang::RecordDecl& record_decl, const clang::ASTContext& ctx) {
-  const clang::CXXRecordDecl* cxx_record_decl =
-      llvm::cast<clang::CXXRecordDecl>(&record_decl);
-  if (cxx_record_decl == nullptr) {
-    return {};
-  }
-
+    const clang::CXXRecordDecl& record_decl, const clang::ASTContext& ctx) {
   // This function is unfortunate: the only way to correctly get information
   // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
   // e.g. correctly determining virtual base paths, etc.
@@ -116,7 +110,7 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
   clang::CXXBasePaths paths;
   // the const cast is a common pattern, apparently, see e.g.
   // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
-  paths.setOrigin(const_cast<clang::CXXRecordDecl*>(cxx_record_decl));
+  paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&record_decl));
 
   auto next_class = [&]() {
     const clang::CXXRecordDecl* found = nullptr;
@@ -136,7 +130,7 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
       }
       return false;
     };
-    return cxx_record_decl->lookupInBases(is_new_class, paths);
+    return record_decl.lookupInBases(is_new_class, paths);
   };
 
   for (; next_class(); paths.clear()) {
@@ -330,7 +324,7 @@ Importer::LookupResult Importer::ImportDecl(clang::Decl* decl) {
   } else if (auto* function_template_decl =
                  clang::dyn_cast<clang::FunctionTemplateDecl>(decl)) {
     return ImportFunction(function_template_decl->getTemplatedDecl());
-  } else if (auto* record_decl = clang::dyn_cast<clang::RecordDecl>(decl)) {
+  } else if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
     auto result = ImportRecord(record_decl);
     // TODO(forster): Should we even visit the nested decl if we couldn't
     // import the parent? For now we have tests that check that we generate
@@ -574,7 +568,8 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
-Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
+Importer::LookupResult Importer::ImportRecord(
+    clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context->isFunctionOrMethod()) {
     return LookupResult();
@@ -588,7 +583,6 @@ Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
   if (record_decl->isUnion()) {
     return LookupResult("Unions are not supported yet");
   }
-
   // Make sure the record has a definition that we'll be able to call
   // ASTContext::getASTRecordLayout() on.
   record_decl = record_decl->getDefinition();
@@ -599,38 +593,30 @@ Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
 
   // To compute the memory layout of the record, it needs to be a concrete type,
   // not a template.
-  auto* cxx_record_decl = clang::dyn_cast<clang::CXXRecordDecl>(record_decl);
-  if (cxx_record_decl != nullptr &&
-      (cxx_record_decl->getDescribedClassTemplate() ||
-       clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl))) {
+  if (record_decl->getDescribedClassTemplate() ||
+      clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl)) {
     return LookupResult("Class templates are not supported yet");
   }
 
-  clang::AccessSpecifier default_access = clang::AS_public;
-  bool is_final = true;
+  sema_.ForceDeclarationOfImplicitMembers(record_decl);
+
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
+
   std::optional<size_t> base_size = std::nullopt;
   bool override_alignment = false;
-
-  if (cxx_record_decl != nullptr) {
-    sema_.ForceDeclarationOfImplicitMembers(cxx_record_decl);
-    if (cxx_record_decl->isClass()) {
-      default_access = clang::AS_private;
-    }
-    is_final = cxx_record_decl->isEffectivelyFinal();
-    if (cxx_record_decl->getNumBases() != 0) {
-      // The size of the base class subobjects is easy to compute, so long as we
-      // know that fields start after the base class subobjects. (This is not
-      // guaranteed by the standard, but is true on the ABIs we work with.)
-      base_size = layout.getFieldCount() == 0
-                      ? static_cast<size_t>(layout.getDataSize().getQuantity())
-                      : layout.getFieldOffset(0) / 8;
-      // Ideally, we'd only include an alignment adjustment if one of the base
-      // classes is more-aligned than any of the fields, but it is simpler do it
-      // whenever there are any base classes at all.
-      override_alignment = true;
-    }
+  if (record_decl->getNumBases() != 0) {
+    // The size of the base class subobjects is easy to compute, so long as we
+    // know that fields start after the base class subobjects. (This is not
+    // guaranteed by the standard, but is true on the ABIs we work with.)
+    base_size = layout.getFieldCount() == 0
+                    ? static_cast<size_t>(layout.getDataSize().getQuantity())
+                    : layout.getFieldOffset(0) / 8;
+    // Ideally, we'd only include an alignment adjustment if one of the base
+    // classes is more-aligned than any of the fields, but it is simpler do it
+    // whenever there are any base classes at all.
+    override_alignment = true;
   }
+
   std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
   if (!record_name.has_value()) {
     return LookupResult();
@@ -638,8 +624,7 @@ Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
   // Provisionally assume that we know this RecordDecl so that we'll be able
   // to import fields whose type contains the record itself.
   known_type_decls_.insert(record_decl);
-  absl::StatusOr<std::vector<Field>> fields =
-      ImportFields(record_decl, default_access);
+  absl::StatusOr<std::vector<Field>> fields = ImportFields(record_decl);
   if (!fields.ok()) {
     // Importing a field failed, so note that we didn't import this RecordDecl
     // after all.
@@ -662,7 +647,7 @@ Importer::LookupResult Importer::ImportRecord(clang::RecordDecl* record_decl) {
       .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
       .is_trivial_abi = record_decl->canPassInRegisters(),
-      .is_final = is_final});
+      .is_final = record_decl->isEffectivelyFinal()});
 }
 
 Importer::LookupResult Importer::ImportTypedefName(
@@ -853,7 +838,9 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 }
 
 absl::StatusOr<std::vector<Field>> Importer::ImportFields(
-    clang::RecordDecl* record_decl, clang::AccessSpecifier default_access) {
+    clang::CXXRecordDecl* record_decl) {
+  clang::AccessSpecifier default_access =
+      record_decl->isClass() ? clang::AS_private : clang::AS_public;
   std::vector<Field> fields;
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
