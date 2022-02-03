@@ -1441,6 +1441,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
 
     Ok(quote! {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
+        __NEWLINE__
         #( __HASH_TOKEN__ include #includes __NEWLINE__)* __NEWLINE__
 
         #( #thunks )* __NEWLINE__ __NEWLINE__

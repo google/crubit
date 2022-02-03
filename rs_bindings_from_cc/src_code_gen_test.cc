@@ -49,6 +49,7 @@ TEST(SrcGenTest, FFIIntegration) {
 
   EXPECT_THAT(bindings.rs_api_impl,
               StrEq("#include <memory>\n"
+                    "\n"
                     "#include "
                     "\"rs_bindings_from_cc/support/"
                     "cxx20_backports.h\"\n"
