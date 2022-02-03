@@ -538,11 +538,7 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   // consider it a textual header. In that case we go up the include stack
   // until we find a header that has an owning target.
 
-  // TODO(b/208377928): We currently don't have a target for the headers in
-  // Clang's resource directory, so for the time being we return a fictional
-  // "//:virtual_clang_resource_dir_target" for system headers.
-  while (source_location.isValid() &&
-         !source_manager.isInSystemHeader(source_location)) {
+  while (source_location.isValid()) {
     if (source_location.isMacroID()) {
       source_location = source_manager.getExpansionLoc(source_location);
     }

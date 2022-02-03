@@ -24,18 +24,60 @@ attach_aspect = rule(
     },
 )
 
+def _is_std(t):
+    return str(t) in ["//rs_bindings_from_cc:cc_std", "//:_builtin_hdrs"]
+
 def _get_targets_and_headers(tut):
     return [
-        json.decode(x)
-        for x in tut[RustBindingsFromCcInfo].targets_and_headers.to_list()
+        x
+        for x in [
+            json.decode(tah)
+            for tah in tut[RustBindingsFromCcInfo].targets_and_headers.to_list()
+        ]
+        if not _is_std(x["t"])
     ]
+
+def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    targets_and_headers = [
+        json.decode(tah)
+        for tah in target_under_test[RustBindingsFromCcInfo].targets_and_headers.to_list()
+    ]
+
+    asserts.equals(env, 2, len(targets_and_headers))
+
+    asserts.equals(
+        env,
+        targets_and_headers[0]["t"],
+        "//rs_bindings_from_cc:cc_std",
+    )
+    asserts.equals(
+        env,
+        targets_and_headers[1]["t"],
+        "//:_builtin_hdrs",
+    )
+
+    return analysistest.end(env)
+
+lib_has_toolchain_targets_and_headers_test = analysistest.make(
+    _lib_has_toolchain_targets_and_headers_test_impl,
+)
+
+def _test_lib_has_toolchain_targets_and_headers():
+    native.cc_library(name = "empty")
+    attach_aspect(name = "empty_with_aspect", dep = ":empty")
+    lib_has_toolchain_targets_and_headers_test(
+        name = "lib_has_toolchain_targets_and_headers_test",
+        target_under_test = ":empty_with_aspect",
+    )
 
 def _no_targets_and_headers_test_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, len(targets_and_headers), 0)
+    asserts.equals(env, 0, len(targets_and_headers))
 
     return analysistest.end(env)
 
@@ -54,7 +96,7 @@ def _targets_and_headers_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, len(targets_and_headers), 1)
+    asserts.equals(env, 1, len(targets_and_headers))
     asserts.equals(
         env,
         targets_and_headers[0]["t"],
@@ -84,7 +126,7 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, len(targets_and_headers), 2)
+    asserts.equals(env, 2, len(targets_and_headers))
 
     asserts.equals(
         env,
@@ -131,7 +173,7 @@ def _textual_hdrs_not_in_targets_and_hdrs_impl(ctx):
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
     # Check that none of the textual headers made it into the targets_and_headers provider.
-    asserts.equals(env, len(targets_and_headers), 1)
+    asserts.equals(env, 1, len(targets_and_headers))
     asserts.equals(
         env,
         targets_and_headers[0]["h"],
@@ -170,6 +212,7 @@ def rust_bindings_from_cc_aspect_test(name):
     _test_targets_and_headers()
     _test_targets_and_headers_propagate_with_cc_infos()
     _test_textual_hdrs_not_in_targets_and_hdrs()
+    _test_lib_has_toolchain_targets_and_headers()
 
     native.test_suite(
         name = name,
@@ -178,5 +221,6 @@ def rust_bindings_from_cc_aspect_test(name):
             ":targets_and_headers_test",
             ":targets_and_headers_propagate_with_cc_info_test",
             ":textual_hdrs_not_in_targets_and_hdrs_test",
+            ":lib_has_toolchain_targets_and_headers_test",
         ],
     )

@@ -6,6 +6,8 @@ load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVari
 
 # buildifier: disable=bzl-visibility
 load("//third_party/bazel_rules/rules_rust/rust/private:rustc.bzl", "rustc_compile_action")
+load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 RustBindingsFromCcInfo = provider(
     doc = ("A provider that contains compile and linking information for the generated" +
@@ -27,7 +29,7 @@ GeneratedBindingsInfo = provider(
     },
 )
 
-def compile_cc(
+def _compile_cc(
         ctx,
         attr,
         cc_toolchain,
@@ -74,7 +76,7 @@ def compile_cc(
         linking_context = linking_context,
     )
 
-def compile_rust(ctx, attr, src, deps):
+def _compile_rust(ctx, attr, src, deps):
     """Compiles a Rust source file.
 
     Args:
@@ -131,6 +133,173 @@ def compile_rust(ctx, attr, src, deps):
         build_info = None,
     )
 
+def _generate_bindings(
+        ctx,
+        attr,
+        cc_toolchain,
+        feature_configuration,
+        compilation_context,
+        public_hdrs,
+        header_includes,
+        action_inputs,
+        targets_and_headers):
+    """Runs the bindings generator.
+
+    Args:
+      ctx: The rule context.
+      attr: The current rule's attributes.
+      cc_toolchain: The cc_toolchain.
+      feature_configuration: The feature configuration.
+      compilation_context: The compilation context for this action.
+      public_hdrs: A list of headers to be passed to the tool via the "--public_headers" flag.
+      header_includes: A list of flags to be passed to the command line with "-include".
+      action_inputs: A list of inputs to the bindings generating action.
+      targets_and_headers: A depset of strings, each one representing mapping of target to " +
+                          "its headers in json format.
+
+    Returns:
+      tuple(cc_output, rs_output): The generated source files.
+    """
+    cc_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_impl.cc")
+    rs_output = ctx.actions.declare_file(ctx.label.name + "_rust_api.rs")
+
+    variables = cc_common.create_compile_variables(
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        system_include_directories = depset(
+            direct = [
+                cc_toolchain.built_in_include_directories[0],
+                cc_toolchain.built_in_include_directories[1].replace("stable", "llvm_unstable"),
+                cc_toolchain.built_in_include_directories[2],
+            ],
+            transitive = [
+                compilation_context.system_includes,
+            ],
+        ),
+        include_directories = compilation_context.includes,
+        quote_include_directories = compilation_context.quote_includes,
+        user_compile_flags = ctx.fragments.cpp.copts +
+                             ctx.fragments.cpp.cxxopts +
+                             header_includes + (
+            attr.copts if hasattr(attr, "copts") else []
+        ),
+        preprocessor_defines = compilation_context.defines,
+        variables_extension = {
+            "rs_bindings_from_cc_tool": ctx.executable._generator.path,
+            "rs_bindings_from_cc_flags": [
+                "--rs_out",
+                rs_output.path,
+                "--cc_out",
+                cc_output.path,
+            ] + _get_hdrs_command_line(public_hdrs),
+            "targets_and_headers": targets_and_headers,
+        },
+    )
+
+    # Run the `rs_bindings_from_cc` to generate the _rust_api_impl.cc and _rust_api.rs files.
+    cc_common.create_compile_action(
+        compilation_context = compilation_context,
+        actions = ctx.actions,
+        action_name = ACTION_NAMES.rs_bindings_from_cc,
+        feature_configuration = feature_configuration,
+        cc_toolchain = cc_toolchain,
+        source_file = public_hdrs[0],
+        output_file = cc_output,
+        grep_includes = ctx.file._grep_includes,
+        additional_inputs = depset(
+            direct = action_inputs + [
+                ctx.executable._rustfmt,
+                ctx.executable._generator,
+            ] + ctx.files._rustfmt_cfg,
+        ),
+        additional_outputs = [rs_output],
+        variables = variables,
+    )
+    return (cc_output, rs_output)
+
+def generate_and_compile_bindings(
+        ctx,
+        attr,
+        compilation_context,
+        public_hdrs,
+        header_includes,
+        action_inputs,
+        targets_and_headers,
+        deps_for_cc_file,
+        deps_for_rs_file):
+    """Runs the bindings generator.
+
+    Args:
+      ctx: The rule context.
+      attr: The current rule's attributes.
+      compilation_context: The current compilation context.
+      public_hdrs: A list of headers to be passed to the tool via the "--public_headers" flag.
+      header_includes: A list of flags to be passed to the command line with "-include".
+      action_inputs: A list of inputs to the bindings generating action.
+      targets_and_headers: A depset of strings, each one representing mapping of target to " +
+                          "its headers in json format.
+      deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
+      deps_for_rs_file: list[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
+
+    Returns:
+      A RustBindingsFromCcInfo containing the result of the compilation of the generated source
+      files, as well a GeneratedBindingsInfo provider containing the generated source files.
+    """
+    cc_toolchain = find_cpp_toolchain(ctx)
+
+    feature_configuration = cc_common.configure_features(
+        ctx = ctx,
+        cc_toolchain = cc_toolchain,
+        requested_features = ctx.features,
+        unsupported_features = ctx.disabled_features + ["module_maps"],
+    )
+
+    cc_output, rs_output = _generate_bindings(
+        ctx = ctx,
+        attr = attr,
+        cc_toolchain = cc_toolchain,
+        feature_configuration = feature_configuration,
+        compilation_context = compilation_context,
+        public_hdrs = public_hdrs,
+        header_includes = header_includes,
+        action_inputs = action_inputs,
+        targets_and_headers = targets_and_headers,
+    )
+
+    # Compile the "_rust_api_impl.cc" file
+    cc_info = _compile_cc(
+        ctx,
+        attr,
+        cc_toolchain,
+        feature_configuration,
+        cc_output,
+        deps_for_cc_file,
+    )
+
+    # Compile the "_rust_api.rs" file
+    dep_variant_info = _compile_rust(
+        ctx,
+        attr,
+        rs_output,
+        deps_for_rs_file,
+    )
+
+    return [
+        RustBindingsFromCcInfo(
+            cc_info = cc_info,
+            dep_variant_info = dep_variant_info,
+            targets_and_headers = targets_and_headers,
+        ),
+        GeneratedBindingsInfo(
+            cc_file = cc_output,
+            rust_file = rs_output,
+        ),
+        OutputGroupInfo(out = depset([cc_output, rs_output])),
+    ]
+
+def _get_hdrs_command_line(hdrs):
+    return ["--public_headers=" + ",".join([x.short_path for x in hdrs])]
+
 bindings_attrs = {
     "_cc_toolchain": attr.label(
         default = "//tools/cpp:current_cc_toolchain",
@@ -167,5 +336,8 @@ bindings_attrs = {
         executable = True,
         allow_single_file = True,
         cfg = "exec",
+    ),
+    "_builtin_hdrs": attr.label(
+        default = "//rs_bindings_from_cc:builtin_headers",
     ),
 }

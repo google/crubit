@@ -7,14 +7,10 @@
 )
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
-    "GeneratedBindingsInfo",
     "RustBindingsFromCcInfo",
     "bindings_attrs",
-    "compile_cc",
-    "compile_rust",
+    "generate_and_compile_bindings",
 )
-load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 # buildifier: disable=bzl-visibility
 load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVariantInfo")
@@ -63,6 +59,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if ctx.executable._generator.basename == "fake_rust_bindings_from_cc":
         return []
 
+    # If this target already provides bindings, we don't need to run the bindings generator.
+    if RustBindingsFromCcInfo in target:
+        return []
+
     # This is not a C++ rule
     if CcInfo not in target:
         return []
@@ -89,6 +89,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             t[RustBindingsFromCcInfo].targets_and_headers
             for t in ctx.rule.attr.deps
             if RustBindingsFromCcInfo in t
+        ] + [
+            # TODO(b/217667751): This is a huge list of headers; pass it as a file instead;
+            ctx.attr._std[RustBindingsFromCcInfo].targets_and_headers,
         ],
     )
 
@@ -100,117 +103,46 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             targets_and_headers = targets_and_headers,
         )
 
-    hdrs_command_line = []
-    if public_hdrs:
-        hdrs_command_line.append("--public_headers=" + (",".join([x.short_path for x in public_hdrs])))
-
     header_includes = []
     for hdr in public_hdrs:
         header_includes.append("-include")
         header_includes.append(hdr.short_path)
 
-    cc_toolchain = find_cpp_toolchain(ctx)
-
-    feature_configuration = cc_common.configure_features(
-        ctx = ctx,
-        cc_toolchain = cc_toolchain,
-        requested_features = ctx.features,
-        unsupported_features = ctx.disabled_features + ["module_maps"],
-    )
-
-    cc_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_impl.cc")
-    rs_output = ctx.actions.declare_file(ctx.label.name + "_rust_api.rs")
-
     stl = ctx.attr._stl[CcInfo].compilation_context
     compilation_context = target[CcInfo].compilation_context
-    variables = cc_common.create_compile_variables(
-        feature_configuration = feature_configuration,
-        cc_toolchain = cc_toolchain,
-        user_compile_flags = ctx.fragments.cpp.copts +
-                             ctx.fragments.cpp.cxxopts +
-                             header_includes + (
-            ctx.rule.attr.copts if hasattr(ctx.rule.attr, "copts") else []
-        ),
-        preprocessor_defines = compilation_context.defines,
-        system_include_directories = depset(
-            cc_toolchain.built_in_include_directories,
-            transitive = [stl.system_includes, compilation_context.system_includes],
-        ),
-        include_directories = depset(transitive = [stl.includes, compilation_context.includes]),
-        quote_include_directories = depset(
-            transitive = [stl.quote_includes, compilation_context.quote_includes],
-        ),
-        variables_extension = {
-            "rs_bindings_from_cc_tool": ctx.executable._generator.path,
-            "rs_bindings_from_cc_flags": [
-                "--rs_out",
-                rs_output.path,
-                "--cc_out",
-                cc_output.path,
-            ] + hdrs_command_line,
-            "targets_and_headers": targets_and_headers,
-        },
-    )
 
-    # Run the `rs_bindings_from_cc` to generate the _rust_api_impl.cc and _rust_api.rs files.
-    cc_common.create_compile_action(
-        actions = ctx.actions,
-        action_name = ACTION_NAMES.rs_bindings_from_cc,
-        feature_configuration = feature_configuration,
-        cc_toolchain = cc_toolchain,
-        source_file = public_hdrs[0],
-        output_file = cc_output,
-        grep_includes = ctx.file._grep_includes,
-        additional_inputs = depset(
-            public_hdrs + [ctx.executable._rustfmt, ctx.executable._generator] + ctx.files._rustfmt_cfg,
-        ),
-        additional_outputs = [rs_output],
-        variables = variables,
-        compilation_context = compilation_context,
-    )
-
-    # Compile the "_rust_api_impl.cc" file
-    cc_info = compile_cc(
+    return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
-        cc_toolchain,
-        feature_configuration,
-        cc_output,
-        [target[CcInfo]] + [
+        compilation_context = compilation_context,
+        public_hdrs = public_hdrs,
+        header_includes = header_includes,
+        action_inputs = public_hdrs + ctx.files._builtin_hdrs,
+        targets_and_headers = targets_and_headers,
+        deps_for_cc_file = [target[CcInfo]] + [
             dep[RustBindingsFromCcInfo].cc_info
             for dep in ctx.rule.attr.deps
             if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_cc_file,
-    )
-
-    # Compile the "_rust_api.rs" file
-    dep_variant_info = compile_rust(
-        ctx,
-        ctx.rule.attr,
-        rs_output,
-        [
+        ] + ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_cc_file + [
+            ctx.attr._std[RustBindingsFromCcInfo].cc_info,
+        ],
+        deps_for_rs_file = [
             dep[RustBindingsFromCcInfo].dep_variant_info
             for dep in ctx.rule.attr.deps
             if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_rs_file,
+        ] + ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_rs_file + [
+            ctx.attr._std[RustBindingsFromCcInfo].dep_variant_info,
+        ],
     )
-
-    return [
-        RustBindingsFromCcInfo(
-            cc_info = cc_info,
-            dep_variant_info = dep_variant_info,
-            targets_and_headers = targets_and_headers,
-        ),
-        GeneratedBindingsInfo(
-            cc_file = cc_output,
-            rust_file = rs_output,
-        ),
-    ]
 
 rust_bindings_from_cc_aspect = aspect(
     implementation = _rust_bindings_from_cc_aspect_impl,
     attr_aspects = ["deps"],
-    attrs = bindings_attrs,
+    attrs = dict(bindings_attrs.items() + {
+        "_std": attr.label(
+            default = "//rs_bindings_from_cc:cc_std",
+        ),
+    }.items()),
     toolchains = [
         "//third_party/bazel_rules/rules_rust/rust:toolchain",
         "//tools/cpp:toolchain_type",
