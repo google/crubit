@@ -18,6 +18,10 @@ extern "C" void __rust_thunk___ZN7TrivialC1ERKS_(
 extern "C" void __rust_thunk___ZN7TrivialD1Ev(class Trivial* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class Trivial& __rust_thunk___ZN7TrivialaSERKS_(
+    class Trivial* __this, const class Trivial& __param_0) {
+  return __this->operator=(__param_0);
+}
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
     class TrivialWithDefaulted* __this) {
   rs_api_impl_support ::construct_at(__this);
@@ -26,6 +30,12 @@ extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
     class TrivialWithDefaulted* __this,
     const class TrivialWithDefaulted& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
+}
+extern "C" class TrivialWithDefaulted&
+__rust_thunk___ZN20TrivialWithDefaultedaSERKS_(
+    class TrivialWithDefaulted* __this,
+    const class TrivialWithDefaulted& __param_0) {
+  return __this->operator=(__param_0);
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
     class TrivialWithDefaulted* __this) {
@@ -42,6 +52,10 @@ extern "C" void __rust_thunk___ZN15TrivialNonfinalC1ERKS_(
 extern "C" void __rust_thunk___ZN15TrivialNonfinalD1Ev(
     class TrivialNonfinal* __this) {
   std ::destroy_at(__this);
+}
+extern "C" class TrivialNonfinal& __rust_thunk___ZN15TrivialNonfinalaSERKS_(
+    class TrivialNonfinal* __this, const class TrivialNonfinal& __param_0) {
+  return __this->operator=(__param_0);
 }
 
 static_assert(sizeof(class Trivial) == 4);

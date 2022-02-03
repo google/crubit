@@ -21,6 +21,12 @@ extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
     class UserOfImportedType* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class UserOfImportedType&
+__rust_thunk___ZN18UserOfImportedTypeaSERKS_(
+    class UserOfImportedType* __this,
+    const class UserOfImportedType& __param_0) {
+  return __this->operator=(__param_0);
+}
 
 static_assert(sizeof(class UserOfImportedType) == 8);
 static_assert(alignof(class UserOfImportedType) == 8);

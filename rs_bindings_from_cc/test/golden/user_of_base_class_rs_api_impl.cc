@@ -18,6 +18,10 @@ extern "C" void __rust_thunk___ZN8Derived2C1ERKS_(
 extern "C" void __rust_thunk___ZN8Derived2D1Ev(class Derived2* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class Derived2& __rust_thunk___ZN8Derived2aSERKS_(
+    class Derived2* __this, const class Derived2& __param_0) {
+  return __this->operator=(__param_0);
+}
 
 static_assert(sizeof(class Derived2) == 16);
 static_assert(alignof(class Derived2) == 8);

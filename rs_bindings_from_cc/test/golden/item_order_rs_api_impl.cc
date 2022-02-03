@@ -18,6 +18,10 @@ extern "C" void __rust_thunk___ZN11FirstStructC1ERKS_(
 extern "C" void __rust_thunk___ZN11FirstStructD1Ev(class FirstStruct* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class FirstStruct& __rust_thunk___ZN11FirstStructaSERKS_(
+    class FirstStruct* __this, const class FirstStruct& __param_0) {
+  return __this->operator=(__param_0);
+}
 extern "C" int __rust_thunk___Z10first_funcv() { return first_func(); }
 extern "C" void __rust_thunk___ZN12SecondStructC1Ev(
     class SecondStruct* __this) {
@@ -30,6 +34,10 @@ extern "C" void __rust_thunk___ZN12SecondStructC1ERKS_(
 extern "C" void __rust_thunk___ZN12SecondStructD1Ev(
     class SecondStruct* __this) {
   std ::destroy_at(__this);
+}
+extern "C" class SecondStruct& __rust_thunk___ZN12SecondStructaSERKS_(
+    class SecondStruct* __this, const class SecondStruct& __param_0) {
+  return __this->operator=(__param_0);
 }
 extern "C" int __rust_thunk___Z11second_funcv() { return second_func(); }
 

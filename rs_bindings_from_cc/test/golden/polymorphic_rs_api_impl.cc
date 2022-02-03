@@ -16,6 +16,10 @@ extern "C" void __rust_thunk___ZN16PolymorphicClassC1ERKS_(
     class PolymorphicClass* __this, const class PolymorphicClass& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
 }
+extern "C" class PolymorphicClass& __rust_thunk___ZN16PolymorphicClassaSERKS_(
+    class PolymorphicClass* __this, const class PolymorphicClass& __param_0) {
+  return __this->operator=(__param_0);
+}
 extern "C" void __rust_thunk___ZN16PolymorphicClassD1Ev(
     class PolymorphicClass* __this) {
   std ::destroy_at(__this);

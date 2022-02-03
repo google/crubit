@@ -939,8 +939,31 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
       return {SpecialName::kConstructor};
     case clang::DeclarationName::CXXDestructorName:
       return {SpecialName::kDestructor};
+    case clang::DeclarationName::CXXOperatorName:
+      switch (named_decl->getDeclName().getCXXOverloadedOperator()) {
+        case clang::OO_None:
+          LOG(FATAL) << "No OO_None expected under CXXOperatorName branch";
+          return std::nullopt;
+        case clang::NUM_OVERLOADED_OPERATORS:
+          LOG(FATAL) << "No NUM_OVERLOADED_OPERATORS expected at runtime";
+          return std::nullopt;
+          // clang-format off
+        #define OVERLOADED_OPERATOR(name, spelling, ...)  \
+        case clang::OO_##name: {                          \
+          std::string name = "operator";                  \
+          if ('a' <= spelling[0] && spelling[0] <= 'z') { \
+            absl::StrAppend(&name, " ");                  \
+          }                                               \
+          absl::StrAppend(&name, spelling);               \
+          return {Identifier(std::move(name))};           \
+        }
+        #include "third_party/llvm/llvm-project/clang/include/clang/Basic/OperatorKinds.def"
+        #undef OVERLOADED_OPERATOR
+          // clang-format on
+      }
+      LOG(FATAL) << "The `switch` above should handle all cases and `return`";
     default:
-      // To be implemented later: operators, conversion functions.
+      // To be implemented later: CXXConversionFunctionName.
       // There are also e.g. literal operators, deduction guides, etc., but
       // we might not need to implement them at all. Full list at:
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3

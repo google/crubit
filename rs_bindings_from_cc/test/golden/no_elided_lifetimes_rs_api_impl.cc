@@ -18,6 +18,10 @@ extern "C" void __rust_thunk___ZN1SC1ERKS_(class S* __this,
 extern "C" void __rust_thunk___ZN1SD1Ev(class S* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class S& __rust_thunk___ZN1SaSERKS_(class S* __this,
+                                               const class S& __param_0) {
+  return __this->operator=(__param_0);
+}
 
 static_assert(sizeof(class S) == 1);
 static_assert(alignof(class S) == 1);

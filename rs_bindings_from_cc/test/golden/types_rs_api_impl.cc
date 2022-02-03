@@ -18,6 +18,10 @@ extern "C" void __rust_thunk___ZN10SomeStructC1ERKS_(
 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSERKS_(
+    class SomeStruct* __this, const class SomeStruct& __param_0) {
+  return __this->operator=(__param_0);
+}
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
     class FieldTypeTestStruct* __this,
     const class FieldTypeTestStruct& __param_0) {

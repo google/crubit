@@ -24,6 +24,10 @@ extern "C" void __rust_thunk___ZN16ContainingStructD1Ev(
     class ContainingStruct* __this) {
   std ::destroy_at(__this);
 }
+extern "C" class ContainingStruct& __rust_thunk___ZN16ContainingStructaSERKS_(
+    class ContainingStruct* __this, const class ContainingStruct& __param_0) {
+  return __this->operator=(__param_0);
+}
 
 static_assert(sizeof(class NontrivialCustomType) == 4);
 static_assert(alignof(class NontrivialCustomType) == 4);

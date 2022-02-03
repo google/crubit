@@ -159,7 +159,7 @@ struct FunctionId {
     function_path: syn::Path,
 }
 
-/// Returns the name of `func` in C++ synatx.
+/// Returns the name of `func` in C++ syntax.
 fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
     let record: Option<&str> = func
         .member_func_metadata
@@ -242,6 +242,41 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     let func_name: syn::Ident;
     let format_first_param_as_self: bool;
     match &func.name {
+        UnqualifiedIdentifier::Identifier(id) if id.identifier == "operator==" => {
+            let record = match maybe_record {
+                None => return Ok(None),
+                Some(record) => record,
+            };
+            match (param_type_kinds.get(0), param_type_kinds.get(1)) {
+                (
+                    Some(RsTypeKind::Reference {
+                        referent: lhs,
+                        mutability: Mutability::Const,
+                        ..
+                    }),
+                    Some(RsTypeKind::Reference {
+                        referent: rhs,
+                        mutability: Mutability::Const,
+                        ..
+                    }),
+                ) => match **lhs {
+                    RsTypeKind::Record(lhs_record) => {
+                        if lhs_record.id != record.id {
+                            return Ok(None);
+                        }
+                        let rhs = rhs.format(ir, &lifetime_to_name)?;
+                        format_first_param_as_self = true;
+                        func_name = make_rs_ident("eq");
+                        impl_kind = ImplKind::Trait(quote! {PartialEq<#rhs>});
+                    }
+                    _ => return Ok(None),
+                },
+                _ => return Ok(None),
+            };
+        }
+        UnqualifiedIdentifier::Identifier(id) if id.identifier.starts_with("operator") => {
+            return Ok(None);
+        }
         UnqualifiedIdentifier::Identifier(id) => {
             func_name = make_rs_ident(&id.identifier);
             match maybe_record {
@@ -597,8 +632,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .iter()
         .enumerate()
         .map(|(i, f)| {
-            // [[no_unique_address]] fields are replaced by an unaligned block of memory which
-            // fills space up to the next field.
+            // [[no_unique_address]] fields are replaced by an unaligned block of memory
+            // which fills space up to the next field.
             // See: docs/struct_layout
             if f.is_no_unique_address {
                 let next_offset = if let Some(next) = record.fields.get(i + 1) {
@@ -695,14 +730,15 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         quote! {}
     };
 
-    let empty_struct_placeholder_field = if record.fields.is_empty() && record.base_size.unwrap_or(0) == 0 {
-        quote! {
-          /// Prevent empty C++ struct being zero-size in Rust.
-          placeholder: std::mem::MaybeUninit<u8>,
-        }
-    } else {
-        quote! {}
-    };
+    let empty_struct_placeholder_field =
+        if record.fields.is_empty() && record.base_size.unwrap_or(0) == 0 {
+            quote! {
+              /// Prevent empty C++ struct being zero-size in Rust.
+              placeholder: std::mem::MaybeUninit<u8>,
+            }
+        } else {
+            quote! {}
+        };
 
     let base_class_into = cc_struct_upcast_impl(record, ir)?;
 
@@ -922,10 +958,9 @@ fn make_rs_ident(ident: &str) -> Ident {
     }
 }
 
-/// Makes an `Ident` to be used in the C++ source code. Does not escape C++
-/// keywords.
-fn make_cc_ident(ident: &str) -> Ident {
-    format_ident!("{}", ident)
+/// Formats a C++ identifier. Does not escape C++ keywords.
+fn format_cc_ident(ident: &str) -> TokenStream {
+    ident.parse().unwrap()
 }
 
 fn rs_type_name_for_target_and_identifier(
@@ -1241,7 +1276,7 @@ fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
         _ => bail!("Item does not define a type: {:?}", item),
     };
 
-    let ident = make_cc_ident(identifier.identifier.as_str());
+    let ident = format_cc_ident(identifier.identifier.as_str());
     Ok(quote! { #disambiguator_fragment #ident })
 }
 
@@ -1272,7 +1307,7 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 if !ty.type_args.is_empty() {
                     bail!("Type not yet supported: {:?}", ty);
                 }
-                let idents = cc_type_name.split_whitespace().map(make_cc_ident);
+                let idents = cc_type_name.split_whitespace().map(format_cc_ident);
                 Ok(quote! {#( #idents )* #const_fragment})
             }
         }
@@ -1287,12 +1322,12 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
         return quote! {};
     }
-    let record_ident = make_cc_ident(&record.identifier.identifier);
+    let record_ident = format_cc_ident(&record.identifier.identifier);
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_assertions =
         record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
-            let field_ident = make_cc_ident(&field.identifier.identifier);
+            let field_ident = format_cc_ident(&field.identifier.identifier);
             let offset = Literal::usize_unsuffixed(field.offset);
             // The IR contains the offset in bits, while C++'s offsetof()
             // returns the offset in bytes, so we need to convert.
@@ -1368,7 +1403,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         let thunk_ident = thunk_ident(func);
         let implementation_function = match &func.name {
             UnqualifiedIdentifier::Identifier(id) => {
-                let fn_ident = make_cc_ident(&id.identifier);
+                let fn_ident = format_cc_ident(&id.identifier);
                 let static_method_metadata = func
                     .member_func_metadata
                     .as_ref()
@@ -1377,7 +1412,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                     None => quote! {#fn_ident},
                     Some(meta) => {
                         let record_ident =
-                            make_cc_ident(&meta.find_record(ir)?.identifier.identifier);
+                            format_cc_ident(&meta.find_record(ir)?.identifier.identifier);
                         quote! { #record_ident :: #fn_ident }
                     }
                 }
@@ -1401,7 +1436,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         };
 
         let param_idents =
-            func.params.iter().map(|p| make_cc_ident(&p.identifier.identifier)).collect_vec();
+            func.params.iter().map(|p| format_cc_ident(&p.identifier.identifier)).collect_vec();
 
         let param_types = func
             .params
@@ -1423,7 +1458,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                 .params
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
-            let this_arg = make_cc_ident(&this_param.identifier.identifier);
+            let this_arg = format_cc_ident(&this_param.identifier.identifier);
             (
                 quote! { #this_arg -> #implementation_function},
                 param_idents.iter().skip(1).cloned().collect_vec(),
@@ -1440,9 +1475,9 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
     let layout_assertions = ir.records().map(|record| cc_struct_layout_assertion(record, ir));
 
     let mut standard_headers = <BTreeSet<Ident>>::new();
-    standard_headers.insert(make_cc_ident("memory")); // ubiquitous.
+    standard_headers.insert(format_ident!("memory")); // ubiquitous.
     if ir.records().next().is_some() {
-        standard_headers.insert(make_cc_ident("cstddef"));
+        standard_headers.insert(format_ident!("cstddef"));
     };
 
     let mut includes =
@@ -2537,6 +2572,68 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_eq_basic_test() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                inline bool operator==(const SomeStruct& other) const {
+                    return i == other.i;
+                }
+                int i;
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialEq<SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn eq<'a, 'b>(&'a self, other: &'b SomeStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
+                    }
+                }
+            }
+        );
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
+                        const class SomeStruct* __this, const class SomeStruct& other) {
+                    return __this->operator==(other);
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_eq_non_const_member_function() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                bool operator==(const SomeStruct& other) /* no `const` here */;
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_not_matches!(rs_api, quote! {impl PartialEq});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_eq_rhs_by_value() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                bool operator==(SomeStruct other) const;
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_not_matches!(rs_api, quote! {impl PartialEq});
         Ok(())
     }
 

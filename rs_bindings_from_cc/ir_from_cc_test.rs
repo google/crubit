@@ -9,7 +9,7 @@ use ir::*;
 use ir_testing::*;
 use itertools::Itertools;
 use quote::quote;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
 use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches};
 
@@ -1102,6 +1102,41 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     assert_eq!(t.lifetime_args.len(), 1);
     assert_eq!(t.lifetime_args[0], f.lifetime_params[0].id);
     assert_eq!(t.name, Some("&mut".to_string()));
+}
+
+#[test]
+fn test_operator_names() {
+    let ir = ir_from_cc(
+        r#"
+        // TOOD(b/208377928): Use #include <stddef.h> instead of declaring `size_t` ourselves...
+        using size_t = unsigned long;
+        #pragma clang lifetime_elision
+        struct SomeStruct {
+          // There is an implicit/default `oparator=` hidden here as well.
+          void* operator new(size_t size);
+          void* operator new[](size_t size);
+          bool operator==(const SomeStruct& other) const;
+        };"#,
+    )
+    .unwrap();
+    let function_names: HashSet<&str> = ir
+        .functions()
+        .filter(|f| {
+            // Only SomeStruct member functions (excluding stddef.h stuff).
+            f.member_func_metadata
+                .as_ref()
+                .map(|m| m.find_record(&ir).unwrap().identifier.identifier == "SomeStruct")
+                .unwrap_or_default()
+        })
+        .flat_map(|f| match &f.name {
+            UnqualifiedIdentifier::Identifier(id) => Some(id.identifier.as_ref()),
+            _ => None,
+        })
+        .collect();
+    assert!(function_names.contains("operator="));
+    assert!(function_names.contains("operator new"));
+    assert!(function_names.contains("operator new[]"));
+    assert!(function_names.contains("operator=="));
 }
 
 #[test]
