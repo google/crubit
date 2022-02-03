@@ -432,11 +432,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         if format_first_param_as_self {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            let self_decl = first_api_param
-                .format_as_self_param_for_instance_method(func, ir, &lifetime_to_name)
-                .with_context(|| {
-                    format!("Failed to format as `self` param: {:?}", first_api_param)
-                })?;
+            let self_decl =
+                first_api_param.format_as_self_param(func, ir, &lifetime_to_name).with_context(
+                    || format!("Failed to format as `self` param: {:?}", first_api_param),
+                )?;
             // Presence of element #0 is verified by `ok_or_else` on
             // `maybe_first_api_param` above.
             api_params[0] = self_decl;
@@ -541,7 +540,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 bail!("Constructors should have at least one parameter (__this)");
             }
             param_types[0] = param_type_kinds[0]
-                .format_as_this_param_for_constructor_thunk(ir, &lifetime_to_name)
+                .format_mut_ref_as_uninitialized(ir, &lifetime_to_name)
                 .with_context(|| {
                     format!("Failed to format `__this` param for a thunk: {:?}", func.params[0])
                 })?;
@@ -1134,39 +1133,25 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(result)
     }
 
-    /// Formats the Rust type of `__this` parameter of a constructor - injecting
-    /// MaybeUninit to return something like `&'a mut MaybeUninit<SomeStruct>`.
-    pub fn format_as_this_param_for_constructor_thunk(
+    /// Formats this RsTypeKind as `&'a mut MaybeUninit<SomeStruct>`. This is
+    /// used to format `__this` parameter in a constructor thunk.
+    pub fn format_mut_ref_as_uninitialized(
         &self,
         ir: &IR,
         lifetime_to_name: &HashMap<LifetimeId, String>,
     ) -> Result<TokenStream> {
-        let nested_type = match self {
-            RsTypeKind::Pointer {
-                pointee: pointee_or_referent,
-                mutability: Mutability::Mut,
-                ..
+        match self {
+            RsTypeKind::Reference { referent, lifetime_id, mutability: Mutability::Mut } => {
+                let nested_type = referent.format(ir, lifetime_to_name)?;
+                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
+                Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
             }
-            | RsTypeKind::Reference {
-                referent: pointee_or_referent,
-                mutability: Mutability::Mut,
-                ..
-            } => pointee_or_referent.format(ir, lifetime_to_name)?,
             _ => bail!("Unexpected type of `__this` parameter in a constructor: {:?}", self),
-        };
-        let lifetime = match self {
-            RsTypeKind::Pointer { .. } => quote! {},
-            RsTypeKind::Reference { lifetime_id, .. } => {
-                Self::format_lifetime(lifetime_id, lifetime_to_name)?
-            }
-            _ => unreachable!(), // Because of the earlier `match`.
-        };
-        // `mut` can be hardcoded, because of the `match` patterns above.
-        Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
+        }
     }
 
     /// Formats this RsTypeKind as either `&'a self` or `&'a mut self`.
-    pub fn format_as_self_param_for_instance_method(
+    pub fn format_as_self_param(
         &self,
         func: &Func,
         ir: &IR,
