@@ -265,6 +265,7 @@ pub struct Field {
     pub type_: MappedType,
     pub access: AccessSpecifier,
     pub offset: usize,
+    pub is_no_unique_address: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

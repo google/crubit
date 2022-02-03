@@ -29,6 +29,7 @@
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/CXXInheritance.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
@@ -632,6 +633,13 @@ Importer::LookupResult Importer::ImportRecord(
     return LookupResult("Importing field failed");
   }
 
+  for (const Field& field : *fields) {
+    if (field.is_no_unique_address) {
+      override_alignment = true;
+      break;
+    }
+  }
+
   return LookupResult(Record{
       .identifier = *record_name,
       .id = GenerateDeclId(record_decl),
@@ -866,7 +874,9 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
          .doc_comment = GetComment(field_decl),
          .type = *type,
          .access = TranslateAccessSpecifier(access),
-         .offset = layout.getFieldOffset(field_decl->getFieldIndex())});
+         .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
+         .is_no_unique_address =
+             field_decl->hasAttr<clang::NoUniqueAddressAttr>()});
   }
   return fields;
 }

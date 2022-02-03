@@ -333,6 +333,8 @@ struct Field {
   AccessSpecifier access;
   // Field offset in bits.
   uint64_t offset;
+  // True if the field is [[no_unique_address]].
+  bool is_no_unique_address;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {
@@ -412,8 +414,6 @@ struct Record {
   // cause the record to have alignment at least 8. Since the field cannot be
   // aligned due to layout issues, the parent struct must instead receive an
   // alignment adjustment as necessary, via .override_alignment=true.
-  //
-  // TODO(b/216726709): use this for [[no_unique_address]].
   //
   // More information: docs/struct_layout
   bool override_alignment = false;

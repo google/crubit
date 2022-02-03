@@ -241,6 +241,7 @@ nlohmann::json Field::ToJson() const {
   result["type"] = type.ToJson();
   result["access"] = AccessToString(access);
   result["offset"] = offset;
+  result["is_no_unique_address"] = is_no_unique_address;
   return result;
 }
 

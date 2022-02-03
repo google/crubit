@@ -595,7 +595,20 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let field_types = record
         .fields
         .iter()
-        .map(|f| {
+        .enumerate()
+        .map(|(i, f)| {
+            // [[no_unique_address]] fields are replaced by an unaligned block of memory which
+            // fills space up to the next field.
+            // See: docs/struct_layout
+            if f.is_no_unique_address {
+                let next_offset = if let Some(next) = record.fields.get(i + 1) {
+                    next.offset
+                } else {
+                    record.size * 8
+                };
+                let width = Literal::usize_unsuffixed((next_offset - f.offset) / 8);
+                return Ok(quote! {[std::mem::MaybeUninit<u8>; #width]});
+            }
             let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())
                 .with_context(|| {
                     format!("Failed to format type for field {:?} on record {:?}", f, record)
@@ -616,7 +629,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .fields
         .iter()
         .map(|f| {
-            if f.access == AccessSpecifier::Public {
+            if f.access == AccessSpecifier::Public && !f.is_no_unique_address {
                 quote! { pub }
             } else {
                 quote! {}
@@ -2036,6 +2049,114 @@ mod tests {
                     __base_class_subobjects: [std::mem::MaybeUninit<u8>; 0],
                     /// Prevent empty C++ struct being zero-size in Rust.
                     placeholder: std::mem::MaybeUninit<u8>,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// When a field is [[no_unique_address]], it occupies the space up to the
+    /// next field.
+    #[test]
+    fn test_no_unique_address() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Field1 {__INT64_TYPE__ x;};
+            class Field2 {char y;};
+            struct Struct final {
+                [[no_unique_address]] Field1 field1;
+                [[no_unique_address]] Field2 field2;
+                __INT16_TYPE__ z;
+            };
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C, align(8))]
+                pub struct Struct {
+                    field1: [std::mem::MaybeUninit<u8>; 8],
+                    field2: [std::mem::MaybeUninit<u8>; 2],
+                    pub z: i16,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// When a [[no_unique_address]] field is the last one, it occupies the rest
+    /// of the object.
+    #[test]
+    fn test_no_unique_address_last_field() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Field1 {__INT64_TYPE__ x;};
+            class Field2 {char y;};
+            struct Struct final {
+                [[no_unique_address]] Field1 field1;
+                [[no_unique_address]] Field2 field2;
+            };
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C, align(8))]
+                pub struct Struct {
+                    field1: [std::mem::MaybeUninit<u8>; 8],
+                    field2: [std::mem::MaybeUninit<u8>; 8],
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_no_unique_address_empty() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Field {};
+            struct Struct final {
+                [[no_unique_address]] Field field;
+                int x;
+            };
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(4))]
+                pub struct Struct {
+                    field: [std::mem::MaybeUninit<u8>; 0],
+                    pub x: i32,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_base_class_subobject_empty_last_field() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            class Field {};
+            struct Struct final {
+                [[no_unique_address]] Field field;
+            };
+        "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C)]
+                pub struct Struct {
+                    field: [std::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
