@@ -230,23 +230,24 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
+    let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.identifier.identifier));
 
-    // Figure out 1) the name and trait of the API function to generate and 2)
-    // whether its first param should be spelled `&self` or `&mut self`.
+    // Find 1) the `func_name` and `impl_kind` of the API function to generate
+    // and 2) whether to `format_first_param_as_self` (`&self` or `&mut self`).
     enum ImplKind {
-        None,               // No `impl` needed
-        Struct,             // e.g. `impl SomeStruct { ... }`
-        Trait(TokenStream), // e.g. `impl From<int> for SomeStruct { ... }`
+        None,   // No `impl` needed
+        Struct, // e.g. `impl SomeStruct { ... }` (SomeStruct based on func.member_func_metadata)
+        Trait {
+            trait_name: TokenStream, // e.g. quote!{ From<int> }
+            record_name: Ident,      /* e.g. SomeStruct (might *not* be from
+                                      * func.member_func_metadata) */
+        },
     }
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
     let format_first_param_as_self: bool;
     match &func.name {
         UnqualifiedIdentifier::Identifier(id) if id.identifier == "operator==" => {
-            let record = match maybe_record {
-                None => return Ok(None),
-                Some(record) => record,
-            };
             match (param_type_kinds.get(0), param_type_kinds.get(1)) {
                 (
                     Some(RsTypeKind::Reference {
@@ -261,13 +262,14 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     }),
                 ) => match **lhs {
                     RsTypeKind::Record(lhs_record) => {
-                        if lhs_record.id != record.id {
-                            return Ok(None);
-                        }
-                        let rhs = rhs.format(ir, &lifetime_to_name)?;
+                        let lhs: Ident = make_rs_ident(&lhs_record.identifier.identifier);
+                        let rhs: TokenStream = rhs.format(ir, &lifetime_to_name)?;
                         format_first_param_as_self = true;
                         func_name = make_rs_ident("eq");
-                        impl_kind = ImplKind::Trait(quote! {PartialEq<#rhs>});
+                        impl_kind = ImplKind::Trait {
+                            trait_name: quote! {PartialEq<#rhs>},
+                            record_name: lhs,
+                        };
                     }
                     _ => return Ok(None),
                 },
@@ -305,7 +307,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             if !should_implement_drop(record) {
                 return Ok(None);
             }
-            impl_kind = ImplKind::Trait(quote! {Drop});
+            let record_name = maybe_record_name
+                .clone()
+                .ok_or_else(|| anyhow!("Destructors must be member functions."))?;
+            impl_kind = ImplKind::Trait { trait_name: quote! {Drop}, record_name };
             func_name = make_rs_ident("drop");
             format_first_param_as_self = true;
         }
@@ -332,10 +337,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 return Ok(None);
             }
 
+            let record_name = maybe_record_name
+                .clone()
+                .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             match func.params.len() {
                 0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                 1 => {
-                    impl_kind = ImplKind::Trait(quote! {Default});
+                    impl_kind = ImplKind::Trait { trait_name: quote! {Default}, record_name };
                     func_name = make_rs_ident("default");
                     format_first_param_as_self = false;
                 }
@@ -346,13 +354,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                         if should_derive_clone(record) {
                             return Ok(None);
                         } else {
-                            impl_kind = ImplKind::Trait(quote! { Clone });
+                            impl_kind = ImplKind::Trait { trait_name: quote! {Clone}, record_name };
                             func_name = make_rs_ident("clone");
                             format_first_param_as_self = true;
                         }
                     } else if !instance_method_metadata.is_explicit_ctor {
                         let param_type = &param_types[1];
-                        impl_kind = ImplKind::Trait(quote! {From< #param_type >});
+                        impl_kind = ImplKind::Trait {
+                            trait_name: quote! {From< #param_type >},
+                            record_name,
+                        };
                         func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
                     } else {
@@ -473,7 +484,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     quote! {}
                 },
             ),
-            ImplKind::Trait(_) => {
+            ImplKind::Trait { .. } => {
                 // Currently supported bindings have no unsafe trait functions.
                 assert!(!is_unsafe || func.name == UnqualifiedIdentifier::Destructor);
                 (quote! {}, quote! {})
@@ -493,7 +504,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
     let api_func: TokenStream;
     let function_id: FunctionId;
-    let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.identifier.identifier));
     match impl_kind {
         ImplKind::None => {
             api_func = quote! { #doc_comment #api_func_def };
@@ -508,9 +518,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 function_path: syn::parse2(quote! { #record_name :: #func_name })?,
             };
         }
-        ImplKind::Trait(trait_name) => {
-            let record_name =
-                maybe_record_name.ok_or_else(|| anyhow!("Trait methods must have records"))?;
+        ImplKind::Trait { trait_name, record_name } => {
             api_func = quote! { #doc_comment impl #trait_name for #record_name { #api_func_def } };
             function_id = FunctionId {
                 self_type: Some(record_name.into()),
@@ -1164,23 +1172,21 @@ impl<'ir> RsTypeKind<'ir> {
         ir: &IR,
         lifetime_to_name: &HashMap<LifetimeId, String>,
     ) -> Result<TokenStream> {
-        let record = func
-            .member_func_metadata
-            .as_ref()
-            .ok_or_else(|| {
-                anyhow!("Formatting `self` parameter in a non-member function: {:?}", func)
-            })?
-            .find_record(ir)?;
-
-        if self.is_mut_ptr_to(record) && func.name == UnqualifiedIdentifier::Destructor {
-            // Even in C++ it is UB to retain `this` pointer and dereference it
-            // after a destructor runs. Therefore it is safe to use `&self` or
-            // `&mut self` in Rust even if IR represents `__this` as a Rust
-            // pointer (e.g. when lifetime annotations are missing - lifetime
-            // annotations are required to represent it as a Rust reference).
-            return Ok(quote! { &mut self });
+        if func.name == UnqualifiedIdentifier::Destructor {
+            let record = func
+                .member_func_metadata
+                .as_ref()
+                .ok_or_else(|| anyhow!("Destructors must be member functions: {:?}", func))?
+                .find_record(ir)?;
+            if self.is_mut_ptr_to(record) {
+                // Even in C++ it is UB to retain `this` pointer and dereference it
+                // after a destructor runs. Therefore it is safe to use `&self` or
+                // `&mut self` in Rust even if IR represents `__this` as a Rust
+                // pointer (e.g. when lifetime annotations are missing - lifetime
+                // annotations are required to represent it as a Rust reference).
+                return Ok(quote! { &mut self });
+            }
         }
-        ensure!(self.is_ref_to(record), "Unexpected type of `self` parameter: {:?}", self);
 
         match self {
             RsTypeKind::Reference { mutability, lifetime_id, .. } => {
@@ -1188,7 +1194,7 @@ impl<'ir> RsTypeKind<'ir> {
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
                 Ok(quote! { & #lifetime #mutability self })
             }
-            _ => unreachable!(), // Because of the `ensure!` and `is_const_ptr_to` above.
+            _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }
     }
 
@@ -2576,7 +2582,7 @@ mod tests {
     }
 
     #[test]
-    fn test_impl_eq_basic_test() -> Result<()> {
+    fn test_impl_eq_for_member_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             struct SomeStruct final {
@@ -2605,6 +2611,30 @@ mod tests {
                 extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
                         const class SomeStruct* __this, const class SomeStruct& other) {
                     return __this->operator==(other);
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_eq_for_free_function() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final { int i; };
+            bool operator==(const SomeStruct& lhs, const SomeStruct& rhs) {
+                return lhs.i == rhs.i;
+            }"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialEq<SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn eq<'a, 'b>(&'a self, rhs: &'b SomeStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
+                    }
                 }
             }
         );

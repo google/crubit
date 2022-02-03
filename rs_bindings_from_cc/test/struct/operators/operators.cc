@@ -12,3 +12,12 @@ bool OperandForOutOfLineDefinition::operator==(
 bool operator==(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs) {
   return (lhs.i % 10) == (rhs.i % 10);
 }
+
+namespace some_other_namespace {
+
+bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
+                const OperandForFreeFuncInDifferentNamespace& rhs) {
+  return (lhs.i % 10) == (rhs.i % 10);
+}
+
+}  // namespace some_other_namespace

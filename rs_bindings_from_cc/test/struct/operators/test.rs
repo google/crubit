@@ -2,6 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[macro_use]
+extern crate static_assertions;
+
 #[cfg(test)]
 mod tests {
     use operators::*;
@@ -22,11 +25,10 @@ mod tests {
         let s3 = TestStruct1 { i: 3000 };
         assert!(s1 == s2);
         assert!(s1 != s3);
-    }
 
-    #[test]
-    fn test_eq_free_func() {
-        // TODO(lukasza): Cover TestStruct3 equality.
+        // The relation is not necessarily symmetrical:
+        assert_impl_all!(TestStruct2: PartialEq<TestStruct1>);
+        assert_not_impl_all!(TestStruct1: PartialEq<TestStruct2>);
     }
 
     #[test]
@@ -36,5 +38,21 @@ mod tests {
         let s3 = OperandForOutOfLineDefinition { i: 3000 };
         assert!(s1 == s2);
         assert!(s1 != s3);
+    }
+
+    #[test]
+    fn test_eq_free_func() {
+        let s1 = OperandForFreeFunc { i: 1005 };
+        let s2 = OperandForFreeFunc { i: 2005 };
+        assert!(s1 == s2);
+    }
+
+    #[test]
+    fn test_eq_free_func_different_namespace() {
+        // We probably should try to mimic "argument-dependent lookup" (ADL) and
+        // only generate bindings for PartialEq if `operator==` free function is
+        // defined in the same namespace as the lhs. See also
+        // https://en.cppreference.com/w/cpp/language/adl
+        assert_not_impl_all!(OperandForFreeFuncInDifferentNamespace: PartialEq);
     }
 }

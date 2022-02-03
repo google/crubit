@@ -27,12 +27,16 @@ struct TestStruct2 {
   int i;
 };
 
+//////////////////////////////////////////////////////////////////////
+
 struct OperandForOutOfLineDefinition {
   // Non-`inline` definition.  Should generate:
   // impl PartialEq for TestStructForOutOfLineDefinition
   bool operator==(const OperandForOutOfLineDefinition& other) const;
   int i;
 };
+
+//////////////////////////////////////////////////////////////////////
 
 struct OperandForFreeFunc {
   int i;
@@ -41,5 +45,19 @@ struct OperandForFreeFunc {
 // Non-member function. Should generate:
 // impl PartialEq for TestStructForFreeFunc.
 bool operator==(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs);
+
+//////////////////////////////////////////////////////////////////////
+
+struct OperandForFreeFuncInDifferentNamespace {
+  int i;
+};
+
+namespace some_other_namespace {
+
+// This should *not* generate PartialEq, because we are trying to mimic ADL.
+bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
+                const OperandForFreeFuncInDifferentNamespace& rhs);
+
+}  // namespace some_other_namespace
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_
