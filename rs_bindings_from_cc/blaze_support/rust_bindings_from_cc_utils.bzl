@@ -169,7 +169,7 @@ def _generate_bindings(
         system_include_directories = depset(
             direct = [
                 cc_toolchain.built_in_include_directories[0],
-                cc_toolchain.built_in_include_directories[1].replace("stable", "llvm_unstable"),
+                cc_toolchain.built_in_include_directories[1].replace("/stable/", "/llvm_unstable/"),
                 cc_toolchain.built_in_include_directories[2],
             ],
             transitive = [
