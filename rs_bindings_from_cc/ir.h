@@ -193,9 +193,15 @@ inline std::ostream& operator<<(std::ostream& o, const MappedType& type) {
 
 // An identifier involved in bindings.
 //
-// Examples:
-//     Identifier of C++'s `int32_t Add(int32_t a, int32_t b)` will be
-//     `Identifier("add")`.
+// For example, the identifier for the C++ function `int Add(int a, int b);`
+// is `Identifier("Add")`.
+//
+// This also includes operator names, such as "operator==". Non-symbol tokens in
+// the operator name are separated by a single space. For example:
+//
+//  * `Identifier("operator==")`
+//  * `Identifier("operator new[]")`
+//  * `Identifier("operator co_await")`
 //
 // Invariants:
 //     `identifier` cannot be empty.
