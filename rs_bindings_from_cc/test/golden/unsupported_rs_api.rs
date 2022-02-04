@@ -20,11 +20,11 @@ impl !Unpin for NontrivialCustomType {}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=7
 // Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Parameter type 'struct NontrivialCustomType &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct NontrivialCustomType &&'
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=12
 // Error while generating bindings for item 'UnsupportedParamType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
+// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=13
 // Error while generating bindings for item 'UnsupportedReturnType':
@@ -32,17 +32,21 @@ impl !Unpin for NontrivialCustomType {}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=15
 // Error while generating bindings for item 'MultipleReasons':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
+// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=15
 // Error while generating bindings for item 'MultipleReasons':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
+// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=18
+// rs_bindings_from_cc/test/golden/unsupported.h;l=15
+// Error while generating bindings for item 'MultipleReasons':
+// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #2
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=19
 // Error while generating bindings for item 'ns::FunctionInNamespace':
 // Items contained in namespaces are not supported yet
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=19
+// rs_bindings_from_cc/test/golden/unsupported.h;l=20
 // Error while generating bindings for item 'ns::StructInNamespace':
 // Items contained in namespaces are not supported yet
 
@@ -66,23 +70,23 @@ impl Default for ContainingStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=25
+// rs_bindings_from_cc/test/golden/unsupported.h;l=26
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Parameter type 'struct ContainingStruct &&' is not supported
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=25
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// Parameter type 'struct ContainingStruct &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&'
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=26
+// Error while generating bindings for item 'ContainingStruct::operator=':
+// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&'
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=27
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=27
+// rs_bindings_from_cc/test/golden/unsupported.h;l=28
 // Error while generating bindings for item 'ContainingStruct::NestedStruct::NonStaticMemberFunction':
 // Couldn't import the parent
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=28
+// rs_bindings_from_cc/test/golden/unsupported.h;l=29
 // Error while generating bindings for item 'ContainingStruct::NestedStruct::StaticMemberFunction':
 // Couldn't import the parent
 

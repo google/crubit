@@ -25,11 +25,11 @@ pub struct S {
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::S':
-// Parameter type 'struct S &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct S &&'
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::operator=':
-// Parameter type 'struct S &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct S &&'
 
 impl S {
     #[inline(always)]

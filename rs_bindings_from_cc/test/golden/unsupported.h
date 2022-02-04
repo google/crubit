@@ -16,7 +16,8 @@ struct NontrivialCustomType final {
 void UnsupportedParamType(NontrivialCustomType n);
 NontrivialCustomType UnsupportedReturnType();
 
-NontrivialCustomType MultipleReasons(NontrivialCustomType n, int);
+NontrivialCustomType MultipleReasons(NontrivialCustomType n, int,
+                                     NontrivialCustomType n2);
 
 namespace ns {
 void FunctionInNamespace();

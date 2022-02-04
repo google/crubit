@@ -31,11 +31,11 @@ impl Default for SomeClass {
 
 // rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::SomeClass':
-// Parameter type 'class SomeClass &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
 
 // rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::operator=':
-// Parameter type 'class SomeClass &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
 
 impl SomeClass {
     #[inline(always)]

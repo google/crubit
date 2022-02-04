@@ -40,11 +40,11 @@ impl<'a> From<&'a Derived2> for &'a Base2 {
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
 // Error while generating bindings for item 'Derived2::Derived2':
-// Parameter type 'struct Derived2 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Derived2 &&'
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
 // Error while generating bindings for item 'Derived2::operator=':
-// Parameter type 'struct Derived2 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Derived2 &&'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_BASE_CLASS_H_
 

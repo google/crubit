@@ -40,11 +40,11 @@ impl Default for Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::Foo':
-// Parameter type 'struct Foo &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Foo &&'
 
 // rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::operator=':
-// Parameter type 'struct Foo &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Foo &&'
 
 // b
 
@@ -78,11 +78,11 @@ impl Default for Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::Bar':
-// Parameter type 'struct Bar &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Bar &&'
 
 // rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::operator=':
-// Parameter type 'struct Bar &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Bar &&'
 
 /// d
 #[derive(Clone, Copy)]
@@ -104,11 +104,11 @@ impl Default for HasNoComments {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
-// Parameter type 'struct HasNoComments &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&'
 
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::operator=':
-// Parameter type 'struct HasNoComments &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&'
 
 // e
 

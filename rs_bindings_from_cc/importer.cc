@@ -39,6 +39,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileManager.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/OperatorKinds.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
@@ -219,6 +220,37 @@ std::vector<clang::RawComment*> Importer::ImportFreeComments() {
   return result;
 }
 
+// Multiple IR items can be associated with the same source location (e.g. the
+// implicitly defined constructors and assignment operators). To produce
+// deterministic output, we order such items based on GetDeclOrder.  The order
+// is somewhat arbitrary, but we still try to make it aesthetically pleasing
+// (e.g. constructors go before assignment operators;  default constructor goes
+// first, etc.).
+static int GetDeclOrder(const clang::Decl* decl) {
+  if (clang::isa<clang::RecordDecl>(decl)) {
+    return decl->getDeclContext()->isRecord() ? 101 : 100;
+  }
+
+  if (auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl)) {
+    return ctor->isDefaultConstructor() ? 202
+           : ctor->isCopyConstructor()  ? 203
+           : ctor->isMoveConstructor()  ? 204
+                                        : 299;
+  }
+
+  if (clang::isa<clang::CXXDestructorDecl>(decl)) {
+    return 306;
+  }
+
+  if (auto* method = clang::dyn_cast<clang::CXXMethodDecl>(decl)) {
+    return method->isCopyAssignmentOperator()   ? 401
+           : method->isMoveAssignmentOperator() ? 402
+                                                : 499;
+  }
+
+  return 999;
+}
+
 void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   ImportDeclsFromDeclContext(translation_unit_decl);
 
@@ -227,7 +259,6 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   auto is_less_than = [&sm](const OrderedItem& a, const OrderedItem& b) {
     auto a_range = std::get<0>(a);
     auto b_range = std::get<0>(b);
-
     if (!a_range.isValid() || !b_range.isValid()) {
       if (a_range.isValid() != b_range.isValid())
         return !a_range.isValid() && b_range.isValid();
@@ -240,57 +271,85 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
         return sm.isBeforeInTranslationUnit(a_range.getEnd(), b_range.getEnd());
       }
     }
-    return std::get<1>(a) < std::get<1>(b);
+
+    auto a_decl_order = std::get<1>(a);
+    auto b_decl_order = std::get<1>(b);
+    if (a_decl_order != b_decl_order) return a_decl_order < b_decl_order;
+
+    // A single FunctionDecl can be associated with multiple UnsupportedItems.
+    // Comparing the fields allows deterministic order between items like:
+    // Non-trivial_abi type '...' is not supported by value as a parameter.
+    // Non-trivial_abi type '...' is not supported by value as a return type.
+    const auto& a_variant = std::get<2>(a);
+    const auto& b_variant = std::get<2>(b);
+    const auto* a_unsupported = std::get_if<UnsupportedItem>(&a_variant);
+    const auto* b_unsupported = std::get_if<UnsupportedItem>(&b_variant);
+    if (a_unsupported && b_unsupported) {
+      if (a_unsupported->name != b_unsupported->name)
+        return a_unsupported->name < b_unsupported->name;
+      return a_unsupported->message < b_unsupported->message;
+    }
+
+    return false;
+  };
+  auto are_equal = [&is_less_than](const OrderedItem& a, const OrderedItem& b) {
+    return !is_less_than(a, b) && !is_less_than(b, a);
   };
 
   // We emit IR items in the order of the decls they were generated for.
   // For decls that emit multiple items we use a stable, but arbitrary order.
   std::vector<OrderedItem> items;
   for (const auto& [decl, result] : lookup_cache_) {
-    int local_order;
-
-    if (clang::isa<clang::RecordDecl>(decl)) {
-      local_order = decl->getDeclContext()->isRecord() ? 1 : 0;
-    } else if (auto ctor = clang::dyn_cast<clang::CXXConstructorDecl>(decl)) {
-      local_order = ctor->isDefaultConstructor() ? 2
-                    : ctor->isCopyConstructor()  ? 3
-                    : ctor->isMoveConstructor()  ? 4
-                                                 : 5;
-    } else if (clang::isa<clang::CXXDestructorDecl>(decl)) {
-      local_order = 6;
-    } else {
-      local_order = 7;
-    }
-
     auto item = result.item();
     if (item) {
       items.push_back(
-          std::make_tuple(decl->getSourceRange(), local_order, *item));
+          std::make_tuple(decl->getSourceRange(), GetDeclOrder(decl), *item));
     }
     if (IsFromCurrentTarget(decl)) {
+      std::string name = "unnamed";
+      if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
+        name = named_decl->getQualifiedNameAsString();
+      }
+      SourceLoc source_loc = ConvertSourceLocation(decl->getBeginLoc());
       for (const auto& error : result.errors()) {
-        std::string name = "unnamed";
-        if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
-          name = named_decl->getQualifiedNameAsString();
-        }
         items.push_back(std::make_tuple(
-            decl->getSourceRange(), local_order,
+            decl->getSourceRange(), GetDeclOrder(decl),
             UnsupportedItem{
-                .name = std::move(name),
-                .message = error,
-                .source_loc = ConvertSourceLocation(decl->getBeginLoc())}));
+                .name = name, .message = error, .source_loc = source_loc}));
       }
     }
   }
 
   for (auto comment : ImportFreeComments()) {
     items.push_back(std::make_tuple(
-        comment->getSourceRange(), 0 /* local_order */,
+        comment->getSourceRange(), 0 /* decl_order */,
         Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())}));
   }
-  std::stable_sort(items.begin(), items.end(), is_less_than);
+  std::sort(items.begin(), items.end(), is_less_than);
 
-  for (const auto& item : items) {
+  for (size_t i = 0; i < items.size(); i++) {
+    const auto& item = items[i];
+    if (i > 0) {
+      const auto& prev = items[i - 1];
+      if (are_equal(item, prev)) {
+        std::string prev_json =
+            std::visit([&](auto&& item) { return item.ToJson().dump(); },
+                       std::get<2>(prev));
+        std::string curr_json =
+            std::visit([&](auto&& item) { return item.ToJson().dump(); },
+                       std::get<2>(item));
+        if (prev_json != curr_json) {
+          LOG(FATAL) << "Non-deterministic order of IR items: " << prev_json
+                     << " -VS- " << curr_json;
+        } else {
+          // TODO(lukasza): Avoid generating duplicate IR items.  Currently
+          // known example: UnsupportedItem: name=std::signbit; message=
+          // Items contained in namespaces are not supported yet.
+          LOG(WARNING) << "Duplicated IR item: " << curr_json;
+          continue;
+        }
+      }
+    }
     invocation_.ir_.items.push_back(std::get<2>(item));
   }
 }
@@ -358,7 +417,13 @@ Importer::LookupResult Importer::ImportFunction(
   llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
 
   std::vector<FuncParam> params;
-  std::vector<std::string> errors;
+  std::set<std::string> errors;
+  auto add_error = [&errors, function_decl](std::string msg) {
+    auto result = errors.insert(std::move(msg));
+    CHECK(result.second) << "Duplicated error message for "
+                         << function_decl->getNameAsString() << ": "
+                         << *result.first;
+  };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!known_type_decls_.contains(
@@ -376,7 +441,8 @@ Importer::LookupResult Importer::ImportFunction(
       auto param_type = ConvertType(method_decl->getThisType(), this_lifetimes,
                                     /*nullable=*/false);
       if (!param_type.ok()) {
-        errors.push_back(std::string(param_type.status().message()));
+        add_error(absl::StrCat("`this` parameter is not supported: ",
+                               param_type.status().message()));
       } else {
         params.push_back({*std::move(param_type), Identifier("__this")});
       }
@@ -395,8 +461,8 @@ Importer::LookupResult Importer::ImportFunction(
     }
     auto param_type = ConvertType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
-      errors.push_back(absl::Substitute("Parameter type '$0' is not supported",
-                                        param->getType().getAsString()));
+      add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
+                                 param_type.status().message()));
       continue;
     }
 
@@ -408,10 +474,10 @@ Importer::LookupResult Importer::ImportFunction(
         // have a different representation which needs special support. We
         // currently do not support it.
         if (!record_decl->canPassInRegisters()) {
-          errors.push_back(
+          add_error(
               absl::Substitute("Non-trivial_abi type '$0' is not "
-                               "supported by value as a parameter",
-                               param->getType().getAsString()));
+                               "supported by value as parameter #$1",
+                               param->getType().getAsString(), i));
         }
       }
     }
@@ -429,7 +495,7 @@ Importer::LookupResult Importer::ImportFunction(
       // have a different representation which needs special support. We
       // currently do not support it.
       if (!record_decl->canPassInRegisters()) {
-        errors.push_back(
+        add_error(
             absl::Substitute("Non-trivial_abi type '$0' is not supported "
                              "by value as a return type",
                              function_decl->getReturnType().getAsString()));
@@ -445,9 +511,8 @@ Importer::LookupResult Importer::ImportFunction(
   auto return_type =
       ConvertType(function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
-    errors.push_back(
-        absl::Substitute("Return type '$0' is not supported",
-                         function_decl->getReturnType().getAsString()));
+    add_error(absl::StrCat("Return type is not supported: ",
+                           return_type.status().message()));
   }
 
   std::vector<Lifetime> lifetime_params;

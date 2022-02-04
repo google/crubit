@@ -30,11 +30,11 @@ impl Default for SomeClass {
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=6
 // Error while generating bindings for item 'SomeClass::SomeClass':
-// Parameter type 'class SomeClass &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=6
 // Error while generating bindings for item 'SomeClass::operator=':
-// Parameter type 'class SomeClass &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
 
 impl SomeClass {
     /// Example of a factory method.

@@ -25,7 +25,7 @@ impl !Unpin for Nontrivial {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=12
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Parameter type 'struct Nontrivial &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Nontrivial &&'
 
 impl Drop for Nontrivial {
     #[inline(always)]
@@ -47,7 +47,7 @@ impl !Unpin for NontrivialInline {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=23
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
-// Parameter type 'struct NontrivialInline &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&'
 
 impl Drop for NontrivialInline {
     #[inline(always)]
@@ -70,7 +70,7 @@ impl !Unpin for NontrivialMembers {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=34
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
-// Parameter type 'struct NontrivialMembers &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&'
 
 impl Drop for NontrivialMembers {
     #[inline(always)]
@@ -81,11 +81,11 @@ impl Drop for NontrivialMembers {
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
 // Error while generating bindings for item 'TakesByValue':
-// Non-trivial_abi type 'struct Nontrivial' is not supported by value as a parameter
+// Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=39
 // Error while generating bindings for item 'TakesByValueInline':
-// Non-trivial_abi type 'struct NontrivialInline' is not supported by value as a parameter
+// Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 

@@ -11,11 +11,11 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=8
 // Error while generating bindings for item 'UseNontrivialCustomType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a parameter
+// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
 
 // rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=10
 // Error while generating bindings for item 'UseUnsupportedType':
-// Parameter type 'ns::StructInNamespace *' is not supported
+// Parameter #0 is not supported: Unsupported type 'ns::StructInNamespace *'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
 

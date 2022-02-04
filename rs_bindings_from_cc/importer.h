@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <utility>
 #include <variant>
@@ -95,16 +96,16 @@ class Importer {
   // don't get imported on purpose.
   class LookupResult {
     std::optional<IR::Item> item_;
-    std::vector<std::string> errors_;
+    std::set<std::string> errors_;
 
    public:
     LookupResult() {}
     explicit LookupResult(IR::Item item) : item_(item) {}
     explicit LookupResult(std::string error) : errors_({error}) {}
-    explicit LookupResult(std::vector<std::string> errors) : errors_(errors) {}
+    explicit LookupResult(std::set<std::string> errors) : errors_(errors) {}
 
     const std::optional<IR::Item>& item() const { return item_; }
-    const std::vector<std::string>& errors() const { return errors_; }
+    const std::set<std::string>& errors() const { return errors_; }
   };
 
   // Imports all decls contained in a `DeclContext`.

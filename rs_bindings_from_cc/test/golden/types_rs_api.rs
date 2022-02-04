@@ -31,11 +31,11 @@ impl Default for SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Parameter type 'struct SomeStruct &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&'
 
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Parameter type 'struct SomeStruct &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&'
 
 // rs_bindings_from_cc/test/golden/types.h;l=11
 // Error while generating bindings for item 'SomeUnion':
@@ -99,7 +99,7 @@ pub struct FieldTypeTestStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Parameter type 'struct FieldTypeTestStruct &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct FieldTypeTestStruct &&'
 
 #[inline(always)]
 pub fn VoidReturningFunction() {

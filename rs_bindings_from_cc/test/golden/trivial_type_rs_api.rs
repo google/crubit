@@ -32,11 +32,11 @@ impl Default for Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::Trivial':
-// Parameter type 'struct Trivial &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Trivial &&'
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::operator=':
-// Parameter type 'struct Trivial &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Trivial &&'
 
 /// Defaulted special member functions are trivial on a struct with only trivial
 /// members.
@@ -59,11 +59,11 @@ impl Default for TrivialWithDefaulted {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=19
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
-// Parameter type 'struct TrivialWithDefaulted &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&'
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=20
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Parameter type 'struct TrivialWithDefaulted &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&'
 
 /// This struct is trivial, and therefore trivially relocatable etc., but still
 /// not safe to pass by reference as it is not final.
@@ -76,11 +76,11 @@ impl !Unpin for TrivialNonfinal {}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Parameter type 'struct TrivialNonfinal &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&'
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
-// Parameter type 'struct TrivialNonfinal &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&'
 
 #[inline(always)]
 pub fn TakesByValue(trivial: Trivial) {

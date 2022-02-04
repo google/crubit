@@ -2666,9 +2666,11 @@ mod tests {
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
         assert_eq!(thunk_ident(&destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));
 
-        let constructor =
-            ir.functions().find(|f| f.name == UnqualifiedIdentifier::Constructor).unwrap();
-        assert_eq!(thunk_ident(&constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
+        let default_constructor = ir
+            .functions()
+            .find(|f| f.name == UnqualifiedIdentifier::Constructor && f.params.len() == 1)
+            .unwrap();
+        assert_eq!(thunk_ident(&default_constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
     }
 
     #[test]

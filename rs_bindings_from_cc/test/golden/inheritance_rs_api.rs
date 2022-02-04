@@ -24,11 +24,11 @@ impl !Unpin for Base0 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=9
 // Error while generating bindings for item 'Base0::Base0':
-// Parameter type 'class Base0 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class Base0 &&'
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=9
 // Error while generating bindings for item 'Base0::operator=':
-// Parameter type 'class Base0 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class Base0 &&'
 
 #[repr(C)]
 pub struct Base1 {
@@ -40,11 +40,11 @@ impl !Unpin for Base1 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=10
 // Error while generating bindings for item 'Base1::Base1':
-// Parameter type 'class Base1 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class Base1 &&'
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=10
 // Error while generating bindings for item 'Base1::operator=':
-// Parameter type 'class Base1 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class Base1 &&'
 
 #[repr(C)]
 pub struct Base2 {
@@ -55,11 +55,11 @@ impl !Unpin for Base2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=15
 // Error while generating bindings for item 'Base2::Base2':
-// Parameter type 'class Base2 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class Base2 &&'
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=15
 // Error while generating bindings for item 'Base2::operator=':
-// Parameter type 'class Base2 &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'class Base2 &&'
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
@@ -85,11 +85,11 @@ impl<'a> From<&'a Derived> for &'a Base2 {
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Derived::Derived':
-// Parameter type 'struct Derived &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Derived &&'
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Derived::operator=':
-// Parameter type 'struct Derived &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct Derived &&'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 

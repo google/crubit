@@ -30,11 +30,11 @@ impl Default for r#type {
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::type':
-// Parameter type 'struct type &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct type &&'
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::operator=':
-// Parameter type 'struct type &&' is not supported
+// Parameter #0 is not supported: Unsupported type 'struct type &&'
 
 #[inline(always)]
 pub fn r#impl(r#match: i32) {

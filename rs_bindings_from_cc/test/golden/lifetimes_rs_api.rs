@@ -11,7 +11,7 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=4
 // Error while generating bindings for item 'AddHook':
-// Parameter type 'void (*)(void)' is not supported
+// Parameter #0 is not supported: Unsupported type 'void (*)(void)'
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=6
 // Error while generating bindings for item 'FunctionPointer':
@@ -19,11 +19,11 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=7
 // Error while generating bindings for item 'AddHookWithTypedef':
-// Parameter type 'FunctionPointer' is not supported
+// Parameter #0 is not supported: Unsupported type 'FunctionPointer'
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=9
 // Error while generating bindings for item 'AddAnotherHook':
-// Parameter type 'void (&)(void)' is not supported
+// Parameter #0 is not supported: Unsupported type 'void (&)(void)'
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=11
 // Error while generating bindings for item 'FunctionReference':
@@ -31,7 +31,7 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=12
 // Error while generating bindings for item 'AddAnotherHookWithTypedef':
-// Parameter type 'FunctionReference' is not supported
+// Parameter #0 is not supported: Unsupported type 'FunctionReference'
 
 #[inline(always)]
 pub unsafe fn ConsumeArray(pair: *mut i32) {
