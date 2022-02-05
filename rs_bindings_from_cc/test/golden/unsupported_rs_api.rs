@@ -76,6 +76,10 @@ impl Default for ContainingStruct {
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=26
 // Error while generating bindings for item 'ContainingStruct::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=26
+// Error while generating bindings for item 'ContainingStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&'
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=27

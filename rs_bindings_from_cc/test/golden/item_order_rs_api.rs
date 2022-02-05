@@ -34,6 +34,10 @@ impl Default for FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=6
+// Error while generating bindings for item 'FirstStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&'
 
 #[inline(always)]
@@ -61,6 +65,10 @@ impl Default for SecondStruct {
 // rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&'
+
+// rs_bindings_from_cc/test/golden/item_order.h;l=12
+// Error while generating bindings for item 'SecondStruct::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::operator=':

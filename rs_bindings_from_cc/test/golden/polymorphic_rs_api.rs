@@ -19,6 +19,18 @@ pub struct PolymorphicClass {
 
 impl !Unpin for PolymorphicClass {}
 
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
+// Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
+// Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
+// Error while generating bindings for item 'PolymorphicClass::operator=':
+// Bindings for this kind of operator are not supported
+
 impl Drop for PolymorphicClass {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {

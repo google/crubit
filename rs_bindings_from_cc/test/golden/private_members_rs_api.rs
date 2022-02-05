@@ -35,6 +35,10 @@ impl Default for SomeClass {
 
 // rs_bindings_from_cc/test/golden/private_members.h;l=6
 // Error while generating bindings for item 'SomeClass::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/private_members.h;l=6
+// Error while generating bindings for item 'SomeClass::operator=':
 // Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
 
 impl SomeClass {

@@ -25,7 +25,19 @@ pub struct S {
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::S':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// Error while generating bindings for item 'S::S':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// Error while generating bindings for item 'S::S':
 // Parameter #0 is not supported: Unsupported type 'struct S &&'
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// Error while generating bindings for item 'S::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::operator=':

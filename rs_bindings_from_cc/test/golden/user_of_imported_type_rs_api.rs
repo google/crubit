@@ -39,6 +39,10 @@ impl Default for UserOfImportedType {
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
+// Error while generating bindings for item 'UserOfImportedType::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_

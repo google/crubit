@@ -88,6 +88,7 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
 ///   tokens: quote!{vec![].into_raw_parts()},
 /// }
 /// ```
+#[derive(Clone, Debug)]
 struct RsSnippet {
     /// Rust feature flags used by this snippet.
     features: BTreeSet<Ident>,
@@ -148,7 +149,7 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
 }
 
 /// Uniquely identifies a generated Rust function.
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct FunctionId {
     // If the function is on a trait impl, contains the name of the Self type for
     // which the trait is being implemented.
@@ -174,7 +175,7 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
             format!("~{}", record.expect("destructor must be associated with a record"))
         }
         UnqualifiedIdentifier::Constructor => {
-            format!("~{}", record.expect("constructor must be associated with a record"))
+            record.expect("constructor must be associated with a record").to_string()
         }
     };
 
@@ -185,14 +186,27 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
     }
 }
 
+fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<UnsupportedItem> {
+    Ok(UnsupportedItem {
+        name: cxx_function_name(func, ir)?,
+        message: message.to_string(),
+        source_loc: func.source_loc.clone(),
+    })
+}
+
+#[derive(Clone, Debug)]
+enum GeneratedFunc {
+    None, // No explicit function needed (e.g. when deriving Drop).
+    Unsupported(UnsupportedItem),
+    Some { api_func: RsSnippet, thunk: RsSnippet, function_id: FunctionId },
+}
+
 /// Generates Rust source code for a given `Func`.
-///
-/// Returns None if no code was generated for the function; otherwise, returns
-/// a tuple containing:
-/// - The generated function or trait impl
-/// - The thunk
-/// - A `FunctionId` identifying the generated Rust function
-fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
+fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
+    let make_unsupported_result = |msg: &str| -> Result<GeneratedFunc> {
+        Ok(GeneratedFunc::Unsupported(make_unsupported_fn(func, ir, msg)?))
+    };
+
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func);
     let doc_comment = generate_doc_comment(&func.doc_comment);
@@ -248,18 +262,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     let format_first_param_as_self: bool;
     match &func.name {
         UnqualifiedIdentifier::Identifier(id) if id.identifier == "operator==" => {
-            match (param_type_kinds.get(0), param_type_kinds.get(1)) {
+            if param_type_kinds.len() != 2 {
+                bail!("Unexpected number of parameters in operator==: {:?}", func);
+            }
+            match (&param_type_kinds[0], &param_type_kinds[1]) {
                 (
-                    Some(RsTypeKind::Reference {
-                        referent: lhs,
-                        mutability: Mutability::Const,
-                        ..
-                    }),
-                    Some(RsTypeKind::Reference {
-                        referent: rhs,
-                        mutability: Mutability::Const,
-                        ..
-                    }),
+                    RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
+                    RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
                 ) => match **lhs {
                     RsTypeKind::Record(lhs_record) => {
                         let lhs: Ident = make_rs_ident(&lhs_record.identifier.identifier);
@@ -271,13 +280,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                             record_name: lhs,
                         };
                     }
-                    _ => return Ok(None),
+                    _ => return make_unsupported_result("operator== where lhs doesn't refer to a record"),
                 },
-                _ => return Ok(None),
+                _ => return make_unsupported_result("operator== where operands are not const references"),
             };
         }
         UnqualifiedIdentifier::Identifier(id) if id.identifier.starts_with("operator") => {
-            return Ok(None);
+            return make_unsupported_result("Bindings for this kind of operator are not supported");
         }
         UnqualifiedIdentifier::Identifier(id) => {
             func_name = make_rs_ident(&id.identifier);
@@ -305,7 +314,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             let record =
                 maybe_record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             if !should_implement_drop(record) {
-                return Ok(None);
+                return Ok(GeneratedFunc::None);
             }
             let record_name = maybe_record_name
                 .clone()
@@ -329,12 +338,17 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
             if !record.is_unpin() {
                 // TODO: Handle <internal link>
-                return Ok(None);
+                return make_unsupported_result(
+                    "Bindings for constructors of non-trivial types are not supported yet",
+                );
             }
             if is_unsafe {
                 // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
                 // translating C++ constructors into static methods in Rust).
-                return Ok(None);
+                return make_unsupported_result(
+                    "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
+                    are intentionally not supported",
+                );
             }
 
             let record_name = maybe_record_name
@@ -352,7 +366,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     if param_type_kinds[1].is_shared_ref_to(record) {
                         // Copy constructor
                         if should_derive_clone(record) {
-                            return Ok(None);
+                            return Ok(GeneratedFunc::None);
                         } else {
                             impl_kind = ImplKind::Trait { trait_name: quote! {Clone}, record_name };
                             func_name = make_rs_ident("clone");
@@ -367,12 +381,12 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                         func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
                     } else {
-                        return Ok(None);
+                        return make_unsupported_result("Not yet supported type of constructor parameter");
                     }
                 }
                 _ => {
                     // TODO(b/216648347): Support bindings for other constructors.
-                    return Ok(None);
+                    return make_unsupported_result("More than 1 constructor parameter is not supported yet");
                 }
             }
         }
@@ -556,7 +570,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         }
     };
 
-    Ok(Some((api_func.into(), thunk.into(), function_id)))
+    Ok(GeneratedFunc::Some { api_func: api_func.into(), thunk: thunk.into(), function_id })
 }
 
 fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
@@ -856,7 +870,7 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();
     for func in ir.functions() {
-        if let Some((_, _, function_id)) = generate_func(func, ir)? {
+        if let GeneratedFunc::Some { function_id, .. } = generate_func(func, ir)? {
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id);
             }
@@ -865,22 +879,26 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
 
     for item in ir.items() {
         match item {
-            Item::Func(func) => {
-                if let Some((snippet, thunk, function_id)) = generate_func(func, ir)? {
+            Item::Func(func) => match generate_func(func, ir)? {
+                GeneratedFunc::None => (),
+                GeneratedFunc::Unsupported(unsupported) => {
+                    items.push(generate_unsupported(&unsupported)?)
+                }
+                GeneratedFunc::Some { api_func, thunk, function_id } => {
                     if overloaded_funcs.contains(&function_id) {
-                        items.push(generate_unsupported(&UnsupportedItem {
-                            name: cxx_function_name(func, ir)?,
-                            message: "Cannot generate bindings for overloaded function".to_string(),
-                            source_loc: func.source_loc.clone(),
-                        })?);
+                        items.push(generate_unsupported(&make_unsupported_fn(
+                            func,
+                            ir,
+                            "Cannot generate bindings for overloaded function",
+                        )?)?);
                         continue;
                     }
-                    features.extend(snippet.features);
+                    features.extend(api_func.features);
                     features.extend(thunk.features);
-                    items.push(snippet.tokens);
+                    items.push(api_func.tokens);
                     thunks.push(thunk.tokens);
                 }
-            }
+            },
             Item::Record(record) => {
                 if !ir.is_current_target(&record.owning_target)
                     && !ir.is_stdlib_target(&record.owning_target)

@@ -27,6 +27,10 @@ pub struct DocCommentSlashes {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=9
+// Error while generating bindings for item 'DocCommentSlashes::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&'
 
 /// The default constructor which will get translated into
@@ -108,6 +112,10 @@ impl Default for DocCommentBang {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=35
 // Error while generating bindings for item 'DocCommentBang::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=35
+// Error while generating bindings for item 'DocCommentBang::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&'
 
 /// Multiline comment
@@ -134,6 +142,10 @@ impl Default for MultilineCommentTwoStars {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
 // Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&'
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=43
+// Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
@@ -166,6 +178,10 @@ impl Default for LineComment {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'LineComment::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=51
+// Error while generating bindings for item 'LineComment::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct LineComment &&'
 
 /// Multiline comment
@@ -192,6 +208,10 @@ impl Default for MultilineOneStar {
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
 // Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&'
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=59
+// Error while generating bindings for item 'MultilineOneStar::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::operator=':

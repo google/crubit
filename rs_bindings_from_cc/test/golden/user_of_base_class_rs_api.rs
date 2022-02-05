@@ -40,7 +40,19 @@ impl<'a> From<&'a Derived2> for &'a Base2 {
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
 // Error while generating bindings for item 'Derived2::Derived2':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// Error while generating bindings for item 'Derived2::Derived2':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// Error while generating bindings for item 'Derived2::Derived2':
 // Parameter #0 is not supported: Unsupported type 'struct Derived2 &&'
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// Error while generating bindings for item 'Derived2::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
 // Error while generating bindings for item 'Derived2::operator=':

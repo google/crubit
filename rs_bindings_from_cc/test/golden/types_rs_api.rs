@@ -35,6 +35,10 @@ impl Default for SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=9
+// Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&'
 
 // rs_bindings_from_cc/test/golden/types.h;l=11

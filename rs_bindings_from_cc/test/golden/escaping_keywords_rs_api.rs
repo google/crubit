@@ -34,6 +34,10 @@ impl Default for r#type {
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
+// Error while generating bindings for item 'type::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct type &&'
 
 #[inline(always)]

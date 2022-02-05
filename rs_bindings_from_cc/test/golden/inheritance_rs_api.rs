@@ -24,7 +24,19 @@ impl !Unpin for Base0 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=9
 // Error while generating bindings for item 'Base0::Base0':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// Error while generating bindings for item 'Base0::Base0':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// Error while generating bindings for item 'Base0::Base0':
 // Parameter #0 is not supported: Unsupported type 'class Base0 &&'
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// Error while generating bindings for item 'Base0::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=9
 // Error while generating bindings for item 'Base0::operator=':
@@ -40,7 +52,19 @@ impl !Unpin for Base1 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=10
 // Error while generating bindings for item 'Base1::Base1':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// Error while generating bindings for item 'Base1::Base1':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// Error while generating bindings for item 'Base1::Base1':
 // Parameter #0 is not supported: Unsupported type 'class Base1 &&'
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// Error while generating bindings for item 'Base1::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=10
 // Error while generating bindings for item 'Base1::operator=':
@@ -55,7 +79,19 @@ impl !Unpin for Base2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=15
 // Error while generating bindings for item 'Base2::Base2':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// Error while generating bindings for item 'Base2::Base2':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// Error while generating bindings for item 'Base2::Base2':
 // Parameter #0 is not supported: Unsupported type 'class Base2 &&'
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// Error while generating bindings for item 'Base2::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=15
 // Error while generating bindings for item 'Base2::operator=':
@@ -85,7 +121,19 @@ impl<'a> From<&'a Derived> for &'a Base2 {
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Derived::Derived':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// Error while generating bindings for item 'Derived::Derived':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// Error while generating bindings for item 'Derived::Derived':
 // Parameter #0 is not supported: Unsupported type 'struct Derived &&'
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// Error while generating bindings for item 'Derived::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Derived::operator=':

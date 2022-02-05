@@ -44,6 +44,10 @@ impl Default for Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=13
+// Error while generating bindings for item 'Foo::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Foo &&'
 
 // b
@@ -82,6 +86,10 @@ impl Default for Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/comment.h;l=39
+// Error while generating bindings for item 'Bar::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Bar &&'
 
 /// d
@@ -105,6 +113,10 @@ impl Default for HasNoComments {
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&'
+
+// rs_bindings_from_cc/test/golden/comment.h;l=45
+// Error while generating bindings for item 'HasNoComments::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::operator=':

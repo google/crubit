@@ -36,6 +36,10 @@ impl Default for Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
+// Error while generating bindings for item 'Trivial::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Trivial &&'
 
 /// Defaulted special member functions are trivial on a struct with only trivial
@@ -57,6 +61,10 @@ impl Default for TrivialWithDefaulted {
     }
 }
 
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=18
+// Error while generating bindings for item 'TrivialWithDefaulted::operator=':
+// Bindings for this kind of operator are not supported
+
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=19
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
 // Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&'
@@ -76,7 +84,19 @@ impl !Unpin for TrivialNonfinal {}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
+// Bindings for constructors of non-trivial types are not supported yet
+
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&'
+
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// Error while generating bindings for item 'TrivialNonfinal::operator=':
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
