@@ -535,7 +535,11 @@ impl IR {
     pub fn is_current_target(&self, target: &BlazeLabel) -> bool {
         // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
         // values.
-        *target == self.flat_ir.current_target
+        *target == *self.current_target()
+    }
+
+    pub fn current_target(&self) -> &BlazeLabel {
+        &self.flat_ir.current_target
     }
 
     // Returns whether `target` is the target that corresponds to the C++

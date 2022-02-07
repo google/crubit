@@ -1,9 +1,9 @@
-#![rustfmt::skip]
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#![feature(custom_inner_attributes)]
+// Automatically @generated Rust bindings for C++ target
+// //rs_bindings_from_cc/test/golden:user_of_unsupported_cc
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 

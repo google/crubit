@@ -67,9 +67,18 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     let ir = deserialize_ir(json)?;
 
     // The code is formatted with a non-default rustfmt configuration. Prevent
-    // downstream workflows from reformatting with a different configuration.
-    let rs_api =
-        format!("#![rustfmt::skip]\n{}", rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?);
+    // downstream workflows from reformatting with a different configuration by
+    // marking the output with `@generated`. See also
+    // https://rust-lang.github.io/rustfmt/?version=v1.4.38&search=#format_generated_files
+    //
+    // TODO(lukasza): It would be nice to include "by $argv[0]"" in the
+    // @generated comment below.  OTOH, `std::env::current_exe()` in our
+    // current build environment returns a guid-like path... :-/
+    let rs_api = format!(
+        "// Automatically @generated Rust bindings for C++ target\n// {target}\n{code}",
+        target = ir.current_target().0,
+        code = rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?
+    );
     let rs_api_impl = tokens_to_string(generate_rs_api_impl(&ir)?)?;
 
     Ok(Bindings { rs_api, rs_api_impl })
@@ -861,9 +870,6 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     // having uses. See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
     let mut has_record = false;
     let mut features = BTreeSet::new();
-
-    // For #![rustfmt::skip].
-    features.insert(make_rs_ident("custom_inner_attributes"));
 
     // Identify all functions having overloads that we can't import (yet).
     // TODO(b/213280424): Implement support for overloaded functions.

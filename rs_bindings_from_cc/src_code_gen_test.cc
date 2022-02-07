@@ -16,6 +16,7 @@ using ::testing::StrEq;
 
 TEST(SrcGenTest, FFIIntegration) {
   IR ir = {.used_headers = {HeaderName("foo/bar.h")},
+           .current_target = BlazeLabel("//some/target/name"),
            .items = {Func{.name = Identifier("hello_world"),
                           .mangled_name = "mangled_name",
                           .return_type = MappedType::Simple("i32", "int"),
@@ -26,8 +27,8 @@ TEST(SrcGenTest, FFIIntegration) {
   EXPECT_THAT(
       bindings.rs_api,
       StrEq(
-          "#![rustfmt::skip]\n"
-          "#![feature(custom_inner_attributes)]\n"
+          "// Automatically @generated Rust bindings for C++ target\n"
+          "// //some/target/name\n"
           "#![allow(non_camel_case_types)]\n"
           "#![allow(non_snake_case)]\n"
           "\n"
