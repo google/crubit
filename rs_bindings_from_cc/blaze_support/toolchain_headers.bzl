@@ -20,7 +20,7 @@ def _collect_nonstd_hdrs(input_list, public_hdrs):
     return [hdr for hdr in input_list if not _is_public_std_header(hdr, public_hdrs)]
 
 def _bindings_for_toolchain_headers_impl(ctx):
-    std_hdrs = ctx.files.hdrs
+    std_hdrs = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + ctx.files.hdrs
 
     # The clang builtin headers also contain some standard headers. We'll consider those part of
     # the C++ Standard library target, so we generate bindings for them.
@@ -50,12 +50,10 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes.append("-include")
         header_includes.append(hdr.basename)
 
-    compilation_context = cc_common.create_compilation_context()
-
     return generate_and_compile_bindings(
         ctx,
         ctx.attr,
-        compilation_context = compilation_context,
+        compilation_context = ctx.attr._stl[CcInfo].compilation_context,
         public_hdrs = public_std_hdrs,
         header_includes = header_includes,
         action_inputs = ctx.files._builtin_hdrs + std_hdrs,
@@ -71,6 +69,7 @@ bindings_for_toolchain_headers = rule(
             "hdrs": attr.label(),
             "public_hdrs": attr.string_list(),
             "deps": attr.label_list(),
+            "_stl": attr.label(default = "//third_party/stl:stl"),
         }.items(),
     ),
     toolchains = [

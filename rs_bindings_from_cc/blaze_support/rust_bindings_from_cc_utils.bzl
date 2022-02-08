@@ -172,9 +172,7 @@ def _generate_bindings(
                 cc_toolchain.built_in_include_directories[1].replace("/stable/", "/llvm_unstable/"),
                 cc_toolchain.built_in_include_directories[2],
             ],
-            transitive = [
-                compilation_context.system_includes,
-            ],
+            transitive = [compilation_context.system_includes],
         ),
         include_directories = compilation_context.includes,
         quote_include_directories = compilation_context.quote_includes,
@@ -314,7 +312,6 @@ bindings_attrs = {
         default = Label("//tools/cpp:grep-includes"),
         cfg = "host",
     ),
-    "_stl": attr.label(default = "//third_party/stl"),
     "_rustfmt": attr.label(
         default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
         executable = True,

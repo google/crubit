@@ -63,6 +63,11 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if RustBindingsFromCcInfo in target:
         return []
 
+    # We generate bindings for these headers via the
+    # rs_bindings_from_cc:cc_std target.
+    if target.label == Label("//third_party/stl:stl"):
+        return [ctx.attr._std[RustBindingsFromCcInfo]]
+
     # This is not a C++ rule
     if CcInfo not in target:
         return []
@@ -108,13 +113,10 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         header_includes.append("-include")
         header_includes.append(hdr.short_path)
 
-    stl = ctx.attr._stl[CcInfo].compilation_context
-    compilation_context = target[CcInfo].compilation_context
-
     return generate_and_compile_bindings(
         ctx,
         ctx.rule.attr,
-        compilation_context = compilation_context,
+        compilation_context = target[CcInfo].compilation_context,
         public_hdrs = public_hdrs,
         header_includes = header_includes,
         action_inputs = public_hdrs + ctx.files._builtin_hdrs,
