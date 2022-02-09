@@ -1163,3 +1163,27 @@ fn test_elided_lifetimes_in_default_constructor_with_explicit_default() {
     .unwrap();
     verify_elided_lifetimes_in_default_constructor(&ir);
 }
+
+#[test]
+fn test_no_aligned_attr() {
+    let ir = ir_from_cc("struct SomeStruct {};").unwrap();
+
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... identifier: "SomeStruct" ...
+        ... override_alignment: false ...
+      }}
+    };
+}
+
+#[test]
+fn test_aligned_attr() {
+    let ir = ir_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
+
+    assert_ir_matches! {ir, quote! {
+      Record {
+        ... identifier: "SomeStruct" ...
+        ... override_alignment: true ...
+      }}
+    };
+}

@@ -290,9 +290,17 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                             record_name: lhs,
                         };
                     }
-                    _ => return make_unsupported_result("operator== where lhs doesn't refer to a record"),
+                    _ => {
+                        return make_unsupported_result(
+                            "operator== where lhs doesn't refer to a record",
+                        );
+                    }
                 },
-                _ => return make_unsupported_result("operator== where operands are not const references"),
+                _ => {
+                    return make_unsupported_result(
+                        "operator== where operands are not const references",
+                    );
+                }
             };
         }
         UnqualifiedIdentifier::Operator(_) => {
@@ -391,12 +399,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
                     } else {
-                        return make_unsupported_result("Not yet supported type of constructor parameter");
+                        return make_unsupported_result(
+                            "Not yet supported type of constructor parameter",
+                        );
                     }
                 }
                 _ => {
                     // TODO(b/216648347): Support bindings for other constructors.
-                    return make_unsupported_result("More than 1 constructor parameter is not supported yet");
+                    return make_unsupported_result(
+                        "More than 1 constructor parameter is not supported yet",
+                    );
                 }
             }
         }
@@ -1468,8 +1480,9 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             None => false,
             Some(meta) => match &func.name {
                 UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => false,
-                UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) =>
-                    meta.instance_method_metadata.is_some(),
+                UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
+                    meta.instance_method_metadata.is_some()
+                }
             },
         };
         let (implementation_function, arg_expressions) = if !needs_this_deref {
@@ -2924,5 +2937,28 @@ mod tests {
         let rs_api_impl = generate_rs_api_impl(&ir)?;
         assert_cc_matches!(rs_api_impl, quote! { static_assert(offsetof(class type, dyn) ... ) });
         Ok(())
+    }
+
+    #[test]
+    fn test_no_aligned_attr() {
+        let ir = ir_from_cc("struct SomeStruct {};").unwrap();
+        let rs_api = generate_rs_api(&ir).unwrap();
+
+        assert_rs_matches! {rs_api, quote! {
+         #[repr(C)]
+         pub struct SomeStruct { ... }
+        }};
+    }
+
+    #[test]
+    fn test_aligned_attr() {
+        let ir = ir_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
+        let rs_api = generate_rs_api(&ir).unwrap();
+
+        assert_rs_matches! {rs_api, quote! {
+           #[repr(C, align(64))]
+           pub struct SomeStruct { ... }
+          }
+        };
     }
 }

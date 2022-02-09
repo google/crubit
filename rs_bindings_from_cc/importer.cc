@@ -665,7 +665,7 @@ Importer::LookupResult Importer::ImportRecord(
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
 
   std::optional<size_t> base_size = std::nullopt;
-  bool override_alignment = false;
+  bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>();
   if (record_decl->getNumBases() != 0) {
     // The size of the base class subobjects is easy to compute, so long as we
     // know that fields start after the base class subobjects. (This is not
