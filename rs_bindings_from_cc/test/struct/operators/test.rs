@@ -32,6 +32,12 @@ mod tests {
     }
 
     #[test]
+    fn test_non_operator_method_name() {
+        let s2 = TestStruct2 { i: 2005 };
+        assert_eq!(2005, s2.operator1());
+    }
+
+    #[test]
     fn test_eq_out_of_line_definition() {
         let s1 = OperandForOutOfLineDefinition { i: 1005 };
         let s2 = OperandForOutOfLineDefinition { i: 2005 };

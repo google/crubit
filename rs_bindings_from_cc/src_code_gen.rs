@@ -180,6 +180,7 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
 
     let func_name = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => id.identifier.clone(),
+        UnqualifiedIdentifier::Operator(op) => op.cc_name(),
         UnqualifiedIdentifier::Destructor => {
             format!("~{}", record.expect("destructor must be associated with a record"))
         }
@@ -270,7 +271,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
     let func_name: syn::Ident;
     let format_first_param_as_self: bool;
     match &func.name {
-        UnqualifiedIdentifier::Identifier(id) if id.identifier == "operator==" => {
+        UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
             if param_type_kinds.len() != 2 {
                 bail!("Unexpected number of parameters in operator==: {:?}", func);
             }
@@ -294,7 +295,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 _ => return make_unsupported_result("operator== where operands are not const references"),
             };
         }
-        UnqualifiedIdentifier::Identifier(id) if id.identifier.starts_with("operator") => {
+        UnqualifiedIdentifier::Operator(_) => {
             return make_unsupported_result("Bindings for this kind of operator are not supported");
         }
         UnqualifiedIdentifier::Identifier(id) => {
@@ -466,7 +467,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
 
         let func_body = match &func.name {
-            UnqualifiedIdentifier::Identifier(_) => {
+            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
                 let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
                 // Only need to wrap everything in an `unsafe { ... }` block if
                 // the *whole* api function is safe.
@@ -1417,6 +1418,10 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
 
         let thunk_ident = thunk_ident(func);
         let implementation_function = match &func.name {
+            UnqualifiedIdentifier::Operator(op) => {
+                let name = syn::parse_str::<TokenStream>(&op.name)?;
+                quote! { operator #name }
+            }
             UnqualifiedIdentifier::Identifier(id) => {
                 let fn_ident = format_cc_ident(&id.identifier);
                 let static_method_metadata = func
@@ -1463,7 +1468,8 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             None => false,
             Some(meta) => match &func.name {
                 UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => false,
-                UnqualifiedIdentifier::Identifier(_) => meta.instance_method_metadata.is_some(),
+                UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) =>
+                    meta.instance_method_metadata.is_some(),
             },
         };
         let (implementation_function, arg_expressions) = if !needs_this_deref {
@@ -1520,7 +1526,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_func, ir_record};
+    use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_func, ir_record, retrieve_func};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
@@ -2846,13 +2852,7 @@ mod tests {
         ];
         for (type_str, is_copy_expected) in tests.iter() {
             let ir = ir_from_cc(&template.replace("PARAM_TYPE", type_str))?;
-            let f = ir
-                .functions()
-                .find(|f| match &f.name {
-                    UnqualifiedIdentifier::Identifier(id) => id.identifier == "func",
-                    _ => false,
-                })
-                .expect("IR should contain a function named 'func'");
+            let f = retrieve_func(&ir, "func");
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
             assert_eq!(*is_copy_expected, t.implements_copy(), "Testing '{}'", type_str);
         }
@@ -2868,20 +2868,8 @@ mod tests {
              void bar(SomeStruct& bar_param);",
         )?;
         let record = ir.records().next().unwrap();
-        let foo_func = ir
-            .functions()
-            .find(|f| {
-                matches!(&f.name, UnqualifiedIdentifier::Identifier(id)
-                                  if id.identifier == "foo")
-            })
-            .unwrap();
-        let bar_func = ir
-            .functions()
-            .find(|f| {
-                matches!(&f.name, UnqualifiedIdentifier::Identifier(id)
-                                  if id.identifier == "bar")
-            })
-            .unwrap();
+        let foo_func = retrieve_func(&ir, "foo");
+        let bar_func = retrieve_func(&ir, "bar");
 
         // const-ref + lifetimes in C++  ===>  shared-ref in Rust
         assert_eq!(foo_func.params.len(), 1);
@@ -2909,13 +2897,7 @@ mod tests {
              void foo(const SomeStruct& foo_param);",
         )?;
         let record = ir.records().next().unwrap();
-        let foo_func = ir
-            .functions()
-            .find(|f| {
-                matches!(&f.name, UnqualifiedIdentifier::Identifier(id)
-                                  if id.identifier == "foo")
-            })
-            .unwrap();
+        let foo_func = retrieve_func(&ir, "foo");
 
         // const-ref + *no* lifetimes in C++  ===>  const-pointer in Rust
         assert_eq!(foo_func.params.len(), 1);

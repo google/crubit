@@ -139,10 +139,9 @@ nlohmann::json Identifier::ToJson() const {
   return result;
 }
 
-nlohmann::json FuncParam::ToJson() const {
+nlohmann::json Operator::ToJson() const {
   nlohmann::json result;
-  result["type"] = type.ToJson();
-  result["identifier"] = identifier.ToJson();
+  result["name"] = name_;
   return result;
 }
 
@@ -153,6 +152,26 @@ static std::string SpecialNameToString(SpecialName special_name) {
     case SpecialName::kConstructor:
       return "Constructor";
   }
+}
+
+nlohmann::json ToJson(const UnqualifiedIdentifier& unqualified_identifier) {
+  nlohmann::json result;
+  if (auto* id = std::get_if<Identifier>(&unqualified_identifier)) {
+    result["Identifier"] = id->ToJson();
+  } else if (auto* op = std::get_if<Operator>(&unqualified_identifier)) {
+    result["Operator"] = op->ToJson();
+  } else {
+    SpecialName special_name = std::get<SpecialName>(unqualified_identifier);
+    result[SpecialNameToString(special_name)] = nullptr;
+  }
+  return result;
+}
+
+nlohmann::json FuncParam::ToJson() const {
+  nlohmann::json result;
+  result["type"] = type.ToJson();
+  result["identifier"] = identifier.ToJson();
+  return result;
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
@@ -192,11 +211,7 @@ nlohmann::json MemberFuncMetadata::ToJson() const {
 
 nlohmann::json Func::ToJson() const {
   nlohmann::json func;
-  if (auto* id = std::get_if<Identifier>(&name)) {
-    func["name"]["Identifier"] = id->ToJson();
-  } else {
-    func["name"][SpecialNameToString(std::get<SpecialName>(name))] = nullptr;
-  }
+  func["name"] = rs_bindings_from_cc::ToJson(name);
   func["owning_target"] = owning_target.value();
   if (doc_comment) {
     func["doc_comment"] = *doc_comment;

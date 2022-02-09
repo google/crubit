@@ -1119,7 +1119,7 @@ fn test_operator_names() {
         };"#,
     )
     .unwrap();
-    let function_names: HashSet<&str> = ir
+    let operator_names: HashSet<&str> = ir
         .functions()
         .filter(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
@@ -1129,14 +1129,14 @@ fn test_operator_names() {
                 .unwrap_or_default()
         })
         .flat_map(|f| match &f.name {
-            UnqualifiedIdentifier::Identifier(id) => Some(id.identifier.as_ref()),
+            UnqualifiedIdentifier::Operator(op) => Some(op.name.as_ref()),
             _ => None,
         })
         .collect();
-    assert!(function_names.contains("operator="));
-    assert!(function_names.contains("operator new"));
-    assert!(function_names.contains("operator new[]"));
-    assert!(function_names.contains("operator=="));
+    assert!(operator_names.contains("="));
+    assert!(operator_names.contains("new"));
+    assert!(operator_names.contains("new[]"));
+    assert!(operator_names.contains("=="));
 }
 
 #[test]

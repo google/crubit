@@ -134,6 +134,27 @@ impl fmt::Debug for Identifier {
     }
 }
 
+#[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Operator {
+    pub name: String,
+}
+
+impl Operator {
+    pub fn cc_name(&self) -> String {
+        let separator = match self.name.chars().next() {
+            Some(c) if c.is_alphabetic() => " ",
+            _ => "",
+        };
+        format!("operator{separator}{name}", separator = separator, name = self.name)
+    }
+}
+
+impl fmt::Debug for Operator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&format!("\"{}\"", &self.cc_name()))
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
 #[serde(transparent)]
 pub struct DeclId(pub usize);
@@ -160,6 +181,7 @@ impl<T: Into<String>> From<T> for BlazeLabel {
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum UnqualifiedIdentifier {
     Identifier(Identifier),
+    Operator(Operator),
     Constructor,
     Destructor,
 }
@@ -177,6 +199,7 @@ impl fmt::Debug for UnqualifiedIdentifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             UnqualifiedIdentifier::Identifier(identifier) => fmt::Debug::fmt(identifier, f),
+            UnqualifiedIdentifier::Operator(op) => fmt::Debug::fmt(op, f),
             UnqualifiedIdentifier::Constructor => f.write_str("Constructor"),
             UnqualifiedIdentifier::Destructor => f.write_str("Destructor"),
         }

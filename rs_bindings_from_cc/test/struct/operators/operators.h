@@ -24,6 +24,11 @@ struct TestStruct2 {
     return (i % 10) == (other.i % 10);
   }
 
+  // Test that method names starting with "operator" are not confused with real
+  // operator names (e.g. accidentally treating "operator1" as an unrecognized /
+  // unsupported operator).
+  inline int operator1() const { return i; }
+
   int i;
 };
 

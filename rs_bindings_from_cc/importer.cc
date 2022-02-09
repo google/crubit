@@ -1011,12 +1011,7 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
           // clang-format off
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
         case clang::OO_##name: {                          \
-          std::string name = "operator";                  \
-          if ('a' <= spelling[0] && spelling[0] <= 'z') { \
-            absl::StrAppend(&name, " ");                  \
-          }                                               \
-          absl::StrAppend(&name, spelling);               \
-          return {Identifier(std::move(name))};           \
+          return {Operator(spelling)};                    \
         }
         #include "third_party/llvm/llvm-project/clang/include/clang/Basic/OperatorKinds.def"
         #undef OVERLOADED_OPERATOR

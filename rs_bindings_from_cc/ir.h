@@ -224,6 +224,27 @@ inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
   return o << std::setw(internal::kJsonIndent) << id.Ident();
 }
 
+class Operator {
+ public:
+  explicit Operator(std::string name) : name_(std::move(name)) {
+    CHECK(!name_.empty()) << "Operator name cannot be empty.";
+  }
+
+  absl::string_view Name() const { return name_; }
+
+  nlohmann::json ToJson() const;
+
+ private:
+  std::string name_;
+};
+
+inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
+  char first_char = op.Name()[0];
+  const char* separator = ('a' <= first_char) && (first_char <= 'z') ? " " : "";
+  return stream << std::setw(internal::kJsonIndent) << "`operator" << separator
+                << op.Name() << "`";
+}
+
 // A function parameter.
 //
 // Examples:
@@ -253,7 +274,8 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // Note that constructors are given a separate variant, so that we can treat
 // them differently. After all, they are not invoked or defined like normal
 // functions.
-using UnqualifiedIdentifier = std::variant<Identifier, SpecialName>;
+using UnqualifiedIdentifier = std::variant<Identifier, Operator, SpecialName>;
+nlohmann::json ToJson(const UnqualifiedIdentifier& unqualified_identifier);
 
 struct MemberFuncMetadata {
   enum ReferenceQualification : char {
