@@ -87,6 +87,7 @@ fn rustfmt(input: String) -> Result<String> {
         ])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at '{}'", rustfmt));
 
@@ -97,8 +98,7 @@ fn rustfmt(input: String) -> Result<String> {
     let output = child.wait_with_output().expect("Failed to read rustfmt stdout");
 
     if !output.status.success() {
-        // The rustfmt error message has already been printed to stderr.
-        bail!("Unable to format output with rustfmt");
+        bail!("rustfmt reported an error: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
