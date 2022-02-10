@@ -1241,9 +1241,12 @@ impl<'ir> RsTypeKind<'ir> {
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
             RsTypeKind::Record(record) => should_derive_copy(record),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
-            RsTypeKind::Other { .. } => {
-                // All "other" primitive types (e.g. i32) implement `Copy`.
-                true
+            RsTypeKind::Other { name, type_args } => {
+                // All types that may appear here without `type_args` (e.g.
+                // primitive types like `i32`) implement `Copy`. Generic types
+                // that may be present here (e.g. Option<...>) are `Copy` if all
+                // of their `type_args` are `Copy`.
+                type_args.iter().all(|t| t.implements_copy())
             }
         }
     }
@@ -2833,7 +2836,7 @@ mod tests {
 
     #[test]
     fn test_rs_type_kind_implements_copy() -> Result<()> {
-        let template = r#" #pragma clang lifetime_elision
+        let template = r#" LIFETIMES
             struct [[clang::trivial_abi]] TrivialStruct final { int i; };
             struct [[clang::trivial_abi]] UserDefinedCopyConstructor final {
                 UserDefinedCopyConstructor(const UserDefinedCopyConstructor&);
@@ -2846,28 +2849,63 @@ mod tests {
         assert_impl_all!(i32: Copy);
         assert_impl_all!(&i32: Copy);
         assert_not_impl_all!(&mut i32: Copy);
+        assert_impl_all!(Option<&i32>: Copy);
+        assert_not_impl_all!(Option<&mut i32>: Copy);
         assert_impl_all!(*const i32: Copy);
         assert_impl_all!(*mut i32: Copy);
+        struct Test {
+            // Test inputs:
+            cc: &'static str,
+            lifetimes: bool,
+            // Expected test outputs:
+            rs: &'static str,
+            is_copy: bool,
+        }
+        // TODO(lukasza): Only fill out `lifetime_to_name` with lifetimes
+        // actually used by `t` / `RsTypeKind` below. Otherwise we will have to
+        // keep increasing the limit of 1000 below forever (LifetimeIds are
+        // consumed by other tests as well).
+        let mut lifetime_to_name = HashMap::<LifetimeId, String>::new();
+        for i in 0..1000 {
+            lifetime_to_name.insert(LifetimeId(i), "a".to_string());
+        }
         let tests = vec![
             // Validity of the next few tests is verified via
             // `assert_[not_]impl_all!` static assertions above.
-            ("int", true),
-            ("const int&", true),
-            ("int&", false),
-            ("const int*", true),
-            ("int*", true),
+            Test { cc: "int", lifetimes: true, rs: "i32", is_copy: true },
+            Test { cc: "const int&", lifetimes: true, rs: "&'a i32", is_copy: true },
+            Test { cc: "int&", lifetimes: true, rs: "&'a mut i32", is_copy: false },
+            Test { cc: "const int*", lifetimes: true, rs: "Option<&'a i32>", is_copy: true },
+            Test { cc: "int*", lifetimes: true, rs: "Option<&'a mut i32>", is_copy: false },
+            Test { cc: "const int*", lifetimes: false, rs: "*const i32", is_copy: true },
+            Test { cc: "int*", lifetimes: false, rs: "*mut i32", is_copy: true },
             // Tests below have been thought-through and verified "manually".
-            ("TrivialStruct", true), // Trivial C++ structs are expected to derive Copy.
-            ("UserDefinedCopyConstructor", false),
-            ("IntAlias", true),
-            ("TrivialAlias", true),
-            ("NonTrivialAlias", false),
+            // TrivialStruct is expected to derive Copy.
+            Test { cc: "TrivialStruct", lifetimes: true, rs: "TrivialStruct", is_copy: true },
+            Test {
+                cc: "UserDefinedCopyConstructor",
+                lifetimes: true,
+                rs: "UserDefinedCopyConstructor",
+                is_copy: false,
+            },
+            Test { cc: "IntAlias", lifetimes: true, rs: "IntAlias", is_copy: true },
+            Test { cc: "TrivialAlias", lifetimes: true, rs: "TrivialAlias", is_copy: true },
+            Test { cc: "NonTrivialAlias", lifetimes: true, rs: "NonTrivialAlias", is_copy: false },
         ];
-        for (type_str, is_copy_expected) in tests.iter() {
-            let ir = ir_from_cc(&template.replace("PARAM_TYPE", type_str))?;
+        for test in tests.iter() {
+            let test_name = format!("cc='{}', lifetimes={}", test.cc, test.lifetimes);
+            let cc_input = template.replace("PARAM_TYPE", test.cc).replace(
+                "LIFETIMES",
+                if test.lifetimes { "#pragma clang lifetime_elision" } else { "" },
+            );
+            let ir = ir_from_cc(&cc_input)?;
             let f = retrieve_func(&ir, "func");
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
-            assert_eq!(*is_copy_expected, t.implements_copy(), "Testing '{}'", type_str);
+
+            let fmt = tokens_to_string(t.format(&ir, &lifetime_to_name)?)?;
+            assert_eq!(test.rs, fmt, "Testing: {}", test_name);
+
+            assert_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);
         }
         Ok(())
     }
