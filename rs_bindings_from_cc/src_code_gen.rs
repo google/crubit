@@ -1241,7 +1241,7 @@ impl<'ir> RsTypeKind<'ir> {
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
             RsTypeKind::Record(record) => should_derive_copy(record),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
-            RsTypeKind::Other { name, type_args } => {
+            RsTypeKind::Other { type_args, .. } => {
                 // All types that may appear here without `type_args` (e.g.
                 // primitive types like `i32`) implement `Copy`. Generic types
                 // that may be present here (e.g. Option<...>) are `Copy` if all
