@@ -18,15 +18,15 @@ has_grte_isystem=0
 stl_isystem="third_party/stl/cxx17"
 cc_std_lib_isystem="external/clang/toolchain/include/c++/v1"
 cc_std_lib_unstable_isystem="external/clang/toolchain/include/c++/v1"
-clang_builtin_isystem="external/clang/toolchain/lib/clang/google3-trunk/include"
+clang_builtin_isystem="third_party/llvm/llvm-project/clang/lib/Headers"
 grte_isystem="@libc//include"
 
 function fail () {
-  cat > "${path_to_test_executable}" <<EOF
+    cat > "${path_to_test_executable}" <<EOF
 echo "$1"
 exit 1
 EOF
-exit 0
+    exit 0
 }
 
 while [[ $# -gt 0 ]]; do

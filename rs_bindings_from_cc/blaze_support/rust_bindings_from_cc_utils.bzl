@@ -169,7 +169,8 @@ def _generate_bindings(
         system_include_directories = depset(
             direct = [
                 cc_toolchain.built_in_include_directories[0],
-                cc_toolchain.built_in_include_directories[1].replace("/stable/", "/llvm_unstable/"),
+                # Clang's builtin headers:
+                "third_party/llvm/llvm-project/clang/lib/Headers",
                 cc_toolchain.built_in_include_directories[2],
             ],
             transitive = [compilation_context.system_includes],
