@@ -780,6 +780,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             quote! {}
         };
 
+    let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, ir)?;
     let base_class_into = cc_struct_upcast_impl(record, ir)?;
 
     let record_tokens = quote! {
@@ -791,6 +792,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
             #empty_struct_placeholder_field
         }
+
+        #no_unique_address_accessors
 
         #base_class_into
 
@@ -1416,6 +1419,36 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
         static_assert(alignof(class #record_ident) == #alignment);
         #( #field_assertions )*
     }
+}
+
+// Returns the accessor functions for no_unique_address member variables.
+fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStream> {
+    let mut fields = vec![];
+    let mut types = vec![];
+    for field in &record.fields {
+        if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
+            continue;
+        }
+        fields.push(make_rs_ident(&field.identifier.identifier));
+        types.push(format_rs_type(&field.type_.rs_type, ir, &HashMap::new()).with_context(
+            || format!("Failed to format type for field {:?} on record {:?}", field, record),
+        )?)
+    }
+
+    if fields.is_empty() {
+        return Ok(quote! {});
+    }
+
+    let ident = make_rs_ident(&record.identifier.identifier);
+    Ok(quote! {
+        impl #ident {
+            #(
+                pub fn #fields(&self) -> &#types {
+                    unsafe {&* (&self.#fields as *const _ as *const #types)}
+                }
+            )*
+        }
+    })
 }
 
 /// Returns the implementation of base class conversions, for converting a type
@@ -2197,6 +2230,15 @@ mod tests {
                     field1: [std::mem::MaybeUninit<u8>; 8],
                     field2: [std::mem::MaybeUninit<u8>; 2],
                     pub z: i16,
+                }
+
+                impl Struct {
+                    pub fn field1(&self) -> &Field1 {
+                        unsafe {&* (&self.field1 as *const _ as *const Field1)}
+                    }
+                    pub fn field2(&self) -> &Field2 {
+                        unsafe {&* (&self.field2 as *const _ as *const Field2)}
+                    }
                 }
             }
         );
