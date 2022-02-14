@@ -437,20 +437,17 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             thunk_args.remove(0);
 
             // Remove the lifetime associated with `__this`.
+            ensure!(func.return_type.rs_type.is_unit_type(),
+                    "Unexpectedly non-void return type of a constructor: {:?}", func);
             let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
             let no_longer_needed_lifetime_id = maybe_first_lifetime
                 .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
             lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
-            // TODO(lukasza): Also cover the case where the lifetime of `__this`
-            // is also used *deep* in another parameter:
-            // fn constructor<'a>(__this: &'a mut Self, x: SomeStruct<'a>)
             if let Some(type_still_dependent_on_removed_lifetime) = param_type_kinds
                 .iter()
                 .skip(1) // Skipping `__this`
-                .find(|t| {
-                    matches!(t, RsTypeKind::Reference{ lifetime_id, .. }
-                                if *lifetime_id == *no_longer_needed_lifetime_id)
-                })
+                .flat_map(|t| t.lifetimes())
+                .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
             {
                 bail!(
                     "The lifetime of `__this` is unexpectedly also used by another \
@@ -1230,6 +1227,8 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(format_lifetime_name(lifetime_name))
     }
 
+    /// Returns whether the type represented by `self` implements the `Copy`
+    /// trait.
     pub fn implements_copy(&self) -> bool {
         // TODO(b/212696226): Verify results of `implements_copy` via static
         // assertions in the generated Rust code (because incorrect results
@@ -1280,6 +1279,52 @@ impl<'ir> RsTypeKind<'ir> {
         match self {
             RsTypeKind::Record(actual_record) => actual_record.id == expected_record.id,
             _ => false,
+        }
+    }
+
+    /// Iterates over `self` and all the nested types (e.g. pointees, generic
+    /// type args, etc.) in DFS order.
+    pub fn dfs_iter<'ty>(&'ty self) -> impl Iterator<Item = &'ty RsTypeKind<'ir>> + '_ {
+        RsTypeKindIter::new(self)
+    }
+
+    /// Iterates over all `LifetimeId`s in `self` and in all the nested types.
+    /// Note that the results might contain duplicate LifetimeId values (e.g.
+    /// if the same LifetimeId is used in two `type_args`).
+    pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
+        self.dfs_iter().filter_map(|t| match t {
+            RsTypeKind::Reference { lifetime_id, .. } => Some(*lifetime_id),
+            _ => None,
+        })
+    }
+}
+
+struct RsTypeKindIter<'ty, 'ir> {
+    todo: Vec<&'ty RsTypeKind<'ir>>,
+}
+
+impl<'ty, 'ir> RsTypeKindIter<'ty, 'ir> {
+    pub fn new(ty: &'ty RsTypeKind<'ir>) -> Self {
+        Self { todo: vec![ty] }
+    }
+}
+
+impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
+    type Item = &'ty RsTypeKind<'ir>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.todo.pop() {
+            None => None,
+            Some(curr) => {
+                match curr {
+                    RsTypeKind::Unit | RsTypeKind::Record(_) => (),
+                    RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
+                    RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
+                    RsTypeKind::TypeAlias { underlying_type: t, .. } => self.todo.push(t),
+                    RsTypeKind::Other { type_args, .. } => self.todo.extend(type_args.iter().rev()),
+                };
+                Some(curr)
+            }
         }
     }
 }
@@ -2861,14 +2906,6 @@ mod tests {
             rs: &'static str,
             is_copy: bool,
         }
-        // TODO(lukasza): Only fill out `lifetime_to_name` with lifetimes
-        // actually used by `t` / `RsTypeKind` below. Otherwise we will have to
-        // keep increasing the limit of 1000 below forever (LifetimeIds are
-        // consumed by other tests as well).
-        let mut lifetime_to_name = HashMap::<LifetimeId, String>::new();
-        for i in 0..1000 {
-            lifetime_to_name.insert(LifetimeId(i), "a".to_string());
-        }
         let tests = vec![
             // Validity of the next few tests is verified via
             // `assert_[not_]impl_all!` static assertions above.
@@ -2901,6 +2938,9 @@ mod tests {
             let ir = ir_from_cc(&cc_input)?;
             let f = retrieve_func(&ir, "func");
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
+
+            let lifetime_to_name: HashMap::<LifetimeId, String> = t.lifetimes().map(
+                |lifetime_id| (lifetime_id, "a".to_string())).collect();
 
             let fmt = tokens_to_string(t.format(&ir, &lifetime_to_name)?)?;
             assert_eq!(test.rs, fmt, "Testing: {}", test_name);
@@ -2958,6 +2998,67 @@ mod tests {
         assert!(!foo_type.is_shared_ref_to(record));
         assert!(matches!(foo_type, RsTypeKind::Pointer { mutability: Mutability::Const, .. }));
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_dfs_iter_ordering() {
+        // Set up a test input representing: A<B<C>, D<E>>.
+        let a = {
+            let b = {
+                let c = RsTypeKind::Other { name: "C", type_args: vec![] };
+                RsTypeKind::Other { name: "B", type_args: vec![c] }
+            };
+            let d = {
+                let e = RsTypeKind::Other { name: "E", type_args: vec![] };
+                RsTypeKind::Other { name: "D", type_args: vec![e] }
+            };
+            RsTypeKind::Other { name: "A", type_args: vec![b, d] }
+        };
+        let dfs_names = a
+            .dfs_iter()
+            .map(|t| match t {
+                RsTypeKind::Other { name, .. } => *name,
+                _ => unreachable!("Only 'other' types are used in this test"),
+            })
+            .collect_vec();
+        assert_eq!(vec!["A", "B", "C", "D", "E"], dfs_names);
+    }
+
+    #[test]
+    fn test_rs_type_kind_lifetimes() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            using TypeAlias = int&;
+            struct SomeStruct {};
+            void foo(int a, int& b, int* c, int** d, TypeAlias e, SomeStruct f); "#,
+        )?;
+        let f = retrieve_func(&ir, "foo");
+        let ret = RsTypeKind::new(&f.return_type.rs_type, &ir)?;
+        let a = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
+        let b = RsTypeKind::new(&f.params[1].type_.rs_type, &ir)?;
+        let c = RsTypeKind::new(&f.params[2].type_.rs_type, &ir)?;
+        let d = RsTypeKind::new(&f.params[3].type_.rs_type, &ir)?;
+        let e = RsTypeKind::new(&f.params[4].type_.rs_type, &ir)?;
+        let f = RsTypeKind::new(&f.params[5].type_.rs_type, &ir)?;
+
+        assert_eq!(0, ret.lifetimes().count()); // No lifetimes on `void`.
+        assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int`.
+        assert_eq!(1, b.lifetimes().count()); // `&'a i32` has a single lifetime.
+        assert_eq!(1, c.lifetimes().count()); // `Option<&'b i32>` has a single lifetime.
+        assert_eq!(2, d.lifetimes().count()); // `&'c Option<&'d i32>` has two lifetimes.
+        assert_eq!(1, e.lifetimes().count()); // Lifetime of underlying type should show through.
+        assert_eq!(0, f.lifetimes().count()); // No lifetimes on structs (yet).
+        Ok(())
+    }
+
+    #[test]
+    fn test_rs_type_kind_lifetimes_raw_ptr() -> Result<()> {
+        let ir = ir_from_cc("void foo(int* a);")?;
+        let f = retrieve_func(&ir, "foo");
+        let a = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
+        assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int*`.
         Ok(())
     }
 
