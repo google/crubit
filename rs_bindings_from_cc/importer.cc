@@ -898,10 +898,12 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     return error;
   }
 
-  // Add cv-qualification.
+  // Handle cv-qualification.
   type->cc_type.is_const = qual_type.isConstQualified();
-  // Not doing volatile for now -- note that volatile pointers do not exist in
-  // Rust, though volatile reads/writes still do.
+  if (qual_type.isVolatileQualified()) {
+    return absl::UnimplementedError(
+        absl::StrCat("Unsupported `volatile` qualifier: ", type_string));
+  }
 
   return *std::move(type);
 }
