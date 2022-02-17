@@ -17,7 +17,6 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
-#include "util/gtl/labs/string_type.h"
 #include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
