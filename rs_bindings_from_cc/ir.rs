@@ -165,7 +165,7 @@ pub struct BlazeLabel(pub String);
 
 impl BlazeLabel {
     pub fn target_name(&self) -> Result<&str> {
-        match self.0.split_once(":") {
+        match self.0.split_once(':') {
             Some((_package, target_name)) => Ok(target_name),
             None => bail!("Unsupported label format {:?}", self.0),
         }

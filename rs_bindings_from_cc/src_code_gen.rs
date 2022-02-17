@@ -30,15 +30,17 @@ pub struct FfiBindings {
 ///
 /// This function panics on error.
 ///
+/// # Safety
+///
+/// Expectations:
+///    * function expects that param `json` is a FfiU8Slice for a valid array of
+///      bytes with the given size.
+///    * function expects that param `json` doesn't change during the call.
+///
 /// Ownership:
 ///    * function doesn't take ownership of (in other words it borrows) the
 ///      param `json`
 ///    * function passes ownership of the returned value to the caller
-///
-/// Safety:
-///    * function expects that param `json` is a FfiU8Slice for a valid array of
-///      bytes with the given size.
-///    * function expects that param `json` doesn't change during the call.
 #[no_mangle]
 pub unsafe extern "C" fn GenerateBindingsImpl(json: FfiU8Slice) -> FfiBindings {
     catch_unwind(|| {
@@ -597,7 +599,7 @@ fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
         Some(text) => {
             // token_stream_printer (and rustfmt) don't put a space between /// and the doc
             // comment, let's add it here so our comments are pretty.
-            let doc = format!(" {}", text.replace("\n", "\n "));
+            let doc = format!(" {}", text.replace('\n', "\n "));
             quote! {#[doc=#doc]}
         }
         None => quote! {},
@@ -738,19 +740,18 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     } else {
         quote! {#[derive( #(#derives),* )]}
     };
-    let unpin_impl;
-    if record.is_unpin() {
-        unpin_impl = quote! {};
+    let unpin_impl = if record.is_unpin() {
+        quote! {}
     } else {
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         record_features.insert(make_rs_ident("negative_impls"));
-        unpin_impl = quote! {
+        quote! {
             __NEWLINE__  __NEWLINE__
             impl !Unpin for #ident {}
-        };
-    }
+        }
+    };
 
     let mut repr_attributes = vec![quote! {C}];
     if record.override_alignment && record.alignment > 1 {
@@ -1020,7 +1021,7 @@ fn rs_type_name_for_target_and_identifier(
         let owning_crate_name = owning_target.target_name()?;
         // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
         // available
-        let escaped_owning_crate_name = owning_crate_name.replace("-", "_");
+        let escaped_owning_crate_name = owning_crate_name.replace('-', "_");
         let owning_crate = make_rs_ident(&escaped_owning_crate_name);
         Ok(quote! {#owning_crate::#ident})
     }
@@ -1505,7 +1506,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
     // token_stream_printer.rs for a list of supported placeholders.
     let mut thunks = vec![];
     for func in ir.functions() {
-        if can_skip_cc_thunk(&func) {
+        if can_skip_cc_thunk(func) {
             continue;
         }
 
@@ -2044,7 +2045,7 @@ mod tests {
 
         let rs_api = rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?;
 
-        let idx = |s: &str| rs_api.find(s).ok_or(anyhow!("'{}' missing", s));
+        let idx = |s: &str| rs_api.find(s).ok_or_else(|| anyhow!("'{}' missing", s));
 
         let f1 = idx("fn first_func")?;
         let f2 = idx("fn second_func")?;
@@ -2797,13 +2798,13 @@ mod tests {
 
         let destructor =
             ir.functions().find(|f| f.name == UnqualifiedIdentifier::Destructor).unwrap();
-        assert_eq!(thunk_ident(&destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));
+        assert_eq!(thunk_ident(destructor), make_rs_ident("__rust_thunk___ZN5ClassD1Ev"));
 
         let default_constructor = ir
             .functions()
             .find(|f| f.name == UnqualifiedIdentifier::Constructor && f.params.len() == 1)
             .unwrap();
-        assert_eq!(thunk_ident(&default_constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
+        assert_eq!(thunk_ident(default_constructor), make_rs_ident("__rust_thunk___ZN5ClassC1Ev"));
     }
 
     #[test]

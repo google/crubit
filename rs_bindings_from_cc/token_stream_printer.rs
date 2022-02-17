@@ -121,7 +121,7 @@ mod tests {
           }
         };
         assert_eq!(
-            tokens_to_string(token_stream.clone())?,
+            tokens_to_string(token_stream)?,
             "struct Foo{ }impl Bar for Foo{ fn bar (& self) { } }"
         );
         Ok(())
@@ -130,42 +130,42 @@ mod tests {
     #[test]
     fn test_space_idents_and_literals() -> Result<()> {
         let token_stream = quote! { foo 42 bar 23 };
-        assert_eq!(tokens_to_string(token_stream.clone())?, "foo 42 bar 23");
+        assert_eq!(tokens_to_string(token_stream)?, "foo 42 bar 23");
         Ok(())
     }
 
     #[test]
     fn test_dont_space_punctuation() -> Result<()> {
         let token_stream = quote! { foo+42+bar+23 };
-        assert_eq!(tokens_to_string(token_stream.clone())?, "foo+42+bar+23");
+        assert_eq!(tokens_to_string(token_stream)?, "foo+42+bar+23");
         Ok(())
     }
 
     #[test]
     fn test_newline_token() -> Result<()> {
         let token_stream = quote! { a __NEWLINE__ b };
-        assert_eq!(tokens_to_string(token_stream.clone())?, "a \nb");
+        assert_eq!(tokens_to_string(token_stream)?, "a \nb");
         Ok(())
     }
 
     #[test]
     fn test_hash_token() -> Result<()> {
         let token_stream = quote! { a __HASH_TOKEN__ b };
-        assert_eq!(tokens_to_string(token_stream.clone())?, "a #b");
+        assert_eq!(tokens_to_string(token_stream)?, "a #b");
         Ok(())
     }
 
     #[test]
     fn test_include_standard_header() -> Result<()> {
         let token_stream = quote! { __HASH_TOKEN__ include <cstddef> };
-        assert_eq!(tokens_to_string(token_stream.clone())?, "#include<cstddef>");
+        assert_eq!(tokens_to_string(token_stream)?, "#include<cstddef>");
         Ok(())
     }
 
     #[test]
     fn test_comments() -> Result<()> {
         let token_stream = quote! { __COMMENT__ "line1\nline2" };
-        assert_eq!(tokens_to_string(token_stream.clone())?, "// line1\n// line2\n");
+        assert_eq!(tokens_to_string(token_stream)?, "// line1\n// line2\n");
         Ok(())
     }
 

@@ -9,12 +9,36 @@ use std::slice;
 
 /// Returns an `FfiU8SliceBox` containing a copy of the data in `ffi_u8_slice`.
 /// The returned `FfiU8SliceBox` must be freed by calling `FreeFfiU8SliceBox()`.
+///
+/// # Safety
+///
+/// Expectations:
+///    * function expects that param `input` is a FfiU8Slice for a valid array of
+///      bytes with the given size.
+///    * function expects that param `input` doesn't change during the call, but
+///      it is okay if it changes afterwards (because the data from `input` will
+///      be copied/boxed into heap).
+///
+/// Ownership:
+///    * function doesn't take ownership of (in other words it borrows) the
+///      param `input`
+///    * function passes ownership of the returned value to the caller
 #[no_mangle]
 pub unsafe extern "C" fn AllocFfiU8SliceBox(input: FfiU8Slice) -> FfiU8SliceBox {
     FfiU8SliceBox::from_boxed_slice(Box::<[u8]>::from(input.as_slice()))
 }
 
 /// Frees `FfiU8SliceBox` allocated by Rust.
+///
+/// # Safety
+///
+/// Expectations:
+///    * function expects that param `sb` is a valid FfiU8SliceBox that has been
+///      allocated earlier by AllocFfiU8SliceBox.
+///    * function expects that there are no remaining references to FfiU8SliceBox
+///
+/// Ownership:
+///    * function takes ownership of the param `sb` and frees its memory.
 #[no_mangle]
 pub unsafe extern "C" fn FreeFfiU8SliceBox(sb: FfiU8SliceBox) {
     catch_unwind(|| {
