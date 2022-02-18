@@ -4,7 +4,8 @@
 
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:user_of_imported_type_cc
-#![feature(const_ptr_offset_from)]
+#![rustfmt::skip]
+#![feature(const_ptr_offset_from, custom_inner_attributes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 

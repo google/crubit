@@ -76,8 +76,14 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     // TODO(lukasza): It would be nice to include "by $argv[0]"" in the
     // @generated comment below.  OTOH, `std::env::current_exe()` in our
     // current build environment returns a guid-like path... :-/
+    //
+    // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
+    // be needed when `@generated` comment/keyword is present...
     let rs_api = format!(
-        "// Automatically @generated Rust bindings for C++ target\n// {target}\n{code}",
+        "// Automatically @generated Rust bindings for C++ target\n\
+        // {target}\n\
+        #![rustfmt::skip]\n\
+        {code}",
         target = ir.current_target().0,
         code = rs_tokens_to_formatted_string(generate_rs_api(&ir)?)?
     );
@@ -884,6 +890,9 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     // having uses. See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
     let mut has_record = false;
     let mut features = BTreeSet::new();
+
+    // For #![rustfmt::skip].
+    features.insert(make_rs_ident("custom_inner_attributes"));
 
     // Identify all functions having overloads that we can't import (yet).
     // TODO(b/213280424): Implement support for overloaded functions.

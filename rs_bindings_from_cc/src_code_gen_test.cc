@@ -29,6 +29,8 @@ TEST(SrcGenTest, FFIIntegration) {
       StrEq(
           "// Automatically @generated Rust bindings for C++ target\n"
           "// //some/target/name\n"
+          "#![rustfmt::skip]\n"
+          "#![feature(custom_inner_attributes)]\n"
           "#![allow(non_camel_case_types)]\n"
           "#![allow(non_snake_case)]\n"
           "\n"
