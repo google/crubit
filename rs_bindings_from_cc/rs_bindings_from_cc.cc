@@ -16,9 +16,6 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
-#include "file/base/filesystem.h"
-#include "file/base/helpers.h"
-#include "file/base/options.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/flags/flag.h"
 #include "third_party/absl/meta/type_traits.h"
@@ -26,8 +23,29 @@
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FileSystem.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
 #include "util/gtl/labs/string_type.h"
 #include "util/task/status.h"
+
+namespace {
+
+absl::Status SetFileContents(const std::string& path,
+                             absl::string_view contents) {
+  std::error_code error_code;
+  llvm::raw_fd_ostream stream(path, error_code);
+  if (error_code) {
+    return absl::Status(absl::StatusCode::kInternal, error_code.message());
+  }
+  stream << contents;
+  stream.close();
+  if (stream.has_error()) {
+    return absl::Status(absl::StatusCode::kInternal, stream.error().message());
+  }
+  return absl::OkStatus();
+}
+
+}  // namespace
 
 ABSL_FLAG(bool, do_nothing, false,
           "if set to true the tool will produce empty files "
@@ -63,12 +81,12 @@ int main(int argc, char* argv[]) {
   QCHECK(!cc_out.empty()) << "please specify --cc_out";
 
   if (absl::GetFlag(FLAGS_do_nothing)) {
-    CHECK_OK(file::SetContents(
-        rs_out, "// intentionally left empty because --do_nothing was passed.",
-        file::Defaults()));
-    CHECK_OK(file::SetContents(
-        cc_out, "// intentionally left empty because --do_nothing was passed.",
-        file::Defaults()));
+    CHECK_OK(SetFileContents(
+        rs_out,
+        "// intentionally left empty because --do_nothing was passed."));
+    CHECK_OK(SetFileContents(
+        cc_out,
+        "// intentionally left empty because --do_nothing was passed."));
     return 0;
   }
 
@@ -132,20 +150,19 @@ int main(int argc, char* argv[]) {
               std::vector<absl::string_view>(argv, argv + argc));
       ir.ok()) {
     if (!ir_out.empty()) {
-      CHECK_OK(file::SetContents(ir_out, ir->ToJson().dump(/*indent=*/2),
-                                 file::Defaults()));
+      CHECK_OK(SetFileContents(ir_out, ir->ToJson().dump(/*indent=*/2)));
     }
     rs_bindings_from_cc::Bindings bindings =
         rs_bindings_from_cc::GenerateBindings(*ir);
-    CHECK_OK(file::SetContents(rs_out, bindings.rs_api, file::Defaults()));
-    CHECK_OK(file::SetContents(cc_out, bindings.rs_api_impl, file::Defaults()));
+    CHECK_OK(SetFileContents(rs_out, bindings.rs_api));
+    CHECK_OK(SetFileContents(cc_out, bindings.rs_api_impl));
     return 0;
   }
 
-  file::Delete(rs_out, file::Defaults()).IgnoreError();
-  file::Delete(cc_out, file::Defaults()).IgnoreError();
+  llvm::sys::fs::remove(rs_out);
+  llvm::sys::fs::remove(cc_out);
   if (!ir_out.empty()) {
-    file::Delete(ir_out, file::Defaults()).IgnoreError();
+    llvm::sys::fs::remove(ir_out);
   }
   return 1;
 }
