@@ -11,17 +11,17 @@
 
 pub type __builtin_ms_va_list = *mut u8;
 
-// rs_bindings_from_cc/test/golden/lifetimes.h;l=4
-// Error while generating bindings for item 'AddHook':
-// Parameter #0 is not supported: Unsupported type 'void (*)(void)'
+#[inline(always)]
+pub fn AddHook(__param_0: Option<extern "C" fn()>) {
+    unsafe { crate::detail::__rust_thunk___Z7AddHookPFvvE(__param_0) }
+}
 
-// rs_bindings_from_cc/test/golden/lifetimes.h;l=6
-// Error while generating bindings for item 'FunctionPointer':
-// Unsupported type 'void (*)(void)'
+pub type FunctionPointer = Option<extern "C" fn()>;
 
-// rs_bindings_from_cc/test/golden/lifetimes.h;l=7
-// Error while generating bindings for item 'AddHookWithTypedef':
-// Parameter #0 is not supported: Unsupported type 'FunctionPointer'
+#[inline(always)]
+pub fn AddHookWithTypedef(hook: Option<extern "C" fn()>) {
+    unsafe { crate::detail::__rust_thunk___Z18AddHookWithTypedefPFvvE(hook) }
+}
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=9
 // Error while generating bindings for item 'AddAnotherHook':
@@ -55,6 +55,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        #[link_name = "_Z7AddHookPFvvE"]
+        pub(crate) fn __rust_thunk___Z7AddHookPFvvE(__param_0: Option<extern "C" fn()>);
+        #[link_name = "_Z18AddHookWithTypedefPFvvE"]
+        pub(crate) fn __rust_thunk___Z18AddHookWithTypedefPFvvE(hook: Option<extern "C" fn()>);
         #[link_name = "_Z12ConsumeArrayPi"]
         pub(crate) fn __rust_thunk___Z12ConsumeArrayPi(pair: *mut i32);
         #[link_name = "_Z23ConsumeArrayWithTypedefPi"]

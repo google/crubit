@@ -172,7 +172,7 @@ class Importer {
   // nullability annotations.
   absl::StatusOr<MappedType> ConvertType(
       clang::QualType qual_type,
-      std::optional<devtools_rust::TypeLifetimes> lifetimes = std::nullopt,
+      std::optional<devtools_rust::TypeLifetimes>& lifetimes,
       bool nullable = true) const;
 
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;

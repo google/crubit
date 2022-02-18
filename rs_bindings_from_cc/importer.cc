@@ -175,6 +175,81 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
   }
   return bases;
 }
+
+// Converts clang::CallingConv enum [1] into an equivalent Rust Abi [2, 3, 4].
+// [1]
+// https://github.com/llvm/llvm-project/blob/c6a3225bb03b6afc2b63fbf13db3c100406b32ce/clang/include/clang/Basic/Specifiers.h#L262-L283
+// [2] https://doc.rust-lang.org/reference/types/function-pointer.html
+// [3]
+// https://doc.rust-lang.org/reference/items/functions.html#extern-function-qualifier
+// [4]
+// https://github.com/rust-lang/rust/blob/b27ccbc7e1e6a04d749e244a3c13f72ca38e80e7/compiler/rustc_target/src/spec/abi.rs#L49
+absl::StatusOr<absl::string_view> ConvertCcCallConvIntoRsAbi(
+    clang::CallingConv cc_call_conv) {
+  switch (cc_call_conv) {
+    case clang::CC_C:  // __attribute__((cdecl))
+      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
+      // that:
+      // - `extern "C"` [...] whatever the default your C compiler supports.
+      // - `extern "cdecl"` -- The default for x86_32 C code.
+      //
+      // We don't support C++ exceptions and therefore we use "C" (rather than
+      // "C-unwind") - we have no need for unwinding across the FFI boundary -
+      // e.g. from C++ into Rust frames (or vice versa).
+      return "C";
+    case clang::CC_X86FastCall:  // __attribute__((fastcall))
+      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
+      // that the fastcall ABI -- corresponds to MSVC's __fastcall and GCC and
+      // clang's __attribute__((fastcall)).
+      return "fastcall";
+    case clang::CC_X86VectorCall:  // __attribute__((vectorcall))
+      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
+      // that the vectorcall ABI -- corresponds to MSVC's __vectorcall and
+      // clang's __attribute__((vectorcall)).
+      return "vectorcall";
+    case clang::CC_X86ThisCall:  // __attribute__((thiscall))
+      // We don't support C++ exceptions and therefore we use "thiscall" (rather
+      // than "thiscall-unwind") - we have no need for unwinding across the FFI
+      // boundary - e.g. from C++ into Rust frames (or vice versa).
+      return "thiscall";
+    case clang::CC_X86StdCall:  // __attribute__((stdcall))
+      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
+      // extern "stdcall" -- The default for the Win32 API on x86_32.
+      //
+      // We don't support C++ exceptions and therefore we use "stdcall" (rather
+      // than "stdcall-unwind") - we have no need for unwinding across the FFI
+      // boundary - e.g. from C++ into Rust frames (or vice versa).
+      return "stdcall";
+    case clang::CC_Win64:  // __attribute__((ms_abi))
+      // https://doc.rust-lang.org/reference/items/external-blocks.html#abi says
+      // extern "win64" -- The default for C code on x86_64 Windows.
+      return "win64";
+    case clang::CC_AAPCS:      // __attribute__((pcs("aapcs")))
+    case clang::CC_AAPCS_VFP:  // __attribute__((pcs("aapcs-vfp")))
+      // TODO(lukasza): Should both map to "aapcs"?
+      break;
+    case clang::CC_X86_64SysV:  // __attribute__((sysv_abi))
+      // TODO(lukasza): Maybe this is "sysv64"?
+      break;
+    case clang::CC_X86Pascal:     // __attribute__((pascal))
+    case clang::CC_X86RegCall:    // __attribute__((regcall))
+    case clang::CC_IntelOclBicc:  // __attribute__((intel_ocl_bicc))
+    case clang::CC_SpirFunction:  // default for OpenCL functions on SPIR target
+    case clang::CC_OpenCLKernel:  // inferred for OpenCL kernels
+    case clang::CC_Swift:         // __attribute__((swiftcall))
+    case clang::CC_SwiftAsync:    // __attribute__((swiftasynccall))
+    case clang::CC_PreserveMost:  // __attribute__((preserve_most))
+    case clang::CC_PreserveAll:   // __attribute__((preserve_all))
+    case clang::CC_AArch64VectorCall:  // __attribute__((aarch64_vector_pcs))
+      // These don't seem to have any Rust equivalents.
+      break;
+  }
+  return absl::UnimplementedError(
+      absl::StrCat("Unsupported calling convention: ",
+                   absl::string_view(
+                       clang::FunctionType::getNameForCallConv(cc_call_conv))));
+}
+
 }  // namespace
 
 std::vector<clang::RawComment*> Importer::ImportFreeComments() {
@@ -748,8 +823,9 @@ Importer::LookupResult Importer::ImportTypedefName(
     // This should never happen.
     LOG(FATAL) << "Couldn't get identifier for TypedefNameDecl";
   }
+  std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type =
-      ConvertType(typedef_name_decl->getUnderlyingType());
+      ConvertType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
     known_type_decls_.insert(typedef_name_decl);
     return LookupResult(
@@ -808,7 +884,7 @@ SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
 
 absl::StatusOr<MappedType> Importer::ConvertType(
     clang::QualType qual_type,
-    std::optional<devtools_rust::TypeLifetimes> lifetimes,
+    std::optional<devtools_rust::TypeLifetimes>& lifetimes,
     bool nullable) const {
   std::optional<MappedType> type = std::nullopt;
   // When converting the type to a string, don't include qualifiers -- we handle
@@ -820,15 +896,52 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     type = MappedType::Simple(std::string(*maybe_mapped_type), type_string);
   } else if (const auto* pointer_type =
                  qual_type->getAs<clang::PointerType>()) {
-    std::optional<LifetimeId> lifetime;
-    if (lifetimes.has_value()) {
-      CHECK(!lifetimes->empty());
-      lifetime = LifetimeId(lifetimes->back().Id());
-      lifetimes->pop_back();
-    }
-    auto pointee_type = ConvertType(pointer_type->getPointeeType(), lifetimes);
-    if (pointee_type.ok()) {
-      type = MappedType::PointerTo(*pointee_type, lifetime, nullable);
+    if (const auto* func_type =
+            pointer_type->getPointeeType()->getAs<clang::FunctionProtoType>()) {
+      std::optional<LifetimeId> lifetime;
+      if (lifetimes.has_value()) {
+        CHECK(!lifetimes->empty());
+        if (lifetimes->back() != devtools_rust::Lifetime::Static()) {
+          return absl::UnimplementedError(
+              absl::StrCat("Function pointers with non-'static lifetimes are "
+                           "not supported: ",
+                           type_string));
+        }
+        lifetime = LifetimeId(lifetimes->back().Id());
+        lifetimes->pop_back();
+      }
+      do {
+        clang::StringRef cc_call_conv =
+            clang::FunctionType::getNameForCallConv(func_type->getCallConv());
+        absl::StatusOr<absl::string_view> rs_abi =
+            ConvertCcCallConvIntoRsAbi(func_type->getCallConv());
+        if (!rs_abi.ok()) return rs_abi.status();
+
+        auto return_type = ConvertType(func_type->getReturnType(), lifetimes);
+        if (!return_type.ok()) break;
+
+        std::vector<MappedType> param_types;
+        for (const clang::QualType& param_type : func_type->getParamTypes()) {
+          auto param_type_status = ConvertType(param_type, lifetimes);
+          if (!param_type_status.ok()) break;
+          param_types.push_back(*param_type_status);
+        }
+
+        type = MappedType::FuncPtr(cc_call_conv, *rs_abi, lifetime,
+                                   *return_type, param_types);
+      } while (false);
+    } else {
+      std::optional<LifetimeId> lifetime;
+      if (lifetimes.has_value()) {
+        CHECK(!lifetimes->empty());
+        lifetime = LifetimeId(lifetimes->back().Id());
+        lifetimes->pop_back();
+      }
+      auto pointee_type =
+          ConvertType(pointer_type->getPointeeType(), lifetimes);
+      if (pointee_type.ok()) {
+        type = MappedType::PointerTo(*pointee_type, lifetime, nullable);
+      }
     }
   } else if (const auto* lvalue_ref_type =
                  qual_type->getAs<clang::LValueReferenceType>()) {
@@ -920,7 +1033,8 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
   std::vector<Field> fields;
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    auto type = ConvertType(field_decl->getType());
+    std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
+    auto type = ConvertType(field_decl->getType(), no_lifetimes);
     if (!type.ok()) {
       return absl::UnimplementedError(
           absl::Substitute("Field type '$0' is not supported",

@@ -31,3 +31,6 @@ const int& forward_reference(const int& i) { return i; }
 int multiply(int x, int y) { return x * y; }
 
 int multiply_with_unnamed_parameters(int x, int y) { return x * y; }
+
+int (*get_pointer_to_multiply_function())(int, int) { return multiply; }
+int (&get_reference_to_multiply_function())(int, int) { return multiply; }

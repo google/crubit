@@ -67,4 +67,24 @@ mod tests {
     fn test_multiply_with_unnamed_parameters() {
         assert_eq!(simple_functions::multiply_with_unnamed_parameters(42, 456), 42 * 456);
     }
+
+    #[test]
+    fn test_function_pointer() {
+        let maybe_mul_fn = simple_functions::get_pointer_to_multiply_function();
+        let mul_fn = maybe_mul_fn.expect("Expecting non-null / non-None function pointer");
+        assert_eq!(mul_fn(123, 456), 123 * 456);
+    }
+
+    #[test]
+    fn test_function_reference() {
+        // TODO(b/217419782): Replicate `test_function_pointer`, but for C++
+        // references. (e.g. no `expect` / `Option` unwrapping should be
+        // needed).
+    }
+
+    #[test]
+    fn test_function_abi() {
+        // TODO(b/217419782): Test function pointers using more exotic calling
+        // conventions / abis.
+    }
 }

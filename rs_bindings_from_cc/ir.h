@@ -35,8 +35,10 @@ inline constexpr absl::string_view kRustPtrMut = "*mut";
 inline constexpr absl::string_view kRustPtrConst = "*const";
 inline constexpr absl::string_view kRustRefMut = "&mut";
 inline constexpr absl::string_view kRustRefConst = "&";
+inline constexpr absl::string_view kRustFuncPtr = "#funcPtr";
 inline constexpr absl::string_view kCcPtr = "*";
 inline constexpr absl::string_view kCcLValueRef = "&";
+inline constexpr absl::string_view kCcFuncValue = "#funcValue";
 inline constexpr int kJsonIndent = 2;
 }  // namespace internal
 
@@ -99,10 +101,19 @@ inline std::ostream& operator<<(std::ostream& o, const Lifetime& l) {
 // is spelled in C++.
 struct CcType {
   nlohmann::json ToJson() const;
-  // The name of the type. For example, int or void.
+
+  // The name of the type. Examples:
+  // - "int32_t", "std::ptrdiff_t", "long long", "bool"
+  // - "void"
+  // - "&" or "*" (pointee stored in `type_args[0]`)
+  // - "#funcValue <callConv>" (compare with "#funcPtr <abi>" in RsType::name
+  //   and note that Rust only supports function pointers; note that <callConv>
+  //   in CcType doesn't map 1:1 to <abi> in RsType).
+  // - a decl name when MappedType::WithDeclIds was used
   std::string name;
 
-  // Id of a decl that this type corresponds to. `nullopt` for primitive types.
+  // Id of a decl that this type corresponds to. `nullopt` for primitive types
+  // (i.e. when `name` is non-empty).
   std::optional<DeclId> decl_id = std::nullopt;
 
   // The C++ const-qualification for the type.
@@ -125,10 +136,22 @@ struct CcType {
 struct RsType {
   nlohmann::json ToJson() const;
 
-  // The name of the type. For example, i32 or ().
+  // The name of the type. Examples:
+  // - "i32" or "bool"
+  // - "()" (the unit type, equivalent of "void" in CcType)
+  // - "&", "&mut", "*const", "*mut" (pointee stored in `type_args[0]`)
+  // - "Option" (e.g. representing nullable, lifetime-annotated C++ pointer as
+  //   `Option<&'a SomeOtherType>` - in this case `type_args[0]` is the generic
+  //    argument representing the Rust reference type).
+  // - "#funcPtr <abi>" (function pointer; return type is the last elem in
+  //   `type_args`; param types are stored in other `type_args`; <abi> would be
+  //   replaced with "cdecl", "stdcall" or other Abi - see
+  //   https://doc.rust-lang.org/reference/types/function-pointer.html);
+  // - a decl name when MappedType::WithDeclIds was used
   std::string name;
 
-  // Id of a decl that this type corresponds to. `nullopt` for primitive types.
+  // Id of a decl that this type corresponds to. `nullopt` when `name` is
+  // non-empty.
   std::optional<DeclId> decl_id = std::nullopt;
 
   // Lifetime arguments for a generic type. Examples:
@@ -136,8 +159,9 @@ struct RsType {
   //   &'a 32 has a single lifetime argument, 'a.
   //   SomeType<'a, 'b> has two lifetime arguments, 'a and 'b.
   // Lifetimes are identified by their unique ID. The corresponding Lifetime
-  // will be found within the lifetime_params of a Func or Record that uses
-  // this type.
+  // will be found within the lifetime_params of a Func or Record or TypeAlias
+  // that uses this type underneath (as a parameter type, field type, or aliased
+  // type).
   std::vector<LifetimeId> lifetime_args = {};
 
   // Type arguments for a generic type. Examples:
@@ -178,6 +202,12 @@ struct MappedType {
 
   static MappedType LValueReferenceTo(MappedType pointee_type,
                                       std::optional<LifetimeId> lifetime);
+
+  static MappedType FuncPtr(absl::string_view cc_call_conv,
+                            absl::string_view rs_abi,
+                            std::optional<LifetimeId> lifetime,
+                            MappedType return_type,
+                            std::vector<MappedType> param_types);
 
   bool IsVoid() const { return rs_type.name == "()"; }
 
