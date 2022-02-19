@@ -7,3 +7,8 @@
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/user_of_unsupported.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
+
+#pragma clang diagnostic pop

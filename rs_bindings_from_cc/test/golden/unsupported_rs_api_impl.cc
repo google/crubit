@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
     class NontrivialCustomType* __this) {
   std ::destroy_at(__this);
@@ -35,3 +37,5 @@ static_assert(offsetof(class NontrivialCustomType, i) * 8 == 0);
 
 static_assert(sizeof(class ContainingStruct) == 1);
 static_assert(alignof(class ContainingStruct) == 1);
+
+#pragma clang diagnostic pop

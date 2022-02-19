@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/user_of_base_class.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN8Derived2C1Ev(class Derived2* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
@@ -26,3 +28,5 @@ extern "C" class Derived2& __rust_thunk___ZN8Derived2aSERKS_(
 static_assert(sizeof(class Derived2) == 16);
 static_assert(alignof(class Derived2) == 8);
 static_assert(offsetof(class Derived2, derived_1) * 8 == 96);
+
+#pragma clang diagnostic pop

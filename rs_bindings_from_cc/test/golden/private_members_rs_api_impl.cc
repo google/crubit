@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/private_members.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
@@ -26,3 +28,5 @@ extern "C" class SomeClass& __rust_thunk___ZN9SomeClassaSERKS_(
 static_assert(sizeof(class SomeClass) == 8);
 static_assert(alignof(class SomeClass) == 4);
 static_assert(offsetof(class SomeClass, public_member_variable_) * 8 == 0);
+
+#pragma clang diagnostic pop

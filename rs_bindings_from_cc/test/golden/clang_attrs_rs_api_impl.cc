@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/clang_attrs.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1Ev(
     class HasCustomAlignment* __this) {
   rs_api_impl_support ::construct_at(__this);
@@ -97,3 +99,5 @@ static_assert(alignof(class InheritsFromBaseWithCustomAlignment) == 64);
 
 static_assert(sizeof(class HasCustomAlignmentWithGnuAttr) == 64);
 static_assert(alignof(class HasCustomAlignmentWithGnuAttr) == 64);
+
+#pragma clang diagnostic pop

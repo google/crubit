@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/comment.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN3FooC1Ev(class Foo* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
@@ -66,3 +68,5 @@ static_assert(offsetof(class Bar, i) * 8 == 0);
 static_assert(sizeof(class HasNoComments) == 4);
 static_assert(alignof(class HasNoComments) == 4);
 static_assert(offsetof(class HasNoComments, i) * 8 == 0);
+
+#pragma clang diagnostic pop

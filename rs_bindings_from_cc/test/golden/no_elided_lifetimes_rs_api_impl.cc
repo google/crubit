@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/no_elided_lifetimes.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN1SC1Ev(class S* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
@@ -25,3 +27,5 @@ extern "C" class S& __rust_thunk___ZN1SaSERKS_(class S* __this,
 
 static_assert(sizeof(class S) == 1);
 static_assert(alignof(class S) == 1);
+
+#pragma clang diagnostic pop

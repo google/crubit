@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/types.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN10SomeStructC1Ev(class SomeStruct* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
@@ -115,3 +117,5 @@ static_assert(offsetof(class FieldTypeTestStruct, struct_ref_field) * 8 ==
               2112);
 static_assert(offsetof(class FieldTypeTestStruct, const_struct_ref_field) * 8 ==
               2176);
+
+#pragma clang diagnostic pop

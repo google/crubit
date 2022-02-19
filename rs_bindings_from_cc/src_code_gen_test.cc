@@ -58,9 +58,14 @@ TEST(SrcGenTest, FFIIntegration) {
                     "cxx20_backports.h\"\n"
                     "#include \"foo/bar.h\"\n"
                     "\n"
+                    "#pragma clang diagnostic push\n"
+                    "#pragma clang diagnostic ignored "
+                    "\"-Wthread-safety-analysis\"\n"
                     "extern \"C\" int __rust_thunk__mangled_name(int arg) { "
                     "return hello_world(arg); "
-                    "}\n"));
+                    "}\n\n"
+                    "#pragma clang diagnostic pop"
+                    "\n"));
 }
 
 }  // namespace

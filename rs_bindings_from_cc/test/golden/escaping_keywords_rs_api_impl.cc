@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/escaping_keywords.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN4typeC1Ev(class type* __this) {
   rs_api_impl_support ::construct_at(__this);
 }
@@ -26,3 +28,5 @@ extern "C" class type& __rust_thunk___ZN4typeaSERKS_(
 static_assert(sizeof(class type) == 4);
 static_assert(alignof(class type) == 4);
 static_assert(offsetof(class type, dyn) * 8 == 0);
+
+#pragma clang diagnostic pop

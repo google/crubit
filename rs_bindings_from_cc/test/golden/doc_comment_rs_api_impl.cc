@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
     class DocCommentSlashes* __this, const class DocCommentSlashes& __param_0) {
   rs_api_impl_support ::construct_at(__this, __param_0);
@@ -106,3 +108,5 @@ static_assert(offsetof(class LineComment, i) * 8 == 0);
 static_assert(sizeof(class MultilineOneStar) == 4);
 static_assert(alignof(class MultilineOneStar) == 4);
 static_assert(offsetof(class MultilineOneStar, i) * 8 == 0);
+
+#pragma clang diagnostic pop

@@ -8,6 +8,8 @@
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/test/golden/user_of_imported_type.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
     class UserOfImportedType* __this) {
   rs_api_impl_support ::construct_at(__this);
@@ -31,3 +33,5 @@ __rust_thunk___ZN18UserOfImportedTypeaSERKS_(
 static_assert(sizeof(class UserOfImportedType) == 8);
 static_assert(alignof(class UserOfImportedType) == 8);
 static_assert(offsetof(class UserOfImportedType, trivial) * 8 == 0);
+
+#pragma clang diagnostic pop

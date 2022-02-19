@@ -1654,11 +1654,17 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
         __NEWLINE__
         #( __HASH_TOKEN__ include #includes __NEWLINE__)* __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
+        // Disable Clang thread-safety-analysis warnings that would otherwise
+        // complain about thunks that call mutex locking functions in an unpaired way.
+        __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis" __NEWLINE__
 
         #( #thunks )* __NEWLINE__ __NEWLINE__
 
         #( #layout_assertions __NEWLINE__ __NEWLINE__ )*
 
+        __NEWLINE__
+        __HASH_TOKEN__ pragma clang diagnostic pop __NEWLINE__
         // To satisfy http://cs/symbol:devtools.metadata.Presubmit.CheckTerminatingNewline check.
         __NEWLINE__
     })
@@ -1673,6 +1679,25 @@ mod tests {
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
     use token_stream_printer::tokens_to_string;
+
+    #[test]
+    fn test_disable_thread_safety_warnings() -> Result<()> {
+        let ir = ir_from_cc("inline void foo() {}")?;
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                ...
+                __HASH_TOKEN__ pragma clang diagnostic push
+                __HASH_TOKEN__ pragma clang diagnostic ignored "-Wthread-safety-analysis"
+                ...
+
+                __HASH_TOKEN__ pragma clang diagnostic pop
+                ...
+            }
+        );
+        Ok(())
+    }
 
     #[test]
     // TODO(hlopko): Move this test to a more principled place where it can access
