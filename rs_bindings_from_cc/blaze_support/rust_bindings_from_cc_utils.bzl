@@ -171,6 +171,8 @@ def _generate_bindings(
                 cc_toolchain.built_in_include_directories[0],
                 # Clang's builtin headers:
                 "third_party/llvm/llvm-project/clang/lib/Headers",
+                # Fuzzer and sanitizer headers:
+                "third_party/llvm/llvm-project/compiler-rt/include",
                 cc_toolchain.built_in_include_directories[2],
             ],
             transitive = [compilation_context.system_includes],
