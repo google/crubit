@@ -20,9 +20,6 @@ load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVari
 # we are omitting ["inc"] from the list below.
 _hdr_extensions = ["h", "hh", "hpp", "ipp", "hxx", "h++", "inl", "tlh", "tli", "H", "tcc"]
 
-def _filter_none(input_list):
-    return [element for element in input_list if element != None]
-
 def _is_hdr(input):
     return input.path.split(".")[-1] in _hdr_extensions
 
@@ -34,7 +31,6 @@ public_headers_to_remove = {
         "base/callback.h",  # //base:callback
         "base/callback-specializations.h",  # //base:callback
         "base/callback-types.h",  # //base:callback
-        "base/file_toc.h",  # //base:file_toc
         "base/googleinit.h",  # //base:googleinit
         "base/logging.h",  # //base:logging
     ],
