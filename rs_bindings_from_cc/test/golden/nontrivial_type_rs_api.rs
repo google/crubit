@@ -89,6 +89,10 @@ impl Drop for NontrivialMembers {
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=41
+// Error while generating bindings for item 'ReturnsByValue':
+// Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
 mod detail {

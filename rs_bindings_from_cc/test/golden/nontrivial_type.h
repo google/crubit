@@ -42,4 +42,6 @@ struct NontrivialMembers final {
 void TakesByValue(Nontrivial nontrivial);
 void TakesByValueInline(NontrivialInline nontrivial);
 
+Nontrivial ReturnsByValue();
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
