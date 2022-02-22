@@ -14,8 +14,14 @@ load(
     "RustBindingsFromCcInfo",
 )
 
+ActionsInfo = provider(
+    doc = ("A provider that contains compile and linking information for the generated" +
+           " `.cc` and `.rs` files."),
+    fields = {"actions": "asdf"},
+)
+
 def _attach_aspect_impl(ctx):
-    return [ctx.attr.dep[RustBindingsFromCcInfo]]
+    return [ctx.attr.dep[RustBindingsFromCcInfo], ActionsInfo(actions = ctx.attr.dep.actions)]
 
 attach_aspect = rule(
     implementation = _attach_aspect_impl,
@@ -186,6 +192,24 @@ textual_hdrs_not_in_targets_and_hdrs_test = analysistest.make(
     _textual_hdrs_not_in_targets_and_hdrs_impl,
 )
 
+def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
+    env = analysistest.begin(ctx)
+    target_under_test = analysistest.target_under_test(env)
+    analysis_action = [a for a in target_under_test[ActionsInfo].actions if a.mnemonic == "CppHeaderAnalysis"][0]
+    inputs = analysis_action.inputs.to_list()
+    inttypes = [i.path for i in inputs if "inttypes.h" in i.path]
+    asserts.equals(
+        env,
+        ["external/clang/toolchain/include/c++/v1/inttypes.h", "@libc//include/inttypes.h", "third_party/llvm/llvm-project/clang/lib/Headers/inttypes.h"],
+        inttypes,
+    )
+
+    return analysistest.end(env)
+
+toolchain_headers_in_header_analysis_action_test = analysistest.make(
+    _toolchain_headers_in_header_analysis_action_test_impl,
+)
+
 def _test_textual_hdrs_not_in_targets_and_hdrs():
     native.cc_library(
         name = "textual",
@@ -203,6 +227,18 @@ def _test_textual_hdrs_not_in_targets_and_hdrs():
         target_under_test = ":textual_with_aspect",
     )
 
+def _test_toolchain_headers_in_header_analysis_action():
+    native.cc_library(
+        name = "somelib",
+        hdrs = ["someheader.h"],
+    )
+    attach_aspect(name = "somelib_with_aspect", dep = ":somelib")
+
+    toolchain_headers_in_header_analysis_action_test(
+        name = "toolchain_headers_in_header_analysis_action_test",
+        target_under_test = ":somelib_with_aspect",
+    )
+
 def rust_bindings_from_cc_aspect_test(name):
     """Sets up rust_bindings_from_cc_aspect test suite.
 
@@ -213,6 +249,7 @@ def rust_bindings_from_cc_aspect_test(name):
     _test_targets_and_headers_propagate_with_cc_infos()
     _test_textual_hdrs_not_in_targets_and_hdrs()
     _test_lib_has_toolchain_targets_and_headers()
+    _test_toolchain_headers_in_header_analysis_action()
 
     native.test_suite(
         name = name,
@@ -222,5 +259,6 @@ def rust_bindings_from_cc_aspect_test(name):
             ":targets_and_headers_propagate_with_cc_info_test",
             ":textual_hdrs_not_in_targets_and_hdrs_test",
             ":lib_has_toolchain_targets_and_headers_test",
+            ":toolchain_headers_in_header_analysis_action_test",
         ],
     )

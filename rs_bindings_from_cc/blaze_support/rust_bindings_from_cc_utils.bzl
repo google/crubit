@@ -21,6 +21,11 @@ RustBindingsFromCcInfo = provider(
     },
 )
 
+RustToolchainHeadersInfo = provider(
+    doc = "A provider that contains all toolchain C++ headers",
+    fields = {"headers": "depset"},
+)
+
 GeneratedBindingsInfo = provider(
     doc = "A provider that contains the generated C++ and Rust source files.",
     fields = {
@@ -153,7 +158,7 @@ def _generate_bindings(
       compilation_context: The compilation context for this action.
       public_hdrs: A list of headers to be passed to the tool via the "--public_headers" flag.
       header_includes: A list of flags to be passed to the command line with "-include".
-      action_inputs: A list of inputs to the bindings generating action.
+      action_inputs: A depset of inputs to the bindings generating action.
       targets_and_headers: A depset of strings, each one representing mapping of target to " +
                           "its headers in json format.
 
@@ -208,10 +213,11 @@ def _generate_bindings(
         output_file = cc_output,
         grep_includes = ctx.file._grep_includes,
         additional_inputs = depset(
-            direct = action_inputs + [
+            direct = [
                 ctx.executable._rustfmt,
                 ctx.executable._generator,
             ] + ctx.files._rustfmt_cfg,
+            transitive = [action_inputs],
         ),
         additional_outputs = [rs_output],
         variables = variables,
@@ -236,7 +242,7 @@ def generate_and_compile_bindings(
       compilation_context: The current compilation context.
       public_hdrs: A list of headers to be passed to the tool via the "--public_headers" flag.
       header_includes: A list of flags to be passed to the command line with "-include".
-      action_inputs: A list of inputs to the bindings generating action.
+      action_inputs: A depset of inputs to the bindings generating action.
       targets_and_headers: A depset of strings, each one representing mapping of target to " +
                           "its headers in json format.
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.

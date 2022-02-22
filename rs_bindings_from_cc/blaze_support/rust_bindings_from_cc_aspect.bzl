@@ -8,6 +8,7 @@
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "RustBindingsFromCcInfo",
+    "RustToolchainHeadersInfo",
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
@@ -115,7 +116,12 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         compilation_context = target[CcInfo].compilation_context,
         public_hdrs = public_hdrs,
         header_includes = header_includes,
-        action_inputs = public_hdrs + ctx.files._builtin_hdrs,
+        action_inputs = depset(
+            direct = public_hdrs + ctx.files._builtin_hdrs,
+            transitive = [
+                ctx.attr._std[RustToolchainHeadersInfo].headers,
+            ],
+        ),
         targets_and_headers = targets_and_headers,
         deps_for_cc_file = [target[CcInfo]] + [
             dep[RustBindingsFromCcInfo].cc_info

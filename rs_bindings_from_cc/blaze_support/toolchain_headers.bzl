@@ -4,6 +4,7 @@
 
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
+    "RustToolchainHeadersInfo",
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
@@ -21,6 +22,7 @@ def _collect_nonstd_hdrs(input_list, public_hdrs):
 
 def _bindings_for_toolchain_headers_impl(ctx):
     std_hdrs = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + ctx.files.hdrs
+    all_std_hdrs = depset(direct = ctx.files.hdrs + ctx.files._builtin_hdrs, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
 
     # The clang builtin headers also contain some standard headers. We'll consider those part of
     # the C++ Standard library target, so we generate bindings for them.
@@ -50,13 +52,13 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes.append("-include")
         header_includes.append(hdr.basename)
 
-    return generate_and_compile_bindings(
+    return [RustToolchainHeadersInfo(headers = all_std_hdrs)] + generate_and_compile_bindings(
         ctx,
         ctx.attr,
         compilation_context = ctx.attr._stl[CcInfo].compilation_context,
         public_hdrs = public_std_hdrs,
         header_includes = header_includes,
-        action_inputs = ctx.files._builtin_hdrs + std_hdrs,
+        action_inputs = all_std_hdrs,
         targets_and_headers = targets_and_headers,
         deps_for_cc_file = ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_cc_file,
         deps_for_rs_file = ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_rs_file,
