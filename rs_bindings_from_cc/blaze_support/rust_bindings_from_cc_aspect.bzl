@@ -84,7 +84,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         direct = [
             json.encode({
                 "t": str(ctx.label),
-                "h": [h.path for h in all_standalone_hdrs],
+                "h": [h.short_path for h in all_standalone_hdrs],
             }),
         ] if all_standalone_hdrs else [],
         transitive = [
