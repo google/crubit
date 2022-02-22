@@ -16,6 +16,8 @@ struct Nontrivial final {
   Nontrivial(Nontrivial&&);
   ~Nontrivial();
 
+  void MemberFunction();
+
   int field;
 };
 
@@ -26,6 +28,8 @@ struct Nontrivial final {
 struct NontrivialInline final {
   NontrivialInline(NontrivialInline&&) {}
   ~NontrivialInline() {}
+
+  void MemberFunction(){};
 
   int field;
 };
@@ -43,5 +47,8 @@ void TakesByValue(Nontrivial nontrivial);
 void TakesByValueInline(NontrivialInline nontrivial);
 
 Nontrivial ReturnsByValue();
+
+const Nontrivial& TakesByConstReference(const Nontrivial& nontrivial);
+Nontrivial& TakesByReference(Nontrivial& nontrivial);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_

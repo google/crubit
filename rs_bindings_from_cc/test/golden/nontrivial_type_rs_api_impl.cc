@@ -14,6 +14,10 @@ extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
     class NontrivialInline* __this) {
   std ::destroy_at(__this);
 }
+extern "C" void __rust_thunk___ZN16NontrivialInline14MemberFunctionEv(
+    class NontrivialInline* __this) {
+  __this->MemberFunction();
+}
 extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
     class NontrivialMembers* __this) {
   std ::destroy_at(__this);

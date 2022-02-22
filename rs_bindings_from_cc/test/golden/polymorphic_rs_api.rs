@@ -46,7 +46,7 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev<'a>(__this: &'a mut PolymorphicClass);
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev<'a>(__this: *mut PolymorphicClass);
     }
 }
 

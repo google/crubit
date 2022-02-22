@@ -24,7 +24,7 @@ class SomeClass final {
   static inline int private_static_inline_method(int arg) { return arg * 42; }
 };
 
-struct InstanceMethods {
+struct InstanceMethods final {
   int get_int_field() const;
   void set_int_field(int new_value);
 

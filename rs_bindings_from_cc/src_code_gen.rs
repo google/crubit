@@ -579,7 +579,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             param_types[0] = param_type_kinds[0]
                 .format_mut_ref_as_uninitialized(ir, &lifetime_to_name)
                 .with_context(|| {
-                    format!("Failed to format `__this` param for a thunk: {:?}", func.params[0])
+                    format!("Failed to format `__this` param for a constructor thunk: {:?}", func.params[0])
+                })?;
+        } else if func.name == UnqualifiedIdentifier::Destructor {
+            if param_types.is_empty() || func.params.is_empty() {
+                bail!("Destructors should have at least one parameter (__this)");
+            }
+            param_types[0] = param_type_kinds[0]
+                .format_ref_as_raw_ptr(ir, &lifetime_to_name)
+                .with_context(|| {
+                    format!("Failed to format `__this` param for a destructor thunk: {:?}", func.params[0])
                 })?;
         }
 
@@ -1149,6 +1158,15 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(result)
     }
 
+    /// Returns true if the type is known to be `Unpin`, false otherwise.
+    pub fn is_unpin(&self, ir: &IR) -> bool {
+        match self {
+            RsTypeKind::Record(record) => record.is_unpin(),
+            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(ir),
+            _ => true,
+        }
+    }
+
     pub fn format(
         &self,
         ir: &IR,
@@ -1161,10 +1179,18 @@ impl<'ir> RsTypeKind<'ir> {
                 quote! {* #mutability #nested_type}
             }
             RsTypeKind::Reference { referent, mutability, lifetime_id } => {
-                let mutability = mutability.format_for_reference();
+                let mut_ = mutability.format_for_reference();
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
                 let nested_type = referent.format(ir, lifetime_to_name)?;
-                quote! {& #lifetime #mutability #nested_type}
+                let reference = quote! {& #lifetime #mut_ #nested_type};
+                if mutability == &Mutability::Mut && !referent.is_unpin(ir) {
+                    // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
+                    // Probably format needs to return an RsSnippet, and RsSnippet needs a `uses`
+                    // field.
+                    quote! {std::pin::Pin< #reference >}
+                } else {
+                    reference
+                }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
                 let return_frag = return_type.format_as_return_type_fragment(ir, lifetime_to_name)?;
@@ -1226,11 +1252,31 @@ impl<'ir> RsTypeKind<'ir> {
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
                 Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
             }
-            _ => bail!("Unexpected type of `__this` parameter in a constructor: {:?}", self),
+            _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
         }
     }
 
-    /// Formats this RsTypeKind as either `&'a self` or `&'a mut self`.
+    /// Formats a reference or pointer as a raw pointer.
+    pub fn format_ref_as_raw_ptr(
+        &self,
+        ir: &IR,
+        lifetime_to_name: &HashMap<LifetimeId, String>,
+    ) -> Result<TokenStream> {
+        match self {
+            RsTypeKind::Reference { referent: pointee, mutability, .. }
+            | RsTypeKind::Pointer { pointee, mutability } => {
+                let nested_type = pointee.format(ir, lifetime_to_name)?;
+                let mut_ = mutability.format_for_pointer();
+                Ok(quote! { * #mut_ #nested_type })
+            }
+            _ => bail!("Expected reference to format as raw ptr, got: {:?}", self),
+        }
+    }
+
+    /// Formats this RsTypeKind as the `self` parameter: usually, `&'a self` or
+    /// `&'a mut self`.
+    ///
+    /// If this is !Unpin, however, it uses `self: Pin<&mut Self>` instead.
     pub fn format_as_self_param(
         &self,
         func: &Func,
@@ -1254,10 +1300,15 @@ impl<'ir> RsTypeKind<'ir> {
         }
 
         match self {
-            RsTypeKind::Reference { mutability, lifetime_id, .. } => {
-                let mutability = mutability.format_for_reference();
+            RsTypeKind::Reference { referent, lifetime_id, mutability } => {
+                let mut_ = mutability.format_for_reference();
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
-                Ok(quote! { & #lifetime #mutability self })
+                if mutability == &Mutability::Mut && !referent.is_unpin(ir) && func.name != UnqualifiedIdentifier::Destructor {
+                    // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
+                    Ok(quote! {self: std::pin::Pin< & #lifetime #mut_ Self>})
+                } else {
+                    Ok(quote! { & #lifetime #mut_ self })
+                }
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }
@@ -3345,5 +3396,102 @@ mod tests {
            pub struct SomeStruct { ... }
           }
         };
+    }
+
+    /// !Unpin references should not be pinned.
+    #[test]
+    fn test_nonunpin_ref_param() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct S {~S();};
+            void Function(const S& s);
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                fn Function<'a>(s: &'a S) { ... }
+            }
+        );
+        Ok(())
+    }
+
+    /// !Unpin mut references must be pinned.
+    #[test]
+    fn test_nonunpin_mut_param() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct S {~S();};
+            void Function(S& s);
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                fn Function<'a>(s: std::pin::Pin<&'a mut S>) { ... }
+            }
+        );
+        Ok(())
+    }
+
+    /// !Unpin &self should not be pinned.
+    #[test]
+    fn test_nonunpin_ref_self() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct S {
+              ~S();
+              void Function() const;
+            };
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                fn Function<'a>(&'a self) { ... }
+            }
+        );
+        Ok(())
+    }
+
+    /// !Unpin &mut self must be pinned.
+    #[test]
+    fn test_nonunpin_mut_self() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct S {
+              ~S();
+              void Function();
+            };
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                fn Function<'a>(self: std::pin::Pin<&'a mut Self>) { ... }
+            }
+        );
+        Ok(())
+    }
+
+    /// Drop::drop must not use self : Pin<...>.
+    #[test]
+    fn test_nonunpin_drop() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            struct S {~S();};
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                fn drop(&mut self) { ... }
+            }
+        );
+        Ok(())
     }
 }

@@ -138,7 +138,7 @@ pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut TrivialWithDefaulted) 
 }
 
 #[inline(always)]
-pub fn TakesTrivialNonfinalByReference<'a>(trivial: &'a mut TrivialNonfinal) {
+pub fn TakesTrivialNonfinalByReference<'a>(trivial: std::pin::Pin<&'a mut TrivialNonfinal>) {
     unsafe {
         crate::detail::__rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(trivial)
     }
@@ -174,7 +174,7 @@ mod detail {
         );
         #[link_name = "_Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal"]
         pub(crate) fn __rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal<'a>(
-            trivial: &'a mut TrivialNonfinal,
+            trivial: std::pin::Pin<&'a mut TrivialNonfinal>,
         );
     }
 }

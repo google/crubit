@@ -36,6 +36,13 @@ impl Drop for Nontrivial {
     }
 }
 
+impl Nontrivial {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(self: std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial14MemberFunctionEv(self) }
+    }
+}
+
 /// Nontrivial due to (inline) user-specified constructor and destructor.
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
@@ -47,7 +54,7 @@ pub struct NontrivialInline {
 
 impl !Unpin for NontrivialInline {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=23
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=25
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&'
 
@@ -55,6 +62,13 @@ impl Drop for NontrivialInline {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
+    }
+}
+
+impl NontrivialInline {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(self: std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
     }
 }
 
@@ -70,7 +84,7 @@ pub struct NontrivialMembers {
 
 impl !Unpin for NontrivialMembers {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=34
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&'
 
@@ -81,17 +95,29 @@ impl Drop for NontrivialMembers {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=42
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=39
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=43
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=41
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=45
 // Error while generating bindings for item 'ReturnsByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
+
+#[inline(always)]
+pub fn TakesByConstReference<'a>(nontrivial: &'a Nontrivial) -> &'a Nontrivial {
+    unsafe { crate::detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
+}
+
+#[inline(always)]
+pub fn TakesByReference<'a>(
+    nontrivial: std::pin::Pin<&'a mut Nontrivial>,
+) -> std::pin::Pin<&'a mut Nontrivial> {
+    unsafe { crate::detail::__rust_thunk___Z16TakesByReferenceR10Nontrivial(nontrivial) }
+}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
@@ -100,11 +126,24 @@ mod detail {
     use super::*;
     extern "C" {
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: &'a mut Nontrivial);
-        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: &'a mut NontrivialInline);
-        pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(
-            __this: &'a mut NontrivialMembers,
+        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: *mut Nontrivial);
+        #[link_name = "_ZN10Nontrivial14MemberFunctionEv"]
+        pub(crate) fn __rust_thunk___ZN10Nontrivial14MemberFunctionEv<'a>(
+            __this: std::pin::Pin<&'a mut Nontrivial>,
         );
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: *mut NontrivialInline);
+        pub(crate) fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
+            __this: std::pin::Pin<&'a mut NontrivialInline>,
+        );
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(__this: *mut NontrivialMembers);
+        #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]
+        pub(crate) fn __rust_thunk___Z21TakesByConstReferenceRK10Nontrivial<'a>(
+            nontrivial: &'a Nontrivial,
+        ) -> &'a Nontrivial;
+        #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
+        pub(crate) fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'a>(
+            nontrivial: std::pin::Pin<&'a mut Nontrivial>,
+        ) -> std::pin::Pin<&'a mut Nontrivial>;
     }
 }
 
