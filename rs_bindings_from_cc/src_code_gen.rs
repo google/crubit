@@ -2237,7 +2237,7 @@ mod tests {
     fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
         let ir = ir_from_cc(
             r#"
-            [[clang::annotate("lifetimes = -> a")]]
+            [[clang::annotate("lifetimes", "-> a")]]
             int (*get_ptr_to_func())(float, double); "#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
@@ -2289,7 +2289,7 @@ mod tests {
         // 1) Need to investigate why this fails - seeing raw pointers in Rust
         //    seems to indicate that no lifetimes are present at the `importer.cc`
         //    level. Maybe lifetime elision doesn't support this scenario? Unclear
-        //    how to explicitly apply [[clang::annotate("lifetimes = a, b -> a")]]
+        //    how to explicitly apply [[clang::annotate("lifetimes", "a, b -> a")]]
         //    to the _inner_ function.
         // 2) It is important to have 2 reference parameters, so see if the problem
         //    of passing `lifetimes` by value would have been caught - see:
@@ -3061,7 +3061,7 @@ mod tests {
         let mut ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             struct Foo final {
-                [[clang::annotate("lifetimes = a: a")]]
+                [[clang::annotate("lifetimes", "a: a")]]
                 Foo(const int& i);
             };"#,
         )?;

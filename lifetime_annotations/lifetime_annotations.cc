@@ -107,43 +107,79 @@ llvm::Expected<llvm::SmallVector<Lifetime>> GetThisLifetimes(
       attrs, 1, symbol_table, elided_lifetime_factory, method->getASTContext());
 }
 
+llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
+    const clang::Expr* arg, const clang::ASTContext& ast_context) {
+  auto error = []() {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        "cannot evaluate argument as a string literal");
+  };
+
+  clang::Expr::EvalResult eval_result;
+  if (!arg->EvaluateAsConstantExpr(eval_result, ast_context) ||
+      !eval_result.Val.isLValue()) {
+    return error();
+  }
+
+  const auto* expr =
+      eval_result.Val.getLValueBase().dyn_cast<const clang::Expr*>();
+  if (!expr) {
+    return error();
+  }
+
+  const auto* strlit = clang::dyn_cast<clang::StringLiteral>(expr);
+  if (!strlit) {
+    return error();
+  }
+
+  return strlit->getString();
+}
+
 // Parse a "(a, b): (a, b), (), a -> b"-style annotation into a
 // FunctionLifetimes.
 // TODO(veluca): this is a temporary solution.
 llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
     const clang::FunctionDecl* func, LifetimeSymbolTable& symbol_table,
-    llvm::StringRef annotation, clang::SourceLocation source_loc) {
-  // The lexer requires a null character at the end of the string.
-  std::string annotation_str(annotation.data(), annotation.size());
-  clang::Lexer lexer(source_loc, clang::LangOptions(), annotation_str.data(),
-                     annotation_str.data(),
-                     annotation_str.data() + annotation_str.size());
-
-  const char* end = annotation_str.data() + annotation_str.size();
-
-  auto error = [func]() {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
-        absl::StrCat("Invalid lifetime annotation for function ",
-                     func->getNameAsString()));
+    const clang::AnnotateAttr* attr) {
+  auto error = [func](absl::string_view detail = absl::string_view()) {
+    std::string msg = absl::StrCat("Invalid lifetime annotation for function ",
+                                   func->getNameAsString());
+    if (!detail.empty()) {
+      absl::StrAppend(&msg, ": ", detail);
+    }
+    return llvm::createStringError(llvm::inconvertibleErrorCode(), msg);
   };
 
-  auto tok = [&]() -> llvm::StringRef {
+  if (attr->args_size() != 1) {
+    return error("`lifetimes` attribute must have exactly one argument");
+  }
+
+  // The lexer requires a null character at the end of the string, so copy it to
+  // a std::string to guarantee this.
+  llvm::StringRef lifetimes;
+  if (llvm::Error err =
+          EvaluateAsStringLiteral(*attr->args_begin(), func->getASTContext())
+              .moveInto(lifetimes)) {
+    return error(toString(std::move(err)));
+  }
+  std::string lifetimes_str = lifetimes.str();
+  clang::Lexer lexer(attr->getLoc(), clang::LangOptions(), lifetimes_str.data(),
+                     lifetimes_str.data(),
+                     lifetimes_str.data() + lifetimes_str.size());
+
+  const char* end = lifetimes_str.data() + lifetimes_str.size();
+
+  auto tok = [&lexer, &lifetimes_str, end, attr]() -> llvm::StringRef {
     clang::Token token;
     if (lexer.getBufferLocation() != end) {
       lexer.LexFromRawLexer(token);
-      return llvm::StringRef(annotation.data() +
+      return llvm::StringRef(lifetimes_str.data() +
                                  token.getLocation().getRawEncoding() -
-                                 source_loc.getRawEncoding(),
+                                 attr->getLoc().getRawEncoding(),
                              token.getLength());
     }
     return "";
   };
-
-  // Consume the "lifetimes =" initial part.
-  if (tok() != "lifetimes" || tok() != "=") {
-    return error();
-  }
 
   llvm::SmallVector<TypeLifetimes> fn_lifetimes;
   bool has_this_lifetimes = false;
@@ -210,7 +246,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
   const clang::AnnotateAttr* lifetime_annotation = nullptr;
   for (const clang::Attr* attr : func->attrs()) {
     if (auto annotate = clang::dyn_cast<clang::AnnotateAttr>(attr)) {
-      if (annotate->getAnnotation().startswith("lifetimes")) {
+      if (annotate->getAnnotation() == "lifetimes") {
         if (lifetime_annotation != nullptr) {
           return llvm::createStringError(
               llvm::inconvertibleErrorCode(),
@@ -223,9 +259,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
     }
   }
   if (lifetime_annotation) {
-    return ParseLifetimeAnnotations(func, symbol_table,
-                                    lifetime_annotation->getAnnotation(),
-                                    lifetime_annotation->getLoc());
+    return ParseLifetimeAnnotations(func, symbol_table, lifetime_annotation);
   }
 
   std::function<llvm::Expected<Lifetime>()> elided_lifetime_factory;
