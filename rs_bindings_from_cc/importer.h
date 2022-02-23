@@ -124,6 +124,7 @@ class Importer {
   LookupResult ImportFunction(clang::FunctionDecl* function_decl);
   LookupResult ImportRecord(clang::CXXRecordDecl* record_decl);
   LookupResult ImportTypedefName(clang::TypedefNameDecl* typedef_name_decl);
+  LookupResult ImportEnum(clang::EnumDecl* enum_decl);
 
   absl::StatusOr<std::vector<Field>> ImportFields(
       clang::CXXRecordDecl* record_decl);

@@ -6,6 +6,8 @@
 // `rs_bindings_from_cc/ir.h` for more information.
 use anyhow::{bail, Context, Result};
 use itertools::Itertools;
+use proc_macro2::{Literal, TokenStream};
+use quote::{ToTokens, TokenStreamExt};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -131,6 +133,22 @@ pub struct Identifier {
 impl fmt::Debug for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&format!("\"{}\"", &self.identifier))
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+pub struct IntegerConstant {
+    pub is_negative: bool,
+    pub wrapped_value: u64,
+}
+
+impl ToTokens for IntegerConstant {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.append(if self.is_negative {
+            Literal::i64_unsuffixed(self.wrapped_value as i64)
+        } else {
+            Literal::u64_unsuffixed(self.wrapped_value)
+        })
     }
 }
 
@@ -367,6 +385,21 @@ impl Record {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Enum {
+    pub identifier: Identifier,
+    pub id: DeclId,
+    pub owning_target: BlazeLabel,
+    pub underlying_type: MappedType,
+    pub enumerators: Vec<Enumerator>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Enumerator {
+    pub identifier: Identifier,
+    pub value: IntegerConstant,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TypeAlias {
     pub identifier: Identifier,
     pub id: DeclId,
@@ -397,6 +430,7 @@ pub struct Comment {
 pub enum Item {
     Func(Func),
     Record(Record),
+    Enum(Enum),
     TypeAlias(TypeAlias),
     UnsupportedItem(UnsupportedItem),
     Comment(Comment),

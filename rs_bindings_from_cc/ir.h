@@ -26,6 +26,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
 #include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
@@ -253,6 +254,30 @@ class Identifier {
 inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
   return o << std::setw(internal::kJsonIndent) << id.Ident();
 }
+
+// An integer value in the range [-2**63, 2**64). This is intended to be used
+// to produce integer literals in Rust code while specifying the type
+// out-of-band.
+class IntegerConstant {
+ public:
+  explicit IntegerConstant(const llvm::APSInt& value) {
+    CHECK(value.getSignificantBits() <= 64)
+        << "enumerator value unexpectedly had more than 64 bits";
+    is_negative_ = value < 0;
+    wrapped_value_ = static_cast<uint64_t>(value.getExtValue());
+  }
+  IntegerConstant(const IntegerConstant& other) = default;
+  IntegerConstant& operator=(const IntegerConstant& other) = default;
+
+  nlohmann::json ToJson() const;
+
+ private:
+  // value < 0
+  bool is_negative_;
+
+  // value (mod 2**64)
+  uint64_t wrapped_value_;
+};
 
 class Operator {
  public:
@@ -498,6 +523,23 @@ struct Record {
   bool is_final = false;
 };
 
+struct Enumerator {
+  nlohmann::json ToJson() const;
+
+  Identifier identifier;
+  IntegerConstant value;
+};
+
+struct Enum {
+  nlohmann::json ToJson() const;
+
+  Identifier identifier;
+  DeclId id;
+  BlazeLabel owning_target;
+  MappedType underlying_type;
+  std::vector<Enumerator> enumerators;
+};
+
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
   return o << std::setw(internal::kJsonIndent) << r.ToJson();
 }
@@ -567,7 +609,8 @@ struct IR {
   std::vector<HeaderName> used_headers;
   BlazeLabel current_target;
 
-  using Item = std::variant<Func, Record, TypeAlias, UnsupportedItem, Comment>;
+  using Item =
+      std::variant<Func, Record, Enum, TypeAlias, UnsupportedItem, Comment>;
   std::vector<Item> items;
 };
 

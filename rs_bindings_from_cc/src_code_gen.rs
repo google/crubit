@@ -846,6 +846,32 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
     derives
 }
 
+fn generate_enum(enum_: &Enum, ir: &IR) -> Result<TokenStream> {
+    let name = make_rs_ident(&enum_.identifier.identifier);
+    let underlying_type = format_rs_type(&enum_.underlying_type.rs_type, ir, &HashMap::new())?;
+    let enumerator_names =
+        enum_.enumerators.iter().map(|enumerator| make_rs_ident(&enumerator.identifier.identifier));
+    let enumerator_values = enum_.enumerators.iter().map(|enumerator| enumerator.value);
+    Ok(quote! {
+        #[repr(transparent)]
+        #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+        pub struct #name(#underlying_type);
+        impl #name {
+            #(pub const #enumerator_names: #name = #name(#enumerator_values);)*
+        }
+        impl From<#underlying_type> for #name {
+            fn from(value: #underlying_type) -> #name {
+                #name(v)
+            }
+        }
+        impl From<#name> for #underlying_type {
+            fn from(value: #name) -> #underlying_type {
+                v.0
+            }
+        }
+    })
+}
+
 fn generate_type_alias(type_alias: &TypeAlias, ir: &IR) -> Result<TokenStream> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
     let underlying_type = format_rs_type(&type_alias.underlying_type.rs_type, ir, &HashMap::new())
@@ -945,6 +971,15 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
                 items.push(snippet.tokens);
                 assertions.push(assertions_snippet.tokens);
                 has_record = true;
+            }
+            Item::Enum(enum_) => {
+                if !ir.is_current_target(&enum_.owning_target)
+                    && !ir.is_stdlib_target(&enum_.owning_target)
+                {
+                    continue;
+                }
+                items.push(generate_enum(enum_, ir)?);
+                continue;
             }
             Item::TypeAlias(type_alias) => {
                 if !ir.is_current_target(&type_alias.owning_target)
@@ -2551,6 +2586,194 @@ mod tests {
                 #[repr(C)]
                 pub struct Struct {
                     field: [std::mem::MaybeUninit<u8>; 1],
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_basic() -> Result<()> {
+        let ir = ir_from_cc("enum Color { kRed = 5, kBlue };")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Color(u32);
+                impl Color {
+                    pub const kRed: Color = Color(5);
+                    pub const kBlue: Color = Color(6);
+                }
+                impl From<u32> for Color {
+                    fn from(value: u32) -> Color {
+                        Color(v)
+                    }
+                }
+                impl From<Color> for u32 {
+                    fn from(value: Color) -> u32 {
+                        v.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_scoped_enum_basic() -> Result<()> {
+        let ir = ir_from_cc("enum class Color { kRed = -5, kBlue };")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Color(i32);
+                impl Color {
+                    pub const kRed: Color = Color(-5);
+                    pub const kBlue: Color = Color(-4);
+                }
+                impl From<i32> for Color {
+                    fn from(value: i32) -> Color {
+                        Color(v)
+                    }
+                }
+                impl From<Color> for i32 {
+                    fn from(value: Color) -> i32 {
+                        v.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_with_64_bit_signed_vals() -> Result<()> {
+        let ir = ir_from_cc(
+            "enum Color : long { kViolet = -9223372036854775807 - 1LL, kRed = -5, kBlue, kGreen = 3, kMagenta = 9223372036854775807 };",
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Color(i64);
+                impl Color {
+                    pub const kViolet: Color = Color(-9223372036854775808);
+                    pub const kRed: Color = Color(-5);
+                    pub const kBlue: Color = Color(-4);
+                    pub const kGreen: Color = Color(3);
+                    pub const kMagenta: Color = Color(9223372036854775807);
+                }
+                impl From<i64> for Color {
+                    fn from(value: i64) -> Color {
+                        Color(v)
+                    }
+                }
+                impl From<Color> for i64 {
+                    fn from(value: Color) -> i64 {
+                        v.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_with_64_bit_unsigned_vals() -> Result<()> {
+        let ir = ir_from_cc(
+            "enum Color: unsigned long { kRed, kBlue, kLimeGreen = 18446744073709551615 };",
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Color(u64);
+                impl Color {
+                    pub const kRed: Color = Color(0);
+                    pub const kBlue: Color = Color(1);
+                    pub const kLimeGreen: Color = Color(18446744073709551615);
+                }
+                impl From<u64> for Color {
+                    fn from(value: u64) -> Color {
+                        Color(v)
+                    }
+                }
+                impl From<Color> for u64 {
+                    fn from(value: Color) -> u64 {
+                        v.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_with_32_bit_signed_vals() -> Result<()> {
+        let ir = ir_from_cc(
+            "enum Color { kViolet = -2147483647 - 1, kRed = -5, kBlue, kGreen = 3, kMagenta = 2147483647 };",
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Color(i32);
+                impl Color {
+                    pub const kViolet: Color = Color(-2147483648);
+                    pub const kRed: Color = Color(-5);
+                    pub const kBlue: Color = Color(-4);
+                    pub const kGreen: Color = Color(3);
+                    pub const kMagenta: Color = Color(2147483647);
+                }
+                impl From<i32> for Color {
+                    fn from(value: i32) -> Color {
+                        Color(v)
+                    }
+                }
+                impl From<Color> for i32 {
+                    fn from(value: Color) -> i32 {
+                        v.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
+        let ir = ir_from_cc("enum Color: unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };")?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Color(u32);
+                impl Color {
+                    pub const kRed: Color = Color(0);
+                    pub const kBlue: Color = Color(1);
+                    pub const kLimeGreen: Color = Color(4294967295);
+                }
+                impl From<u32> for Color {
+                    fn from(value: u32) -> Color {
+                        Color(v)
+                    }
+                }
+                impl From<Color> for u32 {
+                    fn from(value: Color) -> u32 {
+                        v.0
+                    }
                 }
             }
         );

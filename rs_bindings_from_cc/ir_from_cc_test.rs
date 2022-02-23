@@ -19,16 +19,6 @@ use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches};
 fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec<Item>) {
     let actual = ir_from_cc(cc_src).unwrap();
 
-    for (ref mut expected_item, actual_item) in expected.iter_mut().zip(actual.items()) {
-        // TODO(hlopko): Handle MappedTypes as well.
-        match (expected_item, actual_item) {
-            (Item::Record(ref mut expected_record), Item::Record(actual_record)) => {
-                expected_record.id = actual_record.id;
-            }
-            (_, _) => (),
-        }
-    }
-
     // Filter out predefined builtin types.
     let actual_items = actual
         .items()
@@ -37,6 +27,19 @@ fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec
                 if typedef.identifier.identifier == "__builtin_ms_va_list")
         })
         .collect_vec();
+
+    for (expected_item, actual_item) in expected.iter_mut().zip(actual_items.iter()) {
+        // TODO(hlopko): Handle MappedTypes as well.
+        match (expected_item, actual_item) {
+            (Item::Record(ref mut expected_record), Item::Record(actual_record)) => {
+                expected_record.id = actual_record.id;
+            }
+            (Item::Enum(ref mut expected_enum), Item::Enum(actual_enum)) => {
+                expected_enum.id = actual_enum.id;
+            }
+            (_, _) => (),
+        }
+    }
 
     assert_eq!(actual_items, expected.iter().collect_vec());
 }
@@ -1194,4 +1197,18 @@ fn test_volatile_is_unsupported() {
     let ir = ir_from_cc("volatile int* foo();").unwrap();
     let f = ir.unsupported_items().find(|i| i.message.contains("volatile")).unwrap();
     assert_eq!("foo", f.name);
+}
+
+#[test]
+fn test_unnamed_enum_unsupported() {
+    let ir = ir_from_cc("enum { kFoo = 1, kBar = 2 };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "(anonymous)",
+                message: "Unnamed enums are not supported yet" ...
+            }
+        }
+    );
 }

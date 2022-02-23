@@ -471,6 +471,8 @@ Importer::LookupResult Importer::ImportDecl(clang::Decl* decl) {
     // error messages for those decls, so we're visiting.
     ImportDeclsFromDeclContext(record_decl);
     return result;
+  } else if (auto* enum_decl = clang::dyn_cast<clang::EnumDecl>(decl)) {
+    return ImportEnum(enum_decl);
   } else if (auto* typedef_name_decl =
                  clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
     return ImportTypedefName(typedef_name_decl);
@@ -797,6 +799,58 @@ Importer::LookupResult Importer::ImportRecord(
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
       .is_trivial_abi = record_decl->canPassInRegisters(),
       .is_final = record_decl->isEffectivelyFinal()});
+}
+
+Importer::LookupResult Importer::ImportEnum(clang::EnumDecl* enum_decl) {
+  std::optional<Identifier> enum_name = GetTranslatedIdentifier(enum_decl);
+  if (!enum_name.has_value()) {
+    // TODO(b/208945197): This corresponds to an unnamed enum declaration like
+    // `enum { kFoo = 1 }`, which only exists to provide constants into the
+    // surrounding scope and doesn't actually introduce an enum namespace. It
+    // seems like it should probably be handled with other constants.
+    return LookupResult("Unnamed enums are not supported yet");
+  }
+
+  clang::QualType cc_type = enum_decl->getIntegerType();
+  if (cc_type.isNull()) {
+    // According to https://clang.llvm.org/doxygen/classclang_1_1EnumDecl.html,
+    // getIntegerType "returns a null QualType for an enum forward definition
+    // with no fixed underlying type." The same page implies that this can't
+    // occur in C++ nor in standard C, but clang supports enums like this
+    // in C "as an extension".
+    return LookupResult(
+        "Forward declared enums without type specifiers are not supported");
+  }
+  std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
+  absl::StatusOr<MappedType> type = ConvertType(cc_type, no_lifetimes);
+  if (!type.ok()) {
+    return LookupResult(type.status().ToString());
+  }
+
+  std::vector<Enumerator> enumerators;
+  enumerators.reserve(std::distance(enum_decl->enumerators().begin(),
+                                    enum_decl->enumerators().end()));
+  for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
+    std::optional<Identifier> enumerator_name =
+        GetTranslatedIdentifier(enumerator);
+    if (!enumerator_name.has_value()) {
+      // It's not clear that this case is possible
+      return LookupResult("importing enum failed: missing enumerator name");
+    }
+
+    enumerators.push_back(Enumerator{
+        .identifier = *enumerator_name,
+        .value = IntegerConstant(enumerator->getInitVal()),
+    });
+  }
+
+  return LookupResult(Enum{
+      .identifier = *enum_name,
+      .id = GenerateDeclId(enum_decl),
+      .owning_target = GetOwningTarget(enum_decl),
+      .underlying_type = *std::move(type),
+      .enumerators = enumerators,
+  });
 }
 
 Importer::LookupResult Importer::ImportTypedefName(

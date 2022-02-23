@@ -182,6 +182,13 @@ nlohmann::json Identifier::ToJson() const {
   return result;
 }
 
+nlohmann::json IntegerConstant::ToJson() const {
+  nlohmann::json result;
+  result["is_negative"] = is_negative_;
+  result["wrapped_value"] = wrapped_value_;
+  return result;
+}
+
 nlohmann::json Operator::ToJson() const {
   nlohmann::json result;
   result["name"] = name_;
@@ -362,6 +369,26 @@ nlohmann::json Record::ToJson() const {
 
   nlohmann::json item;
   item["Record"] = std::move(record);
+  return item;
+}
+
+nlohmann::json Enumerator::ToJson() const {
+  nlohmann::json result;
+  result["identifier"] = identifier.ToJson();
+  result["value"] = value.ToJson();
+  return result;
+}
+
+nlohmann::json Enum::ToJson() const {
+  nlohmann::json enum_ir;
+  enum_ir["identifier"] = identifier.ToJson();
+  enum_ir["id"] = id.value();
+  enum_ir["owning_target"] = owning_target.value();
+  enum_ir["underlying_type"] = underlying_type.ToJson();
+  enum_ir["enumerators"] = VectorToJson(enumerators);
+
+  nlohmann::json item;
+  item["Enum"] = std::move(enum_ir);
   return item;
 }
 
