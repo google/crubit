@@ -119,21 +119,18 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  rs_bindings_from_cc::BlazeLabel current_target;
-  {
-    auto it = headers_to_targets.find(
-        rs_bindings_from_cc::HeaderName(public_headers[0]));
+  auto find_header = [&](const std::string& header) {
+    auto it = headers_to_targets.find(rs_bindings_from_cc::HeaderName(header));
     QCHECK(it != headers_to_targets.end())
-        << "Couldn't find header '" << public_headers[0] << "' in "
+        << "Couldn't find header '" << header << "' in "
         << "the `headers_to_target` map derived from the "
         << "--targets_and_headers cmdline argument";
-    current_target = it->second;
-  }
-
+    return it->second;
+  };
+  rs_bindings_from_cc::BlazeLabel current_target =
+      find_header(public_headers[0]);
   for (const auto& public_header : public_headers) {
-    rs_bindings_from_cc::BlazeLabel header_target =
-        headers_to_targets.find(rs_bindings_from_cc::HeaderName(public_header))
-            ->second;
+    rs_bindings_from_cc::BlazeLabel header_target = find_header(public_header);
     QCHECK(current_target == header_target)
         << "Expected all public headers to belong to the current target '"
         << current_target << "', but header '" << public_header
