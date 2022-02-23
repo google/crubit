@@ -22,8 +22,6 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/TemplateBase.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Lex/Pragma.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Lex/Preprocessor.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMapInfo.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Hashing.h"
@@ -50,9 +48,12 @@ std::string DebugString(const TypeLifetimes& lifetimes,
 
 llvm::SmallVector<std::string> GetLifetimeParameters(
     const clang::CXXRecordDecl* cxx_record) {
+  // TODO(mboehme): Report errors as Clang diagnostics, not through
+  // llvm::report_fatal_error().
+
   const clang::AnnotateAttr* lifetime_params_attr = nullptr;
   for (auto annotate : cxx_record->specific_attrs<clang::AnnotateAttr>()) {
-    if (annotate->getAnnotation().startswith("lifetime_params")) {
+    if (annotate->getAnnotation() == "lifetime_params") {
       if (lifetime_params_attr) {
         llvm::report_fatal_error("repeated lifetime annotation");
       }
@@ -63,41 +64,15 @@ llvm::SmallVector<std::string> GetLifetimeParameters(
     return {};
   }
 
-  // The lexer requires a null character at the end of the string.
-  std::string annotation(lifetime_params_attr->getAnnotation().data(),
-                         lifetime_params_attr->getAnnotationLength());
-
-  const char* end = annotation.data() + annotation.size();
-
-  clang::SourceLocation source_loc = lifetime_params_attr->getLoc();
-
-  clang::Lexer lexer(source_loc, clang::LangOptions(), annotation.data(),
-                     annotation.data(), end);
-
-  auto tok = [&]() -> llvm::StringRef {
-    clang::Token token;
-    if (lexer.getBufferLocation() != end) {
-      lexer.LexFromRawLexer(token);
-      return llvm::StringRef(annotation.data() +
-                                 token.getLocation().getRawEncoding() -
-                                 source_loc.getRawEncoding(),
-                             token.getLength());
-    }
-    return "";
-  };
-
-  // Consume the "lifetime_params =" initial part.
-  if (tok() != "lifetime_params" || tok() != "=") {
-    llvm::report_fatal_error("invalid lifetime annotation");
-  }
-
   llvm::SmallVector<std::string> ret;
-
-  for (llvm::StringRef token; !(token = tok()).empty();) {
-    if (token == ",") {
-      continue;
+  for (const auto& arg : lifetime_params_attr->args()) {
+    llvm::StringRef lifetime;
+    if (llvm::Error err =
+            EvaluateAsStringLiteral(arg, cxx_record->getASTContext())
+                .moveInto(lifetime)) {
+      llvm::report_fatal_error(llvm::StringRef(toString(std::move(err))));
     }
-    ret.push_back(token.str());
+    ret.push_back(lifetime.str());
   }
 
   return ret;
@@ -403,6 +378,34 @@ ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(
     llvm::SmallVector<std::string> type_lifetime_args) const {
   return GetObjectLifetimesForTypeInContext(type, std::move(type_lifetime_args),
                                             "");
+}
+
+llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
+    const clang::Expr* expr, const clang::ASTContext& ast_context) {
+  auto error = []() {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        "cannot evaluate argument as a string literal");
+  };
+
+  clang::Expr::EvalResult eval_result;
+  if (!expr->EvaluateAsConstantExpr(eval_result, ast_context) ||
+      !eval_result.Val.isLValue()) {
+    return error();
+  }
+
+  const auto* eval_result_expr =
+      eval_result.Val.getLValueBase().dyn_cast<const clang::Expr*>();
+  if (!eval_result_expr) {
+    return error();
+  }
+
+  const auto* strlit = clang::dyn_cast<clang::StringLiteral>(eval_result_expr);
+  if (!strlit) {
+    return error();
+  }
+
+  return strlit->getString();
 }
 
 }  // namespace devtools_rust

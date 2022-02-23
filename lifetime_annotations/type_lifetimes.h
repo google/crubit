@@ -19,6 +19,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMapInfo.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
 namespace devtools_rust {
 
@@ -200,6 +201,13 @@ class ObjectLifetimes {
 // google3/devtools/cymbal/clang_tidy/runtime/lifetimes.cc
 const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
     clang::QualType type);
+
+// Evaluate the given expression as a string literal. Returns an error if the
+// expression is not a string literal.
+// This is exposed here so that it can be used in other places that need to
+// evaluate string literal arguments of `annotate` attributes.
+llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
+    const clang::Expr* expr, const clang::ASTContext& ast_context);
 
 }  // namespace devtools_rust
 

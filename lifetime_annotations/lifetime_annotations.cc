@@ -107,34 +107,6 @@ llvm::Expected<llvm::SmallVector<Lifetime>> GetThisLifetimes(
       attrs, 1, symbol_table, elided_lifetime_factory, method->getASTContext());
 }
 
-llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
-    const clang::Expr* arg, const clang::ASTContext& ast_context) {
-  auto error = []() {
-    return llvm::createStringError(
-        llvm::inconvertibleErrorCode(),
-        "cannot evaluate argument as a string literal");
-  };
-
-  clang::Expr::EvalResult eval_result;
-  if (!arg->EvaluateAsConstantExpr(eval_result, ast_context) ||
-      !eval_result.Val.isLValue()) {
-    return error();
-  }
-
-  const auto* expr =
-      eval_result.Val.getLValueBase().dyn_cast<const clang::Expr*>();
-  if (!expr) {
-    return error();
-  }
-
-  const auto* strlit = clang::dyn_cast<clang::StringLiteral>(expr);
-  if (!strlit) {
-    return error();
-  }
-
-  return strlit->getString();
-}
-
 // Parse a "(a, b): (a, b), (), a -> b"-style annotation into a
 // FunctionLifetimes.
 // TODO(veluca): this is a temporary solution.
