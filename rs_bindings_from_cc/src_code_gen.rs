@@ -3288,6 +3288,30 @@ mod tests {
     }
 
     #[test]
+    fn test_annotated_lifetimes() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"[[clang::annotate("lifetimes", "a, a -> a")]]
+          int& f(int& i1, int& i2);
+          "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn f<'a>(i1: &'a mut i32, i2: &'a mut i32) -> &'a mut i32 { ... }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub(crate) fn __rust_thunk___Z1fRiS_<'a>(i1: &'a mut i32, i2: &'a mut i32)
+                    -> &'a mut i32;
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_format_generic_params() -> Result<()> {
         assert_rs_matches!(format_generic_params(std::iter::empty::<syn::Ident>()), quote! {});
 
