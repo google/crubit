@@ -254,7 +254,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
         })
         .collect::<Result<Vec<_>>>()?;
-    let is_unsafe = param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
+    let is_unsafe = param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }))
+        && func.name != UnqualifiedIdentifier::Destructor;
 
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
@@ -480,7 +481,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
 
         let func_body = match &func.name {
-            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
+            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) | UnqualifiedIdentifier::Destructor  => {
                 let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
                 // Only need to wrap everything in an `unsafe { ... }` block if
                 // the *whole* api function is safe.
@@ -488,9 +489,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     body = quote! { unsafe { #body } };
                 }
                 body
-            }
-            UnqualifiedIdentifier::Destructor => {
-                quote! { unsafe { crate::detail::#thunk_ident( #( #thunk_args ),* ) } }
             }
             UnqualifiedIdentifier::Constructor => {
                 // SAFETY: A user-defined constructor is not guaranteed to
@@ -522,7 +520,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             ),
             ImplKind::Trait { .. } => {
                 // Currently supported bindings have no unsafe trait functions.
-                assert!(!is_unsafe || func.name == UnqualifiedIdentifier::Destructor);
+                assert!(!is_unsafe);
                 (quote! {}, quote! {})
             }
         };
