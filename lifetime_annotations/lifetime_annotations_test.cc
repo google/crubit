@@ -141,57 +141,6 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_OneInputLifetime) {
               IsOkAndHolds(LifetimesAre({{"f", "a -> (a, a)"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest, FunctionPointerLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        void f(void (*)());
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, FunctionPointerAsTypedefLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        typedef void (*FunctionPointer)();
-        void f(FunctionPointer hook);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, FunctionReferenceLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        typedef void (&FunctionReference)();
-        void f(FunctionReference hook);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, FunctionReferenceAsTypedefLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        void f(void (&)());
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, ArrayParamLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        void f(int pair[2]);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, ArrayParamAsTypedefLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        typesef int Arr[2];
-        void f(Arr);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
-}
-
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_NoOutputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
@@ -220,121 +169,6 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Method) {
               IsOkAndHolds(LifetimesAre({{"S::method", "a: b, c -> (a, a)"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        int* f();
-  )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Cannot elide output lifetimes")));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        #pragma clang lifetime_elision
-        int* f(int**);
-  )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Cannot elide output lifetimes")));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsNoLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
-        [[clang::annotate("lifetimes", "()")]]
-        void f(int);
-  )_"),
-              IsOkAndHolds(LifetimesAre({{"f", "()"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsSimple) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "a -> a")]]
-        int* f(int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a -> a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsMultiplePtr) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "(a, b) -> a")]]
-        int* f(int**);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "(a, b) -> a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsMultipleArguments) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "a, b -> a")]]
-        int* f(int*, int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, b -> a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsNoReturn) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "a, b")]]
-        void f(int*, int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, b"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsNoLifetimeParam) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "a, (), a -> a")]]
-        int* f(int*, int, int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, (), a -> a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsMethod) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        struct S {
-          [[clang::annotate("lifetimes", "a: -> a")]]
-          int* f();
-        };
-  )"),
-              IsOkAndHolds(LifetimesAre({{"S::f", "a: -> a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsMethodWithParam) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        struct S {
-          [[clang::annotate("lifetimes", "a: b -> a")]]
-          int* f(int*);
-        };
-  )"),
-              IsOkAndHolds(LifetimesAre({{"S::f", "a: b -> a"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsInvalid_MissingThis) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        struct S {
-          [[clang::annotate("lifetimes", "-> a")]]
-          int* f();
-        };
-  )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Invalid lifetime annotation")));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsInvalid_ThisOnFreeFunction) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "a: a -> a")]]
-        int* f(int*);
-  )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Invalid lifetime annotation")));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationsInvalid_WrongNumber) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
-        [[clang::annotate("lifetimes", "a -> a")]]
-        int* f(int**);
-  )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Invalid lifetime annotation")));
-}
-
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_ExplicitlyDefaultedCtor) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
           #pragma clang lifetime_elision
@@ -355,6 +189,174 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_ImplicitlyDefaultedCtor) {
           void foo() { S s; }
           )"),
       IsOkAndHolds(LifetimesContain({{"S::S[void (void) noexcept]", "a:"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_ArrayParamLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        void f(int pair[2]);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_ArrayParamAsTypedefLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        typesef int Arr[2];
+        void f(Arr);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionPointerLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        void f(void (*)());
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeElision_FunctionPointerAsTypedefLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        typedef void (*FunctionPointer)();
+        void f(FunctionPointer hook);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_FunctionReferenceLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        typedef void (&FunctionReference)();
+        void f(FunctionReference hook);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeElision_FunctionReferenceAsTypedefLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        void f(void (&)());
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        int* f();
+  )"),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Cannot elide output lifetimes")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        int* f(int**);
+  )"),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Cannot elide output lifetimes")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+        [[clang::annotate("lifetimes", "()")]]
+        void f(int);
+  )_"),
+              IsOkAndHolds(LifetimesAre({{"f", "()"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Simple) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a -> a")]]
+        int* f(int*);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultiplePtr) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "(a, b) -> a")]]
+        int* f(int**);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "(a, b) -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultipleArguments) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a, b -> a")]]
+        int* f(int*, int*);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a, b -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoReturn) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a, b")]]
+        void f(int*, int*);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a, b"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimeParam) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a, (), a -> a")]]
+        int* f(int*, int, int*);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a, (), a -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Method) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        struct S {
+          [[clang::annotate("lifetimes", "a: -> a")]]
+          int* f();
+        };
+  )"),
+              IsOkAndHolds(LifetimesAre({{"S::f", "a: -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithParam) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        struct S {
+          [[clang::annotate("lifetimes", "a: b -> a")]]
+          int* f(int*);
+        };
+  )"),
+              IsOkAndHolds(LifetimesAre({{"S::f", "a: b -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_MissingThis) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        struct S {
+          [[clang::annotate("lifetimes", "-> a")]]
+          int* f();
+        };
+  )"),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Invalid lifetime annotation")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_ThisOnFreeFunction) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a: a -> a")]]
+        int* f(int*);
+  )"),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Invalid lifetime annotation")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a -> a")]]
+        int* f(int**);
+  )"),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Invalid lifetime annotation")));
 }
 
 }  // namespace
