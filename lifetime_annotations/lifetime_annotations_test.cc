@@ -44,7 +44,7 @@ class LifetimeAnnotationsTest : public testing::Test {
       const clang::tooling::FileContentMappings& file_contents =
           clang::tooling::FileContentMappings()) {
     absl::StatusOr<NamedFuncLifetimes> result;
-    runOnCodeWithLifetimeHandlers(
+    bool success = runOnCodeWithLifetimeHandlers(
         llvm::StringRef(code.data(), code.size()),
         [&result](clang::ASTContext& ast_context,
                   const LifetimeAnnotationContext& lifetime_context) {
@@ -92,6 +92,11 @@ class LifetimeAnnotationsTest : public testing::Test {
         },
         {}, file_contents);
 
+    if (!success) {
+      return absl::UnknownError(
+          "Error extracting lifetimes. (Compilation error?)");
+    }
+
     return result;
   }
 };
@@ -101,6 +106,15 @@ TEST_F(LifetimeAnnotationsTest, NoLifetimes) {
         int f(int);
   )"),
               IsOkAndHolds(LifetimesAre({{"f", "()"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, Failure_CompileError) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(R"(
+        undefined f(undefined);
+  )"),
+      StatusIs(absl::StatusCode::kUnknown,
+               StartsWith("Error extracting lifetimes. (Compilation error?)")));
 }
 
 TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsNoLifetimeElision) {
@@ -202,7 +216,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_ArrayParamLifetimes) {
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_ArrayParamAsTypedefLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
-        typesef int Arr[2];
+        typedef int Arr[2];
         void f(Arr);
   )"),
               IsOkAndHolds(LifetimesAre({{"f", "a"}})));
