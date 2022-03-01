@@ -135,7 +135,8 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
     return error(toString(std::move(err)));
   }
   std::string lifetimes_str = lifetimes.str();
-  clang::Lexer lexer(attr->getLoc(), clang::LangOptions(), lifetimes_str.data(),
+  clang::LangOptions lang_opts;
+  clang::Lexer lexer(attr->getLoc(), lang_opts, lifetimes_str.data(),
                      lifetimes_str.data(),
                      lifetimes_str.data() + lifetimes_str.size());
 
