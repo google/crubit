@@ -75,11 +75,15 @@ llvm::Error AddLifetimeAnnotationsForType(
     return llvm::Error::success();
   }
 
-  clang::QualType pointee = type->getPointeeType();
-  if (!pointee.isNull()) {
+  // Instead of just checking whether `type->getPointeeType()` is non-null,
+  // check explicitly for `PointerType` and `ReferenceType` as we want to
+  // disallow other types of pointers (e.g. pointers-to-members, for which
+  // lifetimes do not make sense).
+  if (type->getAs<clang::PointerType>() ||
+      type->getAs<clang::ReferenceType>()) {
     if (llvm::Error err = AddLifetimeAnnotationsForType(
-            pointee, symbol_table, elided_lifetime_factory, ast_context,
-            lifetimes)) {
+            type->getPointeeType(), symbol_table, elided_lifetime_factory,
+            ast_context, lifetimes)) {
       return err;
     }
 

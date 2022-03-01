@@ -244,6 +244,16 @@ TEST_F(LifetimeAnnotationsTest,
               IsOkAndHolds(LifetimesAre({{"f", "a"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeElision_PointerToMemberDoesNotGetLifetime) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        struct S {};
+        void f(int S::*ptr_to_member);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "()"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
