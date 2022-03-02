@@ -31,7 +31,7 @@ function test::cmd_line_api() {
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 | \
-      grep 'please specify at least one header in --public_headers' > /dev/null" \
+      grep 'please specify --public_headers' > /dev/null" \
     "generator should show help message for --public_headers"
 
   local hdr="${TEST_TMPDIR}/hello_world.h"
@@ -65,11 +65,19 @@ EOT
 function test::do_nothing() {
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+  local hdr="no_such_file.h"
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"]}]
+EOT
+)"
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --public_headers=\"${hdr}\" \
+      --targets_and_headers=\"$(echo "${json}" | quote_escape)\" \
       --do_nothing"
 
   EXPECT_FILE_NOT_EMPTY "${rs_out}"
@@ -82,9 +90,8 @@ function test::do_nothing() {
 function test::tool_returns_nonzero_on_invalid_input() {
   local rs_out="${TEST_TMPDIR}/rs_api.rs"
   local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
-
-  # Creating outputs so we can observe if the tool deletes them.
-  touch "${rs_out}" "${cc_out}"
+  rm -rf "$rs_out"
+  rm -rf "$cc_out"
 
   local hdr="${TEST_TMPDIR}/hello_world.h"
   echo "int foo(); But this is not C++;" > "${hdr}"
@@ -101,6 +108,7 @@ EOT
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
 
+  # No output files should be created if the C++ input was invalid.
   CHECK_FILE_NOT_EXISTS "${rs_out}"
   CHECK_FILE_NOT_EXISTS "${cc_out}"
 }
