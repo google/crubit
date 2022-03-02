@@ -48,9 +48,8 @@ std::string DebugString(
       return l.DebugString();
     });
 
-// Extracts the lifetime parameters of the given record type.
-llvm::SmallVector<std::string> GetLifetimeParameters(
-    const clang::CXXRecordDecl* cxx_record);
+// Extracts the lifetime parameters of the given type.
+llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type);
 
 TypeLifetimes CreateLifetimesForType(
     clang::QualType type, std::function<Lifetime()> lifetime_factory);

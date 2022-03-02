@@ -46,10 +46,21 @@ std::string DebugString(const TypeLifetimes& lifetimes,
   return absl::StrFormat("(%s)", absl::StrJoin(parts, ", "));
 }
 
-llvm::SmallVector<std::string> GetLifetimeParameters(
-    const clang::CXXRecordDecl* cxx_record) {
-  // TODO(mboehme): Report errors as Clang diagnostics, not through
-  // llvm::report_fatal_error().
+llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
+  // TODO(mboehme):
+  // - Add support for type aliases with lifetime parameters
+  // - Report errors as Clang diagnostics, not through
+  //   llvm::report_fatal_error().
+
+  auto record = type->getAs<clang::RecordType>();
+  if (!record) {
+    return {};
+  }
+
+  auto cxx_record = record->getAsCXXRecordDecl();
+  if (!cxx_record) {
+    return {};
+  }
 
   const clang::AnnotateAttr* lifetime_params_attr = nullptr;
   for (auto annotate : cxx_record->specific_attrs<clang::AnnotateAttr>()) {
@@ -82,14 +93,12 @@ TypeLifetimes CreateLifetimesForType(
     clang::QualType type, std::function<Lifetime()> lifetime_factory) {
   assert(!type.isNull());
   TypeLifetimes ret;
-  if (auto record = type->getAs<clang::RecordType>()) {
-    if (auto cxx_record = record->getAsCXXRecordDecl()) {
-      for (const auto& lftm_param : GetLifetimeParameters(cxx_record)) {
-        (void)lftm_param;
-        ret.push_back(lifetime_factory());
-      }
-    }
+
+  for (const auto& lftm_param : GetLifetimeParameters(type)) {
+    (void)lftm_param;
+    ret.push_back(lifetime_factory());
   }
+
   // Add implicit lifetime parameters for type template parameters.
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
   if (!template_args.empty()) {
@@ -176,18 +185,14 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
 
   ValueLifetimes ret(type);
 
-  if (auto record = type->getAs<clang::RecordType>()) {
-    if (auto cxx_record = record->getAsCXXRecordDecl()) {
-      llvm::SmallVector<std::string> params = GetLifetimeParameters(cxx_record);
-      // Visit in reverse order, as we are doing a post-order traversal.
-      for (size_t i = params.size(); i-- > 0;) {
-        if (ret.lifetime_parameters_by_name_.LookupName(params[i])) {
-          llvm::report_fatal_error("duplicate lifetime parameter name");
-        }
-        ret.lifetime_parameters_by_name_.Add(params[i], type_lifetimes.back());
-        type_lifetimes = type_lifetimes.drop_back();
-      }
+  llvm::SmallVector<std::string> params = GetLifetimeParameters(type);
+  // Visit in reverse order, as we are doing a post-order traversal.
+  for (size_t i = params.size(); i-- > 0;) {
+    if (ret.lifetime_parameters_by_name_.LookupName(params[i])) {
+      llvm::report_fatal_error("duplicate lifetime parameter name");
     }
+    ret.lifetime_parameters_by_name_.Add(params[i], type_lifetimes.back());
+    type_lifetimes = type_lifetimes.drop_back();
   }
 
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
@@ -300,8 +305,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
     // Second case: struct.
     // Resolve lifetime parameters for the struct, if it has any.
     LifetimeSymbolTable lifetime_params;
-    llvm::SmallVector<std::string> params = GetLifetimeParameters(
-        type->getAs<clang::RecordType>()->getAsCXXRecordDecl());
+    llvm::SmallVector<std::string> params = GetLifetimeParameters(type);
     for (size_t i = params.size(); i-- > 0;) {
       assert(!type_lifetime_args.empty());
       auto lftm_arg = type_lifetime_args.back();
