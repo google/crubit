@@ -30,7 +30,7 @@ namespace devtools_rust {
 namespace {
 
 llvm::Expected<llvm::SmallVector<Lifetime>> GetAnnotatedOrElidedLifetimes(
-    llvm::ArrayRef<const clang::Attr*> /*attrs*/, int num_expected,
+    llvm::ArrayRef<const clang::Attr*> /*attrs*/, size_t num_expected,
     LifetimeSymbolTable& /*symbol_table*/,
     const std::function<llvm::Expected<Lifetime>()>& elided_lifetime_factory,
     const clang::ASTContext& /*ast_context*/) {
@@ -42,7 +42,7 @@ llvm::Expected<llvm::SmallVector<Lifetime>> GetAnnotatedOrElidedLifetimes(
   // TODO(mboehme): Extract lifetime annotations from `attrs` if present.
 
   // No lifetime annotations: Use elided lifetimes.
-  for (int i = 0; i < num_expected; ++i) {
+  for (size_t i = 0; i < num_expected; ++i) {
     llvm::Expected<Lifetime> maybe_lifetime = elided_lifetime_factory();
     if (maybe_lifetime) {
       lifetimes.push_back(maybe_lifetime.get());
@@ -61,6 +61,18 @@ llvm::Error AddLifetimeAnnotationsForType(
   assert(elided_lifetime_factory);
 
   llvm::SmallVector<const clang::Attr*> attrs;
+
+  size_t num_lifetime_params = GetLifetimeParameters(type).size();
+  if (num_lifetime_params > 0) {
+    llvm::Expected<llvm::SmallVector<Lifetime>> maybe_lifetime_args =
+        GetAnnotatedOrElidedLifetimes(attrs, num_lifetime_params, symbol_table,
+                                      elided_lifetime_factory, ast_context);
+    if (maybe_lifetime_args) {
+      lifetimes.append(maybe_lifetime_args.get());
+    } else {
+      return maybe_lifetime_args.takeError();
+    }
+  }
 
   const llvm::ArrayRef<clang::TemplateArgument> template_args =
       GetTemplateArgs(type);

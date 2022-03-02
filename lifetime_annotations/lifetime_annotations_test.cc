@@ -173,6 +173,15 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
               IsOkAndHolds(LifetimesAre({{"f", "a -> a"}, {"g", "a -> a"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_LifetimeParameterizedType) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        struct [[clang::annotate("lifetime_params", "s")]] string_view{};
+        string_view f(string_view);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a -> a"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_Method) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
