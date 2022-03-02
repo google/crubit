@@ -80,20 +80,56 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     return absl::InvalidArgumentError("please specify --targets_and_headers");
   }
   nlohmann::json targets_and_headers =
-      nlohmann::json::parse(std::move(targets_and_headers_str));
+      nlohmann::json::parse(std::move(targets_and_headers_str),
+                            /* cb= */ nullptr,
+                            /* allow_exceptions= */ false);
   if (!targets_and_headers.is_array()) {
     return absl::InvalidArgumentError(
         "Expected `--targets_and_headers` to be a JSON array of objects");
   }
   for (const auto& target_and_headers : targets_and_headers) {
+    if (!target_and_headers.contains("t")) {
+      return absl::InvalidArgumentError(
+          "Missing `t` field in an `--targets_and_headers` object");
+    }
+    if (!target_and_headers["t"].is_string()) {
+      return absl::InvalidArgumentError(
+          "Expected `t` fields of `--targets_and_headers` to be a string");
+    }
+    if (!target_and_headers.contains("h")) {
+      return absl::InvalidArgumentError(
+          "Missing `h` field in an `--targets_and_headers` object");
+    }
     if (!target_and_headers["h"].is_array()) {
       return absl::InvalidArgumentError(
           "Expected `h` fields of `--targets_and_headers` to be an array");
     }
-    BlazeLabel target = BlazeLabel{target_and_headers["t"]};
+    BlazeLabel target{std::string(target_and_headers["t"])};
+    if (target.value().empty()) {
+      return absl::InvalidArgumentError(
+          "Expected `t` fields of `--targets_and_headers` to be a non-empty "
+          "string");
+    }
     for (const auto& header : target_and_headers["h"]) {
-      cmdline.headers_to_targets_.insert(
-          std::make_pair(HeaderName(std::string(header)), target));
+      if (!header.is_string()) {
+        return absl::InvalidArgumentError(
+            "Expected `h` fields of `--targets_and_headers` to be an array of "
+            "strings");
+      }
+      std::string header_str(header);
+      if (header_str.empty()) {
+        return absl::InvalidArgumentError(
+            "Expected `h` fields of `--targets_and_headers` to be an array of "
+            "non-empty strings");
+      }
+      const auto [it, inserted] = cmdline.headers_to_targets_.insert(
+          std::make_pair(HeaderName(header_str), target));
+      if (!inserted) {
+        return absl::InvalidArgumentError(absl::Substitute(
+            "The `--targets_and_headers` cmdline argument assigns "
+            "`$0` header to two conflicting targets: `$1` vs `$2`",
+            header_str, target.value(), it->second.value()));
+      }
     }
   }
 
