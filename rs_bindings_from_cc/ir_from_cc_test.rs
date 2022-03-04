@@ -624,6 +624,48 @@ fn test_typedef() -> Result<()> {
 }
 
 #[test]
+fn test_typedef_duplicate() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+            struct MyStruct {};
+            using MyTypeAlias = MyStruct;
+            using MyTypeAlias = MyStruct;
+        "#,
+    )?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+          TypeAlias {
+            identifier: "MyTypeAlias",
+            ...
+          }
+        }
+    );
+    // Emitting duplicated TypeAliases is undesirable, because Rust disallows
+    // redefining a type alias even when the underlying type matches.  See
+    // https://play.rust-lang.org/?edition=2021&gist=1c6f79ed41994fa6c89472742ded2f14
+    //
+    // The implementation avoids duplicated TypeAliases in the following way:
+    // 1) LookupDecl gets called with `decl->getCanonicalDecl()`,
+    // 2) LookupDecl deduplicates via `lookup_cache_`.
+    assert_ir_not_matches!(
+        ir,
+        quote! {
+          TypeAlias {
+            identifier: "MyTypeAlias",
+            ...
+          }
+          ...
+          TypeAlias {
+            identifier: "MyTypeAlias",
+            ...
+          }
+        }
+    );
+    Ok(())
+}
+
+#[test]
 fn test_well_known_types_check_namespaces() -> Result<()> {
     // Check that we don't treat a type called `int32_t` in a user-defined
     // namespace as if it was the standard type `int32_t`.
