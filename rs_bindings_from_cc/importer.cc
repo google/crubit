@@ -773,7 +773,7 @@ Importer::LookupResult Importer::ImportRecord(
     // Importing a field failed, so note that we didn't import this RecordDecl
     // after all.
     known_type_decls_.erase(record_decl);
-    return LookupResult("Importing field failed");
+    return LookupResult(fields.status().ToString());
   }
 
   for (const Field& field : *fields) {
@@ -1090,9 +1090,9 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
     std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
     auto type = ConvertType(field_decl->getType(), no_lifetimes);
     if (!type.ok()) {
-      return absl::UnimplementedError(
-          absl::Substitute("Field type '$0' is not supported",
-                           field_decl->getType().getAsString()));
+      return absl::UnimplementedError(absl::Substitute(
+          "Type of field '$0' is not supported: $1",
+          field_decl->getNameAsString(), type.status().message()));
     }
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {

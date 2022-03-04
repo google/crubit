@@ -673,6 +673,35 @@ fn test_records_nested_in_records_not_supported_yet() {
         }}
     );
 }
+
+#[test]
+fn test_record_with_unsupported_field() -> Result<()> {
+    // Using `union` because (I assume) it won't be supported in the long-term.
+    // But... any other unsupported type would also work for this test.
+    let ir = ir_from_cc(
+        r#"
+        union MyUnion {
+          int i;
+          float f;
+        };
+        struct StructWithUnsupportedField {
+          MyUnion my_field;
+        };
+    "#,
+    )?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+              UnsupportedItem(UnsupportedItem {
+                name: "StructWithUnsupportedField",
+                message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'union MyUnion'",
+                ...
+            })
+        }
+    );
+    Ok(())
+}
+
 #[test]
 fn test_do_not_import_static_member_functions_when_record_not_supported_yet() {
     // only using nested struct as an example of a record we cannot import yet.
