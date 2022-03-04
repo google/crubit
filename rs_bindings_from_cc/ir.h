@@ -556,6 +556,7 @@ struct TypeAlias {
   Identifier identifier;
   DeclId id;
   BlazeLabel owning_target;
+  std::optional<std::string> doc_comment;
   MappedType underlying_type;
 };
 

@@ -404,6 +404,7 @@ pub struct TypeAlias {
     pub identifier: Identifier,
     pub id: DeclId,
     pub owning_target: BlazeLabel,
+    pub doc_comment: Option<String>,
     pub underlying_type: MappedType,
 }
 

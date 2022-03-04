@@ -411,6 +411,9 @@ nlohmann::json TypeAlias::ToJson() const {
   type_alias["identifier"] = identifier.ToJson();
   type_alias["id"] = id.value();
   type_alias["owning_target"] = owning_target.value();
+  if (doc_comment) {
+    type_alias["doc_comment"] = *doc_comment;
+  }
   type_alias["underlying_type"] = underlying_type.ToJson();
 
   nlohmann::json item;

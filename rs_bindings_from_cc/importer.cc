@@ -886,6 +886,7 @@ Importer::LookupResult Importer::ImportTypedefName(
         TypeAlias{.identifier = *identifier,
                   .id = GenerateDeclId(typedef_name_decl),
                   .owning_target = GetOwningTarget(typedef_name_decl),
+                  .doc_comment = GetComment(typedef_name_decl),
                   .underlying_type = *underlying_type});
   } else {
     return LookupResult(std::string(underlying_type.status().message()));

@@ -576,7 +576,10 @@ fn test_type_conversion() -> Result<()> {
 fn test_typedef() -> Result<()> {
     let ir = ir_from_cc(
         r#"
+            // Doc comment for MyTypedefDecl.
             typedef int MyTypedefDecl;
+
+            // Doc comment for MyTypeAliasDecl.
             using MyTypeAliasDecl = int;
         "#,
     )?;
@@ -604,6 +607,7 @@ fn test_typedef() -> Result<()> {
             identifier: "MyTypedefDecl",
             id: DeclId(...),
             owning_target: BlazeLabel("//test:testing_target"),
+            doc_comment: Some("Doc comment for MyTypedefDecl."),
             underlying_type: #int,
           }
         }
@@ -615,6 +619,7 @@ fn test_typedef() -> Result<()> {
             identifier: "MyTypeAliasDecl",
             id: DeclId(...),
             owning_target: BlazeLabel("//test:testing_target"),
+            doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             underlying_type: #int,
           }
         }
@@ -628,15 +633,22 @@ fn test_typedef_duplicate() -> Result<()> {
     let ir = ir_from_cc(
         r#"
             struct MyStruct {};
+            // First doc comment.
             using MyTypeAlias = MyStruct;
+            // Second doc comment.
             using MyTypeAlias = MyStruct;
         "#,
     )?;
+    // TODO(b/200064504): Figure out if we can (and want to) merge the doc
+    // comments from both C++ declarations above. (Currently only the first doc
+    // comment makes it through - maybe this is also okay in the long term?)
     assert_ir_matches!(
         ir,
         quote! {
           TypeAlias {
             identifier: "MyTypeAlias",
+            ...
+            doc_comment: Some("First doc comment."),
             ...
           }
         }

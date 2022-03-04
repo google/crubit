@@ -225,6 +225,9 @@ pub fn foo() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
+/// A type alias
+pub type MyTypeAlias = DocCommentSlashes;
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
 
 mod detail {

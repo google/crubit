@@ -872,9 +872,13 @@ fn generate_enum(enum_: &Enum, ir: &IR) -> Result<TokenStream> {
 
 fn generate_type_alias(type_alias: &TypeAlias, ir: &IR) -> Result<TokenStream> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
+    let doc_comment = generate_doc_comment(&type_alias.doc_comment);
     let underlying_type = format_rs_type(&type_alias.underlying_type.rs_type, ir, &HashMap::new())
         .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
-    Ok(quote! {pub type #ident = #underlying_type;})
+    Ok(quote! {
+        #doc_comment
+        pub type #ident = #underlying_type;
+    })
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
@@ -3517,7 +3521,9 @@ mod tests {
     fn test_type_alias() -> Result<()> {
         let ir = ir_from_cc(
             r#"
+                // MyTypedefDecl doc comment
                 typedef int MyTypedefDecl;
+
                 using MyTypeAliasDecl = int;
                 using MyTypeAliasDecl_Alias = MyTypeAliasDecl;
 
@@ -3529,7 +3535,13 @@ mod tests {
             "#,
         )?;
         let rs_api = generate_rs_api(&ir)?;
-        assert_rs_matches!(rs_api, quote! { pub type MyTypedefDecl = i32; });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[doc = " MyTypedefDecl doc comment"]
+                pub type MyTypedefDecl = i32;
+            }
+        );
         assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = i32; });
         assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl_Alias = MyTypeAliasDecl; });
         assert_rs_matches!(rs_api, quote! { pub type S_Alias = S; });
