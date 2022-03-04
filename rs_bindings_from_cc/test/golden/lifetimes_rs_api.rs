@@ -23,17 +23,17 @@ pub fn AddHookWithTypedef(hook: Option<extern "C" fn()>) {
     unsafe { crate::detail::__rust_thunk___Z18AddHookWithTypedefPFvvE(hook) }
 }
 
-// rs_bindings_from_cc/test/golden/lifetimes.h;l=9
-// Error while generating bindings for item 'AddAnotherHook':
-// Parameter #0 is not supported: Unsupported type 'void (&)(void)'
+#[inline(always)]
+pub fn AddAnotherHook(__param_0: extern "C" fn()) {
+    unsafe { crate::detail::__rust_thunk___Z14AddAnotherHookRFvvE(__param_0) }
+}
 
-// rs_bindings_from_cc/test/golden/lifetimes.h;l=11
-// Error while generating bindings for item 'FunctionReference':
-// Unsupported type 'void (&)(void)'
+pub type FunctionReference = extern "C" fn();
 
-// rs_bindings_from_cc/test/golden/lifetimes.h;l=12
-// Error while generating bindings for item 'AddAnotherHookWithTypedef':
-// Parameter #0 is not supported: Unsupported type 'FunctionReference'
+#[inline(always)]
+pub fn AddAnotherHookWithTypedef(hook: extern "C" fn()) {
+    unsafe { crate::detail::__rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook) }
+}
 
 #[inline(always)]
 pub unsafe fn ConsumeArray(pair: *mut i32) {
@@ -59,6 +59,10 @@ mod detail {
         pub(crate) fn __rust_thunk___Z7AddHookPFvvE(__param_0: Option<extern "C" fn()>);
         #[link_name = "_Z18AddHookWithTypedefPFvvE"]
         pub(crate) fn __rust_thunk___Z18AddHookWithTypedefPFvvE(hook: Option<extern "C" fn()>);
+        #[link_name = "_Z14AddAnotherHookRFvvE"]
+        pub(crate) fn __rust_thunk___Z14AddAnotherHookRFvvE(__param_0: extern "C" fn());
+        #[link_name = "_Z25AddAnotherHookWithTypedefRFvvE"]
+        pub(crate) fn __rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook: extern "C" fn());
         #[link_name = "_Z12ConsumeArrayPi"]
         pub(crate) fn __rust_thunk___Z12ConsumeArrayPi(pair: *mut i32);
         #[link_name = "_Z23ConsumeArrayWithTypedefPi"]

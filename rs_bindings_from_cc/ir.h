@@ -209,6 +209,11 @@ struct MappedType {
                             std::optional<LifetimeId> lifetime,
                             MappedType return_type,
                             std::vector<MappedType> param_types);
+  static MappedType FuncRef(absl::string_view cc_call_conv,
+                            absl::string_view rs_abi,
+                            std::optional<LifetimeId> lifetime,
+                            MappedType return_type,
+                            std::vector<MappedType> param_types);
 
   bool IsVoid() const { return rs_type.name == "()"; }
 

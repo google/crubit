@@ -948,21 +948,22 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   if (auto maybe_mapped_type = MapKnownCcTypeToRsType(type_string);
       maybe_mapped_type.has_value()) {
     type = MappedType::Simple(std::string(*maybe_mapped_type), type_string);
-  } else if (const auto* pointer_type =
-                 qual_type->getAs<clang::PointerType>()) {
+  } else if (qual_type->isPointerType() || qual_type->isLValueReferenceType()) {
+    clang::QualType pointee_type = qual_type->getPointeeType();
+    std::optional<LifetimeId> lifetime;
+    if (lifetimes.has_value()) {
+      CHECK(!lifetimes->empty());
+      lifetime = LifetimeId(lifetimes->back().Id());
+      lifetimes->pop_back();
+    }
     if (const auto* func_type =
-            pointer_type->getPointeeType()->getAs<clang::FunctionProtoType>()) {
-      std::optional<LifetimeId> lifetime;
-      if (lifetimes.has_value()) {
-        CHECK(!lifetimes->empty());
-        if (lifetimes->back() != devtools_rust::Lifetime::Static()) {
-          return absl::UnimplementedError(
-              absl::StrCat("Function pointers with non-'static lifetimes are "
-                           "not supported: ",
-                           type_string));
-        }
-        lifetime = LifetimeId(lifetimes->back().Id());
-        lifetimes->pop_back();
+            pointee_type->getAs<clang::FunctionProtoType>()) {
+      if (lifetime.has_value() &&
+          lifetime->value() != devtools_rust::Lifetime::Static().Id()) {
+        return absl::UnimplementedError(
+            absl::StrCat("Function pointers with non-'static lifetimes are "
+                         "not supported: ",
+                         type_string));
       }
       do {
         clang::StringRef cc_call_conv =
@@ -981,34 +982,26 @@ absl::StatusOr<MappedType> Importer::ConvertType(
           param_types.push_back(*param_type_status);
         }
 
-        type = MappedType::FuncPtr(cc_call_conv, *rs_abi, lifetime,
-                                   *return_type, param_types);
+        if (qual_type->isPointerType()) {
+          type = MappedType::FuncPtr(cc_call_conv, *rs_abi, lifetime,
+                                     *return_type, param_types);
+        } else {
+          DCHECK(qual_type->isLValueReferenceType());
+          type = MappedType::FuncRef(cc_call_conv, *rs_abi, lifetime,
+                                     *return_type, param_types);
+        }
       } while (false);
     } else {
-      std::optional<LifetimeId> lifetime;
-      if (lifetimes.has_value()) {
-        CHECK(!lifetimes->empty());
-        lifetime = LifetimeId(lifetimes->back().Id());
-        lifetimes->pop_back();
+      auto mapped_pointee_type = ConvertType(pointee_type, lifetimes);
+      if (mapped_pointee_type.ok()) {
+        if (qual_type->isPointerType()) {
+          type =
+              MappedType::PointerTo(*mapped_pointee_type, lifetime, nullable);
+        } else {
+          DCHECK(qual_type->isLValueReferenceType());
+          type = MappedType::LValueReferenceTo(*mapped_pointee_type, lifetime);
+        }
       }
-      auto pointee_type =
-          ConvertType(pointer_type->getPointeeType(), lifetimes);
-      if (pointee_type.ok()) {
-        type = MappedType::PointerTo(*pointee_type, lifetime, nullable);
-      }
-    }
-  } else if (const auto* lvalue_ref_type =
-                 qual_type->getAs<clang::LValueReferenceType>()) {
-    std::optional<LifetimeId> lifetime;
-    if (lifetimes.has_value()) {
-      CHECK(!lifetimes->empty());
-      lifetime = LifetimeId(lifetimes->back().Id());
-      lifetimes->pop_back();
-    }
-    auto pointee_type =
-        ConvertType(lvalue_ref_type->getPointeeType(), lifetimes);
-    if (pointee_type.ok()) {
-      type = MappedType::LValueReferenceTo(*pointee_type, lifetime);
     }
   } else if (const auto* builtin_type =
                  // Use getAsAdjusted instead of getAs so we don't desugar

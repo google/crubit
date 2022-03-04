@@ -128,6 +128,26 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
                                std::optional<LifetimeId> lifetime,
                                MappedType return_type,
                                std::vector<MappedType> param_types) {
+  MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
+                              std::move(return_type), std::move(param_types));
+
+  DCHECK_EQ(result.cc_type.name, internal::kCcLValueRef);
+  result.cc_type.name = std::string(internal::kCcPtr);
+
+  RsType rs_func_ptr_type = std::move(result.rs_type);
+  DCHECK_EQ(rs_func_ptr_type.name.substr(0, internal::kRustFuncPtr.length()),
+            internal::kRustFuncPtr);
+  result.rs_type =
+      RsType{.name = "Option", .type_args = {std::move(rs_func_ptr_type)}};
+
+  return result;
+}
+
+MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
+                               absl::string_view rs_abi,
+                               std::optional<LifetimeId> lifetime,
+                               MappedType return_type,
+                               std::vector<MappedType> param_types) {
   std::vector<MappedType> type_args = std::move(param_types);
   type_args.push_back(std::move(return_type));
 
@@ -144,7 +164,7 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
       .name = absl::StrCat(internal::kCcFuncValue, " ", cc_call_conv),
       .type_args = std::move(cc_type_args),
   };
-  CcType cc_func_ptr_type = CcType{.name = std::string(internal::kCcPtr),
+  CcType cc_func_ref_type = CcType{.name = std::string(internal::kCcLValueRef),
                                    .type_args = {cc_func_value_type}};
 
   // Rust cannot express a function *value* type, only function pointer types.
@@ -155,15 +175,9 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   if (lifetime.has_value())
     rs_func_ptr_type.lifetime_args.push_back(*std::move(lifetime));
 
-  // `fn() -> ()` is a *non-nullable* pointer in Rust. Since function pointers
-  // in C++ *can* be null, we need to wrap Rust's function pointer in
-  // `Option<...>`.
-  RsType rs_option_type =
-      RsType{.name = "Option", .type_args = {rs_func_ptr_type}};
-
   return MappedType{
-      .rs_type = std::move(rs_option_type),
-      .cc_type = std::move(cc_func_ptr_type),
+      .rs_type = std::move(rs_func_ptr_type),
+      .cc_type = std::move(cc_func_ref_type),
   };
 }
 

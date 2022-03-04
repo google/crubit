@@ -2270,6 +2270,22 @@ mod tests {
     }
 
     #[test]
+    fn test_func_ref() -> Result<()> {
+        let ir = ir_from_cc(r#" int (&get_ref_to_func())(float, double); "#)?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> i32 {
+                    unsafe { crate::detail::__rust_thunk___Z15get_ref_to_funcv() }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
         let ir = ir_from_cc(
             r#"
