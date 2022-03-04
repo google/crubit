@@ -7,6 +7,7 @@
 
 #if __cplusplus > 201703L
 #include <memory>
+#include <type_traits>
 #else
 #include <utility>
 #endif
@@ -16,14 +17,27 @@ namespace rs_api_impl_support {
 #if __cplusplus > 201703L
 
 use std::construct_at;
+use std::type_identity_t;
 
 #else
+
+namespace detail {
+
+template <class T>
+struct type_identity {
+  using type = T;
+};
+
+}  // namespace detail
 
 template <class T, class... Args>
 constexpr T* construct_at(T* p, Args&&... args) {
   return ::new (const_cast<void*>(static_cast<const volatile void*>(p)))
       T(std::forward<Args>(args)...);
 }
+
+template <class T>
+using type_identity_t = typename detail::type_identity<T>::type;
 
 #endif
 

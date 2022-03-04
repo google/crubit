@@ -1491,6 +1491,21 @@ fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
     Ok(quote! { #disambiguator_fragment #ident })
 }
 
+// Maps a Rust ABI [1] into a Clang attribute. See also
+// `ConvertCcCallConvIntoRsApi` in importer.cc.
+// [1]
+// https://doc.rust-lang.org/reference/items/functions.html#extern-function-qualifier
+fn format_cc_call_conv_as_clang_attribute(rs_abi: &str) -> Result<TokenStream> {
+    match rs_abi {
+        "cdecl" => Ok(quote! {}),
+        "fastcall" => Ok(quote! { __attribute__((fastcall)) }),
+        "stdcall" => Ok(quote! { __attribute__((stdcall)) }),
+        "thiscall" => Ok(quote! { __attribute__((thiscall)) }),
+        "vectorcall" => Ok(quote! { __attribute__((vectorcall)) }),
+        _ => bail!("Unsupported ABI: {}", rs_abi),
+    }
+}
+
 fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     let const_fragment = if ty.is_const {
         quote! {const}
@@ -1514,12 +1529,34 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 let nested_type = format_cc_type(&ty.type_args[0], ir)?;
                 Ok(quote! {#nested_type &})
             }
-            cc_type_name => {
-                if !ty.type_args.is_empty() {
-                    bail!("Type not yet supported: {:?}", ty);
+            cc_type_name => match cc_type_name.strip_prefix("#funcValue ") {
+                None => {
+                    if !ty.type_args.is_empty() {
+                        bail!("Type not yet supported: {:?}", ty);
+                    }
+                    let idents = cc_type_name.split_whitespace().map(format_cc_ident);
+                    Ok(quote! {#( #idents )* #const_fragment})
+                },
+                Some(abi) => match ty.type_args.split_last() {
+                    None => bail!("funcValue type without a return type: {:?}", ty),
+                    Some((ret_type, param_types)) => {
+                        let ret_type = format_cc_type(ret_type, ir)?;
+                        let param_types = param_types
+                            .iter()
+                            .map(|t| format_cc_type(t, ir))
+                            .collect::<Result<Vec<_>>>()?;
+                        let attr = format_cc_call_conv_as_clang_attribute(abi)?;
+                        // `type_identity_t` is used below to avoid having to
+                        // emit spiral-like syntax where some syntax elements of
+                        // an inner type (e.g. function type as below) can
+                        // surround syntax elements of an outer type (e.g. a
+                        // pointer type). Compare: `int (*foo)(int, int)` VS
+                        // `type_identity_t<int(int, int)>* foo`.
+                        Ok(quote! { rs_api_impl_support::type_identity_t<
+                                #ret_type ( #( #param_types ),* ) #attr
+                            >  })
+                    },
                 }
-                let idents = cc_type_name.split_whitespace().map(format_cc_ident);
-                Ok(quote! {#( #idents )* #const_fragment})
             }
         }
     } else {
@@ -1760,7 +1797,8 @@ mod tests {
     use anyhow::anyhow;
     use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_func, ir_record, retrieve_func};
     use token_stream_matchers::{
-        assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
+        assert_cc_matches, assert_cc_not_matches, assert_ir_matches, assert_rs_matches,
+        assert_rs_not_matches,
     };
     use token_stream_printer::tokens_to_string;
 
@@ -2298,6 +2336,95 @@ mod tests {
         // annotated with a lifetime - emit `unsafe fn(...) -> ...` in that
         // case?
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_func_ptr_with_custom_abi() -> Result<()> {
+        let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double) [[clang::vectorcall]]; "#)?;
+
+        // Verify that the test input correctly represents what we intend to
+        // test - we want [[clang::vectorcall]] to apply to the returned
+        // function pointer, but *not* apply to the `get_ptr_to_func` function.
+        // TODO(lukasza): Check that latter part after adding `Func::rs_abi`
+        // field to the IR in cl/428596835.
+        assert_ir_matches!(
+            ir,
+            quote! {
+                Func(Func {
+                    name: "get_ptr_to_func", ...
+                    return_type: MappedType {
+                        rs_type: RsType {
+                            name: Some("Option"), ...
+                            type_args: [RsType { name: Some("#funcPtr vectorcall"), ... }], ...
+                        },
+                        cc_type: CcType {
+                            name: Some("*"), ...
+                            type_args: [CcType { name: Some("#funcValue vectorcall"), ... }], ...
+                        },
+                    },
+                    ...
+                }),
+            }
+        );
+
+        // Check that the custom "vectorcall" ABI gets propagated into the
+        // return type (i.e. into `extern "vectorcall" fn`).
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[inline(always)]
+                pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> i32> {
+                    unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                }
+            }
+        );
+
+        // The usual `extern "C"` ABI should be used for "get_ptr_to_func".
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                mod detail {
+                    #[allow(unused_imports)]
+                    use super::*;
+                    extern "C" {
+                        #[link_name = "_Z15get_ptr_to_funcv"]
+                        pub(crate) fn __rust_thunk___Z15get_ptr_to_funcv()
+                        -> Option<extern "vectorcall" fn(f32, f64) -> i32>;
+                    }
+                }
+            }
+        );
+
+        // Verify that no C++ thunk got generated.
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_not_matches!(rs_api_impl, quote! { __rust_thunk___Z15get_ptr_to_funcv });
+        Ok(())
+    }
+
+    #[test]
+    fn test_func_ptr_thunk() -> Result<()> {
+        // Using an `inline` keyword forces generation of a C++ thunk in
+        // `rs_api_impl` (i.e. exercises `format_cc_type` and similar code).
+        let ir = ir_from_cc(
+            r#"
+            int multiply(int x, int y);
+            inline int (*inline_get_pointer_to_function())(int, int) {
+                return multiply;
+            }
+        "#,
+        )?;
+        let rs_api_impl = generate_rs_api_impl(&ir)?;
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" rs_api_impl_support::type_identity_t<int(int , int)>*
+                __rust_thunk___Z30inline_get_pointer_to_functionv() {
+                    return inline_get_pointer_to_function();
+                }
+            }
+        );
         Ok(())
     }
 

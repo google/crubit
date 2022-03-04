@@ -30,8 +30,9 @@ int (&get_reference_to_multiply_function())(int, int);
 // of a function pointer.  So far inserting `__fastcall` at random locations
 // failed to produce desired results... :-/
 
-// TODO(b/217419782): Add testcases for *inline* function returning a function
-// pointer (forcing generation of C++ thunks).
+inline int (*inline_get_pointer_to_multiply_function())(int, int) {
+  return multiply;
+}
 
 // TODO(b/217419782): Add testcases for pointers to functions that take or
 // return takes/returns non-trivially-movable types by value. In particular,

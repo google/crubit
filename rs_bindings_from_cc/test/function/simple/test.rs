@@ -83,8 +83,9 @@ mod tests {
     }
 
     #[test]
-    fn test_function_abi() {
-        // TODO(b/217419782): Test function pointers using more exotic calling
-        // conventions / abis.
+    fn test_function_pointer_returned_from_inline_function() {
+        let maybe_mul_fn = simple_functions::inline_get_pointer_to_multiply_function();
+        let mul_fn = maybe_mul_fn.expect("Expecting non-null / non-None function pointer");
+        assert_eq!(mul_fn(123, 456), 123 * 456);
     }
 }
