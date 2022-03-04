@@ -12,6 +12,7 @@
 
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
+#include "lifetime_annotations/pointee_type.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_format.h"
 #include "third_party/absl/strings/str_join.h"
@@ -116,7 +117,7 @@ TypeLifetimes CreateLifetimesForType(
     }
     return ret;
   }
-  clang::QualType pointee = type->getPointeeType();
+  clang::QualType pointee = PointeeType(type);
   if (pointee.isNull()) return ret;
   ret = CreateLifetimesForType(pointee, lifetime_factory);
   ret.push_back(lifetime_factory());
@@ -205,7 +206,7 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
     return ret;
   }
 
-  clang::QualType pointee_type = type->getPointeeType();
+  clang::QualType pointee_type = PointeeType(type);
   if (!pointee_type.isNull()) {
     ret.pointee_lifetimes_ = std::make_unique<ObjectLifetimes>(
         ObjectLifetimes::FromTypeLifetimes(type_lifetimes, pointee_type));
@@ -214,13 +215,13 @@ ValueLifetimes ValueLifetimes::FromTypeLifetimes(
 }
 
 ValueLifetimes ValueLifetimes::ForLifetimeLessType(clang::QualType type) {
-  assert(type->getPointeeType().isNull() && !type->isRecordType());
+  assert(PointeeType(type).isNull() && !type->isRecordType());
   return ValueLifetimes(type);
 }
 
 ValueLifetimes ValueLifetimes::ForPointerLikeType(
     clang::QualType type, const ObjectLifetimes& object_lifetimes) {
-  assert(!type->getPointeeType().isNull());
+  assert(!PointeeType(type).isNull());
   ValueLifetimes result(type);
   result.pointee_lifetimes_ =
       std::make_unique<ObjectLifetimes>(object_lifetimes);
@@ -240,7 +241,7 @@ ValueLifetimes ValueLifetimes::ForRecord(
 }
 
 const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
-  assert(!type_->getPointeeType().isNull());
+  assert(!PointeeType(type_).isNull());
   return *pointee_lifetimes_;
 }
 
@@ -358,7 +359,8 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
         ret_lifetime,
         ValueLifetimes::ForRecord(type, std::move(template_argument_lifetimes),
                                   std::move(lifetime_params)));
-  } else if (!type->getPointeeType().isNull()) {
+  } else if (clang::QualType pointee_type = PointeeType(type);
+             !pointee_type.isNull()) {
     std::string object_lifetime_parameter;
     if (!type_lifetime_args.empty()) {
       object_lifetime_parameter = std::move(type_lifetime_args.back());
@@ -366,11 +368,10 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
     }
     // Third case: pointer.
     return ObjectLifetimes(
-        ret_lifetime,
-        ValueLifetimes::ForPointerLikeType(
-            type, GetObjectLifetimesForTypeInContext(
-                      type->getPointeeType(), std::move(type_lifetime_args),
-                      object_lifetime_parameter)));
+        ret_lifetime, ValueLifetimes::ForPointerLikeType(
+                          type, GetObjectLifetimesForTypeInContext(
+                                    pointee_type, std::move(type_lifetime_args),
+                                    object_lifetime_parameter)));
   }
 
   return ObjectLifetimes(ret_lifetime,

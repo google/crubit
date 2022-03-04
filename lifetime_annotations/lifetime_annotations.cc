@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/pointee_type.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/APValue.h"
@@ -87,15 +88,11 @@ llvm::Error AddLifetimeAnnotationsForType(
     return llvm::Error::success();
   }
 
-  // Instead of just checking whether `type->getPointeeType()` is non-null,
-  // check explicitly for `PointerType` and `ReferenceType` as we want to
-  // disallow other types of pointers (e.g. pointers-to-members, for which
-  // lifetimes do not make sense).
-  if (type->getAs<clang::PointerType>() ||
-      type->getAs<clang::ReferenceType>()) {
+  if (clang::QualType pointee_type = PointeeType(type);
+      !pointee_type.isNull()) {
     if (llvm::Error err = AddLifetimeAnnotationsForType(
-            type->getPointeeType(), symbol_table, elided_lifetime_factory,
-            ast_context, lifetimes)) {
+            pointee_type, symbol_table, elided_lifetime_factory, ast_context,
+            lifetimes)) {
       return err;
     }
 
