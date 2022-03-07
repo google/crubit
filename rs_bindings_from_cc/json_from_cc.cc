@@ -11,7 +11,6 @@
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/json/src/json.hpp"
-#include "util/task/status.h"
 
 namespace rs_bindings_from_cc {
 
@@ -37,7 +36,7 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
   // this from tests, which are ok to just fail. Clang has already printed error
   // messages. If we start using this for production, then we should bridge the
   // error code into Rust.
-  CHECK_OK(ir);
+  CHECK(ir.ok()) << "- IrFromCc reported an error: " << ir.status().message();
   std::string json = ir->ToJson().dump();
   return AllocFfiU8SliceBox(MakeFfiU8Slice(json));
 }

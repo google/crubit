@@ -23,7 +23,6 @@
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/json/src/json.hpp"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
-#include "util/task/status.h"
 #include "util/task/status_macros.h"
 
 namespace {
@@ -83,6 +82,10 @@ absl::Status Main(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
   InitGoogle(argv[0], &argc, &argv, true);
-  QCHECK_OK(Main(argc, argv));
+  absl::Status status = Main(argc, argv);
+  if (!status.ok()) {
+    llvm::errs() << status.message() << "\n";
+    return -1;
+  }
   return 0;
 }
