@@ -32,7 +32,7 @@ impl Default for FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
-// Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::operator=':
@@ -40,7 +40,7 @@ impl Default for FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=6
 // Error while generating bindings for item 'FirstStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&': Unsupported clang::Type class 'RValueReference'
 
 #[inline(always)]
 pub fn first_func() -> i32 {
@@ -66,7 +66,7 @@ impl Default for SecondStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
-// Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::operator=':
@@ -74,7 +74,7 @@ impl Default for SecondStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=12
 // Error while generating bindings for item 'SecondStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&': Unsupported clang::Type class 'RValueReference'
 
 #[inline(always)]
 pub fn second_func() -> i32 {

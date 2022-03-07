@@ -34,7 +34,7 @@ impl Default for Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::Trivial':
-// Parameter #0 is not supported: Unsupported type 'struct Trivial &&'
+// Parameter #0 is not supported: Unsupported type 'struct Trivial &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::operator=':
@@ -42,7 +42,7 @@ impl Default for Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=8
 // Error while generating bindings for item 'Trivial::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Trivial &&'
+// Parameter #0 is not supported: Unsupported type 'struct Trivial &&': Unsupported clang::Type class 'RValueReference'
 
 /// Defaulted special member functions are trivial on a struct with only trivial
 /// members.
@@ -69,11 +69,11 @@ impl Default for TrivialWithDefaulted {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=19
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&'
+// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=20
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&'
+// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&': Unsupported clang::Type class 'RValueReference'
 
 /// This struct is trivial, and therefore trivially relocatable etc., but still
 /// not safe to pass by reference as it is not final.
@@ -94,7 +94,7 @@ impl !Unpin for TrivialNonfinal {}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&'
+// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
@@ -102,7 +102,7 @@ impl !Unpin for TrivialNonfinal {}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=29
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&'
+// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&': Unsupported clang::Type class 'RValueReference'
 
 #[inline(always)]
 pub fn TakesByValue(trivial: Trivial) {

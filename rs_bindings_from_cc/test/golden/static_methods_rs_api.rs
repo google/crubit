@@ -32,7 +32,7 @@ impl Default for SomeClass {
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=6
 // Error while generating bindings for item 'SomeClass::SomeClass':
-// Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
+// Parameter #0 is not supported: Unsupported type 'class SomeClass &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=6
 // Error while generating bindings for item 'SomeClass::operator=':
@@ -40,7 +40,7 @@ impl Default for SomeClass {
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=6
 // Error while generating bindings for item 'SomeClass::operator=':
-// Parameter #0 is not supported: Unsupported type 'class SomeClass &&'
+// Parameter #0 is not supported: Unsupported type 'class SomeClass &&': Unsupported clang::Type class 'RValueReference'
 
 impl SomeClass {
     /// Example of a factory method.

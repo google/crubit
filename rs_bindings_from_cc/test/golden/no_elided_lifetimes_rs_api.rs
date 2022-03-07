@@ -35,7 +35,7 @@ pub struct S {
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::S':
-// Parameter #0 is not supported: Unsupported type 'struct S &&'
+// Parameter #0 is not supported: Unsupported type 'struct S &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::operator=':
@@ -43,7 +43,7 @@ pub struct S {
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
 // Error while generating bindings for item 'S::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct S &&'
+// Parameter #0 is not supported: Unsupported type 'struct S &&': Unsupported clang::Type class 'RValueReference'
 
 impl S {
     #[inline(always)]

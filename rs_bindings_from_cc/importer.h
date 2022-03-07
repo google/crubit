@@ -171,10 +171,14 @@ class Importer {
   // specifies lifetimes for all these pointers. Once this is done, make sure
   // that all callers pass in the appropriate information, derived from
   // nullability annotations.
-  absl::StatusOr<MappedType> ConvertType(
+  absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       std::optional<devtools_rust::TypeLifetimes>& lifetimes,
       bool nullable = true) const;
+  absl::StatusOr<MappedType> ConvertType(
+      const clang::Type* type,
+      std::optional<devtools_rust::TypeLifetimes>& lifetimes,
+      bool nullable) const;
 
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 

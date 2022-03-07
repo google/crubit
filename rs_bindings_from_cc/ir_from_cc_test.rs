@@ -743,12 +743,15 @@ fn test_record_with_unsupported_field() -> Result<()> {
         };
     "#,
     )?;
+    // TODO(lukasza): Fix the error message below - saying that clang::Type
+    // class 'Record' is unsupported is incorrect (see also a corresponding
+    // TODO in Importer::ConvertType).
     assert_ir_matches!(
         ir,
         quote! {
               UnsupportedItem(UnsupportedItem {
                 name: "StructWithUnsupportedField",
-                message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'union MyUnion'",
+                message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'union MyUnion': Unsupported clang::Type class 'Record'",
                 ...
             })
         }

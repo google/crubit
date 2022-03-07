@@ -22,7 +22,7 @@ impl !Unpin for NontrivialCustomType {}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=7
 // Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Parameter #0 is not supported: Unsupported type 'struct NontrivialCustomType &&'
+// Parameter #0 is not supported: Unsupported type 'struct NontrivialCustomType &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=12
 // Error while generating bindings for item 'UnsupportedParamType':
@@ -74,7 +74,7 @@ impl Default for ContainingStruct {
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=26
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=26
 // Error while generating bindings for item 'ContainingStruct::operator=':
@@ -82,7 +82,7 @@ impl Default for ContainingStruct {
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=26
 // Error while generating bindings for item 'ContainingStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=27
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':

@@ -42,7 +42,7 @@ impl Default for Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::Foo':
-// Parameter #0 is not supported: Unsupported type 'struct Foo &&'
+// Parameter #0 is not supported: Unsupported type 'struct Foo &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::operator=':
@@ -50,7 +50,7 @@ impl Default for Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=13
 // Error while generating bindings for item 'Foo::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Foo &&'
+// Parameter #0 is not supported: Unsupported type 'struct Foo &&': Unsupported clang::Type class 'RValueReference'
 
 // b
 
@@ -84,7 +84,7 @@ impl Default for Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::Bar':
-// Parameter #0 is not supported: Unsupported type 'struct Bar &&'
+// Parameter #0 is not supported: Unsupported type 'struct Bar &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::operator=':
@@ -92,7 +92,7 @@ impl Default for Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=39
 // Error while generating bindings for item 'Bar::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Bar &&'
+// Parameter #0 is not supported: Unsupported type 'struct Bar &&': Unsupported clang::Type class 'RValueReference'
 
 /// d
 #[derive(Clone, Copy)]
@@ -114,7 +114,7 @@ impl Default for HasNoComments {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
-// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&'
+// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::operator=':
@@ -122,7 +122,7 @@ impl Default for HasNoComments {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=45
 // Error while generating bindings for item 'HasNoComments::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&'
+// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&': Unsupported clang::Type class 'RValueReference'
 
 // e
 

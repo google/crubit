@@ -32,7 +32,7 @@ impl Default for r#type {
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::type':
-// Parameter #0 is not supported: Unsupported type 'struct type &&'
+// Parameter #0 is not supported: Unsupported type 'struct type &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::operator=':
@@ -40,7 +40,7 @@ impl Default for r#type {
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=6
 // Error while generating bindings for item 'type::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct type &&'
+// Parameter #0 is not supported: Unsupported type 'struct type &&': Unsupported clang::Type class 'RValueReference'
 
 #[inline(always)]
 pub fn r#impl(r#match: i32) {

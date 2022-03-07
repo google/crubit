@@ -42,7 +42,7 @@ pub unsafe fn ConsumeArray(pair: *mut i32) {
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=16
 // Error while generating bindings for item 'Arr':
-// Unsupported type 'int[2]'
+// Unsupported type 'int[2]': Unsupported clang::Type class 'ConstantArray'
 
 #[inline(always)]
 pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut i32) {

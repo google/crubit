@@ -48,6 +48,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallPtrSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
+#include "util/task/status_macros.h"
 
 namespace rs_bindings_from_cc {
 namespace {
@@ -520,8 +521,9 @@ Importer::LookupResult Importer::ImportFunction(
         this_lifetimes = lifetimes->this_lifetimes;
         all_lifetimes.insert(this_lifetimes->begin(), this_lifetimes->end());
       }
-      auto param_type = ConvertType(method_decl->getThisType(), this_lifetimes,
-                                    /*nullable=*/false);
+      auto param_type =
+          ConvertQualType(method_decl->getThisType(), this_lifetimes,
+                          /*nullable=*/false);
       if (!param_type.ok()) {
         add_error(absl::StrCat("`this` parameter is not supported: ",
                                param_type.status().message()));
@@ -541,7 +543,7 @@ Importer::LookupResult Importer::ImportFunction(
       param_lifetimes = lifetimes->param_lifetimes[i];
       all_lifetimes.insert(param_lifetimes->begin(), param_lifetimes->end());
     }
-    auto param_type = ConvertType(param->getType(), param_lifetimes);
+    auto param_type = ConvertQualType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
       add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
                                  param_type.status().message()));
@@ -591,7 +593,7 @@ Importer::LookupResult Importer::ImportFunction(
     all_lifetimes.insert(return_lifetimes->begin(), return_lifetimes->end());
   }
   auto return_type =
-      ConvertType(function_decl->getReturnType(), return_lifetimes);
+      ConvertQualType(function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
     add_error(absl::StrCat("Return type is not supported: ",
                            return_type.status().message()));
@@ -822,7 +824,7 @@ Importer::LookupResult Importer::ImportEnum(clang::EnumDecl* enum_decl) {
         "Forward declared enums without type specifiers are not supported");
   }
   std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
-  absl::StatusOr<MappedType> type = ConvertType(cc_type, no_lifetimes);
+  absl::StatusOr<MappedType> type = ConvertQualType(cc_type, no_lifetimes);
   if (!type.ok()) {
     return LookupResult(type.status().ToString());
   }
@@ -879,7 +881,7 @@ Importer::LookupResult Importer::ImportTypedefName(
   }
   std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type =
-      ConvertType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
+      ConvertQualType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
     known_type_decls_.insert(typedef_name_decl);
     return LookupResult(
@@ -938,19 +940,17 @@ SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
 }
 
 absl::StatusOr<MappedType> Importer::ConvertType(
-    clang::QualType qual_type,
+    const clang::Type* type,
     std::optional<devtools_rust::TypeLifetimes>& lifetimes,
     bool nullable) const {
-  std::optional<MappedType> type = std::nullopt;
-  // When converting the type to a string, don't include qualifiers -- we handle
-  // these separately.
-  std::string type_string = qual_type.getUnqualifiedType().getAsString();
+  // Qualifiers are handled separately in ConvertQualType().
+  std::string type_string = clang::QualType(type, 0).getAsString();
 
   if (auto maybe_mapped_type = MapKnownCcTypeToRsType(type_string);
       maybe_mapped_type.has_value()) {
-    type = MappedType::Simple(std::string(*maybe_mapped_type), type_string);
-  } else if (qual_type->isPointerType() || qual_type->isLValueReferenceType()) {
-    clang::QualType pointee_type = qual_type->getPointeeType();
+    return MappedType::Simple(std::string(*maybe_mapped_type), type_string);
+  } else if (type->isPointerType() || type->isLValueReferenceType()) {
+    clang::QualType pointee_type = type->getPointeeType();
     std::optional<LifetimeId> lifetime;
     if (lifetimes.has_value()) {
       CHECK(!lifetimes->empty());
@@ -966,100 +966,120 @@ absl::StatusOr<MappedType> Importer::ConvertType(
                          "not supported: ",
                          type_string));
       }
-      do {
-        clang::StringRef cc_call_conv =
-            clang::FunctionType::getNameForCallConv(func_type->getCallConv());
-        absl::StatusOr<absl::string_view> rs_abi =
-            ConvertCcCallConvIntoRsAbi(func_type->getCallConv());
-        if (!rs_abi.ok()) return rs_abi.status();
 
-        auto return_type = ConvertType(func_type->getReturnType(), lifetimes);
-        if (!return_type.ok()) break;
+      clang::StringRef cc_call_conv =
+          clang::FunctionType::getNameForCallConv(func_type->getCallConv());
+      ASSIGN_OR_RETURN(absl::string_view rs_abi,
+                       ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
+      ASSIGN_OR_RETURN(MappedType mapped_return_type,
+                       ConvertQualType(func_type->getReturnType(), lifetimes));
 
-        std::vector<MappedType> param_types;
-        for (const clang::QualType& param_type : func_type->getParamTypes()) {
-          auto param_type_status = ConvertType(param_type, lifetimes);
-          if (!param_type_status.ok()) break;
-          param_types.push_back(*param_type_status);
-        }
-
-        if (qual_type->isPointerType()) {
-          type = MappedType::FuncPtr(cc_call_conv, *rs_abi, lifetime,
-                                     *return_type, param_types);
-        } else {
-          DCHECK(qual_type->isLValueReferenceType());
-          type = MappedType::FuncRef(cc_call_conv, *rs_abi, lifetime,
-                                     *return_type, param_types);
-        }
-      } while (false);
-    } else {
-      auto mapped_pointee_type = ConvertType(pointee_type, lifetimes);
-      if (mapped_pointee_type.ok()) {
-        if (qual_type->isPointerType()) {
-          type =
-              MappedType::PointerTo(*mapped_pointee_type, lifetime, nullable);
-        } else {
-          DCHECK(qual_type->isLValueReferenceType());
-          type = MappedType::LValueReferenceTo(*mapped_pointee_type, lifetime);
-        }
+      std::vector<MappedType> mapped_param_types;
+      for (const clang::QualType& param_type : func_type->getParamTypes()) {
+        ASSIGN_OR_RETURN(MappedType mapped_param_type,
+                         ConvertQualType(param_type, lifetimes));
+        mapped_param_types.push_back(std::move(mapped_param_type));
       }
+
+      if (type->isPointerType()) {
+        return MappedType::FuncPtr(cc_call_conv, rs_abi, lifetime,
+                                   std::move(mapped_return_type),
+                                   std::move(mapped_param_types));
+      } else {
+        DCHECK(type->isLValueReferenceType());
+        return MappedType::FuncRef(cc_call_conv, rs_abi, lifetime,
+                                   std::move(mapped_return_type),
+                                   std::move(mapped_param_types));
+      }
+    }
+
+    ASSIGN_OR_RETURN(MappedType mapped_pointee_type,
+                     ConvertQualType(pointee_type, lifetimes));
+    if (type->isPointerType()) {
+      return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
+                                   nullable);
+    } else {
+      DCHECK(type->isLValueReferenceType());
+      return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
+                                           lifetime);
     }
   } else if (const auto* builtin_type =
                  // Use getAsAdjusted instead of getAs so we don't desugar
                  // typedefs.
-             qual_type->getAsAdjusted<clang::BuiltinType>()) {
+             type->getAsAdjusted<clang::BuiltinType>()) {
     switch (builtin_type->getKind()) {
       case clang::BuiltinType::Bool:
-        type = MappedType::Simple("bool", "bool");
+        return MappedType::Simple("bool", "bool");
         break;
       case clang::BuiltinType::Float:
-        type = MappedType::Simple("f32", "float");
+        return MappedType::Simple("f32", "float");
         break;
       case clang::BuiltinType::Double:
-        type = MappedType::Simple("f64", "double");
+        return MappedType::Simple("f64", "double");
         break;
       case clang::BuiltinType::Void:
-        type = MappedType::Void();
+        return MappedType::Void();
         break;
       default:
         if (builtin_type->isIntegerType()) {
           auto size = ctx_.getTypeSize(builtin_type);
           if (size == 8 || size == 16 || size == 32 || size == 64) {
-            type = MappedType::Simple(
+            return MappedType::Simple(
                 absl::Substitute(
                     "$0$1", builtin_type->isSignedInteger() ? 'i' : 'u', size),
                 type_string);
           }
         }
     }
-  } else if (const auto* tag_type =
-                 qual_type->getAsAdjusted<clang::TagType>()) {
+  } else if (const auto* tag_type = type->getAsAdjusted<clang::TagType>()) {
     clang::TagDecl* tag_decl = tag_type->getDecl();
 
+    // TODO(lukasza): Rather than falling back to `absl::UnimplementedError` at
+    // the bottom of this method, we should explicitly emit an error when
+    // `tag_decl` is missing from `known_type_decls` or can't be handled by
+    // GetTranslatedIdentifier. See also a corresponding TODO in
+    // `test_record_with_unsupported_field`.
     if (known_type_decls_.contains(tag_decl)) {
       if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
         std::string ident(id->Ident());
         DeclId decl_id = GenerateDeclId(tag_decl);
-        type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+        return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
       }
     }
   } else if (const auto* typedef_type =
-                 qual_type->getAsAdjusted<clang::TypedefType>()) {
+                 type->getAsAdjusted<clang::TypedefType>()) {
     clang::TypedefNameDecl* typedef_name_decl = typedef_type->getDecl();
 
+    // TODO(lukasza): Rather than falling back to `absl::UnimplementedError` at
+    // the bottom of this method, we should explicitly emit an error when
+    // `typedef_name_decl` is missing from `known_type_decls` or can't be
+    // handled by GetTranslatedIdentifier. See also a corresponding TODO in
+    // `test_record_with_unsupported_field`.
+    // TODO(lukasza): Consider merging with `TagType` handling above.
     if (known_type_decls_.contains(typedef_name_decl)) {
       if (std::optional<Identifier> id =
               GetTranslatedIdentifier(typedef_name_decl)) {
         std::string ident(id->Ident());
         DeclId decl_id = GenerateDeclId(typedef_name_decl);
-        type = MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+        return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
       }
     }
   }
 
-  if (!type.has_value()) {
-    absl::Status error = absl::UnimplementedError(
-        absl::Substitute("Unsupported type '$0'", type_string));
+  return absl::UnimplementedError(absl::StrCat(
+      "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
+}
+
+absl::StatusOr<MappedType> Importer::ConvertQualType(
+    clang::QualType qual_type,
+    std::optional<devtools_rust::TypeLifetimes>& lifetimes,
+    bool nullable) const {
+  std::string type_string = qual_type.getAsString();
+  absl::StatusOr<MappedType> type =
+      ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
+  if (!type.ok()) {
+    absl::Status error = absl::UnimplementedError(absl::Substitute(
+        "Unsupported type '$0': $1", type_string, type.status().message()));
     error.SetPayload(kTypeStatusPayloadUrl, absl::Cord(type_string));
     return error;
   }
@@ -1071,7 +1091,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         absl::StrCat("Unsupported `volatile` qualifier: ", type_string));
   }
 
-  return *std::move(type);
+  return type;
 }
 
 absl::StatusOr<std::vector<Field>> Importer::ImportFields(
@@ -1082,7 +1102,7 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
-    auto type = ConvertType(field_decl->getType(), no_lifetimes);
+    auto type = ConvertQualType(field_decl->getType(), no_lifetimes);
     if (!type.ok()) {
       return absl::UnimplementedError(absl::Substitute(
           "Type of field '$0' is not supported: $1",

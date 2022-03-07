@@ -37,7 +37,7 @@ impl Default for UserOfImportedType {
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
-// Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&'
+// Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::operator=':
@@ -45,7 +45,7 @@ impl Default for UserOfImportedType {
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
 // Error while generating bindings for item 'UserOfImportedType::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&'
+// Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
 

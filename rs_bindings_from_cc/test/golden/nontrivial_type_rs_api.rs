@@ -27,7 +27,7 @@ impl !Unpin for Nontrivial {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=12
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Parameter #0 is not supported: Unsupported type 'struct Nontrivial &&'
+// Parameter #0 is not supported: Unsupported type 'struct Nontrivial &&': Unsupported clang::Type class 'RValueReference'
 
 impl Drop for Nontrivial {
     #[inline(always)]
@@ -56,7 +56,7 @@ impl !Unpin for NontrivialInline {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=25
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
-// Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&'
+// Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&': Unsupported clang::Type class 'RValueReference'
 
 impl Drop for NontrivialInline {
     #[inline(always)]
@@ -86,7 +86,7 @@ impl !Unpin for NontrivialMembers {}
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
-// Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&'
+// Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&': Unsupported clang::Type class 'RValueReference'
 
 impl Drop for NontrivialMembers {
     #[inline(always)]

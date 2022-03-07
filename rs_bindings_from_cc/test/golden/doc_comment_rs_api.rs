@@ -25,7 +25,7 @@ pub struct DocCommentSlashes {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&'
+// Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
@@ -33,7 +33,7 @@ pub struct DocCommentSlashes {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=9
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&'
+// Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&': Unsupported clang::Type class 'RValueReference'
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
@@ -110,7 +110,7 @@ impl Default for DocCommentBang {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=35
 // Error while generating bindings for item 'DocCommentBang::DocCommentBang':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&'
+// Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=35
 // Error while generating bindings for item 'DocCommentBang::operator=':
@@ -118,7 +118,7 @@ impl Default for DocCommentBang {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=35
 // Error while generating bindings for item 'DocCommentBang::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&'
+// Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&': Unsupported clang::Type class 'RValueReference'
 
 /// Multiline comment
 ///
@@ -143,7 +143,7 @@ impl Default for MultilineCommentTwoStars {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&'
+// Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
@@ -151,7 +151,7 @@ impl Default for MultilineCommentTwoStars {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=43
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&'
+// Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&': Unsupported clang::Type class 'RValueReference'
 
 /// Line comment
 ///
@@ -176,7 +176,7 @@ impl Default for LineComment {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'LineComment::LineComment':
-// Parameter #0 is not supported: Unsupported type 'struct LineComment &&'
+// Parameter #0 is not supported: Unsupported type 'struct LineComment &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'LineComment::operator=':
@@ -184,7 +184,7 @@ impl Default for LineComment {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=51
 // Error while generating bindings for item 'LineComment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct LineComment &&'
+// Parameter #0 is not supported: Unsupported type 'struct LineComment &&': Unsupported clang::Type class 'RValueReference'
 
 /// Multiline comment
 ///
@@ -209,7 +209,7 @@ impl Default for MultilineOneStar {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&'
+// Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::operator=':
@@ -217,7 +217,7 @@ impl Default for MultilineOneStar {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=59
 // Error while generating bindings for item 'MultilineOneStar::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&'
+// Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&': Unsupported clang::Type class 'RValueReference'
 
 /// A function
 #[inline(always)]

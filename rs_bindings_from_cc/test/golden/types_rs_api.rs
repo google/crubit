@@ -33,7 +33,7 @@ impl Default for SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::operator=':
@@ -41,7 +41,7 @@ impl Default for SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=9
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported clang::Type class 'RValueReference'
 
 // rs_bindings_from_cc/test/golden/types.h;l=11
 // Error while generating bindings for item 'SomeUnion':
@@ -105,7 +105,7 @@ pub struct FieldTypeTestStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Parameter #0 is not supported: Unsupported type 'struct FieldTypeTestStruct &&'
+// Parameter #0 is not supported: Unsupported type 'struct FieldTypeTestStruct &&': Unsupported clang::Type class 'RValueReference'
 
 #[inline(always)]
 pub fn VoidReturningFunction() {
