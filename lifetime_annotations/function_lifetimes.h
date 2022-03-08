@@ -7,6 +7,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <variant>
 
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
@@ -51,6 +52,27 @@ struct FunctionLifetimes {
 
 std::ostream& operator<<(std::ostream& os,
                          const FunctionLifetimes& func_lifetimes);
+
+// An error that occurred while analyzing a function.
+struct FunctionAnalysisError {
+  explicit FunctionAnalysisError(llvm::StringRef message) : message(message) {}
+
+  explicit FunctionAnalysisError(const llvm::Error& err) {
+    ::llvm::raw_string_ostream stream(message);
+    stream << err;
+  }
+
+  // Human-readable description of the error.
+  std::string message;
+};
+
+// Lifetimes for a function, or an error if we couldn't analyze the function.
+// We can't use llvm::Expected<FunctionLifetimes> for this because:
+// - llvm::Expected doesn't allow us to check for an error state without moving
+//   the error out of the llvm::Expected
+// - llvm::Expected asserts in the destructor if we didn't check for an error
+using FunctionLifetimesOrError =
+    std::variant<FunctionLifetimes, FunctionAnalysisError>;
 
 }  // namespace devtools_rust
 
