@@ -17,7 +17,7 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=10
 // Error while generating bindings for item 'UseUnsupportedType':
-// Parameter #0 is not supported: Unsupported type 'ns::StructInNamespace *': Unsupported type 'ns::StructInNamespace': Unsupported clang::Type class 'Elaborated'
+// Parameter #0 is not supported: Unsupported type 'ns::StructInNamespace *': Unsupported type 'ns::StructInNamespace': No generated bindings found for 'StructInNamespace'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
 

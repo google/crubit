@@ -939,6 +939,24 @@ SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
                    .column = sm.getSpellingColumnNumber(loc)};
 }
 
+absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
+    const clang::TypeDecl* decl) const {
+  if (!known_type_decls_.contains(decl)) {
+    return absl::NotFoundError(absl::Substitute(
+        "No generated bindings found for '$0'", decl->getNameAsString()));
+  }
+
+  std::optional<Identifier> id = GetTranslatedIdentifier(decl);
+  if (!id.has_value()) {
+    return absl::UnimplementedError(absl::Substitute(
+        "Cannot translate name of '$0'", decl->getNameAsString()));
+  }
+
+  std::string ident(id->Ident());
+  DeclId decl_id = GenerateDeclId(decl);
+  return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+}
+
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
     std::optional<devtools_rust::TypeLifetimes>& lifetimes,
@@ -1032,38 +1050,10 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         }
     }
   } else if (const auto* tag_type = type->getAsAdjusted<clang::TagType>()) {
-    clang::TagDecl* tag_decl = tag_type->getDecl();
-
-    // TODO(lukasza): Rather than falling back to `absl::UnimplementedError` at
-    // the bottom of this method, we should explicitly emit an error when
-    // `tag_decl` is missing from `known_type_decls` or can't be handled by
-    // GetTranslatedIdentifier. See also a corresponding TODO in
-    // `test_record_with_unsupported_field`.
-    if (known_type_decls_.contains(tag_decl)) {
-      if (std::optional<Identifier> id = GetTranslatedIdentifier(tag_decl)) {
-        std::string ident(id->Ident());
-        DeclId decl_id = GenerateDeclId(tag_decl);
-        return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
-      }
-    }
+    return ConvertTypeDecl(tag_type->getDecl());
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
-    clang::TypedefNameDecl* typedef_name_decl = typedef_type->getDecl();
-
-    // TODO(lukasza): Rather than falling back to `absl::UnimplementedError` at
-    // the bottom of this method, we should explicitly emit an error when
-    // `typedef_name_decl` is missing from `known_type_decls` or can't be
-    // handled by GetTranslatedIdentifier. See also a corresponding TODO in
-    // `test_record_with_unsupported_field`.
-    // TODO(lukasza): Consider merging with `TagType` handling above.
-    if (known_type_decls_.contains(typedef_name_decl)) {
-      if (std::optional<Identifier> id =
-              GetTranslatedIdentifier(typedef_name_decl)) {
-        std::string ident(id->Ident());
-        DeclId decl_id = GenerateDeclId(typedef_name_decl);
-        return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
-      }
-    }
+    return ConvertTypeDecl(typedef_type->getDecl());
   }
 
   return absl::UnimplementedError(absl::StrCat(

@@ -179,6 +179,7 @@ class Importer {
       const clang::Type* type,
       std::optional<devtools_rust::TypeLifetimes>& lifetimes,
       bool nullable) const;
+  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
 
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 
