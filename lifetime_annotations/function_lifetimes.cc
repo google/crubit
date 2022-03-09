@@ -6,10 +6,10 @@
 
 #include <string>
 
-#include "lifetime_annotations/lifetime.h"
-#include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_join.h"
+#include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/LLVM.h"
 

@@ -10,10 +10,10 @@
 #include <string>
 #include <utility>
 
+#include "third_party/absl/strings/str_cat.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/pointee_type.h"
 #include "lifetime_annotations/type_lifetimes.h"
-#include "third_party/absl/strings/str_cat.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/APValue.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attr.h"

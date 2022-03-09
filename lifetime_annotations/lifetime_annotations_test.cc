@@ -7,10 +7,10 @@
 #include <string>
 #include <utility>
 
-#include "lifetime_annotations/test/named_func_lifetimes.h"
-#include "lifetime_annotations/test/run_on_code.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
+#include "lifetime_annotations/test/named_func_lifetimes.h"
+#include "lifetime_annotations/test/run_on_code.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchFinder.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchers.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"

@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_H_
-#define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_H_
+#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_H_
+#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_H_
 
 #include <atomic>
 #include <cassert>
@@ -119,4 +119,4 @@ struct less<devtools_rust::Lifetime> {
 
 }  // namespace std
 
-#endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_H_
+#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_H_

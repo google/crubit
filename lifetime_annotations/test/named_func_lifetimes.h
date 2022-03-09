@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
-#define CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
+#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
+#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
 
 #include <initializer_list>
 #include <iostream>
@@ -12,9 +12,9 @@
 #include <utility>
 #include <vector>
 
+#include "testing/base/public/gunit.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "testing/base/public/gunit.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringMap.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
@@ -91,4 +91,4 @@ testing::Matcher<NamedFuncLifetimes> LifetimesContain(
 
 }  // namespace devtools_rust
 
-#endif  // CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
+#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_

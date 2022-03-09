@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
-#define CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
+#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
+#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
 
 #include <functional>
 #include <memory>
@@ -265,4 +265,4 @@ struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
 
 }  // namespace llvm
 
-#endif  // CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_
+#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TYPE_LIFETIMES_H_

@@ -10,12 +10,12 @@
 #include <string>
 #include <utility>
 
-#include "lifetime_annotations/lifetime.h"
-#include "lifetime_annotations/lifetime_symbol_table.h"
-#include "lifetime_annotations/pointee_type.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_format.h"
 #include "third_party/absl/strings/str_join.h"
+#include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_symbol_table.h"
+#include "lifetime_annotations/pointee_type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attr.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
