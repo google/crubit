@@ -5,11 +5,11 @@
 #include <string>
 
 #include "base/logging.h"
+#include "third_party/absl/status/statusor.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
-#include "third_party/absl/status/statusor.h"
 #include "third_party/json/src/json.hpp"
 
 namespace rs_bindings_from_cc {

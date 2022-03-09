@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_
 
 #if __cplusplus > 201703L
 #include <memory>
@@ -43,4 +43,4 @@ using type_identity_t = typename detail::type_identity<T>::type;
 
 }  // namespace rs_api_impl_support
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_

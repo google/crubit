@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "base/integral_types.h"
-#include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/absl/strings/string_view.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/json/src/json.hpp"
 #include "util/intops/strong_int.h"
 

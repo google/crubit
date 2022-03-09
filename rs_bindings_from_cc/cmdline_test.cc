@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "rs_bindings_from_cc/bazel_types.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "util/task/status_macros.h"
 
 namespace rs_bindings_from_cc {

@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
 
 #include <memory>
 #include <optional>
@@ -14,13 +14,13 @@
 #include <vector>
 
 #include "base/logging.h"
-#include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/types/span.h"
 #include "lifetime_annotations/lifetime_annotations.h"
+#include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -195,4 +195,4 @@ class Importer {
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_

@@ -47,7 +47,7 @@ impl Default for UserOfImportedType {
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
+// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
 
 mod detail {
     #[allow(unused_imports)]

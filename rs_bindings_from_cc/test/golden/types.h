@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -80,4 +80,4 @@ struct FieldTypeTestStruct final {
 
 inline void VoidReturningFunction() {}
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_

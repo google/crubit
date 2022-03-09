@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_
 
 #include <memory>
 
@@ -30,4 +30,4 @@ class FrontendAction : public clang::ASTFrontendAction {
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_

@@ -2,17 +2,17 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
 
 #include <string>
 
-#include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
+#include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.h"
 
 namespace rs_bindings_from_cc {
 
@@ -46,4 +46,4 @@ absl::StatusOr<IR> IrFromCc(
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_

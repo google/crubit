@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
 
 #pragma clang lifetime_elision
 
@@ -21,4 +21,4 @@ inline int take_struct_by_const_ref(const SomeStruct& s) { return s.int_field; }
 // method forces generation of a C++ thunk.
 inline unsigned int double_unsigned_int(unsigned int i) { return 2 * i; }
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_FUNCTION_INLINE_HELLO_WORLD_H_

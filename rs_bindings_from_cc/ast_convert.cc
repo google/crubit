@@ -6,8 +6,8 @@
 
 #include <assert.h>
 
-#include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/functional/function_ref.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"

@@ -16,9 +16,6 @@
 #include <vector>
 
 #include "base/logging.h"
-#include "rs_bindings_from_cc/ast_convert.h"
-#include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/status/status.h"
@@ -28,6 +25,9 @@
 #include "third_party/absl/strings/str_join.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
+#include "rs_bindings_from_cc/ast_convert.h"
+#include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/CXXInheritance.h"

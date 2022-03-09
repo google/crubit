@@ -8,15 +8,15 @@
 #include <variant>
 #include <vector>
 
-#include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/ir_from_cc.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/types/span.h"
+#include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/ir_from_cc.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "util/task/status_macros.h"
 

@@ -7,8 +7,8 @@
 //
 // This allows us to, for example, perform a subset of the work of ast_visitor
 // inside of a ClangMR or other tool.
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
 
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
@@ -29,4 +29,4 @@ SpecialMemberFunc GetDestructorSpecialMemberFunc(
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_

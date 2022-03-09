@@ -9,16 +9,16 @@
 #include <utility>
 #include <vector>
 
-#include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/frontend_action.h"
-#include "rs_bindings_from_cc/importer.h"
-#include "rs_bindings_from_cc/ir.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
 #include "third_party/absl/types/span.h"
+#include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/frontend_action.h"
+#include "rs_bindings_from_cc/importer.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileSystemOptions.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"

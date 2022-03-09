@@ -4,9 +4,9 @@
 
 #include "rs_bindings_from_cc/src_code_gen.h"
 
-#include "rs_bindings_from_cc/ir.h"
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
+#include "rs_bindings_from_cc/ir.h"
 
 namespace rs_bindings_from_cc {
 

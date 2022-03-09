@@ -40,7 +40,7 @@ impl Drop for PolymorphicClass {
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
+// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
 
 mod detail {
     #[allow(unused_imports)]

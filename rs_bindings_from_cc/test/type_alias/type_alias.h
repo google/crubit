@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
 
 #pragma clang lifetime_elision
 
@@ -13,4 +13,4 @@ using Int = int;
 // compiles.
 inline int return_underlying(Int i) { return i; }
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_TYPE_ALIAS_TYPE_ALIAS_H_

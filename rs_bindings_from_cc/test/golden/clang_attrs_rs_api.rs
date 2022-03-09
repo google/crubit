@@ -130,7 +130,7 @@ impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported clang::Type class 'RValueReference'
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
+// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
 
 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
 

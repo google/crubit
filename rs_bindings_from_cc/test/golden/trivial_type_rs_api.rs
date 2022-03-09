@@ -144,7 +144,7 @@ pub fn TakesTrivialNonfinalByReference<'a>(trivial: std::pin::Pin<&'a mut Trivia
     }
 }
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
+// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
 
 mod detail {
     #[allow(unused_imports)]

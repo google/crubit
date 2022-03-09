@@ -141,7 +141,7 @@ impl<'a> From<&'a Derived> for &'a Base2 {
 // Error while generating bindings for item 'Derived::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported clang::Type class 'RValueReference'
 
-// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
+// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 
 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
 

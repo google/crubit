@@ -8,8 +8,8 @@
 //
 // All types in this file own their data. This IR is expected to outlive the
 // Clang's AST context, therefore it cannot reference data owned by it.
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
+#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
+#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 
 #include <stdint.h>
 
@@ -23,8 +23,8 @@
 
 #include "base/integral_types.h"
 #include "base/logging.h"
-#include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/absl/strings/string_view.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "third_party/json/src/json.hpp"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
 #include "util/intops/strong_int.h"
@@ -625,4 +625,4 @@ inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
 }
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
+#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
