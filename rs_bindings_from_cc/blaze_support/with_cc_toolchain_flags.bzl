@@ -2,6 +2,16 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+"""Creates a wrapper shell script that passes all the clang flags for header parsing.
+
+This rule simplifies experimenting with the binary.
+
+Disclaimer: This project is experimental, under heavy development, and should
+be used yet.
+"""
+
+load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 DISABLED_FEATURES = ["module_maps"]
 

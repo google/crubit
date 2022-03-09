@@ -2,6 +2,16 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+"""Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
+
+Disclaimer: This project is experimental, under heavy development, and should
+be used yet.
+"""
+
+# buildifier: disable=bzl-visibility
+load("//third_party/bazel_rules/rules_rust/rust/private:common.bzl", "rust_common")
+
+# buildifier: disable=bzl-visibility
 load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility

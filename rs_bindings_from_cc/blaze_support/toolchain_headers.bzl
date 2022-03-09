@@ -2,6 +2,16 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+"""Generates bindings for the toolchain headers.
+
+Disclaimer: This project is experimental, under heavy development, and should
+be used yet.
+"""
+
+load(
+    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
+    "GeneratedFilesDepsInfo",
+)
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "RustToolchainHeadersInfo",

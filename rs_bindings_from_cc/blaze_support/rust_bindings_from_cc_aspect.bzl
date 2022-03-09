@@ -2,6 +2,16 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+"""
+The tool creates Rust source code with the C++ API projection as well as implementation of the API
+projection. See <internal link> and <internal link> for
+more context.
+
+Disclaimer: This project is experimental, under heavy development, and should
+be used yet.
+"""
+
+load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
     "GeneratedFilesDepsInfo",
 )
