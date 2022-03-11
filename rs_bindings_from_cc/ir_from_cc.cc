@@ -38,8 +38,8 @@ absl::StatusOr<IR> IrFromCc(
         virtual_headers_contents,
     absl::flat_hash_map<const HeaderName, const BlazeLabel> headers_to_targets,
     absl::Span<const absl::string_view> args) {
-  std::vector<const HeaderName> entrypoint_headers(public_headers.begin(),
-                                                   public_headers.end());
+  std::vector<HeaderName> entrypoint_headers(public_headers.begin(),
+                                             public_headers.end());
   clang::tooling::FileContentMappings file_contents;
 
   for (auto const& name_and_content : virtual_headers_contents) {
