@@ -480,7 +480,12 @@ struct BaseClass {
 struct Record {
   nlohmann::json ToJson() const;
 
-  Identifier identifier;
+  // `rs_name` and `cc_name` are typically equal, but they may be different for
+  // template instantiations (when `cc_name` is similar to `MyStruct<int>` and
+  // `rs_name` is similar to "__CcTemplateInst8MyStructIiE").
+  std::string rs_name;
+  std::string cc_name;
+
   DeclId id;
   BlazeLabel owning_target;
   std::optional<std::string> doc_comment;

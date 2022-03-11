@@ -141,12 +141,17 @@ fn test_record_member_variable_access_specifiers() {
     let ir = ir_from_cc(
         "
         struct SomeStruct {
+            int default_access_int;
           public:
             int public_int;
           protected:
             int protected_int;
           private:
             int private_int;
+        };
+
+        class SomeClass {
+          int default_access_int;
         };
     ",
     )
@@ -156,8 +161,12 @@ fn test_record_member_variable_access_specifiers() {
         ir,
         quote! {
             Record {
-                identifier: "SomeStruct" ...
+                rs_name: "SomeStruct", ...
                 fields: [
+                    Field {
+                        identifier: "default_access_int" ...
+                        access: Public ...
+                    },
                     Field {
                         identifier: "public_int" ...
                         access: Public ...
@@ -170,6 +179,20 @@ fn test_record_member_variable_access_specifiers() {
                         identifier: "private_int" ...
                         access: Private ...
                     },
+                ] ...
+            }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "SomeClass", ...
+                fields: [
+                    Field {
+                        identifier: "default_access_int" ...
+                        access: Private ...
+                    }
                 ] ...
             }
         }
@@ -238,7 +261,7 @@ fn test_record_special_member_access_specifiers() {
         ir,
         quote! {
             Record {
-                identifier: "SomeStruct" ...
+                rs_name: "SomeStruct" ...
                 copy_constructor: SpecialMemberFunc { ... access: Private ... },
                 move_constructor: SpecialMemberFunc { ... access: Protected ... },
                 destructor: SpecialMemberFunc { ... access: Public ... } ...
@@ -265,7 +288,7 @@ fn test_record_special_member_definition() {
         ir,
         quote! {
             Record {
-                identifier: "SomeStruct" ...
+                rs_name: "SomeStruct" ...
                 copy_constructor: SpecialMemberFunc { definition: NontrivialUserDefined ... },
                 move_constructor: SpecialMemberFunc { definition: Deleted ... },
                 destructor: SpecialMemberFunc { definition: Trivial ... } ...
@@ -344,7 +367,7 @@ fn test_doc_comment() -> Result<()> {
     )?;
     let comments: HashMap<_, _> = ir
         .records()
-        .map(|r| (r.identifier.identifier.as_str(), r.doc_comment.as_ref().unwrap()))
+        .map(|r| (r.rs_name.as_str(), r.doc_comment.as_ref().unwrap()))
         .collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
@@ -799,7 +822,7 @@ fn test_do_not_import_nonstatic_member_functions_when_record_not_supported_yet()
 #[test]
 fn test_dont_import_injected_class_name() {
     let ir = ir_from_cc("struct SomeStruct {};").unwrap();
-    let names = ir.records().map(|r| &r.identifier.identifier).filter(|n| n.contains("SomeStruct"));
+    let names = ir.records().map(|r| &r.rs_name).filter(|n| n.contains("SomeStruct"));
     // if we do support nested structs, we should not emit record for injected class
     // name
     assert_eq!(names.count(), 1);
@@ -853,9 +876,43 @@ fn test_integer_typedef_usage() -> Result<()> {
 }
 
 #[test]
+fn test_struct() {
+    let ir = ir_from_cc("struct SomeStruct { int first_field; int second_field; };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "SomeStruct" ...
+                cc_name: "SomeStruct" ...
+                fields: [
+                    Field {
+                        identifier: "first_field", ...
+                        type_ : MappedType {
+                            rs_type : RsType { name : Some ("i32"), ...},
+                            cc_type : CcType { name : Some ("int"), ...},
+                         }, ...
+                        offset: 0, ...
+                    },
+                    Field {
+                        identifier: "second_field", ...
+                        type_ : MappedType {
+                            rs_type : RsType { name : Some ("i32"), ...},
+                            cc_type : CcType { name : Some ("int"), ...},
+                         }, ...
+                        offset: 32, ...
+                    },
+                ], ...
+                size: 8, ...
+                alignment: 4, ...
+            }
+        }
+    );
+}
+
+#[test]
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
-    assert!(!ir.records().any(|r| r.identifier.identifier == "Struct"));
+    assert!(!ir.records().any(|r| r.rs_name == "Struct"));
 }
 
 #[test]
@@ -881,7 +938,7 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
     let record =
-        ir.records().find(|r| r.identifier.identifier == record_name).expect("Struct not found");
+        ir.records().find(|r| r.rs_name == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(*f));
     let meta = function
         .expect("Function not found")
@@ -1173,7 +1230,7 @@ fn test_elided_lifetimes() {
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let r = ir.records().next().expect("IR should contain `struct S`");
-    assert_eq!(r.identifier, ir_id("S"));
+    assert_eq!(r.rs_name, "S");
     assert!(r.is_trivial_abi);
 
     let f = ir
@@ -1212,7 +1269,7 @@ fn test_operator_names() {
             // Only SomeStruct member functions (excluding stddef.h stuff).
             f.member_func_metadata
                 .as_ref()
-                .map(|m| m.find_record(&ir).unwrap().identifier.identifier == "SomeStruct")
+                .map(|m| m.find_record(&ir).unwrap().rs_name == "SomeStruct")
                 .unwrap_or_default()
         })
         .flat_map(|f| match &f.name {
@@ -1257,7 +1314,7 @@ fn test_no_aligned_attr() {
 
     assert_ir_matches! {ir, quote! {
       Record {
-        ... identifier: "SomeStruct" ...
+        ... rs_name: "SomeStruct" ...
         ... override_alignment: false ...
       }}
     };
@@ -1269,7 +1326,7 @@ fn test_aligned_attr() {
 
     assert_ir_matches! {ir, quote! {
       Record {
-        ... identifier: "SomeStruct" ...
+        ... rs_name: "SomeStruct" ...
         ... override_alignment: true ...
       }}
     };

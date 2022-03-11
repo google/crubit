@@ -184,7 +184,7 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
         .as_ref()
         .map(|meta| meta.find_record(ir))
         .transpose()?
-        .map(|r| &*r.identifier.identifier);
+        .map(|r| &*r.cc_name);
 
     let func_name = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => id.identifier.clone(),
@@ -259,7 +259,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
 
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
-    let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.identifier.identifier));
+    let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.rs_name));
 
     // Find 1) the `func_name` and `impl_kind` of the API function to generate
     // and 2) whether to `format_first_param_as_self` (`&self` or `&mut self`).
@@ -286,7 +286,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
                 ) => match **lhs {
                     RsTypeKind::Record(lhs_record) => {
-                        let lhs: Ident = make_rs_ident(&lhs_record.identifier.identifier);
+                        let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
                         let rhs: TokenStream = rhs.format(ir, &lifetime_to_name)?;
                         format_first_param_as_self = true;
                         func_name = make_rs_ident("eq");
@@ -672,7 +672,7 @@ fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
-    let ident = make_rs_ident(&record.identifier.identifier);
+    let ident = make_rs_ident(&record.rs_name);
     let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
         record.fields.iter().map(|f| make_rs_ident(&f.identifier.identifier)).collect_vec();
@@ -1239,7 +1239,7 @@ impl<'ir> RsTypeKind<'ir> {
             },
             RsTypeKind::Record(record) => rs_type_name_for_target_and_identifier(
                 &record.owning_target,
-                &record.identifier,
+                &Identifier{identifier: record.rs_name.clone()},
                 ir,
             )?,
             RsTypeKind::TypeAlias { type_alias, .. } => rs_type_name_for_target_and_identifier(
@@ -1485,14 +1485,17 @@ fn format_rs_type(
 }
 
 fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
-    let (disambiguator_fragment, identifier) = match item {
-        Item::Record(record) => (quote! { class }, &record.identifier),
-        Item::TypeAlias(type_alias) => (quote! {}, &type_alias.identifier),
+     Ok(match item {
+        Item::Record(record) => {
+            let ident = format_cc_ident(&record.cc_name);
+            quote! { class #ident }
+        },
+        Item::TypeAlias(type_alias) => {
+            let ident = format_cc_ident(&type_alias.identifier.identifier);
+            quote! { #ident }
+        },
         _ => bail!("Item does not define a type: {:?}", item),
-    };
-
-    let ident = format_cc_ident(identifier.identifier.as_str());
-    Ok(quote! { #disambiguator_fragment #ident })
+    })
 }
 
 // Maps a Rust ABI [1] into a Clang attribute. See also
@@ -1574,7 +1577,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
         return quote! {};
     }
-    let record_ident = format_cc_ident(&record.identifier.identifier);
+    let record_ident = format_cc_ident(&record.cc_name);
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_assertions =
@@ -1612,7 +1615,7 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
         return Ok(quote! {});
     }
 
-    let ident = make_rs_ident(&record.identifier.identifier);
+    let ident = make_rs_ident(&record.rs_name);
     Ok(quote! {
         impl #ident {
             #(
@@ -1641,8 +1644,8 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<TokenStream> {
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
             // TODO(b/216195042): Correctly handle imported records, lifetimes.
-            let base_name = make_rs_ident(&base_record.identifier.identifier);
-            let derived_name = make_rs_ident(&record.identifier.identifier);
+            let base_name = make_rs_ident(&base_record.rs_name);
+            let derived_name = make_rs_ident(&record.rs_name);
             impls.push(quote! {
                 impl<'a> From<&'a #derived_name> for &'a #base_name {
                     fn from(x: &'a #derived_name) -> Self {
@@ -1698,7 +1701,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                     None => quote! {#fn_ident},
                     Some(meta) => {
                         let record_ident =
-                            format_cc_ident(&meta.find_record(ir)?.identifier.identifier);
+                            format_cc_ident(&meta.find_record(ir)?.cc_name);
                         quote! { #record_ident :: #fn_ident }
                     }
                 }

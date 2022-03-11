@@ -360,7 +360,8 @@ nlohmann::json BaseClass::ToJson() const {
 }
 nlohmann::json Record::ToJson() const {
   nlohmann::json record;
-  record["identifier"] = identifier.ToJson();
+  record["rs_name"] = rs_name;
+  record["cc_name"] = cc_name;
   record["id"] = id.value();
   record["owning_target"] = owning_target.value();
   if (doc_comment) {

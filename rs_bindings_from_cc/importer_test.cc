@@ -34,20 +34,20 @@ using ::testing::SizeIs;
 using ::testing::VariantWith;
 using ::testing::status::StatusIs;
 
-template <typename T>
-UnqualifiedIdentifier GetName(const T& x) {
-  return x.identifier;
-}
-UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
-
-std::optional<DeclId> DeclIdForRecord(const IR& ir, absl::string_view ident) {
+std::optional<DeclId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
   for (const Record* record : ir.get_items_if<Record>()) {
-    if (record->identifier.Ident() == ident) {
+    if (record->rs_name == rs_name) {
       return record->id;
     }
   }
   return std::nullopt;
 }
+
+template <typename T>
+UnqualifiedIdentifier GetName(const T& x) {
+  return x.identifier;
+}
+UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
 
 // Matches an IR node that has the given identifier.
 MATCHER_P(IdentifierIs, identifier, "") {
@@ -62,6 +62,9 @@ MATCHER_P(IdentifierIs, identifier, "") {
   *result_listener << "actual identifier: '" << actual->Ident() << "'";
   return false;
 }
+
+// Matches an Record node that has the given `rs_name`.
+MATCHER_P(RsNameIs, rs_name, "") { return arg.rs_name == rs_name; }
 
 // Matches an IR node that has the given doc comment.
 MATCHER_P(DocCommentIs, doc_comment, "") {
@@ -385,21 +388,6 @@ TEST(ImporterTest, TestImportReferenceFunc) {
                   ReturnType(IsIntRef()), ParamsAre(ParamType(IsIntRef()))))));
 }
 
-TEST(ImporterTest, Struct) {
-  ASSERT_OK_AND_ASSIGN(
-      IR ir,
-      IrFromCc("struct SomeStruct { int first_field; int second_field; };"));
-
-  std::vector<const Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(records,
-              ElementsAre(Pointee(AllOf(
-                  IdentifierIs("SomeStruct"), RecordSizeIs(8), AlignmentIs(4),
-                  FieldsAre(AllOf(IdentifierIs("first_field"),
-                                  FieldType(IsInt()), OffsetIs(0)),
-                            AllOf(IdentifierIs("second_field"),
-                                  FieldType(IsInt()), OffsetIs(32)))))));
-}
-
 TEST(ImporterTest, TrivialCopyConstructor) {
   absl::string_view file = R"cc(
     struct Implicit {};
@@ -459,7 +447,7 @@ TEST(ImporterTest, NontrivialMembersCopyConstructor) {
   EXPECT_THAT(
       records,
       Each(Pointee(AnyOf(
-          IdentifierIs(
+          RsNameIs(
               "NontrivialUserDefined"),  // needed to create nontrivial members
           CopyConstructor(DefinitionIs(
               SpecialMemberFunc::Definition::kNontrivialMembers))))));
@@ -577,7 +565,7 @@ TEST(ImporterTest, NontrivialMembersMoveConstructor) {
   EXPECT_THAT(
       records,
       Each(Pointee(AnyOf(
-          IdentifierIs(
+          RsNameIs(
               "NontrivialUserDefined"),  // needed to create nontrivial members
           MoveConstructor(DefinitionIs(
               SpecialMemberFunc::Definition::kNontrivialMembers))))));
@@ -701,7 +689,7 @@ TEST(ImporterTest, NontrivialMembersDestructor) {
   EXPECT_THAT(
       records,
       Each(Pointee(AnyOf(
-          IdentifierIs(
+          RsNameIs(
               "NontrivialUserDefined"),  // needed to create nontrivial members
           Destructor(DefinitionIs(
               SpecialMemberFunc::Definition::kNontrivialMembers))))));
@@ -787,39 +775,6 @@ TEST(ImporterTest, NotTrivialAbi) {
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(1));
   EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
-}
-
-TEST(ImporterTest, MemberVariableAccessSpecifiers) {
-  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc({R"(
-    struct SomeStruct {
-      int default_access_int;
-    public:
-      int public_int;
-    protected:
-      int protected_int;
-    private:
-      int private_int;
-    };
-
-    class SomeClass {
-      int default_access_int;
-    };
-  )"}));
-
-  std::vector<const Record*> records = ir.get_items_if<Record>();
-  EXPECT_THAT(
-      records,
-      ElementsAre(
-          Pointee(AllOf(
-              IdentifierIs("SomeStruct"),
-              FieldsAre(
-                  AllOf(IdentifierIs("default_access_int"), AccessIs(kPublic)),
-                  AllOf(IdentifierIs("public_int"), AccessIs(kPublic)),
-                  AllOf(IdentifierIs("protected_int"), AccessIs(kProtected)),
-                  AllOf(IdentifierIs("private_int"), AccessIs(kPrivate))))),
-          Pointee(AllOf(IdentifierIs("SomeClass"),
-                        FieldsAre(AllOf(IdentifierIs("default_access_int"),
-                                        AccessIs(kPrivate)))))));
 }
 
 }  // namespace

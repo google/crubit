@@ -117,7 +117,8 @@ pub fn ir_record(name: &str) -> Record {
     let ir = ir_from_cc("struct REPLACEME final {};").unwrap();
     for item in ir.take_items() {
         if let Item::Record(mut record) = item {
-            record.identifier = ir_id(name);
+            record.rs_name = name.to_string();
+            record.cc_name = name.to_string();
             return record;
         }
     }

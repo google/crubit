@@ -331,7 +331,8 @@ pub struct SpecialMemberFunc {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
-    pub identifier: Identifier,
+    pub rs_name: String,
+    pub cc_name: String,
     pub id: DeclId,
     pub owning_target: BlazeLabel,
     pub doc_comment: Option<String>,

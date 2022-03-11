@@ -786,7 +786,8 @@ Importer::LookupResult Importer::ImportRecord(
   }
 
   return LookupResult(Record{
-      .identifier = *record_name,
+      .rs_name = std::string(record_name->Ident()),
+      .cc_name = std::string(record_name->Ident()),
       .id = GenerateDeclId(record_decl),
       .owning_target = GetOwningTarget(record_decl),
       .doc_comment = GetComment(record_decl),
