@@ -1,7 +1,7 @@
 # rs_bindings_from_cc
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 
 `:rs_bindings_from_cc` parses C++ headers and generates:
 
