@@ -276,12 +276,31 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         None,   // No `impl` needed
         Struct, // e.g. `impl SomeStruct { ... }` (SomeStruct based on func.member_func_metadata)
         Trait {
+            // Note that `record_name` might *not* be from
+            // `func.member_func_metadata`.
+            record_name: Ident,      // e.g. SomeStruct
             trait_name: TraitName, // e.g. quote!{ From<i32> }
-            record_name: Ident,      /* e.g. SomeStruct (might *not* be from
-                                      * func.member_func_metadata) */
+
+            // Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
+            declare_lifetimes: bool,
+            // The generic params of trait `impl` (e.g. `<'b>`). These start
+            // empty and only later are mutated into the correct value.
+            trait_generic_params: TokenStream,
         },
     }
-    let impl_kind: ImplKind;
+    impl ImplKind {
+        fn new_trait(trait_name: TraitName, record_name: Ident) -> Self {
+            ImplKind::Trait{
+                trait_name, record_name, declare_lifetimes: false, trait_generic_params: quote!{}
+            }
+        }
+        fn new_generic_trait(trait_name: TraitName, record_name: Ident) -> Self {
+            ImplKind::Trait{
+                trait_name, record_name, declare_lifetimes: true, trait_generic_params: quote!{}
+            }
+        }
+    }
+    let mut impl_kind: ImplKind;
     let func_name: syn::Ident;
     let format_first_param_as_self: bool;
     match &func.name {
@@ -299,10 +318,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         let rhs: TokenStream = rhs.format(ir, &lifetime_to_name)?;
                         format_first_param_as_self = true;
                         func_name = make_rs_ident("eq");
-                        impl_kind = ImplKind::Trait {
-                            trait_name: TraitName::Other(quote! {PartialEq<#rhs>}),
-                            record_name: lhs,
-                        };
+                        // Not using `ImplKind::new_generic_trait`, because #rhs
+                        // should be stripped of references + because `&'a self`
+                        // needs to have its lifetime declared next to `fn`, not
+                        // next to `impl`.
+                        impl_kind = ImplKind::new_trait(TraitName::Other(quote! {PartialEq<#rhs>}), lhs);
                     }
                     _ => {
                         return make_unsupported_result(
@@ -351,7 +371,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             let record_name = maybe_record_name
                 .clone()
                 .ok_or_else(|| anyhow!("Destructors must be member functions."))?;
-            impl_kind = ImplKind::Trait { trait_name: TraitName::Other(quote! {Drop}), record_name };
+            impl_kind = ImplKind::new_trait(TraitName::Other(quote! {Drop}), record_name);
             func_name = make_rs_ident("drop");
             format_first_param_as_self = true;
         }
@@ -389,7 +409,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             match func.params.len() {
                 0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                 1 => {
-                    impl_kind = ImplKind::Trait { trait_name: TraitName::UnpinConstructor(quote! {Default}), record_name, };
+                    impl_kind = ImplKind::new_trait(TraitName::UnpinConstructor(quote! {Default}), record_name);
                     func_name = make_rs_ident("default");
                     format_first_param_as_self = false;
                 }
@@ -400,16 +420,14 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         if should_derive_clone(record) {
                             return Ok(GeneratedFunc::None);
                         } else {
-                            impl_kind = ImplKind::Trait { trait_name: TraitName::UnpinConstructor(quote! {Clone}), record_name, };
+                            impl_kind = ImplKind::new_trait(TraitName::UnpinConstructor(quote! {Clone}), record_name);
                             func_name = make_rs_ident("clone");
                             format_first_param_as_self = true;
                         }
                     } else if !instance_method_metadata.is_explicit_ctor {
                         let param_type = &param_types[1];
-                        impl_kind = ImplKind::Trait {
-                            trait_name: TraitName::UnpinConstructor(quote! {From< #param_type >}),
-                            record_name,
-                        };
+                        impl_kind = ImplKind::new_generic_trait(
+                            TraitName::UnpinConstructor(quote! {From< #param_type >}), record_name);
                         func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
                     } else {
@@ -535,11 +553,18 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         };
 
         let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
-        let generic_params = format_generic_params(lifetimes);
+        let fn_generic_params: TokenStream;
+        if let ImplKind::Trait { declare_lifetimes: true, trait_generic_params, ..} = &mut impl_kind {
+            *trait_generic_params = format_generic_params(lifetimes);
+            fn_generic_params = quote!{}
+        } else {
+            fn_generic_params = format_generic_params(lifetimes);
+        }
 
         quote! {
             #[inline(always)]
-            #pub_ #unsafe_ fn #func_name #generic_params( #( #api_params ),* ) #return_type_fragment {
+            #pub_ #unsafe_ fn #func_name #fn_generic_params(
+                    #( #api_params ),* ) #return_type_fragment {
                 #func_body
             }
         }
@@ -561,8 +586,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 function_path: syn::parse2(quote! { #record_name :: #func_name })?,
             };
         }
-        ImplKind::Trait { trait_name, record_name } => {
-            api_func = quote! { #doc_comment impl #trait_name for #record_name { #api_func_def } };
+        ImplKind::Trait { trait_name, record_name, trait_generic_params, .. } => {
+            api_func = quote! {
+                #doc_comment
+                impl #trait_generic_params #trait_name for #record_name {
+                    #api_func_def
+                }
+            };
             function_id = FunctionId {
                 self_type: Some(record_name.into()),
                 function_path: syn::parse2(quote! { #trait_name :: #func_name })?,
@@ -3310,6 +3340,38 @@ mod tests {
                     }
                 }
             }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_from_for_implicit_conversion_from_reference() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeOtherStruct final { int i; };
+            struct StructUnderTest final {
+                StructUnderTest(const SomeOtherStruct& other);  // implicit - no `explicit` keyword
+            };"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        // This is a regression test for b/223800038: We want to ensure that the
+        // code says `impl<'b>` (instead of incorrectly declaring that lifetime
+        // in `fn from<'b>`).
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'b> From<&'b SomeOtherStruct> for StructUnderTest {
+                    #[inline(always)]
+                    fn from(other: &'b SomeOtherStruct) -> Self {
+                        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
+                                &mut tmp, other);
+                            tmp.assume_init()
+                        }
+                    }
+                }
+            },
         );
         Ok(())
     }

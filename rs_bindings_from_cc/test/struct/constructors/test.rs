@@ -43,6 +43,13 @@ mod tests {
     }
 
     #[test]
+    fn test_implicit_conversion_from_reference() {
+        let other = OtherSimpleStruct{ int_field: 126 };
+        let i: StructWithImplicitConversionFromReference = (&other).into();
+        assert_eq!(126, i.int_field);
+    }
+
+    #[test]
     #[allow(clippy::redundant_clone)]
     fn test_inline_constructors() {
         assert_impl_all!(StructWithInlineConstructors: Default);

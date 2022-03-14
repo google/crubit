@@ -36,6 +36,19 @@ struct StructWithImplicitConversionConstructor final {
   int int_field;
 };
 
+struct OtherSimpleStruct {
+  int int_field;
+};
+
+struct StructWithImplicitConversionFromReference final {
+  // Testing `impl<'b> From<&'b OtherSimpleStruct> for ...`.
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  StructWithImplicitConversionFromReference(const OtherSimpleStruct& other)
+      : int_field(other.int_field) {}
+
+  int int_field;
+};
+
 // Inline-defined constructors test that thunks are properly implemented by
 // `generate_rs_api_impl`.
 struct [[clang::trivial_abi]] StructWithInlineConstructors final {
