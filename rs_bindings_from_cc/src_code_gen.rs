@@ -263,11 +263,20 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
 
     // Find 1) the `func_name` and `impl_kind` of the API function to generate
     // and 2) whether to `format_first_param_as_self` (`&self` or `&mut self`).
+    enum TraitName {
+        UnpinConstructor(TokenStream),  // An Unpin constructor trait, e.g. From or Clone.
+        Other(TokenStream),  // any other trait, e.g. Eq.
+    }
+    impl quote::ToTokens for TraitName {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
+            match self {Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),}
+        }
+    }
     enum ImplKind {
         None,   // No `impl` needed
         Struct, // e.g. `impl SomeStruct { ... }` (SomeStruct based on func.member_func_metadata)
         Trait {
-            trait_name: TokenStream, // e.g. quote!{ From<int> }
+            trait_name: TraitName, // e.g. quote!{ From<i32> }
             record_name: Ident,      /* e.g. SomeStruct (might *not* be from
                                       * func.member_func_metadata) */
         },
@@ -291,7 +300,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         format_first_param_as_self = true;
                         func_name = make_rs_ident("eq");
                         impl_kind = ImplKind::Trait {
-                            trait_name: quote! {PartialEq<#rhs>},
+                            trait_name: TraitName::Other(quote! {PartialEq<#rhs>}),
                             record_name: lhs,
                         };
                     }
@@ -342,7 +351,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             let record_name = maybe_record_name
                 .clone()
                 .ok_or_else(|| anyhow!("Destructors must be member functions."))?;
-            impl_kind = ImplKind::Trait { trait_name: quote! {Drop}, record_name };
+            impl_kind = ImplKind::Trait { trait_name: TraitName::Other(quote! {Drop}), record_name };
             func_name = make_rs_ident("drop");
             format_first_param_as_self = true;
         }
@@ -380,7 +389,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             match func.params.len() {
                 0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                 1 => {
-                    impl_kind = ImplKind::Trait { trait_name: quote! {Default}, record_name };
+                    impl_kind = ImplKind::Trait { trait_name: TraitName::UnpinConstructor(quote! {Default}), record_name, };
                     func_name = make_rs_ident("default");
                     format_first_param_as_self = false;
                 }
@@ -391,14 +400,14 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         if should_derive_clone(record) {
                             return Ok(GeneratedFunc::None);
                         } else {
-                            impl_kind = ImplKind::Trait { trait_name: quote! {Clone}, record_name };
+                            impl_kind = ImplKind::Trait { trait_name: TraitName::UnpinConstructor(quote! {Clone}), record_name, };
                             func_name = make_rs_ident("clone");
                             format_first_param_as_self = true;
                         }
                     } else if !instance_method_metadata.is_explicit_ctor {
                         let param_type = &param_types[1];
                         impl_kind = ImplKind::Trait {
-                            trait_name: quote! {From< #param_type >},
+                            trait_name: TraitName::UnpinConstructor(quote! {From< #param_type >}),
                             record_name,
                         };
                         func_name = make_rs_ident("from");
@@ -432,7 +441,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         let mut lifetimes = func.lifetime_params.iter().collect_vec();
         let mut maybe_first_api_param = param_type_kinds.get(0);
 
-        if func.name == UnqualifiedIdentifier::Constructor {
+        if let ImplKind::Trait{trait_name: TraitName::UnpinConstructor(..), ..} = impl_kind {
             return_type_fragment = quote! { -> Self };
 
             // Drop `__this` parameter from the public Rust API. Presence of
@@ -480,17 +489,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             thunk_args[0] = quote! { self };
         }
 
-        let func_body = match &func.name {
-            UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) | UnqualifiedIdentifier::Destructor  => {
-                let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
-                // Only need to wrap everything in an `unsafe { ... }` block if
-                // the *whole* api function is safe.
-                if !is_unsafe {
-                    body = quote! { unsafe { #body } };
-                }
-                body
-            }
-            UnqualifiedIdentifier::Constructor => {
+        let func_body = match &impl_kind {
+            ImplKind::Trait{trait_name: TraitName::UnpinConstructor(..), ..} => {
                 // SAFETY: A user-defined constructor is not guaranteed to
                 // initialize all the fields. To make the `assume_init()` call
                 // below safe, the memory is zero-initialized first. This is a
@@ -506,6 +506,15 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         tmp.assume_init()
                     }
                 }
+            }
+            _ => {
+                let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
+                // Only need to wrap everything in an `unsafe { ... }` block if
+                // the *whole* api function is safe.
+                if !is_unsafe {
+                    body = quote! { unsafe { #body } };
+                }
+                body
             }
         };
 
