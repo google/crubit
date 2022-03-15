@@ -110,11 +110,11 @@ struct CcType {
   // - "#funcValue <callConv>" (compare with "#funcPtr <abi>" in RsType::name
   //   and note that Rust only supports function pointers; note that <callConv>
   //   in CcType doesn't map 1:1 to <abi> in RsType).
-  // - a decl name when MappedType::WithDeclIds was used
+  // - An empty string when `decl_id` is non-empty.
   std::string name;
 
-  // Id of a decl that this type corresponds to. `nullopt` for primitive types
-  // (i.e. when `name` is non-empty).
+  // Id of a decl that this type corresponds to. `nullopt` when `name` is
+  // non-empty.
   std::optional<DeclId> decl_id = std::nullopt;
 
   // The C++ const-qualification for the type.
@@ -148,7 +148,7 @@ struct RsType {
   //   `type_args`; param types are stored in other `type_args`; <abi> would be
   //   replaced with "cdecl", "stdcall" or other Abi - see
   //   https://doc.rust-lang.org/reference/types/function-pointer.html);
-  // - a decl name when MappedType::WithDeclIds was used
+  // - An empty string when `decl_id` is non-empty.
   std::string name;
 
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
@@ -191,10 +191,8 @@ struct MappedType {
     return MappedType{RsType{rs_name}, CcType{cc_name}};
   }
 
-  static MappedType WithDeclIds(std::string rs_name, DeclId rs_decl_id,
-                                std::string cc_name, DeclId cc_decl_id) {
-    return MappedType{RsType{std::move(rs_name), rs_decl_id},
-                      CcType{std::move(cc_name), cc_decl_id}};
+  static MappedType WithDeclId(DeclId decl_id) {
+    return MappedType{RsType{.decl_id = decl_id}, CcType{.decl_id = decl_id}};
   }
 
   static MappedType PointerTo(MappedType pointee_type,

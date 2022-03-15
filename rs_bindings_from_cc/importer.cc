@@ -948,15 +948,8 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
-  std::optional<Identifier> id = GetTranslatedIdentifier(decl);
-  if (!id.has_value()) {
-    return absl::UnimplementedError(absl::Substitute(
-        "Cannot translate name of '$0'", decl->getNameAsString()));
-  }
-
-  std::string ident(id->Ident());
   DeclId decl_id = GenerateDeclId(decl);
-  return MappedType::WithDeclIds(ident, decl_id, ident, decl_id);
+  return MappedType::WithDeclId(decl_id);
 }
 
 absl::StatusOr<MappedType> Importer::ConvertType(
