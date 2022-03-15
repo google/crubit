@@ -392,7 +392,8 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
         name = named_decl->getQualifiedNameAsString();
       }
       SourceLoc source_loc = ConvertSourceLocation(decl->getBeginLoc());
-      for (const auto& error : result.errors()) {
+      if (!result.errors().empty()) {
+        auto error = absl::StrJoin(result.errors(), "\n\n");
         items.push_back(std::make_tuple(
             decl->getSourceRange(), GetDeclOrder(decl),
             UnsupportedItem{
