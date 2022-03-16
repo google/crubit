@@ -25,8 +25,10 @@
 #include "base/logging.h"
 #include "third_party/absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "third_party/json/src/json.hpp"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 #include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
@@ -50,7 +52,7 @@ class HeaderName {
 
   absl::string_view IncludePath() const { return name_; }
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   template <typename H>
   friend H AbslHashValue(H h, const HeaderName& header_name) {
@@ -68,7 +70,7 @@ inline bool operator==(const HeaderName& lhs, const HeaderName& rhs) {
 }
 
 inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
-  return o << std::setw(internal::kJsonIndent) << h.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", h.ToJson()));
 }
 
 // An int uniquely representing a Decl. Since our IR goes through the JSON
@@ -82,7 +84,7 @@ DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 
 // A lifetime.
 struct Lifetime {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   // Lifetime name. Unlike syn::Lifetime, this does not include the apostrophe.
   //
@@ -95,13 +97,13 @@ struct Lifetime {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Lifetime& l) {
-  return o << std::setw(internal::kJsonIndent) << l.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", l.ToJson()));
 }
 
 // A C++ type involved in the bindings. It has the knowledge of how the type
 // is spelled in C++.
 struct CcType {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   // The name of the type. Examples:
   // - "int32_t", "std::ptrdiff_t", "long long", "bool"
@@ -114,8 +116,9 @@ struct CcType {
   std::string name;
 
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
-  // non-empty.
-  std::optional<DeclId> decl_id = std::nullopt;
+  // non-empty. `llvm::Optional` is used because it integrates better with
+  // `llvm::json` library than `std::optional`.
+  llvm::Optional<DeclId> decl_id;
 
   // The C++ const-qualification for the type.
   //
@@ -135,7 +138,7 @@ struct CcType {
 // A Rust type involved in the bindings. It has the knowledge of how the type
 // is spelled in Rust.
 struct RsType {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   // The name of the type. Examples:
   // - "i32" or "bool"
@@ -152,8 +155,9 @@ struct RsType {
   std::string name;
 
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
-  // non-empty.
-  std::optional<DeclId> decl_id = std::nullopt;
+  // non-empty. `llvm::Optional` is used because it integrates better with
+  // `llvm::json` library than `std::optional`.
+  llvm::Optional<DeclId> decl_id;
 
   // Lifetime arguments for a generic type. Examples:
   //   *mut i32 has no lifetime arguments
@@ -173,7 +177,7 @@ struct RsType {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const RsType& type) {
-  return o << std::setw(internal::kJsonIndent) << type.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", type.ToJson()));
 }
 
 // A type involved in the bindings. The rs_type and cc_type will be treated
@@ -215,14 +219,14 @@ struct MappedType {
 
   bool IsVoid() const { return rs_type.name == "()"; }
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   RsType rs_type;
   CcType cc_type;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const MappedType& type) {
-  return o << std::setw(internal::kJsonIndent) << type.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", type.ToJson()));
 }
 
 // An identifier involved in bindings.
@@ -248,7 +252,7 @@ class Identifier {
 
   absl::string_view Ident() const { return identifier_; }
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
  private:
   std::string identifier_;
@@ -272,7 +276,7 @@ class IntegerConstant {
   IntegerConstant(const IntegerConstant& other) = default;
   IntegerConstant& operator=(const IntegerConstant& other) = default;
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
  private:
   // value < 0
@@ -290,7 +294,7 @@ class Operator {
 
   absl::string_view Name() const { return name_; }
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
  private:
   std::string name_;
@@ -309,14 +313,14 @@ inline std::ostream& operator<<(std::ostream& stream, const Operator& op) {
 //    FuncParam of a C++ function `void Foo(int32_t a);` will be
 //    `FuncParam{.type=Type{"i32", "int32_t"}, .identifier=Identifier("foo"))`.
 struct FuncParam {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   MappedType type;
   Identifier identifier;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const FuncParam& param) {
-  return o << std::setw(internal::kJsonIndent) << param.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", param.ToJson()));
 }
 
 enum SpecialName {
@@ -333,7 +337,7 @@ std::ostream& operator<<(std::ostream& o, const SpecialName& special_name);
 // them differently. After all, they are not invoked or defined like normal
 // functions.
 using UnqualifiedIdentifier = std::variant<Identifier, Operator, SpecialName>;
-nlohmann::json ToJson(const UnqualifiedIdentifier& unqualified_identifier);
+llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier);
 
 struct MemberFuncMetadata {
   enum ReferenceQualification : char {
@@ -347,6 +351,8 @@ struct MemberFuncMetadata {
   // constructors and 2) `is_const` and `is_virtual` never applies to
   // constructors.
   struct InstanceMethodMetadata {
+    llvm::json::Value ToJson() const;
+
     ReferenceQualification reference = kUnqualified;
     bool is_const = false;
     bool is_virtual = false;
@@ -355,7 +361,7 @@ struct MemberFuncMetadata {
     bool is_explicit_ctor = false;
   };
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   // The type that this is a member function for.
   DeclId record_id;
@@ -363,12 +369,15 @@ struct MemberFuncMetadata {
   // Qualifiers for the instance method.
   //
   // If null, this is a static method.
-  std::optional<InstanceMethodMetadata> instance_method_metadata;
+  //
+  // `llvm::Optional` is used because it integrates better with `llvm::json`
+  // library than `std::optional`.
+  llvm::Optional<InstanceMethodMetadata> instance_method_metadata;
 };
 
 // Source code location
 struct SourceLoc {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   std::string filename;
   uint64 line;
@@ -376,28 +385,28 @@ struct SourceLoc {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const SourceLoc& r) {
-  return o << std::setw(internal::kJsonIndent) << r.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
 }
 
 // A function involved in the bindings.
 struct Func {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   UnqualifiedIdentifier name;
   BlazeLabel owning_target;
-  std::optional<std::string> doc_comment;
+  llvm::Optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
   std::vector<FuncParam> params;
   std::vector<Lifetime> lifetime_params;
   bool is_inline;
   // If null, this is not a member function.
-  std::optional<MemberFuncMetadata> member_func_metadata;
+  llvm::Optional<MemberFuncMetadata> member_func_metadata;
   SourceLoc source_loc;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
-  return o << std::setw(internal::kJsonIndent) << f.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", f.ToJson()));
 }
 
 // Access specifier for a member or base class.
@@ -411,10 +420,10 @@ std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access);
 
 // A field (non-static member variable) of a record.
 struct Field {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   Identifier identifier;
-  std::optional<std::string> doc_comment;
+  llvm::Optional<std::string> doc_comment;
   MappedType type;
   AccessSpecifier access;
   // Field offset in bits.
@@ -424,7 +433,7 @@ struct Field {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {
-  return o << std::setw(internal::kJsonIndent) << f.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", f.ToJson()));
 }
 
 // Information about special member functions.
@@ -450,7 +459,7 @@ struct SpecialMemberFunc {
     kDeleted,
   };
 
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   Definition definition = Definition::kTrivial;
   AccessSpecifier access = AccessSpecifier::kPublic;
@@ -460,23 +469,26 @@ std::ostream& operator<<(std::ostream& o,
                          const SpecialMemberFunc::Definition& definition);
 
 inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
-  return o << std::setw(internal::kJsonIndent) << f.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", f.ToJson()));
 }
 
 // A base class subobject of a struct or class.
 struct BaseClass {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
   DeclId base_record_id;
 
   // The offset the base class subobject is located at. This is always nonempty
   // for nonvirtual inheritance, and always empty if a virtual base class is
   // anywhere in the inheritance chain.
-  std::optional<int64_t> offset;
+  //
+  // `llvm::Optional` is used because it integrates better with `llvm::json`
+  // library than `std::optional`.
+  llvm::Optional<int64_t> offset;
 };
 
 // A record (struct, class, union).
 struct Record {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   // `rs_name` and `cc_name` are typically equal, but they may be different for
   // template instantiations (when `cc_name` is similar to `MyStruct<int>` and
@@ -486,7 +498,7 @@ struct Record {
 
   DeclId id;
   BlazeLabel owning_target;
-  std::optional<std::string> doc_comment;
+  llvm::Optional<std::string> doc_comment;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
   std::vector<Lifetime> lifetime_params;
@@ -497,7 +509,10 @@ struct Record {
   // The size of the base class subobjects, or null if there are none.
   //
   // More information: docs/struct_layout
-  std::optional<size_t> base_size = std::nullopt;
+  //
+  // `llvm::Optional` is used because it integrates better with `llvm::json`
+  // library than `std::optional`.
+  llvm::Optional<size_t> base_size;
 
   // True if the alignment may differ from what the fields would imply.
   //
@@ -532,14 +547,14 @@ struct Record {
 };
 
 struct Enumerator {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   Identifier identifier;
   IntegerConstant value;
 };
 
 struct Enum {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   Identifier identifier;
   DeclId id;
@@ -549,27 +564,27 @@ struct Enum {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
-  return o << std::setw(internal::kJsonIndent) << r.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
 }
 
 // A type alias (defined either using `typedef` or `using`).
 struct TypeAlias {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   Identifier identifier;
   DeclId id;
   BlazeLabel owning_target;
-  std::optional<std::string> doc_comment;
+  llvm::Optional<std::string> doc_comment;
   MappedType underlying_type;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
-  return o << std::setw(internal::kJsonIndent) << t.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", t.ToJson()));
 }
 
 // A placeholder for an item that we can't generate bindings for (yet)
 struct UnsupportedItem {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   // TODO(forster): We could show the original declaration in the generated
   // message (potentially also for successfully imported items).
@@ -584,23 +599,23 @@ struct UnsupportedItem {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
-  return o << std::setw(internal::kJsonIndent) << r.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
 }
 
 struct Comment {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   std::string text;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
-  return o << std::setw(internal::kJsonIndent) << r.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
 }
 
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
-  nlohmann::json ToJson() const;
+  llvm::json::Value ToJson() const;
 
   template <typename T>
   std::vector<const T*> get_items_if() const {
@@ -624,7 +639,7 @@ struct IR {
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
-  return o << std::setw(internal::kJsonIndent) << ir.ToJson();
+  return o << std::string(llvm::formatv("{0:2}", ir.ToJson()));
 }
 }  // namespace rs_bindings_from_cc
 

@@ -47,6 +47,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallPtrSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
 #include "util/task/status_macros.h"
 
@@ -154,10 +155,10 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
       }
       const clang::CXXRecordDecl* base_record_decl =
           ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      std::optional<int64_t> offset = {0};
+      llvm::Optional<int64_t> offset = {0};
       for (const clang::CXXBasePathElement& base_path_element : path) {
         if (base_path_element.Base->isVirtual()) {
-          offset = std::nullopt;
+          offset.reset();
           break;
         }
         *offset +=
@@ -166,7 +167,7 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
                      base_path_element.Base->getType()->getAsCXXRecordDecl()))
                  .getQuantity()};
       }
-      DCHECK(!offset.has_value() || *offset >= 0)
+      DCHECK(!offset.hasValue() || *offset >= 0)
           << "Concrete base classes should have non-negative offsets.";
       bases.push_back(
           BaseClass{.base_record_id = GenerateDeclId(base_record_decl),
@@ -414,20 +415,18 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     if (i > 0) {
       const auto& prev = items[i - 1];
       if (are_equal(item, prev)) {
-        std::string prev_json =
-            std::visit([&](auto&& item) { return item.ToJson().dump(); },
-                       std::get<2>(prev));
-        std::string curr_json =
-            std::visit([&](auto&& item) { return item.ToJson().dump(); },
-                       std::get<2>(item));
+        llvm::json::Value prev_json = std::visit(
+            [&](auto&& item) { return item.ToJson(); }, std::get<2>(prev));
+        llvm::json::Value curr_json = std::visit(
+            [&](auto&& item) { return item.ToJson(); }, std::get<2>(item));
         if (prev_json != curr_json) {
-          LOG(FATAL) << "Non-deterministic order of IR items: " << prev_json
-                     << " -VS- " << curr_json;
+          llvm::report_fatal_error(
+              llvm::formatv("Non-deterministic order of IR items: {0} -VS- {1}",
+                            prev_json, curr_json));
         } else {
           // TODO(lukasza): Avoid generating duplicate IR items.  Currently
           // known example: UnsupportedItem: name=std::signbit; message=
           // Items contained in namespaces are not supported yet.
-          LOG(WARNING) << "Duplicated IR item: " << curr_json;
           continue;
         }
       }
@@ -612,7 +611,7 @@ Importer::LookupResult Importer::ImportFunction(
       lifetime_params.begin(), lifetime_params.end(),
       [](const Lifetime& l1, const Lifetime& l2) { return l1.name < l2.name; });
 
-  std::optional<MemberFuncMetadata> member_func_metadata;
+  llvm::Optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     switch (method_decl->getAccess()) {
@@ -625,7 +624,8 @@ Importer::LookupResult Importer::ImportFunction(
         // TODO(lukasza): Revisit this for protected methods.
         return LookupResult();
     }
-    std::optional<MemberFuncMetadata::InstanceMethodMetadata> instance_metadata;
+    llvm::Optional<MemberFuncMetadata::InstanceMethodMetadata>
+        instance_metadata;
     if (method_decl->isInstance()) {
       MemberFuncMetadata::ReferenceQualification reference;
       switch (method_decl->getRefQualifier()) {
@@ -749,7 +749,7 @@ Importer::LookupResult Importer::ImportRecord(
 
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
 
-  std::optional<size_t> base_size = std::nullopt;
+  llvm::Optional<size_t> base_size;
   bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>();
   if (record_decl->getNumBases() != 0) {
     // The size of the base class subobjects is easy to compute, so long as we
@@ -907,7 +907,8 @@ static bool ShouldKeepCommentLine(absl::string_view line) {
   return !patterns_to_ignore.match(line);
 }
 
-std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
+llvm::Optional<std::string> Importer::GetComment(
+    const clang::Decl* decl) const {
   // This does currently not distinguish between different types of comments.
   // In general it is not possible in C++ to reliably only extract doc comments.
   // This is going to be a heuristic that needs to be tuned over time.
@@ -923,9 +924,8 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
       raw_comment->getFormattedText(sm, sm.getDiagnostics());
   std::string cleaned_comment_text = absl::StrJoin(
       absl::StrSplit(raw_comment_text, '\n', ShouldKeepCommentLine), "\n");
-  return cleaned_comment_text.empty()
-             ? std::nullopt
-             : std::optional<std::string>(std::move(cleaned_comment_text));
+  if (cleaned_comment_text.empty()) return {};
+  return cleaned_comment_text;
 }
 
 SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {

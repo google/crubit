@@ -114,10 +114,10 @@ MATCHER_P(NameIs, name, "") {
 
 // Matches an RsType or CcType that has the given decl_id.
 MATCHER_P(DeclIdIs, decl_id, "") {
-  if (arg.decl_id.has_value() && *arg.decl_id == decl_id) return true;
+  if (arg.decl_id.hasValue() && *arg.decl_id == decl_id) return true;
 
   *result_listener << "actual decl_id: ";
-  if (arg.decl_id.has_value()) {
+  if (arg.decl_id.hasValue()) {
     *result_listener << *arg.decl_id;
   } else {
     *result_listener << "std::nullopt";

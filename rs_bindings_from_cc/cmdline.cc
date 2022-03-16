@@ -11,8 +11,9 @@
 #include <vector>
 
 #include "third_party/absl/flags/flag.h"
+#include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/substitute.h"
-#include "third_party/json/include/nlohmann/json.hpp"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 #include "util/task/status_macros.h"
 
 ABSL_FLAG(bool, do_nothing, false,
@@ -41,6 +42,21 @@ ABSL_FLAG(std::string, targets_and_headers, std::string(),
           "]");
 
 namespace rs_bindings_from_cc {
+
+namespace {
+
+struct TargetAndHeaders {
+  std::string target;
+  std::vector<std::string> headers;
+};
+
+bool fromJSON(const llvm::json::Value& json, TargetAndHeaders& out,
+              llvm::json::Path path) {
+  llvm::json::ObjectMapper mapper(json, path);
+  return mapper && mapper.map("t", out.target) && mapper.map("h", out.headers);
+}
+
+}  // namespace
 
 absl::StatusOr<Cmdline> Cmdline::Create() {
   return CreateFromArgs(
@@ -79,56 +95,33 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
   if (targets_and_headers_str.empty()) {
     return absl::InvalidArgumentError("please specify --targets_and_headers");
   }
-  nlohmann::json targets_and_headers =
-      nlohmann::json::parse(std::move(targets_and_headers_str),
-                            /* cb= */ nullptr,
-                            /* allow_exceptions= */ false);
-  if (!targets_and_headers.is_array()) {
+  auto targets_and_headers = llvm::json::parse<std::vector<TargetAndHeaders>>(
+      std::move(targets_and_headers_str));
+  if (auto err = targets_and_headers.takeError()) {
     return absl::InvalidArgumentError(
-        "Expected `--targets_and_headers` to be a JSON array of objects");
+        absl::StrCat("Malformed `--targets_and_headers` argument: ",
+                     toString(std::move(err))));
   }
-  for (const auto& target_and_headers : targets_and_headers) {
-    if (!target_and_headers.contains("t")) {
-      return absl::InvalidArgumentError(
-          "Missing `t` field in an `--targets_and_headers` object");
-    }
-    if (!target_and_headers["t"].is_string()) {
-      return absl::InvalidArgumentError(
-          "Expected `t` fields of `--targets_and_headers` to be a string");
-    }
-    if (!target_and_headers.contains("h")) {
-      return absl::InvalidArgumentError(
-          "Missing `h` field in an `--targets_and_headers` object");
-    }
-    if (!target_and_headers["h"].is_array()) {
-      return absl::InvalidArgumentError(
-          "Expected `h` fields of `--targets_and_headers` to be an array");
-    }
-    BlazeLabel target{std::string(target_and_headers["t"])};
-    if (target.value().empty()) {
+  for (const TargetAndHeaders& it : *targets_and_headers) {
+    const std::string& target = it.target;
+    if (target.empty()) {
       return absl::InvalidArgumentError(
           "Expected `t` fields of `--targets_and_headers` to be a non-empty "
           "string");
     }
-    for (const auto& header : target_and_headers["h"]) {
-      if (!header.is_string()) {
-        return absl::InvalidArgumentError(
-            "Expected `h` fields of `--targets_and_headers` to be an array of "
-            "strings");
-      }
-      std::string header_str(header);
-      if (header_str.empty()) {
+    for (const std::string& header : it.headers) {
+      if (header.empty()) {
         return absl::InvalidArgumentError(
             "Expected `h` fields of `--targets_and_headers` to be an array of "
             "non-empty strings");
       }
       const auto [it, inserted] = cmdline.headers_to_targets_.insert(
-          std::make_pair(HeaderName(header_str), target));
+          std::make_pair(HeaderName(header), BlazeLabel(target)));
       if (!inserted) {
         return absl::InvalidArgumentError(absl::Substitute(
             "The `--targets_and_headers` cmdline argument assigns "
             "`$0` header to two conflicting targets: `$1` vs `$2`",
-            header_str, target.value(), it->second.value()));
+            header, target, it->second.value()));
       }
     }
   }

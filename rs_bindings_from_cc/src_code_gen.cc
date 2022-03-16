@@ -8,8 +8,9 @@
 
 #include "rs_bindings_from_cc/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "third_party/json/src/json.hpp"
 #include "third_party/llvm/llvm-project/clang/include/clang/Format/Format.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
 namespace rs_bindings_from_cc {
 
@@ -48,7 +49,7 @@ static void FreeFfiBindings(FfiBindings ffi_bindings) {
 }
 
 Bindings GenerateBindings(const IR& ir) {
-  std::string json = ir.ToJson().dump();
+  std::string json = llvm::formatv("{0}", ir.ToJson());
   FfiBindings ffi_bindings = GenerateBindingsImpl(MakeFfiU8Slice(json));
   Bindings bindings = MakeBindingsFromFfiBindings(ffi_bindings);
   FreeFfiBindings(ffi_bindings);

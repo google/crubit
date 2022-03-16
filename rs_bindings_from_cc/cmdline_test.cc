@@ -57,10 +57,10 @@ TEST(CmdlineTest, TargetsAndHeadersEmpty) {
 }
 
 TEST(CmdlineTest, TargetsAndHeadersInvalidJson) {
-  ASSERT_THAT(
-      TestCmdline({"h1"}, "#!$%"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               AllOf(HasSubstr("--targets_and_headers"), HasSubstr("array"))));
+  ASSERT_THAT(TestCmdline({"h1"}, "#!$%"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       AllOf(HasSubstr("--targets_and_headers"),
+                             HasSubstr("Invalid JSON"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfTopLevelArray) {
@@ -80,21 +80,21 @@ TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeadersArray) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "h": 123}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`h`"), HasSubstr("array"))));
+                             HasSubstr(".h"), HasSubstr("array"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersMissingTarget) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"h": ["h1", "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`t`"), HasSubstr("Missing"))));
+                             HasSubstr(".t"), HasSubstr("missing"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersMissingHeader) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1"}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`h`"), HasSubstr("Missing"))));
+                             HasSubstr(".h"), HasSubstr("missing"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersEmptyHeader) {
@@ -115,14 +115,14 @@ TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfTarget) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": 123, "h": ["h1", "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`t`"), HasSubstr("string"))));
+                             HasSubstr(".t"), HasSubstr("string"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeader) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "h": [123, "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`h`"), HasSubstr("string"))));
+                             HasSubstr(".h"), HasSubstr("string"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersDuplicateHeader) {

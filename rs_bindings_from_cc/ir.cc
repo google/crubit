@@ -16,65 +16,57 @@
 #include "base/integral_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "third_party/json/src/json.hpp"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 #include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
 
 template <class T>
-static std::vector<nlohmann::json> VectorToJson(const std::vector<T>& v) {
-  std::vector<nlohmann::json> result;
-  result.reserve(v.size());
-  for (const T& t : v) {
-    result.push_back(t.ToJson());
-  }
-  return result;
+llvm::json::Value toJSON(const T& t) {
+  return t.ToJson();
 }
 
-nlohmann::json HeaderName::ToJson() const {
-  nlohmann::json result;
-  result["name"] = name_;
-  return result;
+template <typename TTag, typename TInt>
+llvm::json::Value toJSON(const util_intops::StrongInt<TTag, TInt> strong_int) {
+  return llvm::json::Value(strong_int.value());
 }
 
-nlohmann::json Lifetime::ToJson() const {
-  nlohmann::json result;
-  result["name"] = name;
-  result["id"] = id.value();
-  return result;
+template <typename TTag>
+llvm::json::Value toJSON(const gtl::labs::StringType<TTag> string_type) {
+  return llvm::json::Value(string_type.value());
 }
 
-nlohmann::json RsType::ToJson() const {
-  nlohmann::json result;
-
-  if (decl_id.has_value()) {
-    result["decl_id"] = decl_id->value();
-  } else {
-    result["name"] = name;
-  }
-  std::vector<nlohmann::json> json_lifetime_args;
-  json_lifetime_args.reserve(lifetime_args.size());
-  for (const LifetimeId& lifetime_id : lifetime_args) {
-    json_lifetime_args.push_back(lifetime_id.value());
-  }
-  result["lifetime_args"] = json_lifetime_args;
-  result["type_args"] = VectorToJson(type_args);
-
-  return result;
+llvm::json::Value HeaderName::ToJson() const {
+  return llvm::json::Object{
+      {"name", name_},
+  };
 }
 
-nlohmann::json CcType::ToJson() const {
-  nlohmann::json result;
+llvm::json::Value Lifetime::ToJson() const {
+  return llvm::json::Object{
+      {"name", name},
+      {"id", id},
+  };
+}
 
-  if (decl_id.has_value()) {
-    result["decl_id"] = decl_id->value();
-  } else {
-    result["name"] = name;
-  }
-  result["is_const"] = is_const;
-  result["type_args"] = VectorToJson(type_args);
+llvm::json::Value RsType::ToJson() const {
+  return llvm::json::Object{
+      {"name", decl_id.hasValue() ? llvm::json::Value(nullptr)
+                                  : llvm::json::Value(name)},
+      {"lifetime_args", lifetime_args},
+      {"type_args", type_args},
+      {"decl_id", decl_id},
+  };
+}
 
-  return result;
+llvm::json::Value CcType::ToJson() const {
+  return llvm::json::Object{
+      {"name", decl_id.hasValue() ? llvm::json::Value(nullptr)
+                                  : llvm::json::Value(name)},
+      {"is_const", is_const},
+      {"type_args", type_args},
+      {"decl_id", decl_id},
+  };
 }
 
 static MappedType PointerOrReferenceTo(MappedType pointee_type,
@@ -175,32 +167,30 @@ MappedType MappedType::FuncRef(absl::string_view cc_call_conv,
   };
 }
 
-nlohmann::json MappedType::ToJson() const {
-  nlohmann::json result;
-
-  result["rs_type"] = rs_type.ToJson();
-  result["cc_type"] = cc_type.ToJson();
-
-  return result;
+llvm::json::Value MappedType::ToJson() const {
+  return llvm::json::Object{
+      {"rs_type", rs_type},
+      {"cc_type", cc_type},
+  };
 }
 
-nlohmann::json Identifier::ToJson() const {
-  nlohmann::json result;
-  result["identifier"] = identifier_;
-  return result;
+llvm::json::Value Identifier::ToJson() const {
+  return llvm::json::Object{
+      {"identifier", identifier_},
+  };
 }
 
-nlohmann::json IntegerConstant::ToJson() const {
-  nlohmann::json result;
-  result["is_negative"] = is_negative_;
-  result["wrapped_value"] = wrapped_value_;
-  return result;
+llvm::json::Value IntegerConstant::ToJson() const {
+  return llvm::json::Object{
+      {"is_negative", is_negative_},
+      {"wrapped_value", wrapped_value_},
+  };
 }
 
-nlohmann::json Operator::ToJson() const {
-  nlohmann::json result;
-  result["name"] = name_;
-  return result;
+llvm::json::Value Operator::ToJson() const {
+  return llvm::json::Object{
+      {"name", name_},
+  };
 }
 
 static std::string SpecialNameToString(SpecialName special_name) {
@@ -212,81 +202,80 @@ static std::string SpecialNameToString(SpecialName special_name) {
   }
 }
 
-nlohmann::json ToJson(const UnqualifiedIdentifier& unqualified_identifier) {
-  nlohmann::json result;
+llvm::json::Value toJSON(const UnqualifiedIdentifier& unqualified_identifier) {
   if (auto* id = std::get_if<Identifier>(&unqualified_identifier)) {
-    result["Identifier"] = id->ToJson();
+    return llvm::json::Object{
+        {"Identifier", *id},
+    };
   } else if (auto* op = std::get_if<Operator>(&unqualified_identifier)) {
-    result["Operator"] = op->ToJson();
+    return llvm::json::Object{
+        {"Operator", *op},
+    };
   } else {
     SpecialName special_name = std::get<SpecialName>(unqualified_identifier);
-    result[SpecialNameToString(special_name)] = nullptr;
+    return llvm::json::Object{
+        {SpecialNameToString(special_name), nullptr},
+    };
   }
-  return result;
 }
 
-nlohmann::json FuncParam::ToJson() const {
-  nlohmann::json result;
-  result["type"] = type.ToJson();
-  result["identifier"] = identifier.ToJson();
-  return result;
+llvm::json::Value FuncParam::ToJson() const {
+  return llvm::json::Object{
+      {"type", type},
+      {"identifier", identifier},
+  };
 }
 
 std::ostream& operator<<(std::ostream& o, const SpecialName& special_name) {
   return o << SpecialNameToString(special_name);
 }
 
-nlohmann::json MemberFuncMetadata::ToJson() const {
-  nlohmann::json meta;
-
-  meta["record_id"] = record_id.value();
-
-  if (instance_method_metadata.has_value()) {
-    nlohmann::json instance;
-
-    absl::string_view reference;
-    switch (instance_method_metadata->reference) {
-      case MemberFuncMetadata::kLValue:
-        reference = "LValue";
-        break;
-      case MemberFuncMetadata::kRValue:
-        reference = "RValue";
-        break;
-      case MemberFuncMetadata::kUnqualified:
-        reference = "Unqualified";
-        break;
-    }
-    instance["reference"] = reference;
-    instance["is_const"] = instance_method_metadata->is_const;
-    instance["is_virtual"] = instance_method_metadata->is_virtual;
-    instance["is_explicit_ctor"] = instance_method_metadata->is_explicit_ctor;
-
-    meta["instance_method_metadata"] = std::move(instance);
+llvm::json::Value MemberFuncMetadata::InstanceMethodMetadata::ToJson() const {
+  const char* reference_str = nullptr;
+  switch (reference) {
+    case MemberFuncMetadata::kLValue:
+      reference_str = "LValue";
+      break;
+    case MemberFuncMetadata::kRValue:
+      reference_str = "RValue";
+      break;
+    case MemberFuncMetadata::kUnqualified:
+      reference_str = "Unqualified";
+      break;
   }
 
-  return meta;
+  return llvm::json::Object{
+      {"reference", reference_str},
+      {"is_const", is_const},
+      {"is_virtual", is_virtual},
+      {"is_explicit_ctor", is_explicit_ctor},
+  };
 }
 
-nlohmann::json Func::ToJson() const {
-  nlohmann::json func;
-  func["name"] = rs_bindings_from_cc::ToJson(name);
-  func["owning_target"] = owning_target.value();
-  if (doc_comment) {
-    func["doc_comment"] = *doc_comment;
-  }
-  func["mangled_name"] = mangled_name;
-  func["return_type"] = return_type.ToJson();
-  func["params"] = VectorToJson(params);
-  func["lifetime_params"] = VectorToJson(lifetime_params);
-  func["is_inline"] = is_inline;
-  if (member_func_metadata.has_value()) {
-    func["member_func_metadata"] = member_func_metadata->ToJson();
-  }
-  func["source_loc"] = source_loc.ToJson();
+llvm::json::Value MemberFuncMetadata::ToJson() const {
+  return llvm::json::Object{
+      {"record_id", record_id},
+      {"instance_method_metadata", instance_method_metadata},
+  };
+}
 
-  nlohmann::json item;
-  item["Func"] = std::move(func);
-  return item;
+llvm::json::Value Func::ToJson() const {
+  llvm::json::Object func{
+      {"name", name},
+      {"owning_target", owning_target},
+      {"doc_comment", doc_comment},
+      {"mangled_name", mangled_name},
+      {"return_type", return_type},
+      {"params", params},
+      {"lifetime_params", lifetime_params},
+      {"is_inline", is_inline},
+      {"member_func_metadata", member_func_metadata},
+      {"source_loc", source_loc},
+  };
+
+  return llvm::json::Object{
+      {"Func", std::move(func)},
+  };
 }
 
 static std::string AccessToString(AccessSpecifier access) {
@@ -304,18 +293,15 @@ std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access) {
   return o << AccessToString(access);
 }
 
-nlohmann::json Field::ToJson() const {
-  nlohmann::json result;
-
-  result["identifier"] = identifier.ToJson();
-  if (doc_comment) {
-    result["doc_comment"] = *doc_comment;
-  }
-  result["type"] = type.ToJson();
-  result["access"] = AccessToString(access);
-  result["offset"] = offset;
-  result["is_no_unique_address"] = is_no_unique_address;
-  return result;
+llvm::json::Value Field::ToJson() const {
+  return llvm::json::Object{
+      {"identifier", identifier},
+      {"doc_comment", doc_comment},
+      {"type", type},
+      {"access", AccessToString(access)},
+      {"offset", offset},
+      {"is_no_unique_address", is_no_unique_address},
+  };
 }
 
 static std::string SpecialMemberDefinitionToString(
@@ -337,125 +323,119 @@ std::ostream& operator<<(std::ostream& o,
   return o << SpecialMemberDefinitionToString(definition);
 }
 
-nlohmann::json SpecialMemberFunc::ToJson() const {
-  nlohmann::json result;
-  result["definition"] = SpecialMemberDefinitionToString(definition);
-  result["access"] = AccessToString(access);
-  return result;
+llvm::json::Value SpecialMemberFunc::ToJson() const {
+  return llvm::json::Object{
+      {"definition", SpecialMemberDefinitionToString(definition)},
+      {"access", AccessToString(access)},
+  };
 }
 
-nlohmann::json BaseClass::ToJson() const {
-  nlohmann::json base;
-  base["base_record_id"] = base_record_id.value();
-  if (offset.has_value()) {
-    base["offset"] = *offset;
-  }
-  return base;
-}
-nlohmann::json Record::ToJson() const {
-  nlohmann::json record;
-  record["rs_name"] = rs_name;
-  record["cc_name"] = cc_name;
-  record["id"] = id.value();
-  record["owning_target"] = owning_target.value();
-  if (doc_comment) {
-    record["doc_comment"] = *doc_comment;
-  }
-  record["unambiguous_public_bases"] = VectorToJson(unambiguous_public_bases);
-  record["fields"] = VectorToJson(fields);
-  record["lifetime_params"] = VectorToJson(lifetime_params);
-  record["size"] = size;
-  record["alignment"] = alignment;
-  if (base_size) {
-    record["base_size"] = *base_size;
-  }
-  record["override_alignment"] = override_alignment;
-  record["copy_constructor"] = copy_constructor.ToJson();
-  record["move_constructor"] = move_constructor.ToJson();
-  record["destructor"] = destructor.ToJson();
-  record["is_trivial_abi"] = is_trivial_abi;
-  record["is_final"] = is_final;
-
-  nlohmann::json item;
-  item["Record"] = std::move(record);
-  return item;
+llvm::json::Value BaseClass::ToJson() const {
+  return llvm::json::Object{
+      {"base_record_id", base_record_id},
+      {"offset", offset},
+  };
 }
 
-nlohmann::json Enumerator::ToJson() const {
-  nlohmann::json result;
-  result["identifier"] = identifier.ToJson();
-  result["value"] = value.ToJson();
-  return result;
+llvm::json::Value Record::ToJson() const {
+  llvm::json::Object record{
+      {"rs_name", rs_name},
+      {"cc_name", cc_name},
+      {"id", id},
+      {"owning_target", owning_target},
+      {"doc_comment", doc_comment},
+      {"unambiguous_public_bases", unambiguous_public_bases},
+      {"fields", fields},
+      {"lifetime_params", lifetime_params},
+      {"size", size},
+      {"alignment", alignment},
+      {"base_size", base_size},
+      {"override_alignment", override_alignment},
+      {"copy_constructor", copy_constructor},
+      {"move_constructor", move_constructor},
+      {"destructor", destructor},
+      {"is_trivial_abi", is_trivial_abi},
+      {"is_final", is_final},
+  };
+
+  return llvm::json::Object{
+      {"Record", std::move(record)},
+  };
 }
 
-nlohmann::json Enum::ToJson() const {
-  nlohmann::json enum_ir;
-  enum_ir["identifier"] = identifier.ToJson();
-  enum_ir["id"] = id.value();
-  enum_ir["owning_target"] = owning_target.value();
-  enum_ir["underlying_type"] = underlying_type.ToJson();
-  enum_ir["enumerators"] = VectorToJson(enumerators);
-
-  nlohmann::json item;
-  item["Enum"] = std::move(enum_ir);
-  return item;
+llvm::json::Value Enumerator::ToJson() const {
+  return llvm::json::Object{
+      {"identifier", identifier},
+      {"value", value},
+  };
 }
 
-nlohmann::json TypeAlias::ToJson() const {
-  nlohmann::json type_alias;
-  type_alias["identifier"] = identifier.ToJson();
-  type_alias["id"] = id.value();
-  type_alias["owning_target"] = owning_target.value();
-  if (doc_comment) {
-    type_alias["doc_comment"] = *doc_comment;
-  }
-  type_alias["underlying_type"] = underlying_type.ToJson();
+llvm::json::Value Enum::ToJson() const {
+  llvm::json::Object enum_ir{
+      {"identifier", identifier},       {"id", id},
+      {"owning_target", owning_target}, {"underlying_type", underlying_type},
+      {"enumerators", enumerators},
+  };
 
-  nlohmann::json item;
-  item["TypeAlias"] = std::move(type_alias);
-  return item;
+  return llvm::json::Object{
+      {"Enum", std::move(enum_ir)},
+  };
 }
 
-nlohmann::json SourceLoc::ToJson() const {
-  nlohmann::json source_loc;
-  source_loc["filename"] = filename;
-  source_loc["line"] = line;
-  source_loc["column"] = column;
-  return source_loc;
+llvm::json::Value TypeAlias::ToJson() const {
+  llvm::json::Object type_alias{
+      {"identifier", identifier},           {"id", id},
+      {"owning_target", owning_target},     {"doc_comment", doc_comment},
+      {"underlying_type", underlying_type},
+  };
+
+  return llvm::json::Object{
+      {"TypeAlias", std::move(type_alias)},
+  };
 }
 
-nlohmann::json UnsupportedItem::ToJson() const {
-  nlohmann::json unsupported;
-  unsupported["name"] = name;
-  unsupported["message"] = message;
-  unsupported["source_loc"] = source_loc.ToJson();
-
-  nlohmann::json item;
-  item["UnsupportedItem"] = std::move(unsupported);
-  return item;
+llvm::json::Value SourceLoc::ToJson() const {
+  return llvm::json::Object{
+      {"filename", filename},
+      {"line", line},
+      {"column", column},
+  };
 }
 
-nlohmann::json Comment::ToJson() const {
-  nlohmann::json comment;
-  comment["text"] = text;
+llvm::json::Value UnsupportedItem::ToJson() const {
+  llvm::json::Object unsupported{
+      {"name", name},
+      {"message", message},
+      {"source_loc", source_loc},
+  };
 
-  nlohmann::json item;
-  item["Comment"] = std::move(comment);
-  return item;
+  return llvm::json::Object{
+      {"UnsupportedItem", std::move(unsupported)},
+  };
 }
 
-nlohmann::json IR::ToJson() const {
-  std::vector<nlohmann::json> json_items;
+llvm::json::Value Comment::ToJson() const {
+  llvm::json::Object comment{
+      {"text", text},
+  };
+
+  return llvm::json::Object{
+      {"Comment", std::move(comment)},
+  };
+}
+
+llvm::json::Value IR::ToJson() const {
+  std::vector<llvm::json::Value> json_items;
   json_items.reserve(items.size());
   for (const auto& item : items) {
     std::visit([&](auto&& item) { json_items.push_back(item.ToJson()); }, item);
   }
 
-  nlohmann::json result;
-  result["used_headers"] = VectorToJson(used_headers);
-  result["current_target"] = current_target.value();
-  result["items"] = std::move(json_items);
-  return result;
+  return llvm::json::Object{
+      {"used_headers", used_headers},
+      {"current_target", current_target},
+      {"items", std::move(json_items)},
+  };
 }
 
 }  // namespace rs_bindings_from_cc

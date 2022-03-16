@@ -21,7 +21,8 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
-#include "third_party/json/src/json.hpp"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
 #include "util/task/status_macros.h"
 
@@ -66,8 +67,8 @@ absl::Status Main(int argc, char* argv[]) {
           std::vector<absl::string_view>(argv, argv + argc)));
 
   if (!cmdline.ir_out().empty()) {
-    RETURN_IF_ERROR(
-        SetFileContents(cmdline.ir_out(), ir.ToJson().dump(/*indent=*/2)));
+    RETURN_IF_ERROR(SetFileContents(
+        cmdline.ir_out(), std::string(llvm::formatv("{0:2}", ir.ToJson()))));
   }
 
   rs_bindings_from_cc::Bindings bindings =

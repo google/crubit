@@ -159,7 +159,7 @@ class Importer {
   }
 
   // Gets the doc comment of the declaration.
-  std::optional<std::string> GetComment(const clang::Decl* decl) const;
+  llvm::Optional<std::string> GetComment(const clang::Decl* decl) const;
 
   // Converts the Clang type `qual_type` into an equivalent `MappedType`.
   // Lifetimes for the type can optionally be specified using `lifetimes`.
