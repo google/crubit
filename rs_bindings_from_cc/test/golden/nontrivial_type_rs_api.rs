@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 /// Nontrivial due to (declared, but not yet defined) user-specified constructor
 /// and destructor.
 ///
@@ -25,7 +29,7 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=12
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=16
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter #0 is not supported: Unsupported type 'struct Nontrivial &&': Unsupported clang::Type class 'RValueReference'
 
@@ -54,7 +58,7 @@ pub struct NontrivialInline {
 
 impl !Unpin for NontrivialInline {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=25
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=29
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&': Unsupported clang::Type class 'RValueReference'
 
@@ -84,7 +88,7 @@ pub struct NontrivialMembers {
 
 impl !Unpin for NontrivialMembers {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=42
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&': Unsupported clang::Type class 'RValueReference'
 
@@ -95,15 +99,15 @@ impl Drop for NontrivialMembers {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=42
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=46
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=43
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=47
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=45
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=49
 // Error while generating bindings for item 'ReturnsByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
 

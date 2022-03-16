@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 /// The same as Derived from inheritance.h, but in a different build target.
 ///
 /// This tests inheritance across library boundaries.
@@ -40,23 +44,23 @@ impl<'a> From<&'a Derived2> for &'a Base2 {
     }
 }
 
-// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::Derived2':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::Derived2':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::Derived2':
 // Parameter #0 is not supported: Unsupported type 'struct Derived2 &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=11
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived2 &&': Unsupported clang::Type class 'RValueReference'
 

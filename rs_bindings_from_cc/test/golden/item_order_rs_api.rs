@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FirstStruct {
@@ -30,15 +34,15 @@ impl Default for FirstStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=6
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::FirstStruct':
 // Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=6
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=6
+// rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&': Unsupported clang::Type class 'RValueReference'
 
@@ -64,15 +68,15 @@ impl Default for SecondStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=12
+// rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::SecondStruct':
 // Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=12
+// rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=12
+// rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&': Unsupported clang::Type class 'RValueReference'
 

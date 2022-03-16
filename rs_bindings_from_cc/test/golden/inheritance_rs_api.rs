@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 /// Using classes to force these to be non-POD.
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.
@@ -24,23 +28,23 @@ pub struct Base0 {
 
 impl !Unpin for Base0 {}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
 // Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=9
+// rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::operator=':
 // Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported clang::Type class 'RValueReference'
 
@@ -52,23 +56,23 @@ pub struct Base1 {
 
 impl !Unpin for Base1 {}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
 // Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=10
+// rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::operator=':
 // Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported clang::Type class 'RValueReference'
 
@@ -79,23 +83,23 @@ pub struct Base2 {
 
 impl !Unpin for Base2 {}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
 // Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
+// rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::operator=':
 // Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported clang::Type class 'RValueReference'
 
@@ -121,23 +125,23 @@ impl<'a> From<&'a Derived> for &'a Base2 {
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::Derived':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::Derived':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::Derived':
 // Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported clang::Type class 'RValueReference'
 

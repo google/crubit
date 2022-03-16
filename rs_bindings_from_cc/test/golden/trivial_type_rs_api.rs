@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 /// Implicitly defined special member functions are trivial on a struct with
 /// only trivial members.
 #[derive(Clone, Copy)]
@@ -32,15 +36,15 @@ impl Default for Trivial {
     }
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'Trivial::Trivial':
 // Parameter #0 is not supported: Unsupported type 'struct Trivial &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'Trivial::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=8
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'Trivial::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Trivial &&': Unsupported clang::Type class 'RValueReference'
 
@@ -63,15 +67,15 @@ impl Default for TrivialWithDefaulted {
     }
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=18
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=22
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=19
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=23
 // Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
 // Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=20
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=24
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&': Unsupported clang::Type class 'RValueReference'
 
@@ -84,23 +88,23 @@ pub struct TrivialNonfinal {
 
 impl !Unpin for TrivialNonfinal {}
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
 // Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=29
+// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&': Unsupported clang::Type class 'RValueReference'
 

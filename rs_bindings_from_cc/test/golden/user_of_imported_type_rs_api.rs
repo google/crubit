@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #[inline(always)]
 pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial {
     unsafe { crate::detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
@@ -35,15 +39,15 @@ impl Default for UserOfImportedType {
     }
 }
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
 // Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=10
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
 

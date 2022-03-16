@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 // File comment
 
 // TODO(b/202933018): Re-enable once namespaces are supported
@@ -40,15 +44,15 @@ impl Default for Foo {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=13
+// rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::Foo':
 // Parameter #0 is not supported: Unsupported type 'struct Foo &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/comment.h;l=13
+// rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=13
+// rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Foo &&': Unsupported clang::Type class 'RValueReference'
 
@@ -82,15 +86,15 @@ impl Default for Bar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=39
+// rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'Bar::Bar':
 // Parameter #0 is not supported: Unsupported type 'struct Bar &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/comment.h;l=39
+// rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'Bar::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=39
+// rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'Bar::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Bar &&': Unsupported clang::Type class 'RValueReference'
 
@@ -112,15 +116,15 @@ impl Default for HasNoComments {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=45
+// rs_bindings_from_cc/test/golden/comment.h;l=49
 // Error while generating bindings for item 'HasNoComments::HasNoComments':
 // Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/comment.h;l=45
+// rs_bindings_from_cc/test/golden/comment.h;l=49
 // Error while generating bindings for item 'HasNoComments::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=45
+// rs_bindings_from_cc/test/golden/comment.h;l=49
 // Error while generating bindings for item 'HasNoComments::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&': Unsupported clang::Type class 'RValueReference'
 

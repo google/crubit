@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
@@ -31,19 +35,19 @@ impl Default for SomeStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=9
+// rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/types.h;l=9
+// rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/types.h;l=9
+// rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/types.h;l=11
+// rs_bindings_from_cc/test/golden/types.h;l=15
 // Error while generating bindings for item 'SomeUnion':
 // Unions are not supported yet
 
@@ -103,7 +107,7 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ref_field: *const SomeStruct,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=13
+// rs_bindings_from_cc/test/golden/types.h;l=17
 // Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
 // Parameter #0 is not supported: Unsupported type 'struct FieldTypeTestStruct &&': Unsupported clang::Type class 'RValueReference'
 

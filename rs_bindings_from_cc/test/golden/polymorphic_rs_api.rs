@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #[repr(C)]
 pub struct PolymorphicClass {
     /// Prevent empty C++ struct being zero-size in Rust.
@@ -21,15 +25,15 @@ pub struct PolymorphicClass {
 
 impl !Unpin for PolymorphicClass {}
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 // Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 // Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
 // Bindings for constructors of non-trivial types are not supported yet
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=6
+// rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 // Error while generating bindings for item 'PolymorphicClass::operator=':
 // Bindings for this kind of operator are not supported
 

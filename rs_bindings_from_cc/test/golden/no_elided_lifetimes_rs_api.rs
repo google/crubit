@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #[inline(always)]
 pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
@@ -25,23 +29,23 @@ pub struct S {
     placeholder: std::mem::MaybeUninit<u8>,
 }
 
-// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
 // Parameter #0 is not supported: Unsupported type 'struct S &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=6
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct S &&': Unsupported clang::Type class 'RValueReference'
 

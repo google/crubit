@@ -13,6 +13,10 @@ use memoffset_unstable_const::offset_of;
 
 pub type __builtin_ms_va_list = *mut u8;
 
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 #[repr(C)]
 pub struct NontrivialCustomType {
     pub i: i32,
@@ -20,19 +24,19 @@ pub struct NontrivialCustomType {
 
 impl !Unpin for NontrivialCustomType {}
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=7
+// rs_bindings_from_cc/test/golden/unsupported.h;l=11
 // Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialCustomType &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=12
+// rs_bindings_from_cc/test/golden/unsupported.h;l=16
 // Error while generating bindings for item 'UnsupportedParamType':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=13
+// rs_bindings_from_cc/test/golden/unsupported.h;l=17
 // Error while generating bindings for item 'UnsupportedReturnType':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=15
+// rs_bindings_from_cc/test/golden/unsupported.h;l=19
 // Error while generating bindings for item 'MultipleReasons':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
 //
@@ -40,7 +44,7 @@ impl !Unpin for NontrivialCustomType {}
 //
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #2
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=18
+// rs_bindings_from_cc/test/golden/unsupported.h;l=22
 // Error while generating bindings for item 'ns':
 // Namespaces are not supported yet
 
@@ -64,27 +68,27 @@ impl Default for ContainingStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=26
+// rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::ContainingStruct':
 // Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=26
+// rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=26
+// rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&': Unsupported clang::Type class 'RValueReference'
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=27
+// rs_bindings_from_cc/test/golden/unsupported.h;l=31
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=28
+// rs_bindings_from_cc/test/golden/unsupported.h;l=32
 // Error while generating bindings for item 'ContainingStruct::NestedStruct::NonStaticMemberFunction':
 // Couldn't import the parent
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=29
+// rs_bindings_from_cc/test/golden/unsupported.h;l=33
 // Error while generating bindings for item 'ContainingStruct::NestedStruct::StaticMemberFunction':
 // Couldn't import the parent
 
