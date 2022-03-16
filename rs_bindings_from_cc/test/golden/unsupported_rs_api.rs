@@ -40,13 +40,9 @@ impl !Unpin for NontrivialCustomType {}
 //
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #2
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=19
-// Error while generating bindings for item 'ns::FunctionInNamespace':
-// Items contained in namespaces are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=20
-// Error while generating bindings for item 'ns::StructInNamespace':
-// Items contained in namespaces are not supported yet
+// rs_bindings_from_cc/test/golden/unsupported.h;l=18
+// Error while generating bindings for item 'ns':
+// Namespaces are not supported yet
 
 // namespace ns
 

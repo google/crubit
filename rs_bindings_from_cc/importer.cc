@@ -439,11 +439,6 @@ void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext* decl_context) {
   for (auto decl : decl_context->decls()) {
     LookupDecl(decl->getCanonicalDecl());
-
-    if (auto* nested_context = clang::dyn_cast<clang::DeclContext>(decl)) {
-      if (nested_context->isNamespace())
-        ImportDeclsFromDeclContext(nested_context);
-    }
   }
 }
 
@@ -456,11 +451,9 @@ Importer::LookupResult Importer::LookupDecl(clang::Decl* decl) {
 }
 
 Importer::LookupResult Importer::ImportDecl(clang::Decl* decl) {
-  if (decl->getDeclContext()->isNamespace()) {
-    return LookupResult("Items contained in namespaces are not supported yet");
-  }
-
-  if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
+  if (auto* namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
+    return LookupResult("Namespaces are not supported yet");
+  } else if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
     return ImportFunction(function_decl);
   } else if (auto* function_template_decl =
                  clang::dyn_cast<clang::FunctionTemplateDecl>(decl)) {
