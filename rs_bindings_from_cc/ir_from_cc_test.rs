@@ -1129,31 +1129,15 @@ fn test_destructor_function_name() {
 #[test]
 fn test_unsupported_items_are_emitted() -> Result<()> {
     // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing structs from namespaces.
-    let ir = ir_from_cc("namespace my_namespace { struct StructFromNamespaceIsUnsupported {}; }")?;
+    // once we start importing nested structs.
+    let ir = ir_from_cc("struct X { struct Y {}; };")?;
     assert_strings_contain(
         ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
-        "my_namespace::StructFromNamespaceIsUnsupported",
+        "X::Y",
     );
     Ok(())
 }
 
-#[test]
-fn test_unsupported_items_are_emitted_from_reopened_namespace() -> Result<()> {
-    // Once we actually support namespaces, change this test to check that we
-    // emit the struct from the reopened namespace.
-    let ir = ir_from_cc(
-        r#"namespace my_namespace {}
-         namespace my_namespace {
-           struct StructFromNamespaceIsUnsupported {};
-         }"#,
-    )?;
-    assert_strings_contain(
-        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
-        "my_namespace::StructFromNamespaceIsUnsupported",
-    );
-    Ok(())
-}
 
 #[test]
 fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
@@ -1172,16 +1156,15 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
 #[test]
 fn test_user_of_unsupported_type_is_unsupported() -> Result<()> {
     // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing structs from namespaces.
+    // once we start importing nested structs.
     let ir = ir_from_cc(
-        r#"namespace my_namespace { struct Unsupported {}; }
-           void f(my_namespace::Unsupported* unsupported);
-           struct S { my_namespace::Unsupported unsupported; };"#,
+        r#"struct S { struct Nested {int x;}; int y; };
+           void f(S::Nested n);
+        "#,
     )?;
     let names = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
-    assert_strings_contain(&names, "my_namespace::Unsupported");
+    assert_strings_contain(&names, "S::Nested");
     assert_strings_contain(&names, "f");
-    assert_strings_contain(&names, "S");
     Ok(())
 }
 
