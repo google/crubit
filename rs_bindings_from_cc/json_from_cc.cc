@@ -4,7 +4,6 @@
 
 #include <string>
 
-#include "base/logging.h"
 #include "third_party/absl/status/statusor.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ffi_types.h"
@@ -38,7 +37,10 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
   // this from tests, which are ok to just fail. Clang has already printed error
   // messages. If we start using this for production, then we should bridge the
   // error code into Rust.
-  CHECK(ir.ok()) << "- IrFromCc reported an error: " << ir.status().message();
+  if (!ir.ok()) {
+    llvm::report_fatal_error(llvm::formatv("IrFromCc reported an error: {0}",
+                                           ir.status().message()));
+  }
   std::string json = llvm::formatv("{0}", ir->ToJson());
   return AllocFfiU8SliceBox(MakeFfiU8Slice(json));
 }

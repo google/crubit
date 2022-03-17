@@ -4,8 +4,8 @@
 
 #include "rs_bindings_from_cc/ast_consumer.h"
 
-#include "base/logging.h"
 #include "rs_bindings_from_cc/importer.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 
@@ -19,7 +19,7 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
     // There is nothing more for us to do here.
     return;
   }
-  CHECK(instance_.hasSema());
+  CRUBIT_CHECK(instance_.hasSema());
   Importer importer(invocation_, ast_context, instance_.getSema());
   importer.Import(ast_context.getTranslationUnitDecl());
 }

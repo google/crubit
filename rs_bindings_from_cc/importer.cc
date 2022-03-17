@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "base/logging.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/status/status.h"
@@ -28,6 +27,7 @@
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/CXXInheritance.h"
@@ -48,6 +48,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallPtrSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
 #include "util/task/status_macros.h"
 
@@ -167,8 +168,8 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
                      base_path_element.Base->getType()->getAsCXXRecordDecl()))
                  .getQuantity()};
       }
-      DCHECK(!offset.hasValue() || *offset >= 0)
-          << "Concrete base classes should have non-negative offsets.";
+      CRUBIT_CHECK((!offset.hasValue() || *offset >= 0) &&
+                   "Concrete base classes should have non-negative offsets.");
       bases.push_back(
           BaseClass{.base_record_id = GenerateDeclId(base_record_decl),
                     .offset = offset});
@@ -496,9 +497,7 @@ Importer::LookupResult Importer::ImportFunction(
   std::set<std::string> errors;
   auto add_error = [&errors, function_decl](std::string msg) {
     auto result = errors.insert(std::move(msg));
-    CHECK(result.second) << "Duplicated error message for "
-                         << function_decl->getNameAsString() << ": "
-                         << *result.first;
+    CRUBIT_CHECK(result.second && "Duplicated error message");
   };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
@@ -527,7 +526,8 @@ Importer::LookupResult Importer::ImportFunction(
   }
 
   if (lifetimes) {
-    CHECK_EQ(lifetimes->param_lifetimes.size(), function_decl->getNumParams());
+    CRUBIT_CHECK(lifetimes->param_lifetimes.size() ==
+                 function_decl->getNumParams());
   }
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = function_decl->getParamDecl(i);
@@ -560,7 +560,7 @@ Importer::LookupResult Importer::ImportFunction(
     }
 
     std::optional<Identifier> param_name = GetTranslatedIdentifier(param);
-    CHECK(param_name.has_value());  // No known cases where the above can fail.
+    CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({*param_type, *std::move(param_name)});
   }
 
@@ -596,7 +596,7 @@ Importer::LookupResult Importer::ImportFunction(
   for (devtools_rust::Lifetime lifetime : all_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
-    CHECK(name.has_value());
+    CRUBIT_CHECK(name.has_value());
     lifetime_params.push_back(
         {.name = name->str(), .id = LifetimeId(lifetime.Id())});
   }
@@ -655,7 +655,11 @@ Importer::LookupResult Importer::ImportFunction(
 
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
-  CHECK(return_type.ok());  // Silence ClangTidy, checked above.
+
+  // Silence ClangTidy, checked above: calling `add_error` if
+  // `!return_type.ok()` and returning early if `!errors.empty()`.
+  CRUBIT_CHECK(return_type.ok());
+
   if (translated_name.has_value()) {
     return LookupResult(Func{
         .name = *translated_name,
@@ -870,10 +874,7 @@ Importer::LookupResult Importer::ImportTypedefName(
 
   std::optional<Identifier> identifier =
       GetTranslatedIdentifier(typedef_name_decl);
-  if (!identifier.has_value()) {
-    // This should never happen.
-    LOG(FATAL) << "Couldn't get identifier for TypedefNameDecl";
-  }
+  CRUBIT_CHECK(identifier.has_value());  // This should never happen.
   std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type =
       ConvertQualType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
@@ -959,7 +960,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     clang::QualType pointee_type = type->getPointeeType();
     std::optional<LifetimeId> lifetime;
     if (lifetimes.has_value()) {
-      CHECK(!lifetimes->empty());
+      CRUBIT_CHECK(!lifetimes->empty());
       lifetime = LifetimeId(lifetimes->back().Id());
       lifetimes->pop_back();
     }
@@ -992,7 +993,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
                                    std::move(mapped_return_type),
                                    std::move(mapped_param_types));
       } else {
-        DCHECK(type->isLValueReferenceType());
+        CRUBIT_CHECK(type->isLValueReferenceType());
         return MappedType::FuncRef(cc_call_conv, rs_abi, lifetime,
                                    std::move(mapped_return_type),
                                    std::move(mapped_param_types));
@@ -1005,7 +1006,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
                                    nullable);
     } else {
-      DCHECK(type->isLValueReferenceType());
+      CRUBIT_CHECK(type->isLValueReferenceType());
       return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
                                            lifetime);
     }
@@ -1170,10 +1171,12 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
     case clang::DeclarationName::CXXOperatorName:
       switch (named_decl->getDeclName().getCXXOverloadedOperator()) {
         case clang::OO_None:
-          LOG(FATAL) << "No OO_None expected under CXXOperatorName branch";
+          CRUBIT_CHECK(false &&
+                       "No OO_None expected under CXXOperatorName branch");
           return std::nullopt;
         case clang::NUM_OVERLOADED_OPERATORS:
-          LOG(FATAL) << "No NUM_OVERLOADED_OPERATORS expected at runtime";
+          CRUBIT_CHECK(false &&
+                       "No NUM_OVERLOADED_OPERATORS expected at runtime");
           return std::nullopt;
           // clang-format off
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
@@ -1184,7 +1187,8 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
         #undef OVERLOADED_OPERATOR
           // clang-format on
       }
-      LOG(FATAL) << "The `switch` above should handle all cases and `return`";
+      CRUBIT_CHECK(false && "The `switch` above should handle all cases");
+      return std::nullopt;
     default:
       // To be implemented later: CXXConversionFunctionName.
       // There are also e.g. literal operators, deduction guides, etc., but

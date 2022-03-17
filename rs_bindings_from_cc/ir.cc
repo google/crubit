@@ -13,9 +13,9 @@
 #include <variant>
 #include <vector>
 
-#include "base/integral_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
@@ -117,12 +117,13 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
                               std::move(return_type), std::move(param_types));
 
-  DCHECK_EQ(result.cc_type.name, internal::kCcLValueRef);
+  CRUBIT_CHECK(result.cc_type.name == internal::kCcLValueRef);
   result.cc_type.name = std::string(internal::kCcPtr);
 
   RsType rs_func_ptr_type = std::move(result.rs_type);
-  DCHECK_EQ(rs_func_ptr_type.name.substr(0, internal::kRustFuncPtr.length()),
-            internal::kRustFuncPtr);
+  CRUBIT_CHECK(
+      rs_func_ptr_type.name.substr(0, internal::kRustFuncPtr.length()) ==
+      internal::kRustFuncPtr);
   result.rs_type =
       RsType{.name = "Option", .type_args = {std::move(rs_func_ptr_type)}};
 

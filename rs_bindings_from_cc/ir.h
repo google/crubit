@@ -21,10 +21,9 @@
 #include <variant>
 #include <vector>
 
-#include "base/integral_types.h"
-#include "base/logging.h"
 #include "third_party/absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
@@ -247,7 +246,7 @@ class Identifier {
  public:
   explicit Identifier(std::string identifier)
       : identifier_(std::move(identifier)) {
-    CHECK(!identifier_.empty()) << "Identifier name cannot be empty.";
+    CRUBIT_CHECK(!identifier_.empty());
   }
 
   absl::string_view Ident() const { return identifier_; }
@@ -268,8 +267,7 @@ inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
 class IntegerConstant {
  public:
   explicit IntegerConstant(const llvm::APSInt& value) {
-    CHECK(value.getSignificantBits() <= 64)
-        << "enumerator value unexpectedly had more than 64 bits";
+    CRUBIT_CHECK(value.getSignificantBits() <= 64);
     is_negative_ = value < 0;
     wrapped_value_ = static_cast<uint64_t>(value.getExtValue());
   }
@@ -289,7 +287,7 @@ class IntegerConstant {
 class Operator {
  public:
   explicit Operator(std::string name) : name_(std::move(name)) {
-    CHECK(!name_.empty()) << "Operator name cannot be empty.";
+    CRUBIT_CHECK(!name_.empty());
   }
 
   absl::string_view Name() const { return name_; }

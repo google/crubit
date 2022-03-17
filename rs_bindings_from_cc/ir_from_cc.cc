@@ -19,6 +19,7 @@
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/importer.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileManager.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/FileSystemOptions.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
@@ -38,6 +39,10 @@ absl::StatusOr<IR> IrFromCc(
         virtual_headers_contents,
     absl::flat_hash_map<const HeaderName, const BlazeLabel> headers_to_targets,
     absl::Span<const absl::string_view> args) {
+  // Caller should verify that the inputs are not empty.
+  CRUBIT_CHECK(!extra_source_code.empty() || !public_headers.empty());
+  CRUBIT_CHECK(!extra_source_code.empty() || !headers_to_targets.empty());
+
   std::vector<HeaderName> entrypoint_headers(public_headers.begin(),
                                              public_headers.end());
   clang::tooling::FileContentMappings file_contents;

@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "base/init_google.h"
-#include "base/logging.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"

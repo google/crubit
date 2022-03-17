@@ -13,7 +13,6 @@
 #include <variant>
 #include <vector>
 
-#include "base/logging.h"
 #include "third_party/absl/container/flat_hash_map.h"
 #include "third_party/absl/container/flat_hash_set.h"
 #include "third_party/absl/status/statusor.h"
@@ -21,6 +20,7 @@
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -48,8 +48,10 @@ class Importer {
           lifetime_context_(
               std::make_shared<devtools_rust::LifetimeAnnotationContext>()),
           header_targets_(header_targets) {
-      CHECK(!entry_headers_.empty());
-      CHECK(!header_targets_.empty());
+      // Caller should verify that the inputs are non-empty.
+      CRUBIT_CHECK(!entry_headers_.empty());
+      CRUBIT_CHECK(!header_targets_.empty());
+
       ir_.used_headers.insert(ir_.used_headers.end(), entry_headers_.begin(),
                               entry_headers.end());
       ir_.current_target = target_;
@@ -85,7 +87,7 @@ class Importer {
       : invocation_(invocation),
         ctx_(ctx),
         sema_(sema),
-        mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())) {}
+        mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())) {}
 
   // Import all visible declarations from a translation unit.
   void Import(clang::TranslationUnitDecl* decl);

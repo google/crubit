@@ -4,10 +4,9 @@
 
 #include "rs_bindings_from_cc/ast_convert.h"
 
-#include <assert.h>
-
 #include "third_party/absl/functional/function_ref.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "rs_bindings_from_cc/util/check.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
@@ -109,8 +108,9 @@ AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
     case clang::AS_private:
       return kPrivate;
     case clang::AS_none:
-      // We should never be encoding a "none" access specifier in IR.
-      assert(false);
+      CRUBIT_CHECK(
+          false &&
+          "We should never be encoding a 'none' access specifier in IR.");
       // We have to return something. Conservatively return private so we don't
       // inadvertently make a private member variable accessible in Rust.
       return kPrivate;
