@@ -32,7 +32,7 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
       {{HeaderName(std::string(kDependencyHeaderName)),
         std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
       {{HeaderName(std::string(kDependencyHeaderName)),
-        BlazeLabel{kDependencyTarget}}});
+        BlazeLabel{std::string(kDependencyTarget)}}});
   // TODO(forster): For now it is good enough to just exit: We are just using
   // this from tests, which are ok to just fail. Clang has already printed error
   // messages. If we start using this for production, then we should bridge the
