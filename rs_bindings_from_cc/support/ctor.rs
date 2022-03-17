@@ -620,7 +620,6 @@ impl<T> Slot<T> {
 #[doc(hidden)]
 pub mod macro_internal {
     use super::*;
-    pub use pin_project::pin_project;
     pub use std::mem::MaybeUninit;
     pub use std::pin::Pin;
 

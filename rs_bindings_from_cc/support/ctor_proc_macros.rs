@@ -108,9 +108,8 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
     let args: proc_macro2::TokenStream = args.into();
     let mut input = syn::parse_macro_input!(item as syn::DeriveInput);
-    let macro_internal = quote!(::ctor::macro_internal);
 
-    input.attrs.insert(0, syn::parse_quote!(#[#macro_internal::pin_project(#args)]));
+    input.attrs.insert(0, syn::parse_quote!(#[::pin_project::pin_project(#args)]));
     let pin: syn::Attribute = syn::parse_quote!(#[pin]);
     match &mut input.data {
         syn::Data::Struct(data) => {
