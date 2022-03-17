@@ -25,11 +25,11 @@
 #include "base/logging.h"
 #include "third_party/absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
-#include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
 
@@ -77,10 +77,10 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 // serialization/deserialization at the moment, we need a way to restore graph
 // edges that don't follow the JSON tree structure (for example between types
 // and records). We use DeclIds for this.
-DEFINE_STRONG_INT_TYPE(DeclId, uintptr_t);
+CRUBIT_DEFINE_STRONG_INT_TYPE(DeclId, uintptr_t);
 
 // A numerical ID that uniquely identifies a lifetime.
-DEFINE_STRONG_INT_TYPE(LifetimeId, int);
+CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 
 // A lifetime.
 struct Lifetime {

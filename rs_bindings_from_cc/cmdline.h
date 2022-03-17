@@ -42,7 +42,7 @@ class Cmdline {
   absl::string_view ir_out() const { return ir_out_; }
   bool do_nothing() const { return do_nothing_; }
 
-  const std::vector<rs_bindings_from_cc::HeaderName>& public_headers() const {
+  const std::vector<HeaderName>& public_headers() const {
     return public_headers_;
   }
 

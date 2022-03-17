@@ -16,8 +16,8 @@
 #include "base/integral_types.h"
 #include "third_party/absl/strings/string_view.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
-#include "util/intops/strong_int.h"
 
 namespace rs_bindings_from_cc {
 
@@ -27,12 +27,12 @@ llvm::json::Value toJSON(const T& t) {
 }
 
 template <typename TTag, typename TInt>
-llvm::json::Value toJSON(const util_intops::StrongInt<TTag, TInt> strong_int) {
+llvm::json::Value toJSON(const StrongInt<TTag, TInt> strong_int) {
   return llvm::json::Value(strong_int.value());
 }
 
 template <typename TTag>
-llvm::json::Value toJSON(const gtl::labs::StringType<TTag> string_type) {
+llvm::json::Value toJSON(const StringType<TTag> string_type) {
   return llvm::json::Value(string_type.value());
 }
 
