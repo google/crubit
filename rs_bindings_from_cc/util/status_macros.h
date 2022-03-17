@@ -23,11 +23,13 @@
 //     CRUBIT_RETURN_IF_ERROR(foo.Method(args...));
 //     return absl::OkStatus();
 //   }
-#define CRUBIT_RETURN_IF_ERROR(expr)                 \
-  CRUBIT_STATUS_MACROS_IMPL_ELSE_BLOCKER_            \
-  if (::absl::Status status = (expr); status.ok()) { \
-  } else /* NOLINT */                                \
-    return status
+#define CRUBIT_RETURN_IF_ERROR(expr)                   \
+  do {                                                 \
+    if (::absl::Status status = (expr); status.ok()) { \
+    } else {                                           \
+      return status;                                   \
+    }                                                  \
+  } while (false)
 
 // Executes an expression `rexpr` that returns an `absl::StatusOr<T>`. On OK,
 // moves its value into the variable defined by `lhs`, otherwise returns
@@ -149,21 +151,5 @@ constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
 #define CRUBIT_STATUS_MACROS_IMPL_CONCAT_INNER_(x, y) x##y
 #define CRUBIT_STATUS_MACROS_IMPL_CONCAT_(x, y) \
   CRUBIT_STATUS_MACROS_IMPL_CONCAT_INNER_(x, y)
-
-// The GNU compiler emits a warning for code like:
-//
-//   if (foo)
-//     if (bar) { } else baz;
-//
-// because it thinks you might want the else to bind to the first if.  This
-// leads to problems with code like:
-//
-//   if (do_expr) CRUBIT_RETURN_IF_ERROR(expr) << "Some message";
-//
-// The "switch (0) case 0:" idiom is used to suppress this.
-#define CRUBIT_STATUS_MACROS_IMPL_ELSE_BLOCKER_ \
-  switch (0)                                    \
-  case 0:                                       \
-  default:  // NOLINT
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STATUS_MACROS_H_
