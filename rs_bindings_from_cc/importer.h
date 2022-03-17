@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
 
 #include <memory>
 #include <optional>
@@ -195,4 +195,4 @@ class Importer {
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_

@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_NO_ELIDED_LIFETIMES_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_NO_ELIDED_LIFETIMES_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_NO_ELIDED_LIFETIMES_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_NO_ELIDED_LIFETIMES_H_
 
 // `[[clang::trivial_abi]]` is used so that `is_trivial_abi` doesn't get in the
 // way of generating binding for constructors - we want to test that
@@ -26,4 +26,4 @@ struct [[clang::trivial_abi]] StructWithConstructorsWithoutLifetimes final {
   int int_field;
 };
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_NO_ELIDED_LIFETIMES_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_CONSTRUCTORS_NO_ELIDED_LIFETIMES_H_

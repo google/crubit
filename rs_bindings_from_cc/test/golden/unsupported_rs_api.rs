@@ -92,7 +92,7 @@ impl Default for ContainingStruct {
 // Error while generating bindings for item 'ContainingStruct::NestedStruct::StaticMemberFunction':
 // Couldn't import the parent
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 
 mod detail {
     #[allow(unused_imports)]

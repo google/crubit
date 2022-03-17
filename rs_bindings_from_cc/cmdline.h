@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
 
 #include <string>
 #include <vector>
@@ -75,4 +75,4 @@ class Cmdline {
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_

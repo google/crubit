@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
-#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
+#ifndef CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
+#define CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
 
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 
@@ -20,4 +20,4 @@ clang::QualType PointeeType(clang::QualType type);
 
 }  // namespace devtools_rust
 
-#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
+#endif  // CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_

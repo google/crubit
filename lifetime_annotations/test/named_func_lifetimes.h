@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
-#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
+#ifndef CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
+#define CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
 
 #include <initializer_list>
 #include <iostream>
@@ -91,4 +91,4 @@ testing::Matcher<NamedFuncLifetimes> LifetimesContain(
 
 }  // namespace devtools_rust
 
-#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_
+#endif  // CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_

@@ -68,7 +68,7 @@ pub unsafe fn take_pointer(p: *mut i32) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_
 
 mod detail {
     #[allow(unused_imports)]

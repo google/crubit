@@ -8,8 +8,8 @@
 //
 // All types in this file own their data. This IR is expected to outlive the
 // Clang's AST context, therefore it cannot reference data owned by it.
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
 
 #include <stdint.h>
 
@@ -643,4 +643,4 @@ inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
 }
 }  // namespace rs_bindings_from_cc
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_

@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_FFI_TYPES_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_FFI_TYPES_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_FFI_TYPES_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_FFI_TYPES_H_
 
 #include <cstddef>
 
@@ -41,4 +41,4 @@ extern "C" void FreeFfiU8SliceBox(FfiU8SliceBox);
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_FFI_TYPES_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_FFI_TYPES_H_

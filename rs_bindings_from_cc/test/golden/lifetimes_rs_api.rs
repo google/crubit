@@ -53,7 +53,7 @@ pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut i32) {
     crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)
 }
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_LIFETIMES_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_LIFETIMES_H_
 
 mod detail {
     #[allow(unused_imports)]

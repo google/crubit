@@ -130,7 +130,7 @@ impl Default for HasNoComments {
 
 // e
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_COMMENT_H_
 
 mod detail {
     #[allow(unused_imports)]

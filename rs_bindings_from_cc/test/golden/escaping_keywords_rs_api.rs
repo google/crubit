@@ -59,7 +59,7 @@ pub fn r#impl(r#match: i32) {
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ESCAPING_KEYWORDS_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ESCAPING_KEYWORDS_H_
 
 mod detail {
     #[allow(unused_imports)]

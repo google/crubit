@@ -61,7 +61,7 @@ impl SomeClass {
     }
 }
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_MEMBERS_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_MEMBERS_H_
 
 mod detail {
     #[allow(unused_imports)]

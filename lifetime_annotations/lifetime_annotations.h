@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_
-#define THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_
+#ifndef CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_
+#define CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_
 
 #include <memory>
 
@@ -50,4 +50,4 @@ llvm::SmallVector<clang::TypeLoc> GetTemplateArgs(clang::TypeLoc type_loc);
 
 }  // namespace devtools_rust
 
-#endif  // THIRD_PARTY_CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_
+#endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_

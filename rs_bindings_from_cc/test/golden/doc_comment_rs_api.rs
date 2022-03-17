@@ -232,7 +232,7 @@ pub fn foo() -> i32 {
 /// A type alias
 pub type MyTypeAlias = DocCommentSlashes;
 
-// THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
+// CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
 
 mod detail {
     #[allow(unused_imports)]
