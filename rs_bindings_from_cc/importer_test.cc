@@ -18,7 +18,6 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
-#include "util/task/status_macros.h"
 
 namespace rs_bindings_from_cc {
 namespace {

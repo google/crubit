@@ -28,6 +28,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/util/check.h"
+#include "rs_bindings_from_cc/util/status_macros.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Attrs.inc"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/CXXInheritance.h"
@@ -50,7 +51,6 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
-#include "util/task/status_macros.h"
 
 namespace rs_bindings_from_cc {
 namespace {
@@ -155,7 +155,7 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
         continue;
       }
       const clang::CXXRecordDecl* base_record_decl =
-          ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
       llvm::Optional<int64_t> offset = {0};
       for (const clang::CXXBasePathElement& base_path_element : path) {
         if (base_path_element.Base->isVirtual()) {
@@ -164,7 +164,7 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
         }
         *offset +=
             {ctx.getASTRecordLayout(base_path_element.Class)
-                 .getBaseClassOffset(ABSL_DIE_IF_NULL(
+                 .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
                      base_path_element.Base->getType()->getAsCXXRecordDecl()))
                  .getQuantity()};
       }
@@ -976,15 +976,17 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 
       clang::StringRef cc_call_conv =
           clang::FunctionType::getNameForCallConv(func_type->getCallConv());
-      ASSIGN_OR_RETURN(absl::string_view rs_abi,
-                       ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
-      ASSIGN_OR_RETURN(MappedType mapped_return_type,
-                       ConvertQualType(func_type->getReturnType(), lifetimes));
+      CRUBIT_ASSIGN_OR_RETURN(
+          absl::string_view rs_abi,
+          ConvertCcCallConvIntoRsAbi(func_type->getCallConv()));
+      CRUBIT_ASSIGN_OR_RETURN(
+          MappedType mapped_return_type,
+          ConvertQualType(func_type->getReturnType(), lifetimes));
 
       std::vector<MappedType> mapped_param_types;
       for (const clang::QualType& param_type : func_type->getParamTypes()) {
-        ASSIGN_OR_RETURN(MappedType mapped_param_type,
-                         ConvertQualType(param_type, lifetimes));
+        CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_param_type,
+                                ConvertQualType(param_type, lifetimes));
         mapped_param_types.push_back(std::move(mapped_param_type));
       }
 
@@ -1000,8 +1002,8 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       }
     }
 
-    ASSIGN_OR_RETURN(MappedType mapped_pointee_type,
-                     ConvertQualType(pointee_type, lifetimes));
+    CRUBIT_ASSIGN_OR_RETURN(MappedType mapped_pointee_type,
+                            ConvertQualType(pointee_type, lifetimes));
     if (type->isPointerType()) {
       return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
                                    nullable);

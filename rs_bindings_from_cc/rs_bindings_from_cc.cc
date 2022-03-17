@@ -20,10 +20,10 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
+#include "rs_bindings_from_cc/util/status_macros.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
-#include "util/task/status_macros.h"
 
 namespace {
 
@@ -45,19 +45,19 @@ absl::Status SetFileContents(absl::string_view path,
 absl::Status Main(int argc, char* argv[]) {
   using rs_bindings_from_cc::Cmdline;
   using rs_bindings_from_cc::IR;
-  ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
+  CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
 
   if (cmdline.do_nothing()) {
-    RETURN_IF_ERROR(SetFileContents(
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(
         cmdline.rs_out(),
         "// intentionally left empty because --do_nothing was passed."));
-    RETURN_IF_ERROR(SetFileContents(
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(
         cmdline.cc_out(),
         "// intentionally left empty because --do_nothing was passed."));
     return absl::OkStatus();
   }
 
-  ASSIGN_OR_RETURN(
+  CRUBIT_ASSIGN_OR_RETURN(
       IR ir,
       rs_bindings_from_cc::IrFromCc(
           /* extra_source_code= */ "", cmdline.current_target(),
@@ -66,14 +66,15 @@ absl::Status Main(int argc, char* argv[]) {
           std::vector<absl::string_view>(argv, argv + argc)));
 
   if (!cmdline.ir_out().empty()) {
-    RETURN_IF_ERROR(SetFileContents(
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(
         cmdline.ir_out(), std::string(llvm::formatv("{0:2}", ir.ToJson()))));
   }
 
   rs_bindings_from_cc::Bindings bindings =
       rs_bindings_from_cc::GenerateBindings(ir);
-  RETURN_IF_ERROR(SetFileContents(cmdline.rs_out(), bindings.rs_api));
-  RETURN_IF_ERROR(SetFileContents(cmdline.cc_out(), bindings.rs_api_impl));
+  CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.rs_out(), bindings.rs_api));
+  CRUBIT_RETURN_IF_ERROR(
+      SetFileContents(cmdline.cc_out(), bindings.rs_api_impl));
 
   return absl::OkStatus();
 }

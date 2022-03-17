@@ -13,8 +13,8 @@
 #include "third_party/absl/flags/flag.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/substitute.h"
+#include "rs_bindings_from_cc/util/status_macros.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
-#include "util/task/status_macros.h"
 
 ABSL_FLAG(bool, do_nothing, false,
           "if set to true the tool will produce empty files "
@@ -126,11 +126,11 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     }
   }
 
-  ASSIGN_OR_RETURN(cmdline.current_target_,
-                   cmdline.FindHeader(cmdline.public_headers_[0]));
+  CRUBIT_ASSIGN_OR_RETURN(cmdline.current_target_,
+                          cmdline.FindHeader(cmdline.public_headers_[0]));
   for (const HeaderName& public_header : cmdline.public_headers_) {
-    ASSIGN_OR_RETURN(BlazeLabel header_target,
-                     cmdline.FindHeader(public_header));
+    CRUBIT_ASSIGN_OR_RETURN(BlazeLabel header_target,
+                            cmdline.FindHeader(public_header));
 
     if (cmdline.current_target_ != header_target) {
       return absl::InvalidArgumentError(absl::Substitute(
