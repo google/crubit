@@ -742,7 +742,54 @@ macro_rules! ctor {
 //
 // Finally, we introduce some new traits for assignment.
 
-/// Destroy-then-reconstruct. Sidesteps operator=, instead reconstructing
+/// Destroy-then-reconstruct. Sidesteps `operator=`, instead reconstructing
+/// in-place.
+///
+/// If the object cannot be destroyed/reconstructed in place (e.g. it is a base
+/// class subobject), the behavior is undefined.
+///
+/// If `ctor` unwinds, the process will crash.
+///
+/// This is a bit more fragile than, and a lot less common than, `operator=`,
+/// but allows for taking advantage of copy/move elision more aggressively,
+/// rather than requiring materialization into a temporary before triggering
+/// assignment.
+///
+/// That means that e.g. instead of calling `x.assign(&*emplace!(foo))`, you can
+/// directly call `x.reconstruct_unchecked(foo)` -- provided you are OK with the
+/// differing constructor/destructor ordering, and satisfy safety criteria.
+///
+/// # Safety
+///
+/// Dividing sources of UB by language ruleset:
+///
+/// **C++**: The behavior is undefined if `self` is a base class subobject
+/// or `[[no_unique_address]]` member.
+///
+/// See: http://eel.is/c++draft/basic.life#8
+///
+/// And see https://chat.google.com/room/AAAAl3r59xQ/auNOifgQa1c for discussion.
+///
+/// **Rust**: This is safe. Note that since this calls `drop()` on
+/// the pinned pointer, it satisfies the pin guarantee, and is allowed to then
+/// re-init it with something else. In effect, this is just the in-place Ctor
+/// version of the existing method `Pin<T>::set(T)`.
+pub trait ReconstructUnchecked: Sized {
+    /// # Safety
+    /// See trait documentation.
+    unsafe fn reconstruct_unchecked(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self>) {
+        let self_ptr = unsafe { Pin::into_inner_unchecked(self) } as *mut _;
+        std::ptr::drop_in_place(self_ptr);
+        abort_on_unwind(move || {
+            let maybe_uninit_self = &mut *(self_ptr as *mut MaybeUninit<Self>);
+            ctor.ctor(Pin::new_unchecked(maybe_uninit_self));
+        });
+    }
+}
+
+impl<T> ReconstructUnchecked for T {}
+
+/// Destroy-then-reconstruct. Sidesteps `operator=`, instead reconstructing
 /// in-place.
 ///
 /// If `ctor` unwinds, the process will crash.
@@ -756,25 +803,26 @@ macro_rules! ctor {
 /// directly call `x.reconstruct(foo)` -- provided you are OK with the differing
 /// constructor/destructor ordering.
 ///
-/// **Safety, C++**: http://eel.is/c++draft/basic.life#8
-/// See https://chat.google.com/room/AAAAl3r59xQ/auNOifgQa1c for discussion.
+/// # Implementation safety
 ///
-/// **Safety, Rust**: Note that since this calls `drop()` on the pinned pointer,
-/// it satisfies the pin guarantee, and is allowed to then re-init it with
-/// something else. In effect, this is just the in-place Ctor version of the
-/// existing method `Pin<T>::set(T)`.
-pub trait Reconstructible: Sized {
+/// Implementors must ensure that it is safe to destroy and reconstruct the
+/// object. Most notably, if `Self` is a C++ class, it must not be a base class.
+/// See http://eel.is/c++draft/basic.life#8
+///
+/// # Safety
+///
+/// Note that this is not safe to call on `[[no_unique_address]]` member
+/// variables, but the interface is marked safe, because those can only be
+/// produced via unsafe means.
+pub unsafe trait Reconstruct: ReconstructUnchecked {
     fn reconstruct(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self>) {
-        let self_ptr = unsafe { Pin::into_inner_unchecked(self) } as *mut _;
-        unsafe { std::ptr::drop_in_place(self_ptr) };
-        abort_on_unwind(move || unsafe {
-            let maybe_uninit_self = &mut *(self_ptr as *mut MaybeUninit<Self>);
-            ctor.ctor(Pin::new_unchecked(maybe_uninit_self));
-        });
+        unsafe { self.reconstruct_unchecked(ctor) };
     }
 }
 
-impl<T: Sized> Reconstructible for T {}
+/// Safety: anything implementing `Unpin` is Rust-assignable, and
+/// Rust-assignment is inherently destroy+reconstruct.
+unsafe impl<T: Unpin> Reconstruct for T {}
 
 /// Run f, aborting if it unwinds.
 ///
