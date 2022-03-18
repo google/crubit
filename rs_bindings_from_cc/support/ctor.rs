@@ -363,22 +363,6 @@ impl<T: Unpin + Default + Sized> CtorNew<()> for T {
     }
 }
 
-/// All Rust types are C++-moveable if safe (i.e. Unpin + have a moved-from
-/// Default value).
-///
-/// This is different to C++ types, which are C++-moveable if *possible*. mov is
-/// unsafe on C++ types, but safe for Rust types (and for Unpin C++ types).
-///
-/// TODO: ideally this should not change the source for `Copy` types, but that
-/// requires negative trait bounds, as we'd want to define for `Unpin + Default
-/// + !Copy` and `Unpin + Copy`. (Specialization is not sufficient.)
-impl<T: Unpin + Default + Sized> CtorNew<RvalueReference<'_, T>> for T {
-    type CtorType = RustMoveCtor<Self>;
-    fn ctor_new(src: RvalueReference<'_, T>) -> Self::CtorType {
-        RustMoveCtor(std::mem::take(Pin::into_inner(src.0)))
-    }
-}
-
 /// All Unpin Rust types are C++-copyable if they are Rust-cloneable.
 ///
 /// (Unpin is required for safety; otherwise, this would violate the Pin
@@ -387,13 +371,6 @@ impl<T: Unpin + Clone> CtorNew<&T> for T {
     type CtorType = RustMoveCtor<Self>;
     fn ctor_new(src: &Self) -> Self::CtorType {
         RustMoveCtor(src.clone())
-    }
-}
-
-impl<T: Unpin + Clone> CtorNew<ConstRvalueReference<'_, T>> for T {
-    type CtorType = RustMoveCtor<Self>;
-    fn ctor_new(src: ConstRvalueReference<'_, T>) -> Self::CtorType {
-        RustMoveCtor(src.0.clone())
     }
 }
 
@@ -1090,34 +1067,6 @@ mod test {
         }
         // x is no longer in scope, as it was moved into the Copy.
         assert_eq!(*y, 42);
-    }
-
-    #[test]
-    fn test_move_rust_type() {
-        let mut x: u32 = 42;
-        let mut y = Box::emplace(mov(Pin::new(&mut x)));
-        assert_eq!(x, 0);
-        assert_eq!(*y, 42);
-
-        // Can also mutate:
-        x = 50;
-        y.as_mut().assign(mov(Pin::new(&mut x)));
-        assert_eq!(x, 0);
-        assert_eq!(*y, 50);
-    }
-
-    #[test]
-    fn test_const_move_rust_type() {
-        let x: u32 = 42;
-        let mut y = Box::emplace(const_mov(&x));
-        assert_eq!(x, 42);
-        assert_eq!(*y, 42);
-
-        // Can also mutate:
-        let x = 50;
-        y.as_mut().assign(const_mov(&x));
-        assert_eq!(x, 50);
-        assert_eq!(*y, 50);
     }
 
     /// Tests that the assigned variables have the correct type.
