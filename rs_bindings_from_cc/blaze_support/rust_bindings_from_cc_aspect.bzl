@@ -12,8 +12,8 @@ be used yet.
 """
 
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
-    "GeneratedFilesDepsInfo",
+    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
+    "DepsForBindingsInfo",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
@@ -137,14 +137,14 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             dep[RustBindingsFromCcInfo].cc_info
             for dep in ctx.rule.attr.deps
             if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_cc_file + [
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + [
             ctx.attr._std[RustBindingsFromCcInfo].cc_info,
         ],
         deps_for_rs_file = [
             dep[RustBindingsFromCcInfo].dep_variant_info
             for dep in ctx.rule.attr.deps
             if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_rs_file + [
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file + [
             ctx.attr._std[RustBindingsFromCcInfo].dep_variant_info,
         ],
     )

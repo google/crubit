@@ -9,8 +9,8 @@ be used yet.
 """
 
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_binary.bzl",
-    "GeneratedFilesDepsInfo",
+    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
+    "DepsForBindingsInfo",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
@@ -70,8 +70,8 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes = header_includes,
         action_inputs = all_std_hdrs,
         targets_and_headers = targets_and_headers,
-        deps_for_cc_file = ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_cc_file,
-        deps_for_rs_file = ctx.attr._generator[GeneratedFilesDepsInfo].deps_for_rs_file,
+        deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
+        deps_for_rs_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
     )
 
 bindings_for_toolchain_headers = rule(
