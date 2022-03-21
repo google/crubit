@@ -778,7 +778,7 @@ pub trait ReconstructUnchecked: Sized {
     /// # Safety
     /// See trait documentation.
     unsafe fn reconstruct_unchecked(self: Pin<&mut Self>, ctor: impl Ctor<Output = Self>) {
-        let self_ptr = unsafe { Pin::into_inner_unchecked(self) } as *mut _;
+        let self_ptr = Pin::into_inner_unchecked(self) as *mut _;
         std::ptr::drop_in_place(self_ptr);
         abort_on_unwind(move || {
             let maybe_uninit_self = &mut *(self_ptr as *mut MaybeUninit<Self>);
