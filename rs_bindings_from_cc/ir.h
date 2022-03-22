@@ -400,6 +400,7 @@ struct Func {
   bool is_inline;
   // If null, this is not a member function.
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
+  bool has_c_calling_convention = true;
   SourceLoc source_loc;
 };
 

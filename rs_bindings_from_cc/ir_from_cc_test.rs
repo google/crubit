@@ -57,6 +57,7 @@ fn test_function() {
             lifetime_params: vec![],
             is_inline: false,
             member_func_metadata: None,
+            has_c_calling_convention: true,
             source_loc: SourceLoc {
                 filename: "ir_from_cc_virtual_header.h".to_string(),
                 line: 3,
@@ -80,12 +81,28 @@ fn test_function_with_unnamed_parameters() {
             lifetime_params: vec![],
             is_inline: false,
             member_func_metadata: None,
+            has_c_calling_convention: true,
             source_loc: SourceLoc {
                 filename: "ir_from_cc_virtual_header.h".to_string(),
                 line: 3,
                 column: 1,
             },
         })],
+    );
+}
+
+#[test]
+fn test_function_with_custom_calling_convention() {
+    let ir = ir_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                name: "f_vectorcall", ...
+                mangled_name: "_Z12f_vectorcallii", ...
+                has_c_calling_convention: false, ...
+            }
+        }
     );
 }
 

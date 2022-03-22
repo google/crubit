@@ -653,6 +653,9 @@ Importer::LookupResult Importer::ImportFunction(
     return LookupResult(errors);
   }
 
+  bool has_c_calling_convention =
+      function_decl->getType()->getAs<clang::FunctionType>()->getCallConv() ==
+      clang::CC_C;
   std::optional<UnqualifiedIdentifier> translated_name =
       GetTranslatedName(function_decl);
 
@@ -671,6 +674,7 @@ Importer::LookupResult Importer::ImportFunction(
         .lifetime_params = std::move(lifetime_params),
         .is_inline = function_decl->isInlined(),
         .member_func_metadata = std::move(member_func_metadata),
+        .has_c_calling_convention = has_c_calling_convention,
         .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
     });
   }

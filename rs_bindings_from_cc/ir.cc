@@ -271,6 +271,7 @@ llvm::json::Value Func::ToJson() const {
       {"lifetime_params", lifetime_params},
       {"is_inline", is_inline},
       {"member_func_metadata", member_func_metadata},
+      {"has_c_calling_convention", has_c_calling_convention},
       {"source_loc", source_loc},
   };
 

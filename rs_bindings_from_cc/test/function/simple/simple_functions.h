@@ -25,11 +25,6 @@ int (*get_pointer_to_multiply_function())(int, int);
 // Same as above, but returning a *reference* to a function.
 int (&get_reference_to_multiply_function())(int, int);
 
-// TODO(b/217419782): Add testcases for different calling conventions.
-// This requires figuring out the syntax for indicating a calling convention
-// of a function pointer.  So far inserting `__fastcall` at random locations
-// failed to produce desired results... :-/
-
 inline int (*inline_get_pointer_to_multiply_function())(int, int) {
   return multiply;
 }

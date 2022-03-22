@@ -279,6 +279,7 @@ pub struct Func {
     pub lifetime_params: Vec<Lifetime>,
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
+    pub has_c_calling_convention: bool,
     pub source_loc: SourceLoc,
 }
 
