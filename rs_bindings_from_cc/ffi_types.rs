@@ -13,8 +13,8 @@ use std::slice;
 /// # Safety
 ///
 /// Expectations:
-///    * function expects that param `input` is a FfiU8Slice for a valid array of
-///      bytes with the given size.
+///    * function expects that param `input` is a FfiU8Slice for a valid array
+///      of bytes with the given size.
 ///    * function expects that param `input` doesn't change during the call, but
 ///      it is okay if it changes afterwards (because the data from `input` will
 ///      be copied/boxed into heap).
@@ -35,7 +35,8 @@ pub unsafe extern "C" fn AllocFfiU8SliceBox(input: FfiU8Slice) -> FfiU8SliceBox 
 /// Expectations:
 ///    * function expects that param `sb` is a valid FfiU8SliceBox that has been
 ///      allocated earlier by AllocFfiU8SliceBox.
-///    * function expects that there are no remaining references to FfiU8SliceBox
+///    * function expects that there are no remaining references to
+///      FfiU8SliceBox
 ///
 /// Ownership:
 ///    * function takes ownership of the param `sb` and frees its memory.

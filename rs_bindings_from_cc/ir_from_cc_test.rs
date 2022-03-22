@@ -3,7 +3,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-
 use anyhow::Result;
 use ir::*;
 use ir_testing::*;
@@ -365,10 +364,8 @@ fn test_doc_comment() -> Result<()> {
             struct MultilineOneStar {};
         "#,
     )?;
-    let comments: HashMap<_, _> = ir
-        .records()
-        .map(|r| (r.rs_name.as_str(), r.doc_comment.as_ref().unwrap()))
-        .collect();
+    let comments: HashMap<_, _> =
+        ir.records().map(|r| (r.rs_name.as_str(), r.doc_comment.as_ref().unwrap())).collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
     assert_eq!(comments["DocCommentBang"], "Doc comment\n\n * with slashes and bang");
@@ -937,8 +934,7 @@ fn assert_member_function_with_predicate_has_instance_method_metadata<F: FnMut(&
     mut func_predicate: F,
     expected_metadata: &Option<ir::InstanceMethodMetadata>,
 ) {
-    let record =
-        ir.records().find(|r| r.rs_name == record_name).expect("Struct not found");
+    let record = ir.records().find(|r| r.rs_name == record_name).expect("Struct not found");
     let function = ir.functions().find(|f| func_predicate(*f));
     let meta = function
         .expect("Function not found")
@@ -1137,7 +1133,6 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
     );
     Ok(())
 }
-
 
 #[test]
 fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {

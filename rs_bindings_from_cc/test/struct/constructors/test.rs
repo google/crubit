@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_implicit_conversion_from_reference() {
-        let other = OtherSimpleStruct{ int_field: 126 };
+        let other = OtherSimpleStruct { int_field: 126 };
         let i: StructWithImplicitConversionFromReference = (&other).into();
         assert_eq!(126, i.int_field);
     }

@@ -232,8 +232,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
     );
     let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
-            .and_then(|t| t.format_as_return_type_fragment(ir, &lifetime_to_name))
-            .with_context(|| format!("Failed to format return type for {:?}", func))?;
+        .and_then(|t| t.format_as_return_type_fragment(ir, &lifetime_to_name))
+        .with_context(|| format!("Failed to format return type for {:?}", func))?;
 
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
@@ -264,12 +264,14 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
     // Find 1) the `func_name` and `impl_kind` of the API function to generate
     // and 2) whether to `format_first_param_as_self` (`&self` or `&mut self`).
     enum TraitName {
-        UnpinConstructor(TokenStream),  // An Unpin constructor trait, e.g. From or Clone.
-        Other(TokenStream),  // any other trait, e.g. Eq.
+        UnpinConstructor(TokenStream), // An Unpin constructor trait, e.g. From or Clone.
+        Other(TokenStream),            // any other trait, e.g. Eq.
     }
     impl quote::ToTokens for TraitName {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            match self {Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),}
+            match self {
+                Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
+            }
         }
     }
     enum ImplKind {
@@ -278,7 +280,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         Trait {
             // Note that `record_name` might *not* be from
             // `func.member_func_metadata`.
-            record_name: Ident,      // e.g. SomeStruct
+            record_name: Ident,    // e.g. SomeStruct
             trait_name: TraitName, // e.g. quote!{ From<i32> }
 
             // Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
@@ -290,13 +292,19 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
     }
     impl ImplKind {
         fn new_trait(trait_name: TraitName, record_name: Ident) -> Self {
-            ImplKind::Trait{
-                trait_name, record_name, declare_lifetimes: false, trait_generic_params: quote!{}
+            ImplKind::Trait {
+                trait_name,
+                record_name,
+                declare_lifetimes: false,
+                trait_generic_params: quote! {},
             }
         }
         fn new_generic_trait(trait_name: TraitName, record_name: Ident) -> Self {
-            ImplKind::Trait{
-                trait_name, record_name, declare_lifetimes: true, trait_generic_params: quote!{}
+            ImplKind::Trait {
+                trait_name,
+                record_name,
+                declare_lifetimes: true,
+                trait_generic_params: quote! {},
             }
         }
     }
@@ -322,7 +330,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         // should be stripped of references + because `&'a self`
                         // needs to have its lifetime declared next to `fn`, not
                         // next to `impl`.
-                        impl_kind = ImplKind::new_trait(TraitName::Other(quote! {PartialEq<#rhs>}), lhs);
+                        impl_kind =
+                            ImplKind::new_trait(TraitName::Other(quote! {PartialEq<#rhs>}), lhs);
                     }
                     _ => {
                         return make_unsupported_result(
@@ -409,7 +418,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             match func.params.len() {
                 0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                 1 => {
-                    impl_kind = ImplKind::new_trait(TraitName::UnpinConstructor(quote! {Default}), record_name);
+                    impl_kind = ImplKind::new_trait(
+                        TraitName::UnpinConstructor(quote! {Default}),
+                        record_name,
+                    );
                     func_name = make_rs_ident("default");
                     format_first_param_as_self = false;
                 }
@@ -420,14 +432,19 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         if should_derive_clone(record) {
                             return Ok(GeneratedFunc::None);
                         } else {
-                            impl_kind = ImplKind::new_trait(TraitName::UnpinConstructor(quote! {Clone}), record_name);
+                            impl_kind = ImplKind::new_trait(
+                                TraitName::UnpinConstructor(quote! {Clone}),
+                                record_name,
+                            );
                             func_name = make_rs_ident("clone");
                             format_first_param_as_self = true;
                         }
                     } else if !instance_method_metadata.is_explicit_ctor {
                         let param_type = &param_types[1];
                         impl_kind = ImplKind::new_generic_trait(
-                            TraitName::UnpinConstructor(quote! {From< #param_type >}), record_name);
+                            TraitName::UnpinConstructor(quote! {From< #param_type >}),
+                            record_name,
+                        );
                         func_name = make_rs_ident("from");
                         format_first_param_as_self = false;
                     } else {
@@ -459,7 +476,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         let mut lifetimes = func.lifetime_params.iter().collect_vec();
         let mut maybe_first_api_param = param_type_kinds.get(0);
 
-        if let ImplKind::Trait{trait_name: TraitName::UnpinConstructor(..), ..} = impl_kind {
+        if let ImplKind::Trait { trait_name: TraitName::UnpinConstructor(..), .. } = impl_kind {
             return_type_fragment = quote! { -> Self };
 
             // Drop `__this` parameter from the public Rust API. Presence of
@@ -469,8 +486,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             thunk_args.remove(0);
 
             // Remove the lifetime associated with `__this`.
-            ensure!(func.return_type.rs_type.is_unit_type(),
-                    "Unexpectedly non-void return type of a constructor: {:?}", func);
+            ensure!(
+                func.return_type.rs_type.is_unit_type(),
+                "Unexpectedly non-void return type of a constructor: {:?}",
+                func
+            );
             let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
             let no_longer_needed_lifetime_id = maybe_first_lifetime
                 .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
@@ -508,7 +528,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
 
         let func_body = match &impl_kind {
-            ImplKind::Trait{trait_name: TraitName::UnpinConstructor(..), ..} => {
+            ImplKind::Trait { trait_name: TraitName::UnpinConstructor(..), .. } => {
                 // SAFETY: A user-defined constructor is not guaranteed to
                 // initialize all the fields. To make the `assume_init()` call
                 // below safe, the memory is zero-initialized first. This is a
@@ -554,9 +574,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
 
         let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
         let fn_generic_params: TokenStream;
-        if let ImplKind::Trait { declare_lifetimes: true, trait_generic_params, ..} = &mut impl_kind {
+        if let ImplKind::Trait { declare_lifetimes: true, trait_generic_params, .. } =
+            &mut impl_kind
+        {
             *trait_generic_params = format_generic_params(lifetimes);
-            fn_generic_params = quote!{}
+            fn_generic_params = quote! {}
         } else {
             fn_generic_params = format_generic_params(lifetimes);
         }
@@ -616,7 +638,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             param_types[0] = param_type_kinds[0]
                 .format_mut_ref_as_uninitialized(ir, &lifetime_to_name)
                 .with_context(|| {
-                    format!("Failed to format `__this` param for a constructor thunk: {:?}", func.params[0])
+                    format!(
+                        "Failed to format `__this` param for a constructor thunk: {:?}",
+                        func.params[0]
+                    )
                 })?;
         } else if func.name == UnqualifiedIdentifier::Destructor {
             if param_types.is_empty() || func.params.is_empty() {
@@ -625,7 +650,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             param_types[0] = param_type_kinds[0]
                 .format_ref_as_raw_ptr(ir, &lifetime_to_name)
                 .with_context(|| {
-                    format!("Failed to format `__this` param for a destructor thunk: {:?}", func.params[0])
+                    format!(
+                        "Failed to format `__this` param for a destructor thunk: {:?}",
+                        func.params[0]
+                    )
                 })?;
         }
 
@@ -1226,9 +1254,9 @@ impl<'ir> RsTypeKind<'ir> {
                                 return_type: Box::new(type_args.remove(type_args.len() - 1)),
                                 param_types: type_args,
                             }
-                        },
+                        }
                     }
-                },
+                }
             },
         };
         Ok(result)
@@ -1269,16 +1297,17 @@ impl<'ir> RsTypeKind<'ir> {
                 }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
-                let return_frag = return_type.format_as_return_type_fragment(ir, lifetime_to_name)?;
+                let return_frag =
+                    return_type.format_as_return_type_fragment(ir, lifetime_to_name)?;
                 let param_types = param_types
-                        .iter()
-                        .map(|t| t.format(ir, lifetime_to_name))
-                        .collect::<Result<Vec<_>>>()?;
-                quote!{ extern #abi fn( #( #param_types ),* ) #return_frag }
-            },
+                    .iter()
+                    .map(|t| t.format(ir, lifetime_to_name))
+                    .collect::<Result<Vec<_>>>()?;
+                quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
+            }
             RsTypeKind::Record(record) => rs_type_name_for_target_and_identifier(
                 &record.owning_target,
-                &Identifier{identifier: record.rs_name.clone()},
+                &Identifier { identifier: record.rs_name.clone() },
                 ir,
             )?,
             RsTypeKind::TypeAlias { type_alias, .. } => rs_type_name_for_target_and_identifier(
@@ -1379,7 +1408,10 @@ impl<'ir> RsTypeKind<'ir> {
             RsTypeKind::Reference { referent, lifetime_id, mutability } => {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
-                if mutability == &Mutability::Mut && !referent.is_unpin(ir) && func.name != UnqualifiedIdentifier::Destructor {
+                if mutability == &Mutability::Mut
+                    && !referent.is_unpin(ir)
+                    && func.name != UnqualifiedIdentifier::Destructor
+                {
                     // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
                     Ok(quote! {self: std::pin::Pin< & #lifetime #mut_ Self>})
                 } else {
@@ -1498,7 +1530,7 @@ impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
                     RsTypeKind::FuncPtr { return_type, param_types, .. } => {
                         self.todo.push(return_type);
                         self.todo.extend(param_types.iter().rev());
-                    },
+                    }
                     RsTypeKind::Other { type_args, .. } => self.todo.extend(type_args.iter().rev()),
                 };
                 Some(curr)
@@ -1524,15 +1556,15 @@ fn format_rs_type(
 }
 
 fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
-     Ok(match item {
+    Ok(match item {
         Item::Record(record) => {
             let ident = format_cc_ident(&record.cc_name);
             quote! { class #ident }
-        },
+        }
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
             quote! { #ident }
-        },
+        }
         _ => bail!("Item does not define a type: {:?}", item),
     })
 }
@@ -1582,7 +1614,7 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                     }
                     let idents = cc_type_name.split_whitespace().map(format_cc_ident);
                     Ok(quote! {#( #idents )* #const_fragment})
-                },
+                }
                 Some(abi) => match ty.type_args.split_last() {
                     None => bail!("funcValue type without a return type: {:?}", ty),
                     Some((ret_type, param_types)) => {
@@ -1599,11 +1631,11 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                         // pointer type). Compare: `int (*foo)(int, int)` VS
                         // `type_identity_t<int(int, int)>* foo`.
                         Ok(quote! { rs_api_impl_support::type_identity_t<
-                                #ret_type ( #( #param_types ),* ) #attr
-                            >  })
-                    },
-                }
-            }
+                            #ret_type ( #( #param_types ),* ) #attr
+                        >  })
+                    }
+                },
+            },
         }
     } else {
         let item = ir.item_for_type(ty)?;
@@ -1739,8 +1771,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                 match static_method_metadata {
                     None => quote! {#fn_ident},
                     Some(meta) => {
-                        let record_ident =
-                            format_cc_ident(&meta.find_record(ir)?.cc_name);
+                        let record_ident = format_cc_ident(&meta.find_record(ir)?.cc_name);
                         quote! { #record_ident :: #fn_ident }
                     }
                 }
@@ -1810,8 +1841,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         standard_headers.insert(format_ident!("cstddef"));
     };
 
-    let mut includes =
-        vec!["rs_bindings_from_cc/support/cxx20_backports.h"];
+    let mut includes = vec!["rs_bindings_from_cc/support/cxx20_backports.h"];
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
     // access declarations from public headers of the C++ library.
@@ -3690,8 +3720,8 @@ mod tests {
             let f = retrieve_func(&ir, "func");
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
 
-            let lifetime_to_name: HashMap::<LifetimeId, String> = t.lifetimes().map(
-                |lifetime_id| (lifetime_id, "a".to_string())).collect();
+            let lifetime_to_name: HashMap<LifetimeId, String> =
+                t.lifetimes().map(|lifetime_id| (lifetime_id, "a".to_string())).collect();
 
             let fmt = tokens_to_string(t.format(&ir, &lifetime_to_name)?)?;
             assert_eq!(test.rs, fmt, "Testing: {}", test_name);

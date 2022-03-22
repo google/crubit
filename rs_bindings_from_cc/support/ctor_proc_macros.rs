@@ -14,10 +14,8 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as syn::DeriveInput);
 
     let struct_name = input.ident;
-    let struct_ctor_name = Ident::new(
-        &format!("_ctor_derive_{}_CtorType_Default", struct_name),
-        Span::call_site(),
-    );
+    let struct_ctor_name =
+        Ident::new(&format!("_ctor_derive_{}_CtorType_Default", struct_name), Span::call_site());
     let filled_fields: Vec<_> = match &input.data {
         syn::Data::Struct(data) => {
             if let syn::Fields::Unit = data.fields {
