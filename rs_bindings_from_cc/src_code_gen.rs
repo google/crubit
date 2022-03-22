@@ -2,10 +2,6 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[cfg(test)]
-#[macro_use]
-extern crate static_assertions;
-
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use ffi_types::*;
 use ir::*;
@@ -1948,6 +1944,7 @@ mod tests {
     use super::*;
     use anyhow::anyhow;
     use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_func, ir_record, retrieve_func};
+    use static_assertions::{assert_impl_all, assert_not_impl_all};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_ir_matches, assert_rs_matches,
         assert_rs_not_matches,

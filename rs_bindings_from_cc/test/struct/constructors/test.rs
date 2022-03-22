@@ -2,13 +2,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[macro_use]
-extern crate static_assertions;
-
 #[cfg(test)]
 mod tests {
     use constructors::*;
     use no_elided_lifetimes::*;
+    use static_assertions::{assert_impl_all, assert_not_impl_all};
 
     #[test]
     #[allow(clippy::redundant_clone)]

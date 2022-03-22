@@ -2,12 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[macro_use]
-extern crate static_assertions;
-
 #[cfg(test)]
 mod tests {
     use operators::*;
+    use static_assertions::{assert_impl_all, assert_not_impl_all};
 
     #[test]
     fn test_eq_member_func_same_operands() {
