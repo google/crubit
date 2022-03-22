@@ -10,6 +10,10 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ei(
+    class NontrivialInline* __this, int field) {
+  rs_api_impl_support ::construct_at(__this, field);
+}
 extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
     class NontrivialInline* __this) {
   std ::destroy_at(__this);

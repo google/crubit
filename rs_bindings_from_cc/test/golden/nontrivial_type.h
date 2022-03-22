@@ -13,6 +13,7 @@
 // This makes it nontrivial for calls (so not trivially relocatable), as well
 // as specifically giving it a nontrivial move constructor and destructor.
 struct Nontrivial final {
+  explicit Nontrivial(int field);
   Nontrivial(Nontrivial&&);
   ~Nontrivial();
 
@@ -26,10 +27,11 @@ struct Nontrivial final {
 // This makes it nontrivial for calls (so not trivially relocatable), as well
 // as specifically giving it a nontrivial move constructor and destructor.
 struct NontrivialInline final {
+  explicit NontrivialInline(int field) : field(field) {}
   NontrivialInline(NontrivialInline&&) {}
   ~NontrivialInline() {}
 
-  void MemberFunction(){};
+  void MemberFunction() {}
 
   int field;
 };

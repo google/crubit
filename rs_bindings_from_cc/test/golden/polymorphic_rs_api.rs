@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:polymorphic_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
@@ -27,11 +27,20 @@ impl !Unpin for PolymorphicClass {}
 
 // rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 // Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
-// Bindings for constructors of non-trivial types are not supported yet
+// Only single-parameter constructors for T: !Unpin are supported for now
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=10
-// Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
-// Bindings for constructors of non-trivial types are not supported yet
+impl<'b> ctor::CtorNew<&'b PolymorphicClass> for PolymorphicClass {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: &'b PolymorphicClass) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN16PolymorphicClassC1ERKS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 // rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 // Error while generating bindings for item 'PolymorphicClass::operator=':
@@ -50,6 +59,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1ERKS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<PolymorphicClass>,
+            __param_0: &'b PolymorphicClass,
+        );
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev<'a>(__this: *mut PolymorphicClass);
     }
 }

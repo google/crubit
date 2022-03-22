@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:trivial_type_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
@@ -90,11 +90,20 @@ impl !Unpin for TrivialNonfinal {}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Bindings for constructors of non-trivial types are not supported yet
+// Only single-parameter constructors for T: !Unpin are supported for now
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
-// Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Bindings for constructors of non-trivial types are not supported yet
+impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: &'b TrivialNonfinal) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
@@ -159,6 +168,10 @@ mod detail {
         );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,
+        );
+        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<TrivialNonfinal>,
+            __param_0: &'b TrivialNonfinal,
         );
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);

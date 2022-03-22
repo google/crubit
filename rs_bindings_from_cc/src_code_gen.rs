@@ -225,6 +225,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         Ok(GeneratedFunc::Unsupported(make_unsupported_fn(func, ir, msg)?))
     };
 
+    let mut features = BTreeSet::new();
+
     let mangled_name = &func.mangled_name;
     let thunk_ident = thunk_ident(func);
     let doc_comment = generate_doc_comment(&func.doc_comment);
@@ -264,29 +266,40 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
     // Find 1) the `func_name` and `impl_kind` of the API function to generate
     // and 2) whether to `format_first_param_as_self` (`&self` or `&mut self`).
     enum TraitName {
-        UnpinConstructor(TokenStream), // An Unpin constructor trait, e.g. From or Clone.
-        Other(TokenStream),            // any other trait, e.g. Eq.
+        /// The constructor trait for !Unpin types. e.g. `CtorNew(quote! { ()
+        /// })` is the default constructor.
+        CtorNew(TokenStream),
+        /// An Unpin constructor trait, e.g. From or Clone.
+        UnpinConstructor(TokenStream),
+        /// Any other trait, e.g. Eq.
+        Other(TokenStream),
     }
     impl quote::ToTokens for TraitName {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             match self {
                 Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
+                Self::CtorNew(args) => quote! { ctor::CtorNew < #args > }.to_tokens(tokens),
             }
         }
     }
     enum ImplKind {
-        None,   // No `impl` needed
-        Struct, // e.g. `impl SomeStruct { ... }` (SomeStruct based on func.member_func_metadata)
+        /// No `impl` needed
+        None,
+        // For example, `impl SomeStruct { ... }` (`SomeStruct` based on
+        // func.member_func_metadata.)
+        Struct,
         Trait {
-            // Note that `record_name` might *not* be from
-            // `func.member_func_metadata`.
-            record_name: Ident,    // e.g. SomeStruct
-            trait_name: TraitName, // e.g. quote!{ From<i32> }
+            /// For example, `SomeStruct`.
+            /// Note that `record_name` might *not* be from
+            /// `func.member_func_metadata`.
+            record_name: Ident,
+            /// For example, `quote!{ From<i32> }`.
+            trait_name: TraitName,
 
-            // Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
+            /// Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
             declare_lifetimes: bool,
-            // The generic params of trait `impl` (e.g. `<'b>`). These start
-            // empty and only later are mutated into the correct value.
+            /// The generic params of trait `impl` (e.g. `<'b>`). These start
+            /// empty and only later are mutated into the correct value.
             trait_generic_params: TokenStream,
         },
     }
@@ -396,13 +409,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     .instance_method_metadata
                     .as_ref()
                     .ok_or_else(|| anyhow!("Constructors must be instance methods."))?;
-
-            if !record.is_unpin() {
-                // TODO: Handle <internal link>
-                return make_unsupported_result(
-                    "Bindings for constructors of non-trivial types are not supported yet",
-                );
-            }
             if is_unsafe {
                 // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
                 // translating C++ constructors into static methods in Rust).
@@ -415,49 +421,71 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             let record_name = maybe_record_name
                 .clone()
                 .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
-            match func.params.len() {
-                0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
-                1 => {
-                    impl_kind = ImplKind::new_trait(
-                        TraitName::UnpinConstructor(quote! {Default}),
-                        record_name,
-                    );
-                    func_name = make_rs_ident("default");
-                    format_first_param_as_self = false;
-                }
-                2 => {
-                    // TODO(lukasza): Do something smart with move constructor.
-                    if param_type_kinds[1].is_shared_ref_to(record) {
-                        // Copy constructor
-                        if should_derive_clone(record) {
-                            return Ok(GeneratedFunc::None);
-                        } else {
-                            impl_kind = ImplKind::new_trait(
-                                TraitName::UnpinConstructor(quote! {Clone}),
-                                record_name,
-                            );
-                            func_name = make_rs_ident("clone");
-                            format_first_param_as_self = true;
-                        }
-                    } else if !instance_method_metadata.is_explicit_ctor {
+            if !record.is_unpin() {
+                func_name = make_rs_ident("ctor_new");
+                format_first_param_as_self = false;
+
+                match func.params.len() {
+                    0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
+                    2 => {
                         let param_type = &param_types[1];
                         impl_kind = ImplKind::new_generic_trait(
-                            TraitName::UnpinConstructor(quote! {From< #param_type >}),
+                            TraitName::CtorNew(param_type.clone()),
                             record_name,
                         );
-                        func_name = make_rs_ident("from");
-                        format_first_param_as_self = false;
-                    } else {
+                    }
+                    _ => {
+                        // TODO(b/216648347): Support bindings for other constructors.
                         return make_unsupported_result(
-                            "Not yet supported type of constructor parameter",
+                            "Only single-parameter constructors for T: !Unpin are supported for now",
                         );
                     }
                 }
-                _ => {
-                    // TODO(b/216648347): Support bindings for other constructors.
-                    return make_unsupported_result(
-                        "More than 1 constructor parameter is not supported yet",
-                    );
+            } else {
+                match func.params.len() {
+                    0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
+                    1 => {
+                        impl_kind = ImplKind::new_trait(
+                            TraitName::UnpinConstructor(quote! {Default}),
+                            record_name,
+                        );
+                        func_name = make_rs_ident("default");
+                        format_first_param_as_self = false;
+                    }
+                    2 => {
+                        // TODO(lukasza): Do something smart with move constructor.
+                        if param_type_kinds[1].is_shared_ref_to(record) {
+                            // Copy constructor
+                            if should_derive_clone(record) {
+                                return Ok(GeneratedFunc::None);
+                            } else {
+                                impl_kind = ImplKind::new_trait(
+                                    TraitName::UnpinConstructor(quote! {Clone}),
+                                    record_name,
+                                );
+                                func_name = make_rs_ident("clone");
+                                format_first_param_as_self = true;
+                            }
+                        } else if !instance_method_metadata.is_explicit_ctor {
+                            let param_type = &param_types[1];
+                            impl_kind = ImplKind::new_generic_trait(
+                                TraitName::UnpinConstructor(quote! {From< #param_type >}),
+                                record_name,
+                            );
+                            func_name = make_rs_ident("from");
+                            format_first_param_as_self = false;
+                        } else {
+                            return make_unsupported_result(
+                                "Not yet supported type of constructor parameter",
+                            );
+                        }
+                    }
+                    _ => {
+                        // TODO(b/216648347): Support bindings for other constructors.
+                        return make_unsupported_result(
+                            "More than 1 constructor parameter is not supported yet",
+                        );
+                    }
                 }
             }
         }
@@ -476,7 +504,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         let mut lifetimes = func.lifetime_params.iter().collect_vec();
         let mut maybe_first_api_param = param_type_kinds.get(0);
 
-        if let ImplKind::Trait { trait_name: TraitName::UnpinConstructor(..), .. } = impl_kind {
+        if let ImplKind::Trait {
+            trait_name: TraitName::UnpinConstructor(..) | TraitName::CtorNew(..),
+            ..
+        } = impl_kind
+        {
             return_type_fragment = quote! { -> Self };
 
             // Drop `__this` parameter from the public Rust API. Presence of
@@ -513,6 +545,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             maybe_first_api_param = param_type_kinds.get(1);
         }
 
+        if let ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } = impl_kind {
+            return_type_fragment = quote! { -> Self::CtorType };
+        }
+
         // Change `__this: &'a SomeStruct` into `&'a self` if needed.
         if format_first_param_as_self {
             let first_api_param = maybe_first_api_param
@@ -527,7 +563,20 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             thunk_args[0] = quote! { self };
         }
 
+        // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
+        // MaybeUninit<T> in Pin if T is !Unpin. It should understand
+        // 'structural pinning', so that we do not need into_inner_unchecked()
+        // here.
         let func_body = match &impl_kind {
+            ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } => {
+                quote! {
+                    ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| {
+                        unsafe {
+                            crate::detail::#thunk_ident(std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
+                        }
+                    })
+                }
+            }
             ImplKind::Trait { trait_name: TraitName::UnpinConstructor(..), .. } => {
                 // SAFETY: A user-defined constructor is not guaranteed to
                 // initialize all the fields. To make the `assume_init()` call
@@ -609,9 +658,22 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             };
         }
         ImplKind::Trait { trait_name, record_name, trait_generic_params, .. } => {
+            let extra_items;
+            match trait_name {
+                TraitName::CtorNew(..) => {
+                    // This feature seems destined for stabilization, and makes the code
+                    // simpler.
+                    features.insert(make_rs_ident("type_alias_impl_trait"));
+                    extra_items = quote! {type CtorType = impl ctor::Ctor<Output = Self>;};
+                }
+                _ => {
+                    extra_items = quote! {};
+                }
+            };
             api_func = quote! {
                 #doc_comment
                 impl #trait_generic_params #trait_name for #record_name {
+                    #extra_items
                     #api_func_def
                 }
             };
@@ -667,7 +729,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
     };
 
-    Ok(GeneratedFunc::Some { api_func: api_func.into(), thunk: thunk.into(), function_id })
+    Ok(GeneratedFunc::Some {
+        api_func: RsSnippet { features, tokens: api_func },
+        thunk: thunk.into(),
+        function_id,
+    })
 }
 
 fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
@@ -3994,6 +4060,35 @@ mod tests {
             rs_api_impl,
             quote! {
                 fn drop(&mut self) { ... }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_one_arg_constructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct HasConstructor {explicit HasConstructor(unsigned char input) {}};"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(rs_api, quote! {impl !Unpin for HasConstructor {} });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl ctor::CtorNew<u8> for HasConstructor {
+                    type CtorType = impl ctor::Ctor<Output = Self>;
+
+                    #[inline (always)]
+                    fn ctor_new(input: u8) -> Self::CtorType {
+                        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| {
+                            unsafe {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(std::pin::Pin::into_inner_unchecked(dest), input);
+                            }
+                        })
+                    }
+                }
             }
         );
         Ok(())

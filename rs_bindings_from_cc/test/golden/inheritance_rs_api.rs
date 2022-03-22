@@ -30,11 +30,11 @@ impl !Unpin for Base0 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
@@ -58,11 +58,11 @@ impl !Unpin for Base1 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
@@ -85,11 +85,11 @@ impl !Unpin for Base2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':

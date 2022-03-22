@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:nontrivial_type_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
@@ -29,7 +29,20 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=16
+impl ctor::CtorNew<i32> for Nontrivial {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(field: i32) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
+                std::pin::Pin::into_inner_unchecked(dest),
+                field,
+            );
+        })
+    }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=17
 // Error while generating bindings for item 'Nontrivial::Nontrivial':
 // Parameter #0 is not supported: Unsupported type 'struct Nontrivial &&': Unsupported clang::Type class 'RValueReference'
 
@@ -58,7 +71,20 @@ pub struct NontrivialInline {
 
 impl !Unpin for NontrivialInline {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=29
+impl ctor::CtorNew<i32> for NontrivialInline {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(field: i32) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
+                std::pin::Pin::into_inner_unchecked(dest),
+                field,
+            );
+        })
+    }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=31
 // Error while generating bindings for item 'NontrivialInline::NontrivialInline':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&': Unsupported clang::Type class 'RValueReference'
 
@@ -88,7 +114,7 @@ pub struct NontrivialMembers {
 
 impl !Unpin for NontrivialMembers {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=42
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=44
 // Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
 // Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&': Unsupported clang::Type class 'RValueReference'
 
@@ -99,15 +125,15 @@ impl Drop for NontrivialMembers {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=46
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=48
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=47
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=49
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=49
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=51
 // Error while generating bindings for item 'ReturnsByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
 
@@ -129,11 +155,20 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        #[link_name = "_ZN10NontrivialC1Ei"]
+        pub(crate) fn __rust_thunk___ZN10NontrivialC1Ei<'a>(
+            __this: &'a mut std::mem::MaybeUninit<Nontrivial>,
+            field: i32,
+        );
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: *mut Nontrivial);
         #[link_name = "_ZN10Nontrivial14MemberFunctionEv"]
         pub(crate) fn __rust_thunk___ZN10Nontrivial14MemberFunctionEv<'a>(
             __this: std::pin::Pin<&'a mut Nontrivial>,
+        );
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ei<'a>(
+            __this: &'a mut std::mem::MaybeUninit<NontrivialInline>,
+            field: i32,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: *mut NontrivialInline);
         pub(crate) fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(

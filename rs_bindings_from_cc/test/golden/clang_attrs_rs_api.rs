@@ -27,11 +27,11 @@ impl !Unpin for HasCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
@@ -54,11 +54,11 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
@@ -88,11 +88,11 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
@@ -116,11 +116,11 @@ impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Bindings for constructors of non-trivial types are not supported yet
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
