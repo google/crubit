@@ -817,6 +817,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         record.fields.iter().map(|f| make_rs_ident(&f.identifier.identifier)).collect_vec();
     let field_doc_coments =
         record.fields.iter().map(|f| generate_doc_comment(&f.doc_comment)).collect_vec();
+
+    let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
     let field_types = record
         .fields
         .iter()
@@ -840,16 +842,23 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 })?;
             // TODO(b/212696226): Verify cases where ManuallyDrop<T> is skipped
             // via static asserts in the generated code.
-            if should_implement_drop(record) && needs_manually_drop(&f.type_.rs_type, ir)? {
-                // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
-                // if we can ask Rust to preserve field destruction order if the
-                // destructor is the SpecialMemberDefinition::NontrivialMembers
-                // case.
-                formatted = quote! { std::mem::ManuallyDrop<#formatted> }
+            if should_implement_drop(record) {
+                if needs_manually_drop(&f.type_.rs_type, ir)? {
+                    // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
+                    // if we can ask Rust to preserve field destruction order if the
+                    // destructor is the SpecialMemberDefinition::NontrivialMembers
+                    // case.
+                    formatted = quote! { std::mem::ManuallyDrop<#formatted> }
+                } else {
+                    field_copy_trait_assertions.push(quote! {
+                        const _: () = { assert_impl_all!(#formatted: Copy); };
+                    });
+                }
             };
             Ok(formatted)
         })
         .collect::<Result<Vec<_>>>()?;
+
     let field_accesses = record
         .fields
         .iter()
@@ -863,7 +872,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         .collect_vec();
     let size = record.size;
     let alignment = record.alignment;
-    let field_assertions =
+    let field_offset_assertions =
         record.fields.iter().zip(field_idents.iter()).map(|(field, field_ident)| {
             let offset = field.offset;
             quote! {
@@ -872,6 +881,9 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 const _: () = assert!(offset_of!(#ident, #field_ident) * 8 == #offset);
             }
         });
+    // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_all!`
+    // assertions about the `Copy` trait - this trait should be implemented
+    // iff `should_implement_drop(record)` is false.
     let mut record_features = BTreeSet::new();
     let mut assertion_features = BTreeSet::new();
 
@@ -952,7 +964,8 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let assertion_tokens = quote! {
         const _: () = assert!(std::mem::size_of::<#ident>() == #size);
         const _: () = assert!(std::mem::align_of::<#ident>() == #alignment);
-        #( #field_assertions )*
+        #( #field_offset_assertions )*
+        #( #field_copy_trait_assertions )*
     };
 
     Ok((
@@ -1151,7 +1164,10 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
 
     let imports = if has_record {
         quote! {
+            extern crate static_assertions;
+
             use memoffset_unstable_const::offset_of;
+            use static_assertions::{assert_impl_all, assert_not_impl_all};
         }
     } else {
         quote! {}
