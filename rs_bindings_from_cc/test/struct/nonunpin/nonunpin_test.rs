@@ -10,14 +10,34 @@ mod tests {
     /// When a value is constructed in-place, it is initialized, has the correct
     /// address.
     #[test]
-    fn test_nonunpin() {
+    fn test_ctor() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
         }
         assert_eq!(x.value(), 42);
         assert_eq!(x.addr(), &*x as *const _ as usize);
+    }
 
-        x.as_mut().set_value(0);
-        assert_eq!(x.value(), 0);
+    #[test]
+    fn test_copy() {
+        ctor::emplace! {
+            let x = Nonunpin::ctor_new(42);
+            let y = ctor::copy(&*x);
+        }
+
+        assert_eq!(x.value(), 42);
+        assert_eq!(y.value(), 42);
+
+        assert_eq!(x.addr(), &*x as *const _ as usize);
+        assert_eq!(y.addr(), &*y as *const _ as usize);
+    }
+
+    #[test]
+    fn test_methods() {
+        ctor::emplace! {
+            let mut x = Nonunpin::ctor_new(42);
+        }
+        x.as_mut().set_value(24);
+        assert_eq!(x.value(), 24);
     }
 }

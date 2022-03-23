@@ -13,6 +13,7 @@ class Nonunpin {
  public:
   explicit Nonunpin(int value)
       : value_(value), addr_(reinterpret_cast<size_t>(this)) {}
+  Nonunpin(const Nonunpin& other) : Nonunpin(other.value_) {}
   ~Nonunpin() {}
   size_t addr() const { return addr_; }
   int value() const { return value_; }
