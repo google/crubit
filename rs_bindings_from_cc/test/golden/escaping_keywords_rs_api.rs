@@ -57,7 +57,7 @@ pub fn r#impl(r#match: i32) {
 // Error while generating bindings for item 'await':
 // Class templates are not supported yet
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=21
+// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=22
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 

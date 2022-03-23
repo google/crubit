@@ -13,6 +13,7 @@
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "third_party/absl/container/flat_hash_map.h"
@@ -280,8 +281,8 @@ std::vector<clang::RawComment*> Importer::ImportFreeComments() {
   }
 
   // ... and then we remove those that "conflict" with an IR item.
-  for (const auto& [decl, result] : lookup_cache_) {
-    if (result.item()) {
+  for (const auto& [decl, result] : import_cache_) {
+    if (result.has_value()) {
       // Remove doc comments of imported items.
       if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
         ordered_comments.erase(raw_comment->getBeginLoc());
@@ -382,25 +383,15 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   // We emit IR items in the order of the decls they were generated for.
   // For decls that emit multiple items we use a stable, but arbitrary order.
   std::vector<OrderedItem> items;
-  for (const auto& [decl, result] : lookup_cache_) {
-    auto item = result.item();
-    if (item) {
+  for (const auto& [decl, item] : import_cache_) {
+    if (item.has_value()) {
+      if (std::holds_alternative<UnsupportedItem>(*item) &&
+          !IsFromCurrentTarget(decl)) {
+        continue;
+      }
+
       items.push_back(
           std::make_tuple(decl->getSourceRange(), GetDeclOrder(decl), *item));
-    }
-    if (IsFromCurrentTarget(decl)) {
-      std::string name = "unnamed";
-      if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
-        name = named_decl->getQualifiedNameAsString();
-      }
-      SourceLoc source_loc = ConvertSourceLocation(decl->getBeginLoc());
-      if (!result.errors().empty()) {
-        auto error = absl::StrJoin(result.errors(), "\n\n");
-        items.push_back(std::make_tuple(
-            decl->getSourceRange(), GetDeclOrder(decl),
-            UnsupportedItem{
-                .name = name, .message = error, .source_loc = source_loc}));
-      }
     }
   }
 
@@ -439,21 +430,21 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext* decl_context) {
   for (auto decl : decl_context->decls()) {
-    LookupDecl(decl->getCanonicalDecl());
+    ImportDeclIfNeeded(decl->getCanonicalDecl());
   }
 }
 
-Importer::LookupResult Importer::LookupDecl(clang::Decl* decl) {
-  if (!lookup_cache_.contains(decl)) {
-    lookup_cache_.insert({decl, ImportDecl(decl)});
-  }
+void Importer::ImportDeclIfNeeded(clang::Decl* decl) {
+  // TODO: Move `decl->getCanonicalDecl()` from callers into here.
 
-  return lookup_cache_[decl];
+  if (!import_cache_.contains(decl)) {
+    import_cache_.insert({decl, ImportDecl(decl)});
+  }
 }
 
-Importer::LookupResult Importer::ImportDecl(clang::Decl* decl) {
+std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   if (auto* namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
-    return LookupResult("Namespaces are not supported yet");
+    return ImportUnsupportedItem(decl, "Namespaces are not supported yet");
   } else if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
     return ImportFunction(function_decl);
   } else if (auto* function_template_decl =
@@ -472,18 +463,19 @@ Importer::LookupResult Importer::ImportDecl(clang::Decl* decl) {
                  clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
     return ImportTypedefName(typedef_name_decl);
   } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
-    return LookupResult("Class templates are not supported yet");
+    return ImportUnsupportedItem(decl, "Class templates are not supported yet");
   } else {
-    return LookupResult();
+    return std::nullopt;
   }
 }
 
-Importer::LookupResult Importer::ImportFunction(
+std::optional<IR::Item> Importer::ImportFunction(
     clang::FunctionDecl* function_decl) {
-  if (!IsFromCurrentTarget(function_decl)) return LookupResult();
-  if (function_decl->isDeleted()) return LookupResult();
+  if (!IsFromCurrentTarget(function_decl)) return std::nullopt;
+  if (function_decl->isDeleted()) return std::nullopt;
   if (function_decl->isTemplated()) {
-    return LookupResult("Function templates are not supported yet");
+    return ImportUnsupportedItem(function_decl,
+                                 "Function templates are not supported yet");
   }
 
   devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
@@ -503,7 +495,7 @@ Importer::LookupResult Importer::ImportFunction(
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
     if (!known_type_decls_.contains(
             method_decl->getParent()->getCanonicalDecl())) {
-      return LookupResult("Couldn't import the parent");
+      return ImportUnsupportedItem(function_decl, "Couldn't import the parent");
     }
 
     // non-static member functions receive an implicit `this` parameter.
@@ -615,7 +607,7 @@ Importer::LookupResult Importer::ImportFunction(
       case clang::AS_none:
         // No need for IR to include Func representing private methods.
         // TODO(lukasza): Revisit this for protected methods.
-        return LookupResult();
+        return std::nullopt;
     }
     llvm::Optional<MemberFuncMetadata::InstanceMethodMetadata>
         instance_metadata;
@@ -650,7 +642,7 @@ Importer::LookupResult Importer::ImportFunction(
   }
 
   if (!errors.empty()) {
-    return LookupResult(errors);
+    return ImportUnsupportedItem(function_decl, errors);
   }
 
   bool has_c_calling_convention =
@@ -664,7 +656,7 @@ Importer::LookupResult Importer::ImportFunction(
   CRUBIT_CHECK(return_type.ok());
 
   if (translated_name.has_value()) {
-    return LookupResult(Func{
+    return Func{
         .name = *translated_name,
         .owning_target = GetOwningTarget(function_decl),
         .doc_comment = GetComment(function_decl),
@@ -676,9 +668,9 @@ Importer::LookupResult Importer::ImportFunction(
         .member_func_metadata = std::move(member_func_metadata),
         .has_c_calling_convention = has_c_calling_convention,
         .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
-    });
+    };
   }
-  return LookupResult();
+  return std::nullopt;
 }
 
 BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
@@ -716,34 +708,36 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
-Importer::LookupResult Importer::ImportRecord(
+std::optional<IR::Item> Importer::ImportRecord(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context->isFunctionOrMethod()) {
-    return LookupResult();
+    return std::nullopt;
   }
   if (record_decl->isInjectedClassName()) {
-    return LookupResult();
+    return std::nullopt;
   }
   if (decl_context->isRecord()) {
-    return LookupResult("Nested classes are not supported yet");
+    return ImportUnsupportedItem(record_decl,
+                                 "Nested classes are not supported yet");
   }
   if (record_decl->isUnion()) {
-    return LookupResult("Unions are not supported yet");
+    return ImportUnsupportedItem(record_decl, "Unions are not supported yet");
   }
   // Make sure the record has a definition that we'll be able to call
   // ASTContext::getASTRecordLayout() on.
   record_decl = record_decl->getDefinition();
   if (!record_decl || record_decl->isInvalidDecl() ||
       !record_decl->isCompleteDefinition()) {
-    return LookupResult();
+    return std::nullopt;
   }
 
   // To compute the memory layout of the record, it needs to be a concrete type,
   // not a template.
   if (record_decl->getDescribedClassTemplate() ||
       clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl)) {
-    return LookupResult("Class templates are not supported yet");
+    return ImportUnsupportedItem(record_decl,
+                                 "Class templates are not supported yet");
   }
 
   sema_.ForceDeclarationOfImplicitMembers(record_decl);
@@ -767,7 +761,7 @@ Importer::LookupResult Importer::ImportRecord(
 
   std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
   if (!record_name.has_value()) {
-    return LookupResult();
+    return std::nullopt;
   }
   // Provisionally assume that we know this RecordDecl so that we'll be able
   // to import fields whose type contains the record itself.
@@ -777,7 +771,7 @@ Importer::LookupResult Importer::ImportRecord(
     // Importing a field failed, so note that we didn't import this RecordDecl
     // after all.
     known_type_decls_.erase(record_decl);
-    return LookupResult(fields.status().ToString());
+    return ImportUnsupportedItem(record_decl, fields.status().ToString());
   }
 
   for (const Field& field : *fields) {
@@ -787,7 +781,7 @@ Importer::LookupResult Importer::ImportRecord(
     }
   }
 
-  return LookupResult(Record{
+  return Record{
       .rs_name = std::string(record_name->Ident()),
       .cc_name = std::string(record_name->Ident()),
       .id = GenerateDeclId(record_decl),
@@ -803,17 +797,18 @@ Importer::LookupResult Importer::ImportRecord(
       .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
       .is_trivial_abi = record_decl->canPassInRegisters(),
-      .is_final = record_decl->isEffectivelyFinal()});
+      .is_final = record_decl->isEffectivelyFinal()};
 }
 
-Importer::LookupResult Importer::ImportEnum(clang::EnumDecl* enum_decl) {
+std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
   std::optional<Identifier> enum_name = GetTranslatedIdentifier(enum_decl);
   if (!enum_name.has_value()) {
     // TODO(b/208945197): This corresponds to an unnamed enum declaration like
     // `enum { kFoo = 1 }`, which only exists to provide constants into the
     // surrounding scope and doesn't actually introduce an enum namespace. It
     // seems like it should probably be handled with other constants.
-    return LookupResult("Unnamed enums are not supported yet");
+    return ImportUnsupportedItem(enum_decl,
+                                 "Unnamed enums are not supported yet");
   }
 
   clang::QualType cc_type = enum_decl->getIntegerType();
@@ -823,13 +818,14 @@ Importer::LookupResult Importer::ImportEnum(clang::EnumDecl* enum_decl) {
     // with no fixed underlying type." The same page implies that this can't
     // occur in C++ nor in standard C, but clang supports enums like this
     // in C "as an extension".
-    return LookupResult(
+    return ImportUnsupportedItem(
+        enum_decl,
         "Forward declared enums without type specifiers are not supported");
   }
   std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> type = ConvertQualType(cc_type, no_lifetimes);
   if (!type.ok()) {
-    return LookupResult(type.status().ToString());
+    return ImportUnsupportedItem(enum_decl, type.status().ToString());
   }
 
   std::vector<Enumerator> enumerators;
@@ -840,7 +836,8 @@ Importer::LookupResult Importer::ImportEnum(clang::EnumDecl* enum_decl) {
         GetTranslatedIdentifier(enumerator);
     if (!enumerator_name.has_value()) {
       // It's not clear that this case is possible
-      return LookupResult("importing enum failed: missing enumerator name");
+      return ImportUnsupportedItem(
+          enum_decl, "importing enum failed: missing enumerator name");
     }
 
     enumerators.push_back(Enumerator{
@@ -849,31 +846,49 @@ Importer::LookupResult Importer::ImportEnum(clang::EnumDecl* enum_decl) {
     });
   }
 
-  return LookupResult(Enum{
+  return Enum{
       .identifier = *enum_name,
       .id = GenerateDeclId(enum_decl),
       .owning_target = GetOwningTarget(enum_decl),
       .underlying_type = *std::move(type),
       .enumerators = enumerators,
-  });
+  };
 }
 
-Importer::LookupResult Importer::ImportTypedefName(
+IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::string error) {
+  std::string name = "unnamed";
+  if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
+    name = named_decl->getQualifiedNameAsString();
+  }
+  SourceLoc source_loc = ConvertSourceLocation(decl->getBeginLoc());
+  return UnsupportedItem{
+      .name = name, .message = error, .source_loc = source_loc};
+}
+
+IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::set<std::string> errors) {
+  return ImportUnsupportedItem(decl, absl::StrJoin(errors, "\n\n"));
+}
+
+std::optional<IR::Item> Importer::ImportTypedefName(
     clang::TypedefNameDecl* typedef_name_decl) {
   const clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
   if (decl_context) {
     if (decl_context->isFunctionOrMethod()) {
-      return LookupResult();
+      return std::nullopt;
     }
     if (decl_context->isRecord()) {
-      return LookupResult("Typedefs nested in classes are not supported yet");
+      return ImportUnsupportedItem(
+          typedef_name_decl,
+          "Typedefs nested in classes are not supported yet");
     }
   }
 
   clang::QualType type =
       typedef_name_decl->getASTContext().getTypedefType(typedef_name_decl);
   if (MapKnownCcTypeToRsType(type.getAsString()).has_value()) {
-    return LookupResult();
+    return std::nullopt;
   }
 
   std::optional<Identifier> identifier =
@@ -884,14 +899,14 @@ Importer::LookupResult Importer::ImportTypedefName(
       ConvertQualType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
     known_type_decls_.insert(typedef_name_decl);
-    return LookupResult(
-        TypeAlias{.identifier = *identifier,
-                  .id = GenerateDeclId(typedef_name_decl),
-                  .owning_target = GetOwningTarget(typedef_name_decl),
-                  .doc_comment = GetComment(typedef_name_decl),
-                  .underlying_type = *underlying_type});
+    return TypeAlias{.identifier = *identifier,
+                     .id = GenerateDeclId(typedef_name_decl),
+                     .owning_target = GetOwningTarget(typedef_name_decl),
+                     .doc_comment = GetComment(typedef_name_decl),
+                     .underlying_type = *underlying_type};
   } else {
-    return LookupResult(std::string(underlying_type.status().message()));
+    return ImportUnsupportedItem(
+        typedef_name_decl, std::string(underlying_type.status().message()));
   }
 }
 

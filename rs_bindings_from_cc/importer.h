@@ -93,40 +93,27 @@ class Importer {
   void Import(clang::TranslationUnitDecl* decl);
 
  private:
-  // The result of looking up a decl. This may either contain an item that was
-  // imported or a vector of errors that occurred. Both are empty for decls that
-  // don't get imported on purpose.
-  class LookupResult {
-    std::optional<IR::Item> item_;
-    std::set<std::string> errors_;
-
-   public:
-    LookupResult() {}
-    explicit LookupResult(IR::Item item) : item_(item) {}
-    explicit LookupResult(std::string error) : errors_({error}) {}
-    explicit LookupResult(std::set<std::string> errors) : errors_(errors) {}
-
-    const std::optional<IR::Item>& item() const { return item_; }
-    const std::set<std::string>& errors() const { return errors_; }
-  };
-
   // Imports all decls contained in a `DeclContext`.
   void ImportDeclsFromDeclContext(const clang::DeclContext* decl_context);
 
-  // Looks up a decl, either from the cache, or by importing it and updating the
-  // cache.
-  LookupResult LookupDecl(clang::Decl* decl);
+  // Imports a decl, but only if it hasn't been already imported earlier.
+  void ImportDeclIfNeeded(clang::Decl* decl);
 
   // Imports a decl and creates an IR item (or error messages).
   // Does not use or update the cache.
-  LookupResult ImportDecl(clang::Decl* decl);
+  std::optional<IR::Item> ImportDecl(clang::Decl* decl);
 
   // These functions import specific `Decl` subtypes. They use `LookupDecl` to
   // lookup dependencies. They don't use or update the cache themselves.
-  LookupResult ImportFunction(clang::FunctionDecl* function_decl);
-  LookupResult ImportRecord(clang::CXXRecordDecl* record_decl);
-  LookupResult ImportTypedefName(clang::TypedefNameDecl* typedef_name_decl);
-  LookupResult ImportEnum(clang::EnumDecl* enum_decl);
+  std::optional<IR::Item> ImportFunction(clang::FunctionDecl* function_decl);
+  std::optional<IR::Item> ImportRecord(clang::CXXRecordDecl* record_decl);
+  std::optional<IR::Item> ImportTypedefName(
+      clang::TypedefNameDecl* typedef_name_decl);
+  std::optional<IR::Item> ImportEnum(clang::EnumDecl* enum_decl);
+
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl, std::string error);
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 std::set<std::string> errors);
 
   absl::StatusOr<std::vector<Field>> ImportFields(
       clang::CXXRecordDecl* record_decl);
@@ -191,7 +178,8 @@ class Importer {
   clang::Sema& sema_;
 
   std::unique_ptr<clang::MangleContext> mangler_;
-  absl::flat_hash_map<const clang::Decl*, LookupResult> lookup_cache_;
+  absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
+      import_cache_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 };  // class Importer
 
