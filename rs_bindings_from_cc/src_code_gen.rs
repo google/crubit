@@ -1799,7 +1799,9 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
 fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<TokenStream> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     for base in &record.unambiguous_public_bases {
-        let base_record: &Record = ir.find_decl(base.base_record_id)?.try_into()?;
+        let base_record: &Record = ir
+            .find_decl(base.base_record_id)
+            .with_context(|| format!("Can't find a base record of {:?}", record))?;
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
             // TODO(b/216195042): Correctly handle imported records, lifetimes.

@@ -4,7 +4,7 @@
 
 /// Types and deserialization logic for IR. See docs in
 // `rs_bindings_from_cc/ir.h` for more information.
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{ToTokens, TokenStreamExt};
@@ -249,15 +249,7 @@ pub struct MemberFuncMetadata {
 
 impl MemberFuncMetadata {
     pub fn find_record<'a>(&self, ir: &'a IR) -> Result<&'a Record> {
-        ir.find_decl(self.record_id)
-            .context("Failed to retrieve Record for MemberFuncMetadata")
-            .and_then(|decl| decl.try_into())
-            .with_context(|| {
-                format!(
-                    "DeclId {:?} from MemberFuncMetadata::record_id doesn't refer to a Record",
-                    self.record_id
-                )
-            })
+        ir.find_decl(self.record_id).context("Failed to retrieve Record for MemberFuncMetadata")
     }
 }
 
@@ -576,14 +568,25 @@ impl IR {
         T: TypeWithDeclId + std::fmt::Debug,
     {
         if let Some(decl_id) = ty.decl_id() {
-            self.find_decl(decl_id)
+            self.find_untyped_decl(decl_id)
                 .with_context(|| format!("Failed to retrieve item for type {:?}", ty))
         } else {
             bail!("Type {:?} does not have an associated item.", ty)
         }
     }
 
-    pub fn find_decl(&self, decl_id: DeclId) -> Result<&Item> {
+    pub fn find_decl<'a, T>(&'a self, decl_id: DeclId) -> Result<&'a T>
+    where
+        &'a T: TryFrom<&'a Item>,
+    {
+        self.find_untyped_decl(decl_id).and_then(|decl| {
+            decl.try_into().map_err(|_| {
+                anyhow!("DeclId {:?} doesn't refer to a {}", decl_id, std::any::type_name::<T>())
+            })
+        })
+    }
+
+    fn find_untyped_decl(&self, decl_id: DeclId) -> Result<&Item> {
         let idx = *self
             .decl_id_to_item_idx
             .get(&decl_id)
