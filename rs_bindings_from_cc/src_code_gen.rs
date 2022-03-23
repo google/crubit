@@ -215,6 +215,7 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
         name: cxx_function_name(func, ir)?,
         message: message.to_string(),
         source_loc: func.source_loc.clone(),
+        id: func.id,
     })
 }
 
@@ -1257,7 +1258,7 @@ impl Mutability {
 
 // TODO(b/213947473): Instead of having a separate RsTypeKind here, consider
 // changing ir::RsType into a similar `enum`, with fields that contain
-// references (e.g. &'ir Record`) instead of DeclIds.
+// references (e.g. &'ir Record`) instead of ItemIds.
 #[derive(Debug)]
 enum RsTypeKind<'ir> {
     Pointer { pointee: Box<RsTypeKind<'ir>>, mutability: Mutability },
@@ -1993,9 +1994,9 @@ mod tests {
     // `ir_testing`.
     fn test_duplicate_decl_ids_err() {
         let mut r1 = ir_record("R1");
-        r1.id = DeclId(42);
+        r1.id = ItemId(42);
         let mut r2 = ir_record("R2");
-        r2.id = DeclId(42);
+        r2.id = ItemId(42);
         let result = make_ir_from_items([r1.into(), r2.into()]);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Duplicate decl_id found in"));

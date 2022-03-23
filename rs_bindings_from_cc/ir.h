@@ -72,11 +72,12 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
   return o << std::string(llvm::formatv("{0:2}", h.ToJson()));
 }
 
-// An int uniquely representing a Decl. Since our IR goes through the JSON
+// An int uniquely representing an Item. Since our IR goes through the JSON
 // serialization/deserialization at the moment, we need a way to restore graph
 // edges that don't follow the JSON tree structure (for example between types
-// and records). We use DeclIds for this.
-CRUBIT_DEFINE_STRONG_INT_TYPE(DeclId, uintptr_t);
+// and records), as well as location of comments and items we don't yet support.
+//  We use ItemIds for this.
+CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
 
 // A numerical ID that uniquely identifies a lifetime.
 CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
@@ -117,7 +118,7 @@ struct CcType {
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
   // non-empty. `llvm::Optional` is used because it integrates better with
   // `llvm::json` library than `std::optional`.
-  llvm::Optional<DeclId> decl_id;
+  llvm::Optional<ItemId> decl_id;
 
   // The C++ const-qualification for the type.
   //
@@ -156,7 +157,7 @@ struct RsType {
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
   // non-empty. `llvm::Optional` is used because it integrates better with
   // `llvm::json` library than `std::optional`.
-  llvm::Optional<DeclId> decl_id;
+  llvm::Optional<ItemId> decl_id;
 
   // Lifetime arguments for a generic type. Examples:
   //   *mut i32 has no lifetime arguments
@@ -194,7 +195,7 @@ struct MappedType {
     return MappedType{RsType{rs_name}, CcType{cc_name}};
   }
 
-  static MappedType WithDeclId(DeclId decl_id) {
+  static MappedType WithDeclId(ItemId decl_id) {
     return MappedType{RsType{.decl_id = decl_id}, CcType{.decl_id = decl_id}};
   }
 
@@ -362,7 +363,7 @@ struct MemberFuncMetadata {
   llvm::json::Value ToJson() const;
 
   // The type that this is a member function for.
-  DeclId record_id;
+  ItemId record_id;
 
   // Qualifiers for the instance method.
   //
@@ -402,6 +403,7 @@ struct Func {
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
   bool has_c_calling_convention = true;
   SourceLoc source_loc;
+  ItemId id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -474,7 +476,7 @@ inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
 // A base class subobject of a struct or class.
 struct BaseClass {
   llvm::json::Value ToJson() const;
-  DeclId base_record_id;
+  ItemId base_record_id;
 
   // The offset the base class subobject is located at. This is always nonempty
   // for nonvirtual inheritance, and always empty if a virtual base class is
@@ -495,7 +497,7 @@ struct Record {
   std::string rs_name;
   std::string cc_name;
 
-  DeclId id;
+  ItemId id;
   BlazeLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   std::vector<BaseClass> unambiguous_public_bases;
@@ -556,7 +558,7 @@ struct Enum {
   llvm::json::Value ToJson() const;
 
   Identifier identifier;
-  DeclId id;
+  ItemId id;
   BlazeLabel owning_target;
   MappedType underlying_type;
   std::vector<Enumerator> enumerators;
@@ -571,7 +573,7 @@ struct TypeAlias {
   llvm::json::Value ToJson() const;
 
   Identifier identifier;
-  DeclId id;
+  ItemId id;
   BlazeLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   MappedType underlying_type;
@@ -595,6 +597,7 @@ struct UnsupportedItem {
   // TODO(forster): We should support multiple reasons per unsupported item.
   std::string message;
   SourceLoc source_loc;
+  ItemId id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const UnsupportedItem& r) {
@@ -605,6 +608,7 @@ struct Comment {
   llvm::json::Value ToJson() const;
 
   std::string text;
+  ItemId id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Comment& r) {

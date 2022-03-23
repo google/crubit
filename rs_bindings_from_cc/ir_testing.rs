@@ -6,7 +6,7 @@ use anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{
-    self, CcType, DeclId, Func, FuncParam, Identifier, Item, MappedType, Record, RsType,
+    self, CcType, Func, FuncParam, Identifier, Item, ItemId, MappedType, Record, RsType,
     SpecialMemberFunc, IR,
 };
 
@@ -73,13 +73,13 @@ pub fn ir_type(decl_id: usize) -> MappedType {
             name: None,
             lifetime_args: vec![],
             type_args: vec![],
-            decl_id: Some(DeclId(decl_id)),
+            decl_id: Some(ItemId(decl_id)),
         },
         cc_type: CcType {
             name: None,
             type_args: vec![],
             is_const: false,
-            decl_id: Some(DeclId(decl_id)),
+            decl_id: Some(ItemId(decl_id)),
         },
     }
 }

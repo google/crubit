@@ -273,6 +273,7 @@ llvm::json::Value Func::ToJson() const {
       {"member_func_metadata", member_func_metadata},
       {"has_c_calling_convention", has_c_calling_convention},
       {"source_loc", source_loc},
+      {"id", id},
   };
 
   return llvm::json::Object{
@@ -409,6 +410,7 @@ llvm::json::Value UnsupportedItem::ToJson() const {
       {"name", name},
       {"message", message},
       {"source_loc", source_loc},
+      {"id", id},
   };
 
   return llvm::json::Object{
@@ -419,6 +421,7 @@ llvm::json::Value UnsupportedItem::ToJson() const {
 llvm::json::Value Comment::ToJson() const {
   llvm::json::Object comment{
       {"text", text},
+      {"id", id},
   };
 
   return llvm::json::Object{

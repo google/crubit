@@ -33,7 +33,7 @@ using ::testing::SizeIs;
 using ::testing::VariantWith;
 using ::testing::status::StatusIs;
 
-std::optional<DeclId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
+std::optional<ItemId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
   for (const Record* record : ir.get_items_if<Record>()) {
     if (record->rs_name == rs_name) {
       return record->id;
@@ -367,7 +367,7 @@ TEST(ImporterTest, TestImportConstStructPointerFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir,
                        IrFromCc("struct S{}; const S* Foo(const S* s);"));
 
-  std::optional<DeclId> decl_id = DeclIdForRecord(ir, "S");
+  std::optional<ItemId> decl_id = DeclIdForRecord(ir, "S");
   ASSERT_TRUE(decl_id.has_value());
 
   auto is_ptr_to_const_s =

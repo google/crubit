@@ -103,8 +103,12 @@ std::optional<absl::string_view> MapKnownCcTypeToRsType(
   return it->second;
 }
 
-DeclId GenerateDeclId(const clang::Decl* decl) {
-  return DeclId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
+ItemId GenerateItemId(const clang::Decl* decl) {
+  return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
+}
+
+ItemId GenerateItemId(const clang::RawComment* comment) {
+  return ItemId(reinterpret_cast<uintptr_t>(comment));
 }
 
 std::vector<BaseClass> GetUnambiguousPublicBases(
@@ -172,7 +176,7 @@ std::vector<BaseClass> GetUnambiguousPublicBases(
       CRUBIT_CHECK((!offset.hasValue() || *offset >= 0) &&
                    "Concrete base classes should have non-negative offsets.");
       bases.push_back(
-          BaseClass{.base_record_id = GenerateDeclId(base_record_decl),
+          BaseClass{.base_record_id = GenerateItemId(base_record_decl),
                     .offset = offset});
       break;
     }
@@ -398,7 +402,8 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   for (auto comment : ImportFreeComments()) {
     items.push_back(std::make_tuple(
         comment->getSourceRange(), 0 /* decl_order */,
-        Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics())}));
+        Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics()),
+                .id = GenerateItemId(comment)}));
   }
   std::sort(items.begin(), items.end(), is_less_than);
 
@@ -637,7 +642,7 @@ std::optional<IR::Item> Importer::ImportFunction(
     }
 
     member_func_metadata = MemberFuncMetadata{
-        .record_id = GenerateDeclId(method_decl->getParent()),
+        .record_id = GenerateItemId(method_decl->getParent()),
         .instance_method_metadata = instance_metadata};
   }
 
@@ -784,7 +789,7 @@ std::optional<IR::Item> Importer::ImportRecord(
   return Record{
       .rs_name = std::string(record_name->Ident()),
       .cc_name = std::string(record_name->Ident()),
-      .id = GenerateDeclId(record_decl),
+      .id = GenerateItemId(record_decl),
       .owning_target = GetOwningTarget(record_decl),
       .doc_comment = GetComment(record_decl),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl, ctx_),
@@ -848,7 +853,7 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
 
   return Enum{
       .identifier = *enum_name,
-      .id = GenerateDeclId(enum_decl),
+      .id = GenerateItemId(enum_decl),
       .owning_target = GetOwningTarget(enum_decl),
       .underlying_type = *std::move(type),
       .enumerators = enumerators,
@@ -862,8 +867,10 @@ IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
     name = named_decl->getQualifiedNameAsString();
   }
   SourceLoc source_loc = ConvertSourceLocation(decl->getBeginLoc());
-  return UnsupportedItem{
-      .name = name, .message = error, .source_loc = source_loc};
+  return UnsupportedItem{.name = name,
+                         .message = error,
+                         .source_loc = source_loc,
+                         .id = GenerateItemId(decl)};
 }
 
 IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
@@ -900,7 +907,7 @@ std::optional<IR::Item> Importer::ImportTypedefName(
   if (underlying_type.ok()) {
     known_type_decls_.insert(typedef_name_decl);
     return TypeAlias{.identifier = *identifier,
-                     .id = GenerateDeclId(typedef_name_decl),
+                     .id = GenerateItemId(typedef_name_decl),
                      .owning_target = GetOwningTarget(typedef_name_decl),
                      .doc_comment = GetComment(typedef_name_decl),
                      .underlying_type = *underlying_type};
@@ -961,7 +968,7 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
 
-  DeclId decl_id = GenerateDeclId(decl);
+  ItemId decl_id = GenerateItemId(decl);
   return MappedType::WithDeclId(decl_id);
 }
 

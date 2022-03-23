@@ -51,13 +51,13 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
             }
         }
     }
-    let decl_id_to_item_idx = flat_ir
+    let item_id_to_item_idx = flat_ir
         .items
         .iter()
         .enumerate()
         .filter_map(|(idx, item)| item.id().map(|id| (id, idx)))
         .collect::<HashMap<_, _>>();
-    Ok(IR { flat_ir, decl_id_to_item_idx })
+    Ok(IR { flat_ir, item_id_to_item_idx })
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -80,7 +80,7 @@ pub struct RsType {
     pub name: Option<String>,
     pub lifetime_args: Vec<LifetimeId>,
     pub type_args: Vec<RsType>,
-    pub decl_id: Option<DeclId>,
+    pub decl_id: Option<ItemId>,
 }
 
 impl RsType {
@@ -94,7 +94,7 @@ pub struct CcType {
     pub name: Option<String>,
     pub is_const: bool,
     pub type_args: Vec<CcType>,
-    pub decl_id: Option<DeclId>,
+    pub decl_id: Option<ItemId>,
 }
 
 impl CcType {
@@ -104,17 +104,17 @@ impl CcType {
 }
 
 pub trait TypeWithDeclId {
-    fn decl_id(&self) -> Option<DeclId>;
+    fn decl_id(&self) -> Option<ItemId>;
 }
 
 impl TypeWithDeclId for RsType {
-    fn decl_id(&self) -> Option<DeclId> {
+    fn decl_id(&self) -> Option<ItemId> {
         self.decl_id
     }
 }
 
 impl TypeWithDeclId for CcType {
-    fn decl_id(&self) -> Option<DeclId> {
+    fn decl_id(&self) -> Option<ItemId> {
         self.decl_id
     }
 }
@@ -175,7 +175,7 @@ impl fmt::Debug for Operator {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
 #[serde(transparent)]
-pub struct DeclId(pub usize);
+pub struct ItemId(pub usize);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]
@@ -243,7 +243,7 @@ pub struct InstanceMethodMetadata {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct MemberFuncMetadata {
-    pub record_id: DeclId,
+    pub record_id: ItemId,
     pub instance_method_metadata: Option<InstanceMethodMetadata>,
 }
 
@@ -273,6 +273,7 @@ pub struct Func {
     pub member_func_metadata: Option<MemberFuncMetadata>,
     pub has_c_calling_convention: bool,
     pub source_loc: SourceLoc,
+    pub id: ItemId,
 }
 
 impl Func {
@@ -312,7 +313,7 @@ pub enum SpecialMemberDefinition {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct BaseClass {
-    pub base_record_id: DeclId,
+    pub base_record_id: ItemId,
     pub offset: Option<i64>,
 }
 
@@ -326,7 +327,7 @@ pub struct SpecialMemberFunc {
 pub struct Record {
     pub rs_name: String,
     pub cc_name: String,
-    pub id: DeclId,
+    pub id: ItemId,
     pub owning_target: BlazeLabel,
     pub doc_comment: Option<String>,
     pub unambiguous_public_bases: Vec<BaseClass>,
@@ -381,7 +382,7 @@ impl Record {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Enum {
     pub identifier: Identifier,
-    pub id: DeclId,
+    pub id: ItemId,
     pub owning_target: BlazeLabel,
     pub underlying_type: MappedType,
     pub enumerators: Vec<Enumerator>,
@@ -396,7 +397,7 @@ pub struct Enumerator {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct TypeAlias {
     pub identifier: Identifier,
-    pub id: DeclId,
+    pub id: ItemId,
     pub owning_target: BlazeLabel,
     pub doc_comment: Option<String>,
     pub underlying_type: MappedType,
@@ -414,11 +415,13 @@ pub struct UnsupportedItem {
     pub name: String,
     pub message: String,
     pub source_loc: SourceLoc,
+    pub id: ItemId,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Comment {
     pub text: String,
+    pub id: ItemId,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -432,7 +435,7 @@ pub enum Item {
 }
 
 impl Item {
-    fn id(&self) -> Option<DeclId> {
+    fn id(&self) -> Option<ItemId> {
         match self {
             Item::Record(record) => Some(record.id),
             Item::TypeAlias(type_alias) => Some(type_alias.id),
@@ -522,7 +525,7 @@ struct FlatIR {
 pub struct IR {
     flat_ir: FlatIR,
     // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
-    decl_id_to_item_idx: HashMap<DeclId, usize>,
+    item_id_to_item_idx: HashMap<ItemId, usize>,
 }
 
 impl IR {
@@ -563,6 +566,13 @@ impl IR {
         })
     }
 
+    pub fn comments(&self) -> impl Iterator<Item = &Comment> {
+        self.items().filter_map(|item| match item {
+            Item::Comment(comment) => Some(comment),
+            _ => None,
+        })
+    }
+
     pub fn item_for_type<T>(&self, ty: &T) -> Result<&Item>
     where
         T: TypeWithDeclId + std::fmt::Debug,
@@ -575,7 +585,7 @@ impl IR {
         }
     }
 
-    pub fn find_decl<'a, T>(&'a self, decl_id: DeclId) -> Result<&'a T>
+    pub fn find_decl<'a, T>(&'a self, decl_id: ItemId) -> Result<&'a T>
     where
         &'a T: TryFrom<&'a Item>,
     {
@@ -586,9 +596,9 @@ impl IR {
         })
     }
 
-    fn find_untyped_decl(&self, decl_id: DeclId) -> Result<&Item> {
+    fn find_untyped_decl(&self, decl_id: ItemId) -> Result<&Item> {
         let idx = *self
-            .decl_id_to_item_idx
+            .item_id_to_item_idx
             .get(&decl_id)
             .with_context(|| format!("Couldn't find decl_id {:?} in the IR.", decl_id))?;
         self.flat_ir.items.get(idx).with_context(|| format!("Couldn't find an item at idx {}", idx))

@@ -36,6 +36,12 @@ fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec
             (Item::Enum(ref mut expected_enum), Item::Enum(actual_enum)) => {
                 expected_enum.id = actual_enum.id;
             }
+            (Item::Func(ref mut expected_func), Item::Func(actual_func)) => {
+                expected_func.id = actual_func.id;
+            }
+            (Item::TypeAlias(ref mut expected_alias), Item::TypeAlias(actual_alias)) => {
+                expected_alias.id = actual_alias.id;
+            }
             (_, _) => (),
         }
     }
@@ -63,6 +69,7 @@ fn test_function() {
                 line: 3,
                 column: 1,
             },
+            id: ItemId(0),
         })],
     );
 }
@@ -87,6 +94,7 @@ fn test_function_with_unnamed_parameters() {
                 line: 3,
                 column: 1,
             },
+            id: ItemId(0),
         })],
     );
 }
@@ -642,7 +650,7 @@ fn test_typedef() -> Result<()> {
         quote! {
           TypeAlias {
             identifier: "MyTypedefDecl",
-            id: DeclId(...),
+            id: ItemId(...),
             owning_target: BlazeLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
             underlying_type: #int,
@@ -654,7 +662,7 @@ fn test_typedef() -> Result<()> {
         quote! {
           TypeAlias {
             identifier: "MyTypeAliasDecl",
-            id: DeclId(...),
+            id: ItemId(...),
             owning_target: BlazeLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             underlying_type: #int,
@@ -1346,4 +1354,18 @@ fn test_unnamed_enum_unsupported() {
             }
         }
     );
+}
+
+#[test]
+fn test_unsupported_item_has_item_id() {
+    let ir = ir_from_cc("union SomeUnion {};").unwrap();
+    let unsupported = ir.unsupported_items().find(|i| i.name == "SomeUnion").unwrap();
+    assert_ne!(unsupported.id, ItemId(0));
+}
+
+#[test]
+fn test_comment_has_item_id() {
+    let ir = ir_from_cc("// Comment").unwrap();
+    let comment = ir.comments().find(|i| i.text == "Comment").unwrap();
+    assert_ne!(comment.id, ItemId(0));
 }
