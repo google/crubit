@@ -5,10 +5,7 @@
 use anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
-use ir::{
-    self, CcType, Func, FuncParam, Identifier, Item, ItemId, MappedType, Record, RsType,
-    SpecialMemberFunc, IR,
-};
+use ir::{self, CcType, Func, FuncParam, Identifier, Item, ItemId, MappedType, Record, RsType, IR};
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(header_source: &str) -> Result<IR> {
@@ -105,13 +102,6 @@ pub fn ir_func(name: &str) -> Func {
     panic!("Test IR doesn't contain a function");
 }
 
-pub fn ir_public_trivial_special() -> SpecialMemberFunc {
-    SpecialMemberFunc {
-        definition: ir::SpecialMemberDefinition::Trivial,
-        access: ir::AccessSpecifier::Public,
-    }
-}
-
 /// Creates a simple `Item::Record` with a given name.
 pub fn ir_record(name: &str) -> Record {
     let ir = ir_from_cc("struct REPLACEME final {};").unwrap();
@@ -123,11 +113,6 @@ pub fn ir_record(name: &str) -> Record {
         }
     }
     panic!("Test IR doesn't contain a record");
-}
-
-/// Creates an empty IR.
-pub fn ir_empty() -> IR {
-    ir_from_cc("/* nonempty to force an entrypoint header to exist */").unwrap()
 }
 
 /// Retrieves the function with the given name.

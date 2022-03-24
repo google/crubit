@@ -12,90 +12,101 @@ use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
 use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches};
 
-// TODO(mboehme): If we start needing to match on parts of the IR in tests,
-// check out the crate https://crates.io/crates/galvanic-assert.
-
-fn assert_cc_produces_ir_items_ignoring_decl_ids(cc_src: &str, mut expected: Vec<Item>) {
-    let actual = ir_from_cc(cc_src).unwrap();
-
-    // Filter out predefined builtin types.
-    let actual_items = actual
-        .items()
-        .filter(|i| {
-            !matches!(i, Item::TypeAlias(typedef)
-                if typedef.identifier.identifier == "__builtin_ms_va_list")
-        })
-        .collect_vec();
-
-    for (expected_item, actual_item) in expected.iter_mut().zip(actual_items.iter()) {
-        // TODO(hlopko): Handle MappedTypes as well.
-        match (expected_item, actual_item) {
-            (Item::Record(ref mut expected_record), Item::Record(actual_record)) => {
-                expected_record.id = actual_record.id;
-            }
-            (Item::Enum(ref mut expected_enum), Item::Enum(actual_enum)) => {
-                expected_enum.id = actual_enum.id;
-            }
-            (Item::Func(ref mut expected_func), Item::Func(actual_func)) => {
-                expected_func.id = actual_func.id;
-            }
-            (Item::TypeAlias(ref mut expected_alias), Item::TypeAlias(actual_alias)) => {
-                expected_alias.id = actual_alias.id;
-            }
-            (_, _) => (),
-        }
-    }
-
-    assert_eq!(actual_items, expected.iter().collect_vec());
-}
-
 #[test]
 fn test_function() {
-    assert_cc_produces_ir_items_ignoring_decl_ids(
-        "int Add(int a, int b);",
-        vec![Item::Func(Func {
-            name: UnqualifiedIdentifier::Identifier(ir_id("Add")),
-            owning_target: "//test:testing_target".into(),
-            mangled_name: "_Z3Addii".to_string(),
-            doc_comment: None,
-            return_type: ir_int(),
-            params: vec![ir_int_param("a"), ir_int_param("b")],
-            lifetime_params: vec![],
-            is_inline: false,
-            member_func_metadata: None,
-            has_c_calling_convention: true,
-            source_loc: SourceLoc {
-                filename: "ir_from_cc_virtual_header.h".to_string(),
-                line: 3,
-                column: 1,
-            },
-            id: ItemId(0),
-        })],
+    let ir = ir_from_cc("int f(int a, int b);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                name: "f",
+                owning_target: BlazeLabel("//test:testing_target"),
+                mangled_name: "_Z1fii",
+                doc_comment: None,
+                return_type: MappedType {
+                    rs_type: RsType {
+                        name: Some("i32"),
+                        lifetime_args: [],
+                        type_args: [],
+                        decl_id: None,
+                    },
+                    cc_type: CcType {
+                        name: Some("int"),
+                        is_const: false,
+                        type_args: [],
+                        decl_id: None,
+                    },
+                },
+                params: [
+                    FuncParam {
+                        type_: MappedType {
+                            rs_type: RsType {
+                                name: Some("i32"),
+                                lifetime_args: [],
+                                type_args: [],
+                                decl_id: None,
+                            },
+                            cc_type: CcType {
+                                name: Some("int"),
+                                is_const: false,
+                                type_args: [],
+                                decl_id: None,
+                            },
+                        },
+                        identifier: "a",
+                    },
+                    FuncParam {
+                        type_: MappedType {
+                            rs_type: RsType {
+                                name: Some("i32"),
+                                lifetime_args: [],
+                                type_args: [],
+                                decl_id: None,
+                            },
+                            cc_type: CcType {
+                                name: Some("int"),
+                                is_const: false,
+                                type_args: [],
+                                decl_id: None,
+                            },
+                        },
+                        identifier: "b",
+                    },
+                ],
+                lifetime_params: [],
+                is_inline: false,
+                member_func_metadata: None,
+                has_c_calling_convention: true,
+                source_loc: SourceLoc {
+                    filename: "ir_from_cc_virtual_header.h",
+                    line: 3,
+                    column: 1,
+                },
+                id: ItemId(...),
+            }
+        }
     );
 }
 
 #[test]
 fn test_function_with_unnamed_parameters() {
-    assert_cc_produces_ir_items_ignoring_decl_ids(
-        "int multiply(int, int);",
-        vec![Item::Func(Func {
-            name: UnqualifiedIdentifier::Identifier(ir_id("multiply")),
-            owning_target: "//test:testing_target".into(),
-            mangled_name: "_Z8multiplyii".to_string(),
-            doc_comment: None,
-            return_type: ir_int(),
-            params: vec![ir_int_param("__param_0"), ir_int_param("__param_1")],
-            lifetime_params: vec![],
-            is_inline: false,
-            member_func_metadata: None,
-            has_c_calling_convention: true,
-            source_loc: SourceLoc {
-                filename: "ir_from_cc_virtual_header.h".to_string(),
-                line: 3,
-                column: 1,
-            },
-            id: ItemId(0),
-        })],
+    let ir = ir_from_cc("int f(int, int);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                name: "f", ...
+                mangled_name: "_Z1fii", ...
+                params: [
+                    FuncParam {
+                        ... identifier: "__param_0", ...
+                    },
+                    FuncParam {
+                        ... identifier: "__param_1", ...
+                    },
+                ], ...
+            }
+        }
     );
 }
 
