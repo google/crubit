@@ -9,7 +9,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-extern crate static_assertions;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
@@ -151,13 +150,40 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 
 const _: () = assert!(std::mem::size_of::<Foo>() == 8usize);
 const _: () = assert!(std::mem::align_of::<Foo>() == 4usize);
+const _: () = {
+    assert_impl_all!(Foo: Clone);
+};
+const _: () = {
+    assert_impl_all!(Foo: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(Foo: Drop);
+};
 const _: () = assert!(offset_of!(Foo, i) * 8 == 0usize);
 const _: () = assert!(offset_of!(Foo, j) * 8 == 32usize);
 
 const _: () = assert!(std::mem::size_of::<Bar>() == 4usize);
 const _: () = assert!(std::mem::align_of::<Bar>() == 4usize);
+const _: () = {
+    assert_impl_all!(Bar: Clone);
+};
+const _: () = {
+    assert_impl_all!(Bar: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(Bar: Drop);
+};
 const _: () = assert!(offset_of!(Bar, i) * 8 == 0usize);
 
 const _: () = assert!(std::mem::size_of::<HasNoComments>() == 4usize);
 const _: () = assert!(std::mem::align_of::<HasNoComments>() == 4usize);
+const _: () = {
+    assert_impl_all!(HasNoComments: Clone);
+};
+const _: () = {
+    assert_impl_all!(HasNoComments: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(HasNoComments: Drop);
+};
 const _: () = assert!(offset_of!(HasNoComments, i) * 8 == 0usize);

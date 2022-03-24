@@ -9,7 +9,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-extern crate static_assertions;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
@@ -83,5 +82,14 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 
 const _: () = assert!(std::mem::size_of::<SomeClass>() == 8usize);
 const _: () = assert!(std::mem::align_of::<SomeClass>() == 4usize);
+const _: () = {
+    assert_impl_all!(SomeClass: Clone);
+};
+const _: () = {
+    assert_impl_all!(SomeClass: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(SomeClass: Drop);
+};
 const _: () = assert!(offset_of!(SomeClass, public_member_variable_) * 8 == 0usize);
 const _: () = assert!(offset_of!(SomeClass, private_member_variable_) * 8 == 32usize);

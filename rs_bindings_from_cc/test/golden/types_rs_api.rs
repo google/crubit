@@ -9,7 +9,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-extern crate static_assertions;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
@@ -135,9 +134,27 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 
 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 1usize);
 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 1usize);
+const _: () = {
+    assert_impl_all!(SomeStruct: Clone);
+};
+const _: () = {
+    assert_impl_all!(SomeStruct: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(SomeStruct: Drop);
+};
 
 const _: () = assert!(std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
 const _: () = assert!(std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
+const _: () = {
+    assert_impl_all!(FieldTypeTestStruct: Clone);
+};
+const _: () = {
+    assert_impl_all!(FieldTypeTestStruct: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(FieldTypeTestStruct: Drop);
+};
 const _: () = assert!(offset_of!(FieldTypeTestStruct, bool_field) * 8 == 0usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, char_field) * 8 == 8usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, unsigned_char_field) * 8 == 16usize);

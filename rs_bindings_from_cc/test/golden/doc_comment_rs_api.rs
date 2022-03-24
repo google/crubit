@@ -9,7 +9,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-extern crate static_assertions;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
@@ -280,20 +279,65 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 
 const _: () = assert!(std::mem::size_of::<DocCommentSlashes>() == 4usize);
 const _: () = assert!(std::mem::align_of::<DocCommentSlashes>() == 4usize);
+const _: () = {
+    assert_impl_all!(DocCommentSlashes: Clone);
+};
+const _: () = {
+    assert_impl_all!(DocCommentSlashes: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(DocCommentSlashes: Drop);
+};
 const _: () = assert!(offset_of!(DocCommentSlashes, i) * 8 == 0usize);
 
 const _: () = assert!(std::mem::size_of::<DocCommentBang>() == 4usize);
 const _: () = assert!(std::mem::align_of::<DocCommentBang>() == 4usize);
+const _: () = {
+    assert_impl_all!(DocCommentBang: Clone);
+};
+const _: () = {
+    assert_impl_all!(DocCommentBang: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(DocCommentBang: Drop);
+};
 const _: () = assert!(offset_of!(DocCommentBang, i) * 8 == 0usize);
 
 const _: () = assert!(std::mem::size_of::<MultilineCommentTwoStars>() == 4usize);
 const _: () = assert!(std::mem::align_of::<MultilineCommentTwoStars>() == 4usize);
+const _: () = {
+    assert_impl_all!(MultilineCommentTwoStars: Clone);
+};
+const _: () = {
+    assert_impl_all!(MultilineCommentTwoStars: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(MultilineCommentTwoStars: Drop);
+};
 const _: () = assert!(offset_of!(MultilineCommentTwoStars, i) * 8 == 0usize);
 
 const _: () = assert!(std::mem::size_of::<LineComment>() == 4usize);
 const _: () = assert!(std::mem::align_of::<LineComment>() == 4usize);
+const _: () = {
+    assert_impl_all!(LineComment: Clone);
+};
+const _: () = {
+    assert_impl_all!(LineComment: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(LineComment: Drop);
+};
 const _: () = assert!(offset_of!(LineComment, i) * 8 == 0usize);
 
 const _: () = assert!(std::mem::size_of::<MultilineOneStar>() == 4usize);
 const _: () = assert!(std::mem::align_of::<MultilineOneStar>() == 4usize);
+const _: () = {
+    assert_impl_all!(MultilineOneStar: Clone);
+};
+const _: () = {
+    assert_impl_all!(MultilineOneStar: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(MultilineOneStar: Drop);
+};
 const _: () = assert!(offset_of!(MultilineOneStar, i) * 8 == 0usize);

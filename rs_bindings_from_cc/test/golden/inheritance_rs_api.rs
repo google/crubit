@@ -9,7 +9,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-extern crate static_assertions;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
@@ -153,16 +152,43 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 
 const _: () = assert!(std::mem::size_of::<Base0>() == 1usize);
 const _: () = assert!(std::mem::align_of::<Base0>() == 1usize);
+const _: () = {
+    assert_not_impl_all!(Base0: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(Base0: Drop);
+};
 
 const _: () = assert!(std::mem::size_of::<Base1>() == 16usize);
 const _: () = assert!(std::mem::align_of::<Base1>() == 8usize);
+const _: () = {
+    assert_not_impl_all!(Base1: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(Base1: Drop);
+};
 const _: () = assert!(offset_of!(Base1, b1_1_) * 8 == 0usize);
 const _: () = assert!(offset_of!(Base1, b1_2_) * 8 == 64usize);
 
 const _: () = assert!(std::mem::size_of::<Base2>() == 2usize);
 const _: () = assert!(std::mem::align_of::<Base2>() == 2usize);
+const _: () = {
+    assert_not_impl_all!(Base2: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(Base2: Drop);
+};
 const _: () = assert!(offset_of!(Base2, b2_1_) * 8 == 0usize);
 
 const _: () = assert!(std::mem::size_of::<Derived>() == 16usize);
 const _: () = assert!(std::mem::align_of::<Derived>() == 8usize);
+const _: () = {
+    assert_impl_all!(Derived: Clone);
+};
+const _: () = {
+    assert_impl_all!(Derived: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(Derived: Drop);
+};
 const _: () = assert!(offset_of!(Derived, derived_1) * 8 == 96usize);

@@ -9,7 +9,6 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
-extern crate static_assertions;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
@@ -192,6 +191,12 @@ const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::
 
 const _: () = assert!(std::mem::size_of::<Nontrivial>() == 4usize);
 const _: () = assert!(std::mem::align_of::<Nontrivial>() == 4usize);
+const _: () = {
+    assert_not_impl_all!(Nontrivial: Copy);
+};
+const _: () = {
+    assert_impl_all!(Nontrivial: Drop);
+};
 const _: () = assert!(offset_of!(Nontrivial, field) * 8 == 0usize);
 const _: () = {
     assert_impl_all!(i32: Copy);
@@ -199,6 +204,12 @@ const _: () = {
 
 const _: () = assert!(std::mem::size_of::<NontrivialInline>() == 4usize);
 const _: () = assert!(std::mem::align_of::<NontrivialInline>() == 4usize);
+const _: () = {
+    assert_not_impl_all!(NontrivialInline: Copy);
+};
+const _: () = {
+    assert_impl_all!(NontrivialInline: Drop);
+};
 const _: () = assert!(offset_of!(NontrivialInline, field) * 8 == 0usize);
 const _: () = {
     assert_impl_all!(i32: Copy);
@@ -206,4 +217,10 @@ const _: () = {
 
 const _: () = assert!(std::mem::size_of::<NontrivialMembers>() == 4usize);
 const _: () = assert!(std::mem::align_of::<NontrivialMembers>() == 4usize);
+const _: () = {
+    assert_not_impl_all!(NontrivialMembers: Copy);
+};
+const _: () = {
+    assert_impl_all!(NontrivialMembers: Drop);
+};
 const _: () = assert!(offset_of!(NontrivialMembers, nontrivial_member) * 8 == 0usize);

@@ -962,9 +962,36 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         #unpin_impl
     };
 
+    let record_trait_assertions = {
+        let record_type_name = rs_type_name_for_record(record, ir)?;
+        let mut assertions: Vec<TokenStream> = vec![];
+        let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
+            assertions.push(quote! {
+                const _: () = { #assert_impl_macro (#record_type_name: #trait_name); };
+            });
+        };
+        if should_derive_clone(record) {
+            add_assertion(quote! { assert_impl_all! }, quote! { Clone });
+        } else {
+            // Can't `assert_not_impl_all!` here, because `Clone` may be
+            // implemented rather than derived.
+        }
+        let mut add_conditional_assertion = |should_impl_trait: bool, trait_name: TokenStream| {
+            let assert_impl_macro = if should_impl_trait {
+                quote! { assert_impl_all! }
+            } else {
+                quote! { assert_not_impl_all! }
+            };
+            add_assertion(assert_impl_macro, trait_name);
+        };
+        add_conditional_assertion(should_derive_copy(record), quote! { Copy });
+        add_conditional_assertion(should_implement_drop(record), quote! { Drop });
+        assertions
+    };
     let assertion_tokens = quote! {
         const _: () = assert!(std::mem::size_of::<#ident>() == #size);
         const _: () = assert!(std::mem::align_of::<#ident>() == #alignment);
+        #( #record_trait_assertions )*
         #( #field_offset_assertions )*
         #( #field_copy_trait_assertions )*
     };
@@ -1165,8 +1192,6 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
 
     let imports = if has_record {
         quote! {
-            extern crate static_assertions;
-
             use memoffset_unstable_const::offset_of;
             use static_assertions::{assert_impl_all, assert_not_impl_all};
         }
@@ -1232,6 +1257,14 @@ fn rs_type_name_for_target_and_identifier(
         let owning_crate = make_rs_ident(&escaped_owning_crate_name);
         Ok(quote! {#owning_crate::#ident})
     }
+}
+
+fn rs_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
+    rs_type_name_for_target_and_identifier(
+        &record.owning_target,
+        &Identifier { identifier: record.rs_name.clone() },
+        ir,
+    )
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -1394,11 +1427,7 @@ impl<'ir> RsTypeKind<'ir> {
                     .collect::<Result<Vec<_>>>()?;
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
-            RsTypeKind::Record(record) => rs_type_name_for_target_and_identifier(
-                &record.owning_target,
-                &Identifier { identifier: record.rs_name.clone() },
-                ir,
-            )?,
+            RsTypeKind::Record(record) => rs_type_name_for_record(record, ir)?,
             RsTypeKind::TypeAlias { type_alias, .. } => rs_type_name_for_target_and_identifier(
                 &type_alias.owning_target,
                 &type_alias.identifier,
@@ -2144,6 +2173,9 @@ mod tests {
                 const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
                 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 12usize);
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4usize);
+                const _: () = { assert_impl_all!(SomeStruct: Clone); };
+                const _: () = { assert_impl_all!(SomeStruct: Copy); };
+                const _: () = { assert_not_impl_all!(SomeStruct: Drop); };
                 const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
                 const _: () = assert!(offset_of!(SomeStruct, protected_int) * 8 == 32usize);
                 const _: () = assert!(offset_of!(SomeStruct, private_int) * 8 == 64usize);
