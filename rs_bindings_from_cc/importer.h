@@ -18,6 +18,7 @@
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/types/span.h"
 #include "lifetime_annotations/lifetime_annotations.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/util/check.h"
@@ -162,11 +163,11 @@ class Importer {
   // nullability annotations.
   absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
-      std::optional<devtools_rust::TypeLifetimes>& lifetimes,
+      std::optional<devtools_rust::ValueLifetimes>& lifetimes,
       bool nullable = true) const;
   absl::StatusOr<MappedType> ConvertType(
       const clang::Type* type,
-      std::optional<devtools_rust::TypeLifetimes>& lifetimes,
+      std::optional<devtools_rust::ValueLifetimes>& lifetimes,
       bool nullable) const;
   absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
 

@@ -381,6 +381,16 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithParam) {
               IsOkAndHolds(LifetimesAre({{"S::f", "a: b -> a"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithLifetimeParams) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        struct [[clang::annotate("lifetime_params", "x", "y")]] S {
+          [[clang::annotate("lifetimes", "x, y, a: -> x")]]
+          int* f();
+        };
+  )"),
+              IsOkAndHolds(LifetimesAre({{"S::f", "(x, y, a): -> x"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_MissingThis) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         struct S {

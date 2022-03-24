@@ -23,15 +23,6 @@
 
 namespace devtools_rust {
 
-// Lifetimes for a `QualType`.
-//
-// These are ordered according to a post-order traversal of the type.
-//
-// TODO(mboehme): Replace occurrences of this type with ObjectLifetimes
-// or otherwise clarify the relationship between the two types.
-using TypeLifetimes = llvm::SmallVector<Lifetime>;
-using TypeLifetimesRef = llvm::ArrayRef<Lifetime>;
-
 // Returns a lifetime in some human-readable format.
 using LifetimeFormatter = std::function<std::string(Lifetime)>;
 
@@ -41,30 +32,30 @@ enum Variance {
   kInvariant,
 };
 
-// Returns a human-readable representation of `lifetimes`.
-std::string DebugString(
-    const TypeLifetimes& lifetimes,
-    const LifetimeFormatter& formatter = [](Lifetime l) {
-      return l.DebugString();
-    });
-
 // Extracts the lifetime parameters of the given type.
 llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type);
 
-TypeLifetimes CreateLifetimesForType(
-    clang::QualType type, std::function<Lifetime()> lifetime_factory);
+// Takes as input the type of the object that the lifetime is being created for
+// and the name of the lifetime parameter, if any.
+using LifetimeFactory =
+    std::function<llvm::Expected<Lifetime>(clang::QualType, llvm::StringRef)>;
 
 class ObjectLifetimes;
 
 // Represents the lifetimes of a value; these may be 0 for non-reference-like
 // types, 1 for pointers/references, and an arbitrary number for structs with
 // template arguments/lifetime parameters.
-// This is a more structured representation than TypeLifetimes that is easier
-// to query.
 class ValueLifetimes {
  public:
-  static ValueLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
-                                          clang::QualType type);
+  // Creates an invalid ValueLifetimes, which should not be used. This is
+  // provided only for usage with functions with output parameters.
+  ValueLifetimes() : type_(clang::QualType()) {}
+
+  // Creates a ValueLifetimes for a *value* of a given type.
+  // Only fails if lifetime_factory fails.
+  // Lifetimes will be created in post-order in the tree of lifetimes.
+  static llvm::Expected<ValueLifetimes> Create(
+      clang::QualType type, LifetimeFactory lifetime_factory);
 
   // Returns a ValueLifetimes for a lifetime-less type.
   // `type` must not be a pointer-like type or a record type.
@@ -88,7 +79,9 @@ class ValueLifetimes {
 
   ValueLifetimes& operator=(const ValueLifetimes& other);
 
-  std::string DebugString() const;
+  std::string DebugString(const LifetimeFormatter& formatter = [](Lifetime l) {
+    return l.DebugString();
+  }) const;
 
   // Returns the type of the value.
   clang::QualType Type() const { return type_; }
@@ -117,12 +110,27 @@ class ValueLifetimes {
     return ret.value();
   }
 
+  bool HasLifetimes() const {
+    return pointee_lifetimes_ != nullptr ||
+           !lifetime_parameters_by_name_.GetMapping().empty() ||
+           !template_argument_lifetimes_.empty();
+  }
+
+  // Traverses all the lifetimes in the object, recursively. The
+  // visit is done in post-order on the lifetime tree of this type.
+  // The callback may mutate the lifetime in an arbitrary way; `variance` will
+  // be set to signal the variance of the lifetime in the position it appears
+  // in; this is decided with the `variance` parameter to Traverse, which
+  // signals the variance of the current Value. Note that the visitor may be
+  // called multiple times with the same lifetime (but in different positions).
+  // TODO(veluca): verify that the handling of variance is correct in all cases.
+  void Traverse(std::function<void(Lifetime&, Variance)> visitor,
+                Variance variance = kCovariant);
+  void Traverse(std::function<void(const Lifetime&, Variance)> visitor,
+                Variance variance = kCovariant) const;
+
  private:
   explicit ValueLifetimes(clang::QualType type) : type_(type) {}
-
-  static void ReverseVisitTemplateArgs(
-      llvm::ArrayRef<clang::TemplateArgument> template_args,
-      TypeLifetimesRef& type_lifetimes, ValueLifetimes& out);
 
   // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
   // is non-empty.
@@ -151,17 +159,23 @@ class ValueLifetimes {
   friend class llvm::DenseMapInfo<devtools_rust::ValueLifetimes>;
 };
 
-// Represents all the lifetimes of an object.
-// This is a more structured representation than TypeLifetimes that is easier
-// to query.
+// Represents all the lifetimes of an object. The object itself always has
+// a lifetime; in addition, there may be lifetimes associated with the value
+// of the object.
 class ObjectLifetimes {
  public:
-  // Constructs the ObjectLifetimes corresponding to the given `type_lifetimes`
-  // when interpreted as the lifetimes of a glvalue of the given
-  // `type`. Removes the consumed lifetimes from `type_lifetimes` (which
-  // simulates undoing a post-order visit of the lifetime_ tree).
-  static ObjectLifetimes FromTypeLifetimes(TypeLifetimesRef& type_lifetimes,
-                                           clang::QualType type);
+  // Creates an invalid ObjectLifetimes, which should not be used. This is
+  // provided only for usage with functions with output parameters.
+  ObjectLifetimes() {}
+
+  ObjectLifetimes(Lifetime lifetime, ValueLifetimes value_lifetimes)
+      : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
+
+  // Creates lifetimes for an *object* of a given type.
+  // Only fails if lifetime_factory fails.
+  // Lifetimes will be created in post-order in the tree of lifetimes.
+  static llvm::Expected<ObjectLifetimes> Create(
+      clang::QualType type, LifetimeFactory lifetime_factory);
 
   // Returns the lifetime of the object itself.
   Lifetime GetLifetime() const { return lifetime_; }
@@ -169,12 +183,33 @@ class ObjectLifetimes {
   // Returns the lifetime of the contained value.
   const ValueLifetimes& GetValueLifetimes() const { return value_lifetimes_; }
 
-  std::string DebugString() const;
+  clang::QualType Type() const { return value_lifetimes_.Type(); }
+
+  std::string DebugString(const LifetimeFormatter& formatter = [](Lifetime l) {
+    return l.DebugString();
+  }) const;
 
   // Returns the ObjectLifetimes for a base class or a field of the given type.
   ObjectLifetimes GetFieldOrBaseLifetimes(
       clang::QualType type,
       llvm::SmallVector<std::string> type_lifetime_args) const;
+
+  // Traverses all the lifetimes in the object, recursively. The
+  // visit is done in post-order on the lifetime tree of this type.
+  // The callback may mutate the lifetime in an arbitrary way; `variance` will
+  // be set to signal the variance of the lifetime in the position it appears
+  // in; this is decided with the `variance` parameter to Traverse, which
+  // signals the variance of the current Object. Note that the visitor may be
+  // called multiple times with the same lifetime (but in different positions).
+  // `indirection_type` defines the type of the pointer (or reference) to this
+  // object; this is used to determine variance of its pointees.
+  // TODO(veluca): verify that the handling of variance is correct in all cases.
+  void Traverse(std::function<void(Lifetime&, Variance)> visitor,
+                Variance variance = kCovariant,
+                clang::QualType indirection_type = clang::QualType());
+  void Traverse(std::function<void(const Lifetime&, Variance)> visitor,
+                Variance variance = kCovariant,
+                clang::QualType indirection_type = clang::QualType()) const;
 
  private:
   // Returns the ObjectLifetimes for an object of a given type, whose lifetimes
@@ -186,9 +221,6 @@ class ObjectLifetimes {
   ObjectLifetimes GetObjectLifetimesForTypeInContext(
       clang::QualType type, llvm::SmallVector<std::string> type_lifetime_args,
       llvm::StringRef object_lifetime_parameter) const;
-
-  ObjectLifetimes(Lifetime lifetime, ValueLifetimes value_lifetimes)
-      : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
 
   friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
   Lifetime lifetime_;

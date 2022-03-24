@@ -40,6 +40,20 @@ TEST(LifetimeSymbolTableTest, LookupLifetime) {
   EXPECT_EQ(table.LookupLifetime(b), "b");
 }
 
+TEST(LifetimeSymbolTableTest, RebindLifetime) {
+  LifetimeSymbolTable table;
+
+  Lifetime a = table.LookupNameAndMaybeDeclare("a");
+  Lifetime b = Lifetime::CreateVariable();
+
+  EXPECT_EQ(table.LookupLifetime(a), "a");
+
+  table.Rebind("a", b);
+  EXPECT_EQ(table.LookupName("a"), b);
+  EXPECT_EQ(table.LookupLifetime(a), std::nullopt);
+  EXPECT_EQ(table.LookupLifetime(b), "a");
+}
+
 TEST(LifetimeSymbolTableTest, LookupLifetimeAndMaybeDeclare) {
   {
     LifetimeSymbolTable table;

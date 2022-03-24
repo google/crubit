@@ -22,30 +22,17 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/TemplateBase.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/Basic/LLVM.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/SourceLocation.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMapInfo.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Hashing.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 
 namespace devtools_rust {
-
-std::string DebugString(const TypeLifetimes& lifetimes,
-                        const LifetimeFormatter& formatter) {
-  std::vector<std::string> parts;
-  parts.reserve(lifetimes.size());
-
-  for (Lifetime l : lifetimes) {
-    parts.push_back(formatter(l));
-  }
-
-  if (parts.size() == 1) {
-    return parts[0];
-  }
-  return absl::StrFormat("(%s)", absl::StrJoin(parts, ", "));
-}
 
 llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
   // TODO(mboehme):
@@ -90,40 +77,6 @@ llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
   return ret;
 }
 
-TypeLifetimes CreateLifetimesForType(
-    clang::QualType type, std::function<Lifetime()> lifetime_factory) {
-  assert(!type.isNull());
-  TypeLifetimes ret;
-
-  for (const auto& lftm_param : GetLifetimeParameters(type)) {
-    (void)lftm_param;
-    ret.push_back(lifetime_factory());
-  }
-
-  // Add implicit lifetime parameters for type template parameters.
-  llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
-  if (!template_args.empty()) {
-    for (const clang::TemplateArgument& arg : template_args) {
-      if (arg.getKind() == clang::TemplateArgument::Type) {
-        ret.append(CreateLifetimesForType(arg.getAsType(), lifetime_factory));
-      } else if (arg.getKind() == clang::TemplateArgument::Pack) {
-        for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
-          if (inner_arg.getKind() == clang::TemplateArgument::Type) {
-            ret.append(CreateLifetimesForType(inner_arg.getAsType(),
-                                              lifetime_factory));
-          }
-        }
-      }
-    }
-    return ret;
-  }
-  clang::QualType pointee = PointeeType(type);
-  if (pointee.isNull()) return ret;
-  ret = CreateLifetimesForType(pointee, lifetime_factory);
-  ret.push_back(lifetime_factory());
-  return ret;
-}
-
 ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
   type_ = other.type_;
   template_argument_lifetimes_ = other.template_argument_lifetimes_;
@@ -135,83 +88,72 @@ ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
   return *this;
 }
 
-std::string ValueLifetimes::DebugString() const {
-  std::string ret;
-  if (!lifetime_parameters_by_name_.GetMapping().empty()) {
-    std::vector<std::string> lftm_args_strings;
-    for (const auto& lftm_arg : lifetime_parameters_by_name_.GetMapping()) {
-      lftm_args_strings.push_back(lftm_arg.second.DebugString());
-    }
-    absl::StrAppend(&ret, "(", absl::StrJoin(lftm_args_strings, ", "), ")");
-  }
-  if (!template_argument_lifetimes_.empty()) {
-    std::vector<std::string> tmpl_arg_strings;
-    for (const std::optional<ValueLifetimes>& tmpl_arg :
-         template_argument_lifetimes_) {
-      if (tmpl_arg) {
-        tmpl_arg_strings.push_back(tmpl_arg->DebugString());
-      } else {
-        tmpl_arg_strings.push_back("");
-      }
-    }
-    absl::StrAppend(&ret, "<", absl::StrJoin(tmpl_arg_strings, ", "), ">");
-  }
-  if (pointee_lifetimes_) {
-    absl::StrAppend(&ret, " -> ", pointee_lifetimes_->DebugString());
-  }
-  return ret;
-}
-
-void ValueLifetimes::ReverseVisitTemplateArgs(
-    llvm::ArrayRef<clang::TemplateArgument> template_args,
-    TypeLifetimesRef& type_lifetimes, ValueLifetimes& out) {
-  for (size_t i = template_args.size(); i-- > 0;) {
-    const clang::TemplateArgument& arg = template_args[i];
-    if (arg.getKind() == clang::TemplateArgument::Type) {
-      out.template_argument_lifetimes_.push_back(
-          FromTypeLifetimes(type_lifetimes, arg.getAsType()));
-    } else if (arg.getKind() == clang::TemplateArgument::Pack) {
-      ReverseVisitTemplateArgs(arg.getPackAsArray(), type_lifetimes, out);
-    } else {
-      out.template_argument_lifetimes_.push_back(std::nullopt);
-    }
-  }
-}
-
-// Here, `type_lifetimes` are the lifetimes of a prvalue of the given `type`,
-// unlike ObjectLifetimes::FromTypeLifetimes, which assumes a glvalue.
-ValueLifetimes ValueLifetimes::FromTypeLifetimes(
-    TypeLifetimesRef& type_lifetimes, clang::QualType type) {
+llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
+    clang::QualType type, LifetimeFactory lifetime_factory) {
   assert(!type.isNull());
-
   ValueLifetimes ret(type);
 
-  llvm::SmallVector<std::string> params = GetLifetimeParameters(type);
-  // Visit in reverse order, as we are doing a post-order traversal.
-  for (size_t i = params.size(); i-- > 0;) {
-    if (ret.lifetime_parameters_by_name_.LookupName(params[i])) {
-      llvm::report_fatal_error("duplicate lifetime parameter name");
+  for (const auto& lftm_param : GetLifetimeParameters(type)) {
+    Lifetime l;
+    if (llvm::Error err = lifetime_factory(type, lftm_param).moveInto(l)) {
+      return std::move(err);
     }
-    ret.lifetime_parameters_by_name_.Add(params[i], type_lifetimes.back());
-    type_lifetimes = type_lifetimes.drop_back();
+    ret.lifetime_parameters_by_name_.Add(lftm_param, l);
   }
 
+  // Add implicit lifetime parameters for type template parameters.
   llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
   if (!template_args.empty()) {
-    // Since we are simulating reversing a post-order visit, we need to
-    // extract template arguments in reverse order.
-    ReverseVisitTemplateArgs(template_args, type_lifetimes, ret);
-    std::reverse(ret.template_argument_lifetimes_.begin(),
-                 ret.template_argument_lifetimes_.end());
+    for (const clang::TemplateArgument& arg : template_args) {
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+        ValueLifetimes template_arg_lifetime;
+        if (llvm::Error err =
+                ValueLifetimes::Create(arg.getAsType(), lifetime_factory)
+                    .moveInto(template_arg_lifetime)) {
+          return std::move(err);
+        }
+        ret.template_argument_lifetimes_.push_back(template_arg_lifetime);
+      } else if (arg.getKind() == clang::TemplateArgument::Pack) {
+        for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
+          if (inner_arg.getKind() == clang::TemplateArgument::Type) {
+            ValueLifetimes template_arg_lifetime;
+            if (llvm::Error err = ValueLifetimes::Create(inner_arg.getAsType(),
+                                                         lifetime_factory)
+                                      .moveInto(template_arg_lifetime)) {
+              return std::move(err);
+            }
+            ret.template_argument_lifetimes_.push_back(template_arg_lifetime);
+          }
+        }
+      }
+    }
     return ret;
   }
 
-  clang::QualType pointee_type = PointeeType(type);
-  if (!pointee_type.isNull()) {
-    ret.pointee_lifetimes_ = std::make_unique<ObjectLifetimes>(
-        ObjectLifetimes::FromTypeLifetimes(type_lifetimes, pointee_type));
+  clang::QualType pointee = PointeeType(type);
+  if (pointee.isNull()) return ret;
+  ObjectLifetimes obj_lftm;
+  if (llvm::Error err = ObjectLifetimes::Create(pointee, lifetime_factory)
+                            .moveInto(obj_lftm)) {
+    return std::move(err);
   }
+  ret.pointee_lifetimes_ =
+      std::make_unique<ObjectLifetimes>(std::move(obj_lftm));
   return ret;
+}
+
+llvm::Expected<ObjectLifetimes> ObjectLifetimes::Create(
+    clang::QualType type, LifetimeFactory lifetime_factory) {
+  ValueLifetimes v;
+  if (llvm::Error err =
+          ValueLifetimes::Create(type, lifetime_factory).moveInto(v)) {
+    return std::move(err);
+  }
+  Lifetime l;
+  if (llvm::Error err = lifetime_factory(type, "").moveInto(l)) {
+    return std::move(err);
+  }
+  return ObjectLifetimes(l, v);
 }
 
 ValueLifetimes ValueLifetimes::ForLifetimeLessType(clang::QualType type) {
@@ -240,23 +182,56 @@ ValueLifetimes ValueLifetimes::ForRecord(
   return result;
 }
 
+// TODO(veluca): improve the formatting here.
+std::string ValueLifetimes::DebugString(
+    const LifetimeFormatter& formatter) const {
+  std::vector<std::string> lifetimes;
+  Traverse([&](Lifetime l, Variance) { lifetimes.push_back(formatter(l)); });
+  if (lifetimes.size() == 1) {
+    return lifetimes[0];
+  } else {
+    return absl::StrCat("(", absl::StrJoin(lifetimes, ", "), ")");
+  }
+}
+
 const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
   assert(!PointeeType(type_).isNull());
   return *pointee_lifetimes_;
 }
 
-ObjectLifetimes ObjectLifetimes::FromTypeLifetimes(
-    TypeLifetimesRef& type_lifetimes, clang::QualType type) {
-  assert(!type_lifetimes.empty());
-  assert(!type.isNull());
-  Lifetime self_lifetime = type_lifetimes.back();
-  type_lifetimes = type_lifetimes.drop_back();
-  return ObjectLifetimes(
-      self_lifetime, ValueLifetimes::FromTypeLifetimes(type_lifetimes, type));
+void ValueLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
+                              Variance variance) {
+  for (std::optional<ValueLifetimes>& tmpl_arg : template_argument_lifetimes_) {
+    if (tmpl_arg) {
+      tmpl_arg->Traverse(visitor, kInvariant);
+    }
+  }
+  if (pointee_lifetimes_) {
+    pointee_lifetimes_->Traverse(visitor, variance, Type());
+  }
+  for (const auto& lftm_arg : GetLifetimeParameters(type_)) {
+    std::optional<Lifetime> lifetime =
+        lifetime_parameters_by_name_.LookupName(lftm_arg);
+    assert(lifetime.has_value());
+    Lifetime new_lifetime = *lifetime;
+    visitor(new_lifetime, variance);
+
+    // Note that this check is not an optimization, but a guard against UB:
+    // if one calls the const version of Traverse, with a callback that does not
+    // mutate the lifetime, on a const instance of the Value/ObjectLifetimes,
+    // then calling Rebind would be UB, even if Rebind would do nothing in
+    // practice.
+    if (new_lifetime != lifetime) {
+      lifetime_parameters_by_name_.Rebind(lftm_arg, new_lifetime);
+    }
+  }
 }
 
-std::string ObjectLifetimes::DebugString() const {
-  return absl::StrCat(lifetime_.DebugString(), value_lifetimes_.DebugString());
+void ValueLifetimes::Traverse(
+    std::function<void(const Lifetime&, Variance)> visitor,
+    Variance variance) const {
+  const_cast<ValueLifetimes*>(this)->Traverse(
+      [&visitor](Lifetime& l, Variance v) { visitor(l, v); }, variance);
 }
 
 const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
@@ -343,12 +318,11 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
           // Create a new ValueLifetimes of the type of the template parameter,
           // with lifetime `lifetime_`.
           // TODO(veluca): we need to propagate lifetime parameters here.
-          TypeLifetimes type_lifetimes = CreateLifetimesForType(
-              arg.getAsType(), [this]() { return this->lifetime_; });
-          TypeLifetimesRef type_lifetimes_ref(type_lifetimes);
           template_argument_lifetimes.push_back(
-              ValueLifetimes::FromTypeLifetimes(type_lifetimes_ref,
-                                                arg.getAsType()));
+              ValueLifetimes::Create(arg.getAsType(), [this](clang::QualType,
+                                                             llvm::StringRef) {
+                return this->lifetime_;
+              }).get());
         }
       } else {
         template_argument_lifetimes.push_back(std::nullopt);
@@ -378,11 +352,42 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
                          ValueLifetimes::ForLifetimeLessType(type));
 }
 
+std::string ObjectLifetimes::DebugString(
+    const LifetimeFormatter& formatter) const {
+  std::vector<std::string> lifetimes;
+  Traverse([&](Lifetime l, Variance) { lifetimes.push_back(formatter(l)); });
+  if (lifetimes.size() == 1) {
+    return lifetimes[0];
+  } else {
+    return absl::StrCat("(", absl::StrJoin(lifetimes, ", "), ")");
+  }
+}
+
 ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(
     clang::QualType type,
     llvm::SmallVector<std::string> type_lifetime_args) const {
   return GetObjectLifetimesForTypeInContext(type, std::move(type_lifetime_args),
                                             "");
+}
+
+void ObjectLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
+                               Variance variance,
+                               clang::QualType indirection_type) {
+  assert(indirection_type.isNull() ||
+         indirection_type->getPointeeType() == Type());
+  value_lifetimes_.Traverse(
+      visitor, indirection_type.isNull() || indirection_type.isConstQualified()
+                   ? kCovariant
+                   : kInvariant);
+  visitor(lifetime_, variance);
+}
+
+void ObjectLifetimes::Traverse(
+    std::function<void(const Lifetime&, Variance)> visitor, Variance variance,
+    clang::QualType indirection_type) const {
+  const_cast<ObjectLifetimes*>(this)->Traverse(
+      [&visitor](Lifetime& l, Variance v) { visitor(l, v); }, variance,
+      indirection_type);
 }
 
 llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(

@@ -25,6 +25,7 @@
 #include "third_party/absl/strings/str_join.h"
 #include "third_party/absl/strings/string_view.h"
 #include "third_party/absl/strings/substitute.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -488,7 +489,6 @@ std::optional<IR::Item> Importer::ImportFunction(
       devtools_rust::GetLifetimeAnnotations(function_decl,
                                             *invocation_.lifetime_context_,
                                             &lifetime_symbol_table);
-  llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
 
   std::vector<FuncParam> params;
   std::set<std::string> errors;
@@ -505,10 +505,9 @@ std::optional<IR::Item> Importer::ImportFunction(
 
     // non-static member functions receive an implicit `this` parameter.
     if (method_decl->isInstance()) {
-      std::optional<devtools_rust::TypeLifetimes> this_lifetimes;
+      std::optional<devtools_rust::ValueLifetimes> this_lifetimes;
       if (lifetimes) {
-        this_lifetimes = lifetimes->this_lifetimes;
-        all_lifetimes.insert(this_lifetimes->begin(), this_lifetimes->end());
+        this_lifetimes = lifetimes->GetThisLifetimes();
       }
       auto param_type =
           ConvertQualType(method_decl->getThisType(), this_lifetimes,
@@ -523,15 +522,14 @@ std::optional<IR::Item> Importer::ImportFunction(
   }
 
   if (lifetimes) {
-    CRUBIT_CHECK(lifetimes->param_lifetimes.size() ==
-                 function_decl->getNumParams());
+    CRUBIT_CHECK(lifetimes->IsValidForDecl(function_decl));
   }
+
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = function_decl->getParamDecl(i);
-    std::optional<devtools_rust::TypeLifetimes> param_lifetimes;
+    std::optional<devtools_rust::ValueLifetimes> param_lifetimes;
     if (lifetimes) {
-      param_lifetimes = lifetimes->param_lifetimes[i];
-      all_lifetimes.insert(param_lifetimes->begin(), param_lifetimes->end());
+      param_lifetimes = lifetimes->GetParamLifetimes(i);
     }
     auto param_type = ConvertQualType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
@@ -577,16 +575,24 @@ std::optional<IR::Item> Importer::ImportFunction(
     }
   }
 
-  std::optional<devtools_rust::TypeLifetimes> return_lifetimes;
+  std::optional<devtools_rust::ValueLifetimes> return_lifetimes;
   if (lifetimes) {
-    return_lifetimes = lifetimes->return_lifetimes;
-    all_lifetimes.insert(return_lifetimes->begin(), return_lifetimes->end());
+    return_lifetimes = lifetimes->GetReturnLifetimes();
   }
+
   auto return_type =
       ConvertQualType(function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
     add_error(absl::StrCat("Return type is not supported: ",
                            return_type.status().message()));
+  }
+
+  llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
+  if (lifetimes) {
+    lifetimes->Traverse(
+        [&all_lifetimes](devtools_rust::Lifetime l, devtools_rust::Variance) {
+          all_lifetimes.insert(l);
+        });
   }
 
   std::vector<Lifetime> lifetime_params;
@@ -827,7 +833,7 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
         enum_decl,
         "Forward declared enums without type specifiers are not supported");
   }
-  std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
+  std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> type = ConvertQualType(cc_type, no_lifetimes);
   if (!type.ok()) {
     return ImportUnsupportedItem(enum_decl, type.status().ToString());
@@ -901,7 +907,7 @@ std::optional<IR::Item> Importer::ImportTypedefName(
   std::optional<Identifier> identifier =
       GetTranslatedIdentifier(typedef_name_decl);
   CRUBIT_CHECK(identifier.has_value());  // This should never happen.
-  std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
+  std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type =
       ConvertQualType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
@@ -974,7 +980,7 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
 
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
-    std::optional<devtools_rust::TypeLifetimes>& lifetimes,
+    std::optional<devtools_rust::ValueLifetimes>& lifetimes,
     bool nullable) const {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
@@ -986,9 +992,9 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     clang::QualType pointee_type = type->getPointeeType();
     std::optional<LifetimeId> lifetime;
     if (lifetimes.has_value()) {
-      CRUBIT_CHECK(!lifetimes->empty());
-      lifetime = LifetimeId(lifetimes->back().Id());
-      lifetimes->pop_back();
+      lifetime =
+          LifetimeId(lifetimes->GetPointeeLifetimes().GetLifetime().Id());
+      lifetimes = lifetimes->GetPointeeLifetimes().GetValueLifetimes();
     }
     if (const auto* func_type =
             pointee_type->getAs<clang::FunctionProtoType>()) {
@@ -1079,7 +1085,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 
 absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
-    std::optional<devtools_rust::TypeLifetimes>& lifetimes,
+    std::optional<devtools_rust::ValueLifetimes>& lifetimes,
     bool nullable) const {
   std::string type_string = qual_type.getAsString();
   absl::StatusOr<MappedType> type =
@@ -1108,7 +1114,7 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
   std::vector<Field> fields;
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    std::optional<devtools_rust::TypeLifetimes> no_lifetimes;
+    std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
     auto type = ConvertQualType(field_decl->getType(), no_lifetimes);
     if (!type.ok()) {
       return absl::UnimplementedError(absl::Substitute(

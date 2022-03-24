@@ -49,6 +49,10 @@ class LifetimeSymbolTable {
   // to LookupLifetime() to have undefined behaviour.
   void Add(llvm::StringRef name, Lifetime lifetime);
 
+  // Re-binds a name to a different lifetime.
+  // The name *must* be already used.
+  void Rebind(llvm::StringRef name, Lifetime lifetime);
+
   // Accessor for hashing/debugging purposes.
   const llvm::StringMap<Lifetime>& GetMapping() const {
     return name_to_lifetime_;

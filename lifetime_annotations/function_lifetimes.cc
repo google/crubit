@@ -11,11 +11,14 @@
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/LLVM.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
 namespace devtools_rust {
-namespace {
 
+namespace {
 // Track a bijective mapping between 2 sets of Lifetimes.
 class LifetimeBijection {
  public:
@@ -40,50 +43,114 @@ class LifetimeBijection {
 
 }  // namespace
 
-bool FunctionLifetimes::ContainsLifetimes() {
-  for (const auto& param : param_lifetimes) {
-    if (!param.empty()) {
-      return true;
+llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForDecl(
+    const clang::FunctionDecl* func,
+    const FunctionLifetimeFactory& lifetime_factory) {
+  clang::QualType this_type;
+  if (auto method = clang::dyn_cast<clang::CXXMethodDecl>(func);
+      method && !method->isStatic()) {
+    this_type = method->getThisType();
+  }
+  return Create(func->getType()->getAs<clang::FunctionProtoType>(), this_type,
+                lifetime_factory);
+}
+
+bool FunctionLifetimes::IsValidForDecl(const clang::FunctionDecl* function) {
+  // TODO(veluca): also validate the types of the arguments, and/or the type of
+  // the function itself.
+  if (auto method = clang::dyn_cast<clang::CXXMethodDecl>(function);
+      method && !method->isStatic()) {
+    if (!this_lifetimes_.has_value()) return false;
+  }
+  return param_lifetimes_.size() == function->param_size();
+}
+
+llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
+    const clang::FunctionProtoType* type, const clang::QualType this_type,
+    const FunctionLifetimeFactory& lifetime_factory) {
+  FunctionLifetimes ret;
+
+  if (!this_type.isNull()) {
+    ValueLifetimes tmp;
+    if (llvm::Error err =
+            ValueLifetimes::Create(this_type, [&](clang::QualType type,
+                                                  llvm::StringRef param) {
+              return lifetime_factory.CreateParamLifetime(type, param);
+            }).moveInto(tmp)) {
+      return std::move(err);
     }
+    ret.this_lifetimes_ = std::move(tmp);
   }
 
-  return !return_lifetimes.empty() || !this_lifetimes.empty();
+  ret.param_lifetimes_.reserve(type->getNumParams());
+  for (size_t i = 0; i < type->getNumParams(); i++) {
+    ValueLifetimes tmp;
+    if (llvm::Error err = ValueLifetimes::Create(
+                              type->getParamType(i),
+                              [&](clang::QualType type, llvm::StringRef param) {
+                                return lifetime_factory.CreateParamLifetime(
+                                    type, param);
+                              })
+                              .moveInto(tmp)) {
+      return std::move(err);
+    }
+    ret.param_lifetimes_.push_back(std::move(tmp));
+  }
+
+  if (llvm::Error err = ValueLifetimes::Create(
+                            type->getReturnType(),
+                            [&](clang::QualType type, llvm::StringRef param) {
+                              return lifetime_factory.CreateReturnLifetime(
+                                  type, param, ret.param_lifetimes_,
+                                  ret.this_lifetimes_);
+                            })
+                            .moveInto(ret.return_lifetimes_)) {
+    return std::move(err);
+  }
+
+  return ret;
+}
+
+void FunctionLifetimes::Traverse(
+    std::function<void(Lifetime&, Variance)> visitor) {
+  for (auto& param : param_lifetimes_) {
+    param.Traverse(visitor);
+  }
+  return_lifetimes_.Traverse(visitor);
+  if (this_lifetimes_.has_value()) {
+    this_lifetimes_->Traverse(visitor);
+  }
+}
+
+void FunctionLifetimes::Traverse(
+    std::function<void(const Lifetime&, Variance)> visitor) const {
+  const_cast<FunctionLifetimes*>(this)->Traverse(
+      [visitor](Lifetime& l, Variance v) { visitor(l, v); });
 }
 
 bool FunctionLifetimes::IsIsomorphic(const FunctionLifetimes& other) const {
   // We expect this function to only be called for 2 FunctionLifetime objects
   // that are for the same function, thus the number of parameters, and the
   // number of Lifetimes for each type, should always match.
-  assert(param_lifetimes.size() == other.param_lifetimes.size());
-  assert(this_lifetimes.size() == other.this_lifetimes.size());
-  assert(return_lifetimes.size() == other.return_lifetimes.size());
-  for (size_t i = 0; i < param_lifetimes.size(); ++i) {
-    assert(param_lifetimes[i].size() == other.param_lifetimes[i].size());
-  }
+  assert(param_lifetimes_.size() == other.param_lifetimes_.size());
+  assert(this_lifetimes_.has_value() == other.this_lifetimes_.has_value());
 
   // Map of equivalent lifetimes between `*this` and `other`.
   LifetimeBijection bijection;
 
-  auto compare_type_lifetimes = [&bijection](const TypeLifetimes& a,
-                                             const TypeLifetimes& b) {
-    assert(a.size() == b.size());
-    for (size_t i = 0; i < a.size(); ++i) {
-      if (!bijection.Add(a[i], b[i])) {
-        return false;
-      }
-    }
-    return true;
-  };
+  llvm::SmallVector<Lifetime> my_lifetimes;
+  Traverse(
+      [&my_lifetimes](Lifetime l, Variance) { my_lifetimes.push_back(l); });
+  llvm::SmallVector<Lifetime> other_lifetimes;
+  other.Traverse([&other_lifetimes](Lifetime l, Variance) {
+    other_lifetimes.push_back(l);
+  });
 
-  if (!compare_type_lifetimes(return_lifetimes, other.return_lifetimes)) {
-    return false;
-  }
-  if (!compare_type_lifetimes(this_lifetimes, other.this_lifetimes)) {
-    return false;
-  }
-  for (size_t i = 0; i < param_lifetimes.size(); ++i) {
-    if (!compare_type_lifetimes(param_lifetimes[i], other.param_lifetimes[i]))
+  assert(my_lifetimes.size() == other_lifetimes.size());
+  for (size_t i = 0; i < my_lifetimes.size(); ++i) {
+    if (!bijection.Add(my_lifetimes[i], other_lifetimes[i])) {
       return false;
+    }
   }
   return true;
 }
@@ -91,56 +158,27 @@ bool FunctionLifetimes::IsIsomorphic(const FunctionLifetimes& other) const {
 std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
   std::vector<std::string> formatted_param_lifetimes;
 
-  for (const auto& param : param_lifetimes) {
-    formatted_param_lifetimes.push_back(
-        ::devtools_rust::DebugString(param, formatter));
+  for (const auto& param : param_lifetimes_) {
+    formatted_param_lifetimes.push_back(param.DebugString(formatter));
   }
 
   std::string result;
-  if (!this_lifetimes.empty()) {
-    result = absl::StrCat(
-        ::devtools_rust::DebugString(this_lifetimes, formatter), ":");
+  if (this_lifetimes_.has_value()) {
+    result = absl::StrCat(this_lifetimes_->DebugString(formatter), ":");
   }
   if (!result.empty() && !formatted_param_lifetimes.empty()) {
     absl::StrAppend(&result, " ");
   }
   absl::StrAppend(&result, absl::StrJoin(formatted_param_lifetimes, ", "));
 
-  if (!return_lifetimes.empty()) {
+  if (return_lifetimes_.HasLifetimes()) {
     if (!result.empty()) {
       absl::StrAppend(&result, " ");
     }
-    absl::StrAppend(&result, "-> ",
-                    ::devtools_rust::DebugString(return_lifetimes, formatter));
+    absl::StrAppend(&result, "-> ", return_lifetimes_.DebugString(formatter));
   }
 
   return result;
-}
-
-bool FunctionLifetimes::Validate(const clang::FunctionDecl* func) const {
-  if (auto method = clang::dyn_cast<clang::CXXMethodDecl>(func)) {
-    if (CreateLifetimesForType(method->getThisType(), Lifetime::CreateLocal)
-            .size() != this_lifetimes.size()) {
-      return false;
-    }
-  } else if (!this_lifetimes.empty()) {
-    return false;
-  }
-  if (CreateLifetimesForType(func->getReturnType(), Lifetime::CreateLocal)
-          .size() != return_lifetimes.size()) {
-    return false;
-  }
-  if (param_lifetimes.size() != func->getNumParams()) {
-    return false;
-  }
-  for (size_t i = 0; i < param_lifetimes.size(); i++) {
-    if (CreateLifetimesForType(func->getParamDecl(i)->getType(),
-                               Lifetime::CreateLocal)
-            .size() != param_lifetimes[i].size()) {
-      return false;
-    }
-  }
-  return true;
 }
 
 std::ostream& operator<<(std::ostream& os,

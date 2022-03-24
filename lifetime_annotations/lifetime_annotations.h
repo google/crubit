@@ -36,6 +36,13 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     const clang::FunctionDecl* func, const LifetimeAnnotationContext& context,
     LifetimeSymbolTable* symbol_table = nullptr);
 
+// Parses "a: b, a -> b"-style lifetime annotations from `lifetimes_str` for the
+// function declaration `func`. Lifetimes are inserted into the given
+// `symbol_table`, or used from there if already known.
+llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
+    const clang::FunctionDecl* func, const std::string& lifetimes_str,
+    LifetimeSymbolTable* symbol_table = nullptr);
+
 // Adds handlers to `preprocessor` to populate `context`.
 // To be able to use GetLifetimeAnnotations(), call this function to add the
 // necessary handlers before compiling any code.

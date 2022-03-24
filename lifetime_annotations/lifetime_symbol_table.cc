@@ -102,4 +102,14 @@ void LifetimeSymbolTable::Add(llvm::StringRef name, Lifetime lifetime) {
   lifetime_to_name_[lifetime] = name;
 }
 
+void LifetimeSymbolTable::Rebind(llvm::StringRef name, Lifetime lifetime) {
+  auto iter = name_to_lifetime_.find(name);
+  if (iter == name_to_lifetime_.end()) {
+    llvm::report_fatal_error("invalid call to rebind");
+  }
+  lifetime_to_name_.erase(iter->second);
+  lifetime_to_name_[lifetime] = name;
+  iter->second = lifetime;
+}
+
 }  // namespace devtools_rust
