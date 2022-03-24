@@ -173,6 +173,24 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
               IsOkAndHolds(LifetimesAre({{"f", "a -> a"}, {"g", "a -> a"}})));
 }
 
+// TODO(mboehme): Disabled because we don't handle nested templates correctly
+// yet.
+TEST_F(LifetimeAnnotationsTest, DISABLED_LifetimeElision_NestedTemplates) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        template <class T>
+        struct Outer {
+          template <class U>
+          struct Inner {
+          };
+        };
+        void f(Outer<int *>::Inner<int *> &);
+        Outer<int *>::Inner<int *> g(int *);
+  )"),
+      IsOkAndHolds(LifetimesAre({{"f", "(a, b, c)"}, {"g", "a -> (a, a)"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_LifetimeParameterizedType) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
