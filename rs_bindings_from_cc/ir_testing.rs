@@ -46,50 +46,6 @@ pub fn ir_id(name: &str) -> Identifier {
     Identifier { identifier: name.to_string() }
 }
 
-/// Creates a simple type instance for `int`/`i32`
-pub fn ir_int() -> MappedType {
-    MappedType {
-        rs_type: RsType {
-            name: "i32".to_string().into(),
-            lifetime_args: vec![],
-            type_args: vec![],
-            decl_id: None,
-        },
-        cc_type: CcType {
-            name: "int".to_string().into(),
-            type_args: vec![],
-            is_const: false,
-            decl_id: None,
-        },
-    }
-}
-
-pub fn ir_type(decl_id: usize) -> MappedType {
-    MappedType {
-        rs_type: RsType {
-            name: None,
-            lifetime_args: vec![],
-            type_args: vec![],
-            decl_id: Some(ItemId(decl_id)),
-        },
-        cc_type: CcType {
-            name: None,
-            type_args: vec![],
-            is_const: false,
-            decl_id: Some(ItemId(decl_id)),
-        },
-    }
-}
-
-/// Creates a simple `FuncParam` with a given name and `int`/`i32` type
-pub fn ir_int_param(name: &str) -> FuncParam {
-    FuncParam { identifier: ir_id(name), type_: ir_int() }
-}
-
-pub fn ir_param(name: &str, decl_id: usize) -> FuncParam {
-    FuncParam { identifier: ir_id(name), type_: ir_type(decl_id) }
-}
-
 /// Creates a simple `Func` with a given name
 pub fn ir_func(name: &str) -> Func {
     let ir =
