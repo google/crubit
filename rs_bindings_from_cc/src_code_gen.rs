@@ -1962,7 +1962,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
 mod tests {
     use super::*;
     use anyhow::anyhow;
-    use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_func, ir_record, retrieve_func};
+    use ir_testing::{ir_from_cc, ir_from_cc_dependency, ir_record, retrieve_func};
     use static_assertions::{assert_impl_all, assert_not_impl_all};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_ir_matches, assert_rs_matches,
@@ -3698,9 +3698,11 @@ mod tests {
     }
 
     #[test]
-    fn test_thunk_ident_function() {
-        let func = ir_func("foo");
-        assert_eq!(thunk_ident(&func), make_rs_ident("__rust_thunk___Z3foov"));
+    fn test_thunk_ident_function() -> Result<()> {
+        let ir = ir_from_cc("inline int foo() {}")?;
+        let func = retrieve_func(&ir, "foo");
+        assert_eq!(thunk_ident(func), make_rs_ident("__rust_thunk___Z3foov"));
+        Ok(())
     }
 
     #[test]

@@ -5,7 +5,7 @@
 use anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
-use ir::{self, CcType, Func, FuncParam, Identifier, Item, ItemId, MappedType, Record, RsType, IR};
+use ir::{self, Func, Identifier, Item, Record, IR};
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(header_source: &str) -> Result<IR> {
@@ -44,18 +44,6 @@ pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str
 /// Creates an identifier
 pub fn ir_id(name: &str) -> Identifier {
     Identifier { identifier: name.to_string() }
-}
-
-/// Creates a simple `Func` with a given name
-pub fn ir_func(name: &str) -> Func {
-    let ir =
-        ir_from_cc(&str::replace("inline int REPLACEME() {return 0;}", "REPLACEME", name)).unwrap();
-    for item in ir.take_items() {
-        if let Item::Func(func) = item {
-            return func;
-        }
-    }
-    panic!("Test IR doesn't contain a function");
 }
 
 /// Creates a simple `Item::Record` with a given name.
