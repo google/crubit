@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "base/init_google.h"
 #include "third_party/absl/container/flat_hash_map.h"
+#include "third_party/absl/flags/parse.h"
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
@@ -42,7 +42,7 @@ absl::Status SetFileContents(absl::string_view path,
   return absl::OkStatus();
 }
 
-absl::Status Main(int argc, char* argv[]) {
+absl::Status Main(std::vector<char*> args) {
   using rs_bindings_from_cc::Cmdline;
   using rs_bindings_from_cc::IR;
   CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
@@ -57,13 +57,16 @@ absl::Status Main(int argc, char* argv[]) {
     return absl::OkStatus();
   }
 
+  std::vector<absl::string_view> args_as_string_views;
+  args_as_string_views.insert(args_as_string_views.end(), args.begin(),
+                              args.end());
+
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir,
-      rs_bindings_from_cc::IrFromCc(
-          /* extra_source_code= */ "", cmdline.current_target(),
-          cmdline.public_headers(),
-          /* virtual_headers_contents= */ {}, cmdline.headers_to_targets(),
-          std::vector<absl::string_view>(argv, argv + argc)));
+      IR ir, rs_bindings_from_cc::IrFromCc(
+                 /* extra_source_code= */ "", cmdline.current_target(),
+                 cmdline.public_headers(),
+                 /* virtual_headers_contents= */ {},
+                 cmdline.headers_to_targets(), args_as_string_views));
 
   if (!cmdline.ir_out().empty()) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
@@ -82,8 +85,8 @@ absl::Status Main(int argc, char* argv[]) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  InitGoogle(argv[0], &argc, &argv, true);
-  absl::Status status = Main(argc, argv);
+  auto args = absl::ParseCommandLine(argc, argv);
+  absl::Status status = Main(std::move(args));
   if (!status.ok()) {
     llvm::errs() << status.message() << "\n";
     return -1;
