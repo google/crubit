@@ -74,9 +74,12 @@ class ValueLifetimes {
   // parameters, pass the corresponding template argument lifetimes in
   // `template_argument_lifetimes`; otherwise, pass an empty vector.
   // Similarly, pass any lifetime parameters in `lifetime_parameters`.
+  // The structure of `template_argument_lifetimes` is analogous to that of the
+  // return value of `GetTemplateArgs()`.
   static ValueLifetimes ForRecord(
       clang::QualType type,
-      std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes,
+      std::vector<std::vector<std::optional<ValueLifetimes>>>
+          template_argument_lifetimes,
       LifetimeSymbolTable lifetime_parameters);
 
   std::string DebugString(const LifetimeFormatter& formatter = [](Lifetime l) {
@@ -90,16 +93,21 @@ class ValueLifetimes {
   // pointer or reference type.
   const ObjectLifetimes& GetPointeeLifetimes() const;
 
-  // Returns the lifetimes of the i-th template argument.
+  // Returns the lifetimes of the i-th template argument at the given nesting
+  // `depth` within a chain of nested templates and with the given `index`.
+  // For example, for a type `Outer<int*, double*>::Inner<long*>`, the
+  // `double*` template argument has depth 0 and index 1.
   const std::optional<ValueLifetimes>& GetTemplateArgumentLifetimes(
-      size_t i) const {
+      size_t depth, size_t index) const {
     assert(type_->isRecordType());
-    return template_argument_lifetimes_.at(i);
+    return template_argument_lifetimes_.at(depth).at(index);
   }
 
-  size_t GetNumTemplateArguments() const {
+  // Returns the number of template arguments at a given nesting `depth` (see
+  // `GetTemplateArgumentLifetimes` for details).
+  size_t GetNumTemplateArgumentsAtDepth(size_t depth) const {
     assert(type_->isRecordType());
-    return template_argument_lifetimes_.size();
+    return template_argument_lifetimes_.at(depth).size();
   }
 
   // Returns the lifetime associated with the given named lifetime parameter.
@@ -135,7 +143,8 @@ class ValueLifetimes {
   // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
   // is non-empty.
   std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
-  std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes_;
+  std::vector<std::vector<std::optional<ValueLifetimes>>>
+      template_argument_lifetimes_;
   clang::QualType type_;
 
   // Tracks the mapping from the names of the lifetimes on the struct/class
@@ -230,8 +239,13 @@ class ObjectLifetimes {
 // TODO(lukasza): Try deduplicating GetTemplateArgs(QualType) vs
 // GetTemplateArgs(TypeLoc) in
 // google3/devtools/cymbal/clang_tidy/runtime/lifetimes.cc
-const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
-    clang::QualType type);
+// Return type: The outer vector is indexed by the "depth" of the template
+// argument within a chain of nested templates; the inner vector contains the
+// template arguments at a given depth.
+// For example, for a type `Outer<int*, double*>::Inner<long*>`, this returns
+// (in pseudo-code) { { int*, double* }, { long* } };
+const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
+GetTemplateArgs(clang::QualType type);
 
 // Evaluate the given expression as a string literal. Returns an error if the
 // expression is not a string literal.

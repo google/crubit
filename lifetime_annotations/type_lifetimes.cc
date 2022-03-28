@@ -102,27 +102,34 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   // Add implicit lifetime parameters for type template parameters.
-  llvm::ArrayRef<clang::TemplateArgument> template_args = GetTemplateArgs(type);
+  llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> template_args =
+      GetTemplateArgs(type);
   if (!template_args.empty()) {
-    for (const clang::TemplateArgument& arg : template_args) {
-      if (arg.getKind() == clang::TemplateArgument::Type) {
-        ValueLifetimes template_arg_lifetime;
-        if (llvm::Error err =
-                ValueLifetimes::Create(arg.getAsType(), lifetime_factory)
-                    .moveInto(template_arg_lifetime)) {
-          return std::move(err);
-        }
-        ret.template_argument_lifetimes_.push_back(template_arg_lifetime);
-      } else if (arg.getKind() == clang::TemplateArgument::Pack) {
-        for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
-          if (inner_arg.getKind() == clang::TemplateArgument::Type) {
-            ValueLifetimes template_arg_lifetime;
-            if (llvm::Error err = ValueLifetimes::Create(inner_arg.getAsType(),
-                                                         lifetime_factory)
-                                      .moveInto(template_arg_lifetime)) {
-              return std::move(err);
+    for (const auto& args_at_depth : template_args) {
+      ret.template_argument_lifetimes_.push_back({});
+      for (const clang::TemplateArgument& arg : args_at_depth) {
+        if (arg.getKind() == clang::TemplateArgument::Type) {
+          ValueLifetimes template_arg_lifetime;
+          if (llvm::Error err =
+                  ValueLifetimes::Create(arg.getAsType(), lifetime_factory)
+                      .moveInto(template_arg_lifetime)) {
+            return std::move(err);
+          }
+          ret.template_argument_lifetimes_.back().push_back(
+              template_arg_lifetime);
+        } else if (arg.getKind() == clang::TemplateArgument::Pack) {
+          for (const clang::TemplateArgument& inner_arg :
+               arg.getPackAsArray()) {
+            if (inner_arg.getKind() == clang::TemplateArgument::Type) {
+              ValueLifetimes template_arg_lifetime;
+              if (llvm::Error err = ValueLifetimes::Create(
+                                        inner_arg.getAsType(), lifetime_factory)
+                                        .moveInto(template_arg_lifetime)) {
+                return std::move(err);
+              }
+              ret.template_argument_lifetimes_.back().push_back(
+                  template_arg_lifetime);
             }
-            ret.template_argument_lifetimes_.push_back(template_arg_lifetime);
           }
         }
       }
@@ -172,10 +179,15 @@ ValueLifetimes ValueLifetimes::ForPointerLikeType(
 
 ValueLifetimes ValueLifetimes::ForRecord(
     clang::QualType type,
-    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes,
+    std::vector<std::vector<std::optional<ValueLifetimes>>>
+        template_argument_lifetimes,
     LifetimeSymbolTable lifetime_parameters) {
   assert(type->isRecordType());
   assert(GetTemplateArgs(type).size() == template_argument_lifetimes.size());
+  for (size_t depth = 0; depth < template_argument_lifetimes.size(); ++depth) {
+    assert(GetTemplateArgs(type)[depth].size() ==
+           template_argument_lifetimes[depth].size());
+  }
   ValueLifetimes result(type);
   result.template_argument_lifetimes_ = std::move(template_argument_lifetimes);
   result.lifetime_parameters_by_name_ = lifetime_parameters;
@@ -201,9 +213,11 @@ const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
 
 void ValueLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
                               Variance variance) {
-  for (std::optional<ValueLifetimes>& tmpl_arg : template_argument_lifetimes_) {
-    if (tmpl_arg) {
-      tmpl_arg->Traverse(visitor, kInvariant);
+  for (auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
+    for (std::optional<ValueLifetimes>& tmpl_arg : tmpl_arg_at_depth) {
+      if (tmpl_arg) {
+        tmpl_arg->Traverse(visitor, kInvariant);
+      }
     }
   }
   if (pointee_lifetimes_) {
@@ -234,19 +248,29 @@ void ValueLifetimes::Traverse(
       [&visitor](Lifetime& l, Variance v) { visitor(l, v); }, variance);
 }
 
-const llvm::ArrayRef<clang::TemplateArgument> GetTemplateArgs(
-    clang::QualType type) {
-  if (auto specialization = type->getAs<clang::TemplateSpecializationType>()) {
-    return specialization->template_arguments();
+const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
+GetTemplateArgs(clang::QualType type) {
+  llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> result;
+
+  if (auto elaborated = type->getAs<clang::ElaboratedType>()) {
+    if (clang::NestedNameSpecifier* qualifier = elaborated->getQualifier()) {
+      if (const clang::Type* qualifier_type = qualifier->getAsType()) {
+        result = GetTemplateArgs(clang::QualType(qualifier_type, 0));
+      }
+    }
   }
-  if (auto record = type->getAs<clang::RecordType>()) {
+
+  if (auto specialization = type->getAs<clang::TemplateSpecializationType>()) {
+    result.push_back(specialization->template_arguments());
+  } else if (auto record = type->getAs<clang::RecordType>()) {
     if (auto specialization_decl =
             clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
                 record->getDecl())) {
-      return specialization_decl->getTemplateArgs().asArray();
+      result.push_back(specialization_decl->getTemplateArgs().asArray());
     }
   }
-  return {};
+
+  return result;
 }
 
 ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
@@ -269,9 +293,10 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
   // First case: template argument. We just attach the
   // template argument's lifetimes to the leaf ObjectLifetimes.
   if (auto targ = type->getAs<clang::SubstTemplateTypeParmType>()) {
+    const clang::TemplateTypeParmType* type_parm = targ->getReplacedParameter();
     const std::optional<ValueLifetimes>& arg_lifetimes =
-        value_lifetimes_.GetTemplateArgumentLifetimes(
-            targ->getReplacedParameter()->getIndex());
+        value_lifetimes_.GetTemplateArgumentLifetimes(type_parm->getDepth(),
+                                                      type_parm->getIndex());
     if (!arg_lifetimes) {
       assert(false);
       return llvm::DenseMapInfo<ObjectLifetimes>::getEmptyKey();
@@ -295,37 +320,47 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
 
     // TODO(veluca): mixing lifetimes and template parameters is not supported
     // yet.
-    std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes;
-    size_t parameter_pack_expansion_index = 0;
-    for (const clang::TemplateArgument& arg : GetTemplateArgs(type)) {
-      if (arg.getKind() == clang::TemplateArgument::Type) {
-        if (auto templ_arg = clang::dyn_cast<clang::SubstTemplateTypeParmType>(
-                arg.getAsType())) {
-          // Template parameter packs get the index of the *pack*, not the index
-          // of the type inside the pack itself. As they must appear last, we
-          // can just increase the counter at every occurrence and wraparound
-          // when we run out of template arguments.
-          size_t index = templ_arg->getReplacedParameter()->getIndex();
-          if (templ_arg->getReplacedParameter()->isParameterPack()) {
-            index += parameter_pack_expansion_index++;
-            if (index + 1 >= value_lifetimes_.GetNumTemplateArguments()) {
-              parameter_pack_expansion_index = 0;
+    std::vector<std::vector<std::optional<ValueLifetimes>>>
+        template_argument_lifetimes;
+    for (const auto& args_at_depth : GetTemplateArgs(type)) {
+      size_t parameter_pack_expansion_index = 0;
+      template_argument_lifetimes.push_back({});
+      for (const clang::TemplateArgument& arg : args_at_depth) {
+        if (arg.getKind() == clang::TemplateArgument::Type) {
+          if (auto templ_arg =
+                  clang::dyn_cast<clang::SubstTemplateTypeParmType>(
+                      arg.getAsType())) {
+            const clang::TemplateTypeParmType* type_parm =
+                templ_arg->getReplacedParameter();
+            // Template parameter packs get the index of the *pack*, not the
+            // index of the type inside the pack itself. As they must appear
+            // last, we can just increase the counter at every occurrence and
+            // wraparound when we run out of template arguments.
+            size_t index = type_parm->getIndex();
+            if (type_parm->isParameterPack()) {
+              index += parameter_pack_expansion_index++;
+              if (index + 1 >= value_lifetimes_.GetNumTemplateArgumentsAtDepth(
+                                   type_parm->getDepth())) {
+                parameter_pack_expansion_index = 0;
+              }
             }
+            template_argument_lifetimes.back().push_back(
+                value_lifetimes_.GetTemplateArgumentLifetimes(
+                    type_parm->getDepth(), index));
+          } else {
+            // Create a new ValueLifetimes of the type of the template
+            // parameter, with lifetime `lifetime_`.
+            // TODO(veluca): we need to propagate lifetime parameters here.
+            template_argument_lifetimes.back().push_back(
+                ValueLifetimes::Create(arg.getAsType(), [this](
+                                                            clang::QualType,
+                                                            llvm::StringRef) {
+                  return this->lifetime_;
+                }).get());
           }
-          template_argument_lifetimes.push_back(
-              value_lifetimes_.GetTemplateArgumentLifetimes(index));
         } else {
-          // Create a new ValueLifetimes of the type of the template parameter,
-          // with lifetime `lifetime_`.
-          // TODO(veluca): we need to propagate lifetime parameters here.
-          template_argument_lifetimes.push_back(
-              ValueLifetimes::Create(arg.getAsType(), [this](clang::QualType,
-                                                             llvm::StringRef) {
-                return this->lifetime_;
-              }).get());
+          template_argument_lifetimes.back().push_back(std::nullopt);
         }
-      } else {
-        template_argument_lifetimes.push_back(std::nullopt);
       }
     }
 
@@ -442,13 +477,19 @@ bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
     return false;
   }
   for (size_t i = 0; i < lhs.template_argument_lifetimes_.size(); i++) {
-    const auto& alhs = lhs.template_argument_lifetimes_[i];
-    const auto& arhs = rhs.template_argument_lifetimes_[i];
-    if (alhs.has_value() != arhs.has_value()) {
+    if (lhs.template_argument_lifetimes_[i].size() !=
+        rhs.template_argument_lifetimes_[i].size()) {
       return false;
     }
-    if (alhs.has_value() && !isEqual(*alhs, *arhs)) {
-      return false;
+    for (size_t j = 0; j < lhs.template_argument_lifetimes_[i].size(); j++) {
+      const auto& alhs = lhs.template_argument_lifetimes_[i][j];
+      const auto& arhs = rhs.template_argument_lifetimes_[i][j];
+      if (alhs.has_value() != arhs.has_value()) {
+        return false;
+      }
+      if (alhs.has_value() && !isEqual(*alhs, *arhs)) {
+        return false;
+      }
     }
   }
   if (lhs.lifetime_parameters_by_name_.GetMapping() !=
@@ -465,10 +506,12 @@ unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
     hash = DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
         *value_lifetimes.pointee_lifetimes_);
   }
-  for (const auto& tmpl_lifetime :
+  for (const auto& lifetimes_at_depth :
        value_lifetimes.template_argument_lifetimes_) {
-    if (tmpl_lifetime) {
-      hash = hash_combine(hash, getHashValue(*tmpl_lifetime));
+    for (const auto& tmpl_lifetime : lifetimes_at_depth) {
+      if (tmpl_lifetime) {
+        hash = hash_combine(hash, getHashValue(*tmpl_lifetime));
+      }
     }
   }
   for (const auto& lifetime_arg :

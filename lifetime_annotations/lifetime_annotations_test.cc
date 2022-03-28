@@ -173,9 +173,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
               IsOkAndHolds(LifetimesAre({{"f", "a -> a"}, {"g", "a -> a"}})));
 }
 
-// TODO(mboehme): Disabled because we don't handle nested templates correctly
-// yet.
-TEST_F(LifetimeAnnotationsTest, DISABLED_LifetimeElision_NestedTemplates) {
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_NestedTemplates) {
   EXPECT_THAT(
       GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
