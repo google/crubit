@@ -51,6 +51,10 @@ class ValueLifetimes {
   // provided only for usage with functions with output parameters.
   ValueLifetimes() : type_(clang::QualType()) {}
 
+  ValueLifetimes(const ValueLifetimes& other) { *this = other; }
+
+  ValueLifetimes& operator=(const ValueLifetimes& other);
+
   // Creates a ValueLifetimes for a *value* of a given type.
   // Only fails if lifetime_factory fails.
   // Lifetimes will be created in post-order in the tree of lifetimes.
@@ -74,10 +78,6 @@ class ValueLifetimes {
       clang::QualType type,
       std::vector<std::optional<ValueLifetimes>> template_argument_lifetimes,
       LifetimeSymbolTable lifetime_parameters);
-
-  ValueLifetimes(const ValueLifetimes& other) { *this = other; }
-
-  ValueLifetimes& operator=(const ValueLifetimes& other);
 
   std::string DebugString(const LifetimeFormatter& formatter = [](Lifetime l) {
     return l.DebugString();
