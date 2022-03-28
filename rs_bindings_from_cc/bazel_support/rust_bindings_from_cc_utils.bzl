@@ -5,7 +5,7 @@
 """Utility module for sharing logic between rules and aspects that generate Rust bindings from C++.
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 """
 
 # buildifier: disable=bzl-visibility

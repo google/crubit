@@ -319,16 +319,16 @@ TEST(ImporterTest, TwoFuncs) {
 
 TEST(ImporterTest, TwoFuncsFromTwoHeaders) {
   ASSERT_OK_AND_ASSIGN(
-      IR ir, IrFromCc("", BlazeLabel{"//two_funcs:one_target"},
+      IR ir, IrFromCc("", BazelLabel{"//two_funcs:one_target"},
                       {HeaderName("test/testing_header_0.h"),
                        HeaderName("test/testing_header_1.h")},
                       {{HeaderName("test/testing_header_0.h"), "void Foo();"},
                        {HeaderName("test/testing_header_1.h"), "void Bar();"}},
                       {
                           {HeaderName("test/testing_header_0.h"),
-                           BlazeLabel{"//two_funcs:one_target"}},
+                           BazelLabel{"//two_funcs:one_target"}},
                           {HeaderName("test/testing_header_1.h"),
-                           BlazeLabel{"//two_funcs:one_target"}},
+                           BazelLabel{"//two_funcs:one_target"}},
                       }));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
               ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),

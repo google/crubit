@@ -41,8 +41,8 @@ class Importer {
   // Top-level parameters as well as return value of an importer invocation.
   class Invocation {
    public:
-    Invocation(BlazeLabel target, absl::Span<const HeaderName> entry_headers,
-               const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+    Invocation(BazelLabel target, absl::Span<const HeaderName> entry_headers,
+               const absl::flat_hash_map<const HeaderName, const BazelLabel>&
                    header_targets)
         : target_(target),
           entry_headers_(entry_headers),
@@ -59,14 +59,14 @@ class Importer {
     }
 
     // Returns the target of a header, if any.
-    std::optional<BlazeLabel> header_target(const HeaderName header) const {
+    std::optional<BazelLabel> header_target(const HeaderName header) const {
       auto it = header_targets_.find(header);
       return (it != header_targets_.end()) ? std::optional(it->second)
                                            : std::nullopt;
     }
 
     // The main target from which we are importing.
-    const BlazeLabel target_;
+    const BazelLabel target_;
 
     // The headers from which the import starts (a collection of
     // paths in the format suitable for a google3-relative quote include).
@@ -79,7 +79,7 @@ class Importer {
     IR ir_;
 
    private:
-    const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+    const absl::flat_hash_map<const HeaderName, const BazelLabel>&
         header_targets_;
   };
 
@@ -121,7 +121,7 @@ class Importer {
   std::vector<clang::RawComment*> ImportFreeComments();
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
-  BlazeLabel GetOwningTarget(const clang::Decl* decl) const;
+  BazelLabel GetOwningTarget(const clang::Decl* decl) const;
 
   // Checks if the given decl belongs to the current target. Does not look into
   // other redeclarations of the decl.
@@ -172,6 +172,9 @@ class Importer {
   absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
 
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
+
+  std::vector<BaseClass> GetUnambiguousPublicBases(
+      const clang::CXXRecordDecl& record_decl) const;
 
   Invocation& invocation_;
 

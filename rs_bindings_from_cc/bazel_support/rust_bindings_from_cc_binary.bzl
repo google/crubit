@@ -10,7 +10,7 @@ rust_bindings_from_cc_aspect -> rs_bindings_from_cc -> rust_library
               ^_____________________________________________|
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 """
 
 load(

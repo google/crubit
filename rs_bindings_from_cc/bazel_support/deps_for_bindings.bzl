@@ -5,7 +5,7 @@
 """A rule that collects C++ and Rust dependencies for the generated bindings files.
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 """
 
 load(

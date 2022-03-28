@@ -27,12 +27,12 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
     FfiU8Slice header_source, FfiU8Slice dependency_header_source) {
   absl::StatusOr<IR> ir = IrFromCc(
       StringViewFromFfiU8Slice(header_source),
-      BlazeLabel{"//test:testing_target"},
+      BazelLabel{"//test:testing_target"},
       /* public_headers= */ {},
       {{HeaderName(std::string(kDependencyHeaderName)),
         std::string(StringViewFromFfiU8Slice(dependency_header_source))}},
       {{HeaderName(std::string(kDependencyHeaderName)),
-        BlazeLabel{std::string(kDependencyTarget)}}});
+        BazelLabel{std::string(kDependencyTarget)}}});
   // TODO(forster): For now it is good enough to just exit: We are just using
   // this from tests, which are ok to just fail. Clang has already printed error
   // messages. If we start using this for production, then we should bridge the

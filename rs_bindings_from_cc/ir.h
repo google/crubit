@@ -392,7 +392,7 @@ struct Func {
   llvm::json::Value ToJson() const;
 
   UnqualifiedIdentifier name;
-  BlazeLabel owning_target;
+  BazelLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
@@ -498,7 +498,7 @@ struct Record {
   std::string cc_name;
 
   ItemId id;
-  BlazeLabel owning_target;
+  BazelLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
@@ -559,7 +559,7 @@ struct Enum {
 
   Identifier identifier;
   ItemId id;
-  BlazeLabel owning_target;
+  BazelLabel owning_target;
   MappedType underlying_type;
   std::vector<Enumerator> enumerators;
 };
@@ -574,7 +574,7 @@ struct TypeAlias {
 
   Identifier identifier;
   ItemId id;
-  BlazeLabel owning_target;
+  BazelLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   MappedType underlying_type;
 };
@@ -634,7 +634,7 @@ struct IR {
   // Collection of public headers that were used to construct the AST this `IR`
   // is generated from.
   std::vector<HeaderName> used_headers;
-  BlazeLabel current_target;
+  BazelLabel current_target;
 
   using Item =
       std::variant<Func, Record, Enum, TypeAlias, UnsupportedItem, Comment>;

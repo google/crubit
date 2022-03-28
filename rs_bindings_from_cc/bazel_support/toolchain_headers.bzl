@@ -5,7 +5,7 @@
 """Generates bindings for the toolchain headers.
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 """
 
 load(

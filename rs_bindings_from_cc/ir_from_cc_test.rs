@@ -20,7 +20,7 @@ fn test_function() {
         quote! {
             Func {
                 name: "f",
-                owning_target: BlazeLabel("//test:testing_target"),
+                owning_target: BazelLabel("//test:testing_target"),
                 mangled_name: "_Z1fii",
                 doc_comment: None,
                 return_type: MappedType {
@@ -662,7 +662,7 @@ fn test_typedef() -> Result<()> {
           TypeAlias {
             identifier: "MyTypedefDecl",
             id: ItemId(...),
-            owning_target: BlazeLabel("//test:testing_target"),
+            owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
             underlying_type: #int,
           }
@@ -674,7 +674,7 @@ fn test_typedef() -> Result<()> {
           TypeAlias {
             identifier: "MyTypeAliasDecl",
             id: ItemId(...),
-            owning_target: BlazeLabel("//test:testing_target"),
+            owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             underlying_type: #int,
           }
@@ -807,6 +807,62 @@ fn test_record_with_unsupported_field() -> Result<()> {
                 message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'union MyUnion': No generated bindings found for 'MyUnion'",
                 ...
             })
+        }
+    );
+    Ok(())
+}
+
+#[test]
+fn test_record_base_with_unsupported_field() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" // Using `union` because (I assume) it won't be supported in the long-term.
+            // But... any other unsupported type would also work for this test.
+            union UnsupportedType { int i; float f; };
+            struct BaseClass {
+              UnsupportedType base_field;
+            };
+            struct DerivedClass : public BaseClass {
+              int derived_field;
+            }; "#,
+    )?;
+    // Verify that `unambiguous_public_bases` are empty (instead of containing a
+    // dangling `ItemId` of the `BaseClass` (which got imported as
+    // `UnsupportedItem` rather than as a `Record`).
+    assert_ir_matches!(
+        ir,
+        quote! {
+           Record(Record {
+               rs_name: "DerivedClass",
+               cc_name: "DerivedClass",
+               id: ItemId(...),
+               owning_target: BazelLabel("//test:testing_target"),
+               doc_comment: None,
+               unambiguous_public_bases: [],
+               fields: [Field {
+                   identifier: "derived_field", ...
+                   offset: 32, ...
+               }], ...
+               size: 8,
+               alignment: 4,
+               base_size: Some(4),
+               override_alignment: true,
+               ...
+               is_trivial_abi: true,
+               is_final: false,
+           }),
+        }
+    );
+    // Verify that the BaseClass is unsupported (this is mostly verification that
+    // the test input correctly sets up the test scenario;  the real
+    // verification is above).
+    assert_ir_matches!(
+        ir,
+        quote! {
+           UnsupportedItem(UnsupportedItem {
+               name: "BaseClass",
+               message: "UNIMPLEMENTED: Type of field 'base_field' is not supported: Unsupported type 'union UnsupportedType': No generated bindings found for 'UnsupportedType'",
+               ...
+           })
         }
     );
     Ok(())

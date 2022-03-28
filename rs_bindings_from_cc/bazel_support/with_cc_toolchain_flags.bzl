@@ -7,7 +7,7 @@
 This rule simplifies experimenting with the binary.
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 """
 
 load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")

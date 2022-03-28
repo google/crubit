@@ -33,11 +33,11 @@ static constexpr absl::string_view kVirtualInputPath =
     "ir_from_cc_virtual_input.cc";
 
 absl::StatusOr<IR> IrFromCc(
-    const absl::string_view extra_source_code, const BlazeLabel current_target,
+    const absl::string_view extra_source_code, const BazelLabel current_target,
     absl::Span<const HeaderName> public_headers,
     absl::flat_hash_map<const HeaderName, const std::string>
         virtual_headers_contents,
-    absl::flat_hash_map<const HeaderName, const BlazeLabel> headers_to_targets,
+    absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets,
     absl::Span<const absl::string_view> args) {
   // Caller should verify that the inputs are not empty.
   CRUBIT_CHECK(!extra_source_code.empty() || !public_headers.empty());

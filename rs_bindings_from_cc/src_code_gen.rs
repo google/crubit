@@ -1241,7 +1241,7 @@ fn format_cc_ident(ident: &str) -> TokenStream {
 }
 
 fn rs_type_name_for_target_and_identifier(
-    owning_target: &BlazeLabel,
+    owning_target: &BazelLabel,
     identifier: &ir::Identifier,
     ir: &IR,
 ) -> Result<TokenStream> {

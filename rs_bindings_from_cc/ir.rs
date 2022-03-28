@@ -37,7 +37,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
 pub fn make_ir_from_parts(
     items: Vec<Item>,
     used_headers: Vec<HeaderName>,
-    current_target: BlazeLabel,
+    current_target: BazelLabel,
 ) -> Result<IR> {
     make_ir(FlatIR { used_headers, current_target, items })
 }
@@ -179,9 +179,9 @@ pub struct ItemId(pub usize);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]
-pub struct BlazeLabel(pub String);
+pub struct BazelLabel(pub String);
 
-impl BlazeLabel {
+impl BazelLabel {
     pub fn target_name(&self) -> Result<&str> {
         match self.0.split_once(':') {
             Some((_package, target_name)) => Ok(target_name),
@@ -190,7 +190,7 @@ impl BlazeLabel {
     }
 }
 
-impl<T: Into<String>> From<T> for BlazeLabel {
+impl<T: Into<String>> From<T> for BazelLabel {
     fn from(label: T) -> Self {
         Self(label.into())
     }
@@ -263,7 +263,7 @@ pub struct FuncParam {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Func {
     pub name: UnqualifiedIdentifier,
-    pub owning_target: BlazeLabel,
+    pub owning_target: BazelLabel,
     pub mangled_name: String,
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
@@ -328,7 +328,7 @@ pub struct Record {
     pub rs_name: String,
     pub cc_name: String,
     pub id: ItemId,
-    pub owning_target: BlazeLabel,
+    pub owning_target: BazelLabel,
     pub doc_comment: Option<String>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,
@@ -383,7 +383,7 @@ impl Record {
 pub struct Enum {
     pub identifier: Identifier,
     pub id: ItemId,
-    pub owning_target: BlazeLabel,
+    pub owning_target: BazelLabel,
     pub underlying_type: MappedType,
     pub enumerators: Vec<Enumerator>,
 }
@@ -398,7 +398,7 @@ pub struct Enumerator {
 pub struct TypeAlias {
     pub identifier: Identifier,
     pub id: ItemId,
-    pub owning_target: BlazeLabel,
+    pub owning_target: BazelLabel,
     pub doc_comment: Option<String>,
     pub underlying_type: MappedType,
 }
@@ -513,7 +513,7 @@ impl<'a> TryFrom<&'a Item> for &'a Comment {
 struct FlatIR {
     #[serde(default)]
     used_headers: Vec<HeaderName>,
-    current_target: BlazeLabel,
+    current_target: BazelLabel,
     #[serde(default)]
     items: Vec<Item>,
 }
@@ -605,19 +605,19 @@ impl IR {
     }
 
     // Returns whether `target` is the current target.
-    pub fn is_current_target(&self, target: &BlazeLabel) -> bool {
+    pub fn is_current_target(&self, target: &BazelLabel) -> bool {
         // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
         // values.
         *target == *self.current_target()
     }
 
-    pub fn current_target(&self) -> &BlazeLabel {
+    pub fn current_target(&self) -> &BazelLabel {
         &self.flat_ir.current_target
     }
 
     // Returns whether `target` is the target that corresponds to the C++
     // standard library.
-    pub fn is_stdlib_target(&self, target: &BlazeLabel) -> bool {
+    pub fn is_stdlib_target(&self, target: &BazelLabel) -> bool {
         // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
         // values.
         // TODO(b/208377928): We don't yet have an actual target for the standard

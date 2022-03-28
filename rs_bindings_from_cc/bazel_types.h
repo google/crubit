@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_BLAZE_TYPES_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_BLAZE_TYPES_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_BAZEL_TYPES_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_BAZEL_TYPES_H_
 
 #include <string>
 
@@ -11,9 +11,9 @@
 
 namespace rs_bindings_from_cc {
 
-// Representation of a Blaze label (for example //foo/bar:baz).
-CRUBIT_DEFINE_STRING_TYPE(BlazeLabel);
+// Representation of a Bazel label (for example //foo/bar:baz).
+CRUBIT_DEFINE_STRING_TYPE(BazelLabel);
 
 }  // namespace rs_bindings_from_cc
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_BLAZE_TYPES_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_BAZEL_TYPES_H_

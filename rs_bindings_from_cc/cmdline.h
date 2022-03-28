@@ -46,9 +46,9 @@ class Cmdline {
     return public_headers_;
   }
 
-  const BlazeLabel& current_target() const { return current_target_; }
+  const BazelLabel& current_target() const { return current_target_; }
 
-  const absl::flat_hash_map<const HeaderName, const BlazeLabel>&
+  const absl::flat_hash_map<const HeaderName, const BazelLabel>&
   headers_to_targets() const {
     return headers_to_targets_;
   }
@@ -61,16 +61,16 @@ class Cmdline {
       bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str);
 
-  absl::StatusOr<BlazeLabel> FindHeader(const HeaderName& header) const;
+  absl::StatusOr<BazelLabel> FindHeader(const HeaderName& header) const;
 
   std::string cc_out_;
   std::string rs_out_;
   std::string ir_out_;
   bool do_nothing_ = true;
 
-  BlazeLabel current_target_;
+  BazelLabel current_target_;
   std::vector<HeaderName> public_headers_;
-  absl::flat_hash_map<const HeaderName, const BlazeLabel> headers_to_targets_;
+  absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets_;
 };
 
 }  // namespace rs_bindings_from_cc

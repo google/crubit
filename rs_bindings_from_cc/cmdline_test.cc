@@ -45,8 +45,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
   EXPECT_EQ(cmdline.current_target().value(), "t1");
   EXPECT_THAT(cmdline.public_headers(), ElementsAre(HeaderName("h1")));
   EXPECT_THAT(cmdline.headers_to_targets(),
-              UnorderedElementsAre(Pair(HeaderName("h1"), BlazeLabel("t1")),
-                                   Pair(HeaderName("h2"), BlazeLabel("t1"))));
+              UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("t1")),
+                                   Pair(HeaderName("h2"), BazelLabel("t1"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersEmpty) {

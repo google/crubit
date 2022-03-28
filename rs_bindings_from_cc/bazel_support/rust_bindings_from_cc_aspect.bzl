@@ -8,7 +8,7 @@ projection. See <internal link> and <internal link> for
 more context.
 
 Disclaimer: This project is experimental, under heavy development, and should
-be used yet.
+not be used yet.
 """
 
 load(
@@ -27,7 +27,7 @@ load(
 load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVariantInfo")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
-# `textual_hdrs` attribute of the Blaze C++ rules, or using the `.inc` file extension. Therefore
+# `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
 # we are omitting ["inc"] from the list below.
 _hdr_extensions = ["h", "hh", "hpp", "ipp", "hxx", "h++", "inl", "tlh", "tli", "H", "tcc"]
 
@@ -89,7 +89,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # We can improve upon this solution if:
     # 1. we use a library for parsing command line flags that allows repeated flags.
     # 2. instead of json string, we use a struct that will be expanded to flags at execution time.
-    #    This requires changes to Blaze.
+    #    This requires changes to Bazel.
     targets_and_headers = depset(
         direct = [
             json.encode({

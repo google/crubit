@@ -18,7 +18,7 @@
 
 ABSL_FLAG(bool, do_nothing, false,
           "if set to true the tool will produce empty files "
-          "(useful for testing Blaze integration)");
+          "(useful for testing Bazel integration)");
 ABSL_FLAG(std::string, rs_out, "",
           "output path for the Rust source file with bindings");
 ABSL_FLAG(std::string, cc_out, "",
@@ -116,7 +116,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
             "non-empty strings");
       }
       const auto [it, inserted] = cmdline.headers_to_targets_.insert(
-          std::make_pair(HeaderName(header), BlazeLabel(target)));
+          std::make_pair(HeaderName(header), BazelLabel(target)));
       if (!inserted) {
         return absl::InvalidArgumentError(absl::Substitute(
             "The `--targets_and_headers` cmdline argument assigns "
@@ -129,7 +129,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
   CRUBIT_ASSIGN_OR_RETURN(cmdline.current_target_,
                           cmdline.FindHeader(cmdline.public_headers_[0]));
   for (const HeaderName& public_header : cmdline.public_headers_) {
-    CRUBIT_ASSIGN_OR_RETURN(BlazeLabel header_target,
+    CRUBIT_ASSIGN_OR_RETURN(BazelLabel header_target,
                             cmdline.FindHeader(public_header));
 
     if (cmdline.current_target_ != header_target) {
@@ -144,7 +144,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
   return cmdline;
 }
 
-absl::StatusOr<BlazeLabel> Cmdline::FindHeader(const HeaderName& header) const {
+absl::StatusOr<BazelLabel> Cmdline::FindHeader(const HeaderName& header) const {
   auto it = headers_to_targets_.find(header);
   if (it == headers_to_targets_.end()) {
     return absl::InvalidArgumentError(absl::Substitute(

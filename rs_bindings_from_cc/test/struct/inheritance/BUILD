@@ -1,0 +1,16 @@
+"""End-to-end test of inheritance."""
+
+load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+
+licenses(["notice"])
+
+cc_library(
+    name = "upcast",
+    hdrs = ["upcast.h"],
+)
+
+rust_test(
+    name = "upcast_test",
+    srcs = ["upcast_test.rs"],
+    cc_deps = [":upcast"],
+)

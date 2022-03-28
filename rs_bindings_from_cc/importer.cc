@@ -112,79 +112,6 @@ ItemId GenerateItemId(const clang::RawComment* comment) {
   return ItemId(reinterpret_cast<uintptr_t>(comment));
 }
 
-std::vector<BaseClass> GetUnambiguousPublicBases(
-    const clang::CXXRecordDecl& record_decl, const clang::ASTContext& ctx) {
-  // This function is unfortunate: the only way to correctly get information
-  // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
-  // e.g. correctly determining virtual base paths, etc.
-  //
-  // However, lookupInBases does not recurse into a class once it's found.
-  // So we need to call lookupInBases once per class, making this O(N^4).
-
-  llvm::SmallPtrSet<const clang::CXXRecordDecl*, 4> seen;
-  std::vector<BaseClass> bases;
-  clang::CXXBasePaths paths;
-  // the const cast is a common pattern, apparently, see e.g.
-  // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
-  paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&record_decl));
-
-  auto next_class = [&]() {
-    const clang::CXXRecordDecl* found = nullptr;
-
-    // Matches the first new class it encounters (and adds it to `seen`, so
-    // that future runs don't rediscover it.)
-    auto is_new_class = [&](const clang::CXXBaseSpecifier* base_specifier,
-                            clang::CXXBasePath&) {
-      const auto* record_decl = base_specifier->getType()->getAsCXXRecordDecl();
-      if (found) {
-        return record_decl == found;
-      }
-
-      if (record_decl && seen.insert(record_decl).second) {
-        found = record_decl;
-        return true;
-      }
-      return false;
-    };
-    return record_decl.lookupInBases(is_new_class, paths);
-  };
-
-  for (; next_class(); paths.clear()) {
-    for (const clang::CXXBasePath& path : paths) {
-      if (path.Access != clang::AS_public) {
-        continue;
-      }
-      const clang::CXXBaseSpecifier& base_specifier =
-          *path[path.size() - 1].Base;
-      const clang::QualType& base = base_specifier.getType();
-      if (paths.isAmbiguous(ctx.getCanonicalType(base))) {
-        continue;
-      }
-      const clang::CXXRecordDecl* base_record_decl =
-          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      llvm::Optional<int64_t> offset = {0};
-      for (const clang::CXXBasePathElement& base_path_element : path) {
-        if (base_path_element.Base->isVirtual()) {
-          offset.reset();
-          break;
-        }
-        *offset +=
-            {ctx.getASTRecordLayout(base_path_element.Class)
-                 .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
-                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
-                 .getQuantity()};
-      }
-      CRUBIT_CHECK((!offset.hasValue() || *offset >= 0) &&
-                   "Concrete base classes should have non-negative offsets.");
-      bases.push_back(
-          BaseClass{.base_record_id = GenerateItemId(base_record_decl),
-                    .offset = offset});
-      break;
-    }
-  }
-  return bases;
-}
-
 // Converts clang::CallingConv enum [1] into an equivalent Rust Abi [2, 3, 4].
 // [1]
 // https://github.com/llvm/llvm-project/blob/c6a3225bb03b6afc2b63fbf13db3c100406b32ce/clang/include/clang/Basic/Specifiers.h#L262-L283
@@ -684,7 +611,7 @@ std::optional<IR::Item> Importer::ImportFunction(
   return std::nullopt;
 }
 
-BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
+BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   clang::SourceManager& source_manager = ctx_.getSourceManager();
   auto source_location = decl->getLocation();
 
@@ -700,7 +627,7 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     llvm::Optional<llvm::StringRef> filename =
         source_manager.getNonBuiltinFilenameForID(id);
     if (!filename) {
-      return BlazeLabel("//:builtin");
+      return BazelLabel("//:builtin");
     }
     if (filename->startswith("./")) {
       filename = filename->substr(2);
@@ -712,7 +639,7 @@ BlazeLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     source_location = source_manager.getIncludeLoc(id);
   }
 
-  return BlazeLabel("//:virtual_clang_resource_dir_target");
+  return BazelLabel("//:virtual_clang_resource_dir_target");
 }
 
 bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
@@ -774,6 +701,7 @@ std::optional<IR::Item> Importer::ImportRecord(
   if (!record_name.has_value()) {
     return std::nullopt;
   }
+
   // Provisionally assume that we know this RecordDecl so that we'll be able
   // to import fields whose type contains the record itself.
   known_type_decls_.insert(record_decl);
@@ -798,7 +726,7 @@ std::optional<IR::Item> Importer::ImportRecord(
       .id = GenerateItemId(record_decl),
       .owning_target = GetOwningTarget(record_decl),
       .doc_comment = GetComment(record_decl),
-      .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl, ctx_),
+      .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = *std::move(fields),
       .size = layout.getSize().getQuantity(),
       .alignment = layout.getAlignment().getQuantity(),
@@ -1230,6 +1158,84 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
       return std::nullopt;
   }
+}
+
+std::vector<BaseClass> Importer::GetUnambiguousPublicBases(
+    const clang::CXXRecordDecl& record_decl) const {
+  // This function is unfortunate: the only way to correctly get information
+  // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
+  // e.g. correctly determining virtual base paths, etc.
+  //
+  // However, lookupInBases does not recurse into a class once it's found.
+  // So we need to call lookupInBases once per class, making this O(N^4).
+
+  llvm::SmallPtrSet<const clang::CXXRecordDecl*, 4> seen;
+  std::vector<BaseClass> bases;
+  clang::CXXBasePaths paths;
+  // the const cast is a common pattern, apparently, see e.g.
+  // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
+  paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&record_decl));
+
+  auto next_class = [&]() {
+    const clang::CXXRecordDecl* found = nullptr;
+
+    // Matches the first new class it encounters (and adds it to `seen`, so
+    // that future runs don't rediscover it.)
+    auto is_new_class = [&](const clang::CXXBaseSpecifier* base_specifier,
+                            clang::CXXBasePath&) {
+      const auto* record_decl = base_specifier->getType()->getAsCXXRecordDecl();
+      if (found) {
+        return record_decl == found;
+      }
+
+      if (record_decl && seen.insert(record_decl).second) {
+        found = record_decl;
+        return true;
+      }
+      return false;
+    };
+    return record_decl.lookupInBases(is_new_class, paths);
+  };
+
+  for (; next_class(); paths.clear()) {
+    for (const clang::CXXBasePath& path : paths) {
+      if (path.Access != clang::AS_public) {
+        continue;
+      }
+      const clang::CXXBaseSpecifier& base_specifier =
+          *path[path.size() - 1].Base;
+      const clang::QualType& base = base_specifier.getType();
+      if (paths.isAmbiguous(ctx_.getCanonicalType(base))) {
+        continue;
+      }
+
+      clang::CXXRecordDecl* base_record_decl =
+          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+      if (!ConvertTypeDecl(base_record_decl).status().ok()) {
+        continue;
+      }
+
+      llvm::Optional<int64_t> offset = {0};
+      for (const clang::CXXBasePathElement& base_path_element : path) {
+        if (base_path_element.Base->isVirtual()) {
+          offset.reset();
+          break;
+        }
+        *offset +=
+            {ctx_.getASTRecordLayout(base_path_element.Class)
+                 .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
+                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
+                 .getQuantity()};
+      }
+      CRUBIT_CHECK((!offset.hasValue() || *offset >= 0) &&
+                   "Concrete base classes should have non-negative offsets.");
+      bases.push_back(
+          BaseClass{.base_record_id = GenerateItemId(base_record_decl),
+                    .offset = offset});
+      break;
+    }
+  }
+  return bases;
 }
 
 }  // namespace rs_bindings_from_cc

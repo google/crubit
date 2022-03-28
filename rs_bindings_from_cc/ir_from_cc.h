@@ -36,11 +36,11 @@ namespace rs_bindings_from_cc {
 //
 absl::StatusOr<IR> IrFromCc(
     absl::string_view extra_source_code,
-    BlazeLabel current_target = BlazeLabel{"//test:testing_target"},
+    BazelLabel current_target = BazelLabel{"//test:testing_target"},
     absl::Span<const HeaderName> public_headers = {},
     absl::flat_hash_map<const HeaderName, const std::string>
         virtual_headers_contents = {},
-    absl::flat_hash_map<const HeaderName, const BlazeLabel> headers_to_targets =
+    absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets =
         {},
     absl::Span<const absl::string_view> args = {});
 
