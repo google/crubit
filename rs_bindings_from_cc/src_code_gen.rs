@@ -258,8 +258,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
     let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.rs_name));
 
-    // Find 1) the `func_name` and `impl_kind` of the API function to generate
-    // and 2) whether to `format_first_param_as_self` (`&self` or `&mut self`).
+    // Find the `func_name` and `impl_kind` of the API function to generate.
     enum TraitName {
         /// The constructor trait for !Unpin types. e.g. `CtorNew(quote! { ()
         /// })` is the default constructor.
@@ -282,7 +281,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         None,
         // For example, `impl SomeStruct { ... }` (`SomeStruct` based on
         // func.member_func_metadata.)
-        Struct,
+        Struct {
+            /// Whether to format the first parameter as "self" (e.g. `__this:
+            /// &mut T` -> `&mut self`)
+            format_first_param_as_self: bool,
+        },
         Trait {
             /// For example, `SomeStruct`.
             /// Note that `record_name` might *not* be from
@@ -296,29 +299,48 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             /// The generic params of trait `impl` (e.g. `<'b>`). These start
             /// empty and only later are mutated into the correct value.
             trait_generic_params: TokenStream,
+            /// Whether to format the first parameter as "self" (e.g. `__this:
+            /// &mut T` -> `&mut self`)
+            format_first_param_as_self: bool,
         },
     }
     impl ImplKind {
-        fn new_trait(trait_name: TraitName, record_name: Ident) -> Self {
+        fn new_trait(
+            trait_name: TraitName,
+            record_name: Ident,
+            format_first_param_as_self: bool,
+        ) -> Self {
             ImplKind::Trait {
                 trait_name,
                 record_name,
                 declare_lifetimes: false,
                 trait_generic_params: quote! {},
+                format_first_param_as_self,
             }
         }
-        fn new_generic_trait(trait_name: TraitName, record_name: Ident) -> Self {
+        fn new_generic_trait(
+            trait_name: TraitName,
+            record_name: Ident,
+            format_first_param_as_self: bool,
+        ) -> Self {
             ImplKind::Trait {
                 trait_name,
                 record_name,
                 declare_lifetimes: true,
                 trait_generic_params: quote! {},
+                format_first_param_as_self,
             }
+        }
+        fn format_first_param_as_self(&self) -> bool {
+            matches!(
+                self,
+                Self::Trait { format_first_param_as_self: true, .. }
+                    | Self::Struct { format_first_param_as_self: true, .. }
+            )
         }
     }
     let mut impl_kind: ImplKind;
     let func_name: syn::Ident;
-    let format_first_param_as_self: bool;
     match &func.name {
         UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
             if param_type_kinds.len() != 2 {
@@ -332,14 +354,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     RsTypeKind::Record(lhs_record) => {
                         let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
                         let rhs: TokenStream = rhs.format(ir, &lifetime_to_name)?;
-                        format_first_param_as_self = true;
                         func_name = make_rs_ident("eq");
                         // Not using `ImplKind::new_generic_trait`, because #rhs
                         // should be stripped of references + because `&'a self`
                         // needs to have its lifetime declared next to `fn`, not
                         // next to `impl`.
-                        impl_kind =
-                            ImplKind::new_trait(TraitName::Other(quote! {PartialEq<#rhs>}), lhs);
+                        impl_kind = ImplKind::new_trait(
+                            TraitName::Other(quote! {PartialEq<#rhs>}),
+                            lhs,
+                            /* format_first_param_as_self= */ true,
+                        );
                     }
                     _ => {
                         return make_unsupported_result(
@@ -362,18 +386,17 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             match maybe_record {
                 None => {
                     impl_kind = ImplKind::None;
-                    format_first_param_as_self = false;
                 }
                 Some(record) => {
-                    impl_kind = ImplKind::Struct;
-                    if func.is_instance_method() {
+                    let format_first_param_as_self = if func.is_instance_method() {
                         let first_param = param_type_kinds.first().ok_or_else(|| {
                             anyhow!("Missing `__this` parameter in an instance method: {:?}", func)
                         })?;
-                        format_first_param_as_self = first_param.is_ref_to(record)
+                        first_param.is_ref_to(record)
                     } else {
-                        format_first_param_as_self = false;
-                    }
+                        false
+                    };
+                    impl_kind = ImplKind::Struct { format_first_param_as_self };
                 }
             };
         }
@@ -388,9 +411,12 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             let record_name = maybe_record_name
                 .clone()
                 .ok_or_else(|| anyhow!("Destructors must be member functions."))?;
-            impl_kind = ImplKind::new_trait(TraitName::Other(quote! {Drop}), record_name);
+            impl_kind = ImplKind::new_trait(
+                TraitName::Other(quote! {Drop}),
+                record_name,
+                /* format_first_param_as_self= */ true,
+            );
             func_name = make_rs_ident("drop");
-            format_first_param_as_self = true;
         }
         UnqualifiedIdentifier::Constructor => {
             let member_func_metadata = func
@@ -418,7 +444,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
-                format_first_param_as_self = false;
 
                 match func.params.len() {
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
@@ -427,6 +452,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         impl_kind = ImplKind::new_generic_trait(
                             TraitName::CtorNew(param_type.clone()),
                             record_name,
+                            /* format_first_param_as_self= */ false,
                         );
                     }
                     _ => {
@@ -443,9 +469,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         impl_kind = ImplKind::new_trait(
                             TraitName::UnpinConstructor(quote! {Default}),
                             record_name,
+                            /* format_first_param_as_self= */ false,
                         );
                         func_name = make_rs_ident("default");
-                        format_first_param_as_self = false;
                     }
                     2 => {
                         if param_type_kinds[1].is_shared_ref_to(record) {
@@ -456,18 +482,18 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                                 impl_kind = ImplKind::new_trait(
                                     TraitName::UnpinConstructor(quote! {Clone}),
                                     record_name,
+                                    /* format_first_param_as_self= */ true,
                                 );
                                 func_name = make_rs_ident("clone");
-                                format_first_param_as_self = true;
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
                             let param_type = &param_types[1];
                             impl_kind = ImplKind::new_generic_trait(
                                 TraitName::UnpinConstructor(quote! {From< #param_type >}),
                                 record_name,
+                                /* format_first_param_as_self= */ false,
                             );
                             func_name = make_rs_ident("from");
-                            format_first_param_as_self = false;
                         } else {
                             return make_unsupported_result(
                                 "Not yet supported type of constructor parameter",
@@ -551,7 +577,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
 
         // Change `__this: &'a SomeStruct` into `&'a self` if needed.
-        if format_first_param_as_self {
+        if impl_kind.format_first_param_as_self() {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
             let self_decl =
@@ -608,7 +634,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         };
 
         let (pub_, unsafe_) = match impl_kind {
-            ImplKind::None | ImplKind::Struct => (
+            ImplKind::None | ImplKind::Struct { .. } => (
                 quote! { pub },
                 if is_unsafe {
                     quote! {unsafe}
@@ -652,7 +678,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             api_func = quote! { #doc_comment #api_func_def };
             function_id = FunctionId { self_type: None, function_path: func_name.into() };
         }
-        ImplKind::Struct => {
+        ImplKind::Struct { .. } => {
             let record_name =
                 maybe_record_name.ok_or_else(|| anyhow!("Struct methods must have records"))?;
             api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
