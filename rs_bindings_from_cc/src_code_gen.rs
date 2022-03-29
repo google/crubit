@@ -251,8 +251,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
         })
         .collect::<Result<Vec<_>>>()?;
-    let is_unsafe = param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }))
-        && func.name != UnqualifiedIdentifier::Destructor;
+    let has_pointer_params =
+        param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
 
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
@@ -277,12 +277,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
     }
     enum ImplKind {
         /// No `impl` needed
-        None,
+        None { is_unsafe: bool },
         // For example, `impl SomeStruct { ... }` (`SomeStruct` based on
         // func.member_func_metadata.)
         Struct {
             /// For example, `SomeStruct`.
             record_name: Ident,
+            is_unsafe: bool,
             /// Whether to format the first parameter as "self" (e.g. `__this:
             /// &mut T` -> `&mut self`)
             format_first_param_as_self: bool,
@@ -339,6 +340,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     | Self::Struct { format_first_param_as_self: true, .. }
             )
         }
+        /// Returns whether the function is defined as `unsafe fn ...`.
+        fn is_unsafe(&self) -> bool {
+            matches!(
+                self,
+                Self::None { is_unsafe: true, .. } | Self::Struct { is_unsafe: true, .. }
+            )
+        }
     }
     let mut impl_kind: ImplKind;
     let func_name: syn::Ident;
@@ -386,7 +394,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             func_name = make_rs_ident(&id.identifier);
             match maybe_record {
                 None => {
-                    impl_kind = ImplKind::None;
+                    impl_kind = ImplKind::None { is_unsafe: has_pointer_params };
                 }
                 Some(record) => {
                     let format_first_param_as_self = if func.is_instance_method() {
@@ -400,6 +408,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     impl_kind = ImplKind::Struct {
                         record_name: make_rs_ident(&record.rs_name),
                         format_first_param_as_self,
+                        is_unsafe: has_pointer_params,
                     };
                 }
             };
@@ -431,7 +440,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     .instance_method_metadata
                     .as_ref()
                     .ok_or_else(|| anyhow!("Constructors must be instance methods."))?;
-            if is_unsafe {
+            if has_pointer_params {
                 // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
                 // translating C++ constructors into static methods in Rust).
                 return make_unsupported_result(
@@ -625,27 +634,21 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
                 // Only need to wrap everything in an `unsafe { ... }` block if
                 // the *whole* api function is safe.
-                if !is_unsafe {
+                if !impl_kind.is_unsafe() {
                     body = quote! { unsafe { #body } };
                 }
                 body
             }
         };
 
-        let (pub_, unsafe_) = match impl_kind {
-            ImplKind::None | ImplKind::Struct { .. } => (
-                quote! { pub },
-                if is_unsafe {
-                    quote! {unsafe}
-                } else {
-                    quote! {}
-                },
-            ),
-            ImplKind::Trait { .. } => {
-                // Currently supported bindings have no unsafe trait functions.
-                assert!(!is_unsafe);
-                (quote! {}, quote! {})
-            }
+        let pub_ = match impl_kind {
+            ImplKind::None { .. } | ImplKind::Struct { .. } => quote! { pub },
+            ImplKind::Trait { .. } => quote! {},
+        };
+        let unsafe_ = if impl_kind.is_unsafe() {
+            quote! { unsafe }
+        } else {
+            quote! {}
         };
 
         let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
@@ -673,7 +676,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {
-        ImplKind::None => {
+        ImplKind::None { .. } => {
             api_func = quote! { #doc_comment #api_func_def };
             function_id = FunctionId { self_type: None, function_path: func_name.into() };
         }
