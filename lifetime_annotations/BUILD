@@ -2,12 +2,7 @@
 
 licenses(["notice"])
 
-package(default_visibility = [
-    "//devtools/cymbal/clang_tidy/runtime:__pkg__",
-    "//lifetime_analysis:__subpackages__",
-    "//rs_bindings_from_cc:__subpackages__",
-    "//third_party/crubit:__subpackages__",
-])
+package(default_visibility = ["/visibility:public"])
 
 cc_library(
     name = "lifetime",
