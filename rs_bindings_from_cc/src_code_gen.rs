@@ -256,7 +256,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
 
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
-    let maybe_record_name = maybe_record.map(|r| make_rs_ident(&r.rs_name));
 
     // Find the `func_name` and `impl_kind` of the API function to generate.
     enum TraitName {
@@ -282,6 +281,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         // For example, `impl SomeStruct { ... }` (`SomeStruct` based on
         // func.member_func_metadata.)
         Struct {
+            /// For example, `SomeStruct`.
+            record_name: Ident,
             /// Whether to format the first parameter as "self" (e.g. `__this:
             /// &mut T` -> `&mut self`)
             format_first_param_as_self: bool,
@@ -396,7 +397,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     } else {
                         false
                     };
-                    impl_kind = ImplKind::Struct { format_first_param_as_self };
+                    impl_kind = ImplKind::Struct {
+                        record_name: make_rs_ident(&record.rs_name),
+                        format_first_param_as_self,
+                    };
                 }
             };
         }
@@ -408,12 +412,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             if !should_implement_drop(record) {
                 return Ok(GeneratedFunc::None);
             }
-            let record_name = maybe_record_name
-                .clone()
-                .ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             impl_kind = ImplKind::new_trait(
                 TraitName::Other(quote! {Drop}),
-                record_name,
+                make_rs_ident(&record.rs_name),
                 /* format_first_param_as_self= */ true,
             );
             func_name = make_rs_ident("drop");
@@ -439,9 +440,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                 );
             }
 
-            let record_name = maybe_record_name
-                .clone()
-                .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
+            let record_name = make_rs_ident(&record.rs_name);
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
 
@@ -678,9 +677,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             api_func = quote! { #doc_comment #api_func_def };
             function_id = FunctionId { self_type: None, function_path: func_name.into() };
         }
-        ImplKind::Struct { .. } => {
-            let record_name =
-                maybe_record_name.ok_or_else(|| anyhow!("Struct methods must have records"))?;
+        ImplKind::Struct { record_name, .. } => {
             api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
