@@ -232,21 +232,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         Ok(GeneratedFunc::Unsupported(make_unsupported_fn(func, ir, msg)?))
     };
 
-    let mut features = BTreeSet::new();
-
-    let mangled_name = &func.mangled_name;
-    let thunk_ident = thunk_ident(func);
-    let doc_comment = generate_doc_comment(&func.doc_comment);
     let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
         func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
     );
-    let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
-        .and_then(|t| t.format_as_return_type_fragment(ir, &lifetime_to_name))
-        .with_context(|| format!("Failed to format return type for {:?}", func))?;
-
-    let param_idents =
-        func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-
     let param_type_kinds = func
         .params
         .iter()
@@ -497,6 +485,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
     }
 
+    let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
+        .and_then(|t| t.format_as_return_type_fragment(ir, &lifetime_to_name))
+        .with_context(|| format!("Failed to format return type for {:?}", func))?;
+    let param_idents =
+        func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
+    let thunk_ident = thunk_ident(func);
+
     let api_func_def = {
         // Clone params, return type, etc - we may need to mutate them in the
         // API func, but we want to retain the originals for the thunk.
@@ -648,6 +643,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
     };
 
+    let doc_comment = generate_doc_comment(&func.doc_comment);
+    let mut features = BTreeSet::new();
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {
@@ -693,6 +690,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
 
     let thunk = {
         let thunk_attr = if can_skip_cc_thunk(func) {
+            let mangled_name = &func.mangled_name;
             quote! {#[link_name = #mangled_name]}
         } else {
             quote! {}
