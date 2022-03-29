@@ -1235,10 +1235,10 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     for item in ir.items() {
         let generated = generate_item(item, ir, &overloaded_funcs)?;
         items.push(generated.item);
-        if (!generated.thunks.is_empty()) {
+        if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
         }
-        if (!generated.assertions.is_empty()) {
+        if !generated.assertions.is_empty() {
             assertions.push(generated.assertions);
         }
         features.extend(generated.features);
