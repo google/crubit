@@ -33,14 +33,26 @@
 namespace rs_bindings_from_cc {
 
 namespace internal {
+// Pointers and LValue references.
 inline constexpr absl::string_view kRustPtrMut = "*mut";
 inline constexpr absl::string_view kRustPtrConst = "*const";
 inline constexpr absl::string_view kRustRefMut = "&mut";
 inline constexpr absl::string_view kRustRefConst = "&";
+
+// RValue References
+inline constexpr absl::string_view kRustRvalueRefMut = "#RvalueReference mut";
+inline constexpr absl::string_view kRustRvalueRefConst =
+    "#RvalueReference const";
+
+// Function pointers.
 inline constexpr absl::string_view kRustFuncPtr = "#funcPtr";
+
+// C++ types therein.
 inline constexpr absl::string_view kCcPtr = "*";
 inline constexpr absl::string_view kCcLValueRef = "&";
+inline constexpr absl::string_view kCcRValueRef = "&&";
 inline constexpr absl::string_view kCcFuncValue = "#funcValue";
+
 inline constexpr int kJsonIndent = 2;
 }  // namespace internal
 
@@ -205,6 +217,15 @@ struct MappedType {
 
   static MappedType LValueReferenceTo(MappedType pointee_type,
                                       std::optional<LifetimeId> lifetime);
+
+  // Creates an Rvalue Reference mapped type.
+  //
+  // Note: we don't currently support rvalue references that do not have a
+  // lifetime. (Such a thing would require an "Rvalue Pointer" type -- probably
+  // spelled `Move<*mut T>` in Rust, although that doesn't work today due to
+  // the `P: DerefMut` bound in `Move<P>`.)
+  static MappedType RValueReferenceTo(MappedType pointee_type,
+                                      LifetimeId lifetime);
 
   static MappedType FuncPtr(absl::string_view cc_call_conv,
                             absl::string_view rs_abi,

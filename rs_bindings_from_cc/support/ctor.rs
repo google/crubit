@@ -213,6 +213,7 @@ pub fn copy<T: for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) -> Copy<P> 
 // DerefMut based move construction
 // ================================
 
+#[repr(transparent)]
 pub struct RvalueReference<'a, T>(Pin<&'a mut T>);
 
 impl<T> RvalueReference<'_, T> {
@@ -263,6 +264,7 @@ impl<Output: for<'a> CtorNew<RvalueReference<'a, Output>>, P: DerefMut<Target = 
 /// !Unpin to override the blanket Ctor impl.
 impl<P> !Unpin for Move<P> {}
 
+#[repr(transparent)]
 pub struct ConstRvalueReference<'a, T>(&'a T);
 
 impl<'a, T> ConstRvalueReference<'a, T> {

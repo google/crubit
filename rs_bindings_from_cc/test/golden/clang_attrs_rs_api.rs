@@ -36,7 +36,7 @@ impl !Unpin for HasCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::operator=':
@@ -44,7 +44,7 @@ impl !Unpin for HasCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported type: && without lifetime
 
 #[repr(C)]
 pub struct HasFieldWithCustomAlignment {
@@ -63,7 +63,7 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
@@ -71,7 +71,7 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported type: && without lifetime
 
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
@@ -97,7 +97,7 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
@@ -105,7 +105,7 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
 
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
@@ -125,7 +125,7 @@ impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
@@ -133,7 +133,7 @@ impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported type: && without lifetime
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
 

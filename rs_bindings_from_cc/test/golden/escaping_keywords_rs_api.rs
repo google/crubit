@@ -35,9 +35,16 @@ impl Default for r#type {
     }
 }
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
-// Error while generating bindings for item 'type::type':
-// Parameter #0 is not supported: Unsupported type 'struct type &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, r#type>> for r#type {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, r#type>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN4typeC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 // Error while generating bindings for item 'type::operator=':
@@ -45,7 +52,7 @@ impl Default for r#type {
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 // Error while generating bindings for item 'type::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct type &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 #[inline(always)]
 pub fn r#impl(r#match: i32) {
@@ -67,6 +74,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN4typeC1Ev<'a>(__this: &'a mut std::mem::MaybeUninit<r#type>);
+        pub(crate) fn __rust_thunk___ZN4typeC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<r#type>,
+            __param_0: ctor::RvalueReference<'b, r#type>,
+        );
         #[link_name = "_Z4impli"]
         pub(crate) fn __rust_thunk___Z4impli(r#match: i32);
     }

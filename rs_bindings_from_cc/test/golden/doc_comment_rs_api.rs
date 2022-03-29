@@ -28,9 +28,16 @@ pub struct DocCommentSlashes {
     pub i: i32,
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=13
-// Error while generating bindings for item 'DocCommentSlashes::DocCommentSlashes':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, DocCommentSlashes>> for DocCommentSlashes {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, DocCommentSlashes>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
@@ -38,7 +45,7 @@ pub struct DocCommentSlashes {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentSlashes &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
@@ -113,9 +120,16 @@ impl Default for DocCommentBang {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
-// Error while generating bindings for item 'DocCommentBang::DocCommentBang':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, DocCommentBang>> for DocCommentBang {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, DocCommentBang>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DocCommentBangC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'DocCommentBang::operator=':
@@ -123,7 +137,7 @@ impl Default for DocCommentBang {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'DocCommentBang::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct DocCommentBang &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// Multiline comment
 ///
@@ -146,9 +160,16 @@ impl Default for MultilineCommentTwoStars {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=47
-// Error while generating bindings for item 'MultilineCommentTwoStars::MultilineCommentTwoStars':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, MultilineCommentTwoStars>> for MultilineCommentTwoStars {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, MultilineCommentTwoStars>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
@@ -156,7 +177,7 @@ impl Default for MultilineCommentTwoStars {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineCommentTwoStars &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// Line comment
 ///
@@ -179,9 +200,16 @@ impl Default for LineComment {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=55
-// Error while generating bindings for item 'LineComment::LineComment':
-// Parameter #0 is not supported: Unsupported type 'struct LineComment &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, LineComment>> for LineComment {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, LineComment>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11LineCommentC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 // Error while generating bindings for item 'LineComment::operator=':
@@ -189,7 +217,7 @@ impl Default for LineComment {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 // Error while generating bindings for item 'LineComment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct LineComment &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// Multiline comment
 ///
@@ -212,9 +240,16 @@ impl Default for MultilineOneStar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=63
-// Error while generating bindings for item 'MultilineOneStar::MultilineOneStar':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, MultilineOneStar>> for MultilineOneStar {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, MultilineOneStar>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16MultilineOneStarC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 // Error while generating bindings for item 'MultilineOneStar::operator=':
@@ -222,7 +257,7 @@ impl Default for MultilineOneStar {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 // Error while generating bindings for item 'MultilineOneStar::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct MultilineOneStar &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// A function
 #[inline(always)]
@@ -239,6 +274,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
+            __param_0: ctor::RvalueReference<'b, DocCommentSlashes>,
+        );
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
@@ -262,14 +301,30 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<DocCommentBang>,
         );
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<DocCommentBang>,
+            __param_0: ctor::RvalueReference<'b, DocCommentBang>,
+        );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
+        );
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
+            __param_0: ctor::RvalueReference<'b, MultilineCommentTwoStars>,
         );
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<LineComment>,
         );
+        pub(crate) fn __rust_thunk___ZN11LineCommentC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<LineComment>,
+            __param_0: ctor::RvalueReference<'b, LineComment>,
+        );
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<MultilineOneStar>,
+        );
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<MultilineOneStar>,
+            __param_0: ctor::RvalueReference<'b, MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }

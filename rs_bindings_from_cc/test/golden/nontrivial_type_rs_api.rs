@@ -43,9 +43,18 @@ impl ctor::CtorNew<i32> for Nontrivial {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=17
-// Error while generating bindings for item 'Nontrivial::Nontrivial':
-// Parameter #0 is not supported: Unsupported type 'struct Nontrivial &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>> for Nontrivial {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: ctor::RvalueReference<'b, Nontrivial>) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 impl Drop for Nontrivial {
     #[inline(always)]
@@ -85,9 +94,18 @@ impl ctor::CtorNew<i32> for NontrivialInline {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=31
-// Error while generating bindings for item 'NontrivialInline::NontrivialInline':
-// Parameter #0 is not supported: Unsupported type 'struct NontrivialInline &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>> for NontrivialInline {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialInline>) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 impl Drop for NontrivialInline {
     #[inline(always)]
@@ -115,9 +133,18 @@ pub struct NontrivialMembers {
 
 impl !Unpin for NontrivialMembers {}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=44
-// Error while generating bindings for item 'NontrivialMembers::NontrivialMembers':
-// Parameter #0 is not supported: Unsupported type 'struct NontrivialMembers &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>> for NontrivialMembers {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialMembers>) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 impl Drop for NontrivialMembers {
     #[inline(always)]
@@ -161,6 +188,11 @@ mod detail {
             __this: &'a mut std::mem::MaybeUninit<Nontrivial>,
             field: i32,
         );
+        #[link_name = "_ZN10NontrivialC1EOS_"]
+        pub(crate) fn __rust_thunk___ZN10NontrivialC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<Nontrivial>,
+            __param_0: ctor::RvalueReference<'b, Nontrivial>,
+        );
         #[link_name = "_ZN10NontrivialD1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: *mut Nontrivial);
         #[link_name = "_ZN10Nontrivial14MemberFunctionEv"]
@@ -171,9 +203,17 @@ mod detail {
             __this: &'a mut std::mem::MaybeUninit<NontrivialInline>,
             field: i32,
         );
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<NontrivialInline>,
+            __param_0: ctor::RvalueReference<'b, NontrivialInline>,
+        );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: *mut NontrivialInline);
         pub(crate) fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
             __this: std::pin::Pin<&'a mut NontrivialInline>,
+        );
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<NontrivialMembers>,
+            __param_0: ctor::RvalueReference<'b, NontrivialMembers>,
         );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(__this: *mut NontrivialMembers);
         #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]

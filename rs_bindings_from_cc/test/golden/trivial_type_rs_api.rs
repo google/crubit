@@ -37,9 +37,16 @@ impl Default for Trivial {
     }
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
-// Error while generating bindings for item 'Trivial::Trivial':
-// Parameter #0 is not supported: Unsupported type 'struct Trivial &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, Trivial>> for Trivial {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, Trivial>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN7TrivialC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'Trivial::operator=':
@@ -47,7 +54,7 @@ impl Default for Trivial {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=12
 // Error while generating bindings for item 'Trivial::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Trivial &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// Defaulted special member functions are trivial on a struct with only trivial
 /// members.
@@ -72,13 +79,20 @@ impl Default for TrivialWithDefaulted {
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=23
-// Error while generating bindings for item 'TrivialWithDefaulted::TrivialWithDefaulted':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, TrivialWithDefaulted>> for TrivialWithDefaulted {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, TrivialWithDefaulted>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=24
 // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialWithDefaulted &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// This struct is trivial, and therefore trivially relocatable etc., but still
 /// not safe to pass by reference as it is not final.
@@ -106,9 +120,18 @@ impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
     }
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
-// Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNonfinal {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: ctor::RvalueReference<'b, TrivialNonfinal>) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
@@ -116,7 +139,7 @@ impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
 
 // rs_bindings_from_cc/test/golden/trivial_type.h;l=33
 // Error while generating bindings for item 'TrivialNonfinal::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct TrivialNonfinal &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 #[inline(always)]
 pub fn TakesByValue(trivial: Trivial) {
@@ -167,12 +190,24 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN7TrivialC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<Trivial>,
         );
+        pub(crate) fn __rust_thunk___ZN7TrivialC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<Trivial>,
+            __param_0: ctor::RvalueReference<'b, Trivial>,
+        );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,
+        );
+        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,
+            __param_0: ctor::RvalueReference<'b, TrivialWithDefaulted>,
         );
         pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_<'a, 'b>(
             __this: &'a mut std::mem::MaybeUninit<TrivialNonfinal>,
             __param_0: &'b TrivialNonfinal,
+        );
+        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<TrivialNonfinal>,
+            __param_0: ctor::RvalueReference<'b, TrivialNonfinal>,
         );
         #[link_name = "_Z12TakesByValue7Trivial"]
         pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: Trivial);

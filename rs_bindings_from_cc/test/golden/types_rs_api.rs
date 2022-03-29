@@ -36,9 +36,16 @@ impl Default for SomeStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=13
-// Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, SomeStruct>> for SomeStruct {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, SomeStruct>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
@@ -46,7 +53,7 @@ impl Default for SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/types.h;l=15
 // Error while generating bindings for item 'SomeUnion':
@@ -108,9 +115,16 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ref_field: *const SomeStruct,
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=17
-// Error while generating bindings for item 'FieldTypeTestStruct::FieldTypeTestStruct':
-// Parameter #0 is not supported: Unsupported type 'struct FieldTypeTestStruct &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestStruct {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 #[inline(always)]
 pub fn VoidReturningFunction() {
@@ -125,6 +139,14 @@ mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<SomeStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<SomeStruct>,
+            __param_0: ctor::RvalueReference<'b, SomeStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<FieldTypeTestStruct>,
+            __param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }

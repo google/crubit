@@ -39,7 +39,7 @@ impl !Unpin for Base0 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
-// Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::operator=':
@@ -47,7 +47,7 @@ impl !Unpin for Base0 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::operator=':
-// Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported type: && without lifetime
 
 #[repr(C)]
 pub struct Base1 {
@@ -67,7 +67,7 @@ impl !Unpin for Base1 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
-// Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::operator=':
@@ -75,7 +75,7 @@ impl !Unpin for Base1 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::operator=':
-// Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported type: && without lifetime
 
 #[repr(C)]
 pub struct Base2 {
@@ -94,7 +94,7 @@ impl !Unpin for Base2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
-// Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::operator=':
@@ -102,7 +102,7 @@ impl !Unpin for Base2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::operator=':
-// Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported type: && without lifetime
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
@@ -136,7 +136,7 @@ impl<'a> From<&'a Derived> for &'a Base2 {
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::Derived':
-// Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::operator=':
@@ -144,7 +144,7 @@ impl<'a> From<&'a Derived> for &'a Base2 {
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported clang::Type class 'RValueReference'
+// Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported type: && without lifetime
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 

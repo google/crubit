@@ -916,7 +916,8 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   if (auto maybe_mapped_type = MapKnownCcTypeToRsType(type_string);
       maybe_mapped_type.has_value()) {
     return MappedType::Simple(std::string(*maybe_mapped_type), type_string);
-  } else if (type->isPointerType() || type->isLValueReferenceType()) {
+  } else if (type->isPointerType() || type->isLValueReferenceType() ||
+             type->isRValueReferenceType()) {
     clang::QualType pointee_type = type->getPointeeType();
     std::optional<LifetimeId> lifetime;
     if (lifetimes.has_value()) {
@@ -967,10 +968,17 @@ absl::StatusOr<MappedType> Importer::ConvertType(
     if (type->isPointerType()) {
       return MappedType::PointerTo(std::move(mapped_pointee_type), lifetime,
                                    nullable);
-    } else {
-      CRUBIT_CHECK(type->isLValueReferenceType());
+    } else if (type->isLValueReferenceType()) {
       return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
                                            lifetime);
+    } else {
+      CRUBIT_CHECK(type->isRValueReferenceType());
+      if (!lifetime.has_value()) {
+        return absl::UnimplementedError(
+            "Unsupported type: && without lifetime");
+      }
+      return MappedType::RValueReferenceTo(std::move(mapped_pointee_type),
+                                           *lifetime);
     }
   } else if (const auto* builtin_type =
                  // Use getAsAdjusted instead of getAs so we don't desugar

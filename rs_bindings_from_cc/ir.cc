@@ -69,18 +69,28 @@ llvm::json::Value CcType::ToJson() const {
   };
 }
 
-static MappedType PointerOrReferenceTo(MappedType pointee_type,
-                                       absl::string_view cc_ptr_name,
-                                       std::optional<LifetimeId> lifetime,
-                                       bool nullable) {
+namespace {
+enum class ValueCategory { kLvalue, kRvalue };
+
+MappedType PointerOrReferenceTo(MappedType pointee_type,
+                                absl::string_view cc_ptr_name,
+                                ValueCategory value_category,
+                                std::optional<LifetimeId> lifetime,
+                                bool nullable) {
   bool has_lifetime = lifetime.has_value();
   absl::string_view rs_name;
-  if (has_lifetime) {
-    rs_name = pointee_type.cc_type.is_const ? internal::kRustRefConst
-                                            : internal::kRustRefMut;
+  if (value_category == ValueCategory::kLvalue) {
+    if (has_lifetime) {
+      rs_name = pointee_type.cc_type.is_const ? internal::kRustRefConst
+                                              : internal::kRustRefMut;
+    } else {
+      rs_name = pointee_type.cc_type.is_const ? internal::kRustPtrConst
+                                              : internal::kRustPtrMut;
+    }
   } else {
-    rs_name = pointee_type.cc_type.is_const ? internal::kRustPtrConst
-                                            : internal::kRustPtrMut;
+    CRUBIT_CHECK(has_lifetime);
+    rs_name = pointee_type.cc_type.is_const ? internal::kRustRvalueRefConst
+                                            : internal::kRustRvalueRefMut;
   }
   auto pointer_type =
       MappedType::Simple(std::string(rs_name), std::string(cc_ptr_name));
@@ -95,18 +105,27 @@ static MappedType PointerOrReferenceTo(MappedType pointee_type,
   pointer_type.cc_type.type_args.push_back(std::move(pointee_type.cc_type));
   return pointer_type;
 }
+}  // namespace
 
 MappedType MappedType::PointerTo(MappedType pointee_type,
                                  std::optional<LifetimeId> lifetime,
                                  bool nullable) {
   return PointerOrReferenceTo(std::move(pointee_type), internal::kCcPtr,
-                              lifetime, nullable);
+                              ValueCategory::kLvalue, lifetime, nullable);
 }
 
 MappedType MappedType::LValueReferenceTo(MappedType pointee_type,
                                          std::optional<LifetimeId> lifetime) {
   return PointerOrReferenceTo(std::move(pointee_type), internal::kCcLValueRef,
-                              lifetime, /*nullable=*/false);
+                              ValueCategory::kLvalue, lifetime,
+                              /*nullable=*/false);
+}
+
+MappedType MappedType::RValueReferenceTo(MappedType pointee_type,
+                                         LifetimeId lifetime) {
+  return PointerOrReferenceTo(std::move(pointee_type), internal::kCcRValueRef,
+                              ValueCategory::kRvalue, lifetime,
+                              /*nullable=*/false);
 }
 
 MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,

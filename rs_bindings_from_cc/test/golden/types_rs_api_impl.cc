@@ -11,27 +11,47 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN10SomeStructC1Ev(class SomeStruct* __this) {
-  rs_api_impl_support ::construct_at(__this);
+  rs_api_impl_support ::construct_at(std ::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN10SomeStructC1ERKS_(
     class SomeStruct* __this, const class SomeStruct& __param_0) {
-  rs_api_impl_support ::construct_at(__this, __param_0);
+  rs_api_impl_support ::construct_at(
+      std ::forward<decltype(__this)>(__this),
+      std ::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
+    class SomeStruct* __this, class SomeStruct&& __param_0) {
+  rs_api_impl_support ::construct_at(
+      std ::forward<decltype(__this)>(__this),
+      std ::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct* __this) {
-  std ::destroy_at(__this);
+  std ::destroy_at(std ::forward<decltype(__this)>(__this));
 }
 extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSERKS_(
     class SomeStruct* __this, const class SomeStruct& __param_0) {
-  return __this->operator=(__param_0);
+  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSEOS_(
+    class SomeStruct* __this, class SomeStruct&& __param_0) {
+  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
     class FieldTypeTestStruct* __this,
     const class FieldTypeTestStruct& __param_0) {
-  rs_api_impl_support ::construct_at(__this, __param_0);
+  rs_api_impl_support ::construct_at(
+      std ::forward<decltype(__this)>(__this),
+      std ::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
+    class FieldTypeTestStruct* __this, class FieldTypeTestStruct&& __param_0) {
+  rs_api_impl_support ::construct_at(
+      std ::forward<decltype(__this)>(__this),
+      std ::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
     class FieldTypeTestStruct* __this) {
-  std ::destroy_at(__this);
+  std ::destroy_at(std ::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();

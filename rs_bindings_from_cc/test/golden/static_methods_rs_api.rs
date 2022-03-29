@@ -35,9 +35,16 @@ impl Default for SomeClass {
     }
 }
 
-// rs_bindings_from_cc/test/golden/static_methods.h;l=10
-// Error while generating bindings for item 'SomeClass::SomeClass':
-// Parameter #0 is not supported: Unsupported type 'class SomeClass &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, SomeClass>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=10
 // Error while generating bindings for item 'SomeClass::operator=':
@@ -45,7 +52,7 @@ impl Default for SomeClass {
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=10
 // Error while generating bindings for item 'SomeClass::operator=':
-// Parameter #0 is not supported: Unsupported type 'class SomeClass &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 impl SomeClass {
     /// Example of a factory method.
@@ -79,6 +86,10 @@ mod detail {
     extern "C" {
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<SomeClass>,
+        );
+        pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<SomeClass>,
+            __param_0: ctor::RvalueReference<'b, SomeClass>,
         );
         #[link_name = "_ZN9SomeClass21static_factory_methodEi"]
         pub(crate) fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(

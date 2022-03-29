@@ -35,9 +35,16 @@ impl Default for FirstStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
-// Error while generating bindings for item 'FirstStruct::FirstStruct':
-// Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, FirstStruct>> for FirstStruct {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, FirstStruct>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
@@ -45,7 +52,7 @@ impl Default for FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct FirstStruct &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 #[inline(always)]
 pub fn first_func() -> i32 {
@@ -69,9 +76,16 @@ impl Default for SecondStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=16
-// Error while generating bindings for item 'SecondStruct::SecondStruct':
-// Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, SecondStruct>> for SecondStruct {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, SecondStruct>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
@@ -79,7 +93,7 @@ impl Default for SecondStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct SecondStruct &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 #[inline(always)]
 pub fn second_func() -> i32 {
@@ -95,9 +109,17 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<FirstStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<FirstStruct>,
+            __param_0: ctor::RvalueReference<'b, FirstStruct>,
+        );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<SecondStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<SecondStruct>,
+            __param_0: ctor::RvalueReference<'b, SecondStruct>,
         );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }

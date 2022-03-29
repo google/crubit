@@ -40,9 +40,16 @@ impl Default for UserOfImportedType {
     }
 }
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
-// Error while generating bindings for item 'UserOfImportedType::UserOfImportedType':
-// Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, UserOfImportedType>> for UserOfImportedType {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, UserOfImportedType>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::operator=':
@@ -50,7 +57,7 @@ impl Default for UserOfImportedType {
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct UserOfImportedType &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
 
@@ -64,6 +71,10 @@ mod detail {
         ) -> trivial_type_cc::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<UserOfImportedType>,
+        );
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<UserOfImportedType>,
+            __param_0: ctor::RvalueReference<'b, UserOfImportedType>,
         );
     }
 }

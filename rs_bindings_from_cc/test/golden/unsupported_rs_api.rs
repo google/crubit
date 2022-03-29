@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:unsupported_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
@@ -25,9 +25,18 @@ pub struct NontrivialCustomType {
 
 impl !Unpin for NontrivialCustomType {}
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=11
-// Error while generating bindings for item 'NontrivialCustomType::NontrivialCustomType':
-// Parameter #0 is not supported: Unsupported type 'struct NontrivialCustomType &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>> for NontrivialCustomType {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialCustomType>) -> Self::CtorType {
+        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
+            crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                std::pin::Pin::into_inner_unchecked(dest),
+                __param_0,
+            );
+        })
+    }
+}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=16
 // Error while generating bindings for item 'UnsupportedParamType':
@@ -69,9 +78,16 @@ impl Default for ContainingStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=30
-// Error while generating bindings for item 'ContainingStruct::ContainingStruct':
-// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, ContainingStruct>> for ContainingStruct {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, ContainingStruct>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::operator=':
@@ -79,7 +95,7 @@ impl Default for ContainingStruct {
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct ContainingStruct &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=31
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
@@ -99,8 +115,17 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
+        pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<NontrivialCustomType>,
+            __param_0: ctor::RvalueReference<'b, NontrivialCustomType>,
+        );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<ContainingStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<ContainingStruct>,
+            __param_0: ctor::RvalueReference<'b, ContainingStruct>,
         );
     }
 }

@@ -460,7 +460,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         format_first_param_as_self = false;
                     }
                     2 => {
-                        // TODO(lukasza): Do something smart with move constructor.
                         if param_type_kinds[1].is_shared_ref_to(record) {
                             // Copy constructor
                             if should_derive_clone(record) {
@@ -576,6 +575,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         // here.
         let func_body = match &impl_kind {
             ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } => {
+                // TODO(b/226447239): check for copy here and instead use copies in that case?
                 quote! {
                     ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| {
                         unsafe {
@@ -1339,13 +1339,35 @@ impl Mutability {
 // references (e.g. &'ir Record`) instead of ItemIds.
 #[derive(Debug)]
 enum RsTypeKind<'ir> {
-    Pointer { pointee: Box<RsTypeKind<'ir>>, mutability: Mutability },
-    Reference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime_id: LifetimeId },
-    FuncPtr { abi: &'ir str, return_type: Box<RsTypeKind<'ir>>, param_types: Vec<RsTypeKind<'ir>> },
+    Pointer {
+        pointee: Box<RsTypeKind<'ir>>,
+        mutability: Mutability,
+    },
+    Reference {
+        referent: Box<RsTypeKind<'ir>>,
+        mutability: Mutability,
+        lifetime_id: LifetimeId,
+    },
+    RvalueReference {
+        referent: Box<RsTypeKind<'ir>>,
+        mutability: Mutability,
+        lifetime_id: LifetimeId,
+    },
+    FuncPtr {
+        abi: &'ir str,
+        return_type: Box<RsTypeKind<'ir>>,
+        param_types: Vec<RsTypeKind<'ir>>,
+    },
     Record(&'ir Record),
-    TypeAlias { type_alias: &'ir TypeAlias, underlying_type: Box<RsTypeKind<'ir>> },
+    TypeAlias {
+        type_alias: &'ir TypeAlias,
+        underlying_type: Box<RsTypeKind<'ir>>,
+    },
     Unit,
-    Other { name: &'ir str, type_args: Vec<RsTypeKind<'ir>> },
+    Other {
+        name: &'ir str,
+        type_args: Vec<RsTypeKind<'ir>>,
+    },
 }
 
 impl<'ir> RsTypeKind<'ir> {
@@ -1409,6 +1431,16 @@ impl<'ir> RsTypeKind<'ir> {
                     mutability: Mutability::Const,
                     lifetime_id: get_lifetime()?,
                 },
+                "#RvalueReference mut" => RsTypeKind::RvalueReference {
+                    referent: get_pointee()?,
+                    mutability: Mutability::Mut,
+                    lifetime_id: get_lifetime()?,
+                },
+                "#RvalueReference const" => RsTypeKind::RvalueReference {
+                    referent: get_pointee()?,
+                    mutability: Mutability::Const,
+                    lifetime_id: get_lifetime()?,
+                },
                 name => {
                     let mut type_args = get_type_args()?;
                     match name.strip_prefix("#funcPtr ") {
@@ -1461,6 +1493,16 @@ impl<'ir> RsTypeKind<'ir> {
                     quote! {std::pin::Pin< #reference >}
                 } else {
                     reference
+                }
+            }
+            RsTypeKind::RvalueReference { referent, mutability, lifetime_id } => {
+                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
+                let nested_type = referent.format(ir, lifetime_to_name)?;
+                // TODO(b/200067242): Add a `use ctor::RvalueReference` (etc.) to the crate.
+                if mutability == &Mutability::Mut {
+                    quote! {ctor::RvalueReference<#lifetime, #nested_type>}
+                } else {
+                    quote! {ctor::ConstRvalueReference<#lifetime, #nested_type>}
                 }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
@@ -1607,6 +1649,7 @@ impl<'ir> RsTypeKind<'ir> {
             RsTypeKind::FuncPtr { .. } => true,
             RsTypeKind::Reference { mutability: Mutability::Const, .. } => true,
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
+            RsTypeKind::RvalueReference { .. } => false,
             RsTypeKind::Record(record) => should_derive_copy(record),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Other { type_args, .. } => {
@@ -1689,6 +1732,7 @@ impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
                     RsTypeKind::Unit | RsTypeKind::Record(_) => (),
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
                     RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
+                    RsTypeKind::RvalueReference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::TypeAlias { underlying_type: t, .. } => self.todo.push(t),
                     RsTypeKind::FuncPtr { return_type, param_types, .. } => {
                         self.todo.push(return_type);
@@ -1769,6 +1813,13 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 }
                 let nested_type = format_cc_type(&ty.type_args[0], ir)?;
                 Ok(quote! {#nested_type &})
+            }
+            "&&" => {
+                if ty.type_args.len() != 1 {
+                    bail!("Invalid rvalue reference type (need exactly 1 type argument): {:?}", ty);
+                }
+                let nested_type = format_cc_type(&ty.type_args[0], ir)?;
+                Ok(quote! {#nested_type &&})
             }
             cc_type_name => match cc_type_name.strip_prefix("#funcValue ") {
                 None => {
@@ -1977,8 +2028,17 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
                 }
             },
         };
+
+        let arg_expressions: Vec<_> = param_idents
+            .iter()
+            .map(
+                // Forward references along. (If the parameter is a value, not a reference, this
+                // will create an lvalue reference, and still do the right thing.)
+                |ident| quote! {std::forward<decltype(#ident)>(#ident)},
+            )
+            .collect();
         let (implementation_function, arg_expressions) = if !needs_this_deref {
-            (implementation_function, param_idents.clone())
+            (implementation_function, arg_expressions.clone())
         } else {
             let this_param = func
                 .params
@@ -1987,7 +2047,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             let this_arg = format_cc_ident(&this_param.identifier.identifier);
             (
                 quote! { #this_arg -> #implementation_function},
-                param_idents.iter().skip(1).cloned().collect_vec(),
+                arg_expressions.iter().skip(1).cloned().collect_vec(),
             )
         };
 
@@ -2138,7 +2198,7 @@ mod tests {
             generate_rs_api_impl(&ir)?,
             quote! {
                 extern "C" int __rust_thunk___Z3Addii(int a, int b) {
-                    return Add(a, b);
+                    return Add(std::forward<decltype(a)>(a), std::forward<decltype(b)>(b));
                 }
             }
         );
@@ -2180,7 +2240,7 @@ mod tests {
             generate_rs_api_impl(&ir)?,
             quote! {
                 extern "C" class ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(class ParamStruct param) {
-                    return DoSomething(param);
+                    return DoSomething(std::forward<decltype(param)>(param));
                 }
             }
         );
@@ -2231,7 +2291,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct * __this) {
-                    std :: destroy_at (__this) ;
+                    std :: destroy_at (std::forward<decltype(__this)>(__this)) ;
                 }
             }
         );
@@ -2254,7 +2314,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___Z3fooR1S(class S& s) {
-                    foo(s);
+                    foo(std::forward<decltype(s)>(s));
                 }
             }
         );
@@ -2269,7 +2329,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___Z3fooRK1S(const class S& s) {
-                    foo(s);
+                    foo(std::forward<decltype(s)>(s));
                 }
             }
         );
@@ -2284,7 +2344,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___Z3fooj(unsigned int i) {
-                    foo(i);
+                    foo(std::forward<decltype(i)>(i));
                 }
             }
         );
@@ -2323,7 +2383,7 @@ mod tests {
             quote! {
                 extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
                         const class SomeStruct* __this, int arg) {
-                    return __this->some_func(arg);
+                    return __this->some_func(std::forward<decltype(arg)>(arg));
                 }
             }
         );
@@ -2427,7 +2487,7 @@ mod tests {
             generate_rs_api_impl(&ir)?,
             quote! {
                 extern "C" int* __rust_thunk___Z5DerefPKPi(int* const * p) {
-                    return Deref(p);
+                    return Deref(std::forward<decltype(p)>(p));
                 }
             }
         );
@@ -2467,7 +2527,7 @@ mod tests {
         assert_cc_matches!(
             generate_rs_api_impl(&ir)?,
             quote! {
-                extern "C" void __rust_thunk___Z1fPKc(char const * str){ f(str) ; }
+                extern "C" void __rust_thunk___Z1fPKc(char const * str){ f(std::forward<decltype(str)>(str)) ; }
             }
         );
         Ok(())
@@ -3385,7 +3445,7 @@ mod tests {
             quote! {
                 extern "C" float __rust_thunk___Z31f_vectorcall_calling_conventionff(
                     float p1, float p2) {
-                        return f_vectorcall_calling_convention (p1 , p2);
+                        return f_vectorcall_calling_convention (std::forward<decltype(p1)>(p1), std::forward<decltype(p2)>(p2));
                 }
             }
         );
@@ -3542,7 +3602,7 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
                         class DefaultedConstructor* __this) {
-                    rs_api_impl_support::construct_at (__this) ;
+                    rs_api_impl_support::construct_at (std::forward<decltype(__this)>(__this)) ;
                 }
             }
         );
@@ -3717,7 +3777,7 @@ mod tests {
             quote! {
                 extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
                         const class SomeStruct* __this, const class SomeStruct& other) {
-                    return __this->operator==(other);
+                    return __this->operator==(std::forward<decltype(other)>(other));
                 }
             }
         );
@@ -3938,7 +3998,7 @@ mod tests {
         assert_cc_matches!(
             generate_rs_api_impl(&ir)?,
             quote! {
-                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t){ f (t) ; }
+                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t){ f (std::forward<decltype(t)>(t)) ; }
             }
         );
         Ok(())

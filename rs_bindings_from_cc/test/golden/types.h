@@ -76,6 +76,9 @@ struct FieldTypeTestStruct final {
   const SomeStruct* const_struct_ptr_field;
   SomeStruct& struct_ref_field;
   const SomeStruct& const_struct_ref_field;
+  // TODO(b/226580208): Uncomment when these don't cause struct import to fail.
+  // SomeStruct&& struct_rvalue_ref_field;
+  // const SomeStruct&& const_struct_rvalue_ref_field;
 };
 
 inline void VoidReturningFunction() {}

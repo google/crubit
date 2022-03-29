@@ -45,9 +45,16 @@ impl Default for Foo {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=17
-// Error while generating bindings for item 'Foo::Foo':
-// Parameter #0 is not supported: Unsupported type 'struct Foo &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, Foo>> for Foo {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, Foo>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::operator=':
@@ -55,7 +62,7 @@ impl Default for Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Foo &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 // b
 
@@ -87,9 +94,16 @@ impl Default for Bar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=43
-// Error while generating bindings for item 'Bar::Bar':
-// Parameter #0 is not supported: Unsupported type 'struct Bar &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, Bar>> for Bar {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, Bar>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'Bar::operator=':
@@ -97,7 +111,7 @@ impl Default for Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=43
 // Error while generating bindings for item 'Bar::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Bar &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 /// d
 #[derive(Clone, Copy)]
@@ -117,9 +131,16 @@ impl Default for HasNoComments {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=49
-// Error while generating bindings for item 'HasNoComments::HasNoComments':
-// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&': Unsupported clang::Type class 'RValueReference'
+impl<'b> From<ctor::RvalueReference<'b, HasNoComments>> for HasNoComments {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, HasNoComments>) -> Self {
+        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/comment.h;l=49
 // Error while generating bindings for item 'HasNoComments::operator=':
@@ -127,7 +148,7 @@ impl Default for HasNoComments {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=49
 // Error while generating bindings for item 'HasNoComments::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasNoComments &&': Unsupported clang::Type class 'RValueReference'
+// Bindings for this kind of operator are not supported
 
 // e
 
@@ -138,10 +159,22 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN3FooC1Ev<'a>(__this: &'a mut std::mem::MaybeUninit<Foo>);
+        pub(crate) fn __rust_thunk___ZN3FooC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<Foo>,
+            __param_0: ctor::RvalueReference<'b, Foo>,
+        );
         pub(crate) fn __rust_thunk___Z3foov();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(__this: &'a mut std::mem::MaybeUninit<Bar>);
+        pub(crate) fn __rust_thunk___ZN3BarC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<Bar>,
+            __param_0: ctor::RvalueReference<'b, Bar>,
+        );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
             __this: &'a mut std::mem::MaybeUninit<HasNoComments>,
+        );
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1EOS_<'a, 'b>(
+            __this: &'a mut std::mem::MaybeUninit<HasNoComments>,
+            __param_0: ctor::RvalueReference<'b, HasNoComments>,
         );
     }
 }

@@ -11,18 +11,20 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN8Derived2C1Ev(class Derived2* __this) {
-  rs_api_impl_support ::construct_at(__this);
+  rs_api_impl_support ::construct_at(std ::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN8Derived2C1ERKS_(
     class Derived2* __this, const class Derived2& __param_0) {
-  rs_api_impl_support ::construct_at(__this, __param_0);
+  rs_api_impl_support ::construct_at(
+      std ::forward<decltype(__this)>(__this),
+      std ::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN8Derived2D1Ev(class Derived2* __this) {
-  std ::destroy_at(__this);
+  std ::destroy_at(std ::forward<decltype(__this)>(__this));
 }
 extern "C" class Derived2& __rust_thunk___ZN8Derived2aSERKS_(
     class Derived2* __this, const class Derived2& __param_0) {
-  return __this->operator=(__param_0);
+  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
 }
 
 static_assert(sizeof(class Derived2) == 16);
