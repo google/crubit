@@ -1085,6 +1085,95 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #text })
 }
 
+#[derive(Clone, Debug, Default)]
+struct GeneratedItem {
+    item: TokenStream,
+    thunks: TokenStream,
+    assertions: TokenStream,
+    features: BTreeSet<Ident>,
+    has_record: bool,
+}
+
+fn generate_item(
+    item: &Item,
+    ir: &IR,
+    overloaded_funcs: &HashSet<FunctionId>,
+) -> Result<GeneratedItem> {
+    let generated_item = match item {
+        Item::Func(func) => match generate_func(func, ir)? {
+            GeneratedFunc::None => GeneratedItem { ..Default::default() },
+            GeneratedFunc::Unsupported(unsupported) => {
+                GeneratedItem { item: generate_unsupported(&unsupported)?, ..Default::default() }
+            }
+            GeneratedFunc::Some { api_func, thunk, function_id } => {
+                if overloaded_funcs.contains(&function_id) {
+                    GeneratedItem {
+                        item: generate_unsupported(&make_unsupported_fn(
+                            func,
+                            ir,
+                            "Cannot generate bindings for overloaded function",
+                        )?)?,
+                        ..Default::default()
+                    }
+                } else {
+                    GeneratedItem {
+                        item: api_func.tokens,
+                        thunks: thunk.tokens,
+                        features: api_func.features.union(&thunk.features).cloned().collect(),
+                        ..Default::default()
+                    }
+                }
+            }
+        },
+        Item::Record(record) => {
+            if !ir.is_current_target(&record.owning_target)
+                && !ir.is_stdlib_target(&record.owning_target)
+            {
+                GeneratedItem { ..Default::default() }
+            } else {
+                let (snippet, assertions_snippet) = generate_record(record, ir)?;
+                GeneratedItem {
+                    item: snippet.tokens,
+                    assertions: assertions_snippet.tokens,
+                    features: snippet
+                        .features
+                        .union(&assertions_snippet.features)
+                        .cloned()
+                        .collect(),
+                    has_record: true,
+                    ..Default::default()
+                }
+            }
+        }
+        Item::Enum(enum_) => {
+            if !ir.is_current_target(&enum_.owning_target)
+                && !ir.is_stdlib_target(&enum_.owning_target)
+            {
+                GeneratedItem { ..Default::default() }
+            } else {
+                GeneratedItem { item: generate_enum(enum_, ir)?, ..Default::default() }
+            }
+        }
+        Item::TypeAlias(type_alias) => {
+            if !ir.is_current_target(&type_alias.owning_target)
+                && !ir.is_stdlib_target(&type_alias.owning_target)
+            {
+                GeneratedItem { ..Default::default() }
+            } else {
+                GeneratedItem { item: generate_type_alias(type_alias, ir)?, ..Default::default() }
+            }
+        }
+        Item::UnsupportedItem(unsupported) => {
+            GeneratedItem { item: generate_unsupported(unsupported)?, ..Default::default() }
+        }
+        Item::Comment(comment) => {
+            GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
+        }
+    };
+
+    Ok(generated_item)
+}
+
 fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     let mut items = vec![];
     let mut thunks = vec![];
@@ -1120,60 +1209,16 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     }
 
     for item in ir.items() {
-        match item {
-            Item::Func(func) => match generate_func(func, ir)? {
-                GeneratedFunc::None => (),
-                GeneratedFunc::Unsupported(unsupported) => {
-                    items.push(generate_unsupported(&unsupported)?)
-                }
-                GeneratedFunc::Some { api_func, thunk, function_id } => {
-                    if overloaded_funcs.contains(&function_id) {
-                        items.push(generate_unsupported(&make_unsupported_fn(
-                            func,
-                            ir,
-                            "Cannot generate bindings for overloaded function",
-                        )?)?);
-                        continue;
-                    }
-                    features.extend(api_func.features);
-                    features.extend(thunk.features);
-                    items.push(api_func.tokens);
-                    thunks.push(thunk.tokens);
-                }
-            },
-            Item::Record(record) => {
-                if !ir.is_current_target(&record.owning_target)
-                    && !ir.is_stdlib_target(&record.owning_target)
-                {
-                    continue;
-                }
-                let (snippet, assertions_snippet) = generate_record(record, ir)?;
-                features.extend(snippet.features);
-                features.extend(assertions_snippet.features);
-                items.push(snippet.tokens);
-                assertions.push(assertions_snippet.tokens);
-                has_record = true;
-            }
-            Item::Enum(enum_) => {
-                if !ir.is_current_target(&enum_.owning_target)
-                    && !ir.is_stdlib_target(&enum_.owning_target)
-                {
-                    continue;
-                }
-                items.push(generate_enum(enum_, ir)?);
-                continue;
-            }
-            Item::TypeAlias(type_alias) => {
-                if !ir.is_current_target(&type_alias.owning_target)
-                    && !ir.is_stdlib_target(&type_alias.owning_target)
-                {
-                    continue;
-                }
-                items.push(generate_type_alias(type_alias, ir)?);
-            }
-            Item::UnsupportedItem(unsupported) => items.push(generate_unsupported(unsupported)?),
-            Item::Comment(comment) => items.push(generate_comment(comment)?),
+        let generated = generate_item(item, ir, &overloaded_funcs)?;
+        items.push(generated.item);
+        if (!generated.thunks.is_empty()) {
+            thunks.push(generated.thunks);
         }
+        if (!generated.assertions.is_empty()) {
+            assertions.push(generated.assertions);
+        }
+        features.extend(generated.features);
+        has_record = has_record || generated.has_record;
     }
 
     let mod_detail = if thunks.is_empty() {
