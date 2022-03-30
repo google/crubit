@@ -11,20 +11,20 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN1SC1Ev(class S* __this) {
-  rs_api_impl_support ::construct_at(std ::forward<decltype(__this)>(__this));
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN1SC1ERKS_(class S* __this,
                                            const class S& __param_0) {
-  rs_api_impl_support ::construct_at(
-      std ::forward<decltype(__this)>(__this),
-      std ::forward<decltype(__param_0)>(__param_0));
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN1SD1Ev(class S* __this) {
-  std ::destroy_at(std ::forward<decltype(__this)>(__this));
+  std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class S& __rust_thunk___ZN1SaSERKS_(class S* __this,
                                                const class S& __param_0) {
-  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
 static_assert(sizeof(class S) == 1);

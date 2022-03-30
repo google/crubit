@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{bail, Result};
-use proc_macro2::TokenStream;
-use proc_macro2::TokenTree;
+use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use std::fmt::Write as _;
 use std::io::Write as _;
 use std::process::{Command, Stdio};
@@ -30,6 +29,11 @@ pub fn rs_tokens_to_formatted_string(tokens: TokenStream) -> Result<String> {
 ///   `__COMMENT__`, followed by a string literal.
 pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
     let mut result = String::new();
+    tokens_to_string_impl(&mut result, tokens)?;
+    Ok(result)
+}
+
+fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()> {
     let mut it = tokens.into_iter().peekable();
     while let Some(tt) = it.next() {
         match tt {
@@ -47,7 +51,17 @@ pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
                     bail!("__COMMENT__ must be followed by a literal")
                 }
             }
-
+            TokenTree::Group(ref tt) => {
+                let (open_delimiter, closed_delimiter) = match tt.delimiter() {
+                    Delimiter::Parenthesis => ("(", ")"),
+                    Delimiter::Bracket => ("[", "]"),
+                    Delimiter::Brace => ("{ ", " }"),
+                    Delimiter::None => ("", ""),
+                };
+                write!(result, "{}", open_delimiter)?;
+                tokens_to_string_impl(result, tt.stream())?;
+                write!(result, "{}", closed_delimiter)?;
+            }
             _ => {
                 write!(result, "{}", tt)?;
 
@@ -61,7 +75,7 @@ pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
             }
         }
     }
-    Ok(result)
+    Ok(())
 }
 
 fn is_ident_or_literal(tt: &TokenTree) -> bool {
@@ -122,7 +136,7 @@ mod tests {
         };
         assert_eq!(
             tokens_to_string(token_stream)?,
-            "struct Foo{ }impl Bar for Foo{ fn bar (& self) { } }"
+            "struct Foo{  }impl Bar for Foo{ fn bar(&self){  } }"
         );
         Ok(())
     }
@@ -201,6 +215,14 @@ mod tests {
             rs_tokens_to_formatted_string(quote! { #[doc = " hello\n world"] struct X {} })?,
             "/// hello\n/// world\nstruct X {}\n"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_special_tokens_in_groups() -> Result<()> {
+        assert_eq!(tokens_to_string(quote! {{ a __NEWLINE__ b }})?, "{ a \nb }");
+        assert_eq!(tokens_to_string(quote! {(a __COMMENT__ "b")})?, "(a // b\n)");
+        assert_eq!(tokens_to_string(quote! {[__HASH_TOKEN__ a]})?, "[#a]");
         Ok(())
     }
 }

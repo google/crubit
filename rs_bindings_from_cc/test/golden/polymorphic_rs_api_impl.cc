@@ -12,21 +12,21 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN16PolymorphicClassC1Ev(
     class PolymorphicClass* __this) {
-  rs_api_impl_support ::construct_at(std ::forward<decltype(__this)>(__this));
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN16PolymorphicClassC1ERKS_(
     class PolymorphicClass* __this, const class PolymorphicClass& __param_0) {
-  rs_api_impl_support ::construct_at(
-      std ::forward<decltype(__this)>(__this),
-      std ::forward<decltype(__param_0)>(__param_0));
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" class PolymorphicClass& __rust_thunk___ZN16PolymorphicClassaSERKS_(
     class PolymorphicClass* __this, const class PolymorphicClass& __param_0) {
-  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN16PolymorphicClassD1Ev(
     class PolymorphicClass* __this) {
-  std ::destroy_at(std ::forward<decltype(__this)>(__this));
+  std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 
 static_assert(sizeof(class PolymorphicClass) == 8);

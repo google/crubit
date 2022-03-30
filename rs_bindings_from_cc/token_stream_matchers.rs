@@ -481,7 +481,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "input:\n\n```\nfn foo(){ }\n")]
+    #[should_panic(expected = "input:\n\n```\nfn foo(){  }\n")]
     fn test_assert_cc_not_matches_panics_on_match() {
         assert_cc_not_matches!(quote! { fn foo() {} }, quote! { fn foo() {} });
     }
@@ -563,7 +563,7 @@ mod tests {
 Caused by:
     0: expected 'struct B' got 'struct A { int a ; int b ; } ;'
     1: input:\n       \n       ```
-       struct A{ int a ; int b ; };
+       struct A{ int a;int b; };
        ```"
         );
     }
@@ -606,7 +606,7 @@ Caused by:
             ),
             "expected 'struct X { }' but the input already ended: \
                 expected 'fn foo () { } struct X { }' got 'fn foo () { }': \
-                input:\n\n```\nfn foo(){ }\n```"
+                input:\n\n```\nfn foo(){  }\n```"
         );
     }
 
@@ -639,7 +639,7 @@ Caused by:
             "expected 'c' but got 'b': \
             expected 'a : i64 , c : i64' got 'a : i64 , b : i64': \
             expected 'fn foo () { a : i64 , c : i64 }' got 'fn foo () { a : i64 , b : i64 }': \
-            input:\n\n```\nfn foo(){ a : i64 , b : i64 }\n```"
+            input:\n\n```\nfn foo(){ a:i64,b:i64 }\n```"
         );
     }
 
@@ -674,7 +674,7 @@ Caused by:
             ),
             "matched the entire pattern but the input still contained 'drop_impl () ;': \
                 expected 'fn drop (& mut self) { }' got 'fn drop (& mut self) { drop_impl () ; }': \
-                input:\n\n```\nimpl Drop{ fn drop (& mut self) { drop_impl () ; } }\n```"
+                input:\n\n```\nimpl Drop{ fn drop(&mut self){ drop_impl(); } }\n```"
         );
         assert_eq!(
             format!(
@@ -689,8 +689,8 @@ Caused by:
             "matched the entire pattern but the input still contained 'drop_impl2 () ;': \
                 expected 'fn drop (& mut self) { drop_impl1 () ; }' \
                 got 'fn drop (& mut self) { drop_impl1 () ; drop_impl2 () ; }': \
-                input:\n\n```\nimpl Drop{ fn drop (& mut self) { \
-                    drop_impl1 () ; drop_impl2 () ; } }\n```"
+                input:\n\n```\nimpl Drop{ fn drop(&mut self){ \
+                    drop_impl1();drop_impl2(); } }\n```"
         );
     }
 

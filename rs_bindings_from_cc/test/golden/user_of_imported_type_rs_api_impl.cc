@@ -12,35 +12,35 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
     class UserOfImportedType* __this) {
-  rs_api_impl_support ::construct_at(std ::forward<decltype(__this)>(__this));
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
     class UserOfImportedType* __this,
     const class UserOfImportedType& __param_0) {
-  rs_api_impl_support ::construct_at(
-      std ::forward<decltype(__this)>(__this),
-      std ::forward<decltype(__param_0)>(__param_0));
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1EOS_(
     class UserOfImportedType* __this, class UserOfImportedType&& __param_0) {
-  rs_api_impl_support ::construct_at(
-      std ::forward<decltype(__this)>(__this),
-      std ::forward<decltype(__param_0)>(__param_0));
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
     class UserOfImportedType* __this) {
-  std ::destroy_at(std ::forward<decltype(__this)>(__this));
+  std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class UserOfImportedType&
 __rust_thunk___ZN18UserOfImportedTypeaSERKS_(
     class UserOfImportedType* __this,
     const class UserOfImportedType& __param_0) {
-  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" class UserOfImportedType&
 __rust_thunk___ZN18UserOfImportedTypeaSEOS_(
     class UserOfImportedType* __this, class UserOfImportedType&& __param_0) {
-  return __this->operator=(std ::forward<decltype(__param_0)>(__param_0));
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
 static_assert(sizeof(class UserOfImportedType) == 8);
