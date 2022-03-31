@@ -57,3 +57,29 @@ rust_test(
         ":ctor",
     ],
 )
+
+rust_library(
+    name = "forward_declare",
+    srcs = ["forward_declare.rs"],
+    proc_macro_deps = [":forward_declare_proc_macros"],
+    visibility = [
+        "//devtools/rust/cc_interop:__subpackages__",
+        "//third_party/crubit:__subpackages__",
+    ],
+)
+
+rust_proc_macro(
+    name = "forward_declare_proc_macros",
+    srcs = ["forward_declare_proc_macros.rs"],
+    deps = [
+        "//third_party/rust/proc_macro2/v1:proc_macro2",
+        "//third_party/rust/quote/v1:quote",
+        "//third_party/rust/syn/v1:syn",
+    ],
+)
+
+rust_test(
+    name = "forward_declare_macros_test",
+    srcs = ["forward_declare_macros_test.rs"],
+    deps = [":forward_declare"],
+)
