@@ -606,6 +606,7 @@ std::optional<IR::Item> Importer::ImportFunction(
         .member_func_metadata = std::move(member_func_metadata),
         .has_c_calling_convention = has_c_calling_convention,
         .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
+        .id = GenerateItemId(function_decl),
     };
   }
   return std::nullopt;

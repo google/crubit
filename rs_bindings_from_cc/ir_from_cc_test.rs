@@ -1436,3 +1436,11 @@ fn test_comment_has_item_id() {
     let comment = ir.comments().find(|i| i.text == "Comment").unwrap();
     assert_ne!(comment.id, ItemId(0));
 }
+
+#[test]
+fn test_function_has_item_id() {
+    let ir = ir_from_cc("int foo();").unwrap();
+    let function =
+        ir.functions().find(|i| i.name == UnqualifiedIdentifier::Identifier(ir_id("foo"))).unwrap();
+    assert_ne!(function.id, ItemId(0));
+}

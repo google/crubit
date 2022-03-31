@@ -45,17 +45,15 @@ pub fn make_ir_from_parts(
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
     let mut used_decl_ids = HashMap::new();
     for item in &flat_ir.items {
-        if let Some(id) = item.id() {
-            if let Some(existing_decl) = used_decl_ids.insert(id, item) {
-                bail!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
-            }
+        if let Some(existing_decl) = used_decl_ids.insert(item.id(), item) {
+            bail!("Duplicate decl_id found in {:?} and {:?}", existing_decl, item);
         }
     }
     let item_id_to_item_idx = flat_ir
         .items
         .iter()
         .enumerate()
-        .filter_map(|(idx, item)| item.id().map(|id| (id, idx)))
+        .map(|(idx, item)| (item.id(), idx))
         .collect::<HashMap<_, _>>();
     Ok(IR { flat_ir, item_id_to_item_idx })
 }
@@ -435,11 +433,14 @@ pub enum Item {
 }
 
 impl Item {
-    fn id(&self) -> Option<ItemId> {
+    fn id(&self) -> ItemId {
         match self {
-            Item::Record(record) => Some(record.id),
-            Item::TypeAlias(type_alias) => Some(type_alias.id),
-            _ => None,
+            Item::Record(record) => record.id,
+            Item::TypeAlias(type_alias) => type_alias.id,
+            Item::Func(func) => func.id,
+            Item::Enum(enum_) => enum_.id,
+            Item::UnsupportedItem(unsupported) => unsupported.id,
+            Item::Comment(comment) => comment.id,
         }
     }
 }
