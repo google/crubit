@@ -219,19 +219,16 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
     })
 }
 
-#[derive(Clone, Debug)]
-enum GeneratedFunc {
-    None, // No explicit function needed (e.g. when deriving Drop).
-    Unsupported(UnsupportedItem),
-    Some { api_func: RsSnippet, thunk: RsSnippet, function_id: FunctionId },
-}
-
 /// Generates Rust source code for a given `Func`.
-fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
-    let make_unsupported_result = |msg: &str| -> Result<GeneratedFunc> {
-        Ok(GeneratedFunc::Unsupported(make_unsupported_fn(func, ir, msg)?))
-    };
-
+///
+/// Return values:
+///
+///  * `Err(_)`: something went wrong importing this function.
+///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
+///    destructor might be mapped to no `Drop` impl at all.)
+///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
+///    thunk FFI definition, and function ID.
+fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
     let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
         func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
     );
@@ -375,20 +372,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         );
                     }
                     _ => {
-                        return make_unsupported_result(
-                            "operator== where lhs doesn't refer to a record",
-                        );
+                        bail!("operator== where lhs doesn't refer to a record",);
                     }
                 },
                 _ => {
-                    return make_unsupported_result(
-                        "operator== where operands are not const references",
-                    );
+                    bail!("operator== where operands are not const references",);
                 }
             };
         }
         UnqualifiedIdentifier::Operator(_) => {
-            return make_unsupported_result("Bindings for this kind of operator are not supported");
+            bail!("Bindings for this kind of operator are not supported");
         }
         UnqualifiedIdentifier::Identifier(id) => {
             func_name = make_rs_ident(&id.identifier);
@@ -419,7 +412,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             let record =
                 maybe_record.ok_or_else(|| anyhow!("Destructors must be member functions."))?;
             if !should_implement_drop(record) {
-                return Ok(GeneratedFunc::None);
+                return Ok(None);
             }
             impl_kind = ImplKind::new_trait(
                 TraitName::Other(quote! {Drop}),
@@ -443,7 +436,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
             if has_pointer_params {
                 // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
                 // translating C++ constructors into static methods in Rust).
-                return make_unsupported_result(
+                bail!(
                     "Unsafe constructors (e.g. with no elided or explicit lifetimes) \
                     are intentionally not supported",
                 );
@@ -465,7 +458,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                     }
                     _ => {
                         // TODO(b/216648347): Support bindings for other constructors.
-                        return make_unsupported_result(
+                        bail!(
                             "Only single-parameter constructors for T: !Unpin are supported for now",
                         );
                     }
@@ -485,7 +478,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                         if param_type_kinds[1].is_shared_ref_to(record) {
                             // Copy constructor
                             if should_derive_clone(record) {
-                                return Ok(GeneratedFunc::None);
+                                return Ok(None);
                             } else {
                                 impl_kind = ImplKind::new_trait(
                                     TraitName::UnpinConstructor(quote! {Clone}),
@@ -503,16 +496,12 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
                             );
                             func_name = make_rs_ident("from");
                         } else {
-                            return make_unsupported_result(
-                                "Not yet supported type of constructor parameter",
-                            );
+                            bail!("Not yet supported type of constructor parameter",);
                         }
                     }
                     _ => {
                         // TODO(b/216648347): Support bindings for other constructors.
-                        return make_unsupported_result(
-                            "More than 1 constructor parameter is not supported yet",
-                        );
+                        bail!("More than 1 constructor parameter is not supported yet",);
                     }
                 }
             }
@@ -760,11 +749,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<GeneratedFunc> {
         }
     };
 
-    Ok(GeneratedFunc::Some {
-        api_func: RsSnippet { features, tokens: api_func },
-        thunk: thunk.into(),
-        function_id,
-    })
+    Ok(Some((RsSnippet { features, tokens: api_func }, thunk.into(), function_id)))
 }
 
 fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
@@ -1124,12 +1109,13 @@ fn generate_item(
     overloaded_funcs: &HashSet<FunctionId>,
 ) -> Result<GeneratedItem> {
     let generated_item = match item {
-        Item::Func(func) => match generate_func(func, ir)? {
-            GeneratedFunc::None => GeneratedItem { ..Default::default() },
-            GeneratedFunc::Unsupported(unsupported) => {
-                GeneratedItem { item: generate_unsupported(&unsupported)?, ..Default::default() }
-            }
-            GeneratedFunc::Some { api_func, thunk, function_id } => {
+        Item::Func(func) => match generate_func(func, ir) {
+            Err(e) => GeneratedItem {
+                item: generate_unsupported(&make_unsupported_fn(func, ir, format!("{e}"))?)?,
+                ..Default::default()
+            },
+            Ok(None) => GeneratedItem::default(),
+            Ok(Some((api_func, thunk, function_id))) => {
                 if overloaded_funcs.contains(&function_id) {
                     GeneratedItem {
                         item: generate_unsupported(&make_unsupported_fn(
@@ -1225,7 +1211,7 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();
     for func in ir.functions() {
-        if let GeneratedFunc::Some { function_id, .. } = generate_func(func, ir)? {
+        if let Ok(Some((.., function_id))) = generate_func(func, ir) {
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id);
             }
@@ -3674,11 +3660,12 @@ mod tests {
         // like this (note the mismatched 'a and 'b lifetimes):
         //     fn from<'b>(i: &'a i32) -> Self
         // After this CL, this scenario will result in an explicit error.
-        let err = generate_rs_api(&ir).unwrap_err();
-        let msg = format!("{}", err);
-        assert!(
-            msg.contains("The lifetime of `__this` is unexpectedly also used by another parameter")
-        );
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_not_matches!(rs_api, quote! {impl From});
+        let rs_api_str = tokens_to_string(rs_api)?;
+        assert!(rs_api_str.contains(
+            "// The lifetime of `__this` is unexpectedly also used by another parameter"
+        ));
         Ok(())
     }
 
