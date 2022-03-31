@@ -219,133 +219,120 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
     })
 }
 
-/// Generates Rust source code for a given `Func`.
+/// The name of a trait, with extra entries for specially-understood traits and
+/// families of traits.
+enum TraitName {
+    /// The constructor trait for !Unpin types. e.g. `CtorNew(quote! { ()
+    /// })` is the default constructor.
+    CtorNew(TokenStream),
+    /// An Unpin constructor trait, e.g. From or Clone.
+    UnpinConstructor(TokenStream),
+    /// Any other trait, e.g. Eq.
+    Other(TokenStream),
+}
+impl quote::ToTokens for TraitName {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
+            Self::CtorNew(args) => quote! { ctor::CtorNew < #args > }.to_tokens(tokens),
+        }
+    }
+}
+
+/// The kind of the `impl` block the function needs to be generated in.
+enum ImplKind {
+    /// Used for free functions for which we don't want the `impl` block.
+    None { is_unsafe: bool },
+    /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
+    /// block.
+    Struct {
+        /// For example, `SomeStruct`. Retrieved from
+        /// `func.member_func_metadata`.
+        record_name: Ident,
+        is_unsafe: bool,
+        /// Whether to format the first parameter as "self" (e.g. `__this:
+        /// &mut T` -> `&mut self`)
+        format_first_param_as_self: bool,
+    },
+    /// Used for trait methods for which we need an `impl TraitName for
+    /// SomeStruct { ... }` block.
+    Trait {
+        /// For example, `SomeStruct`.
+        /// Note that `record_name` might *not* be from
+        /// `func.member_func_metadata`.
+        record_name: Ident,
+        /// For example, `quote!{ From<i32> }`.
+        trait_name: TraitName,
+
+        /// Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
+        declare_lifetimes: bool,
+        /// The generic params of trait `impl` (e.g. `<'b>`). These start
+        /// empty and only later are mutated into the correct value.
+        trait_generic_params: TokenStream,
+        /// Whether to format the first parameter as "self" (e.g. `__this:
+        /// &mut T` -> `&mut self`)
+        format_first_param_as_self: bool,
+    },
+}
+impl ImplKind {
+    fn new_trait(
+        trait_name: TraitName,
+        record_name: Ident,
+        format_first_param_as_self: bool,
+    ) -> Self {
+        ImplKind::Trait {
+            trait_name,
+            record_name,
+            declare_lifetimes: false,
+            trait_generic_params: quote! {},
+            format_first_param_as_self,
+        }
+    }
+    fn new_generic_trait(
+        trait_name: TraitName,
+        record_name: Ident,
+        format_first_param_as_self: bool,
+    ) -> Self {
+        ImplKind::Trait {
+            trait_name,
+            record_name,
+            declare_lifetimes: true,
+            trait_generic_params: quote! {},
+            format_first_param_as_self,
+        }
+    }
+    fn format_first_param_as_self(&self) -> bool {
+        matches!(
+            self,
+            Self::Trait { format_first_param_as_self: true, .. }
+                | Self::Struct { format_first_param_as_self: true, .. }
+        )
+    }
+    /// Returns whether the function is defined as `unsafe fn ...`.
+    fn is_unsafe(&self) -> bool {
+        matches!(self, Self::None { is_unsafe: true, .. } | Self::Struct { is_unsafe: true, .. })
+    }
+}
+
+/// Returns the shape of the generated Rust API for a given function definition.
 ///
-/// Return values:
+/// Returns:
 ///
 ///  * `Err(_)`: something went wrong importing this function.
 ///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
 ///    destructor might be mapped to no `Drop` impl at all.)
-///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
-///    thunk FFI definition, and function ID.
-fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
-    let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
-        func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
-    );
-    let param_type_kinds = func
-        .params
-        .iter()
-        .map(|p| {
-            RsTypeKind::new(&p.type_.rs_type, ir).with_context(|| {
-                format!("Failed to process type of parameter {:?} on {:?}", p, func)
-            })
-        })
-        .collect::<Result<Vec<_>>>()?;
-    let param_types = param_type_kinds
-        .iter()
-        .map(|t| {
-            t.format(ir, &lifetime_to_name)
-                .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
-        })
-        .collect::<Result<Vec<_>>>()?;
-    let has_pointer_params =
-        param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
-
+///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
+fn api_func_shape(
+    func: &Func,
+    ir: &IR,
+    param_type_kinds: &[RsTypeKind],
+    lifetime_to_name: &HashMap<LifetimeId, String>,
+) -> Result<Option<(Ident, ImplKind)>> {
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
-
-    // Find the `func_name` and `impl_kind` of the API function to generate.
-    enum TraitName {
-        /// The constructor trait for !Unpin types. e.g. `CtorNew(quote! { ()
-        /// })` is the default constructor.
-        CtorNew(TokenStream),
-        /// An Unpin constructor trait, e.g. From or Clone.
-        UnpinConstructor(TokenStream),
-        /// Any other trait, e.g. Eq.
-        Other(TokenStream),
-    }
-    impl quote::ToTokens for TraitName {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            match self {
-                Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
-                Self::CtorNew(args) => quote! { ctor::CtorNew < #args > }.to_tokens(tokens),
-            }
-        }
-    }
-    enum ImplKind {
-        /// No `impl` needed
-        None { is_unsafe: bool },
-        // For example, `impl SomeStruct { ... }` (`SomeStruct` based on
-        // func.member_func_metadata.)
-        Struct {
-            /// For example, `SomeStruct`.
-            record_name: Ident,
-            is_unsafe: bool,
-            /// Whether to format the first parameter as "self" (e.g. `__this:
-            /// &mut T` -> `&mut self`)
-            format_first_param_as_self: bool,
-        },
-        Trait {
-            /// For example, `SomeStruct`.
-            /// Note that `record_name` might *not* be from
-            /// `func.member_func_metadata`.
-            record_name: Ident,
-            /// For example, `quote!{ From<i32> }`.
-            trait_name: TraitName,
-
-            /// Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
-            declare_lifetimes: bool,
-            /// The generic params of trait `impl` (e.g. `<'b>`). These start
-            /// empty and only later are mutated into the correct value.
-            trait_generic_params: TokenStream,
-            /// Whether to format the first parameter as "self" (e.g. `__this:
-            /// &mut T` -> `&mut self`)
-            format_first_param_as_self: bool,
-        },
-    }
-    impl ImplKind {
-        fn new_trait(
-            trait_name: TraitName,
-            record_name: Ident,
-            format_first_param_as_self: bool,
-        ) -> Self {
-            ImplKind::Trait {
-                trait_name,
-                record_name,
-                declare_lifetimes: false,
-                trait_generic_params: quote! {},
-                format_first_param_as_self,
-            }
-        }
-        fn new_generic_trait(
-            trait_name: TraitName,
-            record_name: Ident,
-            format_first_param_as_self: bool,
-        ) -> Self {
-            ImplKind::Trait {
-                trait_name,
-                record_name,
-                declare_lifetimes: true,
-                trait_generic_params: quote! {},
-                format_first_param_as_self,
-            }
-        }
-        fn format_first_param_as_self(&self) -> bool {
-            matches!(
-                self,
-                Self::Trait { format_first_param_as_self: true, .. }
-                    | Self::Struct { format_first_param_as_self: true, .. }
-            )
-        }
-        /// Returns whether the function is defined as `unsafe fn ...`.
-        fn is_unsafe(&self) -> bool {
-            matches!(
-                self,
-                Self::None { is_unsafe: true, .. } | Self::Struct { is_unsafe: true, .. }
-            )
-        }
-    }
-    let mut impl_kind: ImplKind;
+    let has_pointer_params =
+        param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
+    let impl_kind: ImplKind;
     let func_name: syn::Ident;
     match &func.name {
         UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
@@ -449,7 +436,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 match func.params.len() {
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     2 => {
-                        let param_type = &param_types[1];
+                        let param_type = param_type_kinds[1].format(ir, lifetime_to_name)?;
                         impl_kind = ImplKind::new_generic_trait(
                             TraitName::CtorNew(param_type.clone()),
                             record_name,
@@ -488,7 +475,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                                 func_name = make_rs_ident("clone");
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
-                            let param_type = &param_types[1];
+                            let param_type = param_type_kinds[1].format(ir, lifetime_to_name)?;
                             impl_kind = ImplKind::new_generic_trait(
                                 TraitName::UnpinConstructor(quote! {From< #param_type >}),
                                 record_name,
@@ -507,12 +494,51 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             }
         }
     }
+    Ok(Some((func_name, impl_kind)))
+}
+
+/// Generates Rust source code for a given `Func`.
+///
+/// Returns:
+///
+///  * `Err(_)`: couldn't import the function, emit an `UnsupportedItem`.
+///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
+///    destructor might be mapped to no `Drop` impl at all.)
+///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
+///    thunk FFI definition, and function ID.
+fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
+    let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
+        func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
+    );
+    let param_type_kinds = func
+        .params
+        .iter()
+        .map(|p| {
+            RsTypeKind::new(&p.type_.rs_type, ir).with_context(|| {
+                format!("Failed to process type of parameter {:?} on {:?}", p, func)
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let (func_name, mut impl_kind) =
+        if let Some(values) = api_func_shape(func, ir, &param_type_kinds, &lifetime_to_name)? {
+            values
+        } else {
+            return Ok(None);
+        };
 
     let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
         .and_then(|t| t.format_as_return_type_fragment(ir, &lifetime_to_name))
         .with_context(|| format!("Failed to format return type for {:?}", func))?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
+    let param_types = param_type_kinds
+        .iter()
+        .map(|t| {
+            t.format(ir, &lifetime_to_name)
+                .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
+        })
+        .collect::<Result<Vec<_>>>()?;
     let thunk_ident = thunk_ident(func);
 
     let api_func_def = {
