@@ -9,7 +9,7 @@ use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{ToTokens, TokenStreamExt};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::hash_map::{Entry, HashMap};
 use std::convert::TryFrom;
 use std::fmt;
 use std::io::Read;
@@ -55,7 +55,31 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
         .enumerate()
         .map(|(idx, item)| (item.id(), idx))
         .collect::<HashMap<_, _>>();
-    Ok(IR { flat_ir, item_id_to_item_idx })
+
+    let mut lifetime_to_name = HashMap::new();
+    for item in &flat_ir.items {
+        let lifetime_params = match item {
+            Item::Record(Record { lifetime_params, .. }) => lifetime_params,
+            Item::Func(Func { lifetime_params, .. }) => lifetime_params,
+            _ => continue,
+        };
+        for lifetime in lifetime_params {
+            match lifetime_to_name.entry(lifetime.id) {
+                Entry::Occupied(occupied) => {
+                    bail!(
+                        "Duplicate use of lifetime ID {:?} for names: '{}, '{}",
+                        lifetime.id,
+                        occupied.get(),
+                        &lifetime.name
+                    )
+                }
+                Entry::Vacant(vacant) => {
+                    vacant.insert(lifetime.name.clone());
+                }
+            }
+        }
+    }
+    Ok(IR { flat_ir, item_id_to_item_idx, lifetime_to_name })
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -527,6 +551,7 @@ pub struct IR {
     flat_ir: FlatIR,
     // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
     item_id_to_item_idx: HashMap<ItemId, usize>,
+    lifetime_to_name: HashMap<LifetimeId, String>,
 }
 
 impl IR {
@@ -640,6 +665,10 @@ impl IR {
     // Used for `token_stream_matchers`, do not use for anything else.
     pub fn flat_ir_debug_print(&self) -> String {
         format!("{:?}", self.flat_ir)
+    }
+
+    pub fn lifetime_to_name(&self, lifetime_id: LifetimeId) -> Option<&str> {
+        self.lifetime_to_name.get(&lifetime_id).map(|name| &**name)
     }
 }
 

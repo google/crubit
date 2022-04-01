@@ -9,7 +9,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::format_ident;
 use quote::quote;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashSet};
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
@@ -326,7 +326,6 @@ fn api_func_shape(
     func: &Func,
     ir: &IR,
     param_type_kinds: &[RsTypeKind],
-    lifetime_to_name: &HashMap<LifetimeId, String>,
 ) -> Result<Option<(Ident, ImplKind)>> {
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
@@ -346,7 +345,7 @@ fn api_func_shape(
                 ) => match **lhs {
                     RsTypeKind::Record(lhs_record) => {
                         let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
-                        let rhs: TokenStream = rhs.format(ir, &lifetime_to_name)?;
+                        let rhs: TokenStream = rhs.format(ir)?;
                         func_name = make_rs_ident("eq");
                         // Not using `ImplKind::new_generic_trait`, because #rhs
                         // should be stripped of references + because `&'a self`
@@ -436,7 +435,7 @@ fn api_func_shape(
                 match func.params.len() {
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     2 => {
-                        let param_type = param_type_kinds[1].format(ir, lifetime_to_name)?;
+                        let param_type = param_type_kinds[1].format(ir)?;
                         impl_kind = ImplKind::new_generic_trait(
                             TraitName::CtorNew(param_type.clone()),
                             record_name,
@@ -475,7 +474,7 @@ fn api_func_shape(
                                 func_name = make_rs_ident("clone");
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
-                            let param_type = param_type_kinds[1].format(ir, lifetime_to_name)?;
+                            let param_type = param_type_kinds[1].format(ir)?;
                             impl_kind = ImplKind::new_generic_trait(
                                 TraitName::UnpinConstructor(quote! {From< #param_type >}),
                                 record_name,
@@ -507,9 +506,6 @@ fn api_func_shape(
 ///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
 ///    thunk FFI definition, and function ID.
 fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
-    let lifetime_to_name = HashMap::<LifetimeId, String>::from_iter(
-        func.lifetime_params.iter().map(|l| (l.id, l.name.clone())),
-    );
     let param_type_kinds = func
         .params
         .iter()
@@ -521,21 +517,21 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         .collect::<Result<Vec<_>>>()?;
 
     let (func_name, mut impl_kind) =
-        if let Some(values) = api_func_shape(func, ir, &param_type_kinds, &lifetime_to_name)? {
+        if let Some(values) = api_func_shape(func, ir, &param_type_kinds)? {
             values
         } else {
             return Ok(None);
         };
 
     let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
-        .and_then(|t| t.format_as_return_type_fragment(ir, &lifetime_to_name))
+        .and_then(|t| t.format_as_return_type_fragment(ir))
         .with_context(|| format!("Failed to format return type for {:?}", func))?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
     let param_types = param_type_kinds
         .iter()
         .map(|t| {
-            t.format(ir, &lifetime_to_name)
+            t.format(ir)
                 .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
         })
         .collect::<Result<Vec<_>>>()?;
@@ -604,7 +600,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
             let self_decl =
-                first_api_param.format_as_self_param(func, ir, &lifetime_to_name).with_context(
+                first_api_param.format_as_self_param(func, ir).with_context(
                     || format!("Failed to format as `self` param: {:?}", first_api_param),
                 )?;
             // Presence of element #0 is verified by `ok_or_else` on
@@ -744,7 +740,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 bail!("Constructors should have at least one parameter (__this)");
             }
             param_types[0] = param_type_kinds[0]
-                .format_mut_ref_as_uninitialized(ir, &lifetime_to_name)
+                .format_mut_ref_as_uninitialized(ir)
                 .with_context(|| {
                     format!(
                         "Failed to format `__this` param for a constructor thunk: {:?}",
@@ -756,7 +752,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 bail!("Destructors should have at least one parameter (__this)");
             }
             param_types[0] = param_type_kinds[0]
-                .format_ref_as_raw_ptr(ir, &lifetime_to_name)
+                .format_ref_as_raw_ptr(ir)
                 .with_context(|| {
                     format!(
                         "Failed to format `__this` param for a destructor thunk: {:?}",
@@ -872,7 +868,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 let width = Literal::usize_unsuffixed((next_offset - f.offset) / 8);
                 return Ok(quote! {[std::mem::MaybeUninit<u8>; #width]});
             }
-            let mut formatted = format_rs_type(&f.type_.rs_type, ir, &HashMap::new())
+            let mut formatted = format_rs_type(&f.type_.rs_type, ir)
                 .with_context(|| {
                     format!("Failed to format type for field {:?} on record {:?}", f, record)
                 })?;
@@ -1061,7 +1057,7 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
 
 fn generate_enum(enum_: &Enum, ir: &IR) -> Result<TokenStream> {
     let name = make_rs_ident(&enum_.identifier.identifier);
-    let underlying_type = format_rs_type(&enum_.underlying_type.rs_type, ir, &HashMap::new())?;
+    let underlying_type = format_rs_type(&enum_.underlying_type.rs_type, ir)?;
     let enumerator_names =
         enum_.enumerators.iter().map(|enumerator| make_rs_ident(&enumerator.identifier.identifier));
     let enumerator_values = enum_.enumerators.iter().map(|enumerator| enumerator.value);
@@ -1088,7 +1084,7 @@ fn generate_enum(enum_: &Enum, ir: &IR) -> Result<TokenStream> {
 fn generate_type_alias(type_alias: &TypeAlias, ir: &IR) -> Result<TokenStream> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
     let doc_comment = generate_doc_comment(&type_alias.doc_comment);
-    let underlying_type = format_rs_type(&type_alias.underlying_type.rs_type, ir, &HashMap::new())
+    let underlying_type = format_rs_type(&type_alias.underlying_type.rs_type, ir)
         .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
     Ok(quote! {
         #doc_comment
@@ -1506,21 +1502,17 @@ impl<'ir> RsTypeKind<'ir> {
         }
     }
 
-    pub fn format(
-        &self,
-        ir: &IR,
-        lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<TokenStream> {
+    pub fn format(&self, ir: &IR) -> Result<TokenStream> {
         let result = match self {
             RsTypeKind::Pointer { pointee, mutability } => {
                 let mutability = mutability.format_for_pointer();
-                let nested_type = pointee.format(ir, lifetime_to_name)?;
+                let nested_type = pointee.format(ir)?;
                 quote! {* #mutability #nested_type}
             }
             RsTypeKind::Reference { referent, mutability, lifetime_id } => {
                 let mut_ = mutability.format_for_reference();
-                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
-                let nested_type = referent.format(ir, lifetime_to_name)?;
+                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
+                let nested_type = referent.format(ir)?;
                 let reference = quote! {& #lifetime #mut_ #nested_type};
                 if mutability == &Mutability::Mut && !referent.is_unpin(ir) {
                     // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
@@ -1532,8 +1524,8 @@ impl<'ir> RsTypeKind<'ir> {
                 }
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime_id } => {
-                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
-                let nested_type = referent.format(ir, lifetime_to_name)?;
+                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
+                let nested_type = referent.format(ir)?;
                 // TODO(b/200067242): Add a `use ctor::RvalueReference` (etc.) to the crate.
                 if mutability == &Mutability::Mut {
                     quote! {ctor::RvalueReference<#lifetime, #nested_type>}
@@ -1543,10 +1535,10 @@ impl<'ir> RsTypeKind<'ir> {
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
                 let return_frag =
-                    return_type.format_as_return_type_fragment(ir, lifetime_to_name)?;
+                    return_type.format_as_return_type_fragment(ir)?;
                 let param_types = param_types
                     .iter()
-                    .map(|t| t.format(ir, lifetime_to_name))
+                    .map(|t| t.format(ir))
                     .collect::<Result<Vec<_>>>()?;
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
@@ -1562,7 +1554,7 @@ impl<'ir> RsTypeKind<'ir> {
                 let generic_params = format_generic_params(
                     type_args
                         .iter()
-                        .map(|type_arg| type_arg.format(ir, lifetime_to_name))
+                        .map(|type_arg| type_arg.format(ir))
                         .collect::<Result<Vec<_>>>()?,
                 );
                 quote! {#ident #generic_params}
@@ -1571,15 +1563,11 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(result)
     }
 
-    pub fn format_as_return_type_fragment(
-        &self,
-        ir: &IR,
-        lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<TokenStream> {
+    pub fn format_as_return_type_fragment(&self, ir: &IR) -> Result<TokenStream> {
         match self {
             RsTypeKind::Unit => Ok(quote! {}),
             other_type => {
-                let return_type = other_type.format(ir, lifetime_to_name)?;
+                let return_type = other_type.format(ir)?;
                 Ok(quote! { -> #return_type })
             }
         }
@@ -1587,15 +1575,11 @@ impl<'ir> RsTypeKind<'ir> {
 
     /// Formats this RsTypeKind as `&'a mut MaybeUninit<SomeStruct>`. This is
     /// used to format `__this` parameter in a constructor thunk.
-    pub fn format_mut_ref_as_uninitialized(
-        &self,
-        ir: &IR,
-        lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<TokenStream> {
+    pub fn format_mut_ref_as_uninitialized(&self, ir: &IR) -> Result<TokenStream> {
         match self {
             RsTypeKind::Reference { referent, lifetime_id, mutability: Mutability::Mut } => {
-                let nested_type = referent.format(ir, lifetime_to_name)?;
-                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
+                let nested_type = referent.format(ir)?;
+                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
                 Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
             }
             _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
@@ -1603,15 +1587,11 @@ impl<'ir> RsTypeKind<'ir> {
     }
 
     /// Formats a reference or pointer as a raw pointer.
-    pub fn format_ref_as_raw_ptr(
-        &self,
-        ir: &IR,
-        lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<TokenStream> {
+    pub fn format_ref_as_raw_ptr(&self, ir: &IR) -> Result<TokenStream> {
         match self {
             RsTypeKind::Reference { referent: pointee, mutability, .. }
             | RsTypeKind::Pointer { pointee, mutability } => {
-                let nested_type = pointee.format(ir, lifetime_to_name)?;
+                let nested_type = pointee.format(ir)?;
                 let mut_ = mutability.format_for_pointer();
                 Ok(quote! { * #mut_ #nested_type })
             }
@@ -1623,12 +1603,7 @@ impl<'ir> RsTypeKind<'ir> {
     /// `&'a mut self`.
     ///
     /// If this is !Unpin, however, it uses `self: Pin<&mut Self>` instead.
-    pub fn format_as_self_param(
-        &self,
-        func: &Func,
-        ir: &IR,
-        lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<TokenStream> {
+    pub fn format_as_self_param(&self, func: &Func, ir: &IR) -> Result<TokenStream> {
         if func.name == UnqualifiedIdentifier::Destructor {
             let record = func
                 .member_func_metadata
@@ -1648,7 +1623,7 @@ impl<'ir> RsTypeKind<'ir> {
         match self {
             RsTypeKind::Reference { referent, lifetime_id, mutability } => {
                 let mut_ = mutability.format_for_reference();
-                let lifetime = Self::format_lifetime(lifetime_id, lifetime_to_name)?;
+                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
                 if mutability == &Mutability::Mut
                     && !referent.is_unpin(ir)
                     && func.name != UnqualifiedIdentifier::Destructor
@@ -1663,11 +1638,8 @@ impl<'ir> RsTypeKind<'ir> {
         }
     }
 
-    fn format_lifetime(
-        lifetime_id: &LifetimeId,
-        lifetime_to_name: &HashMap<LifetimeId, String>,
-    ) -> Result<TokenStream> {
-        let lifetime_name = lifetime_to_name.get(lifetime_id).ok_or_else(|| {
+    fn format_lifetime(lifetime_id: &LifetimeId, ir: &IR) -> Result<TokenStream> {
+        let lifetime_name = ir.lifetime_to_name(*lifetime_id).ok_or_else(|| {
             anyhow!("`lifetime_to_name` doesn't have an entry for {:?}", lifetime_id)
         })?;
         Ok(format_lifetime_name(lifetime_name))
@@ -1788,13 +1760,9 @@ fn format_lifetime_name(lifetime_name: &str) -> TokenStream {
     quote! { #lifetime }
 }
 
-fn format_rs_type(
-    ty: &ir::RsType,
-    ir: &IR,
-    lifetime_to_name: &HashMap<LifetimeId, String>,
-) -> Result<TokenStream> {
+fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
     RsTypeKind::new(ty, ir)
-        .and_then(|kind| kind.format(ir, lifetime_to_name))
+        .and_then(|kind| kind.format(ir))
         .with_context(|| format!("Failed to format Rust type {:?}", ty))
 }
 
@@ -1927,7 +1895,7 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
             continue;
         }
         fields.push(make_rs_ident(&field.identifier.identifier));
-        types.push(format_rs_type(&field.type_.rs_type, ir, &HashMap::new()).with_context(
+        types.push(format_rs_type(&field.type_.rs_type, ir).with_context(
             || format!("Failed to format type for field {:?} on record {:?}", field, record),
         )?)
     }
@@ -4101,10 +4069,7 @@ mod tests {
             let f = retrieve_func(&ir, "func");
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
 
-            let lifetime_to_name: HashMap<LifetimeId, String> =
-                t.lifetimes().map(|lifetime_id| (lifetime_id, "a".to_string())).collect();
-
-            let fmt = tokens_to_string(t.format(&ir, &lifetime_to_name)?)?;
+            let fmt = tokens_to_string(t.format(&ir)?)?;
             assert_eq!(test.rs, fmt, "Testing: {}", test_name);
 
             assert_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);
