@@ -1494,10 +1494,10 @@ impl<'ir> RsTypeKind<'ir> {
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
-    pub fn is_unpin(&self, ir: &IR) -> bool {
+    pub fn is_unpin(&self) -> bool {
         match self {
             RsTypeKind::Record(record) => record.is_unpin(),
-            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(ir),
+            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
             _ => true,
         }
     }
@@ -1514,7 +1514,7 @@ impl<'ir> RsTypeKind<'ir> {
                 let lifetime = Self::format_lifetime(lifetime_id, ir)?;
                 let nested_type = referent.format(ir)?;
                 let reference = quote! {& #lifetime #mut_ #nested_type};
-                if mutability == &Mutability::Mut && !referent.is_unpin(ir) {
+                if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
                     // Probably format needs to return an RsSnippet, and RsSnippet needs a `uses`
                     // field.
@@ -1625,7 +1625,7 @@ impl<'ir> RsTypeKind<'ir> {
                 let mut_ = mutability.format_for_reference();
                 let lifetime = Self::format_lifetime(lifetime_id, ir)?;
                 if mutability == &Mutability::Mut
-                    && !referent.is_unpin(ir)
+                    && !referent.is_unpin()
                     && func.name != UnqualifiedIdentifier::Destructor
                 {
                     // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
