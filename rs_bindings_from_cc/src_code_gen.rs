@@ -345,7 +345,7 @@ fn api_func_shape(
                 ) => match **lhs {
                     RsTypeKind::Record(lhs_record) => {
                         let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
-                        let rhs: TokenStream = rhs.format(ir)?;
+                        let rhs: TokenStream = rhs.format(ir);
                         func_name = make_rs_ident("eq");
                         // Not using `ImplKind::new_generic_trait`, because #rhs
                         // should be stripped of references + because `&'a self`
@@ -435,7 +435,7 @@ fn api_func_shape(
                 match func.params.len() {
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     2 => {
-                        let param_type = param_type_kinds[1].format(ir)?;
+                        let param_type = param_type_kinds[1].format(ir);
                         impl_kind = ImplKind::new_generic_trait(
                             TraitName::CtorNew(param_type.clone()),
                             record_name,
@@ -474,7 +474,7 @@ fn api_func_shape(
                                 func_name = make_rs_ident("clone");
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
-                            let param_type = param_type_kinds[1].format(ir)?;
+                            let param_type = param_type_kinds[1].format(ir);
                             impl_kind = ImplKind::new_generic_trait(
                                 TraitName::UnpinConstructor(quote! {From< #param_type >}),
                                 record_name,
@@ -524,17 +524,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         };
 
     let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
-        .and_then(|t| t.format_as_return_type_fragment(ir))
+        .map(|t| t.format_as_return_type_fragment(ir))
         .with_context(|| format!("Failed to format return type for {:?}", func))?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-    let param_types = param_type_kinds
-        .iter()
-        .map(|t| {
-            t.format(ir)
-                .with_context(|| format!("Failed to format parameter type {:?} on {:?}", t, func))
-        })
-        .collect::<Result<Vec<_>>>()?;
+    let param_types: Vec<_> = param_type_kinds.iter().map(|t| t.format(ir)).collect();
     let thunk_ident = thunk_ident(func);
 
     let api_func_def = {
@@ -1371,35 +1365,14 @@ impl Mutability {
 // references (e.g. &'ir Record`) instead of ItemIds.
 #[derive(Debug)]
 enum RsTypeKind<'ir> {
-    Pointer {
-        pointee: Box<RsTypeKind<'ir>>,
-        mutability: Mutability,
-    },
-    Reference {
-        referent: Box<RsTypeKind<'ir>>,
-        mutability: Mutability,
-        lifetime_id: LifetimeId,
-    },
-    RvalueReference {
-        referent: Box<RsTypeKind<'ir>>,
-        mutability: Mutability,
-        lifetime_id: LifetimeId,
-    },
-    FuncPtr {
-        abi: &'ir str,
-        return_type: Box<RsTypeKind<'ir>>,
-        param_types: Vec<RsTypeKind<'ir>>,
-    },
+    Pointer { pointee: Box<RsTypeKind<'ir>>, mutability: Mutability },
+    Reference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime: Lifetime },
+    RvalueReference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime: Lifetime },
+    FuncPtr { abi: &'ir str, return_type: Box<RsTypeKind<'ir>>, param_types: Vec<RsTypeKind<'ir>> },
     Record(&'ir Record),
-    TypeAlias {
-        type_alias: &'ir TypeAlias,
-        underlying_type: Box<RsTypeKind<'ir>>,
-    },
+    TypeAlias { type_alias: &'ir TypeAlias, underlying_type: Box<RsTypeKind<'ir>> },
     Unit,
-    Other {
-        name: &'ir str,
-        type_args: Vec<RsTypeKind<'ir>>,
-    },
+    Other { name: &'ir str, type_args: Vec<RsTypeKind<'ir>> },
 }
 
 impl<'ir> RsTypeKind<'ir> {
@@ -1414,11 +1387,14 @@ impl<'ir> RsTypeKind<'ir> {
             }
             Ok(Box::new(get_type_args()?.remove(0)))
         };
-        let get_lifetime = || -> Result<LifetimeId> {
+        let get_lifetime = || -> Result<Lifetime> {
             if ty.lifetime_args.len() != 1 {
                 bail!("Missing reference lifetime (need exactly 1 lifetime argument): {:?}", ty);
             }
-            Ok(ty.lifetime_args[0])
+            let lifetime_id = ty.lifetime_args[0];
+            ir.get_lifetime(lifetime_id)
+                .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))
+                .cloned()
         };
 
         let result = match ty.name.as_deref() {
@@ -1456,22 +1432,22 @@ impl<'ir> RsTypeKind<'ir> {
                 "&mut" => RsTypeKind::Reference {
                     referent: get_pointee()?,
                     mutability: Mutability::Mut,
-                    lifetime_id: get_lifetime()?,
+                    lifetime: get_lifetime()?,
                 },
                 "&" => RsTypeKind::Reference {
                     referent: get_pointee()?,
                     mutability: Mutability::Const,
-                    lifetime_id: get_lifetime()?,
+                    lifetime: get_lifetime()?,
                 },
                 "#RvalueReference mut" => RsTypeKind::RvalueReference {
                     referent: get_pointee()?,
                     mutability: Mutability::Mut,
-                    lifetime_id: get_lifetime()?,
+                    lifetime: get_lifetime()?,
                 },
                 "#RvalueReference const" => RsTypeKind::RvalueReference {
                     referent: get_pointee()?,
                     mutability: Mutability::Const,
-                    lifetime_id: get_lifetime()?,
+                    lifetime: get_lifetime()?,
                 },
                 name => {
                     let mut type_args = get_type_args()?;
@@ -1502,17 +1478,17 @@ impl<'ir> RsTypeKind<'ir> {
         }
     }
 
-    pub fn format(&self, ir: &IR) -> Result<TokenStream> {
-        let result = match self {
+    pub fn format(&self, ir: &IR) -> TokenStream {
+        match self {
             RsTypeKind::Pointer { pointee, mutability } => {
                 let mutability = mutability.format_for_pointer();
-                let nested_type = pointee.format(ir)?;
+                let nested_type = pointee.format(ir);
                 quote! {* #mutability #nested_type}
             }
-            RsTypeKind::Reference { referent, mutability, lifetime_id } => {
+            RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
-                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
-                let nested_type = referent.format(ir)?;
+                let lifetime = format_lifetime_name(&lifetime.name);
+                let nested_type = referent.format(ir);
                 let reference = quote! {& #lifetime #mut_ #nested_type};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/200067242): Add a `use std::pin::Pin` to the crate, and use `Pin`.
@@ -1523,9 +1499,9 @@ impl<'ir> RsTypeKind<'ir> {
                     reference
                 }
             }
-            RsTypeKind::RvalueReference { referent, mutability, lifetime_id } => {
-                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
-                let nested_type = referent.format(ir)?;
+            RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
+                let lifetime = format_lifetime_name(&lifetime.name);
+                let nested_type = referent.format(ir);
                 // TODO(b/200067242): Add a `use ctor::RvalueReference` (etc.) to the crate.
                 if mutability == &Mutability::Mut {
                     quote! {ctor::RvalueReference<#lifetime, #nested_type>}
@@ -1535,11 +1511,10 @@ impl<'ir> RsTypeKind<'ir> {
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
                 let return_frag =
-                    return_type.format_as_return_type_fragment(ir)?;
+                    return_type.format_as_return_type_fragment(ir);
                 let param_types = param_types
                     .iter()
-                    .map(|t| t.format(ir))
-                    .collect::<Result<Vec<_>>>()?;
+                    .map(|t| t.format(ir));
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
             RsTypeKind::Record(record) => rs_type_name_for_record(record, ir),
@@ -1554,21 +1529,19 @@ impl<'ir> RsTypeKind<'ir> {
                 let generic_params = format_generic_params(
                     type_args
                         .iter()
-                        .map(|type_arg| type_arg.format(ir))
-                        .collect::<Result<Vec<_>>>()?,
+                        .map(|type_arg| type_arg.format(ir)),
                 );
                 quote! {#ident #generic_params}
             }
-        };
-        Ok(result)
+        }
     }
 
-    pub fn format_as_return_type_fragment(&self, ir: &IR) -> Result<TokenStream> {
+    pub fn format_as_return_type_fragment(&self, ir: &IR) -> TokenStream {
         match self {
-            RsTypeKind::Unit => Ok(quote! {}),
+            RsTypeKind::Unit => quote! {},
             other_type => {
-                let return_type = other_type.format(ir)?;
-                Ok(quote! { -> #return_type })
+                let return_type = other_type.format(ir);
+                quote! { -> #return_type }
             }
         }
     }
@@ -1577,9 +1550,9 @@ impl<'ir> RsTypeKind<'ir> {
     /// used to format `__this` parameter in a constructor thunk.
     pub fn format_mut_ref_as_uninitialized(&self, ir: &IR) -> Result<TokenStream> {
         match self {
-            RsTypeKind::Reference { referent, lifetime_id, mutability: Mutability::Mut } => {
-                let nested_type = referent.format(ir)?;
-                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
+            RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } => {
+                let nested_type = referent.format(ir);
+                let lifetime = format_lifetime_name(&lifetime.name);
                 Ok(quote! { & #lifetime mut std::mem::MaybeUninit< #nested_type > })
             }
             _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
@@ -1591,7 +1564,7 @@ impl<'ir> RsTypeKind<'ir> {
         match self {
             RsTypeKind::Reference { referent: pointee, mutability, .. }
             | RsTypeKind::Pointer { pointee, mutability } => {
-                let nested_type = pointee.format(ir)?;
+                let nested_type = pointee.format(ir);
                 let mut_ = mutability.format_for_pointer();
                 Ok(quote! { * #mut_ #nested_type })
             }
@@ -1621,9 +1594,9 @@ impl<'ir> RsTypeKind<'ir> {
         }
 
         match self {
-            RsTypeKind::Reference { referent, lifetime_id, mutability } => {
+            RsTypeKind::Reference { referent, lifetime, mutability } => {
                 let mut_ = mutability.format_for_reference();
-                let lifetime = Self::format_lifetime(lifetime_id, ir)?;
+                let lifetime = format_lifetime_name(&lifetime.name);
                 if mutability == &Mutability::Mut
                     && !referent.is_unpin()
                     && func.name != UnqualifiedIdentifier::Destructor
@@ -1636,13 +1609,6 @@ impl<'ir> RsTypeKind<'ir> {
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }
-    }
-
-    fn format_lifetime(lifetime_id: &LifetimeId, ir: &IR) -> Result<TokenStream> {
-        let lifetime_name = ir.lifetime_to_name(*lifetime_id).ok_or_else(|| {
-            anyhow!("`lifetime_to_name` doesn't have an entry for {:?}", lifetime_id)
-        })?;
-        Ok(format_lifetime_name(lifetime_name))
     }
 
     /// Returns whether the type represented by `self` implements the `Copy`
@@ -1713,7 +1679,7 @@ impl<'ir> RsTypeKind<'ir> {
     /// if the same LifetimeId is used in two `type_args`).
     pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
         self.dfs_iter().filter_map(|t| match t {
-            RsTypeKind::Reference { lifetime_id, .. } => Some(*lifetime_id),
+            RsTypeKind::Reference { lifetime, .. } => Some(lifetime.id),
             _ => None,
         })
     }
@@ -1762,7 +1728,7 @@ fn format_lifetime_name(lifetime_name: &str) -> TokenStream {
 
 fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
     RsTypeKind::new(ty, ir)
-        .and_then(|kind| kind.format(ir))
+        .map(|kind| kind.format(ir))
         .with_context(|| format!("Failed to format Rust type {:?}", ty))
 }
 
@@ -4069,7 +4035,7 @@ mod tests {
             let f = retrieve_func(&ir, "func");
             let t = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
 
-            let fmt = tokens_to_string(t.format(&ir)?)?;
+            let fmt = tokens_to_string(t.format(&ir))?;
             assert_eq!(test.rs, fmt, "Testing: {}", test_name);
 
             assert_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);

@@ -56,7 +56,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
         .map(|(idx, item)| (item.id(), idx))
         .collect::<HashMap<_, _>>();
 
-    let mut lifetime_to_name = HashMap::new();
+    let mut lifetimes: HashMap<LifetimeId, Lifetime> = HashMap::new();
     for item in &flat_ir.items {
         let lifetime_params = match item {
             Item::Record(Record { lifetime_params, .. }) => lifetime_params,
@@ -64,22 +64,22 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
             _ => continue,
         };
         for lifetime in lifetime_params {
-            match lifetime_to_name.entry(lifetime.id) {
+            match lifetimes.entry(lifetime.id) {
                 Entry::Occupied(occupied) => {
                     bail!(
                         "Duplicate use of lifetime ID {:?} for names: '{}, '{}",
                         lifetime.id,
-                        occupied.get(),
+                        &occupied.get().name,
                         &lifetime.name
                     )
                 }
                 Entry::Vacant(vacant) => {
-                    vacant.insert(lifetime.name.clone());
+                    vacant.insert(lifetime.clone());
                 }
             }
         }
     }
-    Ok(IR { flat_ir, item_id_to_item_idx, lifetime_to_name })
+    Ok(IR { flat_ir, item_id_to_item_idx, lifetimes })
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -551,7 +551,7 @@ pub struct IR {
     flat_ir: FlatIR,
     // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
     item_id_to_item_idx: HashMap<ItemId, usize>,
-    lifetime_to_name: HashMap<LifetimeId, String>,
+    lifetimes: HashMap<LifetimeId, Lifetime>,
 }
 
 impl IR {
@@ -667,8 +667,8 @@ impl IR {
         format!("{:?}", self.flat_ir)
     }
 
-    pub fn lifetime_to_name(&self, lifetime_id: LifetimeId) -> Option<&str> {
-        self.lifetime_to_name.get(&lifetime_id).map(|name| &**name)
+    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&Lifetime> {
+        self.lifetimes.get(&lifetime_id)
     }
 }
 
