@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -22,13 +23,13 @@ pub type __builtin_ms_va_list = *mut u8;
 #[repr(C)]
 pub struct SomeStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -39,7 +40,7 @@ impl Default for SomeStruct {
 impl<'b> From<ctor::RvalueReference<'b, SomeStruct>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, SomeStruct>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -118,7 +119,7 @@ pub struct FieldTypeTestStruct {
 impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -138,24 +139,24 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<SomeStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<SomeStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<SomeStruct>,
             __param_0: ctor::RvalueReference<'b, SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<FieldTypeTestStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<FieldTypeTestStruct>,
             __param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<SomeStruct>() == 1usize);
-const _: () = assert!(std::mem::align_of::<SomeStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<SomeStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<SomeStruct>() == 1usize);
 const _: () = {
     assert_impl_all!(SomeStruct: Clone);
 };
@@ -166,8 +167,8 @@ const _: () = {
     assert_not_impl_all!(SomeStruct: Drop);
 };
 
-const _: () = assert!(std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
-const _: () = assert!(std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
+const _: () = assert!(rust_std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
 const _: () = {
     assert_impl_all!(FieldTypeTestStruct: Clone);
 };

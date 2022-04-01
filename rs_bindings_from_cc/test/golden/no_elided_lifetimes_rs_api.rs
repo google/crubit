@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -27,7 +28,7 @@ pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
 #[repr(C)]
 pub struct S {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
@@ -94,10 +95,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<S>() == 1usize);
-const _: () = assert!(std::mem::align_of::<S>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<S>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<S>() == 1usize);
 const _: () = {
     assert_impl_all!(S: Clone);
 };

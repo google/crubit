@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -21,7 +22,7 @@ pub type __builtin_ms_va_list = *mut u8;
 #[repr(C)]
 pub struct PolymorphicClass {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 impl !Unpin for PolymorphicClass {}
@@ -34,12 +35,14 @@ impl<'b> ctor::CtorNew<&'b PolymorphicClass> for PolymorphicClass {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(__param_0: &'b PolymorphicClass) -> Self::CtorType {
-        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
-            crate::detail::__rust_thunk___ZN16PolymorphicClassC1ERKS_(
-                std::pin::Pin::into_inner_unchecked(dest),
-                __param_0,
-            );
-        })
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN16PolymorphicClassC1ERKS_(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
     }
 }
 
@@ -61,17 +64,17 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1ERKS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<PolymorphicClass>,
+            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicClass>,
             __param_0: &'b PolymorphicClass,
         );
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassD1Ev<'a>(__this: *mut PolymorphicClass);
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<PolymorphicClass>() == 8usize);
-const _: () = assert!(std::mem::align_of::<PolymorphicClass>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<PolymorphicClass>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<PolymorphicClass>() == 8usize);
 const _: () = {
     assert_not_impl_all!(PolymorphicClass: Copy);
 };

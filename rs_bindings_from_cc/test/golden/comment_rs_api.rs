@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -37,7 +38,7 @@ pub struct Foo {
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
             tmp.assume_init()
@@ -48,7 +49,7 @@ impl Default for Foo {
 impl<'b> From<ctor::RvalueReference<'b, Foo>> for Foo {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, Foo>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -86,7 +87,7 @@ pub struct Bar {
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
             tmp.assume_init()
@@ -97,7 +98,7 @@ impl Default for Bar {
 impl<'b> From<ctor::RvalueReference<'b, Bar>> for Bar {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, Bar>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -123,7 +124,7 @@ pub struct HasNoComments {
 impl Default for HasNoComments {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
             tmp.assume_init()
@@ -134,7 +135,7 @@ impl Default for HasNoComments {
 impl<'b> From<ctor::RvalueReference<'b, HasNoComments>> for HasNoComments {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, HasNoComments>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -158,31 +159,35 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN3FooC1Ev<'a>(__this: &'a mut std::mem::MaybeUninit<Foo>);
+        pub(crate) fn __rust_thunk___ZN3FooC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<Foo>,
+        );
         pub(crate) fn __rust_thunk___ZN3FooC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<Foo>,
+            __this: &'a mut rust_std::mem::MaybeUninit<Foo>,
             __param_0: ctor::RvalueReference<'b, Foo>,
         );
         pub(crate) fn __rust_thunk___Z3foov();
-        pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(__this: &'a mut std::mem::MaybeUninit<Bar>);
+        pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<Bar>,
+        );
         pub(crate) fn __rust_thunk___ZN3BarC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<Bar>,
+            __this: &'a mut rust_std::mem::MaybeUninit<Bar>,
             __param_0: ctor::RvalueReference<'b, Bar>,
         );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<HasNoComments>,
+            __this: &'a mut rust_std::mem::MaybeUninit<HasNoComments>,
         );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<HasNoComments>,
+            __this: &'a mut rust_std::mem::MaybeUninit<HasNoComments>,
             __param_0: ctor::RvalueReference<'b, HasNoComments>,
         );
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<Foo>() == 8usize);
-const _: () = assert!(std::mem::align_of::<Foo>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<Foo>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<Foo>() == 4usize);
 const _: () = {
     assert_impl_all!(Foo: Clone);
 };
@@ -195,8 +200,8 @@ const _: () = {
 const _: () = assert!(offset_of!(Foo, i) * 8 == 0usize);
 const _: () = assert!(offset_of!(Foo, j) * 8 == 32usize);
 
-const _: () = assert!(std::mem::size_of::<Bar>() == 4usize);
-const _: () = assert!(std::mem::align_of::<Bar>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<Bar>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<Bar>() == 4usize);
 const _: () = {
     assert_impl_all!(Bar: Clone);
 };
@@ -208,8 +213,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(Bar, i) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<HasNoComments>() == 4usize);
-const _: () = assert!(std::mem::align_of::<HasNoComments>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<HasNoComments>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<HasNoComments>() == 4usize);
 const _: () = {
     assert_impl_all!(HasNoComments: Clone);
 };

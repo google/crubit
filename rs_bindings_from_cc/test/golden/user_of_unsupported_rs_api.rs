@@ -9,6 +9,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use std as rust_std;
+
 pub type __builtin_ms_va_list = *mut u8;
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
@@ -25,4 +27,4 @@ pub type __builtin_ms_va_list = *mut u8;
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());

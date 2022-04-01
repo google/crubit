@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -27,7 +28,7 @@ pub struct FirstStruct {
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -38,7 +39,7 @@ impl Default for FirstStruct {
 impl<'b> From<ctor::RvalueReference<'b, FirstStruct>> for FirstStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, FirstStruct>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -68,7 +69,7 @@ pub struct SecondStruct {
 impl Default for SecondStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -79,7 +80,7 @@ impl Default for SecondStruct {
 impl<'b> From<ctor::RvalueReference<'b, SecondStruct>> for SecondStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, SecondStruct>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -107,28 +108,28 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<FirstStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<FirstStruct>,
         );
         pub(crate) fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<FirstStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<FirstStruct>,
             __param_0: ctor::RvalueReference<'b, FirstStruct>,
         );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<SecondStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<SecondStruct>,
         );
         pub(crate) fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<SecondStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<SecondStruct>,
             __param_0: ctor::RvalueReference<'b, SecondStruct>,
         );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<FirstStruct>() == 4usize);
-const _: () = assert!(std::mem::align_of::<FirstStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<FirstStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<FirstStruct>() == 4usize);
 const _: () = {
     assert_impl_all!(FirstStruct: Clone);
 };
@@ -140,8 +141,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(FirstStruct, field) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<SecondStruct>() == 4usize);
-const _: () = assert!(std::mem::align_of::<SecondStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<SecondStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<SecondStruct>() == 4usize);
 const _: () = {
     assert_impl_all!(SecondStruct: Clone);
 };

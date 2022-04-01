@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -28,7 +29,7 @@ pub struct SomeClass {
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
             tmp.assume_init()
@@ -39,7 +40,7 @@ impl Default for SomeClass {
 impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, SomeClass>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -76,10 +77,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<SomeClass>,
+            __this: &'a mut rust_std::mem::MaybeUninit<SomeClass>,
         );
         pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<SomeClass>,
+            __this: &'a mut rust_std::mem::MaybeUninit<SomeClass>,
             __param_0: ctor::RvalueReference<'b, SomeClass>,
         );
         #[link_name = "_ZN9SomeClass13public_methodEv"]
@@ -89,10 +90,10 @@ mod detail {
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<SomeClass>() == 8usize);
-const _: () = assert!(std::mem::align_of::<SomeClass>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<SomeClass>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<SomeClass>() == 4usize);
 const _: () = {
     assert_impl_all!(SomeClass: Clone);
 };

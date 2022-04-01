@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -29,7 +30,7 @@ pub struct Trivial {
 impl Default for Trivial {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN7TrivialC1Ev(&mut tmp);
             tmp.assume_init()
@@ -40,7 +41,7 @@ impl Default for Trivial {
 impl<'b> From<ctor::RvalueReference<'b, Trivial>> for Trivial {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, Trivial>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN7TrivialC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -67,7 +68,7 @@ pub struct TrivialWithDefaulted {
 impl Default for TrivialWithDefaulted {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(&mut tmp);
             tmp.assume_init()
@@ -82,7 +83,7 @@ impl Default for TrivialWithDefaulted {
 impl<'b> From<ctor::RvalueReference<'b, TrivialWithDefaulted>> for TrivialWithDefaulted {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, TrivialWithDefaulted>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -111,12 +112,14 @@ impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(__param_0: &'b TrivialNonfinal) -> Self::CtorType {
-        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
-            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
-                std::pin::Pin::into_inner_unchecked(dest),
-                __param_0,
-            );
-        })
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
     }
 }
 
@@ -124,12 +127,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNo
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(__param_0: ctor::RvalueReference<'b, TrivialNonfinal>) -> Self::CtorType {
-        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
-            crate::detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
-                std::pin::Pin::into_inner_unchecked(dest),
-                __param_0,
-            );
-        })
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
     }
 }
 
@@ -175,7 +180,7 @@ pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut TrivialWithDefaulted) 
 }
 
 #[inline(always)]
-pub fn TakesTrivialNonfinalByReference<'a>(trivial: std::pin::Pin<&'a mut TrivialNonfinal>) {
+pub fn TakesTrivialNonfinalByReference<'a>(trivial: rust_std::pin::Pin<&'a mut TrivialNonfinal>) {
     unsafe {
         crate::detail::__rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(trivial)
     }
@@ -188,25 +193,25 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN7TrivialC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<Trivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<Trivial>,
         );
         pub(crate) fn __rust_thunk___ZN7TrivialC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<Trivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<Trivial>,
             __param_0: ctor::RvalueReference<'b, Trivial>,
         );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,
+            __this: &'a mut rust_std::mem::MaybeUninit<TrivialWithDefaulted>,
         );
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<TrivialWithDefaulted>,
+            __this: &'a mut rust_std::mem::MaybeUninit<TrivialWithDefaulted>,
             __param_0: ctor::RvalueReference<'b, TrivialWithDefaulted>,
         );
         pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<TrivialNonfinal>,
+            __this: &'a mut rust_std::mem::MaybeUninit<TrivialNonfinal>,
             __param_0: &'b TrivialNonfinal,
         );
         pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<TrivialNonfinal>,
+            __this: &'a mut rust_std::mem::MaybeUninit<TrivialNonfinal>,
             __param_0: ctor::RvalueReference<'b, TrivialNonfinal>,
         );
         #[link_name = "_Z12TakesByValue7Trivial"]
@@ -227,15 +232,15 @@ mod detail {
         );
         #[link_name = "_Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal"]
         pub(crate) fn __rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal<'a>(
-            trivial: std::pin::Pin<&'a mut TrivialNonfinal>,
+            trivial: rust_std::pin::Pin<&'a mut TrivialNonfinal>,
         );
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<Trivial>() == 4usize);
-const _: () = assert!(std::mem::align_of::<Trivial>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<Trivial>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<Trivial>() == 4usize);
 const _: () = {
     assert_impl_all!(Trivial: Clone);
 };
@@ -247,8 +252,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(Trivial, trivial_field) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<TrivialWithDefaulted>() == 4usize);
-const _: () = assert!(std::mem::align_of::<TrivialWithDefaulted>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<TrivialWithDefaulted>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<TrivialWithDefaulted>() == 4usize);
 const _: () = {
     assert_impl_all!(TrivialWithDefaulted: Clone);
 };
@@ -260,8 +265,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(TrivialWithDefaulted, trivial_field) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<TrivialNonfinal>() == 4usize);
-const _: () = assert!(std::mem::align_of::<TrivialNonfinal>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<TrivialNonfinal>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<TrivialNonfinal>() == 4usize);
 const _: () = {
     assert_not_impl_all!(TrivialNonfinal: Copy);
 };

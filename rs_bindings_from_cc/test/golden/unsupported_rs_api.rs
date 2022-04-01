@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -29,12 +30,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>> for Nont
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialCustomType>) -> Self::CtorType {
-        ctor::FnCtor::new(move |dest: std::pin::Pin<&mut std::mem::MaybeUninit<Self>>| unsafe {
-            crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
-                std::pin::Pin::into_inner_unchecked(dest),
-                __param_0,
-            );
-        })
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
     }
 }
 
@@ -64,13 +67,13 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>> for Nont
 #[repr(C)]
 pub struct ContainingStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -81,7 +84,7 @@ impl Default for ContainingStruct {
 impl<'b> From<ctor::RvalueReference<'b, ContainingStruct>> for ContainingStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, ContainingStruct>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -117,23 +120,23 @@ mod detail {
     extern "C" {
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
         pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<NontrivialCustomType>,
+            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialCustomType>,
             __param_0: ctor::RvalueReference<'b, NontrivialCustomType>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<ContainingStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<ContainingStruct>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<ContainingStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<ContainingStruct>,
             __param_0: ctor::RvalueReference<'b, ContainingStruct>,
         );
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<NontrivialCustomType>() == 4usize);
-const _: () = assert!(std::mem::align_of::<NontrivialCustomType>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<NontrivialCustomType>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<NontrivialCustomType>() == 4usize);
 const _: () = {
     assert_not_impl_all!(NontrivialCustomType: Copy);
 };
@@ -142,8 +145,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(NontrivialCustomType, i) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<ContainingStruct>() == 1usize);
-const _: () = assert!(std::mem::align_of::<ContainingStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<ContainingStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<ContainingStruct>() == 1usize);
 const _: () = {
     assert_impl_all!(ContainingStruct: Clone);
 };

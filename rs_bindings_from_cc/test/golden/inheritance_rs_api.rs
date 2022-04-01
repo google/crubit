@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -24,7 +25,7 @@ pub type __builtin_ms_va_list = *mut u8;
 #[repr(C)]
 pub struct Base0 {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 impl !Unpin for Base0 {}
@@ -107,7 +108,7 @@ impl !Unpin for Base2 {}
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Derived {
-    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 12],
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
 impl<'a> From<&'a Derived> for &'a Base0 {
@@ -148,10 +149,10 @@ impl<'a> From<&'a Derived> for &'a Base2 {
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<Base0>() == 1usize);
-const _: () = assert!(std::mem::align_of::<Base0>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<Base0>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<Base0>() == 1usize);
 const _: () = {
     assert_not_impl_all!(Base0: Copy);
 };
@@ -159,8 +160,8 @@ const _: () = {
     assert_not_impl_all!(Base0: Drop);
 };
 
-const _: () = assert!(std::mem::size_of::<Base1>() == 16usize);
-const _: () = assert!(std::mem::align_of::<Base1>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<Base1>() == 16usize);
+const _: () = assert!(rust_std::mem::align_of::<Base1>() == 8usize);
 const _: () = {
     assert_not_impl_all!(Base1: Copy);
 };
@@ -170,8 +171,8 @@ const _: () = {
 const _: () = assert!(offset_of!(Base1, b1_1_) * 8 == 0usize);
 const _: () = assert!(offset_of!(Base1, b1_2_) * 8 == 64usize);
 
-const _: () = assert!(std::mem::size_of::<Base2>() == 2usize);
-const _: () = assert!(std::mem::align_of::<Base2>() == 2usize);
+const _: () = assert!(rust_std::mem::size_of::<Base2>() == 2usize);
+const _: () = assert!(rust_std::mem::align_of::<Base2>() == 2usize);
 const _: () = {
     assert_not_impl_all!(Base2: Copy);
 };
@@ -180,8 +181,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(Base2, b2_1_) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<Derived>() == 16usize);
-const _: () = assert!(std::mem::align_of::<Derived>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<Derived>() == 16usize);
+const _: () = assert!(rust_std::mem::align_of::<Derived>() == 8usize);
 const _: () = {
     assert_impl_all!(Derived: Clone);
 };

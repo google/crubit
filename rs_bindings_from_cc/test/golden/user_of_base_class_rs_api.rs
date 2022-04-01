@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -26,7 +27,7 @@ pub type __builtin_ms_va_list = *mut u8;
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Derived2 {
-    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 12],
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
 impl<'a> From<&'a Derived2> for &'a Base0 {
@@ -67,10 +68,10 @@ impl<'a> From<&'a Derived2> for &'a Base2 {
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_BASE_CLASS_H_
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<Derived2>() == 16usize);
-const _: () = assert!(std::mem::align_of::<Derived2>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<Derived2>() == 16usize);
+const _: () = assert!(rust_std::mem::align_of::<Derived2>() == 8usize);
 const _: () = {
     assert_impl_all!(Derived2: Clone);
 };

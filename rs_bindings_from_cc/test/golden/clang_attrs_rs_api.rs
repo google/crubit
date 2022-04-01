@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -21,7 +22,7 @@ pub type __builtin_ms_va_list = *mut u8;
 #[repr(C, align(64))]
 pub struct HasCustomAlignment {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 impl !Unpin for HasCustomAlignment {}
@@ -75,9 +76,9 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
-    __base_class_subobjects: [std::mem::MaybeUninit<u8>; 0],
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 0],
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 impl<'a> From<&'a InheritsFromBaseWithCustomAlignment> for &'a HasCustomAlignment {
     fn from(x: &'a InheritsFromBaseWithCustomAlignment) -> Self {
@@ -110,7 +111,7 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
     /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: std::mem::MaybeUninit<u8>,
+    placeholder: rust_std::mem::MaybeUninit<u8>,
 }
 
 impl !Unpin for HasCustomAlignmentWithGnuAttr {}
@@ -137,10 +138,10 @@ impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<HasCustomAlignment>() == 64usize);
-const _: () = assert!(std::mem::align_of::<HasCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<HasCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<HasCustomAlignment>() == 64usize);
 const _: () = {
     assert_not_impl_all!(HasCustomAlignment: Copy);
 };
@@ -148,8 +149,8 @@ const _: () = {
     assert_not_impl_all!(HasCustomAlignment: Drop);
 };
 
-const _: () = assert!(std::mem::size_of::<HasFieldWithCustomAlignment>() == 64usize);
-const _: () = assert!(std::mem::align_of::<HasFieldWithCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<HasFieldWithCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<HasFieldWithCustomAlignment>() == 64usize);
 const _: () = {
     assert_not_impl_all!(HasFieldWithCustomAlignment: Copy);
 };
@@ -158,8 +159,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(HasFieldWithCustomAlignment, field) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
-const _: () = assert!(std::mem::align_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
 const _: () = {
     assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Copy);
 };
@@ -167,8 +168,8 @@ const _: () = {
     assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Drop);
 };
 
-const _: () = assert!(std::mem::size_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
-const _: () = assert!(std::mem::align_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
 const _: () = {
     assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Copy);
 };

@@ -11,6 +11,7 @@
 
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
+use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
@@ -31,7 +32,7 @@ pub struct DocCommentSlashes {
 impl<'b> From<ctor::RvalueReference<'b, DocCommentSlashes>> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, DocCommentSlashes>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -52,7 +53,7 @@ impl<'b> From<ctor::RvalueReference<'b, DocCommentSlashes>> for DocCommentSlashe
 impl Default for DocCommentSlashes {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(&mut tmp);
             tmp.assume_init()
@@ -65,7 +66,7 @@ impl Default for DocCommentSlashes {
 impl From<i32> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: i32) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(&mut tmp, __param_0);
             tmp.assume_init()
@@ -112,7 +113,7 @@ pub struct DocCommentBang {
 impl Default for DocCommentBang {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(&mut tmp);
             tmp.assume_init()
@@ -123,7 +124,7 @@ impl Default for DocCommentBang {
 impl<'b> From<ctor::RvalueReference<'b, DocCommentBang>> for DocCommentBang {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, DocCommentBang>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DocCommentBangC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -152,7 +153,7 @@ pub struct MultilineCommentTwoStars {
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(&mut tmp);
             tmp.assume_init()
@@ -163,7 +164,7 @@ impl Default for MultilineCommentTwoStars {
 impl<'b> From<ctor::RvalueReference<'b, MultilineCommentTwoStars>> for MultilineCommentTwoStars {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, MultilineCommentTwoStars>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -192,7 +193,7 @@ pub struct LineComment {
 impl Default for LineComment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11LineCommentC1Ev(&mut tmp);
             tmp.assume_init()
@@ -203,7 +204,7 @@ impl Default for LineComment {
 impl<'b> From<ctor::RvalueReference<'b, LineComment>> for LineComment {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, LineComment>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11LineCommentC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -232,7 +233,7 @@ pub struct MultilineOneStar {
 impl Default for MultilineOneStar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&mut tmp);
             tmp.assume_init()
@@ -243,7 +244,7 @@ impl Default for MultilineOneStar {
 impl<'b> From<ctor::RvalueReference<'b, MultilineOneStar>> for MultilineOneStar {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, MultilineOneStar>) -> Self {
-        let mut tmp = std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16MultilineOneStarC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -275,16 +276,16 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
+            __this: &'a mut rust_std::mem::MaybeUninit<DocCommentSlashes>,
             __param_0: ctor::RvalueReference<'b, DocCommentSlashes>,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
+            __this: &'a mut rust_std::mem::MaybeUninit<DocCommentSlashes>,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei<'a>(
-            __this: &'a mut std::mem::MaybeUninit<DocCommentSlashes>,
+            __this: &'a mut rust_std::mem::MaybeUninit<DocCommentSlashes>,
             __param_0: i32,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
@@ -299,41 +300,41 @@ mod detail {
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<DocCommentBang>,
+            __this: &'a mut rust_std::mem::MaybeUninit<DocCommentBang>,
         );
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<DocCommentBang>,
+            __this: &'a mut rust_std::mem::MaybeUninit<DocCommentBang>,
             __param_0: ctor::RvalueReference<'b, DocCommentBang>,
         );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
+            __this: &'a mut rust_std::mem::MaybeUninit<MultilineCommentTwoStars>,
         );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<MultilineCommentTwoStars>,
+            __this: &'a mut rust_std::mem::MaybeUninit<MultilineCommentTwoStars>,
             __param_0: ctor::RvalueReference<'b, MultilineCommentTwoStars>,
         );
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<LineComment>,
+            __this: &'a mut rust_std::mem::MaybeUninit<LineComment>,
         );
         pub(crate) fn __rust_thunk___ZN11LineCommentC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<LineComment>,
+            __this: &'a mut rust_std::mem::MaybeUninit<LineComment>,
             __param_0: ctor::RvalueReference<'b, LineComment>,
         );
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev<'a>(
-            __this: &'a mut std::mem::MaybeUninit<MultilineOneStar>,
+            __this: &'a mut rust_std::mem::MaybeUninit<MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1EOS_<'a, 'b>(
-            __this: &'a mut std::mem::MaybeUninit<MultilineOneStar>,
+            __this: &'a mut rust_std::mem::MaybeUninit<MultilineOneStar>,
             __param_0: ctor::RvalueReference<'b, MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
     }
 }
 
-const _: () = assert!(std::mem::size_of::<Option<&i32>>() == std::mem::size_of::<&i32>());
+const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(std::mem::size_of::<DocCommentSlashes>() == 4usize);
-const _: () = assert!(std::mem::align_of::<DocCommentSlashes>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<DocCommentSlashes>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<DocCommentSlashes>() == 4usize);
 const _: () = {
     assert_impl_all!(DocCommentSlashes: Clone);
 };
@@ -345,8 +346,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(DocCommentSlashes, i) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<DocCommentBang>() == 4usize);
-const _: () = assert!(std::mem::align_of::<DocCommentBang>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<DocCommentBang>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<DocCommentBang>() == 4usize);
 const _: () = {
     assert_impl_all!(DocCommentBang: Clone);
 };
@@ -358,8 +359,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(DocCommentBang, i) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<MultilineCommentTwoStars>() == 4usize);
-const _: () = assert!(std::mem::align_of::<MultilineCommentTwoStars>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<MultilineCommentTwoStars>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<MultilineCommentTwoStars>() == 4usize);
 const _: () = {
     assert_impl_all!(MultilineCommentTwoStars: Clone);
 };
@@ -371,8 +372,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(MultilineCommentTwoStars, i) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<LineComment>() == 4usize);
-const _: () = assert!(std::mem::align_of::<LineComment>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<LineComment>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<LineComment>() == 4usize);
 const _: () = {
     assert_impl_all!(LineComment: Clone);
 };
@@ -384,8 +385,8 @@ const _: () = {
 };
 const _: () = assert!(offset_of!(LineComment, i) * 8 == 0usize);
 
-const _: () = assert!(std::mem::size_of::<MultilineOneStar>() == 4usize);
-const _: () = assert!(std::mem::align_of::<MultilineOneStar>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<MultilineOneStar>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<MultilineOneStar>() == 4usize);
 const _: () = {
     assert_impl_all!(MultilineOneStar: Clone);
 };
