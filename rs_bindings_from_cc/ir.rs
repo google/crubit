@@ -204,10 +204,10 @@ pub struct ItemId(pub usize);
 pub struct BazelLabel(pub String);
 
 impl BazelLabel {
-    pub fn target_name(&self) -> Result<&str> {
+    pub fn target_name(&self) -> &str {
         match self.0.split_once(':') {
-            Some((_package, target_name)) => Ok(target_name),
-            None => bail!("Unsupported label format {:?}", self.0),
+            Some((_package, target_name)) => target_name,
+            None => panic!("Unsupported label format {:?}", self.0),
         }
     }
 }

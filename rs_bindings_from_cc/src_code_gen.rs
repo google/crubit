@@ -994,7 +994,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     };
 
     let record_trait_assertions = {
-        let record_type_name = rs_type_name_for_record(record, ir)?;
+        let record_type_name = rs_type_name_for_record(record, ir);
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -1321,22 +1321,22 @@ fn rs_type_name_for_target_and_identifier(
     owning_target: &BazelLabel,
     identifier: &ir::Identifier,
     ir: &IR,
-) -> Result<TokenStream> {
+) -> TokenStream {
     let ident = make_rs_ident(identifier.identifier.as_str());
 
     if ir.is_current_target(owning_target) || ir.is_stdlib_target(owning_target) {
-        Ok(quote! {#ident})
+        quote! {#ident}
     } else {
-        let owning_crate_name = owning_target.target_name()?;
+        let owning_crate_name = owning_target.target_name();
         // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
         // available
         let escaped_owning_crate_name = owning_crate_name.replace('-', "_");
         let owning_crate = make_rs_ident(&escaped_owning_crate_name);
-        Ok(quote! {#owning_crate::#ident})
+        quote! {#owning_crate::#ident}
     }
 }
 
-fn rs_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
+fn rs_type_name_for_record(record: &Record, ir: &IR) -> TokenStream {
     rs_type_name_for_target_and_identifier(
         &record.owning_target,
         &Identifier { identifier: record.rs_name.clone() },
@@ -1542,12 +1542,12 @@ impl<'ir> RsTypeKind<'ir> {
                     .collect::<Result<Vec<_>>>()?;
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
-            RsTypeKind::Record(record) => rs_type_name_for_record(record, ir)?,
+            RsTypeKind::Record(record) => rs_type_name_for_record(record, ir),
             RsTypeKind::TypeAlias { type_alias, .. } => rs_type_name_for_target_and_identifier(
                 &type_alias.owning_target,
                 &type_alias.identifier,
                 ir,
-            )?,
+            ),
             RsTypeKind::Unit => quote! {()},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
