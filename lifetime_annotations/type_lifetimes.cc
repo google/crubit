@@ -88,6 +88,36 @@ ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
   return *this;
 }
 
+namespace {
+
+llvm::Error ForEachTemplateArgument(
+    clang::QualType type,
+    const std::function<llvm::Error(int, clang::QualType)>& callback) {
+  llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> template_args =
+      GetTemplateArgs(type);
+  for (size_t depth = 0; depth < template_args.size(); depth++) {
+    const auto& args_at_depth = template_args[depth];
+    for (const clang::TemplateArgument& arg : args_at_depth) {
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+        if (llvm::Error err = callback(depth, arg.getAsType())) {
+          return err;
+        }
+      } else if (arg.getKind() == clang::TemplateArgument::Pack) {
+        for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
+          if (inner_arg.getKind() == clang::TemplateArgument::Type) {
+            if (llvm::Error err = callback(depth, inner_arg.getAsType())) {
+              return err;
+            }
+          }
+        }
+      }
+    }
+  }
+  return llvm::Error::success();
+}
+
+}  // namespace
+
 llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     clang::QualType type, LifetimeFactory lifetime_factory) {
   assert(!type.isNull());
@@ -102,39 +132,24 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   // Add implicit lifetime parameters for type template parameters.
-  llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> template_args =
-      GetTemplateArgs(type);
-  if (!template_args.empty()) {
-    for (const auto& args_at_depth : template_args) {
-      ret.template_argument_lifetimes_.push_back({});
-      for (const clang::TemplateArgument& arg : args_at_depth) {
-        if (arg.getKind() == clang::TemplateArgument::Type) {
-          ValueLifetimes template_arg_lifetime;
-          if (llvm::Error err =
-                  ValueLifetimes::Create(arg.getAsType(), lifetime_factory)
-                      .moveInto(template_arg_lifetime)) {
-            return std::move(err);
-          }
-          ret.template_argument_lifetimes_.back().push_back(
-              template_arg_lifetime);
-        } else if (arg.getKind() == clang::TemplateArgument::Pack) {
-          for (const clang::TemplateArgument& inner_arg :
-               arg.getPackAsArray()) {
-            if (inner_arg.getKind() == clang::TemplateArgument::Type) {
-              ValueLifetimes template_arg_lifetime;
-              if (llvm::Error err = ValueLifetimes::Create(
-                                        inner_arg.getAsType(), lifetime_factory)
-                                        .moveInto(template_arg_lifetime)) {
-                return std::move(err);
-              }
-              ret.template_argument_lifetimes_.back().push_back(
-                  template_arg_lifetime);
+  if (llvm::Error err = ForEachTemplateArgument(
+          type,
+          [&ret, &lifetime_factory](int depth,
+                                    clang::QualType arg_type) -> llvm::Error {
+            ValueLifetimes template_arg_lifetime;
+            if (llvm::Error err =
+                    ValueLifetimes::Create(arg_type, lifetime_factory)
+                        .moveInto(template_arg_lifetime)) {
+              return err;
             }
-          }
-        }
-      }
-    }
-    return ret;
+            if (ret.template_argument_lifetimes_.size() <= depth) {
+              ret.template_argument_lifetimes_.resize(depth + 1);
+            }
+            ret.template_argument_lifetimes_[depth].push_back(
+                template_arg_lifetime);
+            return llvm::Error::success();
+          })) {
+    return std::move(err);
   }
 
   clang::QualType pointee = PointeeType(type);
