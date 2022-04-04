@@ -829,6 +829,9 @@ fn should_implement_drop(record: &Record) -> bool {
 ///
 /// > if `T` is not `Copy`, using the pointed-to value after calling
 /// > `drop_in_place` can cause undefined behavior
+///
+/// For non-Copy union fields, failing to use `ManuallyDrop<T>` would additionally cause a
+/// compile-time error until https://github.com/rust-lang/rust/issues/55149 is stabilized.
 fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
     let ty_implements_copy = RsTypeKind::new(ty, ir)?.implements_copy();
     Ok(!ty_implements_copy)
@@ -868,7 +871,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 })?;
             // TODO(b/212696226): Verify cases where ManuallyDrop<T> is skipped
             // via static asserts in the generated code.
-            if should_implement_drop(record) {
+            if should_implement_drop(record) || record.is_union {
                 if needs_manually_drop(&f.type_.rs_type, ir)? {
                     // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
                     // if we can ask Rust to preserve field destruction order if the
@@ -926,6 +929,11 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     } else {
         quote! {#[derive( #(#derives),* )]}
     };
+    let record_kind = if record.is_union {
+        quote! { union }
+    } else {
+        quote! { struct }
+    };
     let unpin_impl = if record.is_unpin() {
         quote! {}
     } else {
@@ -974,7 +982,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         #doc_comment
         #derives
         #[repr(#( #repr_attributes ),*)]
-        pub struct #ident {
+        pub #record_kind #ident {
             #base_subobjects_field
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
             #empty_struct_placeholder_field
@@ -2395,7 +2403,7 @@ mod tests {
     #[test]
     fn test_copy_derives_not_final() {
         let mut record = ir_record("S");
-        record.is_final = false;
+        record.is_inheritable = true;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
@@ -3297,6 +3305,204 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_basic_union() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            union SomeUnion {
+                int some_field;
+                long long some_bigger_field;
+            };
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub union SomeUnion {
+                    pub some_field: i32,
+                    pub some_bigger_field: i64,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_union_with_private_fields() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            union SomeUnionWithPrivateFields {
+              public:
+                int public_field;
+              private:
+                long long private_field;
+            };
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub union SomeUnionWithPrivateFields {
+                    pub public_field: i32,
+                    private_field: i64,
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                const _: () = assert!(rust_std::mem::size_of::<SomeUnionWithPrivateFields>() == 8usize);
+                const _: () = assert!(rust_std::mem::align_of::<SomeUnionWithPrivateFields>() == 8usize);
+                const _: () = {
+                  assert_impl_all!(SomeUnionWithPrivateFields: Clone);
+                };
+                const _: () = {
+                  assert_impl_all!(SomeUnionWithPrivateFields: Copy);
+                };
+                const _: () = {
+                  assert_not_impl_all!(SomeUnionWithPrivateFields: Drop);
+                };
+                const _: () = assert!(offset_of!(SomeUnionWithPrivateFields, public_field) * 8 == 0usize);
+                const _: () = assert!(offset_of!(SomeUnionWithPrivateFields, private_field) * 8 == 0usize);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_empty_union() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            union EmptyUnion {};
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub union EmptyUnion {
+                    /// Prevent empty C++ struct being zero-size in Rust.
+                    placeholder: rust_std::mem::MaybeUninit<u8>,
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                const _: () = assert!(rust_std::mem::size_of::<EmptyUnion>() == 1usize);
+                const _: () = assert!(rust_std::mem::align_of::<EmptyUnion>() == 1usize);
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_union_field_with_nontrivial_destructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct NontrivialStruct { ~NontrivialStruct(); };
+            union UnionWithNontrivialField {
+                int trivial_field;
+                NontrivialStruct nontrivial_field;
+            };
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub union UnionWithNontrivialField {
+                    pub trivial_field: i32,
+                    pub nontrivial_field: rust_std::mem::ManuallyDrop<NontrivialStruct>,
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                const _: () = assert!(rust_std::mem::size_of::<UnionWithNontrivialField>() == 4usize);
+                const _: () = assert!(rust_std::mem::align_of::<UnionWithNontrivialField>() == 4usize);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_union_with_constructors() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            union UnionWithDefaultConstructors {
+                int a;
+            };
+            "#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub union UnionWithDefaultConstructors {
+                    pub a: i32,
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl Default for UnionWithDefaultConstructors {
+                    #[inline(always)]
+                    fn default() -> Self {
+                        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&mut tmp);
+                            tmp.assume_init()
+                        }
+                    }
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'b> From<ctor::RvalueReference<'b, UnionWithDefaultConstructors>> for UnionWithDefaultConstructors {
+                    #[inline(always)]
+                    fn from(__param_0: ctor::RvalueReference<'b, UnionWithDefaultConstructors>) -> Self {
+                        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
+                            tmp.assume_init()
+                        }
+                    }
+                }
+            }
+        );
+
         Ok(())
     }
 

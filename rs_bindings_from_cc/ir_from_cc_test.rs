@@ -159,19 +159,6 @@ fn test_function_template_not_supported_yet() {
 }
 
 #[test]
-fn test_union_not_supported_yet() {
-    let ir = ir_from_cc("union SomeUnion {};").unwrap();
-    assert_ir_not_matches!(ir, quote! { Record { identifier: "SomeUnion" ... } });
-    assert_ir_matches!(
-        ir,
-        quote! { UnsupportedItem {
-            name: "SomeUnion",
-            message: "Unions are not supported yet" ...
-        }}
-    );
-}
-
-#[test]
 fn test_record_member_variable_access_specifiers() {
     let ir = ir_from_cc(
         "
@@ -786,16 +773,13 @@ fn test_records_nested_in_records_not_supported_yet() {
 
 #[test]
 fn test_record_with_unsupported_field() -> Result<()> {
-    // Using `union` because (I assume) it won't be supported in the long-term.
+    // Using a nested struct because it's currently not supported.
     // But... any other unsupported type would also work for this test.
     let ir = ir_from_cc(
         r#"
-        union MyUnion {
-          int i;
-          float f;
-        };
         struct StructWithUnsupportedField {
-          MyUnion my_field;
+          struct NestedStruct {};
+          NestedStruct my_field;
         };
     "#,
     )?;
@@ -804,7 +788,7 @@ fn test_record_with_unsupported_field() -> Result<()> {
         quote! {
               UnsupportedItem(UnsupportedItem {
                 name: "StructWithUnsupportedField",
-                message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'union MyUnion': No generated bindings found for 'MyUnion'",
+                message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'",
                 ...
             })
         }
@@ -815,11 +799,11 @@ fn test_record_with_unsupported_field() -> Result<()> {
 #[test]
 fn test_record_base_with_unsupported_field() -> Result<()> {
     let ir = ir_from_cc(
-        r#" // Using `union` because (I assume) it won't be supported in the long-term.
-            // But... any other unsupported type would also work for this test.
-            union UnsupportedType { int i; float f; };
+        r#" // Using a nested struct because it's currently not supported.
+            // But... any other unsupported type would also work for this test
             struct BaseClass {
-              UnsupportedType base_field;
+              struct NestedStruct {};
+              NestedStruct base_field;
             };
             struct DerivedClass : public BaseClass {
               int derived_field;
@@ -847,8 +831,6 @@ fn test_record_base_with_unsupported_field() -> Result<()> {
                base_size: Some(4),
                override_alignment: true,
                ...
-               is_trivial_abi: true,
-               is_final: false,
            }),
         }
     );
@@ -860,7 +842,7 @@ fn test_record_base_with_unsupported_field() -> Result<()> {
         quote! {
            UnsupportedItem(UnsupportedItem {
                name: "BaseClass",
-               message: "UNIMPLEMENTED: Type of field 'base_field' is not supported: Unsupported type 'union UnsupportedType': No generated bindings found for 'UnsupportedType'",
+               message: "UNIMPLEMENTED: Type of field 'base_field' is not supported: Unsupported type 'struct BaseClass::NestedStruct': No generated bindings found for 'NestedStruct'",
                ...
            })
         }
@@ -993,6 +975,7 @@ fn test_struct() {
                 ], ...
                 size: 8, ...
                 alignment: 4, ...
+                is_union: false, ...
             }
         }
     );
@@ -1002,6 +985,41 @@ fn test_struct() {
 fn test_struct_forward_declaration() {
     let ir = ir_from_cc("struct Struct;").unwrap();
     assert!(!ir.records().any(|r| r.rs_name == "Struct"));
+}
+
+#[test]
+fn test_union() {
+    let ir = ir_from_cc("union SomeUnion { int first_field; int second_field; };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "SomeUnion" ...
+                cc_name: "SomeUnion" ...
+                fields: [
+                    Field {
+                        identifier: "first_field", ...
+                        type_ : MappedType {
+                            rs_type : RsType { name : Some ("i32"), ...},
+                            cc_type : CcType { name : Some ("int"), ...},
+                         }, ...
+                        offset: 0, ...
+                    },
+                    Field {
+                        identifier: "second_field", ...
+                        type_ : MappedType {
+                            rs_type : RsType { name : Some ("i32"), ...},
+                            cc_type : CcType { name : Some ("int"), ...},
+                         }, ...
+                        offset: 0, ...
+                    },
+                ], ...
+                size: 4, ...
+                alignment: 4, ...
+                is_union: true, ...
+            }
+        }
+    );
 }
 
 #[test]
@@ -1425,8 +1443,9 @@ fn test_unnamed_enum_unsupported() {
 
 #[test]
 fn test_unsupported_item_has_item_id() {
-    let ir = ir_from_cc("union SomeUnion {};").unwrap();
-    let unsupported = ir.unsupported_items().find(|i| i.name == "SomeUnion").unwrap();
+    let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
+    let unsupported =
+        ir.unsupported_items().find(|i| i.name == "SomeStruct::NestedStruct").unwrap();
     assert_ne!(unsupported.id, ItemId(0));
 }
 

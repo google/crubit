@@ -56,9 +56,42 @@ impl<'b> From<ctor::RvalueReference<'b, SomeStruct>> for SomeStruct {
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Bindings for this kind of operator are not supported
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub union EmptyUnion {
+    /// Prevent empty C++ struct being zero-size in Rust.
+    placeholder: rust_std::mem::MaybeUninit<u8>,
+}
+
+impl Default for EmptyUnion {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<ctor::RvalueReference<'b, EmptyUnion>> for EmptyUnion {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, EmptyUnion>) -> Self {
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
 // rs_bindings_from_cc/test/golden/types.h;l=15
-// Error while generating bindings for item 'SomeUnion':
-// Unions are not supported yet
+// Error while generating bindings for item 'EmptyUnion::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=15
+// Error while generating bindings for item 'EmptyUnion::operator=':
+// Bindings for this kind of operator are not supported
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -127,6 +160,47 @@ impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestS
     }
 }
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub union NonEmptyUnion {
+    pub bool_field: bool,
+    pub char_field: u8,
+    pub int16_field: i16,
+    pub int_field: i32,
+    pub int32_field: i32,
+    pub int64_field: i64,
+}
+
+impl Default for NonEmptyUnion {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<ctor::RvalueReference<'b, NonEmptyUnion>> for NonEmptyUnion {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, NonEmptyUnion>) -> Self {
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/types.h;l=84
+// Error while generating bindings for item 'NonEmptyUnion::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/types.h;l=84
+// Error while generating bindings for item 'NonEmptyUnion::operator=':
+// Bindings for this kind of operator are not supported
+
 #[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
@@ -145,9 +219,23 @@ mod detail {
             __this: &'a mut rust_std::mem::MaybeUninit<SomeStruct>,
             __param_0: ctor::RvalueReference<'b, SomeStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN10EmptyUnionC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<EmptyUnion>,
+        );
+        pub(crate) fn __rust_thunk___ZN10EmptyUnionC1EOS_<'a, 'b>(
+            __this: &'a mut rust_std::mem::MaybeUninit<EmptyUnion>,
+            __param_0: ctor::RvalueReference<'b, EmptyUnion>,
+        );
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
             __this: &'a mut rust_std::mem::MaybeUninit<FieldTypeTestStruct>,
             __param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NonEmptyUnion>,
+        );
+        pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NonEmptyUnion>,
+            __param_0: ctor::RvalueReference<'b, NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
@@ -165,6 +253,18 @@ const _: () = {
 };
 const _: () = {
     assert_not_impl_all!(SomeStruct: Drop);
+};
+
+const _: () = assert!(rust_std::mem::size_of::<EmptyUnion>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<EmptyUnion>() == 1usize);
+const _: () = {
+    assert_impl_all!(EmptyUnion: Clone);
+};
+const _: () = {
+    assert_impl_all!(EmptyUnion: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(EmptyUnion: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
@@ -229,3 +329,39 @@ const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8 == 1
 const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8 == 2048usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ref_field) * 8 == 2112usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 8 == 2176usize);
+
+const _: () = assert!(rust_std::mem::size_of::<NonEmptyUnion>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<NonEmptyUnion>() == 8usize);
+const _: () = {
+    assert_impl_all!(NonEmptyUnion: Clone);
+};
+const _: () = {
+    assert_impl_all!(NonEmptyUnion: Copy);
+};
+const _: () = {
+    assert_not_impl_all!(NonEmptyUnion: Drop);
+};
+const _: () = assert!(offset_of!(NonEmptyUnion, bool_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(NonEmptyUnion, char_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(NonEmptyUnion, int16_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(NonEmptyUnion, int_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(NonEmptyUnion, int32_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(NonEmptyUnion, int64_field) * 8 == 0usize);
+const _: () = {
+    assert_impl_all!(bool: Copy);
+};
+const _: () = {
+    assert_impl_all!(u8: Copy);
+};
+const _: () = {
+    assert_impl_all!(i16: Copy);
+};
+const _: () = {
+    assert_impl_all!(i32: Copy);
+};
+const _: () = {
+    assert_impl_all!(i32: Copy);
+};
+const _: () = {
+    assert_impl_all!(i64: Copy);
+};

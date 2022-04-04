@@ -377,7 +377,8 @@ llvm::json::Value Record::ToJson() const {
       {"move_constructor", move_constructor},
       {"destructor", destructor},
       {"is_trivial_abi", is_trivial_abi},
-      {"is_final", is_final},
+      {"is_inheritable", is_inheritable},
+      {"is_union", is_union},
   };
 
   return llvm::json::Object{

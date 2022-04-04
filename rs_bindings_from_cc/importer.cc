@@ -660,9 +660,6 @@ std::optional<IR::Item> Importer::ImportRecord(
     return ImportUnsupportedItem(record_decl,
                                  "Nested classes are not supported yet");
   }
-  if (record_decl->isUnion()) {
-    return ImportUnsupportedItem(record_decl, "Unions are not supported yet");
-  }
   // Make sure the record has a definition that we'll be able to call
   // ASTContext::getASTRecordLayout() on.
   record_decl = record_decl->getDefinition();
@@ -737,7 +734,9 @@ std::optional<IR::Item> Importer::ImportRecord(
       .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
       .is_trivial_abi = record_decl->canPassInRegisters(),
-      .is_final = record_decl->isEffectivelyFinal()};
+      .is_inheritable =
+          !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
+      .is_union = record_decl->isUnion()};
 }
 
 std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {

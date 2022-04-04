@@ -363,7 +363,8 @@ pub struct Record {
     pub move_constructor: SpecialMemberFunc,
     pub destructor: SpecialMemberFunc,
     pub is_trivial_abi: bool,
-    pub is_final: bool,
+    pub is_inheritable: bool,
+    pub is_union: bool,
 }
 
 impl Record {
@@ -397,7 +398,7 @@ impl Record {
     /// TODO(b/200067242): Actually force mut references to !is_unpin to be
     /// Pin<&mut T>.
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi && self.is_final
+        self.is_trivial_abi && !self.is_inheritable
     }
 }
 

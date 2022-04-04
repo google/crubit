@@ -12,7 +12,7 @@
 
 struct SomeStruct final {};
 
-union SomeUnion {};
+union EmptyUnion {};
 
 struct FieldTypeTestStruct final {
   bool bool_field;
@@ -79,6 +79,15 @@ struct FieldTypeTestStruct final {
   // TODO(b/226580208): Uncomment when these don't cause struct import to fail.
   // SomeStruct&& struct_rvalue_ref_field;
   // const SomeStruct&& const_struct_rvalue_ref_field;
+};
+
+union NonEmptyUnion {
+  bool bool_field;
+  char char_field;
+  int16_t int16_field;
+  int int_field;
+  int32_t int32_field;
+  int64_t int64_field;
 };
 
 inline void VoidReturningFunction() {}

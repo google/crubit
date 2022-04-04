@@ -36,6 +36,32 @@ extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSEOS_(
     class SomeStruct* __this, class SomeStruct&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN10EmptyUnionC1Ev(class EmptyUnion* __this) {
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN10EmptyUnionC1ERKS_(
+    class EmptyUnion* __this, const class EmptyUnion& __param_0) {
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN10EmptyUnionC1EOS_(
+    class EmptyUnion* __this, class EmptyUnion&& __param_0) {
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN10EmptyUnionD1Ev(class EmptyUnion* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" class EmptyUnion& __rust_thunk___ZN10EmptyUnionaSERKS_(
+    class EmptyUnion* __this, const class EmptyUnion& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class EmptyUnion& __rust_thunk___ZN10EmptyUnionaSEOS_(
+    class EmptyUnion* __this, class EmptyUnion&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
     class FieldTypeTestStruct* __this,
     const class FieldTypeTestStruct& __param_0) {
@@ -53,12 +79,43 @@ extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
     class FieldTypeTestStruct* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
+extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
+    class NonEmptyUnion* __this) {
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN13NonEmptyUnionC1ERKS_(
+    class NonEmptyUnion* __this, const class NonEmptyUnion& __param_0) {
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
+    class NonEmptyUnion* __this, class NonEmptyUnion&& __param_0) {
+  rs_api_impl_support::construct_at(
+      std::forward<decltype(__this)>(__this),
+      std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN13NonEmptyUnionD1Ev(
+    class NonEmptyUnion* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" class NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSERKS_(
+    class NonEmptyUnion* __this, const class NonEmptyUnion& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSEOS_(
+    class NonEmptyUnion* __this, class NonEmptyUnion&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();
 }
 
 static_assert(sizeof(class SomeStruct) == 1);
 static_assert(alignof(class SomeStruct) == 1);
+
+static_assert(sizeof(class EmptyUnion) == 1);
+static_assert(alignof(class EmptyUnion) == 1);
 
 static_assert(sizeof(class FieldTypeTestStruct) == 280);
 static_assert(alignof(class FieldTypeTestStruct) == 8);
@@ -137,5 +194,14 @@ static_assert(offsetof(class FieldTypeTestStruct, struct_ref_field) * 8 ==
               2112);
 static_assert(offsetof(class FieldTypeTestStruct, const_struct_ref_field) * 8 ==
               2176);
+
+static_assert(sizeof(class NonEmptyUnion) == 8);
+static_assert(alignof(class NonEmptyUnion) == 8);
+static_assert(offsetof(class NonEmptyUnion, bool_field) * 8 == 0);
+static_assert(offsetof(class NonEmptyUnion, char_field) * 8 == 0);
+static_assert(offsetof(class NonEmptyUnion, int16_field) * 8 == 0);
+static_assert(offsetof(class NonEmptyUnion, int_field) * 8 == 0);
+static_assert(offsetof(class NonEmptyUnion, int32_field) * 8 == 0);
+static_assert(offsetof(class NonEmptyUnion, int64_field) * 8 == 0);
 
 #pragma clang diagnostic pop

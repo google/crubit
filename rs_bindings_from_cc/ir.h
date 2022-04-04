@@ -561,11 +561,16 @@ struct Record {
   //  * https://clang.llvm.org/docs/AttributeReference.html#trivial-abi
   bool is_trivial_abi = false;
 
-  // Whether this type is effectively `final`, and cannot be inherited from.
+  // Whether this type can be inherited from.
   //
-  // This can happen because it was explicitly marked final, or because a core
-  // function like the destructor was marked final.
-  bool is_final = false;
+  // A type might not be inheritable if:
+  // * The type was explicitly marked final
+  // * A core function like the destructor was marked final
+  // * The type is a C++ union, which does not support inheritance
+  bool is_inheritable = false;
+
+  // Whether this type is a C++ union (rather than a struct)
+  bool is_union = false;
 };
 
 struct Enumerator {
