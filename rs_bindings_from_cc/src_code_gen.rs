@@ -343,7 +343,7 @@ fn api_func_shape(
                     RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
                     RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
                 ) => match **lhs {
-                    RsTypeKind::Record(lhs_record) => {
+                    RsTypeKind::Record { record: lhs_record, .. } => {
                         let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
                         let rhs: TokenStream = rhs.format(ir);
                         func_name = make_rs_ident("eq");
@@ -593,10 +593,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         if impl_kind.format_first_param_as_self() {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            let self_decl =
-                first_api_param.format_as_self_param(func, ir).with_context(
-                    || format!("Failed to format as `self` param: {:?}", first_api_param),
-                )?;
+            let self_decl = first_api_param.format_as_self_param(func, ir).with_context(|| {
+                format!("Failed to format as `self` param: {:?}", first_api_param)
+            })?;
             // Presence of element #0 is verified by `ok_or_else` on
             // `maybe_first_api_param` above.
             api_params[0] = self_decl;
@@ -733,9 +732,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             if param_types.is_empty() || func.params.is_empty() {
                 bail!("Constructors should have at least one parameter (__this)");
             }
-            param_types[0] = param_type_kinds[0]
-                .format_mut_ref_as_uninitialized(ir)
-                .with_context(|| {
+            param_types[0] =
+                param_type_kinds[0].format_mut_ref_as_uninitialized(ir).with_context(|| {
                     format!(
                         "Failed to format `__this` param for a constructor thunk: {:?}",
                         func.params[0]
@@ -745,14 +743,12 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             if param_types.is_empty() || func.params.is_empty() {
                 bail!("Destructors should have at least one parameter (__this)");
             }
-            param_types[0] = param_type_kinds[0]
-                .format_ref_as_raw_ptr(ir)
-                .with_context(|| {
-                    format!(
-                        "Failed to format `__this` param for a destructor thunk: {:?}",
-                        func.params[0]
-                    )
-                })?;
+            param_types[0] = param_type_kinds[0].format_ref_as_raw_ptr(ir).with_context(|| {
+                format!(
+                    "Failed to format `__this` param for a destructor thunk: {:?}",
+                    func.params[0]
+                )
+            })?;
         }
 
         let lifetimes = func.lifetime_params.iter().map(|l| format_lifetime_name(&l.name));
@@ -830,8 +826,8 @@ fn should_implement_drop(record: &Record) -> bool {
 /// > if `T` is not `Copy`, using the pointed-to value after calling
 /// > `drop_in_place` can cause undefined behavior
 ///
-/// For non-Copy union fields, failing to use `ManuallyDrop<T>` would additionally cause a
-/// compile-time error until https://github.com/rust-lang/rust/issues/55149 is stabilized.
+/// For non-Copy union fields, failing to use `ManuallyDrop<T>` would
+/// additionally cause a compile-time error until https://github.com/rust-lang/rust/issues/55149 is stabilized.
 fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
     let ty_implements_copy = RsTypeKind::new(ty, ir)?.implements_copy();
     Ok(!ty_implements_copy)
@@ -865,10 +861,9 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
                 let width = Literal::usize_unsuffixed((next_offset - f.offset) / 8);
                 return Ok(quote! {[rust_std::mem::MaybeUninit<u8>; #width]});
             }
-            let mut formatted = format_rs_type(&f.type_.rs_type, ir)
-                .with_context(|| {
-                    format!("Failed to format type for field {:?} on record {:?}", f, record)
-                })?;
+            let mut formatted = format_rs_type(&f.type_.rs_type, ir).with_context(|| {
+                format!("Failed to format type for field {:?} on record {:?}", f, record)
+            })?;
             // TODO(b/212696226): Verify cases where ManuallyDrop<T> is skipped
             // via static asserts in the generated code.
             if should_implement_drop(record) || record.is_union {
@@ -996,7 +991,7 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     };
 
     let record_trait_assertions = {
-        let record_type_name = rs_type_name_for_record(record, ir);
+        let record_type_name = RsTypeKind::new_record(record, ir).format(ir);
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -1324,31 +1319,18 @@ fn format_cc_ident(ident: &str) -> TokenStream {
     ident.parse().unwrap()
 }
 
-fn rs_type_name_for_target_and_identifier(
-    owning_target: &BazelLabel,
-    identifier: &ir::Identifier,
-    ir: &IR,
-) -> TokenStream {
-    let ident = make_rs_ident(identifier.identifier.as_str());
-
+/// Returns Some(crate_ident) if this is an imported crate.
+fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
     if ir.is_current_target(owning_target) || ir.is_stdlib_target(owning_target) {
-        quote! {#ident}
+        None
     } else {
         let owning_crate_name = owning_target.target_name();
         // TODO(b/216587072): Remove this hacky escaping and use the import! macro once
         // available
         let escaped_owning_crate_name = owning_crate_name.replace('-', "_");
         let owning_crate = make_rs_ident(&escaped_owning_crate_name);
-        quote! {#owning_crate::#ident}
+        Some(owning_crate)
     }
-}
-
-fn rs_type_name_for_record(record: &Record, ir: &IR) -> TokenStream {
-    rs_type_name_for_target_and_identifier(
-        &record.owning_target,
-        &Identifier { identifier: record.rs_name.clone() },
-        ir,
-    )
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -1378,14 +1360,41 @@ impl Mutability {
 // references (e.g. &'ir Record`) instead of ItemIds.
 #[derive(Debug)]
 enum RsTypeKind<'ir> {
-    Pointer { pointee: Box<RsTypeKind<'ir>>, mutability: Mutability },
-    Reference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime: Lifetime },
-    RvalueReference { referent: Box<RsTypeKind<'ir>>, mutability: Mutability, lifetime: Lifetime },
-    FuncPtr { abi: &'ir str, return_type: Box<RsTypeKind<'ir>>, param_types: Vec<RsTypeKind<'ir>> },
-    Record(&'ir Record),
-    TypeAlias { type_alias: &'ir TypeAlias, underlying_type: Box<RsTypeKind<'ir>> },
+    Pointer {
+        pointee: Box<RsTypeKind<'ir>>,
+        mutability: Mutability,
+    },
+    Reference {
+        referent: Box<RsTypeKind<'ir>>,
+        mutability: Mutability,
+        lifetime: Lifetime,
+    },
+    RvalueReference {
+        referent: Box<RsTypeKind<'ir>>,
+        mutability: Mutability,
+        lifetime: Lifetime,
+    },
+    FuncPtr {
+        abi: &'ir str,
+        return_type: Box<RsTypeKind<'ir>>,
+        param_types: Vec<RsTypeKind<'ir>>,
+    },
+    Record {
+        record: &'ir Record,
+        /// The imported crate this comes from, or None if the current crate.
+        crate_ident: Option<Ident>,
+    },
+    TypeAlias {
+        type_alias: &'ir TypeAlias,
+        underlying_type: Box<RsTypeKind<'ir>>,
+        /// The imported crate this comes from, or None if the current crate.
+        crate_ident: Option<Ident>,
+    },
     Unit,
-    Other { name: &'ir str, type_args: Vec<RsTypeKind<'ir>> },
+    Other {
+        name: &'ir str,
+        type_args: Vec<RsTypeKind<'ir>>,
+    },
 }
 
 impl<'ir> RsTypeKind<'ir> {
@@ -1418,9 +1427,10 @@ impl<'ir> RsTypeKind<'ir> {
                     ty
                 );
                 match ir.item_for_type(ty)? {
-                    Item::Record(record) => RsTypeKind::Record(record),
+                    Item::Record(record) => RsTypeKind::new_record(record, ir),
                     Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
                         type_alias,
+                        crate_ident: rs_imported_crate_name(&type_alias.owning_target, ir),
                         underlying_type: Box::new(RsTypeKind::new(
                             &type_alias.underlying_type.rs_type,
                             ir,
@@ -1482,10 +1492,17 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(result)
     }
 
+    pub fn new_record(record: &'ir Record, ir: &'ir IR) -> Self {
+        RsTypeKind::Record {
+            record,
+            crate_ident: rs_imported_crate_name(&record.owning_target, ir),
+        }
+    }
+
     /// Returns true if the type is known to be `Unpin`, false otherwise.
     pub fn is_unpin(&self) -> bool {
         match self {
-            RsTypeKind::Record(record) => record.is_unpin(),
+            RsTypeKind::Record { record, .. } => record.is_unpin(),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
             _ => true,
         }
@@ -1504,9 +1521,9 @@ impl<'ir> RsTypeKind<'ir> {
                 let nested_type = referent.format(ir);
                 let reference = quote! {& #lifetime #mut_ #nested_type};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use `Pin`.
-                    // Probably format needs to return an RsSnippet, and RsSnippet needs a `uses`
-                    // field.
+                    // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use
+                    // `Pin`. Probably format needs to return an RsSnippet, and
+                    // RsSnippet needs a `uses` field.
                     quote! {rust_std::pin::Pin< #reference >}
                 } else {
                     reference
@@ -1523,27 +1540,25 @@ impl<'ir> RsTypeKind<'ir> {
                 }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
-                let return_frag =
-                    return_type.format_as_return_type_fragment(ir);
-                let param_types = param_types
-                    .iter()
-                    .map(|t| t.format(ir));
+                let return_frag = return_type.format_as_return_type_fragment(ir);
+                let param_types = param_types.iter().map(|t| t.format(ir));
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
-            RsTypeKind::Record(record) => rs_type_name_for_record(record, ir),
-            RsTypeKind::TypeAlias { type_alias, .. } => rs_type_name_for_target_and_identifier(
-                &type_alias.owning_target,
-                &type_alias.identifier,
-                ir,
-            ),
+            RsTypeKind::Record { record, crate_ident } => {
+                let record_ident = make_rs_ident(&record.rs_name);
+                let crate_ident = crate_ident.iter();
+                quote! {#(#crate_ident::)* #record_ident}
+            }
+            RsTypeKind::TypeAlias { type_alias, crate_ident, .. } => {
+                let alias_ident = make_rs_ident(&type_alias.identifier.identifier);
+                let crate_ident = crate_ident.iter();
+                quote! {#(#crate_ident::)* #alias_ident}
+            }
             RsTypeKind::Unit => quote! {()},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
-                let generic_params = format_generic_params(
-                    type_args
-                        .iter()
-                        .map(|type_arg| type_arg.format(ir)),
-                );
+                let generic_params =
+                    format_generic_params(type_args.iter().map(|type_arg| type_arg.format(ir)));
                 quote! {#ident #generic_params}
             }
         }
@@ -1614,7 +1629,8 @@ impl<'ir> RsTypeKind<'ir> {
                     && !referent.is_unpin()
                     && func.name != UnqualifiedIdentifier::Destructor
                 {
-                    // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use `Pin`.
+                    // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use
+                    // `Pin`.
                     Ok(quote! {self: rust_std::pin::Pin< & #lifetime #mut_ Self>})
                 } else {
                     Ok(quote! { & #lifetime #mut_ self })
@@ -1637,7 +1653,7 @@ impl<'ir> RsTypeKind<'ir> {
             RsTypeKind::Reference { mutability: Mutability::Const, .. } => true,
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
             RsTypeKind::RvalueReference { .. } => false,
-            RsTypeKind::Record(record) => should_derive_copy(record),
+            RsTypeKind::Record { record, .. } => should_derive_copy(record),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Other { type_args, .. } => {
                 // All types that may appear here without `type_args` (e.g.
@@ -1676,7 +1692,9 @@ impl<'ir> RsTypeKind<'ir> {
 
     pub fn is_record(&self, expected_record: &Record) -> bool {
         match self {
-            RsTypeKind::Record(actual_record) => actual_record.id == expected_record.id,
+            RsTypeKind::Record { record: actual_record, .. } => {
+                actual_record.id == expected_record.id
+            }
             _ => false,
         }
     }
@@ -1716,7 +1734,7 @@ impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
             None => None,
             Some(curr) => {
                 match curr {
-                    RsTypeKind::Unit | RsTypeKind::Record(_) => (),
+                    RsTypeKind::Unit | RsTypeKind::Record { .. } => (),
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
                     RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::RvalueReference { referent, .. } => self.todo.push(referent),
@@ -1874,9 +1892,9 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
             continue;
         }
         fields.push(make_rs_ident(&field.identifier.identifier));
-        types.push(format_rs_type(&field.type_.rs_type, ir).with_context(
-            || format!("Failed to format type for field {:?} on record {:?}", field, record),
-        )?)
+        types.push(format_rs_type(&field.type_.rs_type, ir).with_context(|| {
+            format!("Failed to format type for field {:?} on record {:?}", field, record)
+        })?)
     }
 
     if fields.is_empty() {
