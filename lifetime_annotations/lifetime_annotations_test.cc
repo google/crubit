@@ -174,8 +174,7 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_NestedTemplates) {
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
         template <class T>
         struct Outer {
@@ -186,7 +185,8 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_NestedTemplates) {
         void f(Outer<int *>::Inner<int *> &);
         Outer<int *>::Inner<int *> g(int *);
   )"),
-      IsOkAndHolds(LifetimesAre({{"f", "(a, b, c)"}, {"g", "a -> (a, a)"}})));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "(<a>::<b>, c)"}, {"g", "a -> <a>::<a>"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_LifetimeParameterizedType) {
@@ -382,11 +382,11 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithParam) {
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithLifetimeParams) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         struct [[clang::annotate("lifetime_params", "x", "y")]] S {
-          [[clang::annotate("lifetimes", "x, y, a: -> x")]]
+          [[clang::annotate("lifetimes", "([x, y], a): -> x")]]
           int* f();
         };
   )"),
-              IsOkAndHolds(LifetimesAre({{"S::f", "(x, y, a): -> x"}})));
+              IsOkAndHolds(LifetimesAre({{"S::f", "([x, y], a): -> x"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_MissingThis) {

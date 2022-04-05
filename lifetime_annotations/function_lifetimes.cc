@@ -158,13 +158,24 @@ bool FunctionLifetimes::IsIsomorphic(const FunctionLifetimes& other) const {
 std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
   std::vector<std::string> formatted_param_lifetimes;
 
+  // Add parentesis to non-trivial nested lifetimes, i.e. fn parameters with >1
+  // lifetimes, as their DebugString does not contain parenthesis.
+  auto maybe_add_parentheses = [&](std::string s) {
+    if (s.find_first_of(",()") != std::string::npos || s.empty()) {
+      return absl::StrCat("(", s, ")");
+    }
+    return s;
+  };
+
   for (const auto& param : param_lifetimes_) {
-    formatted_param_lifetimes.push_back(param.DebugString(formatter));
+    formatted_param_lifetimes.push_back(
+        maybe_add_parentheses(param.DebugString(formatter)));
   }
 
   std::string result;
   if (this_lifetimes_.has_value()) {
-    result = absl::StrCat(this_lifetimes_->DebugString(formatter), ":");
+    result = absl::StrCat(
+        maybe_add_parentheses(this_lifetimes_->DebugString(formatter)), ":");
   }
   if (!result.empty() && !formatted_param_lifetimes.empty()) {
     absl::StrAppend(&result, " ");
@@ -175,7 +186,9 @@ std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
     if (!result.empty()) {
       absl::StrAppend(&result, " ");
     }
-    absl::StrAppend(&result, "-> ", return_lifetimes_.DebugString(formatter));
+    absl::StrAppend(
+        &result, "-> ",
+        maybe_add_parentheses(return_lifetimes_.DebugString(formatter)));
   }
 
   return result;

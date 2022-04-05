@@ -60,7 +60,8 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
   auto next_lifetime = [&]() {
     llvm::StringRef next = tok();
     while (next == "(" || next == ")" || next == "," || next == "->" ||
-           next == ":") {
+           next == ":" || next == "[" || next == "]" || next == ">" ||
+           next == "<") {
       next = tok();
     }
     return next;

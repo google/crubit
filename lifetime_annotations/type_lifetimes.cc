@@ -209,16 +209,64 @@ ValueLifetimes ValueLifetimes::ForRecord(
   return result;
 }
 
-// TODO(veluca): improve the formatting here.
 std::string ValueLifetimes::DebugString(
     const LifetimeFormatter& formatter) const {
-  std::vector<std::string> lifetimes;
-  Traverse([&](Lifetime l, Variance) { lifetimes.push_back(formatter(l)); });
-  if (lifetimes.size() == 1) {
-    return lifetimes[0];
-  } else {
-    return absl::StrCat("(", absl::StrJoin(lifetimes, ", "), ")");
+  if (!PointeeType(Type()).isNull()) {
+    assert(pointee_lifetimes_);
+    return pointee_lifetimes_->DebugString(formatter);
   }
+
+  std::vector<std::vector<std::string>> tmpl_lifetimes;
+  for (auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
+    tmpl_lifetimes.emplace_back();
+    for (const std::optional<ValueLifetimes>& tmpl_arg : tmpl_arg_at_depth) {
+      if (tmpl_arg) {
+        std::string inner = tmpl_arg->DebugString(formatter);
+        if (!inner.empty()) {
+          tmpl_lifetimes.back().push_back(std::move(inner));
+        }
+      }
+    }
+  }
+  std::vector<std::string> lifetime_parameters;
+  for (const auto& lftm_arg : GetLifetimeParameters(type_)) {
+    std::optional<Lifetime> lifetime =
+        lifetime_parameters_by_name_.LookupName(lftm_arg);
+    assert(lifetime.has_value());
+    lifetime_parameters.push_back(formatter(*lifetime));
+  }
+  bool empty_tmpl_lifetimes = true;
+  for (const auto& tmpl_arg_at_depth : tmpl_lifetimes) {
+    for (const auto& tmpl : tmpl_arg_at_depth) {
+      empty_tmpl_lifetimes &= tmpl.empty();
+    }
+  }
+  if (empty_tmpl_lifetimes && lifetime_parameters.empty()) {
+    return "";
+  } else if (empty_tmpl_lifetimes) {
+    if (lifetime_parameters.size() == 1) {
+      return lifetime_parameters[0];
+    }
+    return absl::StrCat("[", absl::StrJoin(lifetime_parameters, ", "), "]");
+  } else if (lifetime_parameters.empty() && tmpl_lifetimes.size() == 1 &&
+             tmpl_lifetimes[0].size() == 1) {
+    return tmpl_lifetimes[0][0];
+  }
+
+  std::vector<std::string> tmpl_lifetimes_per_depth;
+  tmpl_lifetimes_per_depth.reserve(tmpl_lifetimes.size());
+  for (const auto& tmpl_depth : tmpl_lifetimes) {
+    tmpl_lifetimes_per_depth.push_back(
+        absl::StrCat("<", absl::StrJoin(tmpl_depth, ", "), ">"));
+  }
+  std::string lifetime_parameter_string;
+  if (!lifetime_parameters.empty()) {
+    lifetime_parameter_string =
+        absl::StrCat(" [", absl::StrJoin(lifetime_parameters, ", "), "]");
+  }
+
+  return absl::StrCat(absl::StrJoin(tmpl_lifetimes_per_depth, "::"),
+                      lifetime_parameter_string);
 }
 
 const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
@@ -404,13 +452,12 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
 
 std::string ObjectLifetimes::DebugString(
     const LifetimeFormatter& formatter) const {
-  std::vector<std::string> lifetimes;
-  Traverse([&](Lifetime l, Variance) { lifetimes.push_back(formatter(l)); });
-  if (lifetimes.size() == 1) {
-    return lifetimes[0];
-  } else {
-    return absl::StrCat("(", absl::StrJoin(lifetimes, ", "), ")");
+  std::string inner_lifetimes = value_lifetimes_.DebugString(formatter);
+  std::string lifetime = formatter(lifetime_);
+  if (inner_lifetimes.empty()) {
+    return lifetime;
   }
+  return absl::StrCat(std::move(inner_lifetimes), ", ", std::move(lifetime));
 }
 
 ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(
