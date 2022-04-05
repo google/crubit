@@ -41,6 +41,7 @@ using LifetimeFactory =
     std::function<llvm::Expected<Lifetime>(clang::QualType, llvm::StringRef)>;
 
 class ObjectLifetimes;
+class FunctionLifetimes;
 
 // Represents the lifetimes of a value; these may be 0 for non-reference-like
 // types, 1 for pointers/references, and an arbitrary number for structs with
@@ -49,11 +50,13 @@ class ValueLifetimes {
  public:
   // Creates an invalid ValueLifetimes, which should not be used. This is
   // provided only for usage with functions with output parameters.
-  ValueLifetimes() : type_(clang::QualType()) {}
+  ValueLifetimes() : ValueLifetimes(clang::QualType()) {}
 
-  ValueLifetimes(const ValueLifetimes& other) { *this = other; }
+  ValueLifetimes(const ValueLifetimes& other);
 
   ValueLifetimes& operator=(const ValueLifetimes& other);
+
+  ~ValueLifetimes();
 
   // Creates a ValueLifetimes for a *value* of a given type.
   // Only fails if lifetime_factory fails.
@@ -138,11 +141,12 @@ class ValueLifetimes {
                 Variance variance = kCovariant) const;
 
  private:
-  explicit ValueLifetimes(clang::QualType type) : type_(type) {}
+  explicit ValueLifetimes(clang::QualType type);
 
-  // Note: only one of `pointee_lifetime` or `template_argument_lifetimes`
-  // is non-empty.
+  // Note: only one of `pointee_lifetimes_`, `function_lifetimes_` or
+  // `template_argument_lifetimes_` is non-empty.
   std::unique_ptr<ObjectLifetimes> pointee_lifetimes_;
+  std::unique_ptr<FunctionLifetimes> function_lifetimes_;
   std::vector<std::vector<std::optional<ValueLifetimes>>>
       template_argument_lifetimes_;
   clang::QualType type_;
@@ -237,8 +241,7 @@ class ObjectLifetimes {
 };
 
 // TODO(lukasza): Try deduplicating GetTemplateArgs(QualType) vs
-// GetTemplateArgs(TypeLoc) in
-// google3/devtools/cymbal/clang_tidy/runtime/lifetimes.cc
+// GetTemplateArgs(TypeLoc).
 // Return type: The outer vector is indexed by the "depth" of the template
 // argument within a chain of nested templates; the inner vector contains the
 // template arguments at a given depth.

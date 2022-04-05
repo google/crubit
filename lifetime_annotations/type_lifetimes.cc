@@ -13,6 +13,7 @@
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_format.h"
 #include "third_party/absl/strings/str_join.h"
+#include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "lifetime_annotations/pointee_type.h"
@@ -77,6 +78,8 @@ llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
   return ret;
 }
 
+ValueLifetimes::ValueLifetimes(const ValueLifetimes& other) { *this = other; }
+
 ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
   type_ = other.type_;
   template_argument_lifetimes_ = other.template_argument_lifetimes_;
@@ -85,8 +88,15 @@ ValueLifetimes& ValueLifetimes::operator=(const ValueLifetimes& other) {
       other.pointee_lifetimes_
           ? std::make_unique<ObjectLifetimes>(*other.pointee_lifetimes_)
           : nullptr;
+  function_lifetimes_ =
+      other.function_lifetimes_
+          ? std::make_unique<FunctionLifetimes>(*other.function_lifetimes_)
+          : nullptr;
   return *this;
 }
+
+// Defined here because FunctionLifetimes is an incomplete type in the header.
+ValueLifetimes::~ValueLifetimes() = default;
 
 namespace {
 
@@ -121,7 +131,22 @@ llvm::Error ForEachTemplateArgument(
 llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     clang::QualType type, LifetimeFactory lifetime_factory) {
   assert(!type.isNull());
+  type = type.IgnoreParens();
   ValueLifetimes ret(type);
+
+  if (const auto* fn = clang::dyn_cast<clang::FunctionProtoType>(type)) {
+    // TODO(veluca): this will not correctly handle the distinction between
+    // parameter and return lifetimes.
+    FunctionLifetimeFactorySingleCallback factory(lifetime_factory);
+    FunctionLifetimes fn_lftm;
+    if (llvm::Error err = FunctionLifetimes::CreateForFunctionType(fn, factory)
+                              .moveInto(fn_lftm)) {
+      return std::move(err);
+    }
+    ret.function_lifetimes_ =
+        std::make_unique<FunctionLifetimes>(std::move(fn_lftm));
+    return ret;
+  }
 
   for (const auto& lftm_param : GetLifetimeParameters(type)) {
     Lifetime l;
@@ -215,6 +240,12 @@ std::string ValueLifetimes::DebugString(
     assert(pointee_lifetimes_);
     return pointee_lifetimes_->DebugString(formatter);
   }
+  if (clang::isa<clang::FunctionProtoType>(Type())) {
+    assert(function_lifetimes_);
+    std::string fn_lifetimes = function_lifetimes_->DebugString(formatter);
+    if (fn_lifetimes.empty()) return "";
+    return absl::StrCat("(", fn_lifetimes, ")");
+  }
 
   std::vector<std::vector<std::string>> tmpl_lifetimes;
   for (auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
@@ -302,6 +333,9 @@ void ValueLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
       lifetime_parameters_by_name_.Rebind(lftm_arg, new_lifetime);
     }
   }
+  if (function_lifetimes_) {
+    function_lifetimes_->Traverse(visitor);
+  }
 }
 
 void ValueLifetimes::Traverse(
@@ -310,6 +344,8 @@ void ValueLifetimes::Traverse(
   const_cast<ValueLifetimes*>(this)->Traverse(
       [&visitor](Lifetime& l, Variance v) { visitor(l, v); }, variance);
 }
+
+ValueLifetimes::ValueLifetimes(clang::QualType type) : type_(type) {}
 
 const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
 GetTemplateArgs(clang::QualType type) {
@@ -471,7 +507,7 @@ void ObjectLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
                                Variance variance,
                                clang::QualType indirection_type) {
   assert(indirection_type.isNull() ||
-         indirection_type->getPointeeType() == Type());
+         indirection_type->getPointeeType().IgnoreParens() == Type());
   value_lifetimes_.Traverse(
       visitor, indirection_type.isNull() || indirection_type.isConstQualified()
                    ? kCovariant

@@ -176,6 +176,8 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
                          func->getNameAsString(), "'"));
       }
 
+      // TODO(veluca): adapt to lifetime elision for function pointers.
+
       // If we have an implicit `this` parameter, its lifetime is assigned to
       // all lifetimes in the return type.
       if (this_lifetimes.has_value()) {

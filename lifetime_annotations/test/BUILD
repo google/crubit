@@ -14,8 +14,8 @@ cc_library(
     hdrs = ["named_func_lifetimes.h"],
     deps = [
         "//testing/base/public:gunit_for_library_testonly",
-        "//lifetime_annotations:function_lifetimes",
         "//lifetime_annotations:lifetime_symbol_table",
+        "//lifetime_annotations:type_lifetimes",
         "@llvm///llvm:Support",
     ],
 )

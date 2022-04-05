@@ -418,5 +418,51 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
                        StartsWith("Invalid lifetime annotation")));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Callback) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "b, ((a -> a), static) -> b")]]
+        int* f(int*, int* (*)(int*));
+  )"),
+      IsOkAndHolds(LifetimesAre({{"f", "b, ((a -> a), static) -> b"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackMultipleParams) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "c, ((a, b -> a), static) -> c")]]
+        int* f(int*, int* (*)(int*, int*));
+  )"),
+      IsOkAndHolds(LifetimesAre({{"f", "c, ((a, b -> a), static) -> c"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackTmplFunc) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        template <typename Func>
+        struct function;
+        [[clang::annotate("lifetimes", "a, ((b -> b)) -> a")]]
+        int* f(int*, function<int*(int*)>);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a, ((b -> b)) -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultipleCallbacks) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        [[clang::annotate("lifetimes", "a, ((b -> b), static), ((c -> c), static) -> a")]]
+        int* f(int*, int* (*)(int*), int* (*)(int*));
+  )"),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "a, ((b -> b), static), ((c -> c), static) -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_ReturnFunctionPtr) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+        typedef int* (*FP)(int*);
+        [[clang::annotate("lifetimes", "a -> ((b -> b), static)")]]
+        FP f(int*);
+  )_"),
+              IsOkAndHolds(LifetimesAre({{"f", "a -> ((b -> b), static)"}})));
+}
+
 }  // namespace
 }  // namespace devtools_rust

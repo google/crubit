@@ -55,6 +55,12 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForDecl(
                 lifetime_factory);
 }
 
+llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForFunctionType(
+    const clang::FunctionProtoType* func,
+    const FunctionLifetimeFactory& lifetime_factory) {
+  return Create(func, clang::QualType(), lifetime_factory);
+}
+
 bool FunctionLifetimes::IsValidForDecl(const clang::FunctionDecl* function) {
   // TODO(veluca): also validate the types of the arguments, and/or the type of
   // the function itself.
@@ -158,8 +164,8 @@ bool FunctionLifetimes::IsIsomorphic(const FunctionLifetimes& other) const {
 std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
   std::vector<std::string> formatted_param_lifetimes;
 
-  // Add parentesis to non-trivial nested lifetimes, i.e. fn parameters with >1
-  // lifetimes, as their DebugString does not contain parenthesis.
+  // Add parenteses to non-trivial nested lifetimes, i.e. fn parameters with >1
+  // lifetimes, as their DebugString does not contain parentheses.
   auto maybe_add_parentheses = [&](std::string s) {
     if (s.find_first_of(",()") != std::string::npos || s.empty()) {
       return absl::StrCat("(", s, ")");

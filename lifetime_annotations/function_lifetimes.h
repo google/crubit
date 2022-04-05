@@ -78,6 +78,12 @@ class FunctionLifetimes {
       const clang::FunctionDecl* function,
       const FunctionLifetimeFactory& lifetime_factory);
 
+  static llvm::Expected<FunctionLifetimes> CreateForFunctionType(
+      const clang::FunctionProtoType* function,
+      const FunctionLifetimeFactory& lifetime_factory);
+
+  // TODO(veluca): add support for pointer-to-member-fn.
+
   // Checks if this FunctionLifetimes represents valid lifetimes for the given
   // Decl.
   bool IsValidForDecl(const clang::FunctionDecl* function);
