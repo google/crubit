@@ -1273,13 +1273,13 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
     // is fixed.
     let imports = if has_record {
         quote! {
-            use std as rust_std;
+            use ::std as rust_std;
             use memoffset_unstable_const::offset_of;
             use static_assertions::{assert_impl_all, assert_not_impl_all};
         }
     } else {
         quote! {
-            use std as rust_std;
+            use ::std as rust_std;
         }
     };
 

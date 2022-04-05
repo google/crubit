@@ -9,9 +9,9 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
+use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
-use std as rust_std;
 
 pub type __builtin_ms_va_list = *mut u8;
 
