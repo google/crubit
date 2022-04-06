@@ -526,12 +526,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
     let param_types: Vec<_> = param_type_kinds.iter().map(|t| t.to_token_stream()).collect();
-    let thunk_ident = thunk_ident(func);
+
+    let thunk = generate_func_thunk(func, &param_idents, &param_type_kinds, &return_type_fragment)?;
 
     let api_func_def = {
-        // Clone params, return type, etc - we may need to mutate them in the
-        // API func, but we want to retain the originals for the thunk.
-        let mut return_type_fragment = return_type_fragment.clone();
+        let mut return_type_fragment = return_type_fragment;
         let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
         let mut api_params = param_idents
             .iter()
@@ -603,6 +602,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         // MaybeUninit<T> in Pin if T is !Unpin. It should understand
         // 'structural pinning', so that we do not need into_inner_unchecked()
         // here.
+        let thunk_ident = thunk_ident(func);
         let func_body = match &impl_kind {
             ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } => {
                 // TODO(b/226447239): check for copy here and instead use copies in that case?
@@ -715,50 +715,57 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         }
     }
 
-    let thunk = {
-        let thunk_attr = if can_skip_cc_thunk(func) {
-            let mangled_name = &func.mangled_name;
-            quote! {#[link_name = #mangled_name]}
-        } else {
-            quote! {}
-        };
+    Ok(Some((RsSnippet { features, tokens: api_func }, thunk.into(), function_id)))
+}
 
-        // For constructors inject MaybeUninit into the type of `__this_` parameter.
-        let mut param_types = param_types;
-        if func.name == UnqualifiedIdentifier::Constructor {
-            if param_types.is_empty() || func.params.is_empty() {
-                bail!("Constructors should have at least one parameter (__this)");
-            }
-            param_types[0] =
-                param_type_kinds[0].format_mut_ref_as_uninitialized().with_context(|| {
-                    format!(
-                        "Failed to format `__this` param for a constructor thunk: {:?}",
-                        func.params[0]
-                    )
-                })?;
-        } else if func.name == UnqualifiedIdentifier::Destructor {
-            if param_types.is_empty() || func.params.is_empty() {
-                bail!("Destructors should have at least one parameter (__this)");
-            }
-            param_types[0] = param_type_kinds[0].format_ref_as_raw_ptr().with_context(|| {
-                format!(
-                    "Failed to format `__this` param for a destructor thunk: {:?}",
-                    func.params[0]
-                )
-            })?;
-        }
-
-        let lifetimes = func.lifetime_params.iter().map(|l| format_lifetime_name(&l.name));
-        let generic_params = format_generic_params(lifetimes);
-
-        quote! {
-            #thunk_attr
-            pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
-            ) #return_type_fragment ;
-        }
+fn generate_func_thunk(
+    func: &Func,
+    param_idents: &[Ident],
+    param_type_kinds: &[RsTypeKind],
+    return_type_fragment: &TokenStream,
+) -> Result<TokenStream> {
+    let thunk_attr = if can_skip_cc_thunk(func) {
+        let mangled_name = &func.mangled_name;
+        quote! {#[link_name = #mangled_name]}
+    } else {
+        quote! {}
     };
 
-    Ok(Some((RsSnippet { features, tokens: api_func }, thunk.into(), function_id)))
+    // For constructors, inject MaybeUninit into the type of `__this_` parameter.
+    let mut param_type_kinds = param_type_kinds.into_iter();
+    let mut self_param = None;
+    if func.name == UnqualifiedIdentifier::Constructor {
+        let first_param = param_type_kinds
+            .next()
+            .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
+        self_param = Some(first_param.format_mut_ref_as_uninitialized().with_context(|| {
+            format!(
+                "Failed to format `__this` param for a constructor thunk: {:?}",
+                func.params.get(0)
+            )
+        })?);
+    } else if func.name == UnqualifiedIdentifier::Destructor {
+        let first_param = param_type_kinds
+            .next()
+            .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
+        self_param = Some(first_param.format_ref_as_raw_ptr().with_context(|| {
+            format!(
+                "Failed to format `__this` param for a destructor thunk: {:?}",
+                func.params.get(0)
+            )
+        })?);
+    }
+
+    let thunk_ident = thunk_ident(func);
+    let lifetimes = func.lifetime_params.iter().map(|l| format_lifetime_name(&l.name));
+    let generic_params = format_generic_params(lifetimes);
+    let param_types = self_param.into_iter().chain(param_type_kinds.map(|t| quote! {#t}));
+
+    Ok(quote! {
+        #thunk_attr
+        pub(crate) fn #thunk_ident #generic_params( #( #param_idents: #param_types ),*
+        ) #return_type_fragment ;
+    })
 }
 
 fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
