@@ -521,8 +521,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         };
 
     let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
-        .map(|t| t.format_as_return_type_fragment())
-        .with_context(|| format!("Failed to format return type for {:?}", func))?;
+        .with_context(|| format!("Failed to format return type for {:?}", func))?
+        .format_as_return_type_fragment();
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
     let param_types: Vec<_> = param_type_kinds.iter().map(|t| t.to_token_stream()).collect();
