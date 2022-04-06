@@ -220,16 +220,16 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
 
 /// The name of a trait, with extra entries for specially-understood traits and
 /// families of traits.
-enum TraitName {
-    /// The constructor trait for !Unpin types. e.g. `CtorNew(quote! { ()
-    /// })` is the default constructor.
-    CtorNew(TokenStream),
+enum TraitName<'ir> {
+    /// The constructor trait for !Unpin types. e.g.
+    /// `CtorNew(RsTypeKind::Unit)` is the default constructor.
+    CtorNew(RsTypeKind<'ir>),
     /// An Unpin constructor trait, e.g. From or Clone.
     UnpinConstructor(TokenStream),
     /// Any other trait, e.g. Eq.
     Other(TokenStream),
 }
-impl ToTokens for TraitName {
+impl<'ir> ToTokens for TraitName<'ir> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
@@ -239,7 +239,7 @@ impl ToTokens for TraitName {
 }
 
 /// The kind of the `impl` block the function needs to be generated in.
-enum ImplKind {
+enum ImplKind<'ir> {
     /// Used for free functions for which we don't want the `impl` block.
     None { is_unsafe: bool },
     /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
@@ -261,7 +261,7 @@ enum ImplKind {
         /// `func.member_func_metadata`.
         record_name: Ident,
         /// For example, `quote!{ From<i32> }`.
-        trait_name: TraitName,
+        trait_name: TraitName<'ir>,
 
         /// Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
         declare_lifetimes: bool,
@@ -273,9 +273,9 @@ enum ImplKind {
         format_first_param_as_self: bool,
     },
 }
-impl ImplKind {
+impl<'ir> ImplKind<'ir> {
     fn new_trait(
-        trait_name: TraitName,
+        trait_name: TraitName<'ir>,
         record_name: Ident,
         format_first_param_as_self: bool,
     ) -> Self {
@@ -288,7 +288,7 @@ impl ImplKind {
         }
     }
     fn new_generic_trait(
-        trait_name: TraitName,
+        trait_name: TraitName<'ir>,
         record_name: Ident,
         format_first_param_as_self: bool,
     ) -> Self {
@@ -321,11 +321,11 @@ impl ImplKind {
 ///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
-fn api_func_shape(
+fn api_func_shape<'ir>(
     func: &Func,
     ir: &IR,
-    param_type_kinds: &[RsTypeKind],
-) -> Result<Option<(Ident, ImplKind)>> {
+    param_type_kinds: &[RsTypeKind<'ir>],
+) -> Result<Option<(Ident, ImplKind<'ir>)>> {
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
     let has_pointer_params =
@@ -433,9 +433,8 @@ fn api_func_shape(
                 match func.params.len() {
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     2 => {
-                        let param_type = param_type_kinds[1].to_token_stream();
                         impl_kind = ImplKind::new_generic_trait(
-                            TraitName::CtorNew(param_type.clone()),
+                            TraitName::CtorNew(param_type_kinds[1].clone()),
                             record_name,
                             /* format_first_param_as_self= */ false,
                         );
@@ -1331,7 +1330,7 @@ fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> 
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum Mutability {
     Const,
     Mut,
@@ -1356,7 +1355,7 @@ impl Mutability {
 // TODO(b/213947473): Instead of having a separate RsTypeKind here, consider
 // changing ir::RsType into a similar `enum`, with fields that contain
 // references (e.g. &'ir Record`) instead of ItemIds.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum RsTypeKind<'ir> {
     Pointer {
         pointee: Box<RsTypeKind<'ir>>,
