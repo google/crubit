@@ -324,20 +324,19 @@ impl<'ir> ImplKind<'ir> {
 fn api_func_shape<'ir>(
     func: &Func,
     ir: &IR,
-    param_type_kinds: &[RsTypeKind<'ir>],
+    param_types: &[RsTypeKind<'ir>],
 ) -> Result<Option<(Ident, ImplKind<'ir>)>> {
     let maybe_record: Option<&Record> =
         func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
-    let has_pointer_params =
-        param_type_kinds.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
+    let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
     match &func.name {
         UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
-            if param_type_kinds.len() != 2 {
+            if param_types.len() != 2 {
                 bail!("Unexpected number of parameters in operator==: {:?}", func);
             }
-            match (&param_type_kinds[0], &param_type_kinds[1]) {
+            match (&param_types[0], &param_types[1]) {
                 (
                     RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
                     RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
@@ -375,7 +374,7 @@ fn api_func_shape<'ir>(
                 }
                 Some(record) => {
                     let format_first_param_as_self = if func.is_instance_method() {
-                        let first_param = param_type_kinds.first().ok_or_else(|| {
+                        let first_param = param_types.first().ok_or_else(|| {
                             anyhow!("Missing `__this` parameter in an instance method: {:?}", func)
                         })?;
                         first_param.is_ref_to(record)
@@ -434,7 +433,7 @@ fn api_func_shape<'ir>(
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     2 => {
                         impl_kind = ImplKind::new_generic_trait(
-                            TraitName::CtorNew(param_type_kinds[1].clone()),
+                            TraitName::CtorNew(param_types[1].clone()),
                             record_name,
                             /* format_first_param_as_self= */ false,
                         );
@@ -458,7 +457,7 @@ fn api_func_shape<'ir>(
                         func_name = make_rs_ident("default");
                     }
                     2 => {
-                        if param_type_kinds[1].is_shared_ref_to(record) {
+                        if param_types[1].is_shared_ref_to(record) {
                             // Copy constructor
                             if should_derive_clone(record) {
                                 return Ok(None);
@@ -471,7 +470,7 @@ fn api_func_shape<'ir>(
                                 func_name = make_rs_ident("clone");
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
-                            let param_type = &param_type_kinds[1];
+                            let param_type = &param_types[1];
                             impl_kind = ImplKind::new_generic_trait(
                                 TraitName::UnpinConstructor(quote! {From< #param_type >}),
                                 record_name,
@@ -503,7 +502,7 @@ fn api_func_shape<'ir>(
 ///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
 ///    thunk FFI definition, and function ID.
 fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
-    let param_type_kinds = func
+    let param_types = func
         .params
         .iter()
         .map(|p| {
@@ -514,7 +513,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         .collect::<Result<Vec<_>>>()?;
 
     let (func_name, mut impl_kind) =
-        if let Some(values) = api_func_shape(func, ir, &param_type_kinds)? {
+        if let Some(values) = api_func_shape(func, ir, &param_types)? {
             values
         } else {
             return Ok(None);
@@ -525,9 +524,8 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         .format_as_return_type_fragment();
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-    let param_types: Vec<_> = param_type_kinds.iter().map(|t| t.to_token_stream()).collect();
 
-    let thunk = generate_func_thunk(func, &param_idents, &param_type_kinds, &return_type_fragment)?;
+    let thunk = generate_func_thunk(func, &param_idents, &param_types, &return_type_fragment)?;
 
     let api_func_def = {
         let mut return_type_fragment = return_type_fragment;
@@ -538,7 +536,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             .map(|(ident, type_)| quote! { #ident : #type_ })
             .collect_vec();
         let mut lifetimes = func.lifetime_params.iter().collect_vec();
-        let mut maybe_first_api_param = param_type_kinds.get(0);
+        let mut maybe_first_api_param = param_types.get(0);
 
         if let ImplKind::Trait {
             trait_name: TraitName::UnpinConstructor(..) | TraitName::CtorNew(..),
@@ -563,7 +561,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             let no_longer_needed_lifetime_id = maybe_first_lifetime
                 .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
             lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
-            if let Some(type_still_dependent_on_removed_lifetime) = param_type_kinds
+            if let Some(type_still_dependent_on_removed_lifetime) = param_types
                 .iter()
                 .skip(1) // Skipping `__this`
                 .flat_map(|t| t.lifetimes())
@@ -578,7 +576,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             }
 
             // Rebind `maybe_first_api_param` to the next param after `__this`.
-            maybe_first_api_param = param_type_kinds.get(1);
+            maybe_first_api_param = param_types.get(1);
         }
 
         if let ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } = impl_kind {
@@ -721,7 +719,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 fn generate_func_thunk(
     func: &Func,
     param_idents: &[Ident],
-    param_type_kinds: &[RsTypeKind],
+    param_types: &[RsTypeKind],
     return_type_fragment: &TokenStream,
 ) -> Result<TokenStream> {
     let thunk_attr = if can_skip_cc_thunk(func) {
@@ -732,10 +730,10 @@ fn generate_func_thunk(
     };
 
     // For constructors, inject MaybeUninit into the type of `__this_` parameter.
-    let mut param_type_kinds = param_type_kinds.into_iter();
+    let mut param_types = param_types.into_iter();
     let mut self_param = None;
     if func.name == UnqualifiedIdentifier::Constructor {
-        let first_param = param_type_kinds
+        let first_param = param_types
             .next()
             .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
         self_param = Some(first_param.format_mut_ref_as_uninitialized().with_context(|| {
@@ -745,7 +743,7 @@ fn generate_func_thunk(
             )
         })?);
     } else if func.name == UnqualifiedIdentifier::Destructor {
-        let first_param = param_type_kinds
+        let first_param = param_types
             .next()
             .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
         self_param = Some(first_param.format_ref_as_raw_ptr().with_context(|| {
@@ -759,7 +757,7 @@ fn generate_func_thunk(
     let thunk_ident = thunk_ident(func);
     let lifetimes = func.lifetime_params.iter().map(|l| format_lifetime_name(&l.name));
     let generic_params = format_generic_params(lifetimes);
-    let param_types = self_param.into_iter().chain(param_type_kinds.map(|t| quote! {#t}));
+    let param_types = self_param.into_iter().chain(param_types.map(|t| quote! {#t}));
 
     Ok(quote! {
         #thunk_attr
