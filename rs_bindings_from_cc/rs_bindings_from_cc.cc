@@ -15,6 +15,7 @@
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/string_view.h"
+#include "common/file_io.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -25,22 +26,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
 
-namespace {
-
-absl::Status SetFileContents(absl::string_view path,
-                             absl::string_view contents) {
-  std::error_code error_code;
-  llvm::raw_fd_ostream stream(path, error_code);
-  if (error_code) {
-    return absl::Status(absl::StatusCode::kInternal, error_code.message());
-  }
-  stream << contents;
-  stream.close();
-  if (stream.has_error()) {
-    return absl::Status(absl::StatusCode::kInternal, stream.error().message());
-  }
-  return absl::OkStatus();
-}
+namespace crubit {
 
 absl::Status Main(std::vector<char*> args) {
   using rs_bindings_from_cc::Cmdline;
@@ -82,11 +68,11 @@ absl::Status Main(std::vector<char*> args) {
   return absl::OkStatus();
 }
 
-}  // namespace
+}  // namespace crubit
 
 int main(int argc, char* argv[]) {
   auto args = absl::ParseCommandLine(argc, argv);
-  absl::Status status = Main(std::move(args));
+  absl::Status status = crubit::Main(std::move(args));
   if (!status.ok()) {
     llvm::errs() << status.message() << "\n";
     return -1;

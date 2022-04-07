@@ -68,6 +68,7 @@ cc_binary(
         ":ir",
         ":ir_from_cc",
         ":src_code_gen",
+        "//common:file_io",
         "//rs_bindings_from_cc/util:status_macros",
         "@absl//container:flat_hash_map",
         "@absl//flags:parse",

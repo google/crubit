@@ -2,7 +2,7 @@
 
 licenses(["notice"])
 
-package(default_visibility = ["//rs_bindings_from_cc:__subpackages__"])
+package(default_visibility = ["//third_party/crubit:__subpackages__"])
 
 cc_library(
     name = "check",
@@ -19,7 +19,6 @@ cc_library(
     deps = [
         "@absl//base:core_headers",
         "@absl//meta:type_traits",
-        "@absl//strings",
     ],
 )
 
