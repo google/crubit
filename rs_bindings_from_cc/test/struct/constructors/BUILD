@@ -1,6 +1,6 @@
 """End-to-end test for constructors."""
 
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 
@@ -24,6 +24,6 @@ rust_test(
         ":no_elided_lifetimes",
     ],
     deps = [
-        "//third_party/rust/static_assertions/v1:static_assertions",
+        "@crates_io//static_assertions/v1:static_assertions",
     ],
 )

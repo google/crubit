@@ -1,7 +1,7 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 

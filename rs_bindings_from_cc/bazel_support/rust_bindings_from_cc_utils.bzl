@@ -9,13 +9,13 @@ not be used yet.
 """
 
 # buildifier: disable=bzl-visibility
-load("//third_party/bazel_rules/rules_rust/rust/private:common.bzl", "rust_common")
+load("@rules_rust//rust/private:common.bzl", "rust_common")
 
 # buildifier: disable=bzl-visibility
-load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVariantInfo")
+load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
-load("//third_party/bazel_rules/rules_rust/rust/private:rustc.bzl", "rustc_compile_action")
+load("@rules_rust//rust/private:rustc.bzl", "rustc_compile_action")
 load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
@@ -103,7 +103,7 @@ def _compile_rust(ctx, attr, src, deps):
     Returns:
       A DepVariantInfo provider.
     """
-    toolchain = ctx.toolchains["//third_party/bazel_rules/rules_rust/rust:toolchain"]
+    toolchain = ctx.toolchains["@rules_rust//rust:toolchain"]
 
     output_hash = repr(hash(src.path))
 
@@ -336,7 +336,7 @@ bindings_attrs = {
         cfg = "host",
     ),
     "_rustfmt": attr.label(
-        default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
+        default = "@rust//toolchains/nightly:bin/rustfmt",
         executable = True,
         allow_single_file = True,
         cfg = "exec",
@@ -346,13 +346,13 @@ bindings_attrs = {
         allow_single_file = True,
     ),
     "_error_format": attr.label(
-        default = "//third_party/bazel_rules/rules_rust:error_format",
+        default = "@rules_rust//:error_format",
     ),
     "_extra_rustc_flags": attr.label(
-        default = "//third_party/bazel_rules/rules_rust:extra_rustc_flags",
+        default = "@rules_rust//:extra_rustc_flags",
     ),
     "_process_wrapper": attr.label(
-        default = "//third_party/bazel_rules/rules_rust/util/process_wrapper",
+        default = "@rules_rust//util/process_wrapper",
         executable = True,
         allow_single_file = True,
         cfg = "exec",

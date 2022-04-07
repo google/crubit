@@ -6,22 +6,19 @@ load(
     "deps_for_bindings",
 )
 load("//third_party/bazel_skylib:bzl_library.bzl", "bzl_library")
-load("//third_party/bazel_skylib/rules:common_settings.bzl", "bool_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 licenses(["notice"])
 
 bzl_library(
     name = "rust_bindings_from_cc_aspect",
     srcs = ["rust_bindings_from_cc_aspect.bzl"],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
     deps = [
-        "//third_party/bazel_rules/rules_rust/rust:bzl_lib",
-        "//third_party/bazel_rules/rules_rust/rust/private:bzl_lib",
         "//rs_bindings_from_cc/bazel_support:deps_for_bindings_bzl",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
+        "@rules_rust//rust:bzl_lib",
+        "@rules_rust//rust/private:bzl_lib",
     ],
 )
 
@@ -38,7 +35,6 @@ bzl_library(
 bzl_library(
     name = "toolchain_headers_bzl",
     srcs = ["toolchain_headers.bzl"],
-    visibility = ["//devtools/rust/cc_interop:__subpackages__"],
     deps = [
         "//rs_bindings_from_cc/bazel_support:deps_for_bindings_bzl",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
@@ -53,35 +49,28 @@ bzl_library(
 bzl_library(
     name = "rust_bindings_from_cc_binary_bzl",
     srcs = ["rust_bindings_from_cc_binary.bzl"],
-    visibility = ["//devtools/rust/cc_interop:__subpackages__"],
     deps = [":rust_bindings_from_cc_transition"],
 )
 
 bzl_library(
     name = "deps_for_bindings_bzl",
     srcs = ["deps_for_bindings.bzl"],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
     deps = [
         ":rust_bindings_from_cc_transition",
-        "//third_party/bazel_rules/rules_rust/rust/private:bzl_lib",
+        "@rules_rust//rust/private:bzl_lib",
     ],
 )
 
 bzl_library(
     name = "rust_bindings_from_cc_utils_bzl",
     srcs = ["rust_bindings_from_cc_utils.bzl"],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
     deps = [
-        "//third_party/bazel_rules/rules_rust/rust:bzl_lib",
-        "//third_party/bazel_rules/rules_rust/rust/private:bzl_lib",
         "//tools/build_defs/cc:action_names",
         "//tools/cpp:toolchain_utils",
+        "@rules_rust//rust:bzl_lib",
+        "@rules_rust//rust/private:bzl_lib",
     ],
 )
 

@@ -4,7 +4,7 @@
 
 """A test that the dependencies needed for our generated bindings files are built in target cfg."""
 
-load("//third_party/bazel_skylib/lib:unittest.bzl", "analysistest", "asserts")
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
     "rust_bindings_from_cc_aspect",
@@ -44,7 +44,7 @@ def _deps_for_bindings_in_target_cfg_impl(ctx):
     tut = analysistest.target_under_test(env)
 
     # The compiled binding implicitly depends on the
-    # //third_party/rust/memoffset/v0_6:memoffset_unstable_const crate.
+    # @crates_io//memoffset/v0_6:memoffset_unstable_const crate.
     # Here we check that the -Ldependency and -Lextern arguments for this crate point to a
     # non exec path, aka target configuration.
 

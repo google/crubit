@@ -1,6 +1,6 @@
 """End-to-end tests of C++ functions with non-default calling conventions."""
 
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 

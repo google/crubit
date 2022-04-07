@@ -1,6 +1,6 @@
 # End-to-end test of !Unpin classes.
 
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 

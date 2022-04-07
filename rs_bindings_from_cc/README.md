@@ -9,7 +9,7 @@ not be used yet.
 *   a C++ source file with the implementation of the bindings
 
 For convenience, `:test_wrapper` is a shell script that passes all Clang command
-line flags from the current Blaze C++ toolchain:
+line flags from the current Bazel C++ toolchain:
 
 ```
 bazel run //rs_bindings_from_cc:test_wrapper -- --public_headers=hello_world.h
@@ -53,7 +53,7 @@ If possible follow these recommendations:
     [`rs_bindings_from_cc/test/golden/update.sh`](/rs_bindings_from_cc/test/golden/update.sh)
     to regenerate checked-in files.
 *   Write full executable end-to-end tests (verifying that interop tools and
-    Blaze rules generate outputs that can be built and executed) as small
+    Bazel rules generate outputs that can be built and executed) as small
     projects with a `rust_test` or `cc_test` on top in subpackages of `test`.
 
 To get Rust backtraces for `rs_bindings_from_cc` when running end-to-end tests,

@@ -1,6 +1,6 @@
 """End-to-end tests of C++ functions that don't have lifetime annotations."""
 
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 

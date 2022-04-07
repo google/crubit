@@ -107,8 +107,8 @@ with_cc_toolchain_flags = rule(
     fragments = ["cpp"],
     host_fragments = ["cpp"],
     toolchains = [
-        "//third_party/bazel_rules/rules_rust/rust:toolchain",
-        "//tools/cpp:toolchain_type",
+        "@rules_rust//rust:toolchain",
+        "@bazel_tools//tools/cpp:toolchain_type",
     ],
     implementation = _with_cc_toolchain_flags_impl,
 )

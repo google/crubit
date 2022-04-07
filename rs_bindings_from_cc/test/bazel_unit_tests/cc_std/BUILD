@@ -2,7 +2,7 @@
 be used yet."""
 
 load(":cc_std_test.bzl", "cc_std_test")
-load("//tools/build_defs/testing:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 licenses(["notice"])
 

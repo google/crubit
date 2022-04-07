@@ -9,7 +9,7 @@ cc_library(
     srcs = ["lifetime.cc"],
     hdrs = ["lifetime.h"],
     deps = [
-        "//third_party/absl/strings",
+        "@absl//strings",
         "@llvm///llvm:Support",
     ],
 )
@@ -37,8 +37,8 @@ cc_library(
         ":lifetime",
         ":lifetime_symbol_table",
         ":pointee_type",
-        "//third_party/absl/strings",
-        "//third_party/absl/strings:str_format",
+        "@absl//strings",
+        "@absl//strings:str_format",
         "@llvm///clang:ast",
         "@llvm///clang:basic",
         "@llvm///llvm:Support",
@@ -53,7 +53,7 @@ cc_library(
         ":lifetime_symbol_table",
         ":pointee_type",
         ":type_lifetimes",
-        "//third_party/absl/strings",
+        "@absl//strings",
         "@llvm///clang:ast",
         "@llvm///clang:basic",
         "@llvm///clang:frontend",

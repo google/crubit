@@ -13,7 +13,7 @@ load(
     "rust_bindings_from_cc_binary",
 )
 load(
-    "//third_party/bazel_rules/rules_rust/rust:defs.bzl",
+    "@rules_rust//rust:defs.bzl",
     "rust_library",
     "rust_test",
 )
@@ -37,10 +37,7 @@ with_cc_toolchain_flags(
 rust_bindings_from_cc_binary(
     name = "rs_bindings_from_cc",
     binary = ":rs_bindings_from_cc_impl",
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
 )
 
 deps_for_bindings(
@@ -51,17 +48,14 @@ deps_for_bindings(
     deps_for_generated_rs_file = [
         # Required for struct layout assertions added to the generated
         # Rust code.
-        "//third_party/rust/memoffset/v0_6:memoffset_unstable_const",
+        "@crates_io//memoffset/v0_6:memoffset_unstable_const",
         "//rs_bindings_from_cc/support:ctor",
-        "//third_party/rust/pin_project/v1:pin_project",  # used by ctor macros
+        "@crates_io//pin_project/v1:pin_project",  # used by ctor macros
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
-        "//third_party/rust/static_assertions/v1:static_assertions",
+        "@crates_io//static_assertions/v1:static_assertions",
     ],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
 )
 
 cc_binary(
@@ -74,14 +68,14 @@ cc_binary(
         ":ir",
         ":ir_from_cc",
         ":src_code_gen",
-        "//third_party/absl/container:flat_hash_map",
-        "//third_party/absl/flags:parse",
-        "//third_party/absl/status",
-        "//third_party/absl/status:statusor",
-        "//third_party/absl/strings",
         "//rs_bindings_from_cc/util:status_macros",
+        "@absl//container:flat_hash_map",
+        "@absl//flags:parse",
+        "@absl//status",
+        "@absl//status:statusor",
+        "@absl//strings",
         "@llvm///llvm:Support",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+        "@rust//support:rust_okay_here",
     ],
 )
 
@@ -98,11 +92,11 @@ cc_library(
     deps = [
         ":bazel_types",
         ":ir",
-        "//third_party/absl/container:flat_hash_map",
-        "//third_party/absl/flags:flag",
-        "//third_party/absl/status:statusor",
-        "//third_party/absl/strings",
         "//rs_bindings_from_cc/util:status_macros",
+        "@absl//container:flat_hash_map",
+        "@absl//flags:flag",
+        "@absl//status:statusor",
+        "@absl//strings",
         "@llvm///llvm:Support",
     ],
 )
@@ -150,17 +144,17 @@ cc_library(
         ":ast_convert",
         ":bazel_types",
         ":ir",
-        "//third_party/absl/container:flat_hash_map",
-        "//third_party/absl/container:flat_hash_set",
-        "//third_party/absl/status",
-        "//third_party/absl/status:statusor",
-        "//third_party/absl/strings",
-        "//third_party/absl/strings:cord",
-        "//third_party/absl/types:span",
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc/util:check",
         "//rs_bindings_from_cc/util:status_macros",
+        "@absl//container:flat_hash_map",
+        "@absl//container:flat_hash_set",
+        "@absl//status",
+        "@absl//status:statusor",
+        "@absl//strings",
+        "@absl//strings:cord",
+        "@absl//types:span",
         "@llvm///clang:ast",
         "@llvm///clang:basic",
         "@llvm///clang:sema",
@@ -176,10 +170,10 @@ cc_test(
         ":ir",
         ":ir_from_cc",
         "//testing/base/public:gunit_main",
-        "//third_party/absl/status",
-        "//third_party/absl/status:statusor",
-        "//third_party/absl/strings",
-        "//third_party/absl/types:span",
+        "@absl//status",
+        "@absl//status:statusor",
+        "@absl//strings",
+        "@absl//types:span",
         "@llvm///clang:ast",
     ],
 )
@@ -188,12 +182,11 @@ cc_library(
     name = "ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
-    visibility = ["//devtools/rust/cc_interop:__subpackages__"],
     deps = [
         ":bazel_types",
-        "//third_party/absl/strings",
         "//rs_bindings_from_cc/util:check",
         "//rs_bindings_from_cc/util:strong_int",
+        "@absl//strings",
         "@llvm///llvm:Support",
     ],
 )
@@ -203,12 +196,12 @@ rust_library(
     srcs = ["ir.rs"],
     crate_name = "ir",
     deps = [
-        "//third_party/rust/anyhow/v1:anyhow",
-        "//third_party/rust/itertools/v0_9:itertools",
-        "//third_party/rust/proc_macro2/v1:proc_macro2",
-        "//third_party/rust/quote/v1:quote",
-        "//third_party/rust/serde/v1:serde",
-        "//third_party/rust/serde_json/v1:serde_json",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//itertools/v0_9:itertools",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crates_io//quote/v1:quote",
+        "@crates_io//serde/v1:serde",
+        "@crates_io//serde_json/v1:serde_json",
     ],
 )
 
@@ -225,8 +218,8 @@ rust_library(
         ":json_from_cc",
         ":rs_ffi_types",
         ":rs_ir",
-        "//third_party/rust/anyhow/v1:anyhow",
-        "//third_party/rust/itertools/v0_9:itertools",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//itertools/v0_9:itertools",
     ],
 )
 
@@ -239,12 +232,12 @@ cc_library(
         ":frontend_action",
         ":importer",
         ":ir",
-        "//third_party/absl/container:flat_hash_map",
-        "//third_party/absl/status",
-        "//third_party/absl/status:statusor",
-        "//third_party/absl/strings",
-        "//third_party/absl/types:span",
         "//rs_bindings_from_cc/util:check",
+        "@absl//container:flat_hash_map",
+        "@absl//status",
+        "@absl//status:statusor",
+        "@absl//strings",
+        "@absl//types:span",
         "@llvm///clang:basic",
         "@llvm///clang:frontend",
         "@llvm///clang:tooling",
@@ -259,7 +252,7 @@ cc_library(
         ":ffi_types",
         ":ir",
         ":ir_from_cc",
-        "//third_party/absl/status:statusor",
+        "@absl//status:statusor",
         "@llvm///llvm:Support",
     ],
 )
@@ -271,10 +264,10 @@ rust_test(
         ":ir_testing",
         ":rs_ir",
         ":token_stream_matchers",
-        "//third_party/rust/anyhow/v1:anyhow",
-        "//third_party/rust/itertools/v0_9:itertools",
-        "//third_party/rust/quote/v1:quote",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//itertools/v0_9:itertools",
+        "@crates_io//quote/v1:quote",
+        "@rust//support:rust_okay_here",
     ],
 )
 
@@ -298,12 +291,12 @@ rust_library(
         ":rs_ffi_types",
         ":rs_ir",
         ":token_stream_printer",
-        "//third_party/rust/anyhow/v1:anyhow",
-        "//third_party/rust/itertools/v0_9:itertools",
-        "//third_party/rust/proc_macro2/v1:proc_macro2",
-        "//third_party/rust/quote/v1:quote",
-        "//third_party/rust/serde_json/v1:serde_json",
-        "//third_party/rust/syn/v1:syn",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//itertools/v0_9:itertools",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crates_io//quote/v1:quote",
+        "@crates_io//serde_json/v1:serde_json",
+        "@crates_io//syn/v1:syn",
     ],
 )
 
@@ -311,14 +304,14 @@ rust_test(
     name = "src_code_gen_impl_test",
     crate = ":src_code_gen_impl",
     data = [
+        "@rust//toolchains/nightly:bin/rustfmt",
         "@rustfmt//:rustfmt.toml",
-        "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
     ],
     deps = [
         ":ir_testing",
         ":token_stream_matchers",
-        "//third_party/rust/static_assertions/v1:static_assertions",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+        "@crates_io//static_assertions/v1:static_assertions",
+        "@rust//support:rust_okay_here",
     ],
 )
 
@@ -326,10 +319,9 @@ cc_library(
     name = "ffi_types",
     srcs = ["ffi_types.cc"],
     hdrs = ["ffi_types.h"],
-    visibility = ["//fuzzer:__subpackages__"],
     deps = [
         ":rs_ffi_types",  # buildcleaner: keep
-        "//third_party/absl/strings",
+        "@absl//strings",
     ],
 )
 
@@ -337,11 +329,10 @@ cc_library(
     name = "ast_convert",
     srcs = ["ast_convert.cc"],
     hdrs = ["ast_convert.h"],
-    visibility = ["//devtools/rust/cc_interop:__subpackages__"],
     deps = [
         ":ir",
-        "//third_party/absl/functional:function_ref",
         "//rs_bindings_from_cc/util:check",
+        "@absl//functional:function_ref",
         "@llvm///clang:ast",
         "@llvm///clang:basic",
     ],
@@ -365,10 +356,10 @@ rust_library(
     deps = [
         ":rs_ir",
         ":token_stream_printer",
-        "//third_party/rust/anyhow/v1:anyhow",
-        "//third_party/rust/itertools/v0_9:itertools",
-        "//third_party/rust/proc_macro2/v1:proc_macro2",
-        "//third_party/rust/quote/v1:quote",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//itertools/v0_9:itertools",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crates_io//quote/v1:quote",
     ],
 )
 
@@ -376,12 +367,12 @@ rust_test(
     name = "token_stream_matchers_test",
     crate = ":token_stream_matchers",
     data = [
+        "@rust//toolchains/nightly:bin/rustfmt",
         "@rustfmt//:rustfmt.toml",
-        "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
     ],
     deps = [
         ":ir_testing",
-        "//third_party/unsupported_toolchains/rust/support:rust_okay_here",
+        "@rust//support:rust_okay_here",
     ],
 )
 
@@ -389,12 +380,12 @@ rust_library(
     name = "token_stream_printer",
     srcs = ["token_stream_printer.rs"],
     data = [
+        "@rust//toolchains/nightly:bin/rustfmt",
         "@rustfmt//:rustfmt.toml",
-        "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
     ],
     deps = [
-        "//third_party/rust/anyhow/v1:anyhow",
-        "//third_party/rust/proc_macro2/v1:proc_macro2",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//proc_macro2/v1:proc_macro2",
     ],
 )
 
@@ -402,11 +393,11 @@ rust_test(
     name = "token_stream_printer_test",
     crate = ":token_stream_printer",
     data = [
+        "@rust//toolchains/nightly:bin/rustfmt",
         "@rustfmt//:rustfmt.toml",
-        "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
     ],
     deps = [
-        "//third_party/rust/quote/v1:quote",
+        "@crates_io//quote/v1:quote",
     ],
 )
 
@@ -448,9 +439,6 @@ filegroup(
         "//conditions:default": ["@clang//:cc-std-headers"],
     }) + [
         "//third_party/grte/v5_x86/release/usr/grte/v5:compile",
-    ],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
     ],
 )
 

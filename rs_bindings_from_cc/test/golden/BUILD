@@ -1,4 +1,4 @@
-load("//tools/build_defs/testing:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load(
     "//rs_bindings_from_cc/test/golden:generate_bindings.bzl",
     "generate_bindings",

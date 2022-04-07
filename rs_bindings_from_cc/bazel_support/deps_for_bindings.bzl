@@ -15,7 +15,7 @@ load(
 
 # buildifier: disable=bzl-visibility
 load(
-    "//third_party/bazel_rules/rules_rust/rust/private:providers.bzl",
+    "@rules_rust//rust/private:providers.bzl",
     "CrateInfo",
     "DepInfo",
     "DepVariantInfo",

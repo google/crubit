@@ -43,7 +43,7 @@ rust_bindings_from_cc_binary = rule(
             default = "//tools/allowlists/function_transition_allowlist",
         ),
         "_rustfmt": attr.label(
-            default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
+            default = "@rust//toolchains/nightly:bin/rustfmt",
             executable = True,
             allow_single_file = True,
             cfg = "exec",

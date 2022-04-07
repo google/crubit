@@ -1,5 +1,5 @@
 # Support libraries that the generated Rust/C++ bindings depend upon.
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro", "rust_test")
 
 licenses(["notice"])
 
@@ -8,29 +8,23 @@ cc_library(
     hdrs = [
         "cxx20_backports.h",
     ],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
 )
 
 rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
 )
 
 rust_proc_macro(
     name = "ctor_proc_macros",
     srcs = ["ctor_proc_macros.rs"],
     deps = [
-        "//third_party/rust/proc_macro2/v1:proc_macro2",
-        "//third_party/rust/quote/v1:quote",
-        "//third_party/rust/syn/v1:syn",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crates_io//quote/v1:quote",
+        "@crates_io//syn/v1:syn",
     ],
 )
 
@@ -38,7 +32,7 @@ rust_test(
     name = "ctor_test",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
-    deps = ["//third_party/rust/pin_project/v1:pin_project"],
+    deps = ["@crates_io//pin_project/v1:pin_project"],
 )
 
 rust_test(
@@ -46,7 +40,7 @@ rust_test(
     srcs = ["ctor_proc_macros_test.rs"],
     deps = [
         ":ctor",
-        "//third_party/rust/pin_project/v1:pin_project",
+        "@crates_io//pin_project/v1:pin_project",
     ],
 )
 
@@ -62,19 +56,16 @@ rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
     proc_macro_deps = [":forward_declare_proc_macros"],
-    visibility = [
-        "//devtools/rust/cc_interop:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
 )
 
 rust_proc_macro(
     name = "forward_declare_proc_macros",
     srcs = ["forward_declare_proc_macros.rs"],
     deps = [
-        "//third_party/rust/proc_macro2/v1:proc_macro2",
-        "//third_party/rust/quote/v1:quote",
-        "//third_party/rust/syn/v1:syn",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crates_io//quote/v1:quote",
+        "@crates_io//syn/v1:syn",
     ],
 )
 

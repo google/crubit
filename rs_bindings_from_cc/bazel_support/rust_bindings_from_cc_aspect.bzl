@@ -24,7 +24,7 @@ load(
 )
 
 # buildifier: disable=bzl-visibility
-load("//third_party/bazel_rules/rules_rust/rust/private:providers.bzl", "DepVariantInfo")
+load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -158,8 +158,8 @@ rust_bindings_from_cc_aspect = aspect(
         ),
     }.items()),
     toolchains = [
-        "//third_party/bazel_rules/rules_rust/rust:toolchain",
-        "//tools/cpp:toolchain_type",
+        "@rules_rust//rust:toolchain",
+        "@bazel_tools//tools/cpp:toolchain_type",
     ],
     host_fragments = ["cpp"],
     fragments = ["cpp", "google_cpp"],

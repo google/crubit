@@ -1,6 +1,6 @@
 """End-to-end test for operators."""
 
-load("//third_party/bazel_rules/rules_rust/rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 
@@ -15,6 +15,6 @@ rust_test(
     srcs = ["test.rs"],
     cc_deps = [":operators"],
     deps = [
-        "//third_party/rust/static_assertions/v1:static_assertions",
+        "@crates_io//static_assertions/v1:static_assertions",
     ],
 )
