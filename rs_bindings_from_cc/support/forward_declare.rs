@@ -31,7 +31,7 @@
 //!
 //! ```
 //! pub struct Foo { ... }
-//! unsafe_define!(Foo, symbol!("foo::Foo"));
+//! unsafe_define!(symbol!("foo::Foo"), Foo);
 //! ```
 //!
 //! ## Background
@@ -58,7 +58,7 @@
 //!
 //! For each type you wish to allow to be forward declared by others, give it a
 //! globally unique name such as `"foo::YourType"`, and call
-//! `unsafe_define!(YourType, "foo::YourType")`.
+//! `unsafe_define!(symbol!("foo::YourType"), YourType)`.
 //!
 //! This defines `IncompleteCast<&Incomplete<Name, _>>` and vice versa, for all
 //! of the following common pointer types:
