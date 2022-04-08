@@ -31,7 +31,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Iterates over the AST created from the invocation's entry headers and
 // creates an intermediate representation of the import (`IR`) into the
@@ -187,6 +187,6 @@ class Importer {
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 };  // class Importer
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IMPORTER_H_

@@ -51,10 +51,9 @@
 // implementations of AbslHashValue or operator<<, they should provide those as
 // well.
 #define CRUBIT_DEFINE_STRING_TYPE(string_type_name) \
-  using string_type_name =                          \
-      ::rs_bindings_from_cc::StringType<class string_type_name##_tag_>;
+  using string_type_name = ::crubit::StringType<class string_type_name##_tag_>;
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // StringType provides these operations:
 //   * relational operators (==, !=, <, <=, >, >=)
@@ -127,6 +126,6 @@ std::string AbslUnparseFlag(const StringType<Tag>& val) {
   return absl::UnparseFlag(std::string(val.value()));
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRING_TYPE_H_

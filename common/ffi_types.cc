@@ -6,7 +6,7 @@
 
 #include "third_party/absl/strings/string_view.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 FfiU8Slice MakeFfiU8Slice(absl::string_view s) {
   FfiU8Slice result;
@@ -19,4 +19,4 @@ absl::string_view StringViewFromFfiU8Slice(FfiU8Slice ffi_u8_slice) {
   return absl::string_view(ffi_u8_slice.ptr, ffi_u8_slice.size);
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

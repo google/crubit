@@ -29,8 +29,8 @@
 namespace crubit {
 
 absl::Status Main(std::vector<char*> args) {
-  using rs_bindings_from_cc::Cmdline;
-  using rs_bindings_from_cc::IR;
+  using crubit::Cmdline;
+  using crubit::IR;
   CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
 
   if (cmdline.do_nothing()) {
@@ -48,7 +48,7 @@ absl::Status Main(std::vector<char*> args) {
                               args.end());
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, rs_bindings_from_cc::IrFromCc(
+      IR ir, crubit::IrFromCc(
                  /* extra_source_code= */ "", cmdline.current_target(),
                  cmdline.public_headers(),
                  /* virtual_headers_contents= */ {},
@@ -59,8 +59,7 @@ absl::Status Main(std::vector<char*> args) {
         cmdline.ir_out(), std::string(llvm::formatv("{0:2}", ir.ToJson()))));
   }
 
-  rs_bindings_from_cc::Bindings bindings =
-      rs_bindings_from_cc::GenerateBindings(ir);
+  crubit::Bindings bindings = crubit::GenerateBindings(ir);
   CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.rs_out(), bindings.rs_api));
   CRUBIT_RETURN_IF_ERROR(
       SetFileContents(cmdline.cc_out(), bindings.rs_api_impl));

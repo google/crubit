@@ -14,7 +14,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access);
 
@@ -27,6 +27,6 @@ SpecialMemberFunc GetMoveCtorSpecialMemberFunc(
 SpecialMemberFunc GetDestructorSpecialMemberFunc(
     const clang::RecordDecl& record_decl);
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_AST_CONVERT_H_

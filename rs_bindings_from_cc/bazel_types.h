@@ -9,11 +9,11 @@
 
 #include "rs_bindings_from_cc/util/string_type.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Representation of a Bazel label (for example //foo/bar:baz).
 CRUBIT_DEFINE_STRING_TYPE(BazelLabel);
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_BAZEL_TYPES_H_

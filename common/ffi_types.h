@@ -9,7 +9,7 @@
 
 #include "third_party/absl/strings/string_view.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Owned, Rust-allocated byte array. Call `FreeFfiU8SliceBox` to
 // deallocate.
@@ -39,6 +39,6 @@ extern "C" FfiU8SliceBox AllocFfiU8SliceBox(FfiU8Slice ffi_u8_slice);
 // Implemented in Rust.
 extern "C" void FreeFfiU8SliceBox(FfiU8SliceBox);
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_COMMON_FFI_TYPES_H_

@@ -54,7 +54,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Regex.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 namespace {
 
 constexpr absl::string_view kTypeStatusPayloadUrl =
@@ -1244,4 +1244,4 @@ std::vector<BaseClass> Importer::GetUnambiguousPublicBases(
   return bases;
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

@@ -12,7 +12,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // FFI equivalent of `Bindings`.
 struct FfiBindings {
@@ -56,4 +56,4 @@ Bindings GenerateBindings(const IR& ir) {
   return bindings;
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

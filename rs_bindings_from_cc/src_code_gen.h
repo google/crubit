@@ -9,7 +9,7 @@
 
 #include "rs_bindings_from_cc/ir.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Source code for generated bindings.
 struct Bindings {
@@ -22,6 +22,6 @@ struct Bindings {
 // Generates bindings from the given `IR`.
 Bindings GenerateBindings(const IR& ir);
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_SRC_CODE_GEN_H_

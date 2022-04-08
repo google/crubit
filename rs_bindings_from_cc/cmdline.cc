@@ -41,7 +41,7 @@ ABSL_FLAG(std::string, targets_and_headers, std::string(),
           "...\n"
           "]");
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 namespace {
 
@@ -157,4 +157,4 @@ absl::StatusOr<BazelLabel> Cmdline::FindHeader(const HeaderName& header) const {
 
 Cmdline::Cmdline() = default;
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

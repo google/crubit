@@ -12,7 +12,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Creates an `ASTConsumer` that generates the intermediate representation
 // (`IR`) into the invocation object.
@@ -28,6 +28,6 @@ class FrontendAction : public clang::ASTFrontendAction {
   Importer::Invocation& invocation_;
 };
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_FRONTEND_ACTION_H_

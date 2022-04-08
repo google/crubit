@@ -14,7 +14,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Parses C++ source code into IR.
 //
@@ -44,6 +44,6 @@ absl::StatusOr<IR> IrFromCc(
         {},
     absl::Span<const absl::string_view> args = {});
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_FROM_CC_H_

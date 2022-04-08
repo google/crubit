@@ -14,7 +14,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Parses and validates command line arguments.
 class Cmdline {
@@ -73,6 +73,6 @@ class Cmdline {
   absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets_;
 };
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_

@@ -11,7 +11,7 @@
 #include "testing/base/public/gunit.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 namespace {
 
 using ::testing::AllOf;
@@ -209,4 +209,4 @@ TEST(CmdlineTest, IrOutEmpty) {
 }
 
 }  // namespace
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

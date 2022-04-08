@@ -19,7 +19,7 @@
 #include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 template <class T>
 llvm::json::Value toJSON(const T& t) {
@@ -463,4 +463,4 @@ llvm::json::Value IR::ToJson() const {
   };
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

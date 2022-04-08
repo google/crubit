@@ -30,7 +30,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 namespace internal {
 // Pointers and LValue references.
@@ -670,6 +670,6 @@ struct IR {
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
   return o << std::string(llvm::formatv("{0:2}", ir.ToJson()));
 }
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_

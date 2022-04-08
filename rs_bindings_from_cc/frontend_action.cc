@@ -11,7 +11,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 std::unique_ptr<clang::ASTConsumer> FrontendAction::CreateASTConsumer(
     clang::CompilerInstance& instance, llvm::StringRef) {
@@ -20,4 +20,4 @@ std::unique_ptr<clang::ASTConsumer> FrontendAction::CreateASTConsumer(
   return std::make_unique<AstConsumer>(instance, invocation_);
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

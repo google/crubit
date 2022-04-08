@@ -13,7 +13,7 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // LINT.IfChange
 static constexpr absl::string_view kDependencyTarget = "//test:dependency";
@@ -45,4 +45,4 @@ extern "C" FfiU8SliceBox json_from_cc_dependency(
   return AllocFfiU8SliceBox(MakeFfiU8Slice(json));
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

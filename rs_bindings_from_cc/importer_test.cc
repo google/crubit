@@ -19,7 +19,7 @@
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 namespace {
 
 using ::testing::AllOf;
@@ -777,4 +777,4 @@ TEST(ImporterTest, NotTrivialAbi) {
 }
 
 }  // namespace
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

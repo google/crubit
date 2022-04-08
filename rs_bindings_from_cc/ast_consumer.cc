@@ -9,7 +9,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
   if (ast_context.getDiagnostics().hasErrorOccurred()) {
@@ -24,4 +24,4 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
   importer.Import(ast_context.getTranslationUnitDecl());
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

@@ -10,7 +10,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Consumes the Clang AST created from the invocation's entry header and
 // generates the intermediate representation (`IR`) in the invocation object.
@@ -27,6 +27,6 @@ class AstConsumer : public clang::ASTConsumer {
   Importer::Invocation& invocation_;
 };  // class AstConsumer
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_

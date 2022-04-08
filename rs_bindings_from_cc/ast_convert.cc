@@ -11,7 +11,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 namespace {
 
 // Returns a copy constructor for `record`, or `nullptr` if none is declared.
@@ -133,4 +133,4 @@ SpecialMemberFunc GetDestructorSpecialMemberFunc(
                               [](auto c) { return c->getDestructor(); });
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

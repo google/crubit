@@ -25,7 +25,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/FrontendAction.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Tooling/Tooling.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 static constexpr absl::string_view kVirtualHeaderPath =
     "ir_from_cc_virtual_header.h";
@@ -84,4 +84,4 @@ absl::StatusOr<IR> IrFromCc(
   }
 }
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit

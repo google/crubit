@@ -71,7 +71,7 @@
 #include "third_party/absl/base/macros.h"
 #include "third_party/absl/meta/type_traits.h"
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 
 // Holds an integer value (of type NativeType) and behaves as a NativeType by
 // exposing assignment, unary, comparison, and arithmetic operators.
@@ -154,14 +154,13 @@ CRUBIT_STRONG_INT_COMPARISON_OP(>);   // NOLINT(whitespace/operators)
 CRUBIT_STRONG_INT_COMPARISON_OP(>=);  // NOLINT(whitespace/operators)
 #undef CRUBIT_STRONG_INT_COMPARISON_OP
 
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 
 // Defines the StrongInt using value_type and typedefs it to type_name.
 // The struct int_type_name ## _tag_ trickery is needed to ensure that a new
 // type is created per type_name.
-#define CRUBIT_DEFINE_STRONG_INT_TYPE(type_name, value_type)                  \
-  typedef ::rs_bindings_from_cc::StrongInt<class type_name##_strong_int_tag_, \
-                                           value_type>                        \
+#define CRUBIT_DEFINE_STRONG_INT_TYPE(type_name, value_type)                 \
+  typedef ::crubit::StrongInt<class type_name##_strong_int_tag_, value_type> \
       type_name;
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRONG_INT_H_

@@ -19,7 +19,7 @@
     }                                                                     \
   } while (false)
 
-namespace rs_bindings_from_cc {
+namespace crubit {
 template <typename T>
 ABSL_MUST_USE_RESULT T DieIfNull(const char* file, int line,
                                  const char* exprtext, T&& t) {
@@ -29,8 +29,8 @@ ABSL_MUST_USE_RESULT T DieIfNull(const char* file, int line,
   }
   return std::forward<T>(t);
 }
-}  // namespace rs_bindings_from_cc
+}  // namespace crubit
 #define CRUBIT_DIE_IF_NULL(value) \
-  ::rs_bindings_from_cc::DieIfNull(__FILE__, __LINE__, #value, (value))
+  ::crubit::DieIfNull(__FILE__, __LINE__, #value, (value))
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_CHECK_H_
