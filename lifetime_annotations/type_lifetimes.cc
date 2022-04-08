@@ -120,6 +120,10 @@ llvm::Error ForEachTemplateArgument(
             }
           }
         }
+      } else {
+        if (llvm::Error err = callback(depth, clang::QualType())) {
+          return err;
+        }
       }
     }
   }
@@ -161,17 +165,20 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
           type,
           [&ret, &lifetime_factory](int depth,
                                     clang::QualType arg_type) -> llvm::Error {
-            ValueLifetimes template_arg_lifetime;
-            if (llvm::Error err =
-                    ValueLifetimes::Create(arg_type, lifetime_factory)
-                        .moveInto(template_arg_lifetime)) {
-              return err;
+            std::optional<ValueLifetimes> maybe_template_arg_lifetime;
+            if (!arg_type.isNull()) {
+              maybe_template_arg_lifetime.emplace();
+              if (llvm::Error err =
+                      ValueLifetimes::Create(arg_type, lifetime_factory)
+                          .moveInto(*maybe_template_arg_lifetime)) {
+                return err;
+              }
             }
             if (ret.template_argument_lifetimes_.size() <= depth) {
               ret.template_argument_lifetimes_.resize(depth + 1);
             }
             ret.template_argument_lifetimes_[depth].push_back(
-                template_arg_lifetime);
+                maybe_template_arg_lifetime);
             return llvm::Error::success();
           })) {
     return std::move(err);
