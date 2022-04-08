@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "rs_bindings_from_cc/ffi_types.h"
+#include "common/ffi_types.h"
 
 #include "third_party/absl/strings/string_view.h"
 

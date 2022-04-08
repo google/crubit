@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "rs_bindings_from_cc/ffi_types.h"
+#include "common/ffi_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Format/Format.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"

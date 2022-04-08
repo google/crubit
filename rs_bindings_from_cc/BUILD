@@ -217,8 +217,8 @@ rust_library(
     srcs = ["ir_testing.rs"],
     deps = [
         ":json_from_cc",
-        ":rs_ffi_types",
         ":rs_ir",
+        "//common:rs_ffi_types",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_9:itertools",
     ],
@@ -250,9 +250,9 @@ cc_library(
     srcs = ["json_from_cc.cc"],
     deps = [
         ":bazel_types",
-        ":ffi_types",
         ":ir",
         ":ir_from_cc",
+        "//common:ffi_types",
         "@absl//status:statusor",
         "@llvm///llvm:Support",
     ],
@@ -277,9 +277,9 @@ cc_library(
     srcs = ["src_code_gen.cc"],
     hdrs = ["src_code_gen.h"],
     deps = [
-        ":ffi_types",
         ":ir",
         ":src_code_gen_impl",  # buildcleaner: keep
+        "//common:ffi_types",
         "@llvm///clang:format",
         "@llvm///llvm:Support",
     ],
@@ -289,9 +289,9 @@ rust_library(
     name = "src_code_gen_impl",
     srcs = ["src_code_gen.rs"],
     deps = [
-        ":rs_ffi_types",
         ":rs_ir",
         ":token_stream_printer",
+        "//common:rs_ffi_types",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_9:itertools",
         "@crates_io//proc_macro2/v1:proc_macro2",
@@ -317,16 +317,6 @@ rust_test(
 )
 
 cc_library(
-    name = "ffi_types",
-    srcs = ["ffi_types.cc"],
-    hdrs = ["ffi_types.h"],
-    deps = [
-        ":rs_ffi_types",  # buildcleaner: keep
-        "@absl//strings",
-    ],
-)
-
-cc_library(
     name = "ast_convert",
     srcs = ["ast_convert.cc"],
     hdrs = ["ast_convert.h"],
@@ -337,18 +327,6 @@ cc_library(
         "@llvm///clang:ast",
         "@llvm///clang:basic",
     ],
-)
-
-rust_library(
-    name = "rs_ffi_types",
-    srcs = ["ffi_types.rs"],
-    crate_name = "ffi_types",
-    visibility = ["//fuzzer:__subpackages__"],
-)
-
-rust_test(
-    name = "rs_ffi_types_test",
-    crate = ":rs_ffi_types",
 )
 
 rust_library(
