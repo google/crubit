@@ -127,6 +127,10 @@ class ValueLifetimes {
            !template_argument_lifetimes_.empty();
   }
 
+  // Returns true if `predicate` returns true for any lifetime that appears in
+  // the `ValueLifetimes`.
+  bool HasAny(const std::function<bool(Lifetime)>& predicate) const;
+
   // Traverses all the lifetimes in the object, recursively. The
   // visit is done in post-order on the lifetime tree of this type.
   // The callback may mutate the lifetime in an arbitrary way; `variance` will
@@ -206,6 +210,10 @@ class ObjectLifetimes {
   ObjectLifetimes GetFieldOrBaseLifetimes(
       clang::QualType type,
       llvm::SmallVector<std::string> type_lifetime_args) const;
+
+  // Returns true if `predicate` returns true for any lifetime that appears in
+  // the `ObjectLifetimes`.
+  bool HasAny(const std::function<bool(Lifetime)>& predicate) const;
 
   // Traverses all the lifetimes in the object, recursively. The
   // visit is done in post-order on the lifetime tree of this type.

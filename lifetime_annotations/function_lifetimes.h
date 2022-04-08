@@ -101,6 +101,10 @@ class FunctionLifetimes {
     return l.DebugString();
   }) const;
 
+  // Returns true if `predicate` returns true for any lifetime that appears in
+  // the `FunctionLifetimes`.
+  bool HasAny(const std::function<bool(Lifetime)>& predicate) const;
+
   // Traverses all the lifetimes in the function signature, recursively. The
   // visit is done in post-order on the lifetime tree of this type.
   void Traverse(std::function<void(Lifetime&, Variance)> visitor);

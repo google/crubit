@@ -312,6 +312,32 @@ const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
   return *pointee_lifetimes_;
 }
 
+bool ValueLifetimes::HasAny(
+    const std::function<bool(Lifetime)>& predicate) const {
+  for (const auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
+    for (const std::optional<ValueLifetimes>& tmpl_arg : tmpl_arg_at_depth) {
+      if (tmpl_arg && tmpl_arg->HasAny(predicate)) {
+        return true;
+      }
+    }
+  }
+  if (pointee_lifetimes_ && pointee_lifetimes_->HasAny(predicate)) {
+    return true;
+  }
+  for (const auto& lftm_arg : GetLifetimeParameters(type_)) {
+    std::optional<Lifetime> lifetime =
+        lifetime_parameters_by_name_.LookupName(lftm_arg);
+    assert(lifetime.has_value());
+    if (predicate(lifetime.value())) {
+      return true;
+    }
+  }
+  if (function_lifetimes_ && function_lifetimes_->HasAny(predicate)) {
+    return true;
+  }
+  return false;
+}
+
 void ValueLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
                               Variance variance) {
   for (auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
@@ -508,6 +534,11 @@ ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(
     llvm::SmallVector<std::string> type_lifetime_args) const {
   return GetObjectLifetimesForTypeInContext(type, std::move(type_lifetime_args),
                                             "");
+}
+
+bool ObjectLifetimes::HasAny(
+    const std::function<bool(Lifetime)>& predicate) const {
+  return predicate(lifetime_) || value_lifetimes_.HasAny(predicate);
 }
 
 void ObjectLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,

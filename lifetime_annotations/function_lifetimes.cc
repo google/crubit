@@ -117,6 +117,16 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   return ret;
 }
 
+bool FunctionLifetimes::HasAny(
+    const std::function<bool(Lifetime)>& predicate) const {
+  return std::any_of(param_lifetimes_.begin(), param_lifetimes_.end(),
+                     [&predicate](const ValueLifetimes& v) {
+                       return v.HasAny(predicate);
+                     }) ||
+         return_lifetimes_.HasAny(predicate) ||
+         (this_lifetimes_.has_value() && this_lifetimes_->HasAny(predicate));
+}
+
 void FunctionLifetimes::Traverse(
     std::function<void(Lifetime&, Variance)> visitor) {
   for (auto& param : param_lifetimes_) {
