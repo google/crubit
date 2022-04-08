@@ -56,7 +56,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
         .map(|(idx, item)| (item.id(), idx))
         .collect::<HashMap<_, _>>();
 
-    let mut lifetimes: HashMap<LifetimeId, Lifetime> = HashMap::new();
+    let mut lifetimes: HashMap<LifetimeId, LifetimeName> = HashMap::new();
     for item in &flat_ir.items {
         let lifetime_params = match item {
             Item::Record(Record { lifetime_params, .. }) => lifetime_params,
@@ -92,7 +92,7 @@ pub struct HeaderName {
 pub struct LifetimeId(pub i32);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-pub struct Lifetime {
+pub struct LifetimeName {
     pub name: String,
     pub id: LifetimeId,
 }
@@ -290,7 +290,7 @@ pub struct Func {
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
-    pub lifetime_params: Vec<Lifetime>,
+    pub lifetime_params: Vec<LifetimeName>,
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
     pub has_c_calling_convention: bool,
@@ -354,7 +354,7 @@ pub struct Record {
     pub doc_comment: Option<String>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,
-    pub lifetime_params: Vec<Lifetime>,
+    pub lifetime_params: Vec<LifetimeName>,
     pub size: usize,
     pub alignment: usize,
     pub base_size: Option<usize>,
@@ -552,7 +552,7 @@ pub struct IR {
     flat_ir: FlatIR,
     // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
     item_id_to_item_idx: HashMap<ItemId, usize>,
-    lifetimes: HashMap<LifetimeId, Lifetime>,
+    lifetimes: HashMap<LifetimeId, LifetimeName>,
 }
 
 impl IR {
@@ -668,7 +668,7 @@ impl IR {
         format!("{:?}", self.flat_ir)
     }
 
-    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&Lifetime> {
+    pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName> {
         self.lifetimes.get(&lifetime_id)
     }
 }

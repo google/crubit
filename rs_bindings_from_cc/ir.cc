@@ -42,7 +42,7 @@ llvm::json::Value HeaderName::ToJson() const {
   };
 }
 
-llvm::json::Value Lifetime::ToJson() const {
+llvm::json::Value LifetimeName::ToJson() const {
   return llvm::json::Object{
       {"name", name},
       {"id", id},

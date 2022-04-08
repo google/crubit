@@ -1369,12 +1369,12 @@ enum RsTypeKind<'ir> {
     Reference {
         referent: Box<RsTypeKind<'ir>>,
         mutability: Mutability,
-        lifetime: Lifetime,
+        lifetime: LifetimeName,
     },
     RvalueReference {
         referent: Box<RsTypeKind<'ir>>,
         mutability: Mutability,
-        lifetime: Lifetime,
+        lifetime: LifetimeName,
     },
     FuncPtr {
         abi: &'ir str,
@@ -1411,7 +1411,7 @@ impl<'ir> RsTypeKind<'ir> {
             }
             Ok(Box::new(get_type_args()?.remove(0)))
         };
-        let get_lifetime = || -> Result<Lifetime> {
+        let get_lifetime = || -> Result<LifetimeName> {
             if ty.lifetime_args.len() != 1 {
                 bail!("Missing reference lifetime (need exactly 1 lifetime argument): {:?}", ty);
             }

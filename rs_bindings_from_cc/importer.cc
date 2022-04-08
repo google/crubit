@@ -519,7 +519,7 @@ std::optional<IR::Item> Importer::ImportFunction(
     all_free_lifetimes = lifetimes->AllFreeLifetimes();
   }
 
-  std::vector<Lifetime> lifetime_params;
+  std::vector<LifetimeName> lifetime_params;
   for (devtools_rust::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
@@ -527,9 +527,10 @@ std::optional<IR::Item> Importer::ImportFunction(
     lifetime_params.push_back(
         {.name = name->str(), .id = LifetimeId(lifetime.Id())});
   }
-  std::sort(
-      lifetime_params.begin(), lifetime_params.end(),
-      [](const Lifetime& l1, const Lifetime& l2) { return l1.name < l2.name; });
+  std::sort(lifetime_params.begin(), lifetime_params.end(),
+            [](const LifetimeName& l1, const LifetimeName& l2) {
+              return l1.name < l2.name;
+            });
 
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl =

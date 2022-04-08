@@ -95,7 +95,7 @@ CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
 CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
 
 // A lifetime.
-struct Lifetime {
+struct LifetimeName {
   llvm::json::Value ToJson() const;
 
   // Lifetime name. Unlike syn::Lifetime, this does not include the apostrophe.
@@ -108,7 +108,7 @@ struct Lifetime {
   LifetimeId id;
 };
 
-inline std::ostream& operator<<(std::ostream& o, const Lifetime& l) {
+inline std::ostream& operator<<(std::ostream& o, const LifetimeName& l) {
   return o << std::string(llvm::formatv("{0:2}", l.ToJson()));
 }
 
@@ -175,7 +175,7 @@ struct RsType {
   //   *mut i32 has no lifetime arguments
   //   &'a 32 has a single lifetime argument, 'a.
   //   SomeType<'a, 'b> has two lifetime arguments, 'a and 'b.
-  // Lifetimes are identified by their unique ID. The corresponding Lifetime
+  // Lifetimes are identified by their unique ID. The corresponding LifetimeName
   // will be found within the lifetime_params of a Func or Record or TypeAlias
   // that uses this type underneath (as a parameter type, field type, or aliased
   // type).
@@ -418,7 +418,7 @@ struct Func {
   std::string mangled_name;
   MappedType return_type;
   std::vector<FuncParam> params;
-  std::vector<Lifetime> lifetime_params;
+  std::vector<LifetimeName> lifetime_params;
   bool is_inline;
   // If null, this is not a member function.
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
@@ -523,7 +523,7 @@ struct Record {
   llvm::Optional<std::string> doc_comment;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
-  std::vector<Lifetime> lifetime_params;
+  std::vector<LifetimeName> lifetime_params;
   // Size and alignment in bytes.
   int64_t size;
   int64_t alignment;
