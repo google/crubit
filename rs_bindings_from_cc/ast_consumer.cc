@@ -4,8 +4,8 @@
 
 #include "rs_bindings_from_cc/ast_consumer.h"
 
+#include "common/check.h"
 #include "rs_bindings_from_cc/importer.h"
-#include "rs_bindings_from_cc/util/check.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 

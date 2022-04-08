@@ -26,8 +26,8 @@
 //
 // (But absl::flat_hash_set<Foo> is much better!)
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRING_TYPE_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRING_TYPE_H_
+#ifndef CRUBIT_COMMON_STRING_TYPE_H_
+#define CRUBIT_COMMON_STRING_TYPE_H_
 
 #include <memory>
 #include <ostream>  // NOLINT
@@ -128,4 +128,4 @@ std::string AbslUnparseFlag(const StringType<Tag>& val) {
 
 }  // namespace crubit
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRING_TYPE_H_
+#endif  // CRUBIT_COMMON_STRING_TYPE_H_

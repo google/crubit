@@ -69,7 +69,7 @@ cc_binary(
         ":ir_from_cc",
         ":src_code_gen",
         "//common:file_io",
-        "//rs_bindings_from_cc/util:status_macros",
+        "//common:status_macros",
         "@absl//container:flat_hash_map",
         "@absl//flags:parse",
         "@absl//status",
@@ -83,7 +83,7 @@ cc_binary(
 cc_library(
     name = "bazel_types",
     hdrs = ["bazel_types.h"],
-    deps = ["//rs_bindings_from_cc/util:string_type"],
+    deps = ["//common:string_type"],
 )
 
 cc_library(
@@ -93,7 +93,7 @@ cc_library(
     deps = [
         ":bazel_types",
         ":ir",
-        "//rs_bindings_from_cc/util:status_macros",
+        "//common:status_macros",
         "@absl//container:flat_hash_map",
         "@absl//flags:flag",
         "@absl//status:statusor",
@@ -131,7 +131,7 @@ cc_library(
     hdrs = ["ast_consumer.h"],
     deps = [
         ":importer",
-        "//rs_bindings_from_cc/util:check",
+        "//common:check",
         "@llvm///clang:ast",
         "@llvm///clang:frontend",
     ],
@@ -145,10 +145,10 @@ cc_library(
         ":ast_convert",
         ":bazel_types",
         ":ir",
+        "//common:check",
+        "//common:status_macros",
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
-        "//rs_bindings_from_cc/util:check",
-        "//rs_bindings_from_cc/util:status_macros",
         "@absl//container:flat_hash_map",
         "@absl//container:flat_hash_set",
         "@absl//status",
@@ -185,8 +185,8 @@ cc_library(
     hdrs = ["ir.h"],
     deps = [
         ":bazel_types",
-        "//rs_bindings_from_cc/util:check",
-        "//rs_bindings_from_cc/util:strong_int",
+        "//common:check",
+        "//common:strong_int",
         "@absl//strings",
         "@llvm///llvm:Support",
     ],
@@ -233,7 +233,7 @@ cc_library(
         ":frontend_action",
         ":importer",
         ":ir",
-        "//rs_bindings_from_cc/util:check",
+        "//common:check",
         "@absl//container:flat_hash_map",
         "@absl//status",
         "@absl//status:statusor",
@@ -322,7 +322,7 @@ cc_library(
     hdrs = ["ast_convert.h"],
     deps = [
         ":ir",
-        "//rs_bindings_from_cc/util:check",
+        "//common:check",
         "@absl//functional:function_ref",
         "@llvm///clang:ast",
         "@llvm///clang:basic",

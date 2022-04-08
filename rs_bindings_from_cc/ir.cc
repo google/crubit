@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "third_party/absl/strings/string_view.h"
+#include "common/check.h"
+#include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/util/check.h"
-#include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
 namespace crubit {
@@ -27,12 +27,12 @@ llvm::json::Value toJSON(const T& t) {
 }
 
 template <typename TTag, typename TInt>
-llvm::json::Value toJSON(const StrongInt<TTag, TInt> strong_int) {
+llvm::json::Value toJSON(const crubit::StrongInt<TTag, TInt> strong_int) {
   return llvm::json::Value(strong_int.value());
 }
 
 template <typename TTag>
-llvm::json::Value toJSON(const StringType<TTag> string_type) {
+llvm::json::Value toJSON(const crubit::StringType<TTag> string_type) {
   return llvm::json::Value(string_type.value());
 }
 

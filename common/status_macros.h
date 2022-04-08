@@ -4,8 +4,8 @@
 
 // Helper macros and methods to return and propagate errors with `absl::Status`.
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STATUS_MACROS_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STATUS_MACROS_H_
+#ifndef CRUBIT_COMMON_STATUS_MACROS_H_
+#define CRUBIT_COMMON_STATUS_MACROS_H_
 
 #include <utility>
 
@@ -152,4 +152,4 @@ constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
 #define CRUBIT_STATUS_MACROS_IMPL_CONCAT_(x, y) \
   CRUBIT_STATUS_MACROS_IMPL_CONCAT_INNER_(x, y)
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STATUS_MACROS_H_
+#endif  // CRUBIT_COMMON_STATUS_MACROS_H_

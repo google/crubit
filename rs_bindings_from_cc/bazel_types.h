@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "rs_bindings_from_cc/util/string_type.h"
+#include "common/string_type.h"
 
 namespace crubit {
 

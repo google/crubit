@@ -58,8 +58,8 @@
 //   This class also provides a .value() accessor method and defines a hash
 //   functor that allows the IntType to be used as key to hashable containers.
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRONG_INT_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRONG_INT_H_
+#ifndef CRUBIT_COMMON_STRONG_INT_H_
+#define CRUBIT_COMMON_STRONG_INT_H_
 
 #include <cstdint>
 #include <iosfwd>
@@ -163,4 +163,4 @@ CRUBIT_STRONG_INT_COMPARISON_OP(>=);  // NOLINT(whitespace/operators)
   typedef ::crubit::StrongInt<class type_name##_strong_int_tag_, value_type> \
       type_name;
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_STRONG_INT_H_
+#endif  // CRUBIT_COMMON_STRONG_INT_H_

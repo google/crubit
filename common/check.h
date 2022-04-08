@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_UTIL_CHECK_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_UTIL_CHECK_H_
+#ifndef CRUBIT_COMMON_CHECK_H_
+#define CRUBIT_COMMON_CHECK_H_
 
 #include "third_party/absl/base/attributes.h"
 #include "third_party/absl/base/optimization.h"
@@ -33,4 +33,4 @@ ABSL_MUST_USE_RESULT T DieIfNull(const char* file, int line,
 #define CRUBIT_DIE_IF_NULL(value) \
   ::crubit::DieIfNull(__FILE__, __LINE__, #value, (value))
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_UTIL_CHECK_H_
+#endif  // CRUBIT_COMMON_CHECK_H_

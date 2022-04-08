@@ -13,7 +13,7 @@
 #include "third_party/absl/flags/flag.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/substitute.h"
-#include "rs_bindings_from_cc/util/status_macros.h"
+#include "common/status_macros.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
 
 ABSL_FLAG(bool, do_nothing, false,

@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "third_party/absl/strings/string_view.h"
+#include "common/check.h"
+#include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
-#include "rs_bindings_from_cc/util/check.h"
-#include "rs_bindings_from_cc/util/strong_int.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
