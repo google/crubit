@@ -127,6 +127,17 @@ bool FunctionLifetimes::HasAny(
          (this_lifetimes_.has_value() && this_lifetimes_->HasAny(predicate));
 }
 
+llvm::DenseSet<Lifetime> FunctionLifetimes::AllFreeLifetimes() const {
+  // TODO(veluca): this is incorrect in the presence of HRTBs.
+  llvm::DenseSet<Lifetime> all_lifetimes;
+  Traverse([&all_lifetimes](Lifetime l, Variance) {
+    if (l != Lifetime::Static()) {
+      all_lifetimes.insert(l);
+    }
+  });
+  return all_lifetimes;
+}
+
 void FunctionLifetimes::Traverse(
     std::function<void(Lifetime&, Variance)> visitor) {
   for (auto& param : param_lifetimes_) {

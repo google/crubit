@@ -12,6 +12,7 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
@@ -104,6 +105,11 @@ class FunctionLifetimes {
   // Returns true if `predicate` returns true for any lifetime that appears in
   // the `FunctionLifetimes`.
   bool HasAny(const std::function<bool(Lifetime)>& predicate) const;
+
+  // Returns the set of all lifetimes that are either lifetime parameters of
+  // this function, or (if this FunctionLifetimes is a declaration of a method)
+  // of the enclosing class.
+  llvm::DenseSet<Lifetime> AllFreeLifetimes() const;
 
   // Traverses all the lifetimes in the function signature, recursively. The
   // visit is done in post-order on the lifetime tree of this type.

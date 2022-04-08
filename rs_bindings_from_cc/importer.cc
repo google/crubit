@@ -514,16 +514,13 @@ std::optional<IR::Item> Importer::ImportFunction(
                            return_type.status().message()));
   }
 
-  llvm::DenseSet<devtools_rust::Lifetime> all_lifetimes;
+  llvm::DenseSet<devtools_rust::Lifetime> all_free_lifetimes;
   if (lifetimes) {
-    lifetimes->Traverse(
-        [&all_lifetimes](devtools_rust::Lifetime l, devtools_rust::Variance) {
-          all_lifetimes.insert(l);
-        });
+    all_free_lifetimes = lifetimes->AllFreeLifetimes();
   }
 
   std::vector<Lifetime> lifetime_params;
-  for (devtools_rust::Lifetime lifetime : all_lifetimes) {
+  for (devtools_rust::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
     CRUBIT_CHECK(name.has_value());
