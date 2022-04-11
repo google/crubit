@@ -13,8 +13,6 @@ use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
-pub type __builtin_ms_va_list = *mut u8;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -103,14 +101,6 @@ impl<'b> From<ctor::RvalueReference<'b, ContainingStruct>> for ContainingStruct 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=31
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=32
-// Error while generating bindings for item 'ContainingStruct::NestedStruct::NonStaticMemberFunction':
-// Couldn't import the parent
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=33
-// Error while generating bindings for item 'ContainingStruct::NestedStruct::StaticMemberFunction':
-// Couldn't import the parent
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_
 

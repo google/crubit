@@ -24,12 +24,14 @@ namespace {
 
 using ::testing::AllOf;
 using ::testing::AnyOf;
+using ::testing::Contains;
 using ::testing::Each;
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Pointee;
 using ::testing::SizeIs;
+using ::testing::UnorderedElementsAre;
 using ::testing::VariantWith;
 using ::testing::status::StatusIs;
 
@@ -37,6 +39,23 @@ std::optional<ItemId> DeclIdForRecord(const IR& ir, absl::string_view rs_name) {
   for (const Record* record : ir.get_items_if<Record>()) {
     if (record->rs_name == rs_name) {
       return record->id;
+    }
+  }
+  return std::nullopt;
+}
+
+std::optional<IR::Item> FindItemById(const IR& ir, ItemId id) {
+  for (auto item : ir.items) {
+    if (auto* record = std::get_if<Record>(&item); record && record->id == id) {
+      return item;
+    } else if (auto* func = std::get_if<Func>(&item); func && func->id == id) {
+      return item;
+    } else if (auto* comment = std::get_if<Comment>(&item);
+               comment && comment->id == id) {
+      return item;
+    } else if (auto* unsupported = std::get_if<UnsupportedItem>(&item);
+               unsupported && unsupported->id == id) {
+      return item;
     }
   }
   return std::nullopt;
@@ -108,6 +127,14 @@ MATCHER_P(NameIs, name, "") {
   if (arg.name == name) return true;
 
   *result_listener << "actual name: '" << arg.name << "'";
+  return false;
+}
+
+// Matches text for comments.
+MATCHER_P(TextIs, text, "") {
+  if (arg.text == text) return true;
+
+  *result_listener << "actual text: '" << arg.text << "'";
   return false;
 }
 
@@ -301,7 +328,7 @@ TEST(ImporterTest, ErrorOnInvalidInput) {
 TEST(ImporterTest, FuncWithVoidReturnType) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo();"));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              ElementsAre(VariantWith<Func>(
+              UnorderedElementsAre(VariantWith<Func>(
                   AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
                         ReturnType(IsVoid()), ParamsAre()))));
 }
@@ -310,7 +337,7 @@ TEST(ImporterTest, TwoFuncs) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Bar();"));
   EXPECT_THAT(
       ItemsWithoutBuiltins(ir),
-      ElementsAre(
+      UnorderedElementsAre(
           VariantWith<Func>(AllOf(IdentifierIs("Foo"), MangledNameIs("_Z3Foov"),
                                   ReturnType(IsVoid()), ParamsAre())),
           VariantWith<Func>(AllOf(IdentifierIs("Bar"), MangledNameIs("_Z3Barv"),
@@ -331,35 +358,36 @@ TEST(ImporterTest, TwoFuncsFromTwoHeaders) {
                            BazelLabel{"//two_funcs:one_target"}},
                       }));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              ElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
-                          VariantWith<Func>(IdentifierIs("Bar"))));
+              UnorderedElementsAre(VariantWith<Func>(IdentifierIs("Foo")),
+                                   VariantWith<Func>(IdentifierIs("Bar"))));
 }
 
 TEST(ImporterTest, NonInlineFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo() {}"));
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              ElementsAre(VariantWith<Func>(
+              UnorderedElementsAre(VariantWith<Func>(
                   AllOf(IdentifierIs("Foo"), Not(IsInline())))));
 }
 
 TEST(ImporterTest, InlineFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("inline void Foo() {}"));
-  EXPECT_THAT(
-      ItemsWithoutBuiltins(ir),
-      ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
+  EXPECT_THAT(ItemsWithoutBuiltins(ir),
+              UnorderedElementsAre(
+                  VariantWith<Func>(AllOf(IdentifierIs("Foo"), IsInline()))));
 }
 
 TEST(ImporterTest, FuncJustOnce) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("void Foo(); void Foo();"));
-  EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              ElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
+  EXPECT_THAT(
+      ItemsWithoutBuiltins(ir),
+      UnorderedElementsAre(VariantWith<Func>(AllOf(IdentifierIs("Foo")))));
 }
 
 TEST(ImporterTest, TestImportPointerFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int* Foo(int* a);"));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              ElementsAre(VariantWith<Func>(AllOf(
+              UnorderedElementsAre(VariantWith<Func>(AllOf(
                   ReturnType(IsIntPtr()), ParamsAre(ParamType(IsIntPtr()))))));
 }
 
@@ -383,7 +411,7 @@ TEST(ImporterTest, TestImportReferenceFunc) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc("int& Foo(int& a);"));
 
   EXPECT_THAT(ItemsWithoutBuiltins(ir),
-              ElementsAre(VariantWith<Func>(AllOf(
+              UnorderedElementsAre(VariantWith<Func>(AllOf(
                   ReturnType(IsIntRef()), ParamsAre(ParamType(IsIntRef()))))));
 }
 
@@ -774,6 +802,74 @@ TEST(ImporterTest, NotTrivialAbi) {
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(1));
   EXPECT_THAT(records, Each(Pointee(Not(IsTrivialAbi()))));
+}
+
+TEST(ImporterTest, TopLevelItemIds) {
+  absl::string_view file = R"cc(
+    struct TopLevelStruct {};
+    // Top level comment
+
+    // Function comment
+    void top_level_func();
+    namespace top_level_namespace {
+    struct Nested {};
+    // free nested comment
+
+    // nested_func comment
+    void nested_func();
+    }  // namespace top_level_namespace
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+
+  std::vector<IR::Item> items;
+  for (const auto& id : ir.top_level_item_ids) {
+    auto item = FindItemById(ir, id);
+    ASSERT_TRUE(item.has_value());
+    items.push_back(*item);
+  }
+
+  EXPECT_THAT(ir.top_level_item_ids, SizeIs(5));
+  EXPECT_THAT(
+      items,
+      ElementsAre(
+          VariantWith<Record>(RsNameIs("TopLevelStruct")),
+          VariantWith<Comment>(TextIs("Top level comment")),
+          VariantWith<Func>(IdentifierIs("top_level_func")),
+          VariantWith<UnsupportedItem>(NameIs("top_level_namespace")),
+          VariantWith<Comment>(TextIs("namespace top_level_namespace"))));
+}
+
+TEST(ImporterTest, RecordItemIds) {
+  absl::string_view file = R"cc(
+    struct TopLevelStruct {
+      // A free comment
+
+      // foo comment
+      int foo;
+
+      int bar();
+      struct Nested {};
+      int baz();
+    };
+  )cc";
+  ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
+
+  std::vector<const Record*> records = ir.get_items_if<Record>();
+  EXPECT_THAT(records, SizeIs(1));
+
+  std::vector<IR::Item> items;
+  for (const auto& id : records[0]->child_item_ids) {
+    auto item = FindItemById(ir, id);
+    ASSERT_TRUE(item.has_value());
+    items.push_back(*item);
+  }
+
+  EXPECT_THAT(items,
+              AllOf(Contains(VariantWith<Comment>(TextIs("A free comment"))),
+                    Contains(VariantWith<Func>(IdentifierIs("bar"))),
+                    Contains(VariantWith<UnsupportedItem>(
+                        NameIs("TopLevelStruct::Nested"))),
+                    Contains(VariantWith<Func>(IdentifierIs("baz")))));
 }
 
 }  // namespace

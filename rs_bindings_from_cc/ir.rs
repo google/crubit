@@ -29,6 +29,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
         items.into_iter().collect_vec(),
         /* used_headers= */ vec![],
         /* current_target= */ TESTING_TARGET.into(),
+        /* top_level_item_ids= */ vec![],
     )
 }
 
@@ -38,8 +39,9 @@ pub fn make_ir_from_parts(
     items: Vec<Item>,
     used_headers: Vec<HeaderName>,
     current_target: BazelLabel,
+    top_level_item_ids: Vec<ItemId>,
 ) -> Result<IR> {
-    make_ir(FlatIR { used_headers, current_target, items })
+    make_ir(FlatIR { used_headers, current_target, items, top_level_item_ids })
 }
 
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
@@ -365,6 +367,7 @@ pub struct Record {
     pub is_trivial_abi: bool,
     pub is_inheritable: bool,
     pub is_union: bool,
+    pub child_item_ids: Vec<ItemId>,
 }
 
 impl Record {
@@ -542,6 +545,8 @@ struct FlatIR {
     current_target: BazelLabel,
     #[serde(default)]
     items: Vec<Item>,
+    #[serde(default)]
+    top_level_item_ids: Vec<ItemId>,
 }
 
 /// Struct providing the necessary information about the API of a C++ target to
@@ -558,6 +563,10 @@ pub struct IR {
 impl IR {
     pub fn items(&self) -> impl Iterator<Item = &Item> {
         self.flat_ir.items.iter()
+    }
+
+    pub fn top_level_item_ids(&self) -> impl Iterator<Item = &ItemId> {
+        self.flat_ir.top_level_item_ids.iter()
     }
 
     pub fn items_mut(&mut self) -> impl Iterator<Item = &mut Item> {
@@ -707,6 +716,7 @@ mod tests {
         let expected = FlatIR {
             used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
             current_target: "//foo:bar".into(),
+            top_level_item_ids: vec![],
             items: vec![],
         };
         assert_eq!(ir.flat_ir, expected);

@@ -837,7 +837,11 @@ fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
+fn generate_record(
+    record: &Record,
+    ir: &IR,
+    overloaded_funcs: &HashSet<FunctionId>,
+) -> Result<GeneratedItem> {
     let ident = make_rs_ident(&record.rs_name);
     let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
@@ -975,6 +979,30 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
     let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, ir)?;
     let base_class_into = cc_struct_upcast_impl(record, ir)?;
 
+    let record_generated_items = record
+        .child_item_ids
+        .iter()
+        .map(|id| {
+            let item = ir.find_decl(*id)?;
+            generate_item(item, ir, overloaded_funcs)
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut items = vec![];
+    let mut thunks_from_record_items = vec![];
+    let mut assertions_from_record_items = vec![];
+
+    for generated in record_generated_items.iter() {
+        items.push(&generated.item);
+        if !generated.thunks.is_empty() {
+            thunks_from_record_items.push(&generated.thunks);
+        }
+        if !generated.assertions.is_empty() {
+            assertions_from_record_items.push(&generated.assertions);
+        }
+        record_features.extend(generated.features.clone());
+    }
+
     let record_tokens = quote! {
         #doc_comment
         #derives
@@ -990,6 +1018,9 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         #base_class_into
 
         #unpin_impl
+
+        __NEWLINE__ __NEWLINE__
+        #( #items __NEWLINE__ __NEWLINE__)*
     };
 
     let record_trait_assertions = {
@@ -1024,12 +1055,20 @@ fn generate_record(record: &Record, ir: &IR) -> Result<(RsSnippet, RsSnippet)> {
         #( #record_trait_assertions )*
         #( #field_offset_assertions )*
         #( #field_copy_trait_assertions )*
+        #( #assertions_from_record_items )*
     };
 
-    Ok((
-        RsSnippet { features: record_features, tokens: record_tokens },
-        RsSnippet { features: assertion_features, tokens: assertion_tokens },
-    ))
+    let thunk_tokens = quote! {
+        #( #thunks_from_record_items )*
+    };
+
+    Ok(GeneratedItem {
+        item: record_tokens,
+        features: record_features.union(&assertion_features).cloned().collect(),
+        assertions: assertion_tokens,
+        thunks: thunk_tokens,
+        has_record: true,
+    })
 }
 
 fn should_derive_clone(record: &Record) -> bool {
@@ -1162,18 +1201,7 @@ fn generate_item(
             {
                 GeneratedItem { ..Default::default() }
             } else {
-                let (snippet, assertions_snippet) = generate_record(record, ir)?;
-                GeneratedItem {
-                    item: snippet.tokens,
-                    assertions: assertions_snippet.tokens,
-                    features: snippet
-                        .features
-                        .union(&assertions_snippet.features)
-                        .cloned()
-                        .collect(),
-                    has_record: true,
-                    ..Default::default()
-                }
+                generate_record(record, ir, overloaded_funcs)?
             }
         }
         Item::Enum(enum_) => {
@@ -1239,7 +1267,8 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
         }
     }
 
-    for item in ir.items() {
+    for top_level_item_id in ir.top_level_item_ids() {
+        let item = ir.find_decl(*top_level_item_id)?;
         let generated = generate_item(item, ir, &overloaded_funcs)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {

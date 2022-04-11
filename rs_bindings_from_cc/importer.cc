@@ -48,6 +48,7 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Basic/Specifiers.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
+#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/STLExtras.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallPtrSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Casting.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
@@ -188,54 +189,6 @@ absl::StatusOr<absl::string_view> ConvertCcCallConvIntoRsAbi(
 
 }  // namespace
 
-std::vector<clang::RawComment*> Importer::ImportFreeComments() {
-  clang::SourceManager& sm = ctx_.getSourceManager();
-
-  // We put all comments into an ordered set in source order. Later we'll remove
-  // the comments that we don't want or that we get by other means.
-  auto source_order = [&sm](const clang::SourceLocation& a,
-                            const clang::SourceLocation& b) {
-    return b.isValid() && (a.isInvalid() || sm.isBeforeInTranslationUnit(a, b));
-  };
-  auto ordered_comments = std::map<clang::SourceLocation, clang::RawComment*,
-                                   decltype(source_order)>(source_order);
-
-  // We start off by getting the comments from all entry header files...
-  for (const auto& header : invocation_.entry_headers_) {
-    if (auto file = sm.getFileManager().getFile(header.IncludePath())) {
-      if (auto comments = ctx_.Comments.getCommentsInFile(
-              sm.getOrCreateFileID(*file, clang::SrcMgr::C_User))) {
-        for (const auto& [_, comment] : *comments) {
-          ordered_comments.insert({comment->getBeginLoc(), comment});
-        }
-      }
-    }
-  }
-
-  // ... and then we remove those that "conflict" with an IR item.
-  for (const auto& [decl, result] : import_cache_) {
-    if (result.has_value()) {
-      // Remove doc comments of imported items.
-      if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
-        ordered_comments.erase(raw_comment->getBeginLoc());
-      }
-      // Remove comments that are within a visited decl.
-      // TODO(forster): We should retain floating comments in decls like
-      // records and namespaces.
-      ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
-                             ordered_comments.upper_bound(decl->getEndLoc()));
-    }
-  }
-
-  // Return the remaining comments as a `std::vector`.
-  std::vector<clang::RawComment*> result;
-  result.reserve(ordered_comments.size());
-  for (auto& [_, comment] : ordered_comments) {
-    result.push_back(comment);
-  }
-  return result;
-}
-
 // Multiple IR items can be associated with the same source location (e.g. the
 // implicitly defined constructors and assignment operators). To produce
 // deterministic output, we order such items based on GetDeclOrder.  The order
@@ -267,12 +220,30 @@ static int GetDeclOrder(const clang::Decl* decl) {
   return 999;
 }
 
-void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
-  ImportDeclsFromDeclContext(translation_unit_decl);
+class SourceLocationComparator {
+ public:
+  const bool operator()(const clang::SourceLocation& a,
+                        const clang::SourceLocation& b) const {
+    return b.isValid() && a.isValid() && sm.isBeforeInTranslationUnit(a, b);
+  }
+  const bool operator()(const clang::RawComment* a,
+                        const clang::SourceLocation& b) const {
+    return this->operator()(a->getBeginLoc(), b);
+  }
+  const bool operator()(const clang::SourceLocation& a,
+                        const clang::RawComment* b) const {
+    return this->operator()(a, b->getBeginLoc());
+  }
+  const bool operator()(const clang::RawComment* a,
+                        const clang::RawComment* b) const {
+    return this->operator()(a->getBeginLoc(), b->getBeginLoc());
+  }
 
+  using OrderedItemId = std::tuple<clang::SourceRange, int, ItemId>;
   using OrderedItem = std::tuple<clang::SourceRange, int, IR::Item>;
-  clang::SourceManager& sm = ctx_.getSourceManager();
-  auto is_less_than = [&sm](const OrderedItem& a, const OrderedItem& b) {
+
+  template <typename OrderedItemOrId>
+  bool operator()(const OrderedItemOrId& a, const OrderedItemOrId& b) const {
     auto a_range = std::get<0>(a);
     auto b_range = std::get<0>(b);
     if (!a_range.isValid() || !b_range.isValid()) {
@@ -287,82 +258,138 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
         return sm.isBeforeInTranslationUnit(a_range.getEnd(), b_range.getEnd());
       }
     }
-
     auto a_decl_order = std::get<1>(a);
     auto b_decl_order = std::get<1>(b);
-    if (a_decl_order != b_decl_order) return a_decl_order < b_decl_order;
+    return a_decl_order < b_decl_order;
+  }
 
-    // A single FunctionDecl can be associated with multiple UnsupportedItems.
-    // Comparing the fields allows deterministic order between items like:
-    // Non-trivial_abi type '...' is not supported by value as a parameter.
-    // Non-trivial_abi type '...' is not supported by value as a return type.
-    const auto& a_variant = std::get<2>(a);
-    const auto& b_variant = std::get<2>(b);
-    const auto* a_unsupported = std::get_if<UnsupportedItem>(&a_variant);
-    const auto* b_unsupported = std::get_if<UnsupportedItem>(&b_variant);
-    if (a_unsupported && b_unsupported) {
-      if (a_unsupported->name != b_unsupported->name)
-        return a_unsupported->name < b_unsupported->name;
-      return a_unsupported->message < b_unsupported->message;
+  SourceLocationComparator(clang::SourceManager& sm) : sm(sm) {}
+
+ private:
+  clang::SourceManager& sm;
+};
+
+std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
+    clang::Decl* parent_decl) {
+  auto decl_context = clang::cast<clang::DeclContext>(parent_decl);
+
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  std::vector<SourceLocationComparator::OrderedItemId> items;
+  auto compare_locations = SourceLocationComparator(sm);
+
+  // We are only interested in comments within this decl context.
+  std::vector<const clang::RawComment*> comments_in_range(
+      llvm::lower_bound(comments_, parent_decl->getBeginLoc(),
+                        compare_locations),
+      llvm::upper_bound(comments_, parent_decl->getEndLoc(),
+                        compare_locations));
+
+  std::map<clang::SourceLocation, const clang::RawComment*,
+           SourceLocationComparator>
+      ordered_comments(compare_locations);
+  for (auto& comment : comments_in_range) {
+    ordered_comments.insert({comment->getBeginLoc(), comment});
+  }
+
+  absl::flat_hash_set<ItemId> visited_item_ids;
+  for (auto child : decl_context->decls()) {
+    auto decl = child->getCanonicalDecl();
+    if (!IsFromCurrentTarget(decl)) continue;
+
+    // We remove comments attached to a child decl or that are within a child
+    // decl.
+    if (auto raw_comment = ctx_.getRawCommentForDeclNoCache(decl)) {
+      ordered_comments.erase(raw_comment->getBeginLoc());
     }
+    ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
+                           ordered_comments.upper_bound(decl->getEndLoc()));
 
-    return false;
-  };
-  auto are_equal = [&is_less_than](const OrderedItem& a, const OrderedItem& b) {
-    return !is_less_than(a, b) && !is_less_than(b, a);
-  };
+    // We assume that all the decls of the given parameter decl are already
+    // imported. Some calls to ImportDecl() may have returned std::nullopt, and
+    // those decls don't have corresponding items in the ir, so we don't add
+    // their item id to the list.
+    auto item = import_cache_.find(decl);
+    CRUBIT_CHECK(item != import_cache_.end() && "Found non-imported decl");
+    if (!item->second.has_value()) {
+      continue;
+    }
+    auto item_id = GenerateItemId(decl);
+    // TODO(rosica): Drop this check when we start importing also other redecls,
+    //  not just the canonical
+    if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
+      visited_item_ids.insert(item_id);
+      items.push_back({decl->getSourceRange(), GetDeclOrder(decl), item_id});
+    }
+  }
 
-  // We emit IR items in the order of the decls they were generated for.
-  // For decls that emit multiple items we use a stable, but arbitrary order.
-  std::vector<OrderedItem> items;
+  for (auto& [_, comment] : ordered_comments) {
+    items.push_back({comment->getSourceRange(), 0, GenerateItemId(comment)});
+  }
+  std::sort(items.begin(), items.end(), compare_locations);
+
+  std::vector<ItemId> ordered_item_ids;
+  ordered_item_ids.reserve(items.size());
+  for (auto& ordered_item : items) {
+    ordered_item_ids.push_back(std::get<2>(ordered_item));
+  }
+  return ordered_item_ids;
+}
+
+void Importer::ImportFreeComments() {
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  for (const auto& header : invocation_.entry_headers_) {
+    if (auto file = sm.getFileManager().getFile(header.IncludePath())) {
+      if (auto comments_in_file = ctx_.Comments.getCommentsInFile(
+              sm.getOrCreateFileID(*file, clang::SrcMgr::C_User))) {
+        for (const auto& [_, comment] : *comments_in_file) {
+          comments_.push_back(comment);
+        }
+      }
+    }
+  }
+  std::sort(comments_.begin(), comments_.end(), SourceLocationComparator(sm));
+}
+
+void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
+  ImportFreeComments();
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  std::vector<SourceLocationComparator::OrderedItem> ordered_items;
+
+  for (auto& comment : comments_) {
+    ordered_items.push_back(
+        {comment->getSourceRange(), 0,
+         Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics()),
+                 .id = GenerateItemId(comment)}});
+  }
+
+  ImportDeclsFromDeclContext(translation_unit_decl);
   for (const auto& [decl, item] : import_cache_) {
     if (item.has_value()) {
       if (std::holds_alternative<UnsupportedItem>(*item) &&
           !IsFromCurrentTarget(decl)) {
         continue;
       }
-
-      items.push_back(
-          std::make_tuple(decl->getSourceRange(), GetDeclOrder(decl), *item));
+      ordered_items.push_back(
+          {decl->getSourceRange(), GetDeclOrder(decl), *item});
     }
   }
 
-  for (auto comment : ImportFreeComments()) {
-    items.push_back(std::make_tuple(
-        comment->getSourceRange(), 0 /* decl_order */,
-        Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics()),
-                .id = GenerateItemId(comment)}));
-  }
-  std::sort(items.begin(), items.end(), is_less_than);
+  std::sort(ordered_items.begin(), ordered_items.end(),
+            SourceLocationComparator(sm));
 
-  for (size_t i = 0; i < items.size(); i++) {
-    const auto& item = items[i];
-    if (i > 0) {
-      const auto& prev = items[i - 1];
-      if (are_equal(item, prev)) {
-        llvm::json::Value prev_json = std::visit(
-            [&](auto&& item) { return item.ToJson(); }, std::get<2>(prev));
-        llvm::json::Value curr_json = std::visit(
-            [&](auto&& item) { return item.ToJson(); }, std::get<2>(item));
-        if (prev_json != curr_json) {
-          llvm::report_fatal_error(
-              llvm::formatv("Non-deterministic order of IR items: {0} -VS- {1}",
-                            prev_json, curr_json));
-        } else {
-          // TODO(lukasza): Avoid generating duplicate IR items.  Currently
-          // known example: UnsupportedItem: name=std::signbit; message=
-          // Items contained in namespaces are not supported yet.
-          continue;
-        }
-      }
-    }
-    invocation_.ir_.items.push_back(std::get<2>(item));
+  invocation_.ir_.items.reserve(ordered_items.size());
+  for (auto& ordered_item : ordered_items) {
+    invocation_.ir_.items.push_back(std::get<2>(ordered_item));
   }
+  invocation_.ir_.top_level_item_ids =
+      GetItemIdsInSourceOrder(translation_unit_decl);
 }
 
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext* decl_context) {
   for (auto decl : decl_context->decls()) {
+    // TODO(rosica): We don't always want the canonical decl here (especially
+    // not in namespaces).
     ImportDeclIfNeeded(decl->getCanonicalDecl());
   }
 }
@@ -382,7 +409,8 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
     return ImportFunction(function_decl);
   } else if (auto* function_template_decl =
                  clang::dyn_cast<clang::FunctionTemplateDecl>(decl)) {
-    return ImportFunction(function_template_decl->getTemplatedDecl());
+    return ImportFunction(function_template_decl->getTemplatedDecl(),
+                          function_template_decl);
   } else if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
     auto result = ImportRecord(record_decl);
     // TODO(forster): Should we even visit the nested decl if we couldn't
@@ -403,11 +431,12 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
 }
 
 std::optional<IR::Item> Importer::ImportFunction(
-    clang::FunctionDecl* function_decl) {
+    clang::FunctionDecl* function_decl,
+    clang::FunctionTemplateDecl* function_template_decl) {
   if (!IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
   if (function_decl->isTemplated()) {
-    return ImportUnsupportedItem(function_decl,
+    return ImportUnsupportedItem(function_template_decl,
                                  "Function templates are not supported yet");
   }
 
@@ -604,7 +633,9 @@ std::optional<IR::Item> Importer::ImportFunction(
         .member_func_metadata = std::move(member_func_metadata),
         .has_c_calling_convention = has_c_calling_convention,
         .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
-        .id = GenerateItemId(function_decl),
+        .id = function_template_decl == nullptr
+                  ? GenerateItemId(function_decl)
+                  : GenerateItemId(function_template_decl),
     };
   }
   return std::nullopt;
@@ -716,6 +747,8 @@ std::optional<IR::Item> Importer::ImportRecord(
     }
   }
 
+  ImportDeclsFromDeclContext(record_decl);
+  auto item_ids = GetItemIdsInSourceOrder(record_decl);
   return Record{
       .rs_name = std::string(record_name->Ident()),
       .cc_name = std::string(record_name->Ident()),
@@ -734,7 +767,8 @@ std::optional<IR::Item> Importer::ImportRecord(
       .is_trivial_abi = record_decl->canPassInRegisters(),
       .is_inheritable =
           !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
-      .is_union = record_decl->isUnion()};
+      .is_union = record_decl->isUnion(),
+      .child_item_ids = std::move(item_ids)};
 }
 
 std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {

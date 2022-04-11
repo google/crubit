@@ -571,6 +571,8 @@ struct Record {
 
   // Whether this type is a C++ union (rather than a struct)
   bool is_union = false;
+
+  std::vector<ItemId> child_item_ids;
 };
 
 struct Enumerator {
@@ -665,6 +667,7 @@ struct IR {
   using Item =
       std::variant<Func, Record, Enum, TypeAlias, UnsupportedItem, Comment>;
   std::vector<Item> items;
+  std::vector<ItemId> top_level_item_ids;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {

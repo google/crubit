@@ -10,7 +10,7 @@ use itertools::Itertools;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
-use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches};
+use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 
 #[test]
 fn test_function() {
@@ -831,6 +831,7 @@ fn test_record_base_with_unsupported_field() -> Result<()> {
                base_size: Some(4),
                override_alignment: true,
                ...
+               ...
            }),
         }
     );
@@ -1462,4 +1463,118 @@ fn test_function_has_item_id() {
     let function =
         ir.functions().find(|i| i.name == UnqualifiedIdentifier::Identifier(ir_id("foo"))).unwrap();
     assert_ne!(function.id, ItemId(0));
+}
+
+#[test]
+fn test_top_level_items() {
+    let ir = ir_from_cc(
+        r#"
+        struct TopLevelStruct {};
+        // Top level comment
+
+        // Function comment
+        void top_level_func();
+        namespace top_level_namespace {
+        struct Nested {};
+        // free nested comment
+
+        // nested_func comment
+        void nested_func();
+        }  // namespace top_level_namespace"#,
+    )
+    .unwrap();
+
+    let top_level_items =
+        ir.top_level_item_ids().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert_items_match!(
+        top_level_items,
+        vec![
+            quote! {
+              Record {
+                ... rs_name: "TopLevelStruct" ...
+              }
+            },
+            quote! {
+              Comment {
+                ... text: "Top level comment" ...
+              }
+            },
+            quote! {
+              Func { ... name: "top_level_func" ... }
+            },
+            quote! {
+              UnsupportedItem { ... name: "top_level_namespace" ... }
+            },
+            quote! {
+              Comment {
+                ... text: "namespace top_level_namespace" ...
+              }
+            },
+        ]
+    );
+}
+
+#[test]
+fn test_record_items() {
+    let ir = ir_from_cc(
+        r#"
+        struct TopLevelStruct {
+          // A free comment
+
+          // foo comment
+          int foo;
+
+          int bar();
+          struct Nested {};
+          int baz();
+        };"#,
+    )
+    .unwrap();
+
+    let record = ir.records().find(|i| i.rs_name.as_str() == "TopLevelStruct").unwrap();
+    let record_items =
+        record.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert_items_match!(
+        record_items,
+        vec![
+            quote! {
+              Func { ... name: Constructor ... }
+            },
+            quote! {
+              Func { ... name: Constructor ... }
+            },
+            quote! {
+              // Unsupported parameter
+              UnsupportedItem { ... name: "TopLevelStruct::TopLevelStruct", ... }
+            },
+            quote! {
+              Func { ... name: Destructor ... }
+            },
+            quote! {
+              Func { ... name: "operator=" ... }
+            },
+            quote! {
+              // Unsupported parameter
+              UnsupportedItem { ... name: "TopLevelStruct::operator=" ... }
+            },
+            quote! {
+              ...Comment {
+                ... text: "A free comment" ...
+              }
+            },
+            quote! {
+              ... Func { ... name: "bar" ... }
+            },
+            quote! {
+              ... UnsupportedItem { ... name: "TopLevelStruct::Nested" ... }
+            },
+            quote! {
+              ...Func {
+                ... name: "baz" ...
+              }
+            },
+        ]
+    );
 }

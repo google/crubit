@@ -15,17 +15,20 @@
 
 /// Foo
 struct Foo final {
-  // Foo a
+  // TODO(rosica): This comment appears near fields of a struct, and
+  // is currently generated below the struct definiton on the Rust side.
 
   /// A field
   int i;
 
-  // Foo b
+  // TODO(rosica): This comment appears between fields of a struct, and
+  // is currently generated below the struct definiton on the Rust side.
 
   /// Another field
   int j;
 
-  // Foo c
+  // TODO(rosica): This comment appears near fields of a struct, and
+  // is currently generated below the struct definiton on the Rust side.
 };
 
 // b

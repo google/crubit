@@ -13,8 +13,6 @@ use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
-pub type __builtin_ms_va_list = *mut u8;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -64,7 +62,7 @@ pub fn r#impl(r#match: i32) {
 // Error while generating bindings for item 'await':
 // Class templates are not supported yet
 
-// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=22
+// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=21
 // Error while generating bindings for item 'become':
 // Function templates are not supported yet
 

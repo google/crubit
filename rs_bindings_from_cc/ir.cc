@@ -360,6 +360,12 @@ llvm::json::Value BaseClass::ToJson() const {
 }
 
 llvm::json::Value Record::ToJson() const {
+  std::vector<llvm::json::Value> json_item_ids;
+  json_item_ids.reserve(child_item_ids.size());
+  for (const auto& id : child_item_ids) {
+    json_item_ids.push_back(id.value());
+  }
+
   llvm::json::Object record{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
@@ -379,6 +385,7 @@ llvm::json::Value Record::ToJson() const {
       {"is_trivial_abi", is_trivial_abi},
       {"is_inheritable", is_inheritable},
       {"is_union", is_union},
+      {"child_item_ids", std::move(json_item_ids)},
   };
 
   return llvm::json::Object{
@@ -443,7 +450,7 @@ llvm::json::Value Comment::ToJson() const {
       {"text", text},
       {"id", id},
   };
-
+  comment["id"] = id.value();
   return llvm::json::Object{
       {"Comment", std::move(comment)},
   };
@@ -456,10 +463,17 @@ llvm::json::Value IR::ToJson() const {
     std::visit([&](auto&& item) { json_items.push_back(item.ToJson()); }, item);
   }
 
+  std::vector<llvm::json::Value> top_level_ids;
+  top_level_ids.reserve(top_level_item_ids.size());
+  for (const auto& id : top_level_item_ids) {
+    top_level_ids.push_back(id.value());
+  }
+
   return llvm::json::Object{
       {"used_headers", used_headers},
       {"current_target", current_target},
       {"items", std::move(json_items)},
+      {"top_level_item_ids", std::move(top_level_ids)},
   };
 }
 

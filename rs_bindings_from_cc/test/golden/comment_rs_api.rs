@@ -13,8 +13,6 @@ use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
 use static_assertions::{assert_impl_all, assert_not_impl_all};
 
-pub type __builtin_ms_va_list = *mut u8;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -65,6 +63,15 @@ impl<'b> From<ctor::RvalueReference<'b, Foo>> for Foo {
 // Error while generating bindings for item 'Foo::operator=':
 // Bindings for this kind of operator are not supported
 
+// TODO(rosica): This comment appears near fields of a struct, and
+// is currently generated below the struct definiton on the Rust side.
+
+// TODO(rosica): This comment appears between fields of a struct, and
+// is currently generated below the struct definiton on the Rust side.
+
+// TODO(rosica): This comment appears near fields of a struct, and
+// is currently generated below the struct definiton on the Rust side.
+
 // b
 
 // }  // namespace ns
@@ -106,11 +113,11 @@ impl<'b> From<ctor::RvalueReference<'b, Bar>> for Bar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=43
+// rs_bindings_from_cc/test/golden/comment.h;l=46
 // Error while generating bindings for item 'Bar::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=43
+// rs_bindings_from_cc/test/golden/comment.h;l=46
 // Error while generating bindings for item 'Bar::operator=':
 // Bindings for this kind of operator are not supported
 
@@ -143,11 +150,11 @@ impl<'b> From<ctor::RvalueReference<'b, HasNoComments>> for HasNoComments {
     }
 }
 
-// rs_bindings_from_cc/test/golden/comment.h;l=49
+// rs_bindings_from_cc/test/golden/comment.h;l=52
 // Error while generating bindings for item 'HasNoComments::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/comment.h;l=49
+// rs_bindings_from_cc/test/golden/comment.h;l=52
 // Error while generating bindings for item 'HasNoComments::operator=':
 // Bindings for this kind of operator are not supported
 

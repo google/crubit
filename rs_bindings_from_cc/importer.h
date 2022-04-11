@@ -106,7 +106,9 @@ class Importer {
 
   // These functions import specific `Decl` subtypes. They use `LookupDecl` to
   // lookup dependencies. They don't use or update the cache themselves.
-  std::optional<IR::Item> ImportFunction(clang::FunctionDecl* function_decl);
+  std::optional<IR::Item> ImportFunction(
+      clang::FunctionDecl* function_decl,
+      clang::FunctionTemplateDecl* function_template_decl = nullptr);
   std::optional<IR::Item> ImportRecord(clang::CXXRecordDecl* record_decl);
   std::optional<IR::Item> ImportTypedefName(
       clang::TypedefNameDecl* typedef_name_decl);
@@ -118,7 +120,12 @@ class Importer {
 
   absl::StatusOr<std::vector<Field>> ImportFields(
       clang::CXXRecordDecl* record_decl);
-  std::vector<clang::RawComment*> ImportFreeComments();
+  // Stores the comments of this target in source order.
+  void ImportFreeComments();
+  // Returns the item ids of the children and comments of the given decl in
+  // source order. This method assumes that the children decls have already been
+  // imported.
+  std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl);
 
   std::string GetMangledName(const clang::NamedDecl* named_decl) const;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const;
@@ -185,6 +192,7 @@ class Importer {
   absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
       import_cache_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
+  std::vector<const clang::RawComment*> comments_;
 };  // class Importer
 
 }  // namespace crubit

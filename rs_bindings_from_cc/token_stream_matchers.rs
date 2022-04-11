@@ -104,11 +104,30 @@ macro_rules! assert_ir_not_matches {
     };
 }
 
+/// Like `assert_ir_matches!`, but expects a list of Items and a list of
+/// TokenStreams as input. The macro converts each Item to its struct expression
+/// and matches the corresponding pattern against that.
+/// The use case for this macro is to compare a list of Items to expected
+/// patterns, e.g when we want to confirm that the children items of an item
+/// appear in a certain order.
+#[macro_export]
+macro_rules! assert_items_match {
+    ($items:expr, $patterns:expr $(,)*) => {
+        assert_eq!($items.len(), $patterns.len());
+        for (idx, (item, pattern)) in itertools::enumerate(itertools::zip($items, $patterns)) {
+            $crate::internal::match_item(&item, &pattern).expect(&format!(
+                "input at position {} unexpectedly didn't match the pattern",
+                &idx
+            ));
+        }
+    };
+}
+
 /// Only used to make stuff needed by exported macros available
 pub mod internal {
 
     use anyhow::{anyhow, Result};
-    use ir::IR;
+    use ir::{Item, IR};
     use itertools::Itertools;
     pub use proc_macro2::TokenStream;
     use proc_macro2::TokenTree;
@@ -148,6 +167,19 @@ pub mod internal {
             .map(|line| &line[4..])
             .join("\n");
         Ok(snippet)
+    }
+
+    pub fn match_item(item: &Item, pattern: &TokenStream) -> Result<()> {
+        match_tokens(&item_to_token_stream(item)?, pattern, &ir_to_string)
+    }
+
+    fn item_to_token_stream(item: &Item) -> Result<TokenStream> {
+        // derived debug impl doesn't emit commas after the last element of a group,
+        // (for example `[a, b, c]`), but rustfmt automatically adds it (`[a, b,
+        // c,]`). We use rustfmt to format the failure messages. So to make the
+        // input token stream consistent with failure messages we format the
+        // input token stream with rustfmt as well.
+        Ok(ir_to_string(format! {"{:?}", item}.parse().unwrap())?.parse().unwrap())
     }
 
     #[derive(Debug)]
@@ -470,7 +502,10 @@ mod tests {
 
     #[test]
     fn test_assert_ir_matches_assumes_trailing_commas_in_groups() {
-        assert_ir_matches!(ir_from_cc("").unwrap(), quote! {{... items: [...],}});
+        assert_ir_matches!(
+            ir_from_cc("").unwrap(),
+            quote! {{... items: [...], top_level_item_ids: [...], }}
+        );
     }
 
     #[test]
