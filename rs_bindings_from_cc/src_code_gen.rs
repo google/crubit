@@ -902,7 +902,7 @@ fn generate_record(
                     formatted = quote! { rust_std::mem::ManuallyDrop<#formatted> }
                 } else {
                     field_copy_trait_assertions.push(quote! {
-                        const _: () = { assert_impl_all!(#formatted: Copy); };
+                        const _: () = { static_assertions::assert_impl_all!(#formatted: Copy); };
                     });
                 }
             };
@@ -1058,7 +1058,7 @@ fn generate_record(
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
-                const _: () = { #assert_impl_macro (#record_type_name: #trait_name); };
+                const _: () = { static_assertions::#assert_impl_macro (#record_type_name: #trait_name); };
             });
         };
         if should_derive_clone(record) {
@@ -1331,7 +1331,6 @@ fn generate_rs_api(ir: &IR) -> Result<TokenStream> {
         quote! {
             use ::std as rust_std;
             use memoffset_unstable_const::offset_of;
-            use static_assertions::{assert_impl_all, assert_not_impl_all};
         }
     } else {
         quote! {
@@ -2339,9 +2338,9 @@ mod tests {
                 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
                 const _: () = assert!(rust_std::mem::size_of::<SomeStruct>() == 12usize);
                 const _: () = assert!(rust_std::mem::align_of::<SomeStruct>() == 4usize);
-                const _: () = { assert_impl_all!(SomeStruct: Clone); };
-                const _: () = { assert_impl_all!(SomeStruct: Copy); };
-                const _: () = { assert_not_impl_all!(SomeStruct: Drop); };
+                const _: () = { static_assertions::assert_impl_all!(SomeStruct: Clone); };
+                const _: () = { static_assertions::assert_impl_all!(SomeStruct: Copy); };
+                const _: () = { static_assertions::assert_not_impl_all!(SomeStruct: Drop); };
                 const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
                 const _: () = assert!(offset_of!(SomeStruct, protected_int) * 8 == 32usize);
                 const _: () = assert!(offset_of!(SomeStruct, private_int) * 8 == 64usize);
@@ -3447,13 +3446,13 @@ mod tests {
                 const _: () = assert!(rust_std::mem::size_of::<SomeUnionWithPrivateFields>() == 8usize);
                 const _: () = assert!(rust_std::mem::align_of::<SomeUnionWithPrivateFields>() == 8usize);
                 const _: () = {
-                  assert_impl_all!(SomeUnionWithPrivateFields: Clone);
+                  static_assertions::assert_impl_all!(SomeUnionWithPrivateFields: Clone);
                 };
                 const _: () = {
-                  assert_impl_all!(SomeUnionWithPrivateFields: Copy);
+                  static_assertions::assert_impl_all!(SomeUnionWithPrivateFields: Copy);
                 };
                 const _: () = {
-                  assert_not_impl_all!(SomeUnionWithPrivateFields: Drop);
+                  static_assertions::assert_not_impl_all!(SomeUnionWithPrivateFields: Drop);
                 };
                 const _: () = assert!(offset_of!(SomeUnionWithPrivateFields, public_field) * 8 == 0usize);
                 const _: () = assert!(offset_of!(SomeUnionWithPrivateFields, private_field) * 8 == 0usize);

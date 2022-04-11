@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -255,37 +254,37 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<SomeStruct>() == 1usize);
 const _: () = assert!(rust_std::mem::align_of::<SomeStruct>() == 1usize);
 const _: () = {
-    assert_impl_all!(SomeStruct: Clone);
+    static_assertions::assert_impl_all!(SomeStruct: Clone);
 };
 const _: () = {
-    assert_impl_all!(SomeStruct: Copy);
+    static_assertions::assert_impl_all!(SomeStruct: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(SomeStruct: Drop);
+    static_assertions::assert_not_impl_all!(SomeStruct: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<EmptyUnion>() == 1usize);
 const _: () = assert!(rust_std::mem::align_of::<EmptyUnion>() == 1usize);
 const _: () = {
-    assert_impl_all!(EmptyUnion: Clone);
+    static_assertions::assert_impl_all!(EmptyUnion: Clone);
 };
 const _: () = {
-    assert_impl_all!(EmptyUnion: Copy);
+    static_assertions::assert_impl_all!(EmptyUnion: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(EmptyUnion: Drop);
+    static_assertions::assert_not_impl_all!(EmptyUnion: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
 const _: () = assert!(rust_std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
 const _: () = {
-    assert_impl_all!(FieldTypeTestStruct: Clone);
+    static_assertions::assert_impl_all!(FieldTypeTestStruct: Clone);
 };
 const _: () = {
-    assert_impl_all!(FieldTypeTestStruct: Copy);
+    static_assertions::assert_impl_all!(FieldTypeTestStruct: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(FieldTypeTestStruct: Drop);
+    static_assertions::assert_not_impl_all!(FieldTypeTestStruct: Drop);
 };
 const _: () = assert!(offset_of!(FieldTypeTestStruct, bool_field) * 8 == 0usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, char_field) * 8 == 8usize);
@@ -342,13 +341,13 @@ const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 
 const _: () = assert!(rust_std::mem::size_of::<NonEmptyUnion>() == 8usize);
 const _: () = assert!(rust_std::mem::align_of::<NonEmptyUnion>() == 8usize);
 const _: () = {
-    assert_impl_all!(NonEmptyUnion: Clone);
+    static_assertions::assert_impl_all!(NonEmptyUnion: Clone);
 };
 const _: () = {
-    assert_impl_all!(NonEmptyUnion: Copy);
+    static_assertions::assert_impl_all!(NonEmptyUnion: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(NonEmptyUnion: Drop);
+    static_assertions::assert_not_impl_all!(NonEmptyUnion: Drop);
 };
 const _: () = assert!(offset_of!(NonEmptyUnion, bool_field) * 8 == 0usize);
 const _: () = assert!(offset_of!(NonEmptyUnion, char_field) * 8 == 0usize);
@@ -357,20 +356,20 @@ const _: () = assert!(offset_of!(NonEmptyUnion, int_field) * 8 == 0usize);
 const _: () = assert!(offset_of!(NonEmptyUnion, int32_field) * 8 == 0usize);
 const _: () = assert!(offset_of!(NonEmptyUnion, int64_field) * 8 == 0usize);
 const _: () = {
-    assert_impl_all!(bool: Copy);
+    static_assertions::assert_impl_all!(bool: Copy);
 };
 const _: () = {
-    assert_impl_all!(u8: Copy);
+    static_assertions::assert_impl_all!(u8: Copy);
 };
 const _: () = {
-    assert_impl_all!(i16: Copy);
+    static_assertions::assert_impl_all!(i16: Copy);
 };
 const _: () = {
-    assert_impl_all!(i32: Copy);
+    static_assertions::assert_impl_all!(i32: Copy);
 };
 const _: () = {
-    assert_impl_all!(i32: Copy);
+    static_assertions::assert_impl_all!(i32: Copy);
 };
 const _: () = {
-    assert_impl_all!(i64: Copy);
+    static_assertions::assert_impl_all!(i64: Copy);
 };

@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -154,36 +153,36 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<HasCustomAlignment>() == 64usize);
 const _: () = assert!(rust_std::mem::align_of::<HasCustomAlignment>() == 64usize);
 const _: () = {
-    assert_not_impl_all!(HasCustomAlignment: Copy);
+    static_assertions::assert_not_impl_all!(HasCustomAlignment: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(HasCustomAlignment: Drop);
+    static_assertions::assert_not_impl_all!(HasCustomAlignment: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<HasFieldWithCustomAlignment>() == 64usize);
 const _: () = assert!(rust_std::mem::align_of::<HasFieldWithCustomAlignment>() == 64usize);
 const _: () = {
-    assert_not_impl_all!(HasFieldWithCustomAlignment: Copy);
+    static_assertions::assert_not_impl_all!(HasFieldWithCustomAlignment: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(HasFieldWithCustomAlignment: Drop);
+    static_assertions::assert_not_impl_all!(HasFieldWithCustomAlignment: Drop);
 };
 const _: () = assert!(offset_of!(HasFieldWithCustomAlignment, field) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
 const _: () = assert!(rust_std::mem::align_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
 const _: () = {
-    assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Copy);
+    static_assertions::assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Drop);
+    static_assertions::assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
 const _: () = assert!(rust_std::mem::align_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
 const _: () = {
-    assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Copy);
+    static_assertions::assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Drop);
+    static_assertions::assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Drop);
 };

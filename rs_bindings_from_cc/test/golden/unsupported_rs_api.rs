@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -134,21 +133,21 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<NontrivialCustomType>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<NontrivialCustomType>() == 4usize);
 const _: () = {
-    assert_not_impl_all!(NontrivialCustomType: Copy);
+    static_assertions::assert_not_impl_all!(NontrivialCustomType: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(NontrivialCustomType: Drop);
+    static_assertions::assert_not_impl_all!(NontrivialCustomType: Drop);
 };
 const _: () = assert!(offset_of!(NontrivialCustomType, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<ContainingStruct>() == 1usize);
 const _: () = assert!(rust_std::mem::align_of::<ContainingStruct>() == 1usize);
 const _: () = {
-    assert_impl_all!(ContainingStruct: Clone);
+    static_assertions::assert_impl_all!(ContainingStruct: Clone);
 };
 const _: () = {
-    assert_impl_all!(ContainingStruct: Copy);
+    static_assertions::assert_impl_all!(ContainingStruct: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(ContainingStruct: Drop);
+    static_assertions::assert_not_impl_all!(ContainingStruct: Drop);
 };

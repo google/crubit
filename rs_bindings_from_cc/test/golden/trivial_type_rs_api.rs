@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -262,35 +261,35 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<Trivial>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<Trivial>() == 4usize);
 const _: () = {
-    assert_impl_all!(Trivial: Clone);
+    static_assertions::assert_impl_all!(Trivial: Clone);
 };
 const _: () = {
-    assert_impl_all!(Trivial: Copy);
+    static_assertions::assert_impl_all!(Trivial: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(Trivial: Drop);
+    static_assertions::assert_not_impl_all!(Trivial: Drop);
 };
 const _: () = assert!(offset_of!(Trivial, trivial_field) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<TrivialWithDefaulted>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<TrivialWithDefaulted>() == 4usize);
 const _: () = {
-    assert_impl_all!(TrivialWithDefaulted: Clone);
+    static_assertions::assert_impl_all!(TrivialWithDefaulted: Clone);
 };
 const _: () = {
-    assert_impl_all!(TrivialWithDefaulted: Copy);
+    static_assertions::assert_impl_all!(TrivialWithDefaulted: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(TrivialWithDefaulted: Drop);
+    static_assertions::assert_not_impl_all!(TrivialWithDefaulted: Drop);
 };
 const _: () = assert!(offset_of!(TrivialWithDefaulted, trivial_field) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<TrivialNonfinal>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<TrivialNonfinal>() == 4usize);
 const _: () = {
-    assert_not_impl_all!(TrivialNonfinal: Copy);
+    static_assertions::assert_not_impl_all!(TrivialNonfinal: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(TrivialNonfinal: Drop);
+    static_assertions::assert_not_impl_all!(TrivialNonfinal: Drop);
 };
 const _: () = assert!(offset_of!(TrivialNonfinal, trivial_field) * 8 == 0usize);

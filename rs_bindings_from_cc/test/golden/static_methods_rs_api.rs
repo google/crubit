@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -108,12 +107,12 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<SomeClass>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<SomeClass>() == 4usize);
 const _: () = {
-    assert_impl_all!(SomeClass: Clone);
+    static_assertions::assert_impl_all!(SomeClass: Clone);
 };
 const _: () = {
-    assert_impl_all!(SomeClass: Copy);
+    static_assertions::assert_impl_all!(SomeClass: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(SomeClass: Drop);
+    static_assertions::assert_not_impl_all!(SomeClass: Drop);
 };
 const _: () = assert!(offset_of!(SomeClass, field_) * 8 == 0usize);

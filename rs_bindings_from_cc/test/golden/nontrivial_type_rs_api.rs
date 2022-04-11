@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -349,35 +348,35 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<Nontrivial>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<Nontrivial>() == 4usize);
 const _: () = {
-    assert_not_impl_all!(Nontrivial: Copy);
+    static_assertions::assert_not_impl_all!(Nontrivial: Copy);
 };
 const _: () = {
-    assert_impl_all!(Nontrivial: Drop);
+    static_assertions::assert_impl_all!(Nontrivial: Drop);
 };
 const _: () = assert!(offset_of!(Nontrivial, field) * 8 == 0usize);
 const _: () = {
-    assert_impl_all!(i32: Copy);
+    static_assertions::assert_impl_all!(i32: Copy);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<NontrivialInline>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<NontrivialInline>() == 4usize);
 const _: () = {
-    assert_not_impl_all!(NontrivialInline: Copy);
+    static_assertions::assert_not_impl_all!(NontrivialInline: Copy);
 };
 const _: () = {
-    assert_impl_all!(NontrivialInline: Drop);
+    static_assertions::assert_impl_all!(NontrivialInline: Drop);
 };
 const _: () = assert!(offset_of!(NontrivialInline, field) * 8 == 0usize);
 const _: () = {
-    assert_impl_all!(i32: Copy);
+    static_assertions::assert_impl_all!(i32: Copy);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<NontrivialMembers>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<NontrivialMembers>() == 4usize);
 const _: () = {
-    assert_not_impl_all!(NontrivialMembers: Copy);
+    static_assertions::assert_not_impl_all!(NontrivialMembers: Copy);
 };
 const _: () = {
-    assert_impl_all!(NontrivialMembers: Drop);
+    static_assertions::assert_impl_all!(NontrivialMembers: Drop);
 };
 const _: () = assert!(offset_of!(NontrivialMembers, nontrivial_member) * 8 == 0usize);

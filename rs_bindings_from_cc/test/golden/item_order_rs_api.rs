@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -131,25 +130,25 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<FirstStruct>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<FirstStruct>() == 4usize);
 const _: () = {
-    assert_impl_all!(FirstStruct: Clone);
+    static_assertions::assert_impl_all!(FirstStruct: Clone);
 };
 const _: () = {
-    assert_impl_all!(FirstStruct: Copy);
+    static_assertions::assert_impl_all!(FirstStruct: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(FirstStruct: Drop);
+    static_assertions::assert_not_impl_all!(FirstStruct: Drop);
 };
 const _: () = assert!(offset_of!(FirstStruct, field) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<SecondStruct>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<SecondStruct>() == 4usize);
 const _: () = {
-    assert_impl_all!(SecondStruct: Clone);
+    static_assertions::assert_impl_all!(SecondStruct: Clone);
 };
 const _: () = {
-    assert_impl_all!(SecondStruct: Copy);
+    static_assertions::assert_impl_all!(SecondStruct: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(SecondStruct: Drop);
+    static_assertions::assert_not_impl_all!(SecondStruct: Drop);
 };
 const _: () = assert!(offset_of!(SecondStruct, field) * 8 == 0usize);

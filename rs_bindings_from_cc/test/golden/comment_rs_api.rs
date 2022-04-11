@@ -11,7 +11,6 @@
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;
-use static_assertions::{assert_impl_all, assert_not_impl_all};
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -199,13 +198,13 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<Foo>() == 8usize);
 const _: () = assert!(rust_std::mem::align_of::<Foo>() == 4usize);
 const _: () = {
-    assert_impl_all!(Foo: Clone);
+    static_assertions::assert_impl_all!(Foo: Clone);
 };
 const _: () = {
-    assert_impl_all!(Foo: Copy);
+    static_assertions::assert_impl_all!(Foo: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(Foo: Drop);
+    static_assertions::assert_not_impl_all!(Foo: Drop);
 };
 const _: () = assert!(offset_of!(Foo, i) * 8 == 0usize);
 const _: () = assert!(offset_of!(Foo, j) * 8 == 32usize);
@@ -213,25 +212,25 @@ const _: () = assert!(offset_of!(Foo, j) * 8 == 32usize);
 const _: () = assert!(rust_std::mem::size_of::<Bar>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<Bar>() == 4usize);
 const _: () = {
-    assert_impl_all!(Bar: Clone);
+    static_assertions::assert_impl_all!(Bar: Clone);
 };
 const _: () = {
-    assert_impl_all!(Bar: Copy);
+    static_assertions::assert_impl_all!(Bar: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(Bar: Drop);
+    static_assertions::assert_not_impl_all!(Bar: Drop);
 };
 const _: () = assert!(offset_of!(Bar, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<HasNoComments>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<HasNoComments>() == 4usize);
 const _: () = {
-    assert_impl_all!(HasNoComments: Clone);
+    static_assertions::assert_impl_all!(HasNoComments: Clone);
 };
 const _: () = {
-    assert_impl_all!(HasNoComments: Copy);
+    static_assertions::assert_impl_all!(HasNoComments: Copy);
 };
 const _: () = {
-    assert_not_impl_all!(HasNoComments: Drop);
+    static_assertions::assert_not_impl_all!(HasNoComments: Drop);
 };
 const _: () = assert!(offset_of!(HasNoComments, i) * 8 == 0usize);
