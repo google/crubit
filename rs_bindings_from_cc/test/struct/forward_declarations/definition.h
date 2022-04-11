@@ -11,8 +11,20 @@ struct UnpinStruct final {
   int field = 0;
 };
 
+struct NonunpinStruct /* non-final */ {
+  NonunpinStruct() = default;
+  int field = 0;
+};
+
 inline int ReadCompleteUnpinStruct(const UnpinStruct& s) { return s.field; }
 inline void WriteCompleteUnpinStruct(UnpinStruct& s, int value) {
+  s.field = value;
+}
+
+inline int ReadCompleteNonunpinStruct(const NonunpinStruct& s) {
+  return s.field;
+}
+inline void WriteCompleteNonunpinStruct(NonunpinStruct& s, int value) {
   s.field = value;
 }
 

@@ -16,3 +16,13 @@ fn test_unpin_struct() {
     definition::WriteCompleteUnpinStruct(incomplete_s.incomplete_cast(), 42);
     assert_eq!(definition::ReadCompleteUnpinStruct(incomplete_s.incomplete_cast()), 42);
 }
+
+#[test]
+fn test_nonunpin_struct() {
+    ctor::emplace! {
+      let mut s = definition::NonunpinStruct::ctor_new(());
+    }
+    let mut incomplete_s: Pin<&mut definition::NonunpinStruct> = s.as_mut().incomplete_cast();
+    definition::WriteCompleteNonunpinStruct(incomplete_s.as_mut().incomplete_cast(), 42);
+    assert_eq!(definition::ReadCompleteNonunpinStruct((&*incomplete_s).incomplete_cast()), 42);
+}
