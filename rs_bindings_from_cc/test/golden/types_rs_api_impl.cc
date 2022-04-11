@@ -11,19 +11,17 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN10SomeStructC1Ev(class SomeStruct* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN10SomeStructC1ERKS_(
     class SomeStruct* __this, const class SomeStruct& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
     class SomeStruct* __this, class SomeStruct&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
@@ -37,19 +35,17 @@ extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSEOS_(
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1Ev(class EmptyUnion* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1ERKS_(
     class EmptyUnion* __this, const class EmptyUnion& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1EOS_(
     class EmptyUnion* __this, class EmptyUnion&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionD1Ev(class EmptyUnion* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
@@ -65,15 +61,13 @@ extern "C" class EmptyUnion& __rust_thunk___ZN10EmptyUnionaSEOS_(
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
     class FieldTypeTestStruct* __this,
     const class FieldTypeTestStruct& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
     class FieldTypeTestStruct* __this, class FieldTypeTestStruct&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
     class FieldTypeTestStruct* __this) {
@@ -81,19 +75,17 @@ extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
     class NonEmptyUnion* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1ERKS_(
     class NonEmptyUnion* __this, const class NonEmptyUnion& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
     class NonEmptyUnion* __this, class NonEmptyUnion&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionD1Ev(
     class NonEmptyUnion* __this) {

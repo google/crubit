@@ -11,19 +11,17 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN9SomeClassC1Ev(class SomeClass* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN9SomeClassC1ERKS_(
     class SomeClass* __this, const class SomeClass& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN9SomeClassC1EOS_(class SomeClass* __this,
                                                   class SomeClass&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN9SomeClassD1Ev(class SomeClass* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));

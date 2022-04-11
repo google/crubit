@@ -11,19 +11,17 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN7TrivialC1Ev(class Trivial* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN7TrivialC1ERKS_(
     class Trivial* __this, const class Trivial& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN7TrivialC1EOS_(class Trivial* __this,
                                                 class Trivial&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN7TrivialD1Ev(class Trivial* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
@@ -38,14 +36,13 @@ extern "C" class Trivial& __rust_thunk___ZN7TrivialaSEOS_(
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
     class TrivialWithDefaulted* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
     class TrivialWithDefaulted* __this,
     const class TrivialWithDefaulted& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" class TrivialWithDefaulted&
 __rust_thunk___ZN20TrivialWithDefaultedaSERKS_(
@@ -56,9 +53,8 @@ __rust_thunk___ZN20TrivialWithDefaultedaSERKS_(
 extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1EOS_(
     class TrivialWithDefaulted* __this,
     class TrivialWithDefaulted&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" class TrivialWithDefaulted&
 __rust_thunk___ZN20TrivialWithDefaultedaSEOS_(
@@ -72,19 +68,17 @@ extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalC1Ev(
     class TrivialNonfinal* __this) {
-  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalC1ERKS_(
     class TrivialNonfinal* __this, const class TrivialNonfinal& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalC1EOS_(
     class TrivialNonfinal* __this, class TrivialNonfinal&& __param_0) {
-  rs_api_impl_support::construct_at(
-      std::forward<decltype(__this)>(__this),
-      std::forward<decltype(__param_0)>(__param_0));
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN15TrivialNonfinalD1Ev(
     class TrivialNonfinal* __this) {

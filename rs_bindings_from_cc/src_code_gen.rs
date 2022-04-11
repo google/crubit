@@ -1904,7 +1904,7 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                         // surround syntax elements of an outer type (e.g. a
                         // pointer type). Compare: `int (*foo)(int, int)` VS
                         // `type_identity_t<int(int, int)>* foo`.
-                        Ok(quote! { rs_api_impl_support::type_identity_t<
+                        Ok(quote! { crubit::type_identity_t<
                             #ret_type ( #( #param_types ),* ) #attr
                         >  })
                     }
@@ -2059,7 +2059,7 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
             // using destroy_at, we avoid needing to determine or remember what the correct spelling
             // is. Similar arguments apply to `construct_at`.
             UnqualifiedIdentifier::Constructor => {
-                quote! { rs_api_impl_support::construct_at }
+                quote! { crubit::construct_at }
             }
             UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
         };
@@ -2798,7 +2798,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" rs_api_impl_support::type_identity_t<int(int , int)>*
+                extern "C" crubit::type_identity_t<int(int , int)>*
                 __rust_thunk___Z30inline_get_pointer_to_functionv() {
                     return inline_get_pointer_to_function();
                 }
@@ -2848,7 +2848,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" rs_api_impl_support::type_identity_t<
+                extern "C" crubit::type_identity_t<
                         int(float , double) __attribute__((vectorcall))
                     >* __rust_thunk___Z22inline_get_ptr_to_funcv() {
                     return inline_get_ptr_to_func();
@@ -3866,7 +3866,7 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
                         class DefaultedConstructor* __this) {
-                    rs_api_impl_support::construct_at (std::forward<decltype(__this)>(__this)) ;
+                    crubit::construct_at (std::forward<decltype(__this)>(__this)) ;
                 }
             }
         );

@@ -12,7 +12,7 @@
 #include <utility>
 #endif
 
-namespace rs_api_impl_support {
+namespace crubit {
 
 #if __cplusplus > 201703L
 
@@ -41,6 +41,6 @@ using type_identity_t = typename detail::type_identity<T>::type;
 
 #endif
 
-}  // namespace rs_api_impl_support
+}  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_CXX20_BACKPORTS_H_
