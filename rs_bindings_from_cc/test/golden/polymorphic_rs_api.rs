@@ -25,14 +25,26 @@ pub struct PolymorphicClass {
 
 impl !Unpin for PolymorphicClass {}
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=10
-// Error while generating bindings for item 'PolymorphicClass::PolymorphicClass':
-// Only single-parameter constructors for T: !Unpin are supported for now
+impl ctor::CtorNew<()> for PolymorphicClass {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN16PolymorphicClassC1Ev(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
 impl<'b> ctor::CtorNew<&'b PolymorphicClass> for PolymorphicClass {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: &'b PolymorphicClass) -> Self::CtorType {
+    fn ctor_new(args: &'b PolymorphicClass) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN16PolymorphicClassC1ERKS_(
@@ -61,6 +73,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicClass>,
+        );
         pub(crate) fn __rust_thunk___ZN16PolymorphicClassC1ERKS_<'a, 'b>(
             __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicClass>,
             __param_0: &'b PolymorphicClass,

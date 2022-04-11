@@ -29,10 +29,26 @@ pub struct Nontrivial {
 
 impl !Unpin for Nontrivial {}
 
+impl ctor::CtorNew<()> for Nontrivial {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
+
 impl ctor::CtorNew<i32> for Nontrivial {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(field: i32) -> Self::CtorType {
+    fn ctor_new(args: i32) -> Self::CtorType {
+        let field = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
@@ -44,10 +60,28 @@ impl ctor::CtorNew<i32> for Nontrivial {
     }
 }
 
+impl ctor::CtorNew<(i32, i32)> for Nontrivial {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (i32, i32)) -> Self::CtorType {
+        let (field, unused) = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                    field,
+                    unused,
+                );
+            },
+        )
+    }
+}
+
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>> for Nontrivial {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: ctor::RvalueReference<'b, Nontrivial>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, Nontrivial>) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
@@ -84,10 +118,26 @@ pub struct NontrivialInline {
 
 impl !Unpin for NontrivialInline {}
 
+impl ctor::CtorNew<()> for NontrivialInline {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
+
 impl ctor::CtorNew<i32> for NontrivialInline {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(field: i32) -> Self::CtorType {
+    fn ctor_new(args: i32) -> Self::CtorType {
+        let field = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
@@ -99,10 +149,28 @@ impl ctor::CtorNew<i32> for NontrivialInline {
     }
 }
 
+impl ctor::CtorNew<(i32, i32)> for NontrivialInline {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (i32, i32)) -> Self::CtorType {
+        let (field, unused) = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                    field,
+                    unused,
+                );
+            },
+        )
+    }
+}
+
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>> for NontrivialInline {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialInline>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, NontrivialInline>) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
@@ -140,10 +208,26 @@ pub struct NontrivialMembers {
 
 impl !Unpin for NontrivialMembers {}
 
+impl ctor::CtorNew<()> for NontrivialMembers {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
+
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>> for NontrivialMembers {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialMembers>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, NontrivialMembers>) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
@@ -162,15 +246,15 @@ impl Drop for NontrivialMembers {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=48
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=52
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=49
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=53
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=51
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=55
 // Error while generating bindings for item 'ReturnsByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
 
@@ -192,10 +276,20 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        #[link_name = "_ZN10NontrivialC1Ev"]
+        pub(crate) fn __rust_thunk___ZN10NontrivialC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
+        );
         #[link_name = "_ZN10NontrivialC1Ei"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Ei<'a>(
             __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
             field: i32,
+        );
+        #[link_name = "_ZN10NontrivialC1Eii"]
+        pub(crate) fn __rust_thunk___ZN10NontrivialC1Eii<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
+            field: i32,
+            unused: i32,
         );
         #[link_name = "_ZN10NontrivialC1EOS_"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1EOS_<'a, 'b>(
@@ -208,9 +302,17 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN10Nontrivial14MemberFunctionEv<'a>(
             __this: rust_std::pin::Pin<&'a mut Nontrivial>,
         );
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
+        );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ei<'a>(
             __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
             field: i32,
+        );
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Eii<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
+            field: i32,
+            unused: i32,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1EOS_<'a, 'b>(
             __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
@@ -219,6 +321,9 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: *mut NontrivialInline);
         pub(crate) fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
             __this: rust_std::pin::Pin<&'a mut NontrivialInline>,
+        );
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialMembers>,
         );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1EOS_<'a, 'b>(
             __this: &'a mut rust_std::mem::MaybeUninit<NontrivialMembers>,

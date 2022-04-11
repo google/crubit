@@ -27,7 +27,8 @@ impl !Unpin for NontrivialCustomType {}
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>> for NontrivialCustomType {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: ctor::RvalueReference<'b, NontrivialCustomType>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, NontrivialCustomType>) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(

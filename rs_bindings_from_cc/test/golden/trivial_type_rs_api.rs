@@ -102,14 +102,26 @@ pub struct TrivialNonfinal {
 
 impl !Unpin for TrivialNonfinal {}
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
-// Error while generating bindings for item 'TrivialNonfinal::TrivialNonfinal':
-// Only single-parameter constructors for T: !Unpin are supported for now
+impl ctor::CtorNew<()> for TrivialNonfinal {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(
+                    rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
 impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: &'b TrivialNonfinal) -> Self::CtorType {
+    fn ctor_new(args: &'b TrivialNonfinal) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
@@ -124,7 +136,8 @@ impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNonfinal {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(__param_0: ctor::RvalueReference<'b, TrivialNonfinal>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, TrivialNonfinal>) -> Self::CtorType {
+        let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
@@ -203,6 +216,9 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1EOS_<'a, 'b>(
             __this: &'a mut rust_std::mem::MaybeUninit<TrivialWithDefaulted>,
             __param_0: ctor::RvalueReference<'b, TrivialWithDefaulted>,
+        );
+        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<TrivialNonfinal>,
         );
         pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_<'a, 'b>(
             __this: &'a mut rust_std::mem::MaybeUninit<TrivialNonfinal>,

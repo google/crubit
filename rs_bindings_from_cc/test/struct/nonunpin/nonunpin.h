@@ -12,8 +12,8 @@
 // A deliberately !Unpin class.
 class Nonunpin {
  public:
-  explicit Nonunpin(int value)
-      : value_(value), addr_(reinterpret_cast<size_t>(this)) {}
+  Nonunpin() {}
+  explicit Nonunpin(int value) : value_(value) {}
   Nonunpin(const Nonunpin& other) : Nonunpin(other.value_) {}
   Nonunpin(Nonunpin&& other) : Nonunpin(other.value_) { other.value_ = 0; }
   ~Nonunpin() {}
@@ -28,8 +28,8 @@ class Nonunpin {
   const Nonunpin&& AsConstRvalueRef() const { return std::move(*this); }
 
  private:
-  int value_;
-  size_t addr_;
+  int value_ = 0;
+  size_t addr_ = reinterpret_cast<size_t>(this);
 };
 
 inline int GetValueFromMutRef(Nonunpin& nonunpin) { return nonunpin.value(); }

@@ -10,10 +10,20 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ev(
+    class NontrivialInline* __this) {
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
+}
 extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ei(
     class NontrivialInline* __this, int field) {
   rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this),
                                     std::forward<decltype(field)>(field));
+}
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1Eii(
+    class NontrivialInline* __this, int field, int unused) {
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this),
+                                    std::forward<decltype(field)>(field),
+                                    std::forward<decltype(unused)>(unused));
 }
 extern "C" void __rust_thunk___ZN16NontrivialInlineC1EOS_(
     class NontrivialInline* __this, class NontrivialInline&& __param_0) {
@@ -28,6 +38,10 @@ extern "C" void __rust_thunk___ZN16NontrivialInlineD1Ev(
 extern "C" void __rust_thunk___ZN16NontrivialInline14MemberFunctionEv(
     class NontrivialInline* __this) {
   __this->MemberFunction();
+}
+extern "C" void __rust_thunk___ZN17NontrivialMembersC1Ev(
+    class NontrivialMembers* __this) {
+  rs_api_impl_support::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN17NontrivialMembersC1EOS_(
     class NontrivialMembers* __this, class NontrivialMembers&& __param_0) {

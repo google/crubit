@@ -12,13 +12,23 @@ mod tests {
     /// When a value is constructed in-place, it is initialized, has the correct
     /// address.
     #[test]
-    fn test_ctor() {
+    fn test_onearg_ctor() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
         }
         assert_eq!(x.value(), 42);
         assert_eq!(x.addr(), &*x as *const _ as usize);
     }
+
+    #[test]
+    fn test_default_ctor() {
+        ctor::emplace! {
+            let mut x = Nonunpin::ctor_new(());
+        }
+        assert_eq!(x.value(), 0);
+        assert_eq!(x.addr(), &*x as *const _ as usize);
+    }
+
     #[test]
     fn test_move() {
         ctor::emplace! {

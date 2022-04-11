@@ -221,9 +221,9 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
 /// The name of a trait, with extra entries for specially-understood traits and
 /// families of traits.
 enum TraitName<'ir> {
-    /// The constructor trait for !Unpin types. e.g.
-    /// `CtorNew(RsTypeKind::Unit)` is the default constructor.
-    CtorNew(RsTypeKind<'ir>),
+    /// The constructor trait for !Unpin types, with a list of parameter types.
+    /// For example, `CtorNew(vec![])` is the default constructor.
+    CtorNew(Vec<RsTypeKind<'ir>>),
     /// An Unpin constructor trait, e.g. From or Clone.
     UnpinConstructor(TokenStream),
     /// Any other trait, e.g. Eq.
@@ -233,7 +233,10 @@ impl<'ir> ToTokens for TraitName<'ir> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
-            Self::CtorNew(args) => quote! { ctor::CtorNew < #args > }.to_tokens(tokens),
+            Self::CtorNew(arg_types) => {
+                let arg_types = format_tuple_except_singleton(arg_types);
+                quote! { ctor::CtorNew < #arg_types > }.to_tokens(tokens)
+            }
         }
     }
 }
@@ -429,19 +432,13 @@ fn api_func_shape<'ir>(
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
 
-                match func.params.len() {
-                    0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
-                    2 => {
+                match param_types {
+                    [] => bail!("Missing `__this` parameter in a constructor: {:?}", func),
+                    [_this, params @ ..] => {
                         impl_kind = ImplKind::new_generic_trait(
-                            TraitName::CtorNew(param_types[1].clone()),
+                            TraitName::CtorNew(params.iter().cloned().collect()),
                             record_name,
                             /* format_first_param_as_self= */ false,
-                        );
-                    }
-                    _ => {
-                        // TODO(b/216648347): Support bindings for other constructors.
-                        bail!(
-                            "Only single-parameter constructors for T: !Unpin are supported for now",
                         );
                     }
                 }
@@ -512,12 +509,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let (func_name, mut impl_kind) =
-        if let Some(values) = api_func_shape(func, ir, &param_types)? {
-            values
-        } else {
-            return Ok(None);
-        };
+    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(func, ir, &param_types)? {
+        values
+    } else {
+        return Ok(None);
+    };
 
     let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
         .with_context(|| format!("Failed to format return type for {:?}", func))?
@@ -539,9 +535,9 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         let mut maybe_first_api_param = param_types.get(0);
 
         if let ImplKind::Trait {
-            trait_name: TraitName::UnpinConstructor(..) | TraitName::CtorNew(..),
+            trait_name: trait_name @ (TraitName::UnpinConstructor(..) | TraitName::CtorNew(..)),
             ..
-        } = impl_kind
+        } = &impl_kind
         {
             return_type_fragment = quote! { -> Self };
 
@@ -577,10 +573,16 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
 
             // Rebind `maybe_first_api_param` to the next param after `__this`.
             maybe_first_api_param = param_types.get(1);
-        }
 
-        if let ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } = impl_kind {
-            return_type_fragment = quote! { -> Self::CtorType };
+            if let TraitName::CtorNew(args_type) = trait_name {
+                // CtorNew has no self param, so this should never be used -- and we should fail
+                // if it is.
+                maybe_first_api_param = None;
+
+                return_type_fragment = quote! { -> Self::CtorType };
+                let args_type = format_tuple_except_singleton(args_type);
+                api_params = vec![quote! {args: #args_type}];
+            }
         }
 
         // Change `__this: &'a SomeStruct` into `&'a self` if needed.
@@ -603,8 +605,10 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         let thunk_ident = thunk_ident(func);
         let func_body = match &impl_kind {
             ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } => {
+                let thunk_vars = format_tuple_except_singleton(&thunk_args);
                 // TODO(b/226447239): check for copy here and instead use copies in that case?
                 quote! {
+                    let #thunk_vars = args;
                     ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
                         unsafe {
                             crate::detail::#thunk_ident(rust_std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
@@ -784,6 +788,23 @@ fn format_generic_params<T: ToTokens>(params: impl IntoIterator<Item = T>) -> To
         quote! {}
     } else {
         quote! { < #( #params ),* > }
+    }
+}
+
+/// Formats singletons as themselves, and collections of n!=1 items as a tuple.
+///
+/// In other words, this formats a collection of things as if via `#(#items),*`,
+/// but without lint warnings.
+///
+/// For example:
+///
+/// * [] => ()
+/// * [x] => x  // equivalent to (x), but lint-free.
+/// * [x, y] => (x, y)
+fn format_tuple_except_singleton<T: ToTokens>(items: &[T]) -> TokenStream {
+    match items {
+        [singleton] => quote! {#singleton},
+        items => quote! {(#(#items),*)},
     }
 }
 
@@ -4155,6 +4176,16 @@ mod tests {
     }
 
     #[test]
+    fn test_format_tuple_except_singleton() {
+        fn format(xs: &[TokenStream]) -> TokenStream {
+            format_tuple_except_singleton(xs)
+        }
+        assert_rs_matches!(format(&[]), quote! {()});
+        assert_rs_matches!(format(&[quote! {a}]), quote! {a});
+        assert_rs_matches!(format(&[quote! {a}, quote! {b}]), quote! {(a, b)});
+    }
+
+    #[test]
     fn test_overloaded_functions() -> Result<()> {
         // TODO(b/213280424): We don't support creating bindings for overloaded
         // functions yet, except in the case of overloaded constructors with a
@@ -4574,7 +4605,37 @@ mod tests {
     }
 
     #[test]
-    fn test_nonunpin_one_arg_constructor() -> Result<()> {
+    fn test_nonunpin_0_arg_constructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct HasConstructor {explicit HasConstructor() {}};"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(rs_api, quote! {impl !Unpin for HasConstructor {} });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl ctor::CtorNew<()> for HasConstructor {
+                    type CtorType = impl ctor::Ctor<Output = Self>;
+
+                    #[inline (always)]
+                    fn ctor_new(args: ()) -> Self::CtorType {
+                        let () = args;
+                        ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
+                            unsafe {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(rust_std::pin::Pin::into_inner_unchecked(dest));
+                            }
+                        })
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_1_arg_constructor() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             // This type must be `!Unpin`.
@@ -4589,10 +4650,41 @@ mod tests {
                     type CtorType = impl ctor::Ctor<Output = Self>;
 
                     #[inline (always)]
-                    fn ctor_new(input: u8) -> Self::CtorType {
+                    fn ctor_new(args: u8) -> Self::CtorType {
+                        let input = args;
                         ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
                             unsafe {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(rust_std::pin::Pin::into_inner_unchecked(dest), input);
+                            }
+                        })
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_2_arg_constructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct HasConstructor {explicit HasConstructor(unsigned char input1, signed char input2) {}};"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(rs_api, quote! {impl !Unpin for HasConstructor {} });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl ctor::CtorNew<(u8, i8)> for HasConstructor {
+                    type CtorType = impl ctor::Ctor<Output = Self>;
+
+                    #[inline (always)]
+                    fn ctor_new(args: (u8, i8)) -> Self::CtorType {
+                        let (input1, input2) = args;
+                        ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
+                            unsafe {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(rust_std::pin::Pin::into_inner_unchecked(dest), input1, input2);
                             }
                         })
                     }
