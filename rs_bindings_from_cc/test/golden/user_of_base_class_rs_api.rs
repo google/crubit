@@ -28,6 +28,7 @@ pub struct Derived2 {
     __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), Derived2);
 impl<'a> From<&'a Derived2> for &'a Base0 {
     fn from(x: &'a Derived2) -> Self {
         unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base0) }

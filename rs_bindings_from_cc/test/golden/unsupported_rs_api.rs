@@ -21,6 +21,10 @@ use static_assertions::{assert_impl_all, assert_not_impl_all};
 pub struct NontrivialCustomType {
     pub i: i32,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialCustomType"),
+    NontrivialCustomType
+);
 
 impl !Unpin for NontrivialCustomType {}
 
@@ -68,6 +72,7 @@ pub struct ContainingStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("ContainingStruct"), ContainingStruct);
 
 impl Default for ContainingStruct {
     #[inline(always)]

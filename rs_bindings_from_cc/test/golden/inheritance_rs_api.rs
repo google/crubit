@@ -25,6 +25,7 @@ pub struct Base0 {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), Base0);
 
 impl !Unpin for Base0 {}
 
@@ -53,6 +54,7 @@ pub struct Base1 {
     b1_1_: i64,
     b1_2_: u8,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), Base1);
 
 impl !Unpin for Base1 {}
 
@@ -80,6 +82,7 @@ impl !Unpin for Base1 {}
 pub struct Base2 {
     b2_1_: i16,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), Base2);
 
 impl !Unpin for Base2 {}
 
@@ -109,6 +112,7 @@ pub struct Derived {
     __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), Derived);
 impl<'a> From<&'a Derived> for &'a Base0 {
     fn from(x: &'a Derived) -> Self {
         unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base0) }

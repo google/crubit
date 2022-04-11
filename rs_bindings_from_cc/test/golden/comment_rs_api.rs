@@ -32,6 +32,7 @@ pub struct Foo {
     /// Another field
     pub j: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), Foo);
 
 impl Default for Foo {
     #[inline(always)]
@@ -90,6 +91,7 @@ pub fn foo() {
 pub struct Bar {
     pub i: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), Bar);
 
 impl Default for Bar {
     #[inline(always)]
@@ -127,6 +129,7 @@ impl<'b> From<ctor::RvalueReference<'b, Bar>> for Bar {
 pub struct HasNoComments {
     pub i: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), HasNoComments);
 
 impl Default for HasNoComments {
     #[inline(always)]

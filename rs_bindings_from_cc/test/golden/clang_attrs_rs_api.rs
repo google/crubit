@@ -22,6 +22,7 @@ pub struct HasCustomAlignment {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("HasCustomAlignment"), HasCustomAlignment);
 
 impl !Unpin for HasCustomAlignment {}
 
@@ -49,6 +50,10 @@ impl !Unpin for HasCustomAlignment {}
 pub struct HasFieldWithCustomAlignment {
     pub field: HasCustomAlignment,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasFieldWithCustomAlignment"),
+    HasFieldWithCustomAlignment
+);
 
 impl !Unpin for HasFieldWithCustomAlignment {}
 
@@ -78,6 +83,10 @@ pub struct InheritsFromBaseWithCustomAlignment {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
+    InheritsFromBaseWithCustomAlignment
+);
 impl<'a> From<&'a InheritsFromBaseWithCustomAlignment> for &'a HasCustomAlignment {
     fn from(x: &'a InheritsFromBaseWithCustomAlignment) -> Self {
         unsafe { &*((x as *const _ as *const u8).offset(0) as *const HasCustomAlignment) }
@@ -111,6 +120,10 @@ pub struct HasCustomAlignmentWithGnuAttr {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
+    HasCustomAlignmentWithGnuAttr
+);
 
 impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 

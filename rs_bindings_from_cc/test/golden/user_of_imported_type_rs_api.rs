@@ -27,6 +27,7 @@ pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial
 pub struct UserOfImportedType {
     pub trivial: *mut trivial_type_cc::Trivial,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("UserOfImportedType"), UserOfImportedType);
 
 impl Default for UserOfImportedType {
     #[inline(always)]

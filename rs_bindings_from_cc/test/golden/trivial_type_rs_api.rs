@@ -24,6 +24,7 @@ use static_assertions::{assert_impl_all, assert_not_impl_all};
 pub struct Trivial {
     pub trivial_field: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Trivial"), Trivial);
 
 impl Default for Trivial {
     #[inline(always)]
@@ -62,6 +63,10 @@ impl<'b> From<ctor::RvalueReference<'b, Trivial>> for Trivial {
 pub struct TrivialWithDefaulted {
     pub trivial_field: i32,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TrivialWithDefaulted"),
+    TrivialWithDefaulted
+);
 
 impl Default for TrivialWithDefaulted {
     #[inline(always)]
@@ -99,6 +104,7 @@ impl<'b> From<ctor::RvalueReference<'b, TrivialWithDefaulted>> for TrivialWithDe
 pub struct TrivialNonfinal {
     pub trivial_field: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("TrivialNonfinal"), TrivialNonfinal);
 
 impl !Unpin for TrivialNonfinal {}
 

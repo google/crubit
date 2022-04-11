@@ -28,6 +28,7 @@ pub struct S {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("S"), S);
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':

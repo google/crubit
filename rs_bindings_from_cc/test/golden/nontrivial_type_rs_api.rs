@@ -26,6 +26,7 @@ use static_assertions::{assert_impl_all, assert_not_impl_all};
 pub struct Nontrivial {
     pub field: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), Nontrivial);
 
 impl !Unpin for Nontrivial {}
 
@@ -115,6 +116,7 @@ impl Nontrivial {
 pub struct NontrivialInline {
     pub field: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NontrivialInline"), NontrivialInline);
 
 impl !Unpin for NontrivialInline {}
 
@@ -205,6 +207,7 @@ impl NontrivialInline {
 pub struct NontrivialMembers {
     pub nontrivial_member: rust_std::mem::ManuallyDrop<Nontrivial>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NontrivialMembers"), NontrivialMembers);
 
 impl !Unpin for NontrivialMembers {}
 

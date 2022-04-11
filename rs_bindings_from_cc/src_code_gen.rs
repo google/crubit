@@ -987,6 +987,13 @@ fn generate_record(
         quote! {}
     };
 
+    // TODO(b/227442773): After namespace support is added, use the fully-namespaced
+    // name.
+    let incomplete_symbol = &record.cc_name;
+    let incomplete_definition = quote! {
+        forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #ident);
+    };
+
     let empty_struct_placeholder_field =
         if record.fields.is_empty() && record.base_size.unwrap_or(0) == 0 {
             quote! {
@@ -1033,6 +1040,8 @@ fn generate_record(
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
             #empty_struct_placeholder_field
         }
+
+        #incomplete_definition
 
         #no_unique_address_accessors
 
@@ -3048,7 +3057,10 @@ mod tests {
                     field2: [rust_std::mem::MaybeUninit<u8>; 2],
                     pub z: i16,
                 }
-
+            });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
                 impl Struct {
                     pub fn field1(&self) -> &Field1 {
                         unsafe {&* (&self.field1 as *const _ as *const Field1)}

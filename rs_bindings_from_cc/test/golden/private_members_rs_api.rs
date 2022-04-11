@@ -23,6 +23,7 @@ pub struct SomeClass {
     pub public_member_variable_: i32,
     private_member_variable_: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), SomeClass);
 
 impl Default for SomeClass {
     #[inline(always)]

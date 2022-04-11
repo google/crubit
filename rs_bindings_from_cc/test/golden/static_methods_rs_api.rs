@@ -22,6 +22,7 @@ use static_assertions::{assert_impl_all, assert_not_impl_all};
 pub struct SomeClass {
     field_: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), SomeClass);
 
 impl Default for SomeClass {
     #[inline(always)]

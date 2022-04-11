@@ -26,6 +26,7 @@ pub struct DocCommentSlashes {
     /// A field.
     pub i: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentSlashes"), DocCommentSlashes);
 
 impl<'b> From<ctor::RvalueReference<'b, DocCommentSlashes>> for DocCommentSlashes {
     #[inline(always)]
@@ -107,6 +108,7 @@ pub struct DocCommentBang {
     /// A field
     pub i: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), DocCommentBang);
 
 impl Default for DocCommentBang {
     #[inline(always)]
@@ -147,6 +149,10 @@ pub struct MultilineCommentTwoStars {
     /// A field
     pub i: i32,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MultilineCommentTwoStars"),
+    MultilineCommentTwoStars
+);
 
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
@@ -187,6 +193,7 @@ pub struct LineComment {
     /// A field
     pub i: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), LineComment);
 
 impl Default for LineComment {
     #[inline(always)]
@@ -227,6 +234,7 @@ pub struct MultilineOneStar {
     /// A field
     pub i: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("MultilineOneStar"), MultilineOneStar);
 
 impl Default for MultilineOneStar {
     #[inline(always)]

@@ -22,6 +22,7 @@ use static_assertions::{assert_impl_all, assert_not_impl_all};
 pub struct r#type {
     pub r#dyn: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("type"), r#type);
 
 impl Default for r#type {
     #[inline(always)]

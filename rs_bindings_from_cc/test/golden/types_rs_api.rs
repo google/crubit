@@ -23,6 +23,7 @@ pub struct SomeStruct {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), SomeStruct);
 
 impl Default for SomeStruct {
     #[inline(always)]
@@ -60,6 +61,7 @@ pub union EmptyUnion {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), EmptyUnion);
 
 impl Default for EmptyUnion {
     #[inline(always)]
@@ -146,6 +148,10 @@ pub struct FieldTypeTestStruct {
     pub struct_ref_field: *mut SomeStruct,
     pub const_struct_ref_field: *const SomeStruct,
 }
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("FieldTypeTestStruct"),
+    FieldTypeTestStruct
+);
 
 impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestStruct {
     #[inline(always)]
@@ -172,6 +178,7 @@ pub union NonEmptyUnion {
     pub int32_field: i32,
     pub int64_field: i64,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), NonEmptyUnion);
 
 impl Default for NonEmptyUnion {
     #[inline(always)]

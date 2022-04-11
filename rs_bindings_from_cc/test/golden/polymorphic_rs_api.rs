@@ -22,6 +22,7 @@ pub struct PolymorphicClass {
     /// Prevent empty C++ struct being zero-size in Rust.
     placeholder: rust_std::mem::MaybeUninit<u8>,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("PolymorphicClass"), PolymorphicClass);
 
 impl !Unpin for PolymorphicClass {}
 

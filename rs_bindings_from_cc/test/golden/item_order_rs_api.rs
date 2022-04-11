@@ -22,6 +22,7 @@ use static_assertions::{assert_impl_all, assert_not_impl_all};
 pub struct FirstStruct {
     pub field: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), FirstStruct);
 
 impl Default for FirstStruct {
     #[inline(always)]
@@ -63,6 +64,7 @@ pub fn first_func() -> i32 {
 pub struct SecondStruct {
     pub field: i32,
 }
+forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), SecondStruct);
 
 impl Default for SecondStruct {
     #[inline(always)]
