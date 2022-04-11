@@ -76,6 +76,26 @@ cc_test(
 )
 
 cc_library(
+    name = "lifetime_substitutions",
+    srcs = ["lifetime_substitutions.cc"],
+    hdrs = ["lifetime_substitutions.h"],
+    deps = [
+        "@absl//strings",
+        "//lifetime_annotations:lifetime",
+        "@llvm///llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "lifetime_substitutions_test",
+    srcs = ["lifetime_substitutions_test.cc"],
+    deps = [
+        ":lifetime_substitutions",
+        "//testing/base/public:gunit_main",
+    ],
+)
+
+cc_library(
     name = "lifetime_symbol_table",
     srcs = ["lifetime_symbol_table.cc"],
     hdrs = ["lifetime_symbol_table.h"],
