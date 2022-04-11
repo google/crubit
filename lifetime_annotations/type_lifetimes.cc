@@ -338,6 +338,28 @@ bool ValueLifetimes::HasAny(
   return false;
 }
 
+void ValueLifetimes::SubstituteLifetimes(const LifetimeSubstitutions& subst) {
+  for (auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
+    for (std::optional<ValueLifetimes>& tmpl_arg : tmpl_arg_at_depth) {
+      if (tmpl_arg) {
+        tmpl_arg->SubstituteLifetimes(subst);
+      }
+    }
+  }
+  if (pointee_lifetimes_) {
+    pointee_lifetimes_->SubstituteLifetimes(subst);
+  }
+  for (const auto& lftm_arg : GetLifetimeParameters(type_)) {
+    std::optional<Lifetime> lifetime =
+        lifetime_parameters_by_name_.LookupName(lftm_arg);
+    assert(lifetime.has_value());
+    lifetime_parameters_by_name_.Rebind(lftm_arg, subst.Substitute(*lifetime));
+  }
+  if (function_lifetimes_) {
+    function_lifetimes_->SubstituteLifetimes(subst);
+  }
+}
+
 void ValueLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
                               Variance variance) {
   for (auto& tmpl_arg_at_depth : template_argument_lifetimes_) {
@@ -539,6 +561,11 @@ ObjectLifetimes ObjectLifetimes::GetFieldOrBaseLifetimes(
 bool ObjectLifetimes::HasAny(
     const std::function<bool(Lifetime)>& predicate) const {
   return predicate(lifetime_) || value_lifetimes_.HasAny(predicate);
+}
+
+void ObjectLifetimes::SubstituteLifetimes(const LifetimeSubstitutions& subst) {
+  lifetime_ = subst.Substitute(lifetime_);
+  value_lifetimes_.SubstituteLifetimes(subst);
 }
 
 void ObjectLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,

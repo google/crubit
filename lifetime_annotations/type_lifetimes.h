@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/TypeOrdering.h"
@@ -131,6 +132,10 @@ class ValueLifetimes {
   // the `ValueLifetimes`.
   bool HasAny(const std::function<bool(Lifetime)>& predicate) const;
 
+  // Applies `subst` to all lifetimes in this ValueLifetimes.
+  // See FunctionLifetimes::SubstituteLifetimes() for details.
+  void SubstituteLifetimes(const LifetimeSubstitutions& subst);
+
   // Traverses all the lifetimes in the object, recursively. The
   // visit is done in post-order on the lifetime tree of this type.
   // The callback may mutate the lifetime in an arbitrary way; `variance` will
@@ -214,6 +219,10 @@ class ObjectLifetimes {
   // Returns true if `predicate` returns true for any lifetime that appears in
   // the `ObjectLifetimes`.
   bool HasAny(const std::function<bool(Lifetime)>& predicate) const;
+
+  // Applies `subst` to all lifetimes in this ObjectLifetimes.
+  // See FunctionLifetimes::SubstituteLifetimes() for details.
+  void SubstituteLifetimes(const LifetimeSubstitutions& subst);
 
   // Traverses all the lifetimes in the object, recursively. The
   // visit is done in post-order on the lifetime tree of this type.

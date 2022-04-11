@@ -138,6 +138,17 @@ llvm::DenseSet<Lifetime> FunctionLifetimes::AllFreeLifetimes() const {
   return all_lifetimes;
 }
 
+void FunctionLifetimes::SubstituteLifetimes(
+    const LifetimeSubstitutions& subst) {
+  // TODO(veluca): this is incorrect in the presence of HRTBs.
+  std::for_each(param_lifetimes_.begin(), param_lifetimes_.end(),
+                [&subst](ValueLifetimes& v) { v.SubstituteLifetimes(subst); });
+  return_lifetimes_.SubstituteLifetimes(subst);
+  if (this_lifetimes_.has_value()) {
+    this_lifetimes_->SubstituteLifetimes(subst);
+  }
+}
+
 void FunctionLifetimes::Traverse(
     std::function<void(Lifetime&, Variance)> visitor) {
   for (auto& param : param_lifetimes_) {

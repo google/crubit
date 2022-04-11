@@ -35,6 +35,7 @@ cc_library(
     ],
     deps = [
         ":lifetime",
+        ":lifetime_substitutions",
         ":lifetime_symbol_table",
         ":pointee_type",
         "@absl//strings",

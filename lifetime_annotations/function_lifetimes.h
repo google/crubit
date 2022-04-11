@@ -9,6 +9,7 @@
 #include <string>
 #include <variant>
 
+#include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
@@ -110,6 +111,14 @@ class FunctionLifetimes {
   // this function, or (if this FunctionLifetimes is a declaration of a method)
   // of the enclosing class.
   llvm::DenseSet<Lifetime> AllFreeLifetimes() const;
+
+  // Applies `subst` to all lifetimes in this FunctionLifetimes.
+  // Any lifetime parameter declarations will moved to the innermost location
+  // that is valid for the new lifetimes. Note that this operation is
+  // well-defined and declarations of lifetime parameters can only "move up";
+  // in particular, it results lifetime parameters being as tightly bound as
+  // possible, which is what we want inference to infer.
+  void SubstituteLifetimes(const LifetimeSubstitutions& subst);
 
   // Traverses all the lifetimes in the function signature, recursively. The
   // visit is done in post-order on the lifetime tree of this type.
