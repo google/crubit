@@ -13,10 +13,7 @@ licenses(["notice"])
 bzl_library(
     name = "rust_bindings_from_cc_aspect",
     srcs = ["rust_bindings_from_cc_aspect.bzl"],
-    visibility = [
-        "//javatests/com/google/devtools/ruleanalysis/service/checkbuilddeps/rust:__subpackages__",
-        "//third_party/crubit:__subpackages__",
-    ],
+    visibility = ["//third_party/crubit:__subpackages__"],
     deps = [
         "//rs_bindings_from_cc/bazel_support:deps_for_bindings_bzl",
         "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils_bzl",
