@@ -34,7 +34,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>> for Nont
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -78,7 +78,7 @@ impl Default for ContainingStruct {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -89,7 +89,7 @@ impl<'b> From<ctor::RvalueReference<'b, ContainingStruct>> for ContainingStruct 
     fn from(__param_0: ctor::RvalueReference<'b, ContainingStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }

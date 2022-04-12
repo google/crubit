@@ -30,7 +30,7 @@ impl Default for Trivial {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7TrivialC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN7TrivialC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -41,7 +41,7 @@ impl<'b> From<ctor::RvalueReference<'b, Trivial>> for Trivial {
     fn from(__param_0: ctor::RvalueReference<'b, Trivial>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN7TrivialC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN7TrivialC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -72,7 +72,7 @@ impl Default for TrivialWithDefaulted {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -87,7 +87,7 @@ impl<'b> From<ctor::RvalueReference<'b, TrivialWithDefaulted>> for TrivialWithDe
     fn from(__param_0: ctor::RvalueReference<'b, TrivialWithDefaulted>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN20TrivialWithDefaultedC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -114,7 +114,7 @@ impl ctor::CtorNew<()> for TrivialNonfinal {
         let () = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(
+                detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
@@ -129,7 +129,7 @@ impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
+                detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -145,7 +145,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNo
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
+                detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -164,42 +164,34 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNo
 
 #[inline(always)]
 pub fn TakesByValue(trivial: Trivial) {
-    unsafe { crate::detail::__rust_thunk___Z12TakesByValue7Trivial(trivial) }
+    unsafe { detail::__rust_thunk___Z12TakesByValue7Trivial(trivial) }
 }
 
 #[inline(always)]
 pub fn TakesWithDefaultedByValue(trivial: TrivialWithDefaulted) {
-    unsafe {
-        crate::detail::__rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(trivial)
-    }
+    unsafe { detail::__rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(trivial) }
 }
 
 #[inline(always)]
 pub fn TakesTrivialNonfinalByValue(trivial: TrivialNonfinal) {
-    unsafe {
-        crate::detail::__rust_thunk___Z27TakesTrivialNonfinalByValue15TrivialNonfinal(trivial)
-    }
+    unsafe { detail::__rust_thunk___Z27TakesTrivialNonfinalByValue15TrivialNonfinal(trivial) }
 }
 
 #[inline(always)]
 pub fn TakesByReference<'a>(trivial: &'a mut Trivial) {
-    unsafe { crate::detail::__rust_thunk___Z16TakesByReferenceR7Trivial(trivial) }
+    unsafe { detail::__rust_thunk___Z16TakesByReferenceR7Trivial(trivial) }
 }
 
 #[inline(always)]
 pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut TrivialWithDefaulted) {
     unsafe {
-        crate::detail::__rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted(
-            trivial,
-        )
+        detail::__rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted(trivial)
     }
 }
 
 #[inline(always)]
 pub fn TakesTrivialNonfinalByReference<'a>(trivial: rust_std::pin::Pin<&'a mut TrivialNonfinal>) {
-    unsafe {
-        crate::detail::__rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(trivial)
-    }
+    unsafe { detail::__rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(trivial) }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_

@@ -106,6 +106,7 @@ class Importer {
 
   // These functions import specific `Decl` subtypes. They use `LookupDecl` to
   // lookup dependencies. They don't use or update the cache themselves.
+  std::optional<IR::Item> ImportNamespace(clang::NamespaceDecl* namespace_decl);
   std::optional<IR::Item> ImportFunction(
       clang::FunctionDecl* function_decl,
       clang::FunctionTemplateDecl* function_template_decl = nullptr);

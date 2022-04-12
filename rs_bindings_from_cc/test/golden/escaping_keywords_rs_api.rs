@@ -28,7 +28,7 @@ impl Default for r#type {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4typeC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN4typeC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -39,7 +39,7 @@ impl<'b> From<ctor::RvalueReference<'b, r#type>> for r#type {
     fn from(__param_0: ctor::RvalueReference<'b, r#type>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN4typeC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN4typeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -55,7 +55,7 @@ impl<'b> From<ctor::RvalueReference<'b, r#type>> for r#type {
 
 #[inline(always)]
 pub fn r#impl(r#match: i32) {
-    unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }
+    unsafe { detail::__rust_thunk___Z4impli(r#match) }
 }
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=16

@@ -1578,3 +1578,87 @@ fn test_record_items() {
         ]
     );
 }
+
+#[test]
+fn test_namespaces() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+          // A free comment
+
+          // Struct comment
+          struct StructWithinNamespace {};
+
+          void function_within_namespace();
+
+          namespace inner_namespace {
+          struct InnerStruct {};
+          }  // namespace inner_namespace
+          }  // namespace test_namespace_bindings"#,
+    )
+    .unwrap();
+
+    let namespace = ir.namespaces().find(|n| n.name == ir_id("test_namespace_bindings")).unwrap();
+    let namespace_items =
+        namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert_items_match!(
+        namespace_items,
+        vec![
+            quote! {
+              Comment {
+                ... text: "A free comment" ...
+              }
+            },
+            quote! {
+              Record {
+                ... rs_name : "StructWithinNamespace" ...
+              }
+            },
+            quote! {
+              Func { ... name: "function_within_namespace" ... }
+            },
+            quote! {
+              Namespace { ... name: "inner_namespace" ... }
+            },
+            quote! {
+              Comment {
+                ... text: "namespace inner_namespace" ...
+              }
+            },
+        ]
+    );
+}
+
+#[test]
+fn test_nested_namespace_definition() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings::inner {
+        void func();
+        }"#,
+    )
+    .unwrap();
+
+    let namespace = ir.namespaces().find(|n| n.name == ir_id("test_namespace_bindings")).unwrap();
+    let namespace_items =
+        namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert_items_match!(
+        namespace_items,
+        vec![quote! {
+          Namespace { ... name: "inner" ... }
+        },]
+    );
+
+    let inner_namespace = ir.namespaces().find(|n| n.name == ir_id("inner")).unwrap();
+    let inner_namespace_items =
+        inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert_items_match!(
+        inner_namespace_items,
+        vec![quote! {
+          Func { ... name: "func" ... }
+        },]
+    );
+}

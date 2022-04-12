@@ -29,7 +29,7 @@ impl Default for SomeClass {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -40,7 +40,7 @@ impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
     fn from(__param_0: ctor::RvalueReference<'b, SomeClass>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -57,14 +57,14 @@ impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
 impl SomeClass {
     #[inline(always)]
     pub fn public_method<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
+        unsafe { detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
     }
 }
 
 impl SomeClass {
     #[inline(always)]
     pub fn public_static_method() {
-        unsafe { crate::detail::__rust_thunk___ZN9SomeClass20public_static_methodEv() }
+        unsafe { detail::__rust_thunk___ZN9SomeClass20public_static_methodEv() }
     }
 }
 

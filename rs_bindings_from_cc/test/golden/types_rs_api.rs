@@ -29,7 +29,7 @@ impl Default for SomeStruct {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -40,7 +40,7 @@ impl<'b> From<ctor::RvalueReference<'b, SomeStruct>> for SomeStruct {
     fn from(__param_0: ctor::RvalueReference<'b, SomeStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -67,7 +67,7 @@ impl Default for EmptyUnion {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -78,7 +78,7 @@ impl<'b> From<ctor::RvalueReference<'b, EmptyUnion>> for EmptyUnion {
     fn from(__param_0: ctor::RvalueReference<'b, EmptyUnion>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -157,7 +157,7 @@ impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestS
     fn from(__param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -184,7 +184,7 @@ impl Default for NonEmptyUnion {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -195,7 +195,7 @@ impl<'b> From<ctor::RvalueReference<'b, NonEmptyUnion>> for NonEmptyUnion {
     fn from(__param_0: ctor::RvalueReference<'b, NonEmptyUnion>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -211,7 +211,7 @@ impl<'b> From<ctor::RvalueReference<'b, NonEmptyUnion>> for NonEmptyUnion {
 
 #[inline(always)]
 pub fn VoidReturningFunction() {
-    unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
+    unsafe { detail::__rust_thunk___Z21VoidReturningFunctionv() }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_

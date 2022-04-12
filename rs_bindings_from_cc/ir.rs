@@ -451,6 +451,14 @@ pub struct Comment {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct Namespace {
+    pub name: Identifier,
+    pub id: ItemId,
+    #[serde(default)]
+    pub child_item_ids: Vec<ItemId>,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
     Func(Func),
     Record(Record),
@@ -458,6 +466,7 @@ pub enum Item {
     TypeAlias(TypeAlias),
     UnsupportedItem(UnsupportedItem),
     Comment(Comment),
+    Namespace(Namespace),
 }
 
 impl Item {
@@ -469,6 +478,7 @@ impl Item {
             Item::Enum(enum_) => enum_.id,
             Item::UnsupportedItem(unsupported) => unsupported.id,
             Item::Comment(comment) => comment.id,
+            Item::Namespace(namespace) => namespace.id,
         }
     }
 }
@@ -605,6 +615,13 @@ impl IR {
     pub fn comments(&self) -> impl Iterator<Item = &Comment> {
         self.items().filter_map(|item| match item {
             Item::Comment(comment) => Some(comment),
+            _ => None,
+        })
+    }
+
+    pub fn namespaces(&self) -> impl Iterator<Item = &Namespace> {
+        self.items().filter_map(|item| match item {
+            Item::Namespace(ns) => Some(ns),
             _ => None,
         })
     }

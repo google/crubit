@@ -21,6 +21,7 @@
 #include "third_party/absl/status/status.h"
 #include "third_party/absl/status/statusor.h"
 #include "third_party/absl/strings/cord.h"
+#include "third_party/absl/strings/match.h"
 #include "third_party/absl/strings/str_cat.h"
 #include "third_party/absl/strings/str_join.h"
 #include "third_party/absl/strings/string_view.h"
@@ -404,7 +405,7 @@ void Importer::ImportDeclIfNeeded(clang::Decl* decl) {
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   if (auto* namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
-    return ImportUnsupportedItem(decl, "Namespaces are not supported yet");
+    return ImportNamespace(namespace_decl);
   } else if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
     return ImportFunction(function_decl);
   } else if (auto* function_template_decl =
@@ -428,6 +429,39 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   } else {
     return std::nullopt;
   }
+}
+
+std::optional<IR::Item> Importer::ImportNamespace(
+    clang::NamespaceDecl* namespace_decl) {
+  if (!IsFromCurrentTarget(namespace_decl)) return std::nullopt;
+
+  // TODO(rosica) In order to fully enable namespaces we first need to ensure
+  // that each decl Item contains information on its namespace parents.
+  if (!absl::StrContains(namespace_decl->getQualifiedNameAsString(),
+                         "test_namespace_bindings")) {
+    return ImportUnsupportedItem(namespace_decl,
+                                 "Namespaces are not supported yet");
+  }
+
+  if (namespace_decl->isInline()) {
+    return ImportUnsupportedItem(namespace_decl,
+                                 "Inline namespaces are not supported yet");
+  }
+  if (namespace_decl->isAnonymousNamespace()) {
+    return ImportUnsupportedItem(namespace_decl,
+                                 "Anonymous namespaces are not supported yet");
+  }
+
+  ImportDeclsFromDeclContext(namespace_decl);
+  auto identifier = GetTranslatedIdentifier(namespace_decl);
+  CRUBIT_CHECK(identifier.has_value());
+  auto item_ids = GetItemIdsInSourceOrder(namespace_decl);
+  return Namespace{
+      .name = *identifier,
+      .id = GenerateItemId(namespace_decl),
+      .owning_target = GetOwningTarget(namespace_decl),
+      .child_item_ids = std::move(item_ids),
+  };
 }
 
 std::optional<IR::Item> Importer::ImportFunction(

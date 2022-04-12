@@ -611,7 +611,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     let #thunk_vars = args;
                     ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
                         unsafe {
-                            crate::detail::#thunk_ident(rust_std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
+                            detail::#thunk_ident(rust_std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
                         }
                     })
                 }
@@ -628,13 +628,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                 quote! {
                     let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
+                        detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
                         tmp.assume_init()
                     }
                 }
             }
             _ => {
-                let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
+                let mut body = quote! { detail::#thunk_ident( #( #thunk_args ),* ) };
                 // Only need to wrap everything in an `unsafe { ... }` block if
                 // the *whole* api function is safe.
                 if !impl_kind.is_unsafe() {
@@ -1184,6 +1184,71 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #text })
 }
 
+fn generate_namespace(
+    namespace: &Namespace,
+    ir: &IR,
+    overloaded_funcs: &HashSet<FunctionId>,
+) -> Result<GeneratedItem> {
+    let mut items = vec![];
+    let mut thunks = vec![];
+    let mut assertions = vec![];
+    let mut has_record = false;
+    let mut features = BTreeSet::new();
+
+    for item_id in namespace.child_item_ids.iter() {
+        let item = ir.find_decl(*item_id)?;
+        let generated = generate_item(item, ir, &overloaded_funcs)?;
+        items.push(generated.item);
+        if !generated.thunks.is_empty() {
+            thunks.push(generated.thunks);
+        }
+        if !generated.assertions.is_empty() {
+            assertions.push(generated.assertions);
+        }
+        features.extend(generated.features);
+        has_record = has_record || generated.has_record;
+    }
+
+    let name = make_rs_ident(&namespace.name.identifier);
+
+    // TODO(rosica): Instead of generating thunks and assertions within
+    // the namespace, we could put them at the end of the file.
+    // For this we need to have fully qualified identifiers.
+    let mod_detail = if thunks.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            mod detail {
+                #[allow(unused_imports)]
+                use super::*;
+                extern "C" {
+                    #( #thunks )*
+                }
+            }
+        }
+    };
+
+    let namespace_tokens = quote! {
+        pub mod #name {
+
+            #( #items __NEWLINE__ __NEWLINE__ )*
+
+            __NEWLINE__ __NEWLINE__
+            #mod_detail __NEWLINE__ __NEWLINE__
+
+            #( #assertions __NEWLINE__ __NEWLINE__ )*
+
+        }
+    };
+
+    Ok(GeneratedItem {
+        item: namespace_tokens,
+        features: features,
+        has_record: has_record,
+        ..Default::default()
+    })
+}
+
 #[derive(Clone, Debug, Default)]
 struct GeneratedItem {
     item: TokenStream,
@@ -1257,6 +1322,9 @@ fn generate_item(
         }
         Item::Comment(comment) => {
             GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
+        }
+        Item::Namespace(namespace) => {
+            generate_namespace(namespace, ir, overloaded_funcs)?
         }
     };
 
@@ -2205,7 +2273,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn Add(a: i32, b: i32) -> i32 {
-                    unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+                    unsafe { detail::__rust_thunk___Z3Addii(a, b) }
                 }
             }
         );
@@ -2237,7 +2305,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn Add(a: i32, b: i32) -> i32 {
-                    unsafe { crate::detail::__rust_thunk___Z3Addii(a, b) }
+                    unsafe { detail::__rust_thunk___Z3Addii(a, b) }
                 }
             }
         );
@@ -2279,7 +2347,7 @@ mod tests {
                 #[inline(always)]
                 pub fn DoSomething(param: dependency::ParamStruct)
                     -> dependency::ReturnStruct {
-                    unsafe { crate::detail::__rust_thunk___Z11DoSomething11ParamStruct(param) }
+                    unsafe { detail::__rust_thunk___Z11DoSomething11ParamStruct(param) }
                 }
             }
         );
@@ -2526,7 +2594,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub unsafe fn Deref(p: *const *mut i32) -> *mut i32 {
-                    crate::detail::__rust_thunk___Z5DerefPKPi(p)
+                    detail::__rust_thunk___Z5DerefPKPi(p)
                 }
             }
         );
@@ -2571,7 +2639,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub unsafe fn f(str: *const i8) {
-                    crate::detail::__rust_thunk___Z1fPKc(str)
+                    detail::__rust_thunk___Z1fPKc(str)
                 }
             }
         );
@@ -2603,7 +2671,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn get_ptr_to_func() -> Option<extern "C" fn (f32, f64) -> i32> {
-                    unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                    unsafe { detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
         );
@@ -2643,7 +2711,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn get_ref_to_func() -> extern "C" fn (f32, f64) -> i32 {
-                    unsafe { crate::detail::__rust_thunk___Z15get_ref_to_funcv() }
+                    unsafe { detail::__rust_thunk___Z15get_ref_to_funcv() }
                 }
             }
         );
@@ -2678,7 +2746,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn get_ptr_to_func() -> Option<extern "C" fn (*const i32) -> *const i32> {
-                    unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                    unsafe { detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
         );
@@ -2755,7 +2823,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn get_ptr_to_func() -> Option<extern "vectorcall" fn (f32, f64) -> i32> {
-                    unsafe { crate::detail::__rust_thunk___Z15get_ptr_to_funcv() }
+                    unsafe { detail::__rust_thunk___Z15get_ptr_to_funcv() }
                 }
             }
         );
@@ -3559,7 +3627,7 @@ mod tests {
                     fn default() -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&mut tmp);
+                            detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1Ev(&mut tmp);
                             tmp.assume_init()
                         }
                     }
@@ -3575,7 +3643,7 @@ mod tests {
                     fn from(__param_0: ctor::RvalueReference<'b, UnionWithDefaultConstructors>) -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
+                            detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
                             tmp.assume_init()
                         }
                     }
@@ -3667,7 +3735,7 @@ mod tests {
                 #[inline(always)]
                 pub fn f_vectorcall_calling_convention(p1: f32, p2: f32) -> f32 {
                     unsafe {
-                        crate::detail::__rust_thunk___Z31f_vectorcall_calling_conventionff(p1, p2)
+                        detail::__rust_thunk___Z31f_vectorcall_calling_conventionff(p1, p2)
                     }
                 }
             }
@@ -3677,7 +3745,7 @@ mod tests {
             quote! {
                 #[inline(always)]
                 pub fn f_c_calling_convention(p1: f64, p2: f64) -> f64 {
-                    unsafe { crate::detail::__rust_thunk___Z22f_c_calling_conventiondd(p1, p2) }
+                    unsafe { detail::__rust_thunk___Z22f_c_calling_conventiondd(p1, p2) }
                 }
             }
         );
@@ -3764,7 +3832,7 @@ mod tests {
                 impl Drop for UserDefinedDestructor {
                     #[inline(always)]
                     fn drop(&mut self) {
-                        unsafe { crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self) }
+                        unsafe { detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self) }
                     }
                 }
             }
@@ -3802,7 +3870,7 @@ mod tests {
                 impl Drop for NontrivialMembers {
                     #[inline(always)]
                     fn drop(&mut self) {
-                        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
+                        unsafe { detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
                     }
                 }
             }
@@ -3853,7 +3921,7 @@ mod tests {
                     fn default() -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&mut tmp);
+                            detail::__rust_thunk___ZN20DefaultedConstructorC1Ev(&mut tmp);
                             tmp.assume_init()
                         }
                     }
@@ -3971,7 +4039,7 @@ mod tests {
                     fn from(i: i32) -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
+                            detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
                             tmp.assume_init()
                         }
                     }
@@ -4002,7 +4070,7 @@ mod tests {
                     fn from(other: &'b SomeOtherStruct) -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
-                            crate::detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
+                            detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
                                 &mut tmp, other);
                             tmp.assume_init()
                         }
@@ -4031,7 +4099,7 @@ mod tests {
                 impl PartialEq<SomeStruct> for SomeStruct {
                     #[inline(always)]
                     fn eq<'a, 'b>(&'a self, other: &'b SomeStruct) -> bool {
-                        unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
+                        unsafe { detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
                     }
                 }
             }
@@ -4065,7 +4133,7 @@ mod tests {
                 impl PartialEq<SomeStruct> for SomeStruct {
                     #[inline(always)]
                     fn eq<'a, 'b>(&'a self, rhs: &'b SomeStruct) -> bool {
-                        unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
+                        unsafe { detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
                     }
                 }
             }
@@ -4635,7 +4703,7 @@ mod tests {
                         let () = args;
                         ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
                             unsafe {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(rust_std::pin::Pin::into_inner_unchecked(dest));
+                                detail::__rust_thunk___ZN14HasConstructorC1Ev(rust_std::pin::Pin::into_inner_unchecked(dest));
                             }
                         })
                     }
@@ -4665,7 +4733,7 @@ mod tests {
                         let input = args;
                         ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
                             unsafe {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(rust_std::pin::Pin::into_inner_unchecked(dest), input);
+                                detail::__rust_thunk___ZN14HasConstructorC1Eh(rust_std::pin::Pin::into_inner_unchecked(dest), input);
                             }
                         })
                     }
@@ -4695,10 +4763,102 @@ mod tests {
                         let (input1, input2) = args;
                         ctor::FnCtor::new(move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| {
                             unsafe {
-                                crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(rust_std::pin::Pin::into_inner_unchecked(dest), input1, input2);
+                                detail::__rust_thunk___ZN14HasConstructorC1Eha(rust_std::pin::Pin::into_inner_unchecked(dest), input1, input2);
                             }
                         })
                     }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_namespace_module_items() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            namespace test_namespace_bindings {
+                int func();
+                struct S {};
+                namespace inner {
+                    int inner_func();
+                    struct InnerS {};
+                }
+            }
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                pub mod test_namespace_bindings {
+                    ...
+                    pub fn func() -> i32 { ... }
+                    ...
+                    pub struct S { ... }
+                    ...
+                    pub mod inner {
+                        ...
+                        pub fn inner_func() -> i32 { ... }
+                        ...
+                        pub struct InnerS { ... }
+                        ...
+                    }
+                    ...
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_namespace_module_contains_detail() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            namespace test_namespace_bindings {
+                int f();
+            }
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                pub mod test_namespace_bindings {
+                    ...
+                    mod detail {
+                        #[allow(unused_imports)]
+                        use super::*;
+                        extern "C" {
+                            #[link_name = "_ZN23test_namespace_bindings1fEv"]
+                            pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> i32;
+                        }
+                    }
+                    ...
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_namespace_module_contains_assertions() -> Result<()> {
+        let rs_api_impl = generate_rs_api(&ir_from_cc(
+            r#"
+            namespace test_namespace_bindings {
+                struct S {
+                    int i;
+                };
+            }
+        "#,
+        )?)?;
+        assert_rs_matches!(
+            rs_api_impl,
+            quote! {
+                pub mod test_namespace_bindings {
+                    ...
+                    const _: () = assert!(rust_std::mem::size_of::<S>() == 4usize);
+                    const _: () = assert!(rust_std::mem::align_of::<S>() == 4usize);
+                    ...
+                    const _: () = assert!(offset_of!(S, i) * 8 == 0usize);
                 }
             }
         );

@@ -18,7 +18,7 @@ use memoffset_unstable_const::offset_of;
 
 #[inline(always)]
 pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial {
-    unsafe { crate::detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
+    unsafe { detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
 }
 
 #[derive(Clone, Copy)]
@@ -33,7 +33,7 @@ impl Default for UserOfImportedType {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -44,7 +44,7 @@ impl<'b> From<ctor::RvalueReference<'b, UserOfImportedType>> for UserOfImportedT
     fn from(__param_0: ctor::RvalueReference<'b, UserOfImportedType>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }

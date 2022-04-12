@@ -32,7 +32,7 @@ impl ctor::CtorNew<()> for PolymorphicClass {
         let () = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16PolymorphicClassC1Ev(
+                detail::__rust_thunk___ZN16PolymorphicClassC1Ev(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
@@ -47,7 +47,7 @@ impl<'b> ctor::CtorNew<&'b PolymorphicClass> for PolymorphicClass {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16PolymorphicClassC1ERKS_(
+                detail::__rust_thunk___ZN16PolymorphicClassC1ERKS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -63,7 +63,7 @@ impl<'b> ctor::CtorNew<&'b PolymorphicClass> for PolymorphicClass {
 impl Drop for PolymorphicClass {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicClassD1Ev(self) }
+        unsafe { detail::__rust_thunk___ZN16PolymorphicClassD1Ev(self) }
     }
 }
 

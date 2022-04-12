@@ -36,7 +36,7 @@ impl ctor::CtorNew<()> for Nontrivial {
         let () = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
+                detail::__rust_thunk___ZN10NontrivialC1Ev(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
@@ -51,7 +51,7 @@ impl ctor::CtorNew<i32> for Nontrivial {
         let field = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
+                detail::__rust_thunk___ZN10NontrivialC1Ei(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     field,
                 );
@@ -67,7 +67,7 @@ impl ctor::CtorNew<(i32, i32)> for Nontrivial {
         let (field, unused) = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
+                detail::__rust_thunk___ZN10NontrivialC1Eii(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     field,
                     unused,
@@ -84,7 +84,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>> for Nontrivial {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
+                detail::__rust_thunk___ZN10NontrivialC1EOS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -96,14 +96,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>> for Nontrivial {
 impl Drop for Nontrivial {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
+        unsafe { detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
     }
 }
 
 impl Nontrivial {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: rust_std::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial14MemberFunctionEv(self) }
+        unsafe { detail::__rust_thunk___ZN10Nontrivial14MemberFunctionEv(self) }
     }
 }
 
@@ -126,7 +126,7 @@ impl ctor::CtorNew<()> for NontrivialInline {
         let () = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
+                detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
@@ -141,7 +141,7 @@ impl ctor::CtorNew<i32> for NontrivialInline {
         let field = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
+                detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     field,
                 );
@@ -157,7 +157,7 @@ impl ctor::CtorNew<(i32, i32)> for NontrivialInline {
         let (field, unused) = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
+                detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     field,
                     unused,
@@ -174,7 +174,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>> for Nontrivi
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
+                detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -186,14 +186,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>> for Nontrivi
 impl Drop for NontrivialInline {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
+        unsafe { detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
     }
 }
 
 impl NontrivialInline {
     #[inline(always)]
     pub fn MemberFunction<'a>(self: rust_std::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
+        unsafe { detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
     }
 }
 
@@ -217,7 +217,7 @@ impl ctor::CtorNew<()> for NontrivialMembers {
         let () = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
+                detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
@@ -232,7 +232,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>> for Nontriv
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
+                detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
                     rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
@@ -244,7 +244,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>> for Nontriv
 impl Drop for NontrivialMembers {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
+        unsafe { detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
     }
 }
 
@@ -262,14 +262,14 @@ impl Drop for NontrivialMembers {
 
 #[inline(always)]
 pub fn TakesByConstReference<'a>(nontrivial: &'a Nontrivial) -> &'a Nontrivial {
-    unsafe { crate::detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
+    unsafe { detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
 }
 
 #[inline(always)]
 pub fn TakesByReference<'a>(
     nontrivial: rust_std::pin::Pin<&'a mut Nontrivial>,
 ) -> rust_std::pin::Pin<&'a mut Nontrivial> {
-    unsafe { crate::detail::__rust_thunk___Z16TakesByReferenceR10Nontrivial(nontrivial) }
+    unsafe { detail::__rust_thunk___Z16TakesByReferenceR10Nontrivial(nontrivial) }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_

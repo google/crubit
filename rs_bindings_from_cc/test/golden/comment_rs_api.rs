@@ -38,7 +38,7 @@ impl Default for Foo {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -49,7 +49,7 @@ impl<'b> From<ctor::RvalueReference<'b, Foo>> for Foo {
     fn from(__param_0: ctor::RvalueReference<'b, Foo>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -81,7 +81,7 @@ impl<'b> From<ctor::RvalueReference<'b, Foo>> for Foo {
 /// foo
 #[inline(always)]
 pub fn foo() {
-    unsafe { crate::detail::__rust_thunk___Z3foov() }
+    unsafe { detail::__rust_thunk___Z3foov() }
 }
 
 /// Bar
@@ -97,7 +97,7 @@ impl Default for Bar {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -108,7 +108,7 @@ impl<'b> From<ctor::RvalueReference<'b, Bar>> for Bar {
     fn from(__param_0: ctor::RvalueReference<'b, Bar>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -135,7 +135,7 @@ impl Default for HasNoComments {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -146,7 +146,7 @@ impl<'b> From<ctor::RvalueReference<'b, HasNoComments>> for HasNoComments {
     fn from(__param_0: ctor::RvalueReference<'b, HasNoComments>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }

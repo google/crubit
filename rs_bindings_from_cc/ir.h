@@ -643,6 +643,19 @@ inline std::ostream& operator<<(std::ostream& o, const Comment& r) {
   return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
 }
 
+struct Namespace {
+  llvm::json::Value ToJson() const;
+
+  Identifier name;
+  ItemId id;
+  BazelLabel owning_target;
+  std::vector<ItemId> child_item_ids;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {
+  return o << std::string(llvm::formatv("{0:2}", n.ToJson()));
+}
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
@@ -664,8 +677,8 @@ struct IR {
   std::vector<HeaderName> used_headers;
   BazelLabel current_target;
 
-  using Item =
-      std::variant<Func, Record, Enum, TypeAlias, UnsupportedItem, Comment>;
+  using Item = std::variant<Func, Record, Enum, TypeAlias, UnsupportedItem,
+                            Comment, Namespace>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
 };

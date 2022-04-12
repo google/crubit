@@ -28,7 +28,7 @@ impl Default for FirstStruct {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -39,7 +39,7 @@ impl<'b> From<ctor::RvalueReference<'b, FirstStruct>> for FirstStruct {
     fn from(__param_0: ctor::RvalueReference<'b, FirstStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -55,7 +55,7 @@ impl<'b> From<ctor::RvalueReference<'b, FirstStruct>> for FirstStruct {
 
 #[inline(always)]
 pub fn first_func() -> i32 {
-    unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
+    unsafe { detail::__rust_thunk___Z10first_funcv() }
 }
 
 #[derive(Clone, Copy)]
@@ -70,7 +70,7 @@ impl Default for SecondStruct {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -81,7 +81,7 @@ impl<'b> From<ctor::RvalueReference<'b, SecondStruct>> for SecondStruct {
     fn from(__param_0: ctor::RvalueReference<'b, SecondStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -97,7 +97,7 @@ impl<'b> From<ctor::RvalueReference<'b, SecondStruct>> for SecondStruct {
 
 #[inline(always)]
 pub fn second_func() -> i32 {
-    unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
+    unsafe { detail::__rust_thunk___Z11second_funcv() }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_

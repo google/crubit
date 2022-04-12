@@ -18,7 +18,7 @@ use memoffset_unstable_const::offset_of;
 
 #[inline(always)]
 pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
-    crate::detail::__rust_thunk___Z13free_functionRi(p1)
+    detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
 #[derive(Clone, Copy)]
@@ -52,20 +52,20 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), S);
 impl S {
     #[inline(always)]
     pub unsafe fn const_method(__this: *const S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
-        crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
+        detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
 }
 
 impl S {
     #[inline(always)]
     pub unsafe fn method(__this: *mut S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
-        crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
+        detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
 
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut i32) {
-    crate::detail::__rust_thunk___Z12take_pointerPi(p)
+    detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_

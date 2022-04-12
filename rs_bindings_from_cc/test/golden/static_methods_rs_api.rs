@@ -28,7 +28,7 @@ impl Default for SomeClass {
     fn default() -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
+            detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -39,7 +39,7 @@ impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
     fn from(__param_0: ctor::RvalueReference<'b, SomeClass>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
+            detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -58,9 +58,7 @@ impl SomeClass {
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: i32) -> SomeClass {
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
-                initial_value_of_field,
-            )
+            detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(initial_value_of_field)
         }
     }
 }
@@ -70,9 +68,7 @@ impl SomeClass {
     #[inline(always)]
     pub fn static_method_that_multiplies_its_args(x: i32, y: i32) -> i32 {
         unsafe {
-            crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
-                x, y,
-            )
+            detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(x, y)
         }
     }
 }

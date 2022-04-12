@@ -456,6 +456,25 @@ llvm::json::Value Comment::ToJson() const {
   };
 }
 
+llvm::json::Value Namespace::ToJson() const {
+  std::vector<llvm::json::Value> json_item_ids;
+  json_item_ids.reserve(child_item_ids.size());
+  for (const auto& id : child_item_ids) {
+    json_item_ids.push_back(id.value());
+  }
+
+  llvm::json::Object ns{
+      {"name", name},
+      {"id", id},
+      {"owning_target", owning_target},
+      {"child_item_ids", std::move(json_item_ids)},
+  };
+
+  return llvm::json::Object{
+      {"Namespace", std::move(ns)},
+  };
+}
+
 llvm::json::Value IR::ToJson() const {
   std::vector<llvm::json::Value> json_items;
   json_items.reserve(items.size());
