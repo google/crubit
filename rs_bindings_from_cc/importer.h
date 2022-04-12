@@ -97,8 +97,8 @@ class Importer {
   // Imports all decls contained in a `DeclContext`.
   void ImportDeclsFromDeclContext(const clang::DeclContext* decl_context);
 
-  // Imports a decl, but only if it hasn't been already imported earlier.
-  void ImportDeclIfNeeded(clang::Decl* decl);
+  // Returns the Item of a Decl, importing it first if necessary.
+  std::optional<IR::Item> GetDeclItem(clang::Decl* decl);
 
   // Imports a decl and creates an IR item (or error messages).
   // Does not use or update the cache.

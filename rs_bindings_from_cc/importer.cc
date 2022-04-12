@@ -305,21 +305,15 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
                            ordered_comments.upper_bound(decl->getEndLoc()));
 
-    // We assume that all the decls of the given parameter decl are already
-    // imported. Some calls to ImportDecl() may have returned std::nullopt, and
-    // those decls don't have corresponding items in the ir, so we don't add
-    // their item id to the list.
-    auto item = import_cache_.find(decl);
-    CRUBIT_CHECK(item != import_cache_.end() && "Found non-imported decl");
-    if (!item->second.has_value()) {
-      continue;
-    }
-    auto item_id = GenerateItemId(decl);
-    // TODO(rosica): Drop this check when we start importing also other redecls,
-    //  not just the canonical
-    if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
-      visited_item_ids.insert(item_id);
-      items.push_back({decl->getSourceRange(), GetDeclOrder(decl), item_id});
+    // Only add item ids for decls that can be successfully imported.
+    if (GetDeclItem(decl)) {
+      auto item_id = GenerateItemId(decl);
+      // TODO(rosica): Drop this check when we start importing also other
+      // redecls, not just the canonical
+      if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
+        visited_item_ids.insert(item_id);
+        items.push_back({decl->getSourceRange(), GetDeclOrder(decl), item_id});
+      }
     }
   }
 
@@ -391,16 +385,17 @@ void Importer::ImportDeclsFromDeclContext(
   for (auto decl : decl_context->decls()) {
     // TODO(rosica): We don't always want the canonical decl here (especially
     // not in namespaces).
-    ImportDeclIfNeeded(decl->getCanonicalDecl());
+    GetDeclItem(decl->getCanonicalDecl());
   }
 }
 
-void Importer::ImportDeclIfNeeded(clang::Decl* decl) {
+std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   // TODO: Move `decl->getCanonicalDecl()` from callers into here.
-
-  if (!import_cache_.contains(decl)) {
-    import_cache_.insert({decl, ImportDecl(decl)});
+  auto it = import_cache_.find(decl);
+  if (it == import_cache_.end()) {
+    it = import_cache_.insert({decl, ImportDecl(decl)}).first;
   }
+  return it->second;
 }
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
@@ -482,7 +477,7 @@ std::optional<IR::Item> Importer::ImportFunction(
 
   std::vector<FuncParam> params;
   std::set<std::string> errors;
-  auto add_error = [&errors, function_decl](std::string msg) {
+  auto add_error = [&errors](std::string msg) {
     auto result = errors.insert(std::move(msg));
     CRUBIT_CHECK(result.second && "Duplicated error message");
   };
@@ -781,7 +776,6 @@ std::optional<IR::Item> Importer::ImportRecord(
     }
   }
 
-  ImportDeclsFromDeclContext(record_decl);
   auto item_ids = GetItemIdsInSourceOrder(record_decl);
   return Record{
       .rs_name = std::string(record_name->Ident()),
