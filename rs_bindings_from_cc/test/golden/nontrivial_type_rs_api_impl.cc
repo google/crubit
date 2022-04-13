@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/nontrivial_type.h"
 
 #pragma clang diagnostic push
@@ -54,14 +55,16 @@ extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
 
 static_assert(sizeof(class Nontrivial) == 4);
 static_assert(alignof(class Nontrivial) == 4);
-static_assert(offsetof(class Nontrivial, field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class Nontrivial) * 8 == 0);
 
 static_assert(sizeof(class NontrivialInline) == 4);
 static_assert(alignof(class NontrivialInline) == 4);
-static_assert(offsetof(class NontrivialInline, field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class NontrivialInline) * 8 == 0);
 
 static_assert(sizeof(class NontrivialMembers) == 4);
 static_assert(alignof(class NontrivialMembers) == 4);
-static_assert(offsetof(class NontrivialMembers, nontrivial_member) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(nontrivial_member, class NontrivialMembers) *
+                  8 ==
+              0);
 
 #pragma clang diagnostic pop

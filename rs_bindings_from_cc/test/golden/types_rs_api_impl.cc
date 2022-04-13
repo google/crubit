@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/types.h"
 
 #pragma clang diagnostic push
@@ -111,89 +112,148 @@ static_assert(alignof(class EmptyUnion) == 1);
 
 static_assert(sizeof(class FieldTypeTestStruct) == 280);
 static_assert(alignof(class FieldTypeTestStruct) == 8);
-static_assert(offsetof(class FieldTypeTestStruct, bool_field) * 8 == 0);
-static_assert(offsetof(class FieldTypeTestStruct, char_field) * 8 == 8);
-static_assert(offsetof(class FieldTypeTestStruct, unsigned_char_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(bool_field, class FieldTypeTestStruct) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(char_field, class FieldTypeTestStruct) * 8 == 8);
+static_assert(CRUBIT_OFFSET_OF(unsigned_char_field, class FieldTypeTestStruct) *
+                  8 ==
               16);
-static_assert(offsetof(class FieldTypeTestStruct, signed_char_field) * 8 == 24);
-static_assert(offsetof(class FieldTypeTestStruct, char16_t_field) * 8 == 32);
-static_assert(offsetof(class FieldTypeTestStruct, char32_t_field) * 8 == 64);
-static_assert(offsetof(class FieldTypeTestStruct, wchar_t_field) * 8 == 96);
-static_assert(offsetof(class FieldTypeTestStruct, short_field) * 8 == 128);
-static_assert(offsetof(class FieldTypeTestStruct, int_field) * 8 == 160);
-static_assert(offsetof(class FieldTypeTestStruct, long_field) * 8 == 192);
-static_assert(offsetof(class FieldTypeTestStruct, long_long_field) * 8 == 256);
-static_assert(offsetof(class FieldTypeTestStruct, unsigned_short_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(signed_char_field, class FieldTypeTestStruct) *
+                  8 ==
+              24);
+static_assert(CRUBIT_OFFSET_OF(char16_t_field, class FieldTypeTestStruct) * 8 ==
+              32);
+static_assert(CRUBIT_OFFSET_OF(char32_t_field, class FieldTypeTestStruct) * 8 ==
+              64);
+static_assert(CRUBIT_OFFSET_OF(wchar_t_field, class FieldTypeTestStruct) * 8 ==
+              96);
+static_assert(CRUBIT_OFFSET_OF(short_field, class FieldTypeTestStruct) * 8 ==
+              128);
+static_assert(CRUBIT_OFFSET_OF(int_field, class FieldTypeTestStruct) * 8 ==
+              160);
+static_assert(CRUBIT_OFFSET_OF(long_field, class FieldTypeTestStruct) * 8 ==
+              192);
+static_assert(CRUBIT_OFFSET_OF(long_long_field, class FieldTypeTestStruct) *
+                  8 ==
+              256);
+static_assert(CRUBIT_OFFSET_OF(unsigned_short_field,
+                               class FieldTypeTestStruct) *
+                  8 ==
               320);
-static_assert(offsetof(class FieldTypeTestStruct, unsigned_int_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(unsigned_int_field, class FieldTypeTestStruct) *
+                  8 ==
               352);
-static_assert(offsetof(class FieldTypeTestStruct, unsigned_long_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(unsigned_long_field, class FieldTypeTestStruct) *
+                  8 ==
               384);
-static_assert(offsetof(class FieldTypeTestStruct, unsigned_long_long_field) *
+static_assert(CRUBIT_OFFSET_OF(unsigned_long_long_field,
+                               class FieldTypeTestStruct) *
                   8 ==
               448);
-static_assert(offsetof(class FieldTypeTestStruct, signed_short_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(signed_short_field, class FieldTypeTestStruct) *
+                  8 ==
               512);
-static_assert(offsetof(class FieldTypeTestStruct, signed_int_field) * 8 == 544);
-static_assert(offsetof(class FieldTypeTestStruct, signed_long_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(signed_int_field, class FieldTypeTestStruct) *
+                  8 ==
+              544);
+static_assert(CRUBIT_OFFSET_OF(signed_long_field, class FieldTypeTestStruct) *
+                  8 ==
               576);
-static_assert(offsetof(class FieldTypeTestStruct, signed_long_long_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(signed_long_long_field,
+                               class FieldTypeTestStruct) *
+                  8 ==
               640);
-static_assert(offsetof(class FieldTypeTestStruct, int8_t_field) * 8 == 704);
-static_assert(offsetof(class FieldTypeTestStruct, int16_t_field) * 8 == 720);
-static_assert(offsetof(class FieldTypeTestStruct, int32_t_field) * 8 == 736);
-static_assert(offsetof(class FieldTypeTestStruct, int64_t_field) * 8 == 768);
-static_assert(offsetof(class FieldTypeTestStruct, std_int8_t_field) * 8 == 832);
-static_assert(offsetof(class FieldTypeTestStruct, std_int16_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(int8_t_field, class FieldTypeTestStruct) * 8 ==
+              704);
+static_assert(CRUBIT_OFFSET_OF(int16_t_field, class FieldTypeTestStruct) * 8 ==
+              720);
+static_assert(CRUBIT_OFFSET_OF(int32_t_field, class FieldTypeTestStruct) * 8 ==
+              736);
+static_assert(CRUBIT_OFFSET_OF(int64_t_field, class FieldTypeTestStruct) * 8 ==
+              768);
+static_assert(CRUBIT_OFFSET_OF(std_int8_t_field, class FieldTypeTestStruct) *
+                  8 ==
+              832);
+static_assert(CRUBIT_OFFSET_OF(std_int16_t_field, class FieldTypeTestStruct) *
+                  8 ==
               848);
-static_assert(offsetof(class FieldTypeTestStruct, std_int32_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_int32_t_field, class FieldTypeTestStruct) *
+                  8 ==
               864);
-static_assert(offsetof(class FieldTypeTestStruct, std_int64_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_int64_t_field, class FieldTypeTestStruct) *
+                  8 ==
               896);
-static_assert(offsetof(class FieldTypeTestStruct, uint8_t_field) * 8 == 960);
-static_assert(offsetof(class FieldTypeTestStruct, uint16_t_field) * 8 == 976);
-static_assert(offsetof(class FieldTypeTestStruct, uint32_t_field) * 8 == 992);
-static_assert(offsetof(class FieldTypeTestStruct, uint64_t_field) * 8 == 1024);
-static_assert(offsetof(class FieldTypeTestStruct, std_uint8_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(uint8_t_field, class FieldTypeTestStruct) * 8 ==
+              960);
+static_assert(CRUBIT_OFFSET_OF(uint16_t_field, class FieldTypeTestStruct) * 8 ==
+              976);
+static_assert(CRUBIT_OFFSET_OF(uint32_t_field, class FieldTypeTestStruct) * 8 ==
+              992);
+static_assert(CRUBIT_OFFSET_OF(uint64_t_field, class FieldTypeTestStruct) * 8 ==
+              1024);
+static_assert(CRUBIT_OFFSET_OF(std_uint8_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1088);
-static_assert(offsetof(class FieldTypeTestStruct, std_uint16_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_uint16_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1104);
-static_assert(offsetof(class FieldTypeTestStruct, std_uint32_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_uint32_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1120);
-static_assert(offsetof(class FieldTypeTestStruct, std_uint64_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_uint64_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1152);
-static_assert(offsetof(class FieldTypeTestStruct, ptrdiff_t_field) * 8 == 1216);
-static_assert(offsetof(class FieldTypeTestStruct, size_t_field) * 8 == 1280);
-static_assert(offsetof(class FieldTypeTestStruct, intptr_t_field) * 8 == 1344);
-static_assert(offsetof(class FieldTypeTestStruct, uintptr_t_field) * 8 == 1408);
-static_assert(offsetof(class FieldTypeTestStruct, std_ptrdiff_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(ptrdiff_t_field, class FieldTypeTestStruct) *
+                  8 ==
+              1216);
+static_assert(CRUBIT_OFFSET_OF(size_t_field, class FieldTypeTestStruct) * 8 ==
+              1280);
+static_assert(CRUBIT_OFFSET_OF(intptr_t_field, class FieldTypeTestStruct) * 8 ==
+              1344);
+static_assert(CRUBIT_OFFSET_OF(uintptr_t_field, class FieldTypeTestStruct) *
+                  8 ==
+              1408);
+static_assert(CRUBIT_OFFSET_OF(std_ptrdiff_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1472);
-static_assert(offsetof(class FieldTypeTestStruct, std_size_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_size_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1536);
-static_assert(offsetof(class FieldTypeTestStruct, std_intptr_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_intptr_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1600);
-static_assert(offsetof(class FieldTypeTestStruct, std_uintptr_t_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(std_uintptr_t_field, class FieldTypeTestStruct) *
+                  8 ==
               1664);
-static_assert(offsetof(class FieldTypeTestStruct, float_field) * 8 == 1728);
-static_assert(offsetof(class FieldTypeTestStruct, double_field) * 8 == 1792);
-static_assert(offsetof(class FieldTypeTestStruct, ptr_field) * 8 == 1856);
-static_assert(offsetof(class FieldTypeTestStruct, struct_field) * 8 == 1920);
-static_assert(offsetof(class FieldTypeTestStruct, struct_ptr_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(float_field, class FieldTypeTestStruct) * 8 ==
+              1728);
+static_assert(CRUBIT_OFFSET_OF(double_field, class FieldTypeTestStruct) * 8 ==
+              1792);
+static_assert(CRUBIT_OFFSET_OF(ptr_field, class FieldTypeTestStruct) * 8 ==
+              1856);
+static_assert(CRUBIT_OFFSET_OF(struct_field, class FieldTypeTestStruct) * 8 ==
+              1920);
+static_assert(CRUBIT_OFFSET_OF(struct_ptr_field, class FieldTypeTestStruct) *
+                  8 ==
               1984);
-static_assert(offsetof(class FieldTypeTestStruct, const_struct_ptr_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(const_struct_ptr_field,
+                               class FieldTypeTestStruct) *
+                  8 ==
               2048);
-static_assert(offsetof(class FieldTypeTestStruct, struct_ref_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(struct_ref_field, class FieldTypeTestStruct) *
+                  8 ==
               2112);
-static_assert(offsetof(class FieldTypeTestStruct, const_struct_ref_field) * 8 ==
+static_assert(CRUBIT_OFFSET_OF(const_struct_ref_field,
+                               class FieldTypeTestStruct) *
+                  8 ==
               2176);
 
 static_assert(sizeof(class NonEmptyUnion) == 8);
 static_assert(alignof(class NonEmptyUnion) == 8);
-static_assert(offsetof(class NonEmptyUnion, bool_field) * 8 == 0);
-static_assert(offsetof(class NonEmptyUnion, char_field) * 8 == 0);
-static_assert(offsetof(class NonEmptyUnion, int16_field) * 8 == 0);
-static_assert(offsetof(class NonEmptyUnion, int_field) * 8 == 0);
-static_assert(offsetof(class NonEmptyUnion, int32_field) * 8 == 0);
-static_assert(offsetof(class NonEmptyUnion, int64_field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(bool_field, class NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(char_field, class NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int16_field, class NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int_field, class NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int32_field, class NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int64_field, class NonEmptyUnion) * 8 == 0);
 
 #pragma clang diagnostic pop

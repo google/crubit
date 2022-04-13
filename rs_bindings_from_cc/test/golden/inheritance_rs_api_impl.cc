@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/inheritance.h"
 
 #pragma clang diagnostic push
@@ -82,6 +83,6 @@ static_assert(alignof(class Base2) == 2);
 
 static_assert(sizeof(class Derived) == 16);
 static_assert(alignof(class Derived) == 8);
-static_assert(offsetof(class Derived, derived_1) * 8 == 96);
+static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived) * 8 == 96);
 
 #pragma clang diagnostic pop

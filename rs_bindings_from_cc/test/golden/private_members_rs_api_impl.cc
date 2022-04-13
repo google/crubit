@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/private_members.h"
 
 #pragma clang diagnostic push
@@ -37,6 +38,7 @@ extern "C" class SomeClass& __rust_thunk___ZN9SomeClassaSEOS_(
 
 static_assert(sizeof(class SomeClass) == 8);
 static_assert(alignof(class SomeClass) == 4);
-static_assert(offsetof(class SomeClass, public_member_variable_) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(public_member_variable_, class SomeClass) * 8 ==
+              0);
 
 #pragma clang diagnostic pop

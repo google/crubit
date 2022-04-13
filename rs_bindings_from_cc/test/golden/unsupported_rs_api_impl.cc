@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/unsupported.h"
 
 #pragma clang diagnostic push
@@ -43,7 +44,7 @@ extern "C" class ContainingStruct& __rust_thunk___ZN16ContainingStructaSEOS_(
 
 static_assert(sizeof(class NontrivialCustomType) == 4);
 static_assert(alignof(class NontrivialCustomType) == 4);
-static_assert(offsetof(class NontrivialCustomType, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class NontrivialCustomType) * 8 == 0);
 
 static_assert(sizeof(class ContainingStruct) == 1);
 static_assert(alignof(class ContainingStruct) == 1);

@@ -1997,10 +1997,10 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
         record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
             let field_ident = format_cc_ident(&field.identifier.identifier);
             let offset = Literal::usize_unsuffixed(field.offset);
-            // The IR contains the offset in bits, while C++'s offsetof()
-            // returns the offset in bytes, so we need to convert.
+            // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the offset in
+            // bytes, so we need to convert.
             quote! {
-                static_assert(offsetof(class #record_ident, #field_ident) * 8 == #offset);
+                static_assert(CRUBIT_OFFSET_OF(#field_ident, class #record_ident) * 8 == #offset);
             }
         });
     quote! {
@@ -2194,7 +2194,10 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         standard_headers.insert(format_ident!("cstddef"));
     };
 
-    let mut includes = vec!["rs_bindings_from_cc/support/cxx20_backports.h"];
+    let mut includes = vec![
+        "rs_bindings_from_cc/support/cxx20_backports.h",
+        "rs_bindings_from_cc/support/offsetof.h",
+    ];
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
     // access declarations from public headers of the C++ library.
@@ -2428,7 +2431,7 @@ mod tests {
             quote! {
                 static_assert(sizeof(class SomeStruct) == 12);
                 static_assert(alignof(class SomeStruct) == 4);
-                static_assert(offsetof(class SomeStruct, public_int) * 8 == 0);
+                static_assert(CRUBIT_OFFSET_OF(public_int, class SomeStruct) * 8 == 0);
             }
         );
         Ok(())
@@ -4559,7 +4562,10 @@ mod tests {
     fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
         let rs_api_impl = generate_rs_api_impl(&ir)?;
-        assert_cc_matches!(rs_api_impl, quote! { static_assert(offsetof(class type, dyn) ... ) });
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_OFFSET_OF(dyn, class type) ... ) }
+        );
         Ok(())
     }
 

@@ -7,8 +7,18 @@ cc_library(
     name = "rs_api_impl_support",
     hdrs = [
         "cxx20_backports.h",
+        "offsetof.h",
     ],
     visibility = ["//third_party/crubit:__subpackages__"],
+)
+
+cc_test(
+    name = "offsetof_test",
+    srcs = ["offsetof_test.cc"],
+    deps = [
+        ":rs_api_impl_support",
+        "//testing/base/public:gunit_main",
+    ],
 )
 
 rust_library(

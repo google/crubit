@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/clang_attrs.h"
 
 #pragma clang diagnostic push
@@ -96,7 +97,8 @@ static_assert(alignof(class HasCustomAlignment) == 64);
 
 static_assert(sizeof(class HasFieldWithCustomAlignment) == 64);
 static_assert(alignof(class HasFieldWithCustomAlignment) == 64);
-static_assert(offsetof(class HasFieldWithCustomAlignment, field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class HasFieldWithCustomAlignment) * 8 ==
+              0);
 
 static_assert(sizeof(class InheritsFromBaseWithCustomAlignment) == 64);
 static_assert(alignof(class InheritsFromBaseWithCustomAlignment) == 64);

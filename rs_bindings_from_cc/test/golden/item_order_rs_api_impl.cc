@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/item_order.h"
 
 #pragma clang diagnostic push
@@ -65,10 +66,10 @@ extern "C" int __rust_thunk___Z11second_funcv() { return second_func(); }
 
 static_assert(sizeof(class FirstStruct) == 4);
 static_assert(alignof(class FirstStruct) == 4);
-static_assert(offsetof(class FirstStruct, field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class FirstStruct) * 8 == 0);
 
 static_assert(sizeof(class SecondStruct) == 4);
 static_assert(alignof(class SecondStruct) == 4);
-static_assert(offsetof(class SecondStruct, field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class SecondStruct) * 8 == 0);
 
 #pragma clang diagnostic pop

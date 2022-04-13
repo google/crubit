@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/trivial_type.h"
 
 #pragma clang diagnostic push
@@ -95,14 +96,15 @@ extern "C" class TrivialNonfinal& __rust_thunk___ZN15TrivialNonfinalaSEOS_(
 
 static_assert(sizeof(class Trivial) == 4);
 static_assert(alignof(class Trivial) == 4);
-static_assert(offsetof(class Trivial, trivial_field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, class Trivial) * 8 == 0);
 
 static_assert(sizeof(class TrivialWithDefaulted) == 4);
 static_assert(alignof(class TrivialWithDefaulted) == 4);
-static_assert(offsetof(class TrivialWithDefaulted, trivial_field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialWithDefaulted) * 8 ==
+              0);
 
 static_assert(sizeof(class TrivialNonfinal) == 4);
 static_assert(alignof(class TrivialNonfinal) == 4);
-static_assert(offsetof(class TrivialNonfinal, trivial_field) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialNonfinal) * 8 == 0);
 
 #pragma clang diagnostic pop

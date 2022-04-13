@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/namespace.h"
 
 #pragma clang diagnostic push
@@ -30,6 +31,6 @@ extern "C" class S& __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_(
 
 static_assert(sizeof(class S) == 4);
 static_assert(alignof(class S) == 4);
-static_assert(offsetof(class S, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class S) * 8 == 0);
 
 #pragma clang diagnostic pop

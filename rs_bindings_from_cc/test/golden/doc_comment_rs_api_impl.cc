@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
+#include "rs_bindings_from_cc/support/offsetof.h"
 #include "rs_bindings_from_cc/test/golden/doc_comment.h"
 
 #pragma clang diagnostic push
@@ -144,22 +145,22 @@ extern "C" int __rust_thunk___Z3foov() { return foo(); }
 
 static_assert(sizeof(class DocCommentSlashes) == 4);
 static_assert(alignof(class DocCommentSlashes) == 4);
-static_assert(offsetof(class DocCommentSlashes, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class DocCommentSlashes) * 8 == 0);
 
 static_assert(sizeof(class DocCommentBang) == 4);
 static_assert(alignof(class DocCommentBang) == 4);
-static_assert(offsetof(class DocCommentBang, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class DocCommentBang) * 8 == 0);
 
 static_assert(sizeof(class MultilineCommentTwoStars) == 4);
 static_assert(alignof(class MultilineCommentTwoStars) == 4);
-static_assert(offsetof(class MultilineCommentTwoStars, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class MultilineCommentTwoStars) * 8 == 0);
 
 static_assert(sizeof(class LineComment) == 4);
 static_assert(alignof(class LineComment) == 4);
-static_assert(offsetof(class LineComment, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class LineComment) * 8 == 0);
 
 static_assert(sizeof(class MultilineOneStar) == 4);
 static_assert(alignof(class MultilineOneStar) == 4);
-static_assert(offsetof(class MultilineOneStar, i) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class MultilineOneStar) * 8 == 0);
 
 #pragma clang diagnostic pop
