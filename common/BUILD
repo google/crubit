@@ -82,3 +82,28 @@ cc_library(
         "@absl//types:source_location",
     ],
 )
+
+rust_library(
+    name = "token_stream_printer",
+    srcs = ["token_stream_printer.rs"],
+    data = [
+        "@rust//toolchains/nightly:bin/rustfmt",
+        "@rustfmt//:rustfmt.toml",
+    ],
+    deps = [
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+    ],
+)
+
+rust_test(
+    name = "token_stream_printer_test",
+    crate = ":token_stream_printer",
+    data = [
+        "@rust//toolchains/nightly:bin/rustfmt",
+        "@rustfmt//:rustfmt.toml",
+    ],
+    deps = [
+        "@crates_io//quote/v1:quote",
+    ],
+)

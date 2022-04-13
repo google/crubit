@@ -291,8 +291,8 @@ rust_library(
     srcs = ["src_code_gen.rs"],
     deps = [
         ":rs_ir",
-        ":token_stream_printer",
         "//common:rs_ffi_types",
+        "//common:token_stream_printer",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_9:itertools",
         "@crates_io//proc_macro2/v1:proc_macro2",
@@ -335,7 +335,7 @@ rust_library(
     srcs = ["token_stream_matchers.rs"],
     deps = [
         ":rs_ir",
-        ":token_stream_printer",
+        "//common:token_stream_printer",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_9:itertools",
         "@crates_io//proc_macro2/v1:proc_macro2",
@@ -353,31 +353,6 @@ rust_test(
     deps = [
         ":ir_testing",
         "@rust//support:rust_okay_here",
-    ],
-)
-
-rust_library(
-    name = "token_stream_printer",
-    srcs = ["token_stream_printer.rs"],
-    data = [
-        "@rust//toolchains/nightly:bin/rustfmt",
-        "@rustfmt//:rustfmt.toml",
-    ],
-    deps = [
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//proc_macro2/v1:proc_macro2",
-    ],
-)
-
-rust_test(
-    name = "token_stream_printer_test",
-    crate = ":token_stream_printer",
-    data = [
-        "@rust//toolchains/nightly:bin/rustfmt",
-        "@rustfmt//:rustfmt.toml",
-    ],
-    deps = [
-        "@crates_io//quote/v1:quote",
     ],
 )
 
