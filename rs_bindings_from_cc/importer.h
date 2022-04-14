@@ -83,12 +83,58 @@ class Importer {
         header_targets_;
   };
 
+  // The currently known canonical type decls that we know how to map into
+  // Rust.
+  class TypeMapper {
+   public:
+    TypeMapper(const clang::ASTContext* ctx) : ctx_(ctx) {}
+
+    TypeMapper(const TypeMapper& other) = default;
+    TypeMapper& operator=(const TypeMapper& other) = default;
+
+    // Converts the Clang type `qual_type` into an equivalent `MappedType`.
+    // Lifetimes for the type can optionally be specified using `lifetimes`.
+    // If `qual_type` is a pointer type, `nullable` specifies whether the
+    // pointer can be null.
+    // TODO(b/209390498): Currently, we're able to specify nullability only for
+    // top-level pointers. Extend this so that we can specify nullability for
+    // all pointers contained in `qual_type`, in the same way that `lifetimes`
+    // specifies lifetimes for all these pointers. Once this is done, make sure
+    // that all callers pass in the appropriate information, derived from
+    // nullability annotations.
+    absl::StatusOr<MappedType> ConvertQualType(
+        clang::QualType qual_type,
+        std::optional<devtools_rust::ValueLifetimes>& lifetimes,
+        bool nullable = true) const;
+    absl::StatusOr<MappedType> ConvertType(
+        const clang::Type* type,
+        std::optional<devtools_rust::ValueLifetimes>& lifetimes,
+        bool nullable) const;
+    absl::StatusOr<MappedType> ConvertTypeDecl(
+        const clang::TypeDecl* decl) const;
+
+    bool Contains(const clang::TypeDecl* decl) const {
+      return known_type_decls_.contains(
+          clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+    }
+
+    void Insert(const clang::TypeDecl* decl) {
+      known_type_decls_.insert(
+          clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+    }
+
+   private:
+    const clang::ASTContext* ctx_;
+    absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
+  };
+
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema)
       : invocation_(invocation),
         ctx_(ctx),
         sema_(sema),
-        mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())) {}
+        mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())),
+        type_mapper_(&ctx) {}
 
   // Import all visible declarations from a translation unit.
   void Import(clang::TranslationUnitDecl* decl);
@@ -159,26 +205,6 @@ class Importer {
   // Gets the doc comment of the declaration.
   llvm::Optional<std::string> GetComment(const clang::Decl* decl) const;
 
-  // Converts the Clang type `qual_type` into an equivalent `MappedType`.
-  // Lifetimes for the type can optionally be specified using `lifetimes`.
-  // If `qual_type` is a pointer type, `nullable` specifies whether the pointer
-  // can be null.
-  // TODO(b/209390498): Currently, we're able to specify nullability only for
-  // top-level pointers. Extend this so that we can specify nullability for all
-  // pointers contained in `qual_type`, in the same way that `lifetimes`
-  // specifies lifetimes for all these pointers. Once this is done, make sure
-  // that all callers pass in the appropriate information, derived from
-  // nullability annotations.
-  absl::StatusOr<MappedType> ConvertQualType(
-      clang::QualType qual_type,
-      std::optional<devtools_rust::ValueLifetimes>& lifetimes,
-      bool nullable = true) const;
-  absl::StatusOr<MappedType> ConvertType(
-      const clang::Type* type,
-      std::optional<devtools_rust::ValueLifetimes>& lifetimes,
-      bool nullable) const;
-  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
-
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
 
   std::vector<BaseClass> GetUnambiguousPublicBases(
@@ -192,7 +218,7 @@ class Importer {
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
       import_cache_;
-  absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
+  TypeMapper type_mapper_;
   std::vector<const clang::RawComment*> comments_;
 };  // class Importer
 

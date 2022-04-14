@@ -483,8 +483,7 @@ std::optional<IR::Item> Importer::ImportFunction(
   };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    if (!known_type_decls_.contains(
-            method_decl->getParent()->getCanonicalDecl())) {
+    if (!type_mapper_.Contains(method_decl->getParent())) {
       return ImportUnsupportedItem(function_decl, "Couldn't import the parent");
     }
 
@@ -494,9 +493,9 @@ std::optional<IR::Item> Importer::ImportFunction(
       if (lifetimes) {
         this_lifetimes = lifetimes->GetThisLifetimes();
       }
-      auto param_type =
-          ConvertQualType(method_decl->getThisType(), this_lifetimes,
-                          /*nullable=*/false);
+      auto param_type = type_mapper_.ConvertQualType(method_decl->getThisType(),
+                                                     this_lifetimes,
+                                                     /*nullable=*/false);
       if (!param_type.ok()) {
         add_error(absl::StrCat("`this` parameter is not supported: ",
                                param_type.status().message()));
@@ -516,7 +515,8 @@ std::optional<IR::Item> Importer::ImportFunction(
     if (lifetimes) {
       param_lifetimes = lifetimes->GetParamLifetimes(i);
     }
-    auto param_type = ConvertQualType(param->getType(), param_lifetimes);
+    auto param_type =
+        type_mapper_.ConvertQualType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
       add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
                                  param_type.status().message()));
@@ -565,8 +565,8 @@ std::optional<IR::Item> Importer::ImportFunction(
     return_lifetimes = lifetimes->GetReturnLifetimes();
   }
 
-  auto return_type =
-      ConvertQualType(function_decl->getReturnType(), return_lifetimes);
+  auto return_type = type_mapper_.ConvertQualType(
+      function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
     add_error(absl::StrCat("Return type is not supported: ",
                            return_type.status().message()));
@@ -758,14 +758,8 @@ std::optional<IR::Item> Importer::ImportRecord(
     return std::nullopt;
   }
 
-  // Provisionally assume that we know this RecordDecl so that we'll be able
-  // to import fields whose type contains the record itself.
-  known_type_decls_.insert(record_decl);
   absl::StatusOr<std::vector<Field>> fields = ImportFields(record_decl);
   if (!fields.ok()) {
-    // Importing a field failed, so note that we didn't import this RecordDecl
-    // after all.
-    known_type_decls_.erase(record_decl);
     return ImportUnsupportedItem(record_decl, fields.status().ToString());
   }
 
@@ -775,6 +769,8 @@ std::optional<IR::Item> Importer::ImportRecord(
       break;
     }
   }
+
+  type_mapper_.Insert(record_decl);
 
   auto item_ids = GetItemIdsInSourceOrder(record_decl);
   return Record{
@@ -822,7 +818,8 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
         "Forward declared enums without type specifiers are not supported");
   }
   std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
-  absl::StatusOr<MappedType> type = ConvertQualType(cc_type, no_lifetimes);
+  absl::StatusOr<MappedType> type =
+      type_mapper_.ConvertQualType(cc_type, no_lifetimes);
   if (!type.ok()) {
     return ImportUnsupportedItem(enum_decl, type.status().ToString());
   }
@@ -896,10 +893,10 @@ std::optional<IR::Item> Importer::ImportTypedefName(
       GetTranslatedIdentifier(typedef_name_decl);
   CRUBIT_CHECK(identifier.has_value());  // This should never happen.
   std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
-  absl::StatusOr<MappedType> underlying_type =
-      ConvertQualType(typedef_name_decl->getUnderlyingType(), no_lifetimes);
+  absl::StatusOr<MappedType> underlying_type = type_mapper_.ConvertQualType(
+      typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
-    known_type_decls_.insert(typedef_name_decl);
+    type_mapper_.Insert(typedef_name_decl);
     return TypeAlias{.identifier = *identifier,
                      .id = GenerateItemId(typedef_name_decl),
                      .owning_target = GetOwningTarget(typedef_name_decl),
@@ -955,7 +952,7 @@ SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
                    .column = sm.getSpellingColumnNumber(loc)};
 }
 
-absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
+absl::StatusOr<MappedType> Importer::TypeMapper::ConvertTypeDecl(
     const clang::TypeDecl* decl) const {
   if (!known_type_decls_.contains(decl)) {
     return absl::NotFoundError(absl::Substitute(
@@ -966,7 +963,7 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
   return MappedType::WithDeclId(decl_id);
 }
 
-absl::StatusOr<MappedType> Importer::ConvertType(
+absl::StatusOr<MappedType> Importer::TypeMapper::ConvertType(
     const clang::Type* type,
     std::optional<devtools_rust::ValueLifetimes>& lifetimes,
     bool nullable) const {
@@ -1059,7 +1056,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         break;
       default:
         if (builtin_type->isIntegerType()) {
-          auto size = ctx_.getTypeSize(builtin_type);
+          auto size = ctx_->getTypeSize(builtin_type);
           if (size == 8 || size == 16 || size == 32 || size == 64) {
             return MappedType::Simple(
                 absl::Substitute(
@@ -1079,7 +1076,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
 }
 
-absl::StatusOr<MappedType> Importer::ConvertQualType(
+absl::StatusOr<MappedType> Importer::TypeMapper::ConvertQualType(
     clang::QualType qual_type,
     std::optional<devtools_rust::ValueLifetimes>& lifetimes,
     bool nullable) const {
@@ -1105,13 +1102,19 @@ absl::StatusOr<MappedType> Importer::ConvertQualType(
 
 absl::StatusOr<std::vector<Field>> Importer::ImportFields(
     clang::CXXRecordDecl* record_decl) {
+  // Provisionally assume that we know this RecordDecl so that we'll be able
+  // to import fields whose type contains the record itself.
+  TypeMapper temp_import_mapper(type_mapper_);
+  temp_import_mapper.Insert(record_decl);
+
   clang::AccessSpecifier default_access =
       record_decl->isClass() ? clang::AS_private : clang::AS_public;
   std::vector<Field> fields;
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
-    auto type = ConvertQualType(field_decl->getType(), no_lifetimes);
+    auto type =
+        temp_import_mapper.ConvertQualType(field_decl->getType(), no_lifetimes);
     if (!type.ok()) {
       return absl::UnimplementedError(absl::Substitute(
           "Type of field '$0' is not supported: $1",
@@ -1279,7 +1282,7 @@ std::vector<BaseClass> Importer::GetUnambiguousPublicBases(
 
       clang::CXXRecordDecl* base_record_decl =
           CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      if (!ConvertTypeDecl(base_record_decl).status().ok()) {
+      if (!type_mapper_.ConvertTypeDecl(base_record_decl).status().ok()) {
         continue;
       }
 
