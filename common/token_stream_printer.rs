@@ -25,6 +25,8 @@ pub fn rs_tokens_to_formatted_string(tokens: TokenStream) -> Result<String> {
 ///   "foo/bar.h"`). We are also using explict newlines for making the generated
 ///   Rust/C++ source code more readable. Use the placeholder `__NEWLINE__` to
 ///   insert a newline character.
+/// * `TokenStream` cannot encode formatting whitespace, so we use the
+///   placeholder `__SPACE__`.
 /// * `TokenStream` cannot encode comments, so we use the placeholder
 ///   `__COMMENT__`, followed by a string literal.
 pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
@@ -38,6 +40,7 @@ fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()>
     while let Some(tt) = it.next() {
         match tt {
             TokenTree::Ident(ref tt) if tt == "__NEWLINE__" => writeln!(result)?,
+            TokenTree::Ident(ref tt) if tt == "__SPACE__" => write!(result, " ")?,
             TokenTree::Ident(ref tt) if tt == "__HASH_TOKEN__" => write!(result, "#")?,
 
             TokenTree::Ident(ref tt) if tt == "__COMMENT__" => {
@@ -80,8 +83,8 @@ fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()>
 
 fn is_ident_or_literal(tt: &TokenTree) -> bool {
     match tt {
-        TokenTree::Ident(id) if id == "__NEWLINE__" => false,
-        TokenTree::Ident(_) | TokenTree::Literal(_) => true,
+        TokenTree::Ident(id) => id != "__NEWLINE__" && id != "__SPACE__",
+        TokenTree::Literal(_) => true,
         _ => false,
     }
 }
@@ -167,6 +170,20 @@ mod tests {
     }
 
     #[test]
+    fn test_space_token() -> Result<()> {
+        let token_stream = quote! { a __SPACE__ = __SPACE__ b };
+        assert_eq!(tokens_to_string(token_stream)?, "a = b");
+        Ok(())
+    }
+
+    #[test]
+    fn test_redundant_space_token() -> Result<()> {
+        let token_stream = quote! { a __SPACE__ b };
+        assert_eq!(tokens_to_string(token_stream)?, "a b");
+        Ok(())
+    }
+
+    #[test]
     fn test_hash_token() -> Result<()> {
         let token_stream = quote! { a __HASH_TOKEN__ b };
         assert_eq!(tokens_to_string(token_stream)?, "a #b");
@@ -225,6 +242,7 @@ mod tests {
     #[test]
     fn test_special_tokens_in_groups() -> Result<()> {
         assert_eq!(tokens_to_string(quote! {{ a __NEWLINE__ b }})?, "{ a\nb }");
+        assert_eq!(tokens_to_string(quote! {{ a __SPACE__ b }})?, "{ a b }");
         assert_eq!(tokens_to_string(quote! {(a __COMMENT__ "b")})?, "(a // b\n)");
         assert_eq!(tokens_to_string(quote! {[__HASH_TOKEN__ a]})?, "[#a]");
         Ok(())

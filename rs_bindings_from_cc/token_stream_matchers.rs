@@ -302,7 +302,7 @@ pub mod internal {
             }
         };
         while let Some(actual_token) = input_iter.next() {
-            if is_newline_token(&actual_token) {
+            if is_whitespace_token(&actual_token) {
                 continue;
             }
 
@@ -392,8 +392,8 @@ pub mod internal {
         iter::once(token).chain(iter).collect::<TokenStream>()
     }
 
-    fn is_newline_token(token: &TokenTree) -> bool {
-        matches!(token, TokenTree::Ident(ref id) if id == "__NEWLINE__")
+    fn is_whitespace_token(token: &TokenTree) -> bool {
+        matches!(token, TokenTree::Ident(id) if id == "__NEWLINE__" || id == "__SPACE__")
     }
 
     fn is_wildcard(pattern: TokenStream) -> bool {
@@ -431,7 +431,7 @@ pub mod internal {
                         if input_suffix
                             .clone()
                             .into_iter()
-                            .filter(|token| !is_newline_token(token))
+                            .filter(|token| !is_whitespace_token(token))
                             .count()
                             != 0
                         {
@@ -690,7 +690,16 @@ Caused by:
     fn test_ignore_newlines() {
         assert_rs_cc_matches!(
             quote! {__NEWLINE__ fn __NEWLINE__ foo __NEWLINE__ (
-            __NEWLINE__ a: __NEWLINE__ usize) {}},
+            __NEWLINE__ a __NEWLINE__ : __NEWLINE__ usize __NEWLINE__) {}},
+            quote! {fn foo(a: usize) {}}
+        );
+    }
+
+    #[test]
+    fn test_ignore_space() {
+        assert_rs_cc_matches!(
+            quote! {__SPACE__ fn __SPACE__ foo __SPACE__ (
+            __SPACE__ a __SPACE__ : __SPACE__ usize __SPACE__) {}},
             quote! {fn foo(a: usize) {}}
         );
     }
