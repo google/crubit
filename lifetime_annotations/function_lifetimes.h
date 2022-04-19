@@ -12,6 +12,7 @@
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseSet.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
@@ -65,6 +66,9 @@ class FunctionLifetimes {
     return param_lifetimes_[i];
   }
 
+  // Returns the number of function parameters (excluding the implicit `this).
+  const size_t GetNumParams() const { return param_lifetimes_.size(); }
+
   // Lifetimes for the return type.
   const ValueLifetimes& GetReturnLifetimes() const { return return_lifetimes_; }
 
@@ -73,6 +77,9 @@ class FunctionLifetimes {
     assert(this_lifetimes_.has_value());
     return *this_lifetimes_;
   }
+
+  // Returns whether this FunctionLifetimes represents a non-static method.
+  bool IsNonStaticMethod() const { return this_lifetimes_.has_value(); }
 
   // Creates lifetimes for a function with a given decl.
   // Only fails if lifetime_factory fails.
@@ -87,6 +94,20 @@ class FunctionLifetimes {
       const FunctionLifetimeFactory& lifetime_factory);
 
   // TODO(veluca): add support for pointer-to-member-fn.
+
+  // Creates a copy of this FunctionLifetimes with the same structure, but
+  // fresh, unrelated lifetimes independently of whether the lifetimes where
+  // identical in this FunctionLifetimes.
+  // TODO(veluca): remove this method once FunctionLifetimes keeps track of its
+  // own type, and replace it with an appropriate call to Create().
+  llvm::Expected<FunctionLifetimes> CreateCopy(
+      const LifetimeFactory& factory) const;
+
+  // Returns FunctionLifetimes for a method that this method overrides.
+  // Precondition: `IsNonStaticMethod()` is true,
+  // `method`'s signature is compatible with this FunctionLifetimes except for
+  // the `this` parameter.
+  FunctionLifetimes ForOverriddenMethod(const clang::CXXMethodDecl* method);
 
   // Checks if this FunctionLifetimes represents valid lifetimes for the given
   // Decl.

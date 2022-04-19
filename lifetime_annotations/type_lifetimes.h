@@ -109,6 +109,12 @@ class ValueLifetimes {
     return template_argument_lifetimes_.at(depth).at(index);
   }
 
+  // Returns the number of template nesting levels.
+  size_t GetNumTemplateNestingLevels() const {
+    assert(type_->isRecordType());
+    return template_argument_lifetimes_.size();
+  }
+
   // Returns the number of template arguments at a given nesting `depth` (see
   // `GetTemplateArgumentLifetimes` for details).
   size_t GetNumTemplateArgumentsAtDepth(size_t depth) const {

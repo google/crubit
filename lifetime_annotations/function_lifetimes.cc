@@ -63,6 +63,52 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForFunctionType(
   return Create(func, clang::QualType(), lifetime_factory);
 }
 
+llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateCopy(
+    const LifetimeFactory& factory) const {
+  FunctionLifetimes ret;
+
+  if (this_lifetimes_.has_value()) {
+    ValueLifetimes tmp;
+    if (llvm::Error err =
+            ValueLifetimes::Create(this_lifetimes_->Type(), factory)
+                .moveInto(tmp)) {
+      return std::move(err);
+    }
+    ret.this_lifetimes_ = std::move(tmp);
+  }
+
+  ret.param_lifetimes_.reserve(param_lifetimes_.size());
+  for (size_t i = 0; i < param_lifetimes_.size(); i++) {
+    ValueLifetimes tmp;
+    if (llvm::Error err =
+            ValueLifetimes::Create(param_lifetimes_[i].Type(), factory)
+                .moveInto(tmp)) {
+      return std::move(err);
+    }
+    ret.param_lifetimes_.push_back(std::move(tmp));
+  }
+
+  if (llvm::Error err =
+          ValueLifetimes::Create(return_lifetimes_.Type(), factory)
+              .moveInto(ret.return_lifetimes_)) {
+    return std::move(err);
+  }
+
+  return ret;
+}
+
+FunctionLifetimes FunctionLifetimes::ForOverriddenMethod(
+    const clang::CXXMethodDecl* method) {
+  FunctionLifetimes ret = *this;
+  assert(this_lifetimes_.has_value());
+  ret.this_lifetimes_ = ValueLifetimes::ForPointerLikeType(
+      method->getThisType(),
+      this_lifetimes_.value().GetPointeeLifetimes().GetFieldOrBaseLifetimes(
+          method->getThisObjectType(), {}));
+  assert(ret.IsValidForDecl(method));
+  return ret;
+}
+
 bool FunctionLifetimes::IsValidForDecl(const clang::FunctionDecl* function) {
   // TODO(veluca): also validate the types of the arguments, and/or the type of
   // the function itself.
