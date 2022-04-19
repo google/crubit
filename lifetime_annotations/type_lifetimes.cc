@@ -33,7 +33,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
   // TODO(mboehme):
@@ -616,13 +618,15 @@ llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
   return strlit->getString();
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 namespace llvm {
 
-bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
-    const devtools_rust::ValueLifetimes& lhs,
-    const devtools_rust::ValueLifetimes& rhs) {
+bool DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>::isEqual(
+    const clang::tidy::lifetimes::ValueLifetimes& lhs,
+    const clang::tidy::lifetimes::ValueLifetimes& rhs) {
   if (lhs.type_ != rhs.type_) {
     return false;
   }
@@ -631,7 +635,7 @@ bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
     return false;
   }
   if (lhs.pointee_lifetimes_ &&
-      !DenseMapInfo<devtools_rust::ObjectLifetimes>::isEqual(
+      !DenseMapInfo<clang::tidy::lifetimes::ObjectLifetimes>::isEqual(
           *lhs.pointee_lifetimes_, *rhs.pointee_lifetimes_)) {
     return false;
   }
@@ -662,11 +666,11 @@ bool DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
   return true;
 }
 
-unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
-    const devtools_rust::ValueLifetimes& value_lifetimes) {
+unsigned DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>::getHashValue(
+    const clang::tidy::lifetimes::ValueLifetimes& value_lifetimes) {
   llvm::hash_code hash = 0;
   if (value_lifetimes.pointee_lifetimes_) {
-    hash = DenseMapInfo<devtools_rust::ObjectLifetimes>::getHashValue(
+    hash = DenseMapInfo<clang::tidy::lifetimes::ObjectLifetimes>::getHashValue(
         *value_lifetimes.pointee_lifetimes_);
   }
   for (const auto& lifetimes_at_depth :
@@ -681,9 +685,9 @@ unsigned DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
        value_lifetimes.lifetime_parameters_by_name_.GetMapping()) {
     hash = hash_combine(hash, DenseMapInfo<llvm::StringRef>::getHashValue(
                                   lifetime_arg.first()));
-    hash =
-        hash_combine(hash, DenseMapInfo<devtools_rust::Lifetime>::getHashValue(
-                               lifetime_arg.second));
+    hash = hash_combine(
+        hash, DenseMapInfo<clang::tidy::lifetimes::Lifetime>::getHashValue(
+                  lifetime_arg.second));
   }
   return hash_combine(
       hash, DenseMapInfo<clang::QualType>::getHashValue(value_lifetimes.type_));

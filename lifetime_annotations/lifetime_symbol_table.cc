@@ -10,7 +10,9 @@
 
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 std::optional<Lifetime> LifetimeSymbolTable::LookupName(
     llvm::StringRef name) const {
@@ -112,4 +114,6 @@ void LifetimeSymbolTable::Rebind(llvm::StringRef name, Lifetime lifetime) {
   iter->second = lifetime;
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

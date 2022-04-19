@@ -13,7 +13,9 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // Context that is required to obtain lifetime annotations for a function.
 struct LifetimeAnnotationContext {
@@ -61,6 +63,8 @@ void AddLifetimeAnnotationHandlers(
 llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
     clang::TypeLoc type_loc);
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_ANNOTATIONS_H_

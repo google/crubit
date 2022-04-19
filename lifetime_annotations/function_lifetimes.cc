@@ -16,7 +16,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 namespace {
 // Track a bijective mapping between 2 sets of Lifetimes.
@@ -237,4 +239,6 @@ std::ostream& operator<<(std::ostream& os,
   return os << func_lifetimes.DebugString();
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

@@ -4,7 +4,9 @@
 
 #include "lifetime_annotations/pointee_type.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 clang::QualType PointeeType(clang::QualType type) {
   if (auto ptr_type = type->getAs<clang::PointerType>()) {
@@ -16,4 +18,6 @@ clang::QualType PointeeType(clang::QualType type) {
   return clang::QualType();
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

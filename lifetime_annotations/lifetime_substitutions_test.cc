@@ -6,7 +6,9 @@
 #include "testing/base/public/gmock.h"
 #include "testing/base/public/gunit.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 namespace {
 
 TEST(LifetimeSubstitutions, EmptySubstitution) {
@@ -94,4 +96,6 @@ TEST(LifetimeSubstitutions, SubstituteIsTransitive) {
 }
 
 }  // namespace
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

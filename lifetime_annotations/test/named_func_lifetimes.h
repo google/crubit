@@ -20,7 +20,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // Returns a human-readable representation of `func_lifetimes` that uses
 // alphabetic names for lifetimes.
@@ -89,6 +91,8 @@ testing::Matcher<NamedFuncLifetimes> LifetimesAre(NamedFuncLifetimes expected);
 testing::Matcher<NamedFuncLifetimes> LifetimesContain(
     NamedFuncLifetimes expected);
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_TEST_NAMED_FUNC_LIFETIMES_H_

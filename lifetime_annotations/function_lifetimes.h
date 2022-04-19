@@ -18,7 +18,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // Interface used to create lifetimes in FunctionLifetimes::CreateForDecl.
 // CreateReturnLifetime will be called with the ValueLifetimes that were created
@@ -160,6 +162,8 @@ struct FunctionAnalysisError {
 using FunctionLifetimesOrError =
     std::variant<FunctionAnalysisError, FunctionLifetimes>;
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_FUNCTION_LIFETIMES_H_

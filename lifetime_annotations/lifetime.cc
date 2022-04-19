@@ -6,7 +6,9 @@
 
 #include "third_party/absl/strings/str_cat.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 constexpr int INVALID_LIFETIME_ID_EMPTY = 0;
 constexpr int INVALID_LIFETIME_ID_TOMBSTONE = 1;
@@ -79,4 +81,6 @@ std::ostream& operator<<(std::ostream& os, Lifetime lifetime) {
   return os << lifetime.DebugString();
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

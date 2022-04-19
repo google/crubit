@@ -8,7 +8,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMap.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Hashing.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // A set of substitutions of a lifetime variable with another lifetime (variable
 // or constant).
@@ -34,6 +36,8 @@ class LifetimeSubstitutions {
   llvm::DenseMap<Lifetime, Lifetime> substitutions_;
 };
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_SUBSTITUTIONS_H_

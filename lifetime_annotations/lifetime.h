@@ -14,7 +14,9 @@
 
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Hashing.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // A lifetime variable or constant lifetime.
 class Lifetime {
@@ -81,26 +83,28 @@ class Lifetime {
 
 std::ostream& operator<<(std::ostream& os, Lifetime lifetime);
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 namespace llvm {
 
 template <>
-struct DenseMapInfo<devtools_rust::Lifetime, void> {
-  static devtools_rust::Lifetime getEmptyKey() {
-    return devtools_rust::Lifetime::InvalidEmpty();
+struct DenseMapInfo<clang::tidy::lifetimes::Lifetime, void> {
+  static clang::tidy::lifetimes::Lifetime getEmptyKey() {
+    return clang::tidy::lifetimes::Lifetime::InvalidEmpty();
   }
 
-  static devtools_rust::Lifetime getTombstoneKey() {
-    return devtools_rust::Lifetime::InvalidTombstone();
+  static clang::tidy::lifetimes::Lifetime getTombstoneKey() {
+    return clang::tidy::lifetimes::Lifetime::InvalidTombstone();
   }
 
-  static unsigned getHashValue(devtools_rust::Lifetime lifetime) {
+  static unsigned getHashValue(clang::tidy::lifetimes::Lifetime lifetime) {
     return llvm::hash_value(lifetime.id_);
   }
 
-  static bool isEqual(devtools_rust::Lifetime lhs,
-                      devtools_rust::Lifetime rhs) {
+  static bool isEqual(clang::tidy::lifetimes::Lifetime lhs,
+                      clang::tidy::lifetimes::Lifetime rhs) {
     return lhs.id_ == rhs.id_;
   }
 };
@@ -110,9 +114,9 @@ struct DenseMapInfo<devtools_rust::Lifetime, void> {
 namespace std {
 
 template <>
-struct less<devtools_rust::Lifetime> {
-  bool operator()(const devtools_rust::Lifetime& l1,
-                  const devtools_rust::Lifetime& l2) const {
+struct less<clang::tidy::lifetimes::Lifetime> {
+  bool operator()(const clang::tidy::lifetimes::Lifetime& l1,
+                  const clang::tidy::lifetimes::Lifetime& l2) const {
     return l1.id_ < l2.id_;
   }
 };

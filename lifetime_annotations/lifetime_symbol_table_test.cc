@@ -6,7 +6,9 @@
 
 #include "testing/base/public/gunit.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 namespace {
 
 TEST(LifetimeSymbolTableTest, Static) {
@@ -80,4 +82,6 @@ TEST(LifetimeSymbolTableTest, LookupLifetimeAndMaybeDeclare) {
 }
 
 }  // namespace
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

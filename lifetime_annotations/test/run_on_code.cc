@@ -9,7 +9,9 @@
 
 #include "lifetime_annotations/lifetime_annotations.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 namespace {
 
@@ -68,4 +70,6 @@ bool runOnCodeWithLifetimeHandlers(
       std::make_shared<clang::PCHContainerOperations>(), file_contents);
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

@@ -469,11 +469,11 @@ std::optional<IR::Item> Importer::ImportFunction(
                                  "Function templates are not supported yet");
   }
 
-  devtools_rust::LifetimeSymbolTable lifetime_symbol_table;
-  llvm::Expected<devtools_rust::FunctionLifetimes> lifetimes =
-      devtools_rust::GetLifetimeAnnotations(function_decl,
-                                            *invocation_.lifetime_context_,
-                                            &lifetime_symbol_table);
+  clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
+  llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
+      clang::tidy::lifetimes::GetLifetimeAnnotations(
+          function_decl, *invocation_.lifetime_context_,
+          &lifetime_symbol_table);
 
   std::vector<FuncParam> params;
   std::set<std::string> errors;
@@ -489,7 +489,7 @@ std::optional<IR::Item> Importer::ImportFunction(
 
     // non-static member functions receive an implicit `this` parameter.
     if (method_decl->isInstance()) {
-      std::optional<devtools_rust::ValueLifetimes> this_lifetimes;
+      std::optional<clang::tidy::lifetimes::ValueLifetimes> this_lifetimes;
       if (lifetimes) {
         this_lifetimes = lifetimes->GetThisLifetimes();
       }
@@ -511,7 +511,7 @@ std::optional<IR::Item> Importer::ImportFunction(
 
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = function_decl->getParamDecl(i);
-    std::optional<devtools_rust::ValueLifetimes> param_lifetimes;
+    std::optional<clang::tidy::lifetimes::ValueLifetimes> param_lifetimes;
     if (lifetimes) {
       param_lifetimes = lifetimes->GetParamLifetimes(i);
     }
@@ -560,7 +560,7 @@ std::optional<IR::Item> Importer::ImportFunction(
     }
   }
 
-  std::optional<devtools_rust::ValueLifetimes> return_lifetimes;
+  std::optional<clang::tidy::lifetimes::ValueLifetimes> return_lifetimes;
   if (lifetimes) {
     return_lifetimes = lifetimes->GetReturnLifetimes();
   }
@@ -572,13 +572,13 @@ std::optional<IR::Item> Importer::ImportFunction(
                            return_type.status().message()));
   }
 
-  llvm::DenseSet<devtools_rust::Lifetime> all_free_lifetimes;
+  llvm::DenseSet<clang::tidy::lifetimes::Lifetime> all_free_lifetimes;
   if (lifetimes) {
     all_free_lifetimes = lifetimes->AllFreeLifetimes();
   }
 
   std::vector<LifetimeName> lifetime_params;
-  for (devtools_rust::Lifetime lifetime : all_free_lifetimes) {
+  for (clang::tidy::lifetimes::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
     CRUBIT_CHECK(name.has_value());
@@ -817,7 +817,7 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
         enum_decl,
         "Forward declared enums without type specifiers are not supported");
   }
-  std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
+  std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> type =
       type_mapper_.ConvertQualType(cc_type, no_lifetimes);
   if (!type.ok()) {
@@ -892,7 +892,7 @@ std::optional<IR::Item> Importer::ImportTypedefName(
   std::optional<Identifier> identifier =
       GetTranslatedIdentifier(typedef_name_decl);
   CRUBIT_CHECK(identifier.has_value());  // This should never happen.
-  std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
+  std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type = type_mapper_.ConvertQualType(
       typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
@@ -965,7 +965,7 @@ absl::StatusOr<MappedType> Importer::TypeMapper::ConvertTypeDecl(
 
 absl::StatusOr<MappedType> Importer::TypeMapper::ConvertType(
     const clang::Type* type,
-    std::optional<devtools_rust::ValueLifetimes>& lifetimes,
+    std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) const {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
@@ -985,7 +985,8 @@ absl::StatusOr<MappedType> Importer::TypeMapper::ConvertType(
     if (const auto* func_type =
             pointee_type->getAs<clang::FunctionProtoType>()) {
       if (lifetime.has_value() &&
-          lifetime->value() != devtools_rust::Lifetime::Static().Id()) {
+          lifetime->value() !=
+              clang::tidy::lifetimes::Lifetime::Static().Id()) {
         return absl::UnimplementedError(
             absl::StrCat("Function pointers with non-'static lifetimes are "
                          "not supported: ",
@@ -1078,7 +1079,7 @@ absl::StatusOr<MappedType> Importer::TypeMapper::ConvertType(
 
 absl::StatusOr<MappedType> Importer::TypeMapper::ConvertQualType(
     clang::QualType qual_type,
-    std::optional<devtools_rust::ValueLifetimes>& lifetimes,
+    std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) const {
   std::string type_string = qual_type.getAsString();
   absl::StatusOr<MappedType> type =
@@ -1112,7 +1113,7 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
   std::vector<Field> fields;
   const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    std::optional<devtools_rust::ValueLifetimes> no_lifetimes;
+    std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
     auto type =
         temp_import_mapper.ConvertQualType(field_decl->getType(), no_lifetimes);
     if (!type.ok()) {

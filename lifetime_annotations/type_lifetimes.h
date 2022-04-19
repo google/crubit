@@ -22,7 +22,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // Returns a lifetime in some human-readable format.
 using LifetimeFormatter = std::function<std::string(Lifetime)>;
@@ -178,7 +180,7 @@ class ValueLifetimes {
   // string_view (this mapping is tracked by lifetime_parameters_by_name_).
   LifetimeSymbolTable lifetime_parameters_by_name_;
 
-  friend class llvm::DenseMapInfo<devtools_rust::ValueLifetimes>;
+  friend class llvm::DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>;
 };
 
 // Represents all the lifetimes of an object. The object itself always has
@@ -252,7 +254,7 @@ class ObjectLifetimes {
       clang::QualType type, llvm::SmallVector<std::string> type_lifetime_args,
       llvm::StringRef object_lifetime_parameter) const;
 
-  friend class llvm::DenseMapInfo<devtools_rust::ObjectLifetimes>;
+  friend class llvm::DenseMapInfo<clang::tidy::lifetimes::ObjectLifetimes>;
   Lifetime lifetime_;
   ValueLifetimes value_lifetimes_;
 };
@@ -274,58 +276,63 @@ GetTemplateArgs(clang::QualType type);
 llvm::Expected<llvm::StringRef> EvaluateAsStringLiteral(
     const clang::Expr* expr, const clang::ASTContext& ast_context);
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 namespace llvm {
 
 template <>
-struct DenseMapInfo<devtools_rust::ValueLifetimes> {
-  static devtools_rust::ValueLifetimes getEmptyKey() {
-    return devtools_rust::ValueLifetimes(
+struct DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes> {
+  static clang::tidy::lifetimes::ValueLifetimes getEmptyKey() {
+    return clang::tidy::lifetimes::ValueLifetimes(
         DenseMapInfo<clang::QualType>().getEmptyKey());
   }
 
-  static devtools_rust::ValueLifetimes getTombstoneKey() {
-    return devtools_rust::ValueLifetimes(
+  static clang::tidy::lifetimes::ValueLifetimes getTombstoneKey() {
+    return clang::tidy::lifetimes::ValueLifetimes(
         DenseMapInfo<clang::QualType>().getTombstoneKey());
   }
 
-  static bool isEqual(const devtools_rust::ValueLifetimes& lhs,
-                      const devtools_rust::ValueLifetimes& rhs);
+  static bool isEqual(const clang::tidy::lifetimes::ValueLifetimes& lhs,
+                      const clang::tidy::lifetimes::ValueLifetimes& rhs);
 
   static unsigned getHashValue(
-      const devtools_rust::ValueLifetimes& value_lifetimes);
+      const clang::tidy::lifetimes::ValueLifetimes& value_lifetimes);
 };
 
 template <>
-struct DenseMapInfo<devtools_rust::ObjectLifetimes> {
-  static devtools_rust::ObjectLifetimes getEmptyKey() {
-    return devtools_rust::ObjectLifetimes(
-        DenseMapInfo<devtools_rust::Lifetime>().getEmptyKey(),
-        DenseMapInfo<devtools_rust::ValueLifetimes>().getEmptyKey());
+struct DenseMapInfo<clang::tidy::lifetimes::ObjectLifetimes> {
+  static clang::tidy::lifetimes::ObjectLifetimes getEmptyKey() {
+    return clang::tidy::lifetimes::ObjectLifetimes(
+        DenseMapInfo<clang::tidy::lifetimes::Lifetime>().getEmptyKey(),
+        DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>().getEmptyKey());
   }
 
-  static devtools_rust::ObjectLifetimes getTombstoneKey() {
-    return devtools_rust::ObjectLifetimes(
-        DenseMapInfo<devtools_rust::Lifetime>().getTombstoneKey(),
-        DenseMapInfo<devtools_rust::ValueLifetimes>().getTombstoneKey());
+  static clang::tidy::lifetimes::ObjectLifetimes getTombstoneKey() {
+    return clang::tidy::lifetimes::ObjectLifetimes(
+        DenseMapInfo<clang::tidy::lifetimes::Lifetime>().getTombstoneKey(),
+        DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>()
+            .getTombstoneKey());
   }
 
-  static bool isEqual(const devtools_rust::ObjectLifetimes& lhs,
-                      const devtools_rust::ObjectLifetimes& rhs) {
-    return DenseMapInfo<devtools_rust::Lifetime>::isEqual(lhs.lifetime_,
-                                                          rhs.lifetime_) &&
-           DenseMapInfo<devtools_rust::ValueLifetimes>::isEqual(
+  static bool isEqual(const clang::tidy::lifetimes::ObjectLifetimes& lhs,
+                      const clang::tidy::lifetimes::ObjectLifetimes& rhs) {
+    return DenseMapInfo<clang::tidy::lifetimes::Lifetime>::isEqual(
+               lhs.lifetime_, rhs.lifetime_) &&
+           DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>::isEqual(
                lhs.value_lifetimes_, rhs.value_lifetimes_);
   }
 
   static unsigned getHashValue(
-      const devtools_rust::ObjectLifetimes& object_lifetimes) {
-    unsigned hash = DenseMapInfo<devtools_rust::Lifetime>::getHashValue(
-        object_lifetimes.lifetime_);
+      const clang::tidy::lifetimes::ObjectLifetimes& object_lifetimes) {
+    unsigned hash =
+        DenseMapInfo<clang::tidy::lifetimes::Lifetime>::getHashValue(
+            object_lifetimes.lifetime_);
     return hash_combine(
-        hash, DenseMapInfo<devtools_rust::ValueLifetimes>::getHashValue(
-                  object_lifetimes.value_lifetimes_));
+        hash,
+        DenseMapInfo<clang::tidy::lifetimes::ValueLifetimes>::getHashValue(
+            object_lifetimes.value_lifetimes_));
   }
 };
 

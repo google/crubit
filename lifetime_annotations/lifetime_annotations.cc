@@ -32,7 +32,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 namespace {
 
 llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
@@ -324,4 +326,6 @@ llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
   return args;
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

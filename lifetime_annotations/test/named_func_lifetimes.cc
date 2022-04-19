@@ -10,7 +10,9 @@
 
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMap.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 std::string NameLifetimes(const FunctionLifetimes& func_lifetimes) {
   LifetimeSymbolTable symbol_table;
@@ -133,4 +135,6 @@ testing::Matcher<NamedFuncLifetimes> LifetimesContain(
   return LifetimesContainMatcher(std::move(expected));
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

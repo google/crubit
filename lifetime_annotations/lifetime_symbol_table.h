@@ -13,7 +13,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringMap.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // One-to-one mapping between lifetime names and the corresponding lifetimes.
 class LifetimeSymbolTable {
@@ -64,6 +66,8 @@ class LifetimeSymbolTable {
   int next_name_index_ = 0;
 };
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_LIFETIME_SYMBOL_TABLE_H_

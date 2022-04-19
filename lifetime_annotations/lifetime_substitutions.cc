@@ -9,7 +9,9 @@
 #include "third_party/absl/strings/str_join.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 void LifetimeSubstitutions::Add(Lifetime variable, Lifetime substitution) {
   assert(variable.IsVariable());
@@ -47,4 +49,6 @@ void LifetimeSubstitutions::Dump() const {
   llvm::errs() << absl::StrJoin(parts, ", ") << "\n";
 }
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

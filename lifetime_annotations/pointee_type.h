@@ -7,7 +7,9 @@
 
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 // If `type` is a pointer or reference type, returns the type of its pointee.
 // Otherwise, returns a null type.
@@ -18,6 +20,8 @@ namespace devtools_rust {
 // lifetimes for it".
 clang::QualType PointeeType(clang::QualType type);
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_

@@ -47,7 +47,8 @@ class Importer {
         : target_(target),
           entry_headers_(entry_headers),
           lifetime_context_(
-              std::make_shared<devtools_rust::LifetimeAnnotationContext>()),
+              std::make_shared<
+                  clang::tidy::lifetimes::LifetimeAnnotationContext>()),
           header_targets_(header_targets) {
       // Caller should verify that the inputs are non-empty.
       CRUBIT_CHECK(!entry_headers_.empty());
@@ -72,7 +73,7 @@ class Importer {
     // paths in the format suitable for a google3-relative quote include).
     const absl::Span<const HeaderName> entry_headers_;
 
-    const std::shared_ptr<devtools_rust::LifetimeAnnotationContext>
+    const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
         lifetime_context_;
 
     // The main output of the import process
@@ -104,11 +105,11 @@ class Importer {
     // nullability annotations.
     absl::StatusOr<MappedType> ConvertQualType(
         clang::QualType qual_type,
-        std::optional<devtools_rust::ValueLifetimes>& lifetimes,
+        std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
         bool nullable = true) const;
     absl::StatusOr<MappedType> ConvertType(
         const clang::Type* type,
-        std::optional<devtools_rust::ValueLifetimes>& lifetimes,
+        std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
         bool nullable) const;
     absl::StatusOr<MappedType> ConvertTypeDecl(
         const clang::TypeDecl* decl) const;

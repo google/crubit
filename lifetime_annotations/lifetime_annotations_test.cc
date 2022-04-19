@@ -15,7 +15,9 @@
 #include "third_party/llvm/llvm-project/clang/include/clang/ASTMatchers/ASTMatchers.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 namespace {
 
 using testing::StartsWith;
@@ -465,4 +467,6 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_ReturnFunctionPtr) {
 }
 
 }  // namespace
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

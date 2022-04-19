@@ -14,7 +14,9 @@
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
 
-namespace devtools_rust {
+namespace clang {
+namespace tidy {
+namespace lifetimes {
 
 bool runOnCodeWithLifetimeHandlers(
     llvm::StringRef code,
@@ -24,6 +26,8 @@ bool runOnCodeWithLifetimeHandlers(
     const clang::tooling::FileContentMappings& file_contents =
         clang::tooling::FileContentMappings());
 
-}  // namespace devtools_rust
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang
 
 #endif  // CRUBIT_LIFETIME_ANNOTATIONS_TEST_RUN_ON_CODE_H_
