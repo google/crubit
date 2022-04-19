@@ -79,7 +79,11 @@ fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()>
 }
 
 fn is_ident_or_literal(tt: &TokenTree) -> bool {
-    matches!(tt, TokenTree::Ident(_) | TokenTree::Literal(_))
+    match tt {
+        TokenTree::Ident(id) if id == "__NEWLINE__" => false,
+        TokenTree::Ident(_) | TokenTree::Literal(_) => true,
+        _ => false,
+    }
 }
 
 fn rustfmt(input: String) -> Result<String> {
@@ -158,7 +162,7 @@ mod tests {
     #[test]
     fn test_newline_token() -> Result<()> {
         let token_stream = quote! { a __NEWLINE__ b };
-        assert_eq!(tokens_to_string(token_stream)?, "a \nb");
+        assert_eq!(tokens_to_string(token_stream)?, "a\nb");
         Ok(())
     }
 
@@ -220,7 +224,7 @@ mod tests {
 
     #[test]
     fn test_special_tokens_in_groups() -> Result<()> {
-        assert_eq!(tokens_to_string(quote! {{ a __NEWLINE__ b }})?, "{ a \nb }");
+        assert_eq!(tokens_to_string(quote! {{ a __NEWLINE__ b }})?, "{ a\nb }");
         assert_eq!(tokens_to_string(quote! {(a __COMMENT__ "b")})?, "(a // b\n)");
         assert_eq!(tokens_to_string(quote! {[__HASH_TOKEN__ a]})?, "[#a]");
         Ok(())
