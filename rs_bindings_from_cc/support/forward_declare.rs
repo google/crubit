@@ -73,6 +73,9 @@
 //! `Box`, `Rc`, and `Arc` are excluded, because they require knowledge of the
 //! `Drop` impl, and incomplete types do not know how to drop.
 //!
+//! Additionally, a `Pin` can be constructed from a mut reference and vice
+//! versa, if the non-pinned referent is `Unpin`.
+//!
 //! ## Forward Declaring
 //!
 //! To forward declare a type which supports forward declarations, use the
@@ -231,14 +234,14 @@ pub trait IncompleteCast<T> {
     fn incomplete_cast(self) -> T;
 }
 
-/// Marker trait: pointers/references to this type may be safely transmuted to
-/// pointers/references to `T`.
+/// Marker trait: `T : IncompleteTransmute<U>` means that pointers/references to
+/// `T` may be safely transmuted to pointers/references to `U`.
 ///
 /// In particular, this is implemented by default for any complete type `T` and
 /// its `Incomplete` types. However, it may also be used for compound data types
 /// which can themselves contain complete/incomplete types.
 ///
-/// Safety: this allows e.g. `&Self` to be transmuted to `&T`, and vice versa,
+/// Safety: this allows e.g. `&Self` to be transmuted to `&Target`, and vice versa,
 /// in safe code. The safety requirements for `std::mem::transmute` apply.
 #[doc(hidden)]
 pub unsafe trait IncompleteTransmute<Target: ?Sized> {}
@@ -307,17 +310,18 @@ where
 /// If `T` is `IntoIncomplete<U>`, you can transmute from `Pin<&T>` to
 /// `Pin<&U>`. You can also, for any such U, transmute from `Pin<&U>` to `&U`.
 /// This blanket impl generalizes the second transmute: you can also transmute
-/// from `Pin<&mut T>` straight to `&mut U`.
-//
-// Safety: `Pin<&'a T>` allows getting the shared reference out of the pin, and
-// `Pin` is `repr(transparent)`. (For example, you can copy it and call
-// `get_ref()`, which is equivalent to the transmute.)
+/// from `Pin<&T>` straight to `&U`.
+///
+/// Safety: `Pin<&'a T>` allows getting the shared reference out of the pin, and
+/// `Pin` is `repr(transparent)`. (For example, you can copy it and call
+/// `get_ref()`, which is equivalent to the transmute.)
 unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for Pin<&'a T> where
     T: IncompleteTransmute<U>
 {
 }
 
-/// `Pin::into_inner()` transmute.
+/// `Pin::into_inner()` transmute: transmute a pinned reference into a
+/// `mut` reference.
 ///
 /// If `T` is `IntoIncomplete<U>`, you can transmute from `Pin<&mut T>` to
 /// `Pin<&mut U>`. If `U` is `Unpin`, then you could also transmute from
@@ -326,22 +330,47 @@ unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for Pin<&'a T> 
 ///
 /// Since this is equivalent to `Pin::into_inner()`, it requires `Unpin`.
 //
-// Note: ideally we'd blanket impl the conversion to allow unpinning any smart
-// pointer type, and not only mut references, but this causes coherence issues,
-// because `Pin` itself is a smart pointer. I could not think of a workaround
-// that did not require specialization, other than to hardcode the set of
-// pointer types supported.
-//
-// Since we're hardcoding a set of pointer types above *anyway*, we just need to
-// keep the list of unpinnable types in sync with the list of "pointers to
-// transmutable things" above.
-//
-// Safety: since we require `Unpin`, `Pin` does not restrict getting the mut
-// reference out of the pin, and is `repr(transparent)`
+/// Note: ideally we'd blanket impl the conversion to allow unpinning any smart
+/// pointer type, and not only mut references, but this causes coherence issues,
+/// because `Pin` itself is a smart pointer. I could not think of a workaround
+/// that did not require specialization, other than to hardcode the set of
+/// pointer types supported.
+///
+/// Since we're hardcoding a set of pointer types above *anyway*, we just need
+/// to keep the list of unpinnable types in sync with the list of "pointers to
+/// transmutable things" above.
+///
+/// For similar coherence reasons, we must only have an `Unpin` constraint on
+/// one of the references, not both. As the pinned type is very unlikely to be
+/// `Unpin` (why would you pin an `Unpin` type?), it is more useful to request
+/// it of the unpinned reference.
+///
+/// Safety: since we require `Unpin`, `Pin` does not restrict getting the mut
+/// reference out of the pin, and is `repr(transparent)`
 unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a mut U> for Pin<&'a mut T>
 where
     T: IncompleteTransmute<U>,
     U: Unpin,
+{
+}
+
+/// `Pin::get_ref()` transmute: transmute a pinned mut reference into a
+/// non-`mut` reference.
+///
+/// Safety: `Pin` does not restrict getting the reference out of the pin, and is
+/// `repr(transparent)`.
+unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for Pin<&'a mut T> where
+    T: IncompleteTransmute<U>
+{
+}
+
+/// `Pin::new()` transmute: transmute a mut reference into a pinned mut
+/// reference.
+///
+/// Safety: If `T` is `Unpin`, you could freely call `Pin::new()` to obtain a
+/// `Pin<&mut T>`. This is equivalent to a transmute, which is therefore safe.
+unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<Pin<&'a mut U>> for &'a mut T where
+    T: Unpin + IncompleteTransmute<U>
 {
 }
 

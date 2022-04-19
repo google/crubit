@@ -45,42 +45,58 @@ fn test_conversions() {
         &*x as *const _ as *const u8 as usize
     }
 
+    let loc = ptr_location(&complete);
+
+    // & -> &
     {
         let incomplete_ref: &MyTypeIncomplete = (&complete).incomplete_cast();
         let complete_ref: &MyType = incomplete_ref.incomplete_cast();
         assert_eq!(ptr_location(incomplete_ref), ptr_location(complete_ref));
     }
 
+    // Pin<&> <-> Pin<&>
     {
         let incomplete_pin_ref: ::std::pin::Pin<&MyTypeIncomplete> =
             ::std::pin::Pin::new(&complete).incomplete_cast();
         let complete_pin_ref: ::std::pin::Pin<&MyType> = incomplete_pin_ref.incomplete_cast();
-        assert_eq!(ptr_location(incomplete_pin_ref), ptr_location(complete_pin_ref));
+        assert_eq!(ptr_location(incomplete_pin_ref), loc);
+        assert_eq!(ptr_location(complete_pin_ref), loc);
         let complete_unpinned_ref: &MyType = incomplete_pin_ref.incomplete_cast();
-        assert_eq!(ptr_location(incomplete_pin_ref), ptr_location(complete_unpinned_ref));
+        assert_eq!(ptr_location(complete_unpinned_ref), loc);
     }
 
+    // &mut -> &mut
     {
         let incomplete_mut: &mut MyTypeIncomplete = (&mut complete).incomplete_cast();
-        let loc = ptr_location(&*incomplete_mut);
+        assert_eq!(ptr_location(&*incomplete_mut), loc);
         let complete_mut: &mut MyType = incomplete_mut.incomplete_cast();
         assert_eq!(ptr_location(complete_mut), loc);
     }
 
+    // Pin<&mut> <-> Pin<&mut>
     {
         let incomplete_pin_mut: ::std::pin::Pin<&mut MyTypeIncomplete> =
             ::std::pin::Pin::new(&mut complete).incomplete_cast();
-        let loc = ptr_location(&*incomplete_pin_mut);
+        assert_eq!(ptr_location(&*incomplete_pin_mut), loc);
         let complete_pin_mut: ::std::pin::Pin<&mut MyType> = incomplete_pin_mut.incomplete_cast();
         assert_eq!(ptr_location(complete_pin_mut), loc);
     }
 
     {
-        let incomplete_pin_mut: ::std::pin::Pin<&mut MyTypeIncomplete> =
-            ::std::pin::Pin::new(&mut complete).incomplete_cast();
-        let loc = ptr_location(&*incomplete_pin_mut);
-        let complete_unpinned_mut: &mut MyType = incomplete_pin_mut.incomplete_cast();
-        assert_eq!(ptr_location(complete_unpinned_mut), loc);
+        // &mut -> Pin<&mut>
+        let mut incomplete_pin_mut: ::std::pin::Pin<&mut MyTypeIncomplete> =
+            (&mut complete).incomplete_cast();
+        assert_eq!(ptr_location(&*incomplete_pin_mut), loc);
+        // Pin<&mut> -> &mut
+        {
+            let complete_unpinned_mut: &mut MyType = incomplete_pin_mut.as_mut().incomplete_cast();
+            assert_eq!(ptr_location(complete_unpinned_mut), loc);
+        }
+        // Pin<&mut> -> &
+        {
+            let complete_unpinned_ref: &MyType = incomplete_pin_mut.incomplete_cast();
+            assert_eq!(ptr_location(complete_unpinned_ref), loc);
+        }
     }
 
     /// Typeless location&length info for a slice.
