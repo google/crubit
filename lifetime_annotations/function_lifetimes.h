@@ -113,12 +113,6 @@ class FunctionLifetimes {
   // Decl.
   bool IsValidForDecl(const clang::FunctionDecl* function);
 
-  // Returns if the two FunctionLifetimes have the same structures, without
-  // requiring them to have the same exact Lifetimes. They have the same
-  // structure if unique vs reoccuring Lifetimes in `this` and `other` are found
-  // in the same positions.
-  bool IsIsomorphic(const FunctionLifetimes& other) const;
-
   // Returns a human-readable representation of `func_lifetimes`. Formats
   // lifetimes using `formatter`, or Lifetime::DebugString() if `formatter` is
   // null.

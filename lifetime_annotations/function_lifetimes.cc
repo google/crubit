@@ -20,31 +20,6 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
-namespace {
-// Track a bijective mapping between 2 sets of Lifetimes.
-class LifetimeBijection {
- public:
-  // Returns true if the bidirectional mapping between lifetimes could be added
-  // to the bijection, or is already present. Returns false if the lifetimes
-  // conflict with other mappings already recorded in the bijection.
-  bool Add(Lifetime lifetime_in_a, Lifetime lifetime_in_b) {
-    auto [a_to_b_iter, a_to_b_inserted] =
-        a_to_b_.try_emplace(lifetime_in_a, lifetime_in_b);
-    if (!a_to_b_inserted) {
-      return a_to_b_iter->second == lifetime_in_b;
-    }
-    auto [_, b_to_a_inserted] =
-        b_to_a_.try_emplace(lifetime_in_b, lifetime_in_a);
-    return b_to_a_inserted;
-  }
-
- private:
-  llvm::DenseMap<Lifetime, Lifetime> a_to_b_;
-  llvm::DenseMap<Lifetime, Lifetime> b_to_a_;
-};
-
-}  // namespace
-
 llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForDecl(
     const clang::FunctionDecl* func,
     const FunctionLifetimeFactory& lifetime_factory) {
@@ -212,33 +187,6 @@ void FunctionLifetimes::Traverse(
     std::function<void(const Lifetime&, Variance)> visitor) const {
   const_cast<FunctionLifetimes*>(this)->Traverse(
       [visitor](Lifetime& l, Variance v) { visitor(l, v); });
-}
-
-bool FunctionLifetimes::IsIsomorphic(const FunctionLifetimes& other) const {
-  // We expect this function to only be called for 2 FunctionLifetime objects
-  // that are for the same function, thus the number of parameters, and the
-  // number of Lifetimes for each type, should always match.
-  assert(param_lifetimes_.size() == other.param_lifetimes_.size());
-  assert(this_lifetimes_.has_value() == other.this_lifetimes_.has_value());
-
-  // Map of equivalent lifetimes between `*this` and `other`.
-  LifetimeBijection bijection;
-
-  llvm::SmallVector<Lifetime> my_lifetimes;
-  Traverse(
-      [&my_lifetimes](Lifetime l, Variance) { my_lifetimes.push_back(l); });
-  llvm::SmallVector<Lifetime> other_lifetimes;
-  other.Traverse([&other_lifetimes](Lifetime l, Variance) {
-    other_lifetimes.push_back(l);
-  });
-
-  assert(my_lifetimes.size() == other_lifetimes.size());
-  for (size_t i = 0; i < my_lifetimes.size(); ++i) {
-    if (!bijection.Add(my_lifetimes[i], other_lifetimes[i])) {
-      return false;
-    }
-  }
-  return true;
 }
 
 std::string FunctionLifetimes::DebugString(LifetimeFormatter formatter) const {
