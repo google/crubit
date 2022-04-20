@@ -8,24 +8,19 @@
 
 struct UnpinStruct final {
   UnpinStruct() = default;
+  UnpinStruct(int value) : field(value) {}
   int field = 0;
 };
 
 struct NonunpinStruct /* non-final */ {
   NonunpinStruct() = default;
+  NonunpinStruct(int value) : field(value) {}
   int field = 0;
 };
 
-inline int ReadCompleteUnpinStruct(const UnpinStruct& s) { return s.field; }
-inline void WriteCompleteUnpinStruct(UnpinStruct& s, int value) {
-  s.field = value;
-}
-
-inline int ReadCompleteNonunpinStruct(const NonunpinStruct& s) {
-  return s.field;
-}
-inline void WriteCompleteNonunpinStruct(NonunpinStruct& s, int value) {
-  s.field = value;
-}
+int ReadUnpinStruct(const UnpinStruct& s);
+void WriteUnpinStruct(UnpinStruct& s, int value);
+int ReadNonunpinStruct(const NonunpinStruct& s);
+void WriteNonunpinStruct(NonunpinStruct& s, int value);
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_FORWARD_DECLARATIONS_DEFINITION_H_

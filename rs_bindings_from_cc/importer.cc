@@ -718,12 +718,23 @@ std::optional<IR::Item> Importer::ImportRecord(
     return ImportUnsupportedItem(record_decl,
                                  "Nested classes are not supported yet");
   }
-  // Make sure the record has a definition that we'll be able to call
-  // ASTContext::getASTRecordLayout() on.
-  record_decl = record_decl->getDefinition();
-  if (!record_decl || record_decl->isInvalidDecl() ||
-      !record_decl->isCompleteDefinition()) {
+  if (record_decl->isInvalidDecl()) {
     return std::nullopt;
+  }
+
+  std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
+  if (!record_name.has_value()) {
+    return std::nullopt;
+  }
+
+  if (clang::CXXRecordDecl* complete = record_decl->getDefinition()) {
+    record_decl = complete;
+  } else {
+    CRUBIT_CHECK(!record_decl->isCompleteDefinition());
+    type_mapper_.Insert(record_decl);
+    return IncompleteRecord{.cc_name = std::string(record_name->Ident()),
+                            .id = GenerateItemId(record_decl),
+                            .owning_target = GetOwningTarget(record_decl)};
   }
 
   // To compute the memory layout of the record, it needs to be a concrete type,
@@ -751,11 +762,6 @@ std::optional<IR::Item> Importer::ImportRecord(
     // classes is more-aligned than any of the fields, but it is simpler do it
     // whenever there are any base classes at all.
     override_alignment = true;
-  }
-
-  std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
-  if (!record_name.has_value()) {
-    return std::nullopt;
   }
 
   absl::StatusOr<std::vector<Field>> fields = ImportFields(record_decl);

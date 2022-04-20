@@ -359,6 +359,18 @@ llvm::json::Value BaseClass::ToJson() const {
   };
 }
 
+llvm::json::Value IncompleteRecord::ToJson() const {
+  llvm::json::Object record{
+      {"cc_name", cc_name},
+      {"id", id},
+      {"owning_target", owning_target},
+  };
+
+  return llvm::json::Object{
+      {"IncompleteRecord", std::move(record)},
+  };
+}
+
 llvm::json::Value Record::ToJson() const {
   std::vector<llvm::json::Value> json_item_ids;
   json_item_ids.reserve(child_item_ids.size());

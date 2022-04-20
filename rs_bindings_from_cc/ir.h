@@ -575,6 +575,14 @@ struct Record {
   std::vector<ItemId> child_item_ids;
 };
 
+// A forward-declared record (e.g. `struct Foo;`)
+struct IncompleteRecord {
+  llvm::json::Value ToJson() const;
+  std::string cc_name;
+  ItemId id;
+  BazelLabel owning_target;
+};
+
 struct Enumerator {
   llvm::json::Value ToJson() const;
 
@@ -677,8 +685,8 @@ struct IR {
   std::vector<HeaderName> used_headers;
   BazelLabel current_target;
 
-  using Item = std::variant<Func, Record, Enum, TypeAlias, UnsupportedItem,
-                            Comment, Namespace>;
+  using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,
+                            UnsupportedItem, Comment, Namespace>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
 };

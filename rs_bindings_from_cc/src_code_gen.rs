@@ -856,6 +856,17 @@ fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
     Ok(!ty_implements_copy)
 }
 
+/// Generates Rust source code for a given incomplete record declaration.
+fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<TokenStream> {
+    let ident = make_rs_ident(&incomplete_record.cc_name);
+    let name = &incomplete_record.cc_name;
+    Ok(quote! {
+        forward_declare::forward_declare!(
+            pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#name)
+        );
+    })
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(
@@ -1290,6 +1301,18 @@ fn generate_item(
                 }
             }
         },
+        Item::IncompleteRecord(incomplete_record) => {
+            if !ir.is_current_target(&incomplete_record.owning_target)
+                && !ir.is_stdlib_target(&incomplete_record.owning_target)
+            {
+                GeneratedItem { ..Default::default() }
+            } else {
+                GeneratedItem {
+                    item: generate_incomplete_record(incomplete_record)?,
+                    ..Default::default()
+                }
+            }
+        }
         Item::Record(record) => {
             if !ir.is_current_target(&record.owning_target)
                 && !ir.is_stdlib_target(&record.owning_target)
@@ -1323,9 +1346,7 @@ fn generate_item(
         Item::Comment(comment) => {
             GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
         }
-        Item::Namespace(namespace) => {
-            generate_namespace(namespace, ir, overloaded_funcs)?
-        }
+        Item::Namespace(namespace) => generate_namespace(namespace, ir, overloaded_funcs)?,
     };
 
     Ok(generated_item)
@@ -1507,6 +1528,14 @@ enum RsTypeKind<'ir> {
         return_type: Box<RsTypeKind<'ir>>,
         param_types: Vec<RsTypeKind<'ir>>,
     },
+    /// An incomplete record type.
+    IncompleteRecord {
+        incomplete_record: &'ir IncompleteRecord,
+
+        /// The imported crate this comes from, or None if the current crate.
+        crate_ident: Option<Ident>,
+    },
+    /// A complete record type.
     Record {
         record: &'ir Record,
         /// The imported crate this comes from, or None if the current crate.
@@ -1555,6 +1584,10 @@ impl<'ir> RsTypeKind<'ir> {
                     ty
                 );
                 match ir.item_for_type(ty)? {
+                    Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
+                        incomplete_record,
+                        crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, ir),
+                    },
                     Item::Record(record) => RsTypeKind::new_record(record, ir),
                     Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
                         type_alias,
@@ -1630,6 +1663,7 @@ impl<'ir> RsTypeKind<'ir> {
     /// Returns true if the type is known to be `Unpin`, false otherwise.
     pub fn is_unpin(&self) -> bool {
         match self {
+            RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, .. } => record.is_unpin(),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_unpin(),
             _ => true,
@@ -1722,6 +1756,7 @@ impl<'ir> RsTypeKind<'ir> {
             RsTypeKind::Reference { mutability: Mutability::Const, .. } => true,
             RsTypeKind::Reference { mutability: Mutability::Mut, .. } => false,
             RsTypeKind::RvalueReference { .. } => false,
+            RsTypeKind::IncompleteRecord { .. } => false,
             RsTypeKind::Record { record, .. } => should_derive_copy(record),
             RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.implements_copy(),
             RsTypeKind::Other { type_args, .. } => {
@@ -1823,6 +1858,11 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 let return_frag = return_type.format_as_return_type_fragment();
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
+            RsTypeKind::IncompleteRecord { incomplete_record, crate_ident } => {
+                let record_ident = make_rs_ident(&incomplete_record.cc_name);
+                let crate_ident = crate_ident.iter();
+                quote! {#(#crate_ident::)* #record_ident}
+            }
             RsTypeKind::Record { record, crate_ident } => {
                 let record_ident = make_rs_ident(&record.rs_name);
                 let crate_ident = crate_ident.iter();
@@ -1861,7 +1901,9 @@ impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
             None => None,
             Some(curr) => {
                 match curr {
-                    RsTypeKind::Unit | RsTypeKind::Record { .. } => (),
+                    RsTypeKind::Unit
+                    | RsTypeKind::IncompleteRecord { .. }
+                    | RsTypeKind::Record { .. } => {}
                     RsTypeKind::Pointer { pointee, .. } => self.todo.push(pointee),
                     RsTypeKind::Reference { referent, .. } => self.todo.push(referent),
                     RsTypeKind::RvalueReference { referent, .. } => self.todo.push(referent),
@@ -1997,8 +2039,8 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
         record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
             let field_ident = format_cc_ident(&field.identifier.identifier);
             let offset = Literal::usize_unsuffixed(field.offset);
-            // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the offset in
-            // bytes, so we need to convert.
+            // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
+            // offset in bytes, so we need to convert.
             quote! {
                 static_assert(CRUBIT_OFFSET_OF(#field_ident, class #record_ident) * 8 == #offset);
             }
@@ -3127,7 +3169,8 @@ mod tests {
                     field2: [rust_std::mem::MaybeUninit<u8>; 2],
                     pub z: i16,
                 }
-            });
+            }
+        );
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4776,6 +4819,23 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_forward_declared() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct ForwardDeclared;"#,
+        )?;
+        let rs_api = generate_rs_api(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                forward_declare::forward_declare!(pub ForwardDeclared = forward_declare::symbol!("ForwardDeclared"));
+            }
+        );
+        assert_rs_not_matches!(rs_api, quote! {struct ForwardDeclared});
         Ok(())
     }
 

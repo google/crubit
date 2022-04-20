@@ -12,6 +12,8 @@
 
 struct SomeStruct final {};
 
+struct ForwardDeclaredStruct;
+
 union EmptyUnion {};
 
 struct FieldTypeTestStruct final {
@@ -79,6 +81,8 @@ struct FieldTypeTestStruct final {
   // TODO(b/226580208): Uncomment when these don't cause struct import to fail.
   // SomeStruct&& struct_rvalue_ref_field;
   // const SomeStruct&& const_struct_rvalue_ref_field;
+
+  ForwardDeclaredStruct* forward_declared_ptr_field;
 };
 
 union NonEmptyUnion {

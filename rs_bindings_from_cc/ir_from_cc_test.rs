@@ -1469,6 +1469,8 @@ fn test_function_has_item_id() {
 fn test_top_level_items() {
     let ir = ir_from_cc(
         r#"
+        struct ForwardDeclaredTopLevelStruct;
+        struct TopLevelStruct;
         struct TopLevelStruct {};
         // Top level comment
 
@@ -1490,6 +1492,11 @@ fn test_top_level_items() {
     assert_items_match!(
         top_level_items,
         vec![
+            quote! {
+              IncompleteRecord {
+                ... cc_name: "ForwardDeclaredTopLevelStruct" ...
+              }
+            },
             quote! {
               Record {
                 ... rs_name: "TopLevelStruct" ...

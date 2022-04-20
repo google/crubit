@@ -110,7 +110,7 @@ static_assert(alignof(class SomeStruct) == 1);
 static_assert(sizeof(class EmptyUnion) == 1);
 static_assert(alignof(class EmptyUnion) == 1);
 
-static_assert(sizeof(class FieldTypeTestStruct) == 280);
+static_assert(sizeof(class FieldTypeTestStruct) == 288);
 static_assert(alignof(class FieldTypeTestStruct) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, class FieldTypeTestStruct) * 8 == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, class FieldTypeTestStruct) * 8 == 8);
@@ -246,6 +246,10 @@ static_assert(CRUBIT_OFFSET_OF(const_struct_ref_field,
                                class FieldTypeTestStruct) *
                   8 ==
               2176);
+static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
+                               class FieldTypeTestStruct) *
+                  8 ==
+              2240);
 
 static_assert(sizeof(class NonEmptyUnion) == 8);
 static_assert(alignof(class NonEmptyUnion) == 8);

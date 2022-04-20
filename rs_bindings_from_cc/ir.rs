@@ -348,6 +348,13 @@ pub struct SpecialMemberFunc {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct IncompleteRecord {
+    pub cc_name: String,
+    pub id: ItemId,
+    pub owning_target: BazelLabel,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub rs_name: String,
     pub cc_name: String,
@@ -461,6 +468,7 @@ pub struct Namespace {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
     Func(Func),
+    IncompleteRecord(IncompleteRecord),
     Record(Record),
     Enum(Enum),
     TypeAlias(TypeAlias),
@@ -472,10 +480,11 @@ pub enum Item {
 impl Item {
     fn id(&self) -> ItemId {
         match self {
-            Item::Record(record) => record.id,
-            Item::TypeAlias(type_alias) => type_alias.id,
             Item::Func(func) => func.id,
+            Item::IncompleteRecord(record) => record.id,
+            Item::Record(record) => record.id,
             Item::Enum(enum_) => enum_.id,
+            Item::TypeAlias(type_alias) => type_alias.id,
             Item::UnsupportedItem(unsupported) => unsupported.id,
             Item::Comment(comment) => comment.id,
             Item::Namespace(namespace) => namespace.id,

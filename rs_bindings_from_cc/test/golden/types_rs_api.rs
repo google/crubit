@@ -54,6 +54,8 @@ impl<'b> From<ctor::RvalueReference<'b, SomeStruct>> for SomeStruct {
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Bindings for this kind of operator are not supported
 
+forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union EmptyUnion {
@@ -84,11 +86,11 @@ impl<'b> From<ctor::RvalueReference<'b, EmptyUnion>> for EmptyUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=15
+// rs_bindings_from_cc/test/golden/types.h;l=17
 // Error while generating bindings for item 'EmptyUnion::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/types.h;l=15
+// rs_bindings_from_cc/test/golden/types.h;l=17
 // Error while generating bindings for item 'EmptyUnion::operator=':
 // Bindings for this kind of operator are not supported
 
@@ -146,6 +148,10 @@ pub struct FieldTypeTestStruct {
     pub const_struct_ptr_field: *const SomeStruct,
     pub struct_ref_field: *mut SomeStruct,
     pub const_struct_ref_field: *const SomeStruct,
+    /// TODO(b/226580208): Uncomment when these don't cause struct import to fail.
+    /// SomeStruct&& struct_rvalue_ref_field;
+    /// const SomeStruct&& const_struct_rvalue_ref_field;
+    pub forward_declared_ptr_field: *mut ForwardDeclaredStruct,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldTypeTestStruct"),
@@ -162,10 +168,6 @@ impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestS
         }
     }
 }
-
-// TODO(b/226580208): Uncomment when these don't cause struct import to fail.
-// SomeStruct&& struct_rvalue_ref_field;
-// const SomeStruct&& const_struct_rvalue_ref_field;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -201,11 +203,11 @@ impl<'b> From<ctor::RvalueReference<'b, NonEmptyUnion>> for NonEmptyUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=84
+// rs_bindings_from_cc/test/golden/types.h;l=88
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/types.h;l=84
+// rs_bindings_from_cc/test/golden/types.h;l=88
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
 // Bindings for this kind of operator are not supported
 
@@ -275,7 +277,7 @@ const _: () = {
     static_assertions::assert_not_impl_all!(EmptyUnion: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<FieldTypeTestStruct>() == 280usize);
+const _: () = assert!(rust_std::mem::size_of::<FieldTypeTestStruct>() == 288usize);
 const _: () = assert!(rust_std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
 const _: () = {
     static_assertions::assert_impl_all!(FieldTypeTestStruct: Clone);
@@ -337,6 +339,7 @@ const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8 == 1
 const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8 == 2048usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ref_field) * 8 == 2112usize);
 const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 8 == 2176usize);
+const _: () = assert!(offset_of!(FieldTypeTestStruct, forward_declared_ptr_field) * 8 == 2240usize);
 
 const _: () = assert!(rust_std::mem::size_of::<NonEmptyUnion>() == 8usize);
 const _: () = assert!(rust_std::mem::align_of::<NonEmptyUnion>() == 8usize);
