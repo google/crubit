@@ -408,6 +408,17 @@ const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
 GetTemplateArgs(clang::QualType type) {
   llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> result;
 
+  // Desugar any typedefs on `type`. We need to do this so that the "depth" of
+  // the template arguments is compatible with
+  // TemplateTypeParmType::getDepth(), which likewise assumes that typedefs are
+  // desugared; see the call to getCanonicalTypeInternal() in
+  // TemplateTypeParmType::getCanTTPTInfo(). Unlike that function, we can't
+  // simply canonicalize the type, as that would also remove type annotations,
+  // and we need those.
+  while (const auto* typedef_type = type->getAs<clang::TypedefType>()) {
+    type = typedef_type->desugar();
+  }
+
   if (auto elaborated = type->getAs<clang::ElaboratedType>()) {
     if (clang::NestedNameSpecifier* qualifier = elaborated->getQualifier()) {
       if (const clang::Type* qualifier_type = qualifier->getAsType()) {
