@@ -320,7 +320,7 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   for (auto& [_, comment] : ordered_comments) {
     items.push_back({comment->getSourceRange(), 0, GenerateItemId(comment)});
   }
-  std::sort(items.begin(), items.end(), compare_locations);
+  llvm::sort(items, compare_locations);
 
   std::vector<ItemId> ordered_item_ids;
   ordered_item_ids.reserve(items.size());
@@ -342,7 +342,7 @@ void Importer::ImportFreeComments() {
       }
     }
   }
-  std::sort(comments_.begin(), comments_.end(), SourceLocationComparator(sm));
+  llvm::sort(comments_, SourceLocationComparator(sm));
 }
 
 void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
@@ -369,8 +369,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
     }
   }
 
-  std::sort(ordered_items.begin(), ordered_items.end(),
-            SourceLocationComparator(sm));
+  llvm::sort(ordered_items, SourceLocationComparator(sm));
 
   invocation_.ir_.items.reserve(ordered_items.size());
   for (auto& ordered_item : ordered_items) {
@@ -585,10 +584,10 @@ std::optional<IR::Item> Importer::ImportFunction(
     lifetime_params.push_back(
         {.name = name->str(), .id = LifetimeId(lifetime.Id())});
   }
-  std::sort(lifetime_params.begin(), lifetime_params.end(),
-            [](const LifetimeName& l1, const LifetimeName& l2) {
-              return l1.name < l2.name;
-            });
+  llvm::sort(lifetime_params,
+             [](const LifetimeName& l1, const LifetimeName& l2) {
+               return l1.name < l2.name;
+             });
 
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl =
