@@ -17,14 +17,14 @@ namespace crubit {
 class AstConsumer : public clang::ASTConsumer {
  public:
   explicit AstConsumer(clang::CompilerInstance& instance,
-                       Importer::Invocation& invocation)
+                       Invocation& invocation)
       : instance_(instance), invocation_(invocation) {}
 
   void HandleTranslationUnit(clang::ASTContext& context) override;
 
  private:
   clang::CompilerInstance& instance_;
-  Importer::Invocation& invocation_;
+  Invocation& invocation_;
 };  // class AstConsumer
 
 }  // namespace crubit

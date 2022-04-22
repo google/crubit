@@ -18,14 +18,13 @@ namespace crubit {
 // (`IR`) into the invocation object.
 class FrontendAction : public clang::ASTFrontendAction {
  public:
-  explicit FrontendAction(Importer::Invocation& invocation)
-      : invocation_(invocation) {}
+  explicit FrontendAction(Invocation& invocation) : invocation_(invocation) {}
 
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
       clang::CompilerInstance& instance, llvm::StringRef) override;
 
  private:
-  Importer::Invocation& invocation_;
+  Invocation& invocation_;
 };
 
 }  // namespace crubit

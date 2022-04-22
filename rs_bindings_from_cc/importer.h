@@ -33,154 +33,133 @@
 
 namespace crubit {
 
-// Iterates over the AST created from the invocation's entry headers and
-// creates an intermediate representation of the import (`IR`) into the
-// invocation object.
-class Importer {
+// Top-level parameters as well as return value of an importer invocation.
+class Invocation {
  public:
-  // Top-level parameters as well as return value of an importer invocation.
-  class Invocation {
-   public:
-    Invocation(BazelLabel target, absl::Span<const HeaderName> entry_headers,
-               const absl::flat_hash_map<const HeaderName, const BazelLabel>&
-                   header_targets)
-        : target_(target),
-          entry_headers_(entry_headers),
-          lifetime_context_(
-              std::make_shared<
-                  clang::tidy::lifetimes::LifetimeAnnotationContext>()),
-          header_targets_(header_targets) {
-      // Caller should verify that the inputs are non-empty.
-      CRUBIT_CHECK(!entry_headers_.empty());
-      CRUBIT_CHECK(!header_targets_.empty());
+  Invocation(BazelLabel target, absl::Span<const HeaderName> entry_headers,
+             const absl::flat_hash_map<const HeaderName, const BazelLabel>&
+                 header_targets)
+      : target_(target),
+        entry_headers_(entry_headers),
+        lifetime_context_(std::make_shared<
+                          clang::tidy::lifetimes::LifetimeAnnotationContext>()),
+        header_targets_(header_targets) {
+    // Caller should verify that the inputs are non-empty.
+    CRUBIT_CHECK(!entry_headers_.empty());
+    CRUBIT_CHECK(!header_targets_.empty());
 
-      ir_.used_headers.insert(ir_.used_headers.end(), entry_headers_.begin(),
-                              entry_headers.end());
-      ir_.current_target = target_;
-    }
+    ir_.used_headers.insert(ir_.used_headers.end(), entry_headers_.begin(),
+                            entry_headers.end());
+    ir_.current_target = target_;
+  }
 
-    // Returns the target of a header, if any.
-    std::optional<BazelLabel> header_target(const HeaderName header) const {
-      auto it = header_targets_.find(header);
-      return (it != header_targets_.end()) ? std::optional(it->second)
-                                           : std::nullopt;
-    }
+  // Returns the target of a header, if any.
+  std::optional<BazelLabel> header_target(const HeaderName header) const {
+    auto it = header_targets_.find(header);
+    return (it != header_targets_.end()) ? std::optional(it->second)
+                                         : std::nullopt;
+  }
 
-    // The main target from which we are importing.
-    const BazelLabel target_;
+  // The main target from which we are importing.
+  const BazelLabel target_;
 
-    // The headers from which the import starts (a collection of
-    // paths in the format suitable for a google3-relative quote include).
-    const absl::Span<const HeaderName> entry_headers_;
+  // The headers from which the import starts (a collection of
+  // paths in the format suitable for a google3-relative quote include).
+  const absl::Span<const HeaderName> entry_headers_;
 
-    const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
-        lifetime_context_;
+  const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
+      lifetime_context_;
 
-    // The main output of the import process
-    IR ir_;
-
-   private:
-    const absl::flat_hash_map<const HeaderName, const BazelLabel>&
-        header_targets_;
-  };
-
-  // The currently known canonical type decls that we know how to map into
-  // Rust.
-  class TypeMapper {
-   public:
-    TypeMapper(const clang::ASTContext* ctx) : ctx_(ctx) {}
-
-    TypeMapper(const TypeMapper& other) = default;
-    TypeMapper& operator=(const TypeMapper& other) = default;
-
-    // Converts the Clang type `qual_type` into an equivalent `MappedType`.
-    // Lifetimes for the type can optionally be specified using `lifetimes`.
-    // If `qual_type` is a pointer type, `nullable` specifies whether the
-    // pointer can be null.
-    // TODO(b/209390498): Currently, we're able to specify nullability only for
-    // top-level pointers. Extend this so that we can specify nullability for
-    // all pointers contained in `qual_type`, in the same way that `lifetimes`
-    // specifies lifetimes for all these pointers. Once this is done, make sure
-    // that all callers pass in the appropriate information, derived from
-    // nullability annotations.
-    absl::StatusOr<MappedType> ConvertQualType(
-        clang::QualType qual_type,
-        std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-        bool nullable = true) const;
-    absl::StatusOr<MappedType> ConvertType(
-        const clang::Type* type,
-        std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-        bool nullable) const;
-    absl::StatusOr<MappedType> ConvertTypeDecl(
-        const clang::TypeDecl* decl) const;
-
-    bool Contains(const clang::TypeDecl* decl) const {
-      return known_type_decls_.contains(
-          clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
-    }
-
-    void Insert(const clang::TypeDecl* decl) {
-      known_type_decls_.insert(
-          clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
-    }
-
-   private:
-    const clang::ASTContext* ctx_;
-    absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
-  };
-
-  explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
-                    clang::Sema& sema)
-      : invocation_(invocation),
-        ctx_(ctx),
-        sema_(sema),
-        mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())),
-        type_mapper_(&ctx) {}
-
-  // Import all visible declarations from a translation unit.
-  void Import(clang::TranslationUnitDecl* decl);
+  // The main output of the import process
+  IR ir_;
 
  private:
+  const absl::flat_hash_map<const HeaderName, const BazelLabel>&
+      header_targets_;
+};
+
+// The currently known canonical type decls that we know how to map into
+// Rust.
+class TypeMapper {
+ public:
+  TypeMapper(const clang::ASTContext* ctx) : ctx_(ctx) {}
+
+  TypeMapper(const TypeMapper& other) = default;
+  TypeMapper& operator=(const TypeMapper& other) = default;
+
+  // Converts the Clang type `qual_type` into an equivalent `MappedType`.
+  // Lifetimes for the type can optionally be specified using `lifetimes`.
+  // If `qual_type` is a pointer type, `nullable` specifies whether the
+  // pointer can be null.
+  // TODO(b/209390498): Currently, we're able to specify nullability only for
+  // top-level pointers. Extend this so that we can specify nullability for
+  // all pointers contained in `qual_type`, in the same way that `lifetimes`
+  // specifies lifetimes for all these pointers. Once this is done, make sure
+  // that all callers pass in the appropriate information, derived from
+  // nullability annotations.
+  absl::StatusOr<MappedType> ConvertQualType(
+      clang::QualType qual_type,
+      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      bool nullable = true) const;
+  absl::StatusOr<MappedType> ConvertType(
+      const clang::Type* type,
+      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      bool nullable) const;
+  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
+  std::optional<absl::string_view> MapKnownCcTypeToRsType(
+      absl::string_view cc_type) const;
+
+  bool Contains(const clang::TypeDecl* decl) const {
+    return known_type_decls_.contains(
+        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+  }
+
+  void Insert(const clang::TypeDecl* decl) {
+    known_type_decls_.insert(
+        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+  }
+
+ private:
+  const clang::ASTContext* ctx_;
+  absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
+};
+
+// Explicitly defined interface that defines how `DeclImporter`s are allowed to
+// interface with the global state of the importer.
+class ImportContext {
+ public:
+  ImportContext(Invocation& invocation, clang::ASTContext& ctx,
+                clang::Sema& sema)
+      : invocation_(invocation), ctx_(ctx), sema_(sema), type_mapper_(&ctx){};
+  virtual ~ImportContext(){};
+
   // Imports all decls contained in a `DeclContext`.
-  void ImportDeclsFromDeclContext(const clang::DeclContext* decl_context);
+  virtual void ImportDeclsFromDeclContext(
+      const clang::DeclContext* decl_context) = 0;
 
-  // Returns the Item of a Decl, importing it first if necessary.
-  std::optional<IR::Item> GetDeclItem(clang::Decl* decl);
+  // Imports an unsupported item with a single error message.
+  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::string error) = 0;
 
-  // Imports a decl and creates an IR item (or error messages).
-  // Does not use or update the cache.
-  std::optional<IR::Item> ImportDecl(clang::Decl* decl);
+  // Imports an unsupported item with multiple error messages.
+  virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                         std::set<std::string> errors) = 0;
 
-  // These functions import specific `Decl` subtypes. They use `LookupDecl` to
-  // lookup dependencies. They don't use or update the cache themselves.
-  std::optional<IR::Item> ImportNamespace(clang::NamespaceDecl* namespace_decl);
-  std::optional<IR::Item> ImportFunction(
-      clang::FunctionDecl* function_decl,
-      clang::FunctionTemplateDecl* function_template_decl = nullptr);
-  std::optional<IR::Item> ImportRecord(clang::CXXRecordDecl* record_decl);
-  std::optional<IR::Item> ImportTypedefName(
-      clang::TypedefNameDecl* typedef_name_decl);
-  std::optional<IR::Item> ImportEnum(clang::EnumDecl* enum_decl);
-
-  IR::Item ImportUnsupportedItem(const clang::Decl* decl, std::string error);
-  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
-                                 std::set<std::string> errors);
-
-  absl::StatusOr<std::vector<Field>> ImportFields(
-      clang::CXXRecordDecl* record_decl);
-  // Stores the comments of this target in source order.
-  void ImportFreeComments();
   // Returns the item ids of the children and comments of the given decl in
   // source order. This method assumes that the children decls have already been
   // imported.
-  std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl);
+  virtual std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) = 0;
 
-  std::string GetMangledName(const clang::NamedDecl* named_decl) const;
-  BazelLabel GetOwningTarget(const clang::Decl* decl) const;
+  // Mangles the name of a named decl.
+  virtual std::string GetMangledName(
+      const clang::NamedDecl* named_decl) const = 0;
+
+  // Returs the label of the target that contains a decl.
+  virtual BazelLabel GetOwningTarget(const clang::Decl* decl) const = 0;
 
   // Checks if the given decl belongs to the current target. Does not look into
   // other redeclarations of the decl.
-  bool IsFromCurrentTarget(const clang::Decl* decl) const;
+  virtual bool IsFromCurrentTarget(const clang::Decl* decl) const = 0;
 
   // Gets an IR UnqualifiedIdentifier for the named decl.
   //
@@ -190,36 +169,184 @@ class Importer {
   // a SpecialName.
   //
   // If the translated name is not yet implemented, this returns null.
-  std::optional<UnqualifiedIdentifier> GetTranslatedName(
-      const clang::NamedDecl* named_decl) const;
+  virtual std::optional<UnqualifiedIdentifier> GetTranslatedName(
+      const clang::NamedDecl* named_decl) const = 0;
 
   // GetTranslatedName, but only for identifier names. This is the common case.
+  virtual std::optional<Identifier> GetTranslatedIdentifier(
+      const clang::NamedDecl* named_decl) const = 0;
+
+  // Gets the doc comment of the declaration.
+  virtual llvm::Optional<std::string> GetComment(
+      const clang::Decl* decl) const = 0;
+
+  // Converts a Clang source location to IR.
+  virtual SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const = 0;
+
+  Invocation& invocation_;
+  clang::ASTContext& ctx_;
+  clang::Sema& sema_;
+  TypeMapper type_mapper_;
+};
+
+// Interface for components that can import decls of a certain category.
+class DeclImporter {
+ public:
+  DeclImporter(ImportContext& ictx) : ictx_(ictx){};
+  virtual ~DeclImporter(){};
+
+  // Determines whether this importer is autoritative for a decl. This does not
+  // imply that the import will be succesful.
+  virtual bool CanImport(clang::Decl*) = 0;
+
+  // Returns an IR item for a decl, or `std::nullopt` if importing failed.
+  // This member function may only be called after `CanImport` returned `true`.
+  virtual std::optional<IR::Item> ImportDecl(clang::Decl*) = 0;
+
+ protected:
+  ImportContext& ictx_;
+};
+
+// Common implementation for defining `DeclImporter`s that determine their
+// applicability by the dynamic type of the decl.
+template <typename D>
+class DeclImporterBase : public DeclImporter {
+ public:
+  DeclImporterBase(ImportContext& context) : DeclImporter(context) {}
+
+ protected:
+  bool CanImport(clang::Decl* decl) { return clang::isa<D>(decl); }
+  std::optional<IR::Item> ImportDecl(clang::Decl* decl) {
+    return Import(clang::cast<D>(decl));
+  }
+  virtual std::optional<IR::Item> Import(D*);
+};
+
+// TODO(forster): Move those implementations into separate files.
+
+// A `DeclImporter` for `ClassTemplateDecl`s.
+class ClassTemplateDeclImporter
+    : public DeclImporterBase<clang::ClassTemplateDecl> {
+ public:
+  ClassTemplateDeclImporter(ImportContext& context)
+      : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::ClassTemplateDecl*);
+};
+
+// A `DeclImporter` for `CXXRecordDecl`s.
+class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
+ public:
+  CXXRecordDeclImporter(ImportContext& context) : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::CXXRecordDecl*);
+
+ private:
+  absl::StatusOr<std::vector<Field>> ImportFields(clang::CXXRecordDecl*);
+  std::vector<BaseClass> GetUnambiguousPublicBases(
+      const clang::CXXRecordDecl& record_decl) const;
+};
+
+// A `DeclImporter` for `EnumDecl`s.
+class EnumDeclImporter : public DeclImporterBase<clang::EnumDecl> {
+ public:
+  EnumDeclImporter(ImportContext& context) : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::EnumDecl*);
+};
+
+// A `DeclImporter` for `FunctionTemplateDecl`s.
+class FunctionTemplateDeclImporter
+    : public DeclImporterBase<clang::FunctionTemplateDecl> {
+ public:
+  FunctionTemplateDeclImporter(ImportContext& context)
+      : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::FunctionTemplateDecl*);
+};
+
+// A `DeclImporter` for `FunctionDecl`s.
+class FunctionDeclImporter : public DeclImporterBase<clang::FunctionDecl> {
+ public:
+  FunctionDeclImporter(ImportContext& context) : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::FunctionDecl*);
+};
+
+// A `DeclImporter` for `NamespaceDecl`s.
+class NamespaceDeclImporter : public DeclImporterBase<clang::NamespaceDecl> {
+ public:
+  NamespaceDeclImporter(ImportContext& context) : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::NamespaceDecl*);
+};
+
+// A `DeclImporter` for `TypedefNameDecl`s.
+class TypedefNameDeclImporter
+    : public DeclImporterBase<clang::TypedefNameDecl> {
+ public:
+  TypedefNameDeclImporter(ImportContext& context) : DeclImporterBase(context){};
+  std::optional<IR::Item> Import(clang::TypedefNameDecl*);
+};
+
+// Iterates over the AST created from the invocation's entry headers and
+// creates an intermediate representation of the import (`IR`) into the
+// invocation object.
+class Importer : public ImportContext {
+ public:
+  explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
+                    clang::Sema& sema)
+      : ImportContext(invocation, ctx, sema),
+        mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())) {
+    decl_importers_.push_back(
+        std::make_unique<ClassTemplateDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<EnumDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<FunctionDeclImporter>(*this));
+    decl_importers_.push_back(
+        std::make_unique<FunctionTemplateDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<NamespaceDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<TypedefNameDeclImporter>(*this));
+  }
+
+  // Import all visible declarations from a translation unit.
+  void Import(clang::TranslationUnitDecl* decl);
+
+ protected:
+  // Implementation of `ImportContext`
+  void ImportDeclsFromDeclContext(
+      const clang::DeclContext* decl_context) override;
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 std::string error) override;
+  IR::Item ImportUnsupportedItem(const clang::Decl* decl,
+                                 std::set<std::string> errors) override;
+  std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
+  std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
+  BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
+  bool IsFromCurrentTarget(const clang::Decl* decl) const override;
+  std::optional<UnqualifiedIdentifier> GetTranslatedName(
+      const clang::NamedDecl* named_decl) const override;
   std::optional<Identifier> GetTranslatedIdentifier(
-      const clang::NamedDecl* named_decl) const {
+      const clang::NamedDecl* named_decl) const override {
     if (std::optional<UnqualifiedIdentifier> name =
             GetTranslatedName(named_decl)) {
       return std::move(*std::get_if<Identifier>(&*name));
     }
     return std::nullopt;
   }
+  llvm::Optional<std::string> GetComment(
+      const clang::Decl* decl) const override;
+  SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const override;
 
-  // Gets the doc comment of the declaration.
-  llvm::Optional<std::string> GetComment(const clang::Decl* decl) const;
+ private:
+  // Returns the Item of a Decl, importing it first if necessary.
+  std::optional<IR::Item> GetDeclItem(clang::Decl* decl);
 
-  SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const;
+  // Imports a decl and creates an IR item (or error messages).
+  // Does not use or update the cache.
+  std::optional<IR::Item> ImportDecl(clang::Decl* decl);
 
-  std::vector<BaseClass> GetUnambiguousPublicBases(
-      const clang::CXXRecordDecl& record_decl) const;
+  // Stores the comments of this target in source order.
+  void ImportFreeComments();
 
-  Invocation& invocation_;
-
-  clang::ASTContext& ctx_;
-  clang::Sema& sema_;
-
+  std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
       import_cache_;
-  TypeMapper type_mapper_;
   std::vector<const clang::RawComment*> comments_;
 };  // class Importer
 

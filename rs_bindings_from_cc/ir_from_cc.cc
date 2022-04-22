@@ -70,8 +70,8 @@ absl::StatusOr<IR> IrFromCc(
       "-fparse-all-comments"};
   args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
 
-  if (Importer::Invocation invocation(current_target, entrypoint_headers,
-                                      headers_to_targets);
+  if (Invocation invocation(current_target, entrypoint_headers,
+                            headers_to_targets);
       clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings, kVirtualInputPath,

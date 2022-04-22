@@ -62,11 +62,13 @@ namespace {
 constexpr absl::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
+}
+
 // A mapping of C++ standard types to their equivalent Rust types.
 // To produce more idiomatic results, these types receive special handling
 // instead of using the generic type mapping mechanism.
-std::optional<absl::string_view> MapKnownCcTypeToRsType(
-    absl::string_view cc_type) {
+std::optional<absl::string_view> TypeMapper::MapKnownCcTypeToRsType(
+    absl::string_view cc_type) const {
   static const auto* const kWellKnownTypes =
       new absl::flat_hash_map<absl::string_view, absl::string_view>({
           {"ptrdiff_t", "isize"},
@@ -105,6 +107,8 @@ std::optional<absl::string_view> MapKnownCcTypeToRsType(
   if (it == kWellKnownTypes->end()) return std::nullopt;
   return it->second;
 }
+
+namespace {
 
 ItemId GenerateItemId(const clang::Decl* decl) {
   return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
@@ -398,80 +402,71 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
 }
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
-  if (auto* namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
-    return ImportNamespace(namespace_decl);
-  } else if (auto* function_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
-    return ImportFunction(function_decl);
-  } else if (auto* function_template_decl =
-                 clang::dyn_cast<clang::FunctionTemplateDecl>(decl)) {
-    return ImportFunction(function_template_decl->getTemplatedDecl(),
-                          function_template_decl);
-  } else if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
-    auto result = ImportRecord(record_decl);
+  std::optional<IR::Item> result;
+  for (auto& importer : decl_importers_) {
+    if (importer->CanImport(decl)) {
+      result = importer->ImportDecl(decl);
+    }
+  }
+
+  if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
     // TODO(forster): Should we even visit the nested decl if we couldn't
     // import the parent? For now we have tests that check that we generate
     // error messages for those decls, so we're visiting.
     ImportDeclsFromDeclContext(record_decl);
-    return result;
-  } else if (auto* enum_decl = clang::dyn_cast<clang::EnumDecl>(decl)) {
-    return ImportEnum(enum_decl);
-  } else if (auto* typedef_name_decl =
-                 clang::dyn_cast<clang::TypedefNameDecl>(decl)) {
-    return ImportTypedefName(typedef_name_decl);
-  } else if (clang::isa<clang::ClassTemplateDecl>(decl)) {
-    return ImportUnsupportedItem(decl, "Class templates are not supported yet");
-  } else {
-    return std::nullopt;
   }
+
+  return result;
 }
 
-std::optional<IR::Item> Importer::ImportNamespace(
+std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
-  if (!IsFromCurrentTarget(namespace_decl)) return std::nullopt;
+  if (!ictx_.IsFromCurrentTarget(namespace_decl)) return std::nullopt;
 
   // TODO(rosica) In order to fully enable namespaces we first need to ensure
   // that each decl Item contains information on its namespace parents.
   if (!absl::StrContains(namespace_decl->getQualifiedNameAsString(),
                          "test_namespace_bindings")) {
-    return ImportUnsupportedItem(namespace_decl,
-                                 "Namespaces are not supported yet");
+    return ictx_.ImportUnsupportedItem(namespace_decl,
+                                       "Namespaces are not supported yet");
   }
 
   if (namespace_decl->isInline()) {
-    return ImportUnsupportedItem(namespace_decl,
-                                 "Inline namespaces are not supported yet");
+    return ictx_.ImportUnsupportedItem(
+        namespace_decl, "Inline namespaces are not supported yet");
   }
   if (namespace_decl->isAnonymousNamespace()) {
-    return ImportUnsupportedItem(namespace_decl,
-                                 "Anonymous namespaces are not supported yet");
+    return ictx_.ImportUnsupportedItem(
+        namespace_decl, "Anonymous namespaces are not supported yet");
   }
 
-  ImportDeclsFromDeclContext(namespace_decl);
-  auto identifier = GetTranslatedIdentifier(namespace_decl);
+  ictx_.ImportDeclsFromDeclContext(namespace_decl);
+  auto identifier = ictx_.GetTranslatedIdentifier(namespace_decl);
   CRUBIT_CHECK(identifier.has_value());
-  auto item_ids = GetItemIdsInSourceOrder(namespace_decl);
+  auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   return Namespace{
       .name = *identifier,
       .id = GenerateItemId(namespace_decl),
-      .owning_target = GetOwningTarget(namespace_decl),
+      .owning_target = ictx_.GetOwningTarget(namespace_decl),
       .child_item_ids = std::move(item_ids),
   };
 }
 
-std::optional<IR::Item> Importer::ImportFunction(
-    clang::FunctionDecl* function_decl,
+std::optional<IR::Item> FunctionTemplateDeclImporter::Import(
     clang::FunctionTemplateDecl* function_template_decl) {
-  if (!IsFromCurrentTarget(function_decl)) return std::nullopt;
+  return ictx_.ImportUnsupportedItem(
+      function_template_decl, "Function templates are not supported yet");
+}
+
+std::optional<IR::Item> FunctionDeclImporter::Import(
+    clang::FunctionDecl* function_decl) {
+  if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
-  if (function_decl->isTemplated()) {
-    return ImportUnsupportedItem(function_template_decl,
-                                 "Function templates are not supported yet");
-  }
 
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
   llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
       clang::tidy::lifetimes::GetLifetimeAnnotations(
-          function_decl, *invocation_.lifetime_context_,
+          function_decl, *ictx_.invocation_.lifetime_context_,
           &lifetime_symbol_table);
 
   std::vector<FuncParam> params;
@@ -482,8 +477,9 @@ std::optional<IR::Item> Importer::ImportFunction(
   };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    if (!type_mapper_.Contains(method_decl->getParent())) {
-      return ImportUnsupportedItem(function_decl, "Couldn't import the parent");
+    if (!ictx_.type_mapper_.Contains(method_decl->getParent())) {
+      return ictx_.ImportUnsupportedItem(function_decl,
+                                         "Couldn't import the parent");
     }
 
     // non-static member functions receive an implicit `this` parameter.
@@ -492,9 +488,9 @@ std::optional<IR::Item> Importer::ImportFunction(
       if (lifetimes) {
         this_lifetimes = lifetimes->GetThisLifetimes();
       }
-      auto param_type = type_mapper_.ConvertQualType(method_decl->getThisType(),
-                                                     this_lifetimes,
-                                                     /*nullable=*/false);
+      auto param_type = ictx_.type_mapper_.ConvertQualType(
+          method_decl->getThisType(), this_lifetimes,
+          /*nullable=*/false);
       if (!param_type.ok()) {
         add_error(absl::StrCat("`this` parameter is not supported: ",
                                param_type.status().message()));
@@ -515,7 +511,7 @@ std::optional<IR::Item> Importer::ImportFunction(
       param_lifetimes = lifetimes->GetParamLifetimes(i);
     }
     auto param_type =
-        type_mapper_.ConvertQualType(param->getType(), param_lifetimes);
+        ictx_.type_mapper_.ConvertQualType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
       add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
                                  param_type.status().message()));
@@ -538,7 +534,7 @@ std::optional<IR::Item> Importer::ImportFunction(
       }
     }
 
-    std::optional<Identifier> param_name = GetTranslatedIdentifier(param);
+    std::optional<Identifier> param_name = ictx_.GetTranslatedIdentifier(param);
     CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({*param_type, *std::move(param_name)});
   }
@@ -564,7 +560,7 @@ std::optional<IR::Item> Importer::ImportFunction(
     return_lifetimes = lifetimes->GetReturnLifetimes();
   }
 
-  auto return_type = type_mapper_.ConvertQualType(
+  auto return_type = ictx_.type_mapper_.ConvertQualType(
       function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
     add_error(absl::StrCat("Return type is not supported: ",
@@ -635,14 +631,14 @@ std::optional<IR::Item> Importer::ImportFunction(
   }
 
   if (!errors.empty()) {
-    return ImportUnsupportedItem(function_decl, errors);
+    return ictx_.ImportUnsupportedItem(function_decl, errors);
   }
 
   bool has_c_calling_convention =
       function_decl->getType()->getAs<clang::FunctionType>()->getCallConv() ==
       clang::CC_C;
   std::optional<UnqualifiedIdentifier> translated_name =
-      GetTranslatedName(function_decl);
+      ictx_.GetTranslatedName(function_decl);
 
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
@@ -651,19 +647,17 @@ std::optional<IR::Item> Importer::ImportFunction(
   if (translated_name.has_value()) {
     return Func{
         .name = *translated_name,
-        .owning_target = GetOwningTarget(function_decl),
-        .doc_comment = GetComment(function_decl),
-        .mangled_name = GetMangledName(function_decl),
+        .owning_target = ictx_.GetOwningTarget(function_decl),
+        .doc_comment = ictx_.GetComment(function_decl),
+        .mangled_name = ictx_.GetMangledName(function_decl),
         .return_type = *return_type,
         .params = std::move(params),
         .lifetime_params = std::move(lifetime_params),
         .is_inline = function_decl->isInlined(),
         .member_func_metadata = std::move(member_func_metadata),
         .has_c_calling_convention = has_c_calling_convention,
-        .source_loc = ConvertSourceLocation(function_decl->getBeginLoc()),
-        .id = function_template_decl == nullptr
-                  ? GenerateItemId(function_decl)
-                  : GenerateItemId(function_template_decl),
+        .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
+        .id = GenerateItemId(function_decl),
     };
   }
   return std::nullopt;
@@ -704,7 +698,13 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
-std::optional<IR::Item> Importer::ImportRecord(
+std::optional<IR::Item> ClassTemplateDeclImporter::Import(
+    clang::ClassTemplateDecl* class_template_decl) {
+  return ictx_.ImportUnsupportedItem(class_template_decl,
+                                     "Class templates are not supported yet");
+}
+
+std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
   if (decl_context->isFunctionOrMethod()) {
@@ -714,14 +714,15 @@ std::optional<IR::Item> Importer::ImportRecord(
     return std::nullopt;
   }
   if (decl_context->isRecord()) {
-    return ImportUnsupportedItem(record_decl,
-                                 "Nested classes are not supported yet");
+    return ictx_.ImportUnsupportedItem(record_decl,
+                                       "Nested classes are not supported yet");
   }
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;
   }
 
-  std::optional<Identifier> record_name = GetTranslatedIdentifier(record_decl);
+  std::optional<Identifier> record_name =
+      ictx_.GetTranslatedIdentifier(record_decl);
   if (!record_name.has_value()) {
     return std::nullopt;
   }
@@ -730,23 +731,25 @@ std::optional<IR::Item> Importer::ImportRecord(
     record_decl = complete;
   } else {
     CRUBIT_CHECK(!record_decl->isCompleteDefinition());
-    type_mapper_.Insert(record_decl);
-    return IncompleteRecord{.cc_name = std::string(record_name->Ident()),
-                            .id = GenerateItemId(record_decl),
-                            .owning_target = GetOwningTarget(record_decl)};
+    ictx_.type_mapper_.Insert(record_decl);
+    return IncompleteRecord{
+        .cc_name = std::string(record_name->Ident()),
+        .id = GenerateItemId(record_decl),
+        .owning_target = ictx_.GetOwningTarget(record_decl)};
   }
 
   // To compute the memory layout of the record, it needs to be a concrete type,
   // not a template.
   if (record_decl->getDescribedClassTemplate() ||
       clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl)) {
-    return ImportUnsupportedItem(record_decl,
-                                 "Class templates are not supported yet");
+    return ictx_.ImportUnsupportedItem(record_decl,
+                                       "Class templates are not supported yet");
   }
 
-  sema_.ForceDeclarationOfImplicitMembers(record_decl);
+  ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
 
-  const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
+  const clang::ASTRecordLayout& layout =
+      ictx_.ctx_.getASTRecordLayout(record_decl);
 
   llvm::Optional<size_t> base_size;
   bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>();
@@ -765,7 +768,7 @@ std::optional<IR::Item> Importer::ImportRecord(
 
   absl::StatusOr<std::vector<Field>> fields = ImportFields(record_decl);
   if (!fields.ok()) {
-    return ImportUnsupportedItem(record_decl, fields.status().ToString());
+    return ictx_.ImportUnsupportedItem(record_decl, fields.status().ToString());
   }
 
   for (const Field& field : *fields) {
@@ -775,15 +778,15 @@ std::optional<IR::Item> Importer::ImportRecord(
     }
   }
 
-  type_mapper_.Insert(record_decl);
+  ictx_.type_mapper_.Insert(record_decl);
 
-  auto item_ids = GetItemIdsInSourceOrder(record_decl);
+  auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
   return Record{
       .rs_name = std::string(record_name->Ident()),
       .cc_name = std::string(record_name->Ident()),
       .id = GenerateItemId(record_decl),
-      .owning_target = GetOwningTarget(record_decl),
-      .doc_comment = GetComment(record_decl),
+      .owning_target = ictx_.GetOwningTarget(record_decl),
+      .doc_comment = ictx_.GetComment(record_decl),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = *std::move(fields),
       .size = layout.getSize().getQuantity(),
@@ -800,15 +803,16 @@ std::optional<IR::Item> Importer::ImportRecord(
       .child_item_ids = std::move(item_ids)};
 }
 
-std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
-  std::optional<Identifier> enum_name = GetTranslatedIdentifier(enum_decl);
+std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
+  std::optional<Identifier> enum_name =
+      ictx_.GetTranslatedIdentifier(enum_decl);
   if (!enum_name.has_value()) {
     // TODO(b/208945197): This corresponds to an unnamed enum declaration like
     // `enum { kFoo = 1 }`, which only exists to provide constants into the
     // surrounding scope and doesn't actually introduce an enum namespace. It
     // seems like it should probably be handled with other constants.
-    return ImportUnsupportedItem(enum_decl,
-                                 "Unnamed enums are not supported yet");
+    return ictx_.ImportUnsupportedItem(enum_decl,
+                                       "Unnamed enums are not supported yet");
   }
 
   clang::QualType cc_type = enum_decl->getIntegerType();
@@ -818,15 +822,15 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
     // with no fixed underlying type." The same page implies that this can't
     // occur in C++ nor in standard C, but clang supports enums like this
     // in C "as an extension".
-    return ImportUnsupportedItem(
+    return ictx_.ImportUnsupportedItem(
         enum_decl,
         "Forward declared enums without type specifiers are not supported");
   }
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> type =
-      type_mapper_.ConvertQualType(cc_type, no_lifetimes);
+      ictx_.type_mapper_.ConvertQualType(cc_type, no_lifetimes);
   if (!type.ok()) {
-    return ImportUnsupportedItem(enum_decl, type.status().ToString());
+    return ictx_.ImportUnsupportedItem(enum_decl, type.status().ToString());
   }
 
   std::vector<Enumerator> enumerators;
@@ -834,10 +838,10 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
                                     enum_decl->enumerators().end()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
     std::optional<Identifier> enumerator_name =
-        GetTranslatedIdentifier(enumerator);
+        ictx_.GetTranslatedIdentifier(enumerator);
     if (!enumerator_name.has_value()) {
       // It's not clear that this case is possible
-      return ImportUnsupportedItem(
+      return ictx_.ImportUnsupportedItem(
           enum_decl, "importing enum failed: missing enumerator name");
     }
 
@@ -850,7 +854,7 @@ std::optional<IR::Item> Importer::ImportEnum(clang::EnumDecl* enum_decl) {
   return Enum{
       .identifier = *enum_name,
       .id = GenerateItemId(enum_decl),
-      .owning_target = GetOwningTarget(enum_decl),
+      .owning_target = ictx_.GetOwningTarget(enum_decl),
       .underlying_type = *std::move(type),
       .enumerators = enumerators,
   };
@@ -874,7 +878,7 @@ IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
   return ImportUnsupportedItem(decl, absl::StrJoin(errors, "\n\n"));
 }
 
-std::optional<IR::Item> Importer::ImportTypedefName(
+std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     clang::TypedefNameDecl* typedef_name_decl) {
   const clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
   if (decl_context) {
@@ -882,7 +886,7 @@ std::optional<IR::Item> Importer::ImportTypedefName(
       return std::nullopt;
     }
     if (decl_context->isRecord()) {
-      return ImportUnsupportedItem(
+      return ictx_.ImportUnsupportedItem(
           typedef_name_decl,
           "Typedefs nested in classes are not supported yet");
     }
@@ -890,25 +894,27 @@ std::optional<IR::Item> Importer::ImportTypedefName(
 
   clang::QualType type =
       typedef_name_decl->getASTContext().getTypedefType(typedef_name_decl);
-  if (MapKnownCcTypeToRsType(type.getAsString()).has_value()) {
+  if (ictx_.type_mapper_.MapKnownCcTypeToRsType(type.getAsString())
+          .has_value()) {
     return std::nullopt;
   }
 
   std::optional<Identifier> identifier =
-      GetTranslatedIdentifier(typedef_name_decl);
+      ictx_.GetTranslatedIdentifier(typedef_name_decl);
   CRUBIT_CHECK(identifier.has_value());  // This should never happen.
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
-  absl::StatusOr<MappedType> underlying_type = type_mapper_.ConvertQualType(
-      typedef_name_decl->getUnderlyingType(), no_lifetimes);
+  absl::StatusOr<MappedType> underlying_type =
+      ictx_.type_mapper_.ConvertQualType(typedef_name_decl->getUnderlyingType(),
+                                         no_lifetimes);
   if (underlying_type.ok()) {
-    type_mapper_.Insert(typedef_name_decl);
+    ictx_.type_mapper_.Insert(typedef_name_decl);
     return TypeAlias{.identifier = *identifier,
                      .id = GenerateItemId(typedef_name_decl),
-                     .owning_target = GetOwningTarget(typedef_name_decl),
-                     .doc_comment = GetComment(typedef_name_decl),
+                     .owning_target = ictx_.GetOwningTarget(typedef_name_decl),
+                     .doc_comment = ictx_.GetComment(typedef_name_decl),
                      .underlying_type = *underlying_type};
   } else {
-    return ImportUnsupportedItem(
+    return ictx_.ImportUnsupportedItem(
         typedef_name_decl, std::string(underlying_type.status().message()));
   }
 }
@@ -957,7 +963,7 @@ SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
                    .column = sm.getSpellingColumnNumber(loc)};
 }
 
-absl::StatusOr<MappedType> Importer::TypeMapper::ConvertTypeDecl(
+absl::StatusOr<MappedType> TypeMapper::ConvertTypeDecl(
     const clang::TypeDecl* decl) const {
   if (!known_type_decls_.contains(decl)) {
     return absl::NotFoundError(absl::Substitute(
@@ -968,7 +974,7 @@ absl::StatusOr<MappedType> Importer::TypeMapper::ConvertTypeDecl(
   return MappedType::WithDeclId(decl_id);
 }
 
-absl::StatusOr<MappedType> Importer::TypeMapper::ConvertType(
+absl::StatusOr<MappedType> TypeMapper::ConvertType(
     const clang::Type* type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) const {
@@ -1082,7 +1088,7 @@ absl::StatusOr<MappedType> Importer::TypeMapper::ConvertType(
       "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
 }
 
-absl::StatusOr<MappedType> Importer::TypeMapper::ConvertQualType(
+absl::StatusOr<MappedType> TypeMapper::ConvertQualType(
     clang::QualType qual_type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) const {
@@ -1106,17 +1112,18 @@ absl::StatusOr<MappedType> Importer::TypeMapper::ConvertQualType(
   return type;
 }
 
-absl::StatusOr<std::vector<Field>> Importer::ImportFields(
+absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
     clang::CXXRecordDecl* record_decl) {
   // Provisionally assume that we know this RecordDecl so that we'll be able
   // to import fields whose type contains the record itself.
-  TypeMapper temp_import_mapper(type_mapper_);
+  TypeMapper temp_import_mapper(ictx_.type_mapper_);
   temp_import_mapper.Insert(record_decl);
 
   clang::AccessSpecifier default_access =
       record_decl->isClass() ? clang::AS_private : clang::AS_public;
   std::vector<Field> fields;
-  const clang::ASTRecordLayout& layout = ctx_.getASTRecordLayout(record_decl);
+  const clang::ASTRecordLayout& layout =
+      ictx_.ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
     auto type =
@@ -1131,7 +1138,8 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
       access = default_access;
     }
 
-    std::optional<Identifier> field_name = GetTranslatedIdentifier(field_decl);
+    std::optional<Identifier> field_name =
+        ictx_.GetTranslatedIdentifier(field_decl);
     if (!field_name.has_value()) {
       return absl::UnimplementedError(
           absl::Substitute("Cannot translate name for field '$0'",
@@ -1139,7 +1147,7 @@ absl::StatusOr<std::vector<Field>> Importer::ImportFields(
     }
     fields.push_back(
         {.identifier = *std::move(field_name),
-         .doc_comment = GetComment(field_decl),
+         .doc_comment = ictx_.GetComment(field_decl),
          .type = *type,
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
@@ -1237,7 +1245,7 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
   }
 }
 
-std::vector<BaseClass> Importer::GetUnambiguousPublicBases(
+std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
     const clang::CXXRecordDecl& record_decl) const {
   // This function is unfortunate: the only way to correctly get information
   // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
@@ -1282,13 +1290,13 @@ std::vector<BaseClass> Importer::GetUnambiguousPublicBases(
       const clang::CXXBaseSpecifier& base_specifier =
           *path[path.size() - 1].Base;
       const clang::QualType& base = base_specifier.getType();
-      if (paths.isAmbiguous(ctx_.getCanonicalType(base))) {
+      if (paths.isAmbiguous(ictx_.ctx_.getCanonicalType(base))) {
         continue;
       }
 
       clang::CXXRecordDecl* base_record_decl =
           CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      if (!type_mapper_.ConvertTypeDecl(base_record_decl).status().ok()) {
+      if (!ictx_.type_mapper_.ConvertTypeDecl(base_record_decl).status().ok()) {
         continue;
       }
 
@@ -1299,7 +1307,7 @@ std::vector<BaseClass> Importer::GetUnambiguousPublicBases(
           break;
         }
         *offset +=
-            {ctx_.getASTRecordLayout(base_path_element.Class)
+            {ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
                  .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
                      base_path_element.Base->getType()->getAsCXXRecordDecl()))
                  .getQuantity()};
