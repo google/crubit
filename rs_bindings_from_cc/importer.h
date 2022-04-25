@@ -14,6 +14,7 @@
 
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
+#include "rs_bindings_from_cc/importers/cxx_record.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -21,18 +22,6 @@
 namespace crubit {
 
 // TODO(forster): Move those implementations into separate files.
-
-// A `DeclImporter` for `CXXRecordDecl`s.
-class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
- public:
-  CXXRecordDeclImporter(ImportContext& context) : DeclImporterBase(context){};
-  std::optional<IR::Item> Import(clang::CXXRecordDecl*);
-
- private:
-  absl::StatusOr<std::vector<Field>> ImportFields(clang::CXXRecordDecl*);
-  std::vector<BaseClass> GetUnambiguousPublicBases(
-      const clang::CXXRecordDecl& record_decl) const;
-};
 
 // A `DeclImporter` for `EnumDecl`s.
 class EnumDeclImporter : public DeclImporterBase<clang::EnumDecl> {

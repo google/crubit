@@ -11,3 +11,15 @@ cc_library(
         "@llvm///clang:ast",
     ],
 )
+
+cc_library(
+    name = "cxx_record",
+    srcs = ["cxx_record.cc"],
+    hdrs = ["cxx_record.h"],
+    deps = [
+        "//rs_bindings_from_cc:ast_convert",
+        "//rs_bindings_from_cc:decl_importer",
+        "@llvm///clang:ast",
+        "@llvm///clang:sema",
+    ],
+)

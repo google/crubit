@@ -25,6 +25,8 @@
 #include "common/check.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclBase.h"
+#include "third_party/llvm/llvm-project/clang/include/clang/AST/RawCommentList.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/APSInt.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/Optional.h"
 #include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
@@ -90,6 +92,14 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 // and records), as well as location of comments and items we don't yet support.
 //  We use ItemIds for this.
 CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
+
+inline ItemId GenerateItemId(const clang::Decl* decl) {
+  return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
+}
+
+inline ItemId GenerateItemId(const clang::RawComment* comment) {
+  return ItemId(reinterpret_cast<uintptr_t>(comment));
+}
 
 // A numerical ID that uniquely identifies a lifetime.
 CRUBIT_DEFINE_STRONG_INT_TYPE(LifetimeId, int);
