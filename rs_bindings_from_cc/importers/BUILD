@@ -64,3 +64,13 @@ cc_library(
         "@llvm///clang:ast",
     ],
 )
+
+cc_library(
+    name = "typedef_name",
+    srcs = ["typedef_name.cc"],
+    hdrs = ["typedef_name.h"],
+    deps = [
+        "//rs_bindings_from_cc:decl_importer",
+        "@llvm///clang:ast",
+    ],
+)
