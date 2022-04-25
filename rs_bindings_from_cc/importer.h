@@ -18,6 +18,7 @@
 #include "rs_bindings_from_cc/importers/enum.h"
 #include "rs_bindings_from_cc/importers/function.h"
 #include "rs_bindings_from_cc/importers/function_template.h"
+#include "rs_bindings_from_cc/importers/namespace.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -25,13 +26,6 @@
 namespace crubit {
 
 // TODO(forster): Move those implementations into separate files.
-
-// A `DeclImporter` for `NamespaceDecl`s.
-class NamespaceDeclImporter : public DeclImporterBase<clang::NamespaceDecl> {
- public:
-  NamespaceDeclImporter(ImportContext& context) : DeclImporterBase(context){};
-  std::optional<IR::Item> Import(clang::NamespaceDecl*);
-};
 
 // A `DeclImporter` for `TypedefNameDecl`s.
 class TypedefNameDeclImporter

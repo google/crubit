@@ -53,3 +53,14 @@ cc_library(
         "@llvm///clang:ast",
     ],
 )
+
+cc_library(
+    name = "namespace",
+    srcs = ["namespace.cc"],
+    hdrs = ["namespace.h"],
+    deps = [
+        "@absl//strings",
+        "//rs_bindings_from_cc:decl_importer",
+        "@llvm///clang:ast",
+    ],
+)
