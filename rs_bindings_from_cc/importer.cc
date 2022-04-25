@@ -698,12 +698,6 @@ bool Importer::IsFromCurrentTarget(const clang::Decl* decl) const {
   return invocation_.target_ == GetOwningTarget(decl);
 }
 
-std::optional<IR::Item> ClassTemplateDeclImporter::Import(
-    clang::ClassTemplateDecl* class_template_decl) {
-  return ictx_.ImportUnsupportedItem(class_template_decl,
-                                     "Class templates are not supported yet");
-}
-
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();

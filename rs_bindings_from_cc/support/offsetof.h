@@ -2,8 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
-#define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
+#ifndef CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
+#define CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
 
 #include <cstddef>
 
@@ -63,4 +63,4 @@ struct OffsetOfHelper<void(T)> {
 #define CRUBIT_OFFSET_OF(member, T...) \
   offsetof(::crubit::details::OffsetOfHelper<void(T)>::Type, member)
 
-#endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_
+#endif  // CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_OFFSETOF_H_

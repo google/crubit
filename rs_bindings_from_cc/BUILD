@@ -114,6 +114,19 @@ cc_test(
 )
 
 cc_library(
+    name = "decl_importer",
+    hdrs = ["decl_importer.h"],
+    visibility = ["//third_party/crubit:__subpackages__"],
+    deps = [
+        "ir",
+        ":bazel_types",
+        "//lifetime_annotations",
+        "@absl//container:flat_hash_map",
+        "@absl//status:statusor",
+    ],
+)
+
+cc_library(
     name = "frontend_action",
     srcs = ["frontend_action.cc"],
     hdrs = ["frontend_action.h"],
@@ -145,11 +158,13 @@ cc_library(
     deps = [
         ":ast_convert",
         ":bazel_types",
+        ":decl_importer",
         ":ir",
         "//common:check",
         "//common:status_macros",
         "//lifetime_annotations",
         "//lifetime_annotations:type_lifetimes",
+        "//rs_bindings_from_cc/importers:class_template",
         "@absl//container:flat_hash_map",
         "@absl//container:flat_hash_set",
         "@absl//status",
