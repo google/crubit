@@ -35,6 +35,16 @@ cc_library(
 )
 
 cc_library(
+    name = "function",
+    srcs = ["function.cc"],
+    hdrs = ["function.h"],
+    deps = [
+        "@absl//strings",
+        "//rs_bindings_from_cc:decl_importer",
+    ],
+)
+
+cc_library(
     name = "function_template",
     srcs = ["function_template.cc"],
     hdrs = ["function_template.h"],
