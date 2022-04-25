@@ -23,3 +23,13 @@ cc_library(
         "@llvm///clang:sema",
     ],
 )
+
+cc_library(
+    name = "enum",
+    srcs = ["enum.cc"],
+    hdrs = ["enum.h"],
+    deps = [
+        "//rs_bindings_from_cc:decl_importer",
+        "@llvm///clang:ast",
+    ],
+)

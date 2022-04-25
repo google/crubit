@@ -15,6 +15,7 @@
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
+#include "rs_bindings_from_cc/importers/enum.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
 #include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
@@ -22,13 +23,6 @@
 namespace crubit {
 
 // TODO(forster): Move those implementations into separate files.
-
-// A `DeclImporter` for `EnumDecl`s.
-class EnumDeclImporter : public DeclImporterBase<clang::EnumDecl> {
- public:
-  EnumDeclImporter(ImportContext& context) : DeclImporterBase(context){};
-  std::optional<IR::Item> Import(clang::EnumDecl*);
-};
 
 // A `DeclImporter` for `FunctionTemplateDecl`s.
 class FunctionTemplateDeclImporter

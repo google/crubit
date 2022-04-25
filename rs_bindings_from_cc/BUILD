@@ -165,6 +165,7 @@ cc_library(
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc/importers:class_template",
         "//rs_bindings_from_cc/importers:cxx_record",
+        "//rs_bindings_from_cc/importers:enum",
         "@absl//container:flat_hash_map",
         "@absl//container:flat_hash_set",
         "@absl//status",
