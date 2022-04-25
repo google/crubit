@@ -444,12 +444,6 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
   };
 }
 
-std::optional<IR::Item> FunctionTemplateDeclImporter::Import(
-    clang::FunctionTemplateDecl* function_template_decl) {
-  return ictx_.ImportUnsupportedItem(
-      function_template_decl, "Function templates are not supported yet");
-}
-
 std::optional<IR::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;

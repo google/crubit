@@ -33,3 +33,13 @@ cc_library(
         "@llvm///clang:ast",
     ],
 )
+
+cc_library(
+    name = "function_template",
+    srcs = ["function_template.cc"],
+    hdrs = ["function_template.h"],
+    deps = [
+        "//rs_bindings_from_cc:decl_importer",
+        "@llvm///clang:ast",
+    ],
+)
