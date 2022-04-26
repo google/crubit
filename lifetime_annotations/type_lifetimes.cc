@@ -62,11 +62,29 @@ llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
       lifetime_params_attr = annotate;
     }
   }
-  if (!lifetime_params_attr) {
-    return {};
-  }
 
   llvm::SmallVector<std::string> ret;
+
+  // TODO(mboehme): Require derived class to explicitly declare all lifetime
+  // parameters inherited from the base class.
+  if (cxx_record->hasDefinition()) {
+    for (const clang::CXXBaseSpecifier& base : cxx_record->bases()) {
+      if (lifetime_params_attr) {
+        llvm::report_fatal_error(
+            "derived classes may not add lifetime parameters");
+      }
+      if (!ret.empty()) {
+        llvm::report_fatal_error(
+            "only one base class may have lifetime parameters");
+      }
+      ret = GetLifetimeParameters(base.getType());
+    }
+  }
+
+  if (!lifetime_params_attr) {
+    return ret;
+  }
+
   for (const auto& arg : lifetime_params_attr->args()) {
     llvm::StringRef lifetime;
     if (llvm::Error err =
