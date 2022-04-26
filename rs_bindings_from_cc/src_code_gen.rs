@@ -4638,7 +4638,7 @@ mod tests {
     /// !Unpin references should not be pinned.
     #[test]
     fn test_nonunpin_ref_param() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {~S();};
@@ -4646,7 +4646,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 fn Function<'a>(s: &'a S) { ... }
             }
@@ -4657,7 +4657,7 @@ mod tests {
     /// !Unpin mut references must be pinned.
     #[test]
     fn test_nonunpin_mut_param() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {~S();};
@@ -4665,7 +4665,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 fn Function<'a>(s: rust_std::pin::Pin<&'a mut S>) { ... }
             }
@@ -4676,7 +4676,7 @@ mod tests {
     /// !Unpin &self should not be pinned.
     #[test]
     fn test_nonunpin_ref_self() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {
@@ -4686,7 +4686,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 fn Function<'a>(&'a self) { ... }
             }
@@ -4697,7 +4697,7 @@ mod tests {
     /// !Unpin &mut self must be pinned.
     #[test]
     fn test_nonunpin_mut_self() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {
@@ -4707,7 +4707,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 fn Function<'a>(self: rust_std::pin::Pin<&'a mut Self>) { ... }
             }
@@ -4718,13 +4718,13 @@ mod tests {
     /// Drop::drop must not use self : Pin<...>.
     #[test]
     fn test_nonunpin_drop() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             struct S {~S();};
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 fn drop(&mut self) { ... }
             }
@@ -4841,7 +4841,7 @@ mod tests {
 
     #[test]
     fn test_namespace_module_items() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 int func();
@@ -4854,7 +4854,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 pub mod test_namespace_bindings {
                     ...
@@ -4878,7 +4878,7 @@ mod tests {
 
     #[test]
     fn test_namespace_module_contains_detail() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 int f();
@@ -4886,7 +4886,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 pub mod test_namespace_bindings {
                     ...
@@ -4907,7 +4907,7 @@ mod tests {
 
     #[test]
     fn test_namespace_module_contains_assertions() -> Result<()> {
-        let rs_api_impl = generate_rs_api(&ir_from_cc(
+        let rs_api = generate_rs_api(&ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 struct S {
@@ -4917,7 +4917,7 @@ mod tests {
         "#,
         )?)?;
         assert_rs_matches!(
-            rs_api_impl,
+            rs_api,
             quote! {
                 pub mod test_namespace_bindings {
                     ...
