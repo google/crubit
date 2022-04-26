@@ -1305,7 +1305,7 @@ fn generate_item(
             if !ir.is_current_target(&incomplete_record.owning_target)
                 && !ir.is_stdlib_target(&incomplete_record.owning_target)
             {
-                GeneratedItem { ..Default::default() }
+                GeneratedItem::default()
             } else {
                 GeneratedItem {
                     item: generate_incomplete_record(incomplete_record)?,
@@ -1317,7 +1317,7 @@ fn generate_item(
             if !ir.is_current_target(&record.owning_target)
                 && !ir.is_stdlib_target(&record.owning_target)
             {
-                GeneratedItem { ..Default::default() }
+                GeneratedItem::default()
             } else {
                 generate_record(record, ir, overloaded_funcs)?
             }
@@ -1326,7 +1326,7 @@ fn generate_item(
             if !ir.is_current_target(&enum_.owning_target)
                 && !ir.is_stdlib_target(&enum_.owning_target)
             {
-                GeneratedItem { ..Default::default() }
+                GeneratedItem::default()
             } else {
                 GeneratedItem { item: generate_enum(enum_, ir)?, ..Default::default() }
             }
@@ -1335,7 +1335,7 @@ fn generate_item(
             if !ir.is_current_target(&type_alias.owning_target)
                 && !ir.is_stdlib_target(&type_alias.owning_target)
             {
-                GeneratedItem { ..Default::default() }
+                GeneratedItem::default()
             } else {
                 GeneratedItem { item: generate_type_alias(type_alias, ir)?, ..Default::default() }
             }
