@@ -102,10 +102,7 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   if (!this_type.isNull()) {
     ValueLifetimes tmp;
     if (llvm::Error err =
-            ValueLifetimes::Create(this_type, [&](clang::QualType type,
-                                                  llvm::StringRef param) {
-              return lifetime_factory.CreateParamLifetime(type, param);
-            }).moveInto(tmp)) {
+            lifetime_factory.CreateParamLifetimes(this_type).moveInto(tmp)) {
       return std::move(err);
     }
     ret.this_lifetimes_ = std::move(tmp);
@@ -114,26 +111,19 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   ret.param_lifetimes_.reserve(type->getNumParams());
   for (size_t i = 0; i < type->getNumParams(); i++) {
     ValueLifetimes tmp;
-    if (llvm::Error err = ValueLifetimes::Create(
-                              type->getParamType(i),
-                              [&](clang::QualType type, llvm::StringRef param) {
-                                return lifetime_factory.CreateParamLifetime(
-                                    type, param);
-                              })
-                              .moveInto(tmp)) {
+    if (llvm::Error err =
+            lifetime_factory.CreateParamLifetimes(type->getParamType(i))
+                .moveInto(tmp)) {
       return std::move(err);
     }
     ret.param_lifetimes_.push_back(std::move(tmp));
   }
 
-  if (llvm::Error err = ValueLifetimes::Create(
-                            type->getReturnType(),
-                            [&](clang::QualType type, llvm::StringRef param) {
-                              return lifetime_factory.CreateReturnLifetime(
-                                  type, param, ret.param_lifetimes_,
-                                  ret.this_lifetimes_);
-                            })
-                            .moveInto(ret.return_lifetimes_)) {
+  if (llvm::Error err =
+          lifetime_factory
+              .CreateReturnLifetimes(type->getReturnType(),
+                                     ret.param_lifetimes_, ret.this_lifetimes_)
+              .moveInto(ret.return_lifetimes_)) {
     return std::move(err);
   }
 

@@ -24,33 +24,33 @@ namespace tidy {
 namespace lifetimes {
 
 // Interface used to create lifetimes in FunctionLifetimes::CreateForDecl.
-// CreateReturnLifetime will be called with the ValueLifetimes that were created
-// through calls to CreateParamLifetimes.
+// CreateReturnLifetimes will be called with the ValueLifetimes that were
+// created through calls to CreateParamLifetimes.
 class FunctionLifetimeFactory {
  public:
   virtual ~FunctionLifetimeFactory() {}
-  virtual llvm::Expected<Lifetime> CreateParamLifetime(
-      clang::QualType type, llvm::StringRef ref) const = 0;
-  virtual llvm::Expected<Lifetime> CreateReturnLifetime(
-      clang::QualType type, llvm::StringRef ref,
+  virtual llvm::Expected<ValueLifetimes> CreateParamLifetimes(
+      clang::QualType type) const = 0;
+  virtual llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
+      clang::QualType type,
       const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
       const std::optional<ValueLifetimes>& this_lifetimes) const = 0;
 };
 
-// Implementation of FunctionLifetimeFactory that just uses a single callback.
+// Implementation of FunctionLifetimeFactory that defers to a LifetimeFactory.
 class FunctionLifetimeFactorySingleCallback : public FunctionLifetimeFactory {
  public:
   FunctionLifetimeFactorySingleCallback(LifetimeFactory factory)
       : factory_(std::move(factory)) {}
-  llvm::Expected<Lifetime> CreateParamLifetime(
-      clang::QualType type, llvm::StringRef ref) const override {
-    return factory_(type, ref);
+  llvm::Expected<ValueLifetimes> CreateParamLifetimes(
+      clang::QualType type) const override {
+    return ValueLifetimes::Create(type, factory_);
   }
-  llvm::Expected<Lifetime> CreateReturnLifetime(
-      clang::QualType type, llvm::StringRef ref,
+  llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
+      clang::QualType type,
       const llvm::SmallVector<ValueLifetimes>& /*param_lifetimes*/,
       const std::optional<ValueLifetimes>& /*this_lifetimes*/) const override {
-    return factory_(type, ref);
+    return ValueLifetimes::Create(type, factory_);
   }
 
  private:

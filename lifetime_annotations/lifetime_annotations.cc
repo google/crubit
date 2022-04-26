@@ -152,34 +152,28 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
           symbol_table(symbol_table) {}
 
    private:
-    llvm::Expected<Lifetime> CreateParamLifetime(
-        clang::QualType, llvm::StringRef) const override {
+    llvm::Expected<ValueLifetimes> CreateParamLifetimes(
+        clang::QualType param_type) const override {
       // TODO(mboehme): parse lifetime annotations from `type` if present.
-      if (!elision_enabled) {
-        return llvm::createStringError(
-            llvm::inconvertibleErrorCode(),
-            absl::StrCat("Lifetime elision not enabled for '",
-                         func->getNameAsString(), "'"));
-      }
-      Lifetime lifetime = Lifetime::CreateVariable();
-      symbol_table.LookupLifetimeAndMaybeDeclare(lifetime);
-      return lifetime;
+      return ValueLifetimes::Create(
+          param_type,
+          [this](clang::QualType, llvm::StringRef) -> llvm::Expected<Lifetime> {
+            if (!elision_enabled) {
+              return llvm::createStringError(
+                  llvm::inconvertibleErrorCode(),
+                  absl::StrCat("Lifetime elision not enabled for '",
+                               func->getNameAsString(), "'"));
+            }
+
+            Lifetime lifetime = Lifetime::CreateVariable();
+            symbol_table.LookupLifetimeAndMaybeDeclare(lifetime);
+            return lifetime;
+          });
     }
 
-    llvm::Expected<Lifetime> CreateReturnLifetime(
-        clang::QualType, llvm::StringRef,
+    static std::optional<Lifetime> GetSingleInputLifetime(
         const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
-        const std::optional<ValueLifetimes>& this_lifetimes) const override {
-      // TODO(mboehme): parse lifetime annotations from `type` if present.
-      if (!elision_enabled) {
-        return llvm::createStringError(
-            llvm::inconvertibleErrorCode(),
-            absl::StrCat("Lifetime elision not enabled for '",
-                         func->getNameAsString(), "'"));
-      }
-
-      // TODO(veluca): adapt to lifetime elision for function pointers.
-
+        const std::optional<ValueLifetimes>& this_lifetimes) {
       // If we have an implicit `this` parameter, its lifetime is assigned to
       // all lifetimes in the return type.
       if (this_lifetimes.has_value()) {
@@ -199,13 +193,47 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
         return *all_input_lifetimes.begin();
       } else {
         // Otherwise, we don't know how to elide the output lifetime.
-        return llvm::createStringError(
-            llvm::inconvertibleErrorCode(),
-            absl::StrCat(
-                "Cannot elide output lifetimes for '", func->getNameAsString(),
-                "' because it is a non-member function that does not have "
-                "exactly one input lifetime"));
+        return std::nullopt;
       }
+    }
+
+    llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
+        clang::QualType return_type,
+        const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
+        const std::optional<ValueLifetimes>& this_lifetimes) const override {
+      // TODO(mboehme): parse lifetime annotations from `type` if present.
+
+      // TODO(veluca): adapt to lifetime elision for function pointers.
+
+      std::optional<Lifetime> input_lifetime =
+          GetSingleInputLifetime(param_lifetimes, this_lifetimes);
+
+      return ValueLifetimes::Create(
+          return_type,
+          [&input_lifetime, this](clang::QualType,
+                                  llvm::StringRef) -> llvm::Expected<Lifetime> {
+            if (!elision_enabled) {
+              return llvm::createStringError(
+                  llvm::inconvertibleErrorCode(),
+                  absl::StrCat("Lifetime elision not enabled for '",
+                               func->getNameAsString(), "'"));
+            }
+
+            // If we have a single input lifetime, its lifetime is assigned to
+            // all output lifetimes.
+            if (input_lifetime.has_value()) {
+              return *input_lifetime;
+            } else {
+              // Otherwise, we don't know how to elide the output lifetime.
+              return llvm::createStringError(
+                  llvm::inconvertibleErrorCode(),
+                  absl::StrCat("Cannot elide output lifetimes for '",
+                               func->getNameAsString(),
+                               "' because it is a non-member function that "
+                               "does not have "
+                               "exactly one input lifetime"));
+            }
+          });
     }
 
     bool elision_enabled;
