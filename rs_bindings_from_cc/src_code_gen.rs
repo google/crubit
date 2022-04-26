@@ -1016,9 +1016,7 @@ fn generate_record(
         };
 
     let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, ir)?;
-    let base_class_into = cc_struct_upcast_impl(record, ir)?;
-
-    let record_generated_items = record
+    let mut record_generated_items = record
         .child_item_ids
         .iter()
         .map(|id| {
@@ -1026,6 +1024,8 @@ fn generate_record(
             generate_item(item, ir, overloaded_funcs)
         })
         .collect::<Result<Vec<_>>>()?;
+
+    record_generated_items.push(cc_struct_upcast_impl(record, ir)?);
 
     let mut items = vec![];
     let mut thunks_from_record_items = vec![];
@@ -1055,8 +1055,6 @@ fn generate_record(
         #incomplete_definition
 
         #no_unique_address_accessors
-
-        #base_class_into
 
         #unpin_impl
 
@@ -2092,7 +2090,7 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
 //
 // TODO(b/216195042): Should this use, like, AsRef/AsMut (and some equivalent
 // for Pin)?
-fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<TokenStream> {
+fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     for base in &record.unambiguous_public_bases {
         let base_record: &Record = ir
@@ -2119,8 +2117,11 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<TokenStream> {
         }
     }
 
-    Ok(quote! {
-        #(#impls)*
+    Ok(GeneratedItem {
+        item: quote! {
+            #(#impls)*
+        },
+        ..Default::default()
     })
 }
 

@@ -86,11 +86,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
     InheritsFromBaseWithCustomAlignment
 );
-impl<'a> From<&'a InheritsFromBaseWithCustomAlignment> for &'a HasCustomAlignment {
-    fn from(x: &'a InheritsFromBaseWithCustomAlignment) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(0) as *const HasCustomAlignment) }
-    }
-}
 
 impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 
@@ -113,6 +108,12 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
+
+impl<'a> From<&'a InheritsFromBaseWithCustomAlignment> for &'a HasCustomAlignment {
+    fn from(x: &'a InheritsFromBaseWithCustomAlignment) -> Self {
+        unsafe { &*((x as *const _ as *const u8).offset(0) as *const HasCustomAlignment) }
+    }
+}
 
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
