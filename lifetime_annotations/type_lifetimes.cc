@@ -555,17 +555,20 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
                                   std::move(lifetime_params)));
   } else if (clang::QualType pointee_type = PointeeType(type);
              !pointee_type.isNull()) {
-    std::string object_lifetime_parameter;
-    if (!type_lifetime_args.empty()) {
-      object_lifetime_parameter = std::move(type_lifetime_args.back());
-      type_lifetime_args.pop_back();
+    if (type_lifetime_args.empty()) {
+      llvm::report_fatal_error(
+          llvm::Twine("didn't find type lifetimes for object of type " +
+                      type.getAsString()));
     }
+    std::string pointee_object_lifetime_parameter =
+        std::move(type_lifetime_args.back());
+    type_lifetime_args.pop_back();
     // Third case: pointer.
     return ObjectLifetimes(
         ret_lifetime, ValueLifetimes::ForPointerLikeType(
                           type, GetObjectLifetimesForTypeInContext(
                                     pointee_type, std::move(type_lifetime_args),
-                                    object_lifetime_parameter)));
+                                    pointee_object_lifetime_parameter)));
   }
 
   return ObjectLifetimes(ret_lifetime,
