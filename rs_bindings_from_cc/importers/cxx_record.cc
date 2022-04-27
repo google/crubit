@@ -5,9 +5,9 @@
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
 #include "rs_bindings_from_cc/ast_convert.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/RecordLayout.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Sema/Sema.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/RecordLayout.h"
+#include "clang/Sema/Sema.h"
 
 namespace crubit {
 

@@ -4,7 +4,7 @@
 
 #include "common/file_io.h"
 
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 

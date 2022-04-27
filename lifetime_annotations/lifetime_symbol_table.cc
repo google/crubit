@@ -8,7 +8,7 @@
 #include <optional>
 #include <string>
 
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
+#include "llvm/Support/ErrorHandling.h"
 
 namespace clang {
 namespace tidy {

@@ -6,8 +6,8 @@
 
 #include "common/check.h"
 #include "rs_bindings_from_cc/importer.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 namespace crubit {
 

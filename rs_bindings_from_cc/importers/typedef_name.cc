@@ -4,7 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
+#include "clang/AST/ASTContext.h"
 
 namespace crubit {
 

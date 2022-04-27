@@ -6,7 +6,7 @@
 
 #include <optional>
 
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
+#include "clang/AST/DeclTemplate.h"
 
 namespace crubit {
 

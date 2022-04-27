@@ -4,7 +4,7 @@
 
 #include "lifetime_annotations/lifetime.h"
 
-#include "third_party/absl/strings/str_cat.h"
+#include "absl/strings/str_cat.h"
 
 namespace clang {
 namespace tidy {

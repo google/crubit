@@ -4,14 +4,14 @@
 
 #include <string>
 
-#include "third_party/absl/status/statusor.h"
+#include "absl/status/statusor.h"
 #include "common/ffi_types.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/JSON.h"
 
 namespace crubit {
 

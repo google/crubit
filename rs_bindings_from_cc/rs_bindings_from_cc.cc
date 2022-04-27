@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 
-#include "third_party/absl/container/flat_hash_map.h"
-#include "third_party/absl/flags/parse.h"
-#include "third_party/absl/status/status.h"
-#include "third_party/absl/status/statusor.h"
-#include "third_party/absl/strings/string_view.h"
+#include "absl/container/flat_hash_map.h"
+#include "absl/flags/parse.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "common/file_io.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -22,9 +22,9 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/JSON.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
 

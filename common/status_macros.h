@@ -9,10 +9,10 @@
 
 #include <utility>
 
-#include "third_party/absl/base/optimization.h"
-#include "third_party/absl/status/status.h"
-#include "third_party/absl/status/statusor.h"
-#include "third_party/absl/types/source_location.h"
+#include "absl/base/optimization.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/types/source_location.h"
 
 // Evaluates an expression that produces a `absl::Status`. If the status is not
 // ok, returns it from the current function.

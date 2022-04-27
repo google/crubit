@@ -9,9 +9,9 @@
 
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/Decl.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
+#include "clang/AST/Decl.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

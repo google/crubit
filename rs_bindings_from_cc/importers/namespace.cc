@@ -4,7 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/namespace.h"
 
-#include "third_party/absl/strings/match.h"
+#include "absl/strings/match.h"
 
 namespace crubit {
 

@@ -5,10 +5,10 @@
 #ifndef CRUBIT_COMMON_CHECK_H_
 #define CRUBIT_COMMON_CHECK_H_
 
-#include "third_party/absl/base/attributes.h"
-#include "third_party/absl/base/optimization.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
+#include "absl/base/attributes.h"
+#include "absl/base/optimization.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FormatVariadic.h"
 
 #define CRUBIT_CHECK(condition)                                           \
   do {                                                                    \

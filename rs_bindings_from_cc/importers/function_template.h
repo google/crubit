@@ -6,7 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_IMPORTERS_FUNCTION_TEMPLATE_H_
 
 #include "rs_bindings_from_cc/decl_importer.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclTemplate.h"
+#include "clang/AST/DeclTemplate.h"
 
 namespace crubit {
 

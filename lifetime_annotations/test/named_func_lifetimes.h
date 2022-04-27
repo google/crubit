@@ -15,10 +15,10 @@
 #include "testing/base/public/gunit.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringMap.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/ErrorHandling.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/FormatVariadic.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/raw_ostream.h"
+#include "llvm/ADT/StringMap.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FormatVariadic.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace clang {
 namespace tidy {

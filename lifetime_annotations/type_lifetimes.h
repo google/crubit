@@ -14,13 +14,13 @@
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/Type.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/TypeOrdering.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/DenseMapInfo.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/SmallVector.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/Error.h"
+#include "clang/AST/Type.h"
+#include "clang/AST/TypeOrdering.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMapInfo.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 
 namespace clang {
 namespace tidy {

@@ -34,10 +34,10 @@
 #include <string>
 #include <utility>
 
-#include "third_party/absl/container/flat_hash_set.h"
-#include "third_party/absl/flags/marshalling.h"
-#include "third_party/absl/meta/type_traits.h"
-#include "third_party/absl/strings/string_view.h"
+#include "absl/container/flat_hash_set.h"
+#include "absl/flags/marshalling.h"
+#include "absl/meta/type_traits.h"
+#include "absl/strings/string_view.h"
 
 // Defines the StringType using StringTypeRepresentation and provides a type
 // alias to string_type_name.  The struct string_type_name ## _tag_ trickery is

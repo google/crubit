@@ -4,7 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/function.h"
 
-#include "third_party/absl/strings/substitute.h"
+#include "absl/strings/substitute.h"
 
 namespace crubit {
 

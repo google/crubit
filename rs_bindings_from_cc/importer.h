@@ -21,8 +21,8 @@
 #include "rs_bindings_from_cc/importers/namespace.h"
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/DeclCXX.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/Mangle.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/AST/Mangle.h"
 
 namespace crubit {
 

@@ -6,9 +6,9 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 
 #include "rs_bindings_from_cc/importer.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTConsumer.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Frontend/CompilerInstance.h"
+#include "clang/AST/ASTConsumer.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 namespace crubit {
 

@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "third_party/absl/status/statusor.h"
+#include "absl/status/statusor.h"
 
 namespace crubit {
 

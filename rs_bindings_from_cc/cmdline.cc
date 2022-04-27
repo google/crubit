@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 
-#include "third_party/absl/flags/flag.h"
-#include "third_party/absl/strings/str_cat.h"
-#include "third_party/absl/strings/substitute.h"
+#include "absl/flags/flag.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/substitute.h"
 #include "common/status_macros.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/Support/JSON.h"
+#include "llvm/Support/JSON.h"
 
 ABSL_FLAG(bool, do_nothing, false,
           "if set to true the tool will produce empty files "

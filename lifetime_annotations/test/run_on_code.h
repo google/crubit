@@ -9,10 +9,10 @@
 #include <string>
 
 #include "lifetime_annotations/lifetime_annotations.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/AST/ASTContext.h"
-#include "third_party/llvm/llvm-project/clang/include/clang/Tooling/Tooling.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/ArrayRef.h"
-#include "third_party/llvm/llvm-project/llvm/include/llvm/ADT/StringRef.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/Tooling/Tooling.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {
