@@ -5,7 +5,6 @@
 /// Types and deserialization logic for IR. See docs in
 // `rs_bindings_from_cc/ir.h` for more information.
 use anyhow::{anyhow, bail, Context, Result};
-use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{ToTokens, TokenStreamExt};
 use serde::Deserialize;
@@ -14,23 +13,10 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::io::Read;
 
-pub const TESTING_TARGET: &str = "//test:testing_target";
-
 /// Deserialize `IR` from JSON given as a reader.
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
     let flat_ir = serde_json::from_reader(reader)?;
     make_ir(flat_ir)
-}
-
-/// Create a testing `IR` instance from given items, using mock values for other
-/// fields.
-pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
-    make_ir_from_parts(
-        items.into_iter().collect_vec(),
-        /* used_headers= */ vec![],
-        /* current_target= */ TESTING_TARGET.into(),
-        /* top_level_item_ids= */ vec![],
-    )
 }
 
 /// Create a testing `IR` instance from given parts. This function does not use

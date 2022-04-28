@@ -5,14 +5,27 @@
 use anyhow::Result;
 
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
-use ir::{self, Func, Identifier, Item, Record, IR};
+use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
+use itertools::Itertools;
 
 /// Generates `IR` from a header containing `header_source`.
 pub fn ir_from_cc(header_source: &str) -> Result<IR> {
     ir_from_cc_dependency(header_source, "// empty header")
 }
 
-const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
+/// Name of the current target used by `ir_from_cc` and `ir_from_cc_dependency`.
+pub const TESTING_TARGET: &str = "//test:testing_target";
+
+/// Create a testing `IR` instance from given items, using mock values for other
+/// fields.
+pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
+    make_ir_from_parts(
+        items.into_iter().collect_vec(),
+        /* used_headers= */ vec![],
+        /* current_target= */ TESTING_TARGET.into(),
+        /* top_level_item_ids= */ vec![],
+    )
+}
 
 /// Generates `IR` from a header that depends on another header.
 ///
@@ -20,6 +33,8 @@ const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 /// for the header with `dependency_header_source`. The name of the dependency
 /// target is assumed to be `"//test:dependency"`.
 pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str) -> Result<IR> {
+    const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
+
     extern "C" {
         fn json_from_cc_dependency(
             header_source: FfiU8Slice,
