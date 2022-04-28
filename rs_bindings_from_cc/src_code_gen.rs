@@ -2115,37 +2115,57 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
 //
 // TODO(b/216195042): Should this use, like, AsRef/AsMut (and some equivalent
 // for Pin)?
+// TODO(b/216195042): Correctly handle imported records, lifetimes.
 fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
+    let mut thunks = vec![];
+    let mut cc_impls = vec![];
     for base in &record.unambiguous_public_bases {
         let base_record: &Record = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
+        let base_name = make_rs_ident(&base_record.rs_name);
+        let derived_name = make_rs_ident(&record.rs_name);
+        let body;
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
-            // TODO(b/216195042): Correctly handle imported records, lifetimes.
-            let base_name = make_rs_ident(&base_record.rs_name);
-            let derived_name = make_rs_ident(&record.rs_name);
-            impls.push(quote! {
-                impl<'a> From<&'a #derived_name> for &'a #base_name {
-                    fn from(x: &'a #derived_name) -> Self {
-                        unsafe {
-                            &*((x as *const _ as *const u8).offset(#offset) as *const #base_name)
-                        }
-                    }
+            body = quote! {&*((x as *const _ as *const u8).offset(#offset) as *const #base_name)};
+        } else {
+            // TODO(b/216195042): use mangled names here, or otherwise guarantee
+            // non-collision.
+            let cast_fn_name = make_rs_ident(&format!(
+                "__crubit_dynamic_upcast__{}__to__{}",
+                record.rs_name, base_record.rs_name
+            ));
+            let base_cc_name = format_cc_ident(&base_record.cc_name);
+            let derived_cc_name = format_cc_ident(&record.cc_name);
+            cc_impls.push(quote! {
+                extern "C" const #base_cc_name& #cast_fn_name(const #derived_cc_name& from) {
+                    return from;
                 }
             });
-        } else {
-            // TODO(b/216195042): determine offset dynamically / use a dynamic
-            // cast. This requires a new C++ function to be
-            // generated, so that we have something to call.
+            thunks.push(quote! {
+                pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
+            });
+            body = quote! {
+                &*detail::#cast_fn_name(x)
+            };
         }
+        impls.push(quote! {
+            impl<'a> From<&'a #derived_name> for &'a #base_name {
+                fn from(x: &'a #derived_name) -> Self {
+                    unsafe {
+                        #body
+                    }
+                }
+            }
+        });
     }
 
     Ok(GeneratedItem {
-        item: quote! {
-            #(#impls)*
-        },
+        item: quote! {#(#impls)*},
+        thunks: quote! {#(#thunks)*},
+        thunk_impls: quote! {#(#cc_impls)*},
         ..Default::default()
     })
 }
@@ -3738,8 +3758,16 @@ mod tests {
             "",
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        // TODO(b/216195042): virtual bases.
-        assert_rs_not_matches!(rs_api, quote! { From<&'a Derived> for &'a VirtualBase });
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'a> From<&'a Derived> for &'a VirtualBase {
+                    fn from(x: &'a Derived) -> Self {
+                        unsafe { &*detail::__crubit_dynamic_upcast__Derived__to__VirtualBase(x) }
+                    }
+                }
+            }
+        );
         assert_rs_matches!(rs_api, quote! { From<&'a Derived> for &'a UnambiguousPublicBase });
         assert_rs_matches!(rs_api, quote! { From<&'a Derived> for &'a MultipleInheritance });
         assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a PrivateBase});

@@ -56,4 +56,26 @@ struct Derived final : Base0, Base1, Base4 {
   char private_field;  // NOLINT(clang-diagnostic-unused-private-field)
 };
 
+class VirtualBase2 : public virtual Base1 {};
+class VirtualBase3 : public virtual Base1 {};
+
+class VirtualDerived : public virtual VirtualBase2,
+                       public virtual VirtualBase3 {
+ public:
+  size_t base1_address() const {
+    const Base1* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  size_t base2_address() const {
+    const VirtualBase2* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+
+  size_t base3_address() const {
+    const VirtualBase3* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_UPCAST_H_

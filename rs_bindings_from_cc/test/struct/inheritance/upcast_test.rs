@@ -1,9 +1,9 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 #[cfg(test)]
 mod tests {
+    use ctor::CtorNew as _;
     use upcast::*;
 
     #[test]
@@ -21,5 +21,26 @@ mod tests {
         assert_eq!(base3 as *const _ as usize, derived.base3_address());
         let base4: &Base4 = derived.into();
         assert_eq!(base4 as *const _ as usize, derived.base4_address());
+    }
+
+    #[test]
+    fn test_virtual_upcast() {
+        ctor::emplace! {
+            let derived = VirtualDerived::ctor_new(());
+        }
+        let derived = &*derived;
+
+        let base1: &Base1 = derived.into();
+        let base1_address = base1 as *const _ as usize;
+        assert_eq!(base1_address, derived.base1_address());
+        let base2: &VirtualBase2 = derived.into();
+        assert_eq!(base2 as *const _ as usize, derived.base2_address());
+        let base3: &VirtualBase3 = derived.into();
+        assert_eq!(base3 as *const _ as usize, derived.base3_address());
+
+        let base1: &Base1 = base2.into();
+        assert_eq!(base1 as *const _ as usize, base1_address);
+        let base1: &Base1 = base3.into();
+        assert_eq!(base1 as *const _ as usize, base1_address);
     }
 }

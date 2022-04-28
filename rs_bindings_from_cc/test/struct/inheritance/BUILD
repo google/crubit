@@ -13,4 +13,7 @@ rust_test(
     name = "upcast_test",
     srcs = ["upcast_test.rs"],
     cc_deps = [":upcast"],
+    deps = [
+        "//rs_bindings_from_cc/support:ctor",
+    ],
 )

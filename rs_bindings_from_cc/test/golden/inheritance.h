@@ -24,4 +24,9 @@ struct Derived final : Base0, Base1, Base2 {
   char derived_1;
 };
 
+class VirtualBase1 : public virtual Base1 {};
+class VirtualBase2 : public virtual Base1 {};
+class VirtualDerived : public virtual VirtualBase1,
+                       public virtual VirtualBase2 {};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_

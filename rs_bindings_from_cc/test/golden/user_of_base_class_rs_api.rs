@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:user_of_base_class_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 
@@ -21,13 +21,14 @@ use memoffset_unstable_const::offset_of;
 /// This tests inheritance across library boundaries.
 ///
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
-#[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Derived2 {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 12],
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 20],
     pub derived_1: u8,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), Derived2);
+
+impl !Unpin for Derived2 {}
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::Derived2':
@@ -51,33 +52,100 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), Derived2);
 
 impl<'a> From<&'a Derived2> for &'a Base0 {
     fn from(x: &'a Derived2) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base0) }
+        unsafe { &*detail::__crubit_dynamic_upcast__Derived2__to__Base0(x) }
     }
 }
 impl<'a> From<&'a Derived2> for &'a Base1 {
     fn from(x: &'a Derived2) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base1) }
+        unsafe { &*((x as *const _ as *const u8).offset(8) as *const Base1) }
     }
 }
 impl<'a> From<&'a Derived2> for &'a Base2 {
     fn from(x: &'a Derived2) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(10) as *const Base2) }
+        unsafe { &*((x as *const _ as *const u8).offset(18) as *const Base2) }
+    }
+}
+
+#[repr(C, align(8))]
+pub struct VirtualDerived2 {
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 32],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived2"), VirtualDerived2);
+
+impl !Unpin for VirtualDerived2 {}
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=19
+// Error while generating bindings for item 'VirtualDerived2::VirtualDerived2':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=19
+// Error while generating bindings for item 'VirtualDerived2::VirtualDerived2':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=19
+// Error while generating bindings for item 'VirtualDerived2::VirtualDerived2':
+// Parameter #0 is not supported: Unsupported type 'class VirtualDerived2 &&': Unsupported type: && without lifetime
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=19
+// Error while generating bindings for item 'VirtualDerived2::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=19
+// Error while generating bindings for item 'VirtualDerived2::operator=':
+// Parameter #0 is not supported: Unsupported type 'class VirtualDerived2 &&': Unsupported type: && without lifetime
+
+impl<'a> From<&'a VirtualDerived2> for &'a VirtualBase1 {
+    fn from(x: &'a VirtualDerived2) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(x) }
+    }
+}
+impl<'a> From<&'a VirtualDerived2> for &'a Base1 {
+    fn from(x: &'a VirtualDerived2) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(x) }
+    }
+}
+impl<'a> From<&'a VirtualDerived2> for &'a VirtualBase2 {
+    fn from(x: &'a VirtualDerived2) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(x) }
     }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_BASE_CLASS_H_
 
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        pub fn __crubit_dynamic_upcast__Derived2__to__Base0(from: *const Derived2) -> *const Base0;
+        pub fn __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(
+            from: *const VirtualDerived2,
+        ) -> *const VirtualBase1;
+        pub fn __crubit_dynamic_upcast__VirtualDerived2__to__Base1(
+            from: *const VirtualDerived2,
+        ) -> *const Base1;
+        pub fn __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(
+            from: *const VirtualDerived2,
+        ) -> *const VirtualBase2;
+    }
+}
+
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<Derived2>() == 16usize);
+const _: () = assert!(rust_std::mem::size_of::<Derived2>() == 24usize);
 const _: () = assert!(rust_std::mem::align_of::<Derived2>() == 8usize);
 const _: () = {
-    static_assertions::assert_impl_all!(Derived2: Clone);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(Derived2: Copy);
+    static_assertions::assert_not_impl_all!(Derived2: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_all!(Derived2: Drop);
 };
-const _: () = assert!(offset_of!(Derived2, derived_1) * 8 == 96usize);
+const _: () = assert!(offset_of!(Derived2, derived_1) * 8 == 160usize);
+
+const _: () = assert!(rust_std::mem::size_of::<VirtualDerived2>() == 32usize);
+const _: () = assert!(rust_std::mem::align_of::<VirtualDerived2>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualDerived2: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualDerived2: Drop);
+};

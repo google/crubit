@@ -12,8 +12,11 @@
 // This tests inheritance across library boundaries.
 //
 // TODO(b/216195042): Correctly namespace base classes in generated Rust code.
-struct Derived2 final : Base0, Base1, Base2 {
+struct Derived2 final : virtual Base0, Base1, Base2 {
   char derived_1;
 };
+
+class VirtualDerived2 : public virtual VirtualBase1,
+                        public virtual VirtualBase2 {};
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_BASE_CLASS_H_

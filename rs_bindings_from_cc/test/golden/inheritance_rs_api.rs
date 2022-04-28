@@ -149,7 +149,141 @@ impl<'a> From<&'a Derived> for &'a Base2 {
     }
 }
 
+#[repr(C, align(8))]
+pub struct VirtualBase1 {
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 17],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), VirtualBase1);
+
+impl !Unpin for VirtualBase1 {}
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// Error while generating bindings for item 'VirtualBase1::VirtualBase1':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// Error while generating bindings for item 'VirtualBase1::VirtualBase1':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// Error while generating bindings for item 'VirtualBase1::VirtualBase1':
+// Parameter #0 is not supported: Unsupported type 'class VirtualBase1 &&': Unsupported type: && without lifetime
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// Error while generating bindings for item 'VirtualBase1::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// Error while generating bindings for item 'VirtualBase1::operator=':
+// Parameter #0 is not supported: Unsupported type 'class VirtualBase1 &&': Unsupported type: && without lifetime
+
+impl<'a> From<&'a VirtualBase1> for &'a Base1 {
+    fn from(x: &'a VirtualBase1) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(x) }
+    }
+}
+
+#[repr(C, align(8))]
+pub struct VirtualBase2 {
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 17],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), VirtualBase2);
+
+impl !Unpin for VirtualBase2 {}
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// Error while generating bindings for item 'VirtualBase2::VirtualBase2':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// Error while generating bindings for item 'VirtualBase2::VirtualBase2':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// Error while generating bindings for item 'VirtualBase2::VirtualBase2':
+// Parameter #0 is not supported: Unsupported type 'class VirtualBase2 &&': Unsupported type: && without lifetime
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// Error while generating bindings for item 'VirtualBase2::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// Error while generating bindings for item 'VirtualBase2::operator=':
+// Parameter #0 is not supported: Unsupported type 'class VirtualBase2 &&': Unsupported type: && without lifetime
+
+impl<'a> From<&'a VirtualBase2> for &'a Base1 {
+    fn from(x: &'a VirtualBase2) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(x) }
+    }
+}
+
+#[repr(C, align(8))]
+pub struct VirtualDerived {
+    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 32],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), VirtualDerived);
+
+impl !Unpin for VirtualDerived {}
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// Error while generating bindings for item 'VirtualDerived::VirtualDerived':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// Error while generating bindings for item 'VirtualDerived::VirtualDerived':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// Error while generating bindings for item 'VirtualDerived::VirtualDerived':
+// Parameter #0 is not supported: Unsupported type 'class VirtualDerived &&': Unsupported type: && without lifetime
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// Error while generating bindings for item 'VirtualDerived::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// Error while generating bindings for item 'VirtualDerived::operator=':
+// Parameter #0 is not supported: Unsupported type 'class VirtualDerived &&': Unsupported type: && without lifetime
+
+impl<'a> From<&'a VirtualDerived> for &'a VirtualBase1 {
+    fn from(x: &'a VirtualDerived) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(x) }
+    }
+}
+impl<'a> From<&'a VirtualDerived> for &'a Base1 {
+    fn from(x: &'a VirtualDerived) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(x) }
+    }
+}
+impl<'a> From<&'a VirtualDerived> for &'a VirtualBase2 {
+    fn from(x: &'a VirtualDerived) -> Self {
+        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(x) }
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        pub fn __crubit_dynamic_upcast__VirtualBase1__to__Base1(
+            from: *const VirtualBase1,
+        ) -> *const Base1;
+        pub fn __crubit_dynamic_upcast__VirtualBase2__to__Base1(
+            from: *const VirtualBase2,
+        ) -> *const Base1;
+        pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(
+            from: *const VirtualDerived,
+        ) -> *const VirtualBase1;
+        pub fn __crubit_dynamic_upcast__VirtualDerived__to__Base1(
+            from: *const VirtualDerived,
+        ) -> *const Base1;
+        pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(
+            from: *const VirtualDerived,
+        ) -> *const VirtualBase2;
+    }
+}
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
@@ -195,3 +329,30 @@ const _: () = {
     static_assertions::assert_not_impl_all!(Derived: Drop);
 };
 const _: () = assert!(offset_of!(Derived, derived_1) * 8 == 96usize);
+
+const _: () = assert!(rust_std::mem::size_of::<VirtualBase1>() == 24usize);
+const _: () = assert!(rust_std::mem::align_of::<VirtualBase1>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualBase1: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualBase1: Drop);
+};
+
+const _: () = assert!(rust_std::mem::size_of::<VirtualBase2>() == 24usize);
+const _: () = assert!(rust_std::mem::align_of::<VirtualBase2>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualBase2: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualBase2: Drop);
+};
+
+const _: () = assert!(rust_std::mem::size_of::<VirtualDerived>() == 32usize);
+const _: () = assert!(rust_std::mem::align_of::<VirtualDerived>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualDerived: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(VirtualDerived: Drop);
+};
