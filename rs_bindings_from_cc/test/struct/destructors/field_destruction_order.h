@@ -7,7 +7,7 @@
 
 #pragma clang lifetime_elision
 
-struct DestructionOrderRecorder {
+struct [[clang::trivial_abi]] DestructionOrderRecorder final {
   ~DestructionOrderRecorder() { RecordDestruction(int_field); }
   int int_field;
 
@@ -16,7 +16,7 @@ struct DestructionOrderRecorder {
   static void ClearDestructionRecord();
 };
 
-struct FieldDestructionOrderTester {
+struct [[clang::trivial_abi]] FieldDestructionOrderTester final {
   DestructionOrderRecorder field1;
   DestructionOrderRecorder field2;
   DestructionOrderRecorder field3;

@@ -52,6 +52,15 @@ extern "C" void __rust_thunk___ZN17NontrivialMembersD1Ev(
     class NontrivialMembers* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
+extern "C" void __rust_thunk___ZN15NontrivialUnpinC1ERKS_(
+    class NontrivialUnpin* __this, const class NontrivialUnpin& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class NontrivialUnpin& __rust_thunk___ZN15NontrivialUnpinaSERKS_(
+    class NontrivialUnpin* __this, const class NontrivialUnpin& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 
 static_assert(sizeof(class Nontrivial) == 4);
 static_assert(alignof(class Nontrivial) == 4);
@@ -66,5 +75,9 @@ static_assert(alignof(class NontrivialMembers) == 4);
 static_assert(CRUBIT_OFFSET_OF(nontrivial_member, class NontrivialMembers) *
                   8 ==
               0);
+
+static_assert(sizeof(class NontrivialUnpin) == 4);
+static_assert(alignof(class NontrivialUnpin) == 4);
+static_assert(CRUBIT_OFFSET_OF(field, class NontrivialUnpin) * 8 == 0);
 
 #pragma clang diagnostic pop

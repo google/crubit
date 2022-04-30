@@ -1132,7 +1132,8 @@ fn should_derive_clone(record: &Record) -> bool {
 
 fn should_derive_copy(record: &Record) -> bool {
     // TODO(b/202258760): Make `Copy` inclusion configurable.
-    should_derive_clone(record)
+    record.destructor.definition == ir::SpecialMemberDefinition::Trivial
+        && should_derive_clone(record)
 }
 
 fn generate_derives(record: &Record) -> Vec<Ident> {
@@ -2675,6 +2676,19 @@ mod tests {
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
+    /// In Rust, a Drop type cannot be Copy.
+    #[test]
+    fn test_copy_derives_dtor_nontrivial_self() {
+        let mut record = ir_record("S");
+        for definition in [
+            ir::SpecialMemberDefinition::NontrivialUserDefined,
+            ir::SpecialMemberDefinition::NontrivialMembers,
+        ] {
+            record.destructor.definition = definition;
+            assert_eq!(generate_derives(&record), &["Clone"]);
+        }
+    }
+
     #[test]
     fn test_ptr_func() -> Result<()> {
         let ir = ir_from_cc(&tokens_to_string(quote! {
@@ -3668,7 +3682,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[derive(Clone, Copy)]
+                #[derive(Clone)]
                 #[repr(C)]
                 pub union UnionWithNontrivialField {
                     pub trivial_field: i32,

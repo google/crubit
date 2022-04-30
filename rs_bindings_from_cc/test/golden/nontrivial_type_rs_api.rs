@@ -248,17 +248,83 @@ impl Drop for NontrivialMembers {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=52
+/// Nontrivial, but trivially relocatable and final (and therefore Unpin).
+#[derive(Clone)]
+#[repr(C)]
+pub struct NontrivialUnpin {
+    pub field: i32,
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("NontrivialUnpin"), NontrivialUnpin);
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=53
+// Error while generating bindings for item 'NontrivialUnpin::operator=':
+// Bindings for this kind of operator are not supported
+
+impl Default for NontrivialUnpin {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            detail::__rust_thunk___ZN15NontrivialUnpinC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=55
+// Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
+// Not yet supported type of constructor parameter
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=56
+// Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
+// More than 1 constructor parameter is not supported yet
+
+impl<'b> From<ctor::RvalueReference<'b, Nontrivial>> for NontrivialUnpin {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, Nontrivial>) -> Self {
+        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            detail::__rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl Drop for NontrivialUnpin {
+    #[inline(always)]
+    fn drop<'a>(&'a mut self) {
+        unsafe { detail::__rust_thunk___ZN15NontrivialUnpinD1Ev(self) }
+    }
+}
+
+impl NontrivialUnpin {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(&'a mut self) {
+        unsafe { detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(self) }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=65
 // Error while generating bindings for item 'TakesByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=53
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=66
 // Error while generating bindings for item 'TakesByValueInline':
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=55
+#[inline(always)]
+pub fn TakesByValueUnpin(nontrivial: NontrivialUnpin) {
+    unsafe { detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(nontrivial) }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=69
 // Error while generating bindings for item 'ReturnsByValue':
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
+
+#[inline(always)]
+pub fn ReturnsByValueUnpin() -> NontrivialUnpin {
+    unsafe { detail::__rust_thunk___Z19ReturnsByValueUnpinv() }
+}
 
 #[inline(always)]
 pub fn TakesByConstReference<'a>(nontrivial: &'a Nontrivial) -> &'a Nontrivial {
@@ -270,6 +336,16 @@ pub fn TakesByReference<'a>(
     nontrivial: rust_std::pin::Pin<&'a mut Nontrivial>,
 ) -> rust_std::pin::Pin<&'a mut Nontrivial> {
     unsafe { detail::__rust_thunk___Z16TakesByReferenceR10Nontrivial(nontrivial) }
+}
+
+#[inline(always)]
+pub fn TakesByConstReferenceUnpin<'a>(nontrivial: &'a NontrivialUnpin) -> &'a NontrivialUnpin {
+    unsafe { detail::__rust_thunk___Z26TakesByConstReferenceUnpinRK15NontrivialUnpin(nontrivial) }
+}
+
+#[inline(always)]
+pub fn TakesByReferenceUnpin<'a>(nontrivial: &'a mut NontrivialUnpin) -> &'a mut NontrivialUnpin {
+    unsafe { detail::__rust_thunk___Z21TakesByReferenceUnpinR15NontrivialUnpin(nontrivial) }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
@@ -332,6 +408,27 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, NontrivialMembers>,
         );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(__this: *mut NontrivialMembers);
+        #[link_name = "_ZN15NontrivialUnpinC1Ev"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1Ev<'a>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialUnpin>,
+        );
+        #[link_name = "_ZN15NontrivialUnpinC1EO10Nontrivial"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial<'a, 'b>(
+            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialUnpin>,
+            __param_0: ctor::RvalueReference<'b, Nontrivial>,
+        );
+        #[link_name = "_ZN15NontrivialUnpinD1Ev"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(__this: *mut NontrivialUnpin);
+        #[link_name = "_ZN15NontrivialUnpin14MemberFunctionEv"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'a>(
+            __this: &'a mut NontrivialUnpin,
+        );
+        #[link_name = "_Z17TakesByValueUnpin15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
+            nontrivial: NontrivialUnpin,
+        );
+        #[link_name = "_Z19ReturnsByValueUnpinv"]
+        pub(crate) fn __rust_thunk___Z19ReturnsByValueUnpinv() -> NontrivialUnpin;
         #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]
         pub(crate) fn __rust_thunk___Z21TakesByConstReferenceRK10Nontrivial<'a>(
             nontrivial: &'a Nontrivial,
@@ -340,6 +437,14 @@ mod detail {
         pub(crate) fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'a>(
             nontrivial: rust_std::pin::Pin<&'a mut Nontrivial>,
         ) -> rust_std::pin::Pin<&'a mut Nontrivial>;
+        #[link_name = "_Z26TakesByConstReferenceUnpinRK15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z26TakesByConstReferenceUnpinRK15NontrivialUnpin<'a>(
+            nontrivial: &'a NontrivialUnpin,
+        ) -> &'a NontrivialUnpin;
+        #[link_name = "_Z21TakesByReferenceUnpinR15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z21TakesByReferenceUnpinR15NontrivialUnpin<'a>(
+            nontrivial: &'a mut NontrivialUnpin,
+        ) -> &'a mut NontrivialUnpin;
     }
 }
 
@@ -380,3 +485,19 @@ const _: () = {
     static_assertions::assert_impl_all!(NontrivialMembers: Drop);
 };
 const _: () = assert!(offset_of!(NontrivialMembers, nontrivial_member) * 8 == 0usize);
+
+const _: () = assert!(rust_std::mem::size_of::<NontrivialUnpin>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<NontrivialUnpin>() == 4usize);
+const _: () = {
+    static_assertions::assert_impl_all!(NontrivialUnpin: Clone);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(NontrivialUnpin: Copy);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(NontrivialUnpin: Drop);
+};
+const _: () = assert!(offset_of!(NontrivialUnpin, field) * 8 == 0usize);
+const _: () = {
+    static_assertions::assert_impl_all!(i32: Copy);
+};

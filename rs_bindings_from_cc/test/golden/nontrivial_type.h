@@ -49,12 +49,31 @@ struct NontrivialMembers final {
   Nontrivial nontrivial_member;
 };
 
+// Nontrivial, but trivially relocatable and final (and therefore Unpin).
+struct [[clang::trivial_abi]] NontrivialUnpin final {
+  explicit NontrivialUnpin();
+  explicit NontrivialUnpin(int field);
+  explicit NontrivialUnpin(int field, int unused);
+  NontrivialUnpin(Nontrivial&&);
+  ~NontrivialUnpin();
+
+  void MemberFunction();
+
+  int field;
+};
+
 void TakesByValue(Nontrivial nontrivial);
 void TakesByValueInline(NontrivialInline nontrivial);
+void TakesByValueUnpin(NontrivialUnpin nontrivial);
 
 Nontrivial ReturnsByValue();
+NontrivialUnpin ReturnsByValueUnpin();
 
 const Nontrivial& TakesByConstReference(const Nontrivial& nontrivial);
 Nontrivial& TakesByReference(Nontrivial& nontrivial);
+
+const NontrivialUnpin& TakesByConstReferenceUnpin(
+    const NontrivialUnpin& nontrivial);
+NontrivialUnpin& TakesByReferenceUnpin(NontrivialUnpin& nontrivial);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
