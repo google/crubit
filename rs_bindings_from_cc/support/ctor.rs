@@ -979,28 +979,6 @@ pub trait CtorNew<ConstructorArgs> {
     fn ctor_new(args: ConstructorArgs) -> Self::CtorType;
 }
 
-/// Degenerate singleton tuple constructor.
-// Implementation note: This would be much  better the other way around, where
-// you define it for singleton tuples and it gets derived for non-tuples. That
-// way, both the code implementing *and* the code using the trait can be generic
-// over tuple member counts. The way it is defined right now, any impl must
-// specifically special-case 1-tuples and define them as non-tuple args instead.
-//
-// (That would be relevant for e.g. code generation. Of course, if code
-// generation is sufficiently textual, and chooses not to include the trialing
-// comma, then it can still define the 1-arg case well enough.)
-//
-// Unfortunately, I don't know how to flip this the way I want after all:
-// https://play.rust-lang.org/?gist=87e3bbdbe8ea6ac0e2d16f4d3a9a37b2
-impl<FromType, T: CtorNew<FromType>> CtorNew<(FromType,)> for T {
-    type CtorType = <Self as CtorNew<FromType>>::CtorType;
-
-    fn ctor_new(args: (FromType,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as CtorNew<FromType>>::ctor_new(arg)
-    }
-}
-
 // ====
 // Misc
 // ====

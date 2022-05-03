@@ -55,6 +55,14 @@ impl<'b> ctor::CtorNew<&'b PolymorphicClass> for PolymorphicClass {
         )
     }
 }
+impl<'b> ctor::CtorNew<(&'b PolymorphicClass,)> for PolymorphicClass {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b PolymorphicClass,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b PolymorphicClass>>::ctor_new(arg)
+    }
+}
 
 // rs_bindings_from_cc/test/golden/polymorphic.h;l=10
 // Error while generating bindings for item 'PolymorphicClass::operator=':

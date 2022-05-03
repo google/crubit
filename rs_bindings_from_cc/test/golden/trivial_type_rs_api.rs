@@ -137,6 +137,14 @@ impl<'b> ctor::CtorNew<&'b TrivialNonfinal> for TrivialNonfinal {
         )
     }
 }
+impl<'b> ctor::CtorNew<(&'b TrivialNonfinal,)> for TrivialNonfinal {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b TrivialNonfinal,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b TrivialNonfinal>>::ctor_new(arg)
+    }
+}
 
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNonfinal {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -151,6 +159,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>> for TrivialNo
                 );
             },
         )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, TrivialNonfinal>,)> for TrivialNonfinal {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, TrivialNonfinal>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, TrivialNonfinal>>>::ctor_new(arg)
     }
 }
 

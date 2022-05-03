@@ -700,24 +700,43 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             };
         }
         ImplKind::Trait { trait_name, record_name, trait_generic_params, .. } => {
+            let extra_body;
             let extra_items;
-            match trait_name {
-                TraitName::CtorNew(..) => {
+            match &trait_name {
+                TraitName::CtorNew(params) => {
                     // This feature seems destined for stabilization, and makes the code
                     // simpler.
                     features.insert(make_rs_ident("type_alias_impl_trait"));
-                    extra_items = quote! {type CtorType = impl ctor::Ctor<Output = Self>;};
+                    extra_body = quote! {type CtorType = impl ctor::Ctor<Output = Self>;};
+
+                    if let [single_param] = params.as_slice() {
+                        extra_items = quote! {
+                            impl #trait_generic_params ctor::CtorNew<(#single_param,)> for #record_name {
+                                #extra_body
+
+                                #[inline (always)]
+                                fn ctor_new(args: (#single_param,)) -> Self::CtorType {
+                                    let (arg,) = args;
+                                    <Self as ctor::CtorNew<#single_param>>::ctor_new(arg)
+                                }
+                            }
+                        }
+                    } else {
+                        extra_items = quote! {}
+                    }
                 }
                 _ => {
+                    extra_body = quote! {};
                     extra_items = quote! {};
                 }
             };
             api_func = quote! {
                 #doc_comment
                 impl #trait_generic_params #trait_name for #record_name {
-                    #extra_items
+                    #extra_body
                     #api_func_def
                 }
+                #extra_items
             };
             function_id = FunctionId {
                 self_type: Some(record_name.into()),

@@ -42,6 +42,16 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>> for Nont
         )
     }
 }
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, NontrivialCustomType>,)>
+    for NontrivialCustomType
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, NontrivialCustomType>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, NontrivialCustomType>>>::ctor_new(arg)
+    }
+}
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=16
 // Error while generating bindings for item 'UnsupportedParamType':
