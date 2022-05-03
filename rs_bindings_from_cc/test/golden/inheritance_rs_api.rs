@@ -133,19 +133,19 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), Derived);
 // Error while generating bindings for item 'Derived::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a Derived> for &'a Base0 {
-    fn from(x: &'a Derived) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base0) }
+unsafe impl oops::Inherits<Base0> for Derived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base0 {
+        (derived as *const _ as *const u8).offset(0) as *const Base0
     }
 }
-impl<'a> From<&'a Derived> for &'a Base1 {
-    fn from(x: &'a Derived) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(0) as *const Base1) }
+unsafe impl oops::Inherits<Base1> for Derived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+        (derived as *const _ as *const u8).offset(0) as *const Base1
     }
 }
-impl<'a> From<&'a Derived> for &'a Base2 {
-    fn from(x: &'a Derived) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(10) as *const Base2) }
+unsafe impl oops::Inherits<Base2> for Derived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base2 {
+        (derived as *const _ as *const u8).offset(10) as *const Base2
     }
 }
 
@@ -177,9 +177,9 @@ impl !Unpin for VirtualBase1 {}
 // Error while generating bindings for item 'VirtualBase1::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualBase1 &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a VirtualBase1> for &'a Base1 {
-    fn from(x: &'a VirtualBase1) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(x) }
+unsafe impl oops::Inherits<Base1> for VirtualBase1 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+        detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(derived)
     }
 }
 
@@ -211,9 +211,9 @@ impl !Unpin for VirtualBase2 {}
 // Error while generating bindings for item 'VirtualBase2::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualBase2 &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a VirtualBase2> for &'a Base1 {
-    fn from(x: &'a VirtualBase2) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(x) }
+unsafe impl oops::Inherits<Base1> for VirtualBase2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+        detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(derived)
     }
 }
 
@@ -245,19 +245,19 @@ impl !Unpin for VirtualDerived {}
 // Error while generating bindings for item 'VirtualDerived::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualDerived &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a VirtualDerived> for &'a VirtualBase1 {
-    fn from(x: &'a VirtualDerived) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(x) }
+unsafe impl oops::Inherits<VirtualBase1> for VirtualDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase1 {
+        detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(derived)
     }
 }
-impl<'a> From<&'a VirtualDerived> for &'a Base1 {
-    fn from(x: &'a VirtualDerived) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(x) }
+unsafe impl oops::Inherits<Base1> for VirtualDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+        detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(derived)
     }
 }
-impl<'a> From<&'a VirtualDerived> for &'a VirtualBase2 {
-    fn from(x: &'a VirtualDerived) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(x) }
+unsafe impl oops::Inherits<VirtualBase2> for VirtualDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase2 {
+        detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(derived)
     }
 }
 

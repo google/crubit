@@ -50,19 +50,19 @@ impl !Unpin for Derived2 {}
 // Error while generating bindings for item 'Derived2::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived2 &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a Derived2> for &'a Base0 {
-    fn from(x: &'a Derived2) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__Derived2__to__Base0(x) }
+unsafe impl oops::Inherits<Base0> for Derived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base0 {
+        detail::__crubit_dynamic_upcast__Derived2__to__Base0(derived)
     }
 }
-impl<'a> From<&'a Derived2> for &'a Base1 {
-    fn from(x: &'a Derived2) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(8) as *const Base1) }
+unsafe impl oops::Inherits<Base1> for Derived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+        (derived as *const _ as *const u8).offset(8) as *const Base1
     }
 }
-impl<'a> From<&'a Derived2> for &'a Base2 {
-    fn from(x: &'a Derived2) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(18) as *const Base2) }
+unsafe impl oops::Inherits<Base2> for Derived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base2 {
+        (derived as *const _ as *const u8).offset(18) as *const Base2
     }
 }
 
@@ -94,19 +94,19 @@ impl !Unpin for VirtualDerived2 {}
 // Error while generating bindings for item 'VirtualDerived2::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualDerived2 &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a VirtualDerived2> for &'a VirtualBase1 {
-    fn from(x: &'a VirtualDerived2) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(x) }
+unsafe impl oops::Inherits<VirtualBase1> for VirtualDerived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase1 {
+        detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(derived)
     }
 }
-impl<'a> From<&'a VirtualDerived2> for &'a Base1 {
-    fn from(x: &'a VirtualDerived2) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(x) }
+unsafe impl oops::Inherits<Base1> for VirtualDerived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+        detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(derived)
     }
 }
-impl<'a> From<&'a VirtualDerived2> for &'a VirtualBase2 {
-    fn from(x: &'a VirtualDerived2) -> Self {
-        unsafe { &*detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(x) }
+unsafe impl oops::Inherits<VirtualBase2> for VirtualDerived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase2 {
+        detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(derived)
     }
 }
 

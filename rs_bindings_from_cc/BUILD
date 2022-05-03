@@ -51,6 +51,7 @@ deps_for_bindings(
         "@crates_io//memoffset/v0_6:memoffset_unstable_const",
         "//rs_bindings_from_cc/support:ctor",
         "//rs_bindings_from_cc/support:forward_declare",
+        "//rs_bindings_from_cc/support:oops",
         "@crates_io//pin_project/v1:pin_project",  # used by ctor macros
         # Required for `Copy` trait assertions added to the generated Rust
         # code.

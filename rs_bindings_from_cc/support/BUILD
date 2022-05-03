@@ -91,3 +91,16 @@ rust_test(
     srcs = ["forward_declare_macros_test.rs"],
     deps = [":forward_declare"],
 )
+
+rust_library(
+    name = "oops",
+    srcs = ["oops.rs"],
+    visibility = [
+        "//third_party/crubit:__subpackages__",
+    ],
+)
+
+rust_test(
+    name = "oops_test",
+    srcs = ["oops.rs"],
+)

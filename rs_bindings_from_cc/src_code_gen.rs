@@ -2108,15 +2108,7 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-///
-/// TODO(b/216195042): Implement this in terms of a supporting trait which casts
-/// raw pointers. Then, we would have blanket impls for reference, pinned mut
-/// reference, etc. conversion. The current version is just enough to test the
-/// logic in importer.
-//
-// TODO(b/216195042): Should this use, like, AsRef/AsMut (and some equivalent
-// for Pin)?
-// TODO(b/216195042): Correctly handle imported records, lifetimes.
+// TODO(b/216195042): Correctly handle imported records.
 fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
@@ -2130,7 +2122,7 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
         let body;
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
-            body = quote! {&*((x as *const _ as *const u8).offset(#offset) as *const #base_name)};
+            body = quote! {(derived as *const _ as *const u8).offset(#offset) as *const #base_name};
         } else {
             // TODO(b/216195042): use mangled names here, or otherwise guarantee
             // non-collision.
@@ -2149,15 +2141,13 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
                 pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
             });
             body = quote! {
-                &*detail::#cast_fn_name(x)
+                detail::#cast_fn_name(derived)
             };
         }
         impls.push(quote! {
-            impl<'a> From<&'a #derived_name> for &'a #base_name {
-                fn from(x: &'a #derived_name) -> Self {
-                    unsafe {
-                        #body
-                    }
+            unsafe impl oops::Inherits<#base_name> for #derived_name {
+                unsafe fn upcast_ptr(derived: *const Self) -> *const #base_name {
+                    #body
                 }
             }
         });
@@ -3777,18 +3767,33 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'a> From<&'a Derived> for &'a VirtualBase {
-                    fn from(x: &'a Derived) -> Self {
-                        unsafe { &*detail::__crubit_dynamic_upcast__Derived__to__VirtualBase(x) }
+                unsafe impl oops::Inherits<VirtualBase> for Derived {
+                    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase {
+                        detail::__crubit_dynamic_upcast__Derived__to__VirtualBase(derived)
                     }
                 }
             }
         );
-        assert_rs_matches!(rs_api, quote! { From<&'a Derived> for &'a UnambiguousPublicBase });
-        assert_rs_matches!(rs_api, quote! { From<&'a Derived> for &'a MultipleInheritance });
-        assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a PrivateBase});
-        assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a ProtectedBase});
-        assert_rs_not_matches!(rs_api, quote! {From<&'a Derived> for &'a AmbiguousPublicBase});
+        assert_rs_matches!(
+            rs_api,
+            quote! { unsafe impl oops::Inherits<UnambiguousPublicBase> for Derived }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! { unsafe impl oops::Inherits<MultipleInheritance> for Derived }
+        );
+        assert_rs_not_matches!(
+            rs_api,
+            quote! {unsafe impl oops::Inherits<PrivateBase> for Derived}
+        );
+        assert_rs_not_matches!(
+            rs_api,
+            quote! {unsafe impl oops::Inherits<ProtectedBase> for Derived}
+        );
+        assert_rs_not_matches!(
+            rs_api,
+            quote! {unsafe impl oops::Inherits<AmbiguousPublicBase> for Derived}
+        );
         Ok(())
     }
 
@@ -3815,7 +3820,7 @@ mod tests {
             "",
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_not_matches!(rs_api, quote! { From<&'a Derived> for &'a Base });
+        assert_rs_not_matches!(rs_api, quote! { unsafe impl oops::Inherits<Base> for Derived });
         Ok(())
     }
 

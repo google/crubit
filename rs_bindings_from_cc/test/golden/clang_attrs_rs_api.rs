@@ -109,9 +109,9 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
 
-impl<'a> From<&'a InheritsFromBaseWithCustomAlignment> for &'a HasCustomAlignment {
-    fn from(x: &'a InheritsFromBaseWithCustomAlignment) -> Self {
-        unsafe { &*((x as *const _ as *const u8).offset(0) as *const HasCustomAlignment) }
+unsafe impl oops::Inherits<HasCustomAlignment> for InheritsFromBaseWithCustomAlignment {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const HasCustomAlignment {
+        (derived as *const _ as *const u8).offset(0) as *const HasCustomAlignment
     }
 }
 

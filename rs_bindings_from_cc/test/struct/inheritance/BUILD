@@ -15,5 +15,6 @@ rust_test(
     cc_deps = [":upcast"],
     deps = [
         "//rs_bindings_from_cc/support:ctor",
+        "//rs_bindings_from_cc/support:oops",
     ],
 )

@@ -4,22 +4,23 @@
 #[cfg(test)]
 mod tests {
     use ctor::CtorNew as _;
+    use oops::Upcast as _;
     use upcast::*;
 
     #[test]
     fn test_upcast() {
         let derived = Derived::default();
         let derived = &derived;
-        let base0: &Base0 = derived.into();
+        let base0: &Base0 = derived.upcast();
         assert_eq!(base0 as *const _ as usize, derived.base0_address());
         assert_eq!(base0 as *const _ as usize, derived as *const _ as usize);
-        let base1: &Base1 = derived.into();
+        let base1: &Base1 = derived.upcast();
         assert_eq!(base1 as *const _ as usize, derived.base1_address());
-        let base2: &Base2 = derived.into();
+        let base2: &Base2 = derived.upcast();
         assert_eq!(base2 as *const _ as usize, derived.base2_address());
-        let base3: &Base3 = derived.into();
+        let base3: &Base3 = derived.upcast();
         assert_eq!(base3 as *const _ as usize, derived.base3_address());
-        let base4: &Base4 = derived.into();
+        let base4: &Base4 = derived.upcast();
         assert_eq!(base4 as *const _ as usize, derived.base4_address());
     }
 
@@ -30,17 +31,17 @@ mod tests {
         }
         let derived = &*derived;
 
-        let base1: &Base1 = derived.into();
+        let base1: &Base1 = derived.upcast();
         let base1_address = base1 as *const _ as usize;
         assert_eq!(base1_address, derived.base1_address());
-        let base2: &VirtualBase2 = derived.into();
+        let base2: &VirtualBase2 = derived.upcast();
         assert_eq!(base2 as *const _ as usize, derived.base2_address());
-        let base3: &VirtualBase3 = derived.into();
+        let base3: &VirtualBase3 = derived.upcast();
         assert_eq!(base3 as *const _ as usize, derived.base3_address());
 
-        let base1: &Base1 = base2.into();
+        let base1: &Base1 = base2.upcast();
         assert_eq!(base1 as *const _ as usize, base1_address);
-        let base1: &Base1 = base3.into();
+        let base1: &Base1 = base3.upcast();
         assert_eq!(base1 as *const _ as usize, base1_address);
     }
 }
