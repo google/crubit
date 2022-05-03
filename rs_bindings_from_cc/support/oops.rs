@@ -190,7 +190,7 @@ mod test {
 
         unsafe impl Inherits<Base> for Derived {
             unsafe fn upcast_ptr(derived: *const Self) -> *const Base {
-                unsafe { &(*derived).base }
+                &(*derived).base
             }
         }
         let mut derived = Derived::default();
@@ -225,7 +225,7 @@ mod test {
 
         unsafe impl Inherits<Base> for Derived {
             unsafe fn upcast_ptr(derived: *const Self) -> *const Base {
-                unsafe { &(*derived).base }
+                &(*derived).base
             }
         }
         let mut derived = Derived::default();
