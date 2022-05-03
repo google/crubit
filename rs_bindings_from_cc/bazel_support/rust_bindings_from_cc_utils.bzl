@@ -91,6 +91,18 @@ def _compile_cc(
         linking_context = linking_context,
     )
 
+def _get_crate_info(providers):
+    for provider in providers:
+        if hasattr(provider, "name"):
+            return provider
+    fail("Couldn't find a CrateInfo in the list of providers")
+
+def _get_dep_info(providers):
+    for provider in providers:
+        if hasattr(provider, "direct_crates"):
+            return provider
+    fail("Couldn't find a DepInfo in the list of providers")
+
 def _compile_rust(ctx, attr, src, deps):
     """Compiles a Rust source file.
 
@@ -142,8 +154,8 @@ def _compile_rust(ctx, attr, src, deps):
     )
 
     return DepVariantInfo(
-        crate_info = providers[0],
-        dep_info = providers[1],
+        crate_info = _get_crate_info(providers),
+        dep_info = _get_dep_info(providers),
         cc_info = None,
         build_info = None,
     )
