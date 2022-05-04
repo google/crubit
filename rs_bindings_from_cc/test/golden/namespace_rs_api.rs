@@ -17,6 +17,8 @@ use memoffset_unstable_const::offset_of;
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_namespace_bindings {
+    use super::*;
+
     #[repr(C)]
     pub struct S {
         pub i: i32,
@@ -52,6 +54,8 @@ pub mod test_namespace_bindings {
     }
 
     pub mod inner {
+        use super::*;
+
         #[inline(always)]
         pub fn i() {
             unsafe { detail::__rust_thunk___ZN23test_namespace_bindings5inner1iEv() }

@@ -1273,6 +1273,7 @@ fn generate_namespace(
 
     let namespace_tokens = quote! {
         pub mod #name {
+            use super::*; __NEWLINE__ __NEWLINE__
 
             #( #items __NEWLINE__ __NEWLINE__ )*
 
@@ -5009,6 +5010,24 @@ mod tests {
     }
 
     #[test]
+    fn test_namespace_uses_star_from_super() -> Result<()> {
+        let rs_api = generate_bindings_tokens(&ir_from_cc(
+            "namespace test_namespace_bindings { int func(); }",
+        )?)?
+        .rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub mod test_namespace_bindings {
+                    use super::*;
+                    ...
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_namespace_module_contains_detail() -> Result<()> {
         let rs_api = generate_bindings_tokens(&ir_from_cc(
             r#"
@@ -5054,6 +5073,7 @@ mod tests {
             rs_api,
             quote! {
                 pub mod test_namespace_bindings {
+                    use super::*;
                     ...
                     const _: () = assert!(rust_std::mem::size_of::<S>() == 4usize);
                     const _: () = assert!(rust_std::mem::align_of::<S>() == 4usize);
