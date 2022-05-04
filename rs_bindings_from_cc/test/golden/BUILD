@@ -3,6 +3,7 @@ load(
     "//rs_bindings_from_cc/test/golden:generate_bindings.bzl",
     "generate_bindings",
 )
+load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 
@@ -55,6 +56,18 @@ DEPS = {
         "LICENSE_HEADER",
     ],
 ) for name in TESTS]
+
+[rust_test(
+    name = name + "_rs_test",
+    srcs = ["empty_rs_test.rs"],
+    cc_deps = ["%s_cc" % name],
+) for name in TESTS if name not in [
+    # TODO(hlopko): These tests fail to compile, fix them.
+    "namespace",
+    "polymorphic",
+    "types",
+    "user_of_base_class",
+]]
 
 # Only there so build-cleaner doesn't try to add separate targets for generated files.
 filegroup(
