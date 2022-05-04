@@ -89,8 +89,8 @@ where
 
 /// Upcast `&mut` -> `&mut`.
 ///
-/// This is never true for C++ types, but could be true for inheritance
-/// implemented in pure Rust.
+/// This impl is never applicable to C++ types (a C++ base class is `!Unpin`),
+/// but could work for inheritance implemented in pure Rust.
 impl<'a, Derived, Base> Upcast<&'a mut Base> for &'a mut Derived
 where
     Pin<&'a mut Derived>: Upcast<Pin<&'a mut Base>>,
@@ -123,7 +123,7 @@ where
 /// not an immediately obvious benefit to make raw pointer upcasts a safe
 /// operation.
 pub unsafe trait Inherits<Base> {
-    /// Upcast a `mut` pointer.
+    /// Upcast a `const` pointer.
     ///
     /// ## Safety
     ///
