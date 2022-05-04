@@ -66,8 +66,8 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":bazel_types",
+        ":cc_ir",
         ":cmdline",
-        ":ir",
         ":ir_from_cc",
         ":src_code_gen",
         "//common:file_io",
@@ -94,7 +94,7 @@ cc_library(
     hdrs = ["cmdline.h"],
     deps = [
         ":bazel_types",
-        ":ir",
+        ":cc_ir",
         "//common:status_macros",
         "@absl//container:flat_hash_map",
         "@absl//flags:flag",
@@ -119,7 +119,7 @@ cc_library(
     hdrs = ["decl_importer.h"],
     visibility = ["//third_party/crubit:__subpackages__"],
     deps = [
-        "ir",
+        "cc_ir",
         ":bazel_types",
         "//lifetime_annotations",
         "@absl//container:flat_hash_map",
@@ -159,8 +159,8 @@ cc_library(
     deps = [
         ":ast_convert",
         ":bazel_types",
+        ":cc_ir",
         ":decl_importer",
-        ":ir",
         "//common:check",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
@@ -189,7 +189,7 @@ cc_test(
     srcs = ["importer_test.cc"],
     deps = [
         ":bazel_types",
-        ":ir",
+        ":cc_ir",
         ":ir_from_cc",
         "//testing/base/public:gunit_main",
         "@absl//status",
@@ -201,7 +201,7 @@ cc_test(
 )
 
 cc_library(
-    name = "ir",
+    name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
     deps = [
@@ -215,9 +215,8 @@ cc_library(
 )
 
 rust_library(
-    name = "rs_ir",
+    name = "ir",
     srcs = ["ir.rs"],
-    crate_name = "ir",
     deps = [
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_10:itertools",
@@ -230,7 +229,7 @@ rust_library(
 
 rust_test(
     name = "rs_ir_test",
-    crate = ":rs_ir",
+    crate = ":ir",
 )
 
 rust_library(
@@ -238,9 +237,9 @@ rust_library(
     testonly = 1,
     srcs = ["ir_testing.rs"],
     deps = [
+        ":ir",
         ":json_from_cc",
-        ":rs_ir",
-        "//common:rs_ffi_types",
+        "//common:ffi_types",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_10:itertools",
     ],
@@ -252,9 +251,9 @@ cc_library(
     hdrs = ["ir_from_cc.h"],
     deps = [
         ":bazel_types",
+        ":cc_ir",
         ":frontend_action",
         ":importer",
-        ":ir",
         "//common:check",
         "@absl//container:flat_hash_map",
         "@absl//status",
@@ -272,9 +271,9 @@ cc_library(
     srcs = ["json_from_cc.cc"],
     deps = [
         ":bazel_types",
-        ":ir",
+        ":cc_ir",
         ":ir_from_cc",
-        "//common:ffi_types",
+        "//common:cc_ffi_types",
         "@absl//status:statusor",
         "@llvm///llvm:Support",
     ],
@@ -284,8 +283,8 @@ rust_test(
     name = "ir_from_cc_test",
     srcs = ["ir_from_cc_test.rs"],
     deps = [
+        ":ir",
         ":ir_testing",
-        ":rs_ir",
         ":token_stream_matchers",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_10:itertools",
@@ -299,9 +298,9 @@ cc_library(
     srcs = ["src_code_gen.cc"],
     hdrs = ["src_code_gen.h"],
     deps = [
-        ":ir",
+        ":cc_ir",
         ":src_code_gen_impl",  # buildcleaner: keep
-        "//common:ffi_types",
+        "//common:cc_ffi_types",
         "@llvm///clang:format",
         "@llvm///llvm:Support",
     ],
@@ -311,8 +310,8 @@ rust_library(
     name = "src_code_gen_impl",
     srcs = ["src_code_gen.rs"],
     deps = [
-        ":rs_ir",
-        "//common:rs_ffi_types",
+        ":ir",
+        "//common:ffi_types",
         "//common:token_stream_printer",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_10:itertools",
@@ -344,7 +343,7 @@ cc_library(
     hdrs = ["ast_convert.h"],
     visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
-        ":ir",
+        ":cc_ir",
         "//common:check",
         "@absl//functional:function_ref",
         "@llvm///clang:ast",
@@ -356,7 +355,7 @@ rust_library(
     name = "token_stream_matchers",
     srcs = ["token_stream_matchers.rs"],
     deps = [
-        ":rs_ir",
+        ":ir",
         "//common:token_stream_printer",
         "@crates_io//anyhow/v1:anyhow",
         "@crates_io//itertools/v0_10:itertools",

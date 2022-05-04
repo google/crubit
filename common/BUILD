@@ -21,26 +21,25 @@ cc_library(
 )
 
 cc_library(
-    name = "ffi_types",
+    name = "cc_ffi_types",
     srcs = ["ffi_types.cc"],
     hdrs = ["ffi_types.h"],
     visibility = ["//third_party/crubit:__subpackages__"],
     deps = [
-        ":rs_ffi_types",  # buildcleaner: keep
+        ":ffi_types",  # buildcleaner: keep
         "@absl//strings",
     ],
 )
 
 rust_library(
-    name = "rs_ffi_types",
+    name = "ffi_types",
     srcs = ["ffi_types.rs"],
-    crate_name = "ffi_types",
     visibility = ["//third_party/crubit:__subpackages__"],
 )
 
 rust_test(
-    name = "rs_ffi_types_test",
-    crate = ":rs_ffi_types",
+    name = "ffi_types_test",
+    crate = ":ffi_types",
 )
 
 cc_library(
