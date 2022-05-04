@@ -35,28 +35,28 @@ extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSEOS_(
     class SomeStruct* __this, class SomeStruct&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN10EmptyUnionC1Ev(class EmptyUnion* __this) {
+extern "C" void __rust_thunk___ZN10EmptyUnionC1Ev(union EmptyUnion* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1ERKS_(
-    class EmptyUnion* __this, const class EmptyUnion& __param_0) {
+    union EmptyUnion* __this, const union EmptyUnion& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1EOS_(
-    class EmptyUnion* __this, class EmptyUnion&& __param_0) {
+    union EmptyUnion* __this, union EmptyUnion&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN10EmptyUnionD1Ev(class EmptyUnion* __this) {
+extern "C" void __rust_thunk___ZN10EmptyUnionD1Ev(union EmptyUnion* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class EmptyUnion& __rust_thunk___ZN10EmptyUnionaSERKS_(
-    class EmptyUnion* __this, const class EmptyUnion& __param_0) {
+extern "C" union EmptyUnion& __rust_thunk___ZN10EmptyUnionaSERKS_(
+    union EmptyUnion* __this, const union EmptyUnion& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class EmptyUnion& __rust_thunk___ZN10EmptyUnionaSEOS_(
-    class EmptyUnion* __this, class EmptyUnion&& __param_0) {
+extern "C" union EmptyUnion& __rust_thunk___ZN10EmptyUnionaSEOS_(
+    union EmptyUnion* __this, union EmptyUnion&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
@@ -75,29 +75,29 @@ extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
-    class NonEmptyUnion* __this) {
+    union NonEmptyUnion* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1ERKS_(
-    class NonEmptyUnion* __this, const class NonEmptyUnion& __param_0) {
+    union NonEmptyUnion* __this, const union NonEmptyUnion& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
-    class NonEmptyUnion* __this, class NonEmptyUnion&& __param_0) {
+    union NonEmptyUnion* __this, union NonEmptyUnion&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionD1Ev(
-    class NonEmptyUnion* __this) {
+    union NonEmptyUnion* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSERKS_(
-    class NonEmptyUnion* __this, const class NonEmptyUnion& __param_0) {
+extern "C" union NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSERKS_(
+    union NonEmptyUnion* __this, const union NonEmptyUnion& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSEOS_(
-    class NonEmptyUnion* __this, class NonEmptyUnion&& __param_0) {
+extern "C" union NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSEOS_(
+    union NonEmptyUnion* __this, union NonEmptyUnion&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
@@ -107,8 +107,8 @@ extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
 static_assert(sizeof(class SomeStruct) == 1);
 static_assert(alignof(class SomeStruct) == 1);
 
-static_assert(sizeof(class EmptyUnion) == 1);
-static_assert(alignof(class EmptyUnion) == 1);
+static_assert(sizeof(union EmptyUnion) == 1);
+static_assert(alignof(union EmptyUnion) == 1);
 
 static_assert(sizeof(class FieldTypeTestStruct) == 288);
 static_assert(alignof(class FieldTypeTestStruct) == 8);
@@ -251,13 +251,13 @@ static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
                   8 ==
               2240);
 
-static_assert(sizeof(class NonEmptyUnion) == 8);
-static_assert(alignof(class NonEmptyUnion) == 8);
-static_assert(CRUBIT_OFFSET_OF(bool_field, class NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(char_field, class NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(int16_field, class NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(int_field, class NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(int32_field, class NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(int64_field, class NonEmptyUnion) * 8 == 0);
+static_assert(sizeof(union NonEmptyUnion) == 8);
+static_assert(alignof(union NonEmptyUnion) == 8);
+static_assert(CRUBIT_OFFSET_OF(bool_field, union NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(char_field, union NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int16_field, union NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int_field, union NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int32_field, union NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(int64_field, union NonEmptyUnion) * 8 == 0);
 
 #pragma clang diagnostic pop

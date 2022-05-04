@@ -1979,7 +1979,8 @@ fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
     Ok(match item {
         Item::Record(record) => {
             let ident = format_cc_ident(&record.cc_name);
-            quote! { class #ident }
+            let tag_kind = tag_kind(record);
+            quote! { #tag_kind #ident }
         }
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
@@ -1987,6 +1988,14 @@ fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
         }
         _ => bail!("Item does not define a type: {:?}", item),
     })
+}
+
+fn tag_kind(record: &ir::Record) -> TokenStream {
+    if record.is_union {
+        quote! { union }
+    } else {
+        quote! { class }
+    }
 }
 
 // Maps a Rust ABI [1] into a Clang attribute. See also
@@ -2078,6 +2087,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
     let record_ident = format_cc_ident(&record.cc_name);
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
+    let tag_kind = tag_kind(record);
     let field_assertions =
         record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
             let field_ident = format_cc_ident(&field.identifier.identifier);
@@ -2085,12 +2095,12 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
             // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
             // offset in bytes, so we need to convert.
             quote! {
-                static_assert(CRUBIT_OFFSET_OF(#field_ident, class #record_ident) * 8 == #offset);
+                static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #record_ident) * 8 == #offset);
             }
         });
     quote! {
-        static_assert(sizeof(class #record_ident) == #size);
-        static_assert(alignof(class #record_ident) == #alignment);
+        static_assert(sizeof(#tag_kind #record_ident) == #size);
+        static_assert(alignof(#tag_kind #record_ident) == #alignment);
         #( #field_assertions )*
     }
 }
@@ -3580,7 +3590,7 @@ mod tests {
             };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
 
         assert_rs_matches!(
             rs_api,
@@ -3592,6 +3602,35 @@ mod tests {
                     pub some_bigger_field: i64,
                 }
             }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion*__this) {...}
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___ZN9SomeUnionD1Ev(union SomeUnion*__this) {...}
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+            extern "C" union SomeUnion&__rust_thunk___ZN9SomeUnionaSERKS_(
+                union SomeUnion*__this, const union SomeUnion&__param_0) { ... }
+            }
+        );
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(union SomeUnion)==8) });
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(alignof(union SomeUnion)==8) });
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_OFFSET_OF(some_field, union SomeUnion)*8==0) }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(CRUBIT_OFFSET_OF(some_bigger_field, union SomeUnion)*8==0) }
         );
         Ok(())
     }
