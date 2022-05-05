@@ -2138,7 +2138,6 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-// TODO(b/216195042): Correctly handle imported records.
 fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
@@ -2147,7 +2146,7 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
         let base_record: &Record = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_name = make_rs_ident(&base_record.rs_name);
+        let base_name = RsTypeKind::new_record(base_record, ir).into_token_stream();
         let derived_name = make_rs_ident(&record.rs_name);
         let body;
         if let Some(offset) = base.offset {

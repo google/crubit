@@ -50,19 +50,19 @@ impl !Unpin for Derived2 {}
 // Error while generating bindings for item 'Derived2::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived2 &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<Base0> for Derived2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base0 {
+unsafe impl oops::Inherits<inheritance_cc::Base0> for Derived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base0 {
         detail::__crubit_dynamic_upcast__Derived2__to__Base0(derived)
     }
 }
-unsafe impl oops::Inherits<Base1> for Derived2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
-        (derived as *const _ as *const u8).offset(8) as *const Base1
+unsafe impl oops::Inherits<inheritance_cc::Base1> for Derived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
+        (derived as *const _ as *const u8).offset(8) as *const inheritance_cc::Base1
     }
 }
-unsafe impl oops::Inherits<Base2> for Derived2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base2 {
-        (derived as *const _ as *const u8).offset(18) as *const Base2
+unsafe impl oops::Inherits<inheritance_cc::Base2> for Derived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base2 {
+        (derived as *const _ as *const u8).offset(18) as *const inheritance_cc::Base2
     }
 }
 
@@ -94,18 +94,18 @@ impl !Unpin for VirtualDerived2 {}
 // Error while generating bindings for item 'VirtualDerived2::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualDerived2 &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<VirtualBase1> for VirtualDerived2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase1 {
+unsafe impl oops::Inherits<inheritance_cc::VirtualBase1> for VirtualDerived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase1 {
         detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(derived)
     }
 }
-unsafe impl oops::Inherits<Base1> for VirtualDerived2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+unsafe impl oops::Inherits<inheritance_cc::Base1> for VirtualDerived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
         detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(derived)
     }
 }
-unsafe impl oops::Inherits<VirtualBase2> for VirtualDerived2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase2 {
+unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for VirtualDerived2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase2 {
         detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(derived)
     }
 }
@@ -116,16 +116,18 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub fn __crubit_dynamic_upcast__Derived2__to__Base0(from: *const Derived2) -> *const Base0;
+        pub fn __crubit_dynamic_upcast__Derived2__to__Base0(
+            from: *const Derived2,
+        ) -> *const inheritance_cc::Base0;
         pub fn __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(
             from: *const VirtualDerived2,
-        ) -> *const VirtualBase1;
+        ) -> *const inheritance_cc::VirtualBase1;
         pub fn __crubit_dynamic_upcast__VirtualDerived2__to__Base1(
             from: *const VirtualDerived2,
-        ) -> *const Base1;
+        ) -> *const inheritance_cc::Base1;
         pub fn __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(
             from: *const VirtualDerived2,
-        ) -> *const VirtualBase2;
+        ) -> *const inheritance_cc::VirtualBase2;
     }
 }
 

@@ -66,7 +66,6 @@ DEPS = {
     "namespace",
     "polymorphic",
     "types",
-    "user_of_base_class",
 ]]
 
 # Only there so build-cleaner doesn't try to add separate targets for generated files.
