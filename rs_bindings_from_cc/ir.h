@@ -25,6 +25,7 @@
 #include "common/check.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
@@ -99,6 +100,19 @@ inline ItemId GenerateItemId(const clang::Decl* decl) {
 
 inline ItemId GenerateItemId(const clang::RawComment* comment) {
   return ItemId(reinterpret_cast<uintptr_t>(comment));
+}
+
+// Returns the ID of the parent namespace, if such exists, and `llvm::None` for
+// top level decls.
+// We use this function to assign a parent namespace to all the IR items.
+// `llvm::Optional` is used because it integrates better with the `llvm::json`
+// library than `std::optional`.
+inline llvm::Optional<ItemId> GetEnclosingNamespaceId(const clang::Decl* decl) {
+  auto enclosing_namespace =
+      decl->getDeclContext()->getEnclosingNamespaceContext();
+  if (enclosing_namespace->isTranslationUnit()) return llvm::None;
+  auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
+  return GenerateItemId(namespace_decl);
 }
 
 // A numerical ID that uniquely identifies a lifetime.
@@ -435,6 +449,7 @@ struct Func {
   bool has_c_calling_convention = true;
   SourceLoc source_loc;
   ItemId id;
+  llvm::Optional<ItemId> enclosing_namespace_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -583,6 +598,7 @@ struct Record {
   bool is_union = false;
 
   std::vector<ItemId> child_item_ids;
+  llvm::Optional<ItemId> enclosing_namespace_id;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -591,6 +607,7 @@ struct IncompleteRecord {
   std::string cc_name;
   ItemId id;
   BazelLabel owning_target;
+  llvm::Optional<ItemId> enclosing_namespace_id;
 };
 
 struct Enumerator {
@@ -608,6 +625,7 @@ struct Enum {
   BazelLabel owning_target;
   MappedType underlying_type;
   std::vector<Enumerator> enumerators;
+  llvm::Optional<ItemId> enclosing_namespace_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
@@ -623,6 +641,7 @@ struct TypeAlias {
   BazelLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   MappedType underlying_type;
+  llvm::Optional<ItemId> enclosing_namespace_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
@@ -668,6 +687,7 @@ struct Namespace {
   ItemId id;
   BazelLabel owning_target;
   std::vector<ItemId> child_item_ids;
+  llvm::Optional<ItemId> enclosing_namespace_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {

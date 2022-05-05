@@ -284,6 +284,7 @@ pub struct Func {
     pub has_c_calling_convention: bool,
     pub source_loc: SourceLoc,
     pub id: ItemId,
+    pub enclosing_namespace_id: Option<ItemId>,
 }
 
 impl Func {
@@ -338,6 +339,7 @@ pub struct IncompleteRecord {
     pub cc_name: String,
     pub id: ItemId,
     pub owning_target: BazelLabel,
+    pub enclosing_namespace_id: Option<ItemId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -361,6 +363,7 @@ pub struct Record {
     pub is_inheritable: bool,
     pub is_union: bool,
     pub child_item_ids: Vec<ItemId>,
+    pub enclosing_namespace_id: Option<ItemId>,
 }
 
 impl Record {
@@ -405,6 +408,7 @@ pub struct Enum {
     pub owning_target: BazelLabel,
     pub underlying_type: MappedType,
     pub enumerators: Vec<Enumerator>,
+    pub enclosing_namespace_id: Option<ItemId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -420,6 +424,7 @@ pub struct TypeAlias {
     pub owning_target: BazelLabel,
     pub doc_comment: Option<String>,
     pub underlying_type: MappedType,
+    pub enclosing_namespace_id: Option<ItemId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -449,6 +454,7 @@ pub struct Namespace {
     pub id: ItemId,
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
+    pub enclosing_namespace_id: Option<ItemId>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -474,6 +480,18 @@ impl Item {
             Item::UnsupportedItem(unsupported) => unsupported.id,
             Item::Comment(comment) => comment.id,
             Item::Namespace(namespace) => namespace.id,
+        }
+    }
+    pub fn enclosing_namespace_id(&self) -> Option<ItemId> {
+        match self {
+            Item::Record(record) => record.enclosing_namespace_id,
+            Item::IncompleteRecord(record) => record.enclosing_namespace_id,
+            Item::Enum(enum_) => enum_.enclosing_namespace_id,
+            Item::Func(func) => func.enclosing_namespace_id,
+            Item::Namespace(namespace) => namespace.enclosing_namespace_id,
+            Item::TypeAlias(type_alias) => type_alias.enclosing_namespace_id,
+            Item::Comment(_) => None,
+            Item::UnsupportedItem(_) => None,
         }
     }
 }

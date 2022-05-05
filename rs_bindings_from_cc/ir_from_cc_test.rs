@@ -83,6 +83,7 @@ fn test_function() {
                     column: 1,
                 },
                 id: ItemId(...),
+                enclosing_namespace_id: None,
             }
         }
     );
@@ -652,6 +653,7 @@ fn test_typedef() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
             underlying_type: #int,
+            enclosing_namespace_id: None,
           }
         }
     );
@@ -664,6 +666,7 @@ fn test_typedef() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             underlying_type: #int,
+            enclosing_namespace_id: None,
           }
         }
     );
@@ -1668,4 +1671,60 @@ fn test_nested_namespace_definition() {
           Func { ... name: "func" ... }
         },]
     );
+}
+
+#[test]
+fn test_enclosing_namespace_ids() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+          struct T {};
+          struct S {
+            void processT();
+          };
+          void f();
+          enum E {};
+          typedef int TypedefDecl;
+          using TypeAliasDecl = int;
+          namespace inner {
+            struct InnerS {};
+            void inner_f();
+            enum InnerE {};
+            typedef int InnerTypedefDecl;
+            using InnerTypeAliasDecl = int;
+          }
+        }"#,
+    )
+    .unwrap();
+
+    let namespace = ir.namespaces().find(|n| n.name == ir_id("test_namespace_bindings")).unwrap();
+    let namespace_items: Vec<&Item> =
+        namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert_eq!(namespace.enclosing_namespace_id, None);
+    assert!(namespace_items.iter().all(|item| item.enclosing_namespace_id() == Some(namespace.id)));
+
+    let inner_namespace = ir.namespaces().find(|n| n.name == ir_id("inner")).unwrap();
+    let inner_namespace_items: Vec<&Item> =
+        inner_namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+
+    assert!(
+        inner_namespace_items
+            .iter()
+            .all(|item| item.enclosing_namespace_id() == Some(inner_namespace.id))
+    );
+
+    let record = ir.records().find(|r| r.rs_name.as_str() == "S").unwrap();
+    let record_items: Vec<&Item> =
+        record.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
+    for item in record_items.iter() {
+        match item {
+            Item::UnsupportedItem(_) => {}
+            Item::Comment(_) => {}
+            _ => {
+                dbg!("{:?}", item);
+                assert!(item.enclosing_namespace_id() == Some(namespace.id));
+            }
+        }
+    }
 }

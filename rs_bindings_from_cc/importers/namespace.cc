@@ -38,6 +38,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
       .id = GenerateItemId(namespace_decl),
       .owning_target = ictx_.GetOwningTarget(namespace_decl),
       .child_item_ids = std::move(item_ids),
+      .enclosing_namespace_id = GetEnclosingNamespaceId(namespace_decl),
   };
 }
 

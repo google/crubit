@@ -42,7 +42,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return IncompleteRecord{
         .cc_name = std::string(record_name->Ident()),
         .id = GenerateItemId(record_decl),
-        .owning_target = ictx_.GetOwningTarget(record_decl)};
+        .owning_target = ictx_.GetOwningTarget(record_decl),
+        .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
   }
 
   // To compute the memory layout of the record, it needs to be a concrete type,
@@ -107,7 +108,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_inheritable =
           !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
       .is_union = record_decl->isUnion(),
-      .child_item_ids = std::move(item_ids)};
+      .child_item_ids = std::move(item_ids),
+      .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl),
+  };
 }
 
 }  // namespace crubit

@@ -60,6 +60,7 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
       .owning_target = ictx_.GetOwningTarget(enum_decl),
       .underlying_type = *std::move(type),
       .enumerators = enumerators,
+      .enclosing_namespace_id = GetEnclosingNamespaceId(enum_decl),
   };
 }
 

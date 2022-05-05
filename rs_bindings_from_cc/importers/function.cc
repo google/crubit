@@ -208,6 +208,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         .has_c_calling_convention = has_c_calling_convention,
         .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
         .id = GenerateItemId(function_decl),
+        .enclosing_namespace_id = GetEnclosingNamespaceId(function_decl),
     };
   }
   return std::nullopt;

@@ -293,6 +293,7 @@ llvm::json::Value Func::ToJson() const {
       {"has_c_calling_convention", has_c_calling_convention},
       {"source_loc", source_loc},
       {"id", id},
+      {"enclosing_namespace_id", enclosing_namespace_id},
   };
 
   return llvm::json::Object{
@@ -398,6 +399,7 @@ llvm::json::Value Record::ToJson() const {
       {"is_inheritable", is_inheritable},
       {"is_union", is_union},
       {"child_item_ids", std::move(json_item_ids)},
+      {"enclosing_namespace_id", enclosing_namespace_id},
   };
 
   return llvm::json::Object{
@@ -414,9 +416,12 @@ llvm::json::Value Enumerator::ToJson() const {
 
 llvm::json::Value Enum::ToJson() const {
   llvm::json::Object enum_ir{
-      {"identifier", identifier},       {"id", id},
-      {"owning_target", owning_target}, {"underlying_type", underlying_type},
+      {"identifier", identifier},
+      {"id", id},
+      {"owning_target", owning_target},
+      {"underlying_type", underlying_type},
       {"enumerators", enumerators},
+      {"enclosing_namespace_id", enclosing_namespace_id},
   };
 
   return llvm::json::Object{
@@ -426,9 +431,12 @@ llvm::json::Value Enum::ToJson() const {
 
 llvm::json::Value TypeAlias::ToJson() const {
   llvm::json::Object type_alias{
-      {"identifier", identifier},           {"id", id},
-      {"owning_target", owning_target},     {"doc_comment", doc_comment},
+      {"identifier", identifier},
+      {"id", id},
+      {"owning_target", owning_target},
+      {"doc_comment", doc_comment},
       {"underlying_type", underlying_type},
+      {"enclosing_namespace_id", enclosing_namespace_id},
   };
 
   return llvm::json::Object{
@@ -480,6 +488,7 @@ llvm::json::Value Namespace::ToJson() const {
       {"id", id},
       {"owning_target", owning_target},
       {"child_item_ids", std::move(json_item_ids)},
+      {"enclosing_namespace_id", enclosing_namespace_id},
   };
 
   return llvm::json::Object{

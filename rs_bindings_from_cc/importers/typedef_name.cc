@@ -38,11 +38,13 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
                                          no_lifetimes);
   if (underlying_type.ok()) {
     ictx_.type_mapper_.Insert(typedef_name_decl);
-    return TypeAlias{.identifier = *identifier,
-                     .id = GenerateItemId(typedef_name_decl),
-                     .owning_target = ictx_.GetOwningTarget(typedef_name_decl),
-                     .doc_comment = ictx_.GetComment(typedef_name_decl),
-                     .underlying_type = *underlying_type};
+    return TypeAlias{
+        .identifier = *identifier,
+        .id = GenerateItemId(typedef_name_decl),
+        .owning_target = ictx_.GetOwningTarget(typedef_name_decl),
+        .doc_comment = ictx_.GetComment(typedef_name_decl),
+        .underlying_type = *underlying_type,
+        .enclosing_namespace_id = GetEnclosingNamespaceId(typedef_name_decl)};
   } else {
     return ictx_.ImportUnsupportedItem(
         typedef_name_decl, std::string(underlying_type.status().message()));
