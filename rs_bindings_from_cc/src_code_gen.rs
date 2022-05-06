@@ -31,26 +31,31 @@ pub struct FfiBindings {
 /// Expectations:
 ///    * `json` should be a FfiU8Slice for a valid array of bytes with the given
 ///      size.
+///    * `crubit_support_path` should be a FfiU8Slice for a valid array of bytes
+///      representing an UTF8-encoded string
 ///    * `rustfmt_config_path` should be a FfiU8Slice for a valid array of bytes
 ///      representing an UTF8-encoded string (without the UTF-8 requirement, it
 ///      seems that Rust doesn't offer a way to convert to OsString on Windows)
-///    * `json` and `rustfmt_config_path` shouldn't change during the call.
+///    * `json`, `crubit_support_path`, and `rustfmt_config_path` shouldn't
+///      change during the call.
 ///
 /// Ownership:
 ///    * function doesn't take ownership of (in other words it borrows) the
-///      input params: `json`, and `rustfmt_config_path`
+///      input params: `json`, `crubit_support_path`, and `rustfmt_config_path`
 ///    * function passes ownership of the returned value to the caller
 #[no_mangle]
 pub unsafe extern "C" fn GenerateBindingsImpl(
     json: FfiU8Slice,
+    crubit_support_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
+    let crubit_support_path: &str = std::str::from_utf8(crubit_support_path.as_slice()).unwrap();
     let rustfmt_config_path: OsString =
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         // It is ok to abort here.
-        let Bindings { rs_api, rs_api_impl } = generate_bindings(json, &rustfmt_config_path).unwrap();
+        let Bindings { rs_api, rs_api_impl } = generate_bindings(json, crubit_support_path, &rustfmt_config_path).unwrap();
         FfiBindings {
             rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
             rs_api_impl: FfiU8SliceBox::from_boxed_slice(
@@ -77,10 +82,15 @@ struct BindingsTokens {
     rs_api_impl: TokenStream,
 }
 
-fn generate_bindings(json: &[u8], rustfmt_config_path: &OsStr) -> Result<Bindings> {
+fn generate_bindings(
+    json: &[u8],
+    crubit_support_path: &str,
+    rustfmt_config_path: &OsStr,
+) -> Result<Bindings> {
     let ir = deserialize_ir(json)?;
 
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+    let BindingsTokens { rs_api, rs_api_impl } =
+        generate_bindings_tokens(&ir, crubit_support_path)?;
     let rs_api = {
         let rustfmt_config = if rustfmt_config_path.is_empty() {
             RustfmtConfig::default()
@@ -1404,10 +1414,10 @@ fn generate_item(
 
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
 // needed to support it.
-fn generate_bindings_tokens(ir: &IR) -> Result<BindingsTokens> {
+fn generate_bindings_tokens(ir: &IR, crubit_support_path: &str) -> Result<BindingsTokens> {
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut thunk_impls = vec![generate_rs_api_impl(ir)?];
+    let mut thunk_impls = vec![generate_rs_api_impl(ir, crubit_support_path)?];
     let mut assertions = vec![];
 
     // We import nullable pointers as an Option<&T> and assume that at the ABI
@@ -2209,7 +2219,7 @@ fn thunk_ident(func: &Func) -> Ident {
     format_ident!("__rust_thunk__{}", func.mangled_name)
 }
 
-fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
+fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStream> {
     // This function uses quote! to generate C++ source code out of convenience.
     // This is a bold idea so we have to continously evaluate if it still makes
     // sense or the cost of working around differences in Rust and C++ tokens is
@@ -2317,14 +2327,14 @@ fn generate_rs_api_impl(ir: &IR) -> Result<TokenStream> {
         standard_headers.insert(format_ident!("cstddef"));
     };
 
-    let mut includes = vec![
-        "rs_bindings_from_cc/support/cxx20_backports.h",
-        "rs_bindings_from_cc/support/offsetof.h",
-    ];
+    let mut includes = vec!["cxx20_backports.h", "offsetof.h"]
+        .into_iter()
+        .map(|hdr| format!("{}/{}", crubit_support_path, hdr))
+        .collect_vec();
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
     // access declarations from public headers of the C++ library.
-    includes.extend(ir.used_headers().map(|i| &i.name as &str));
+    includes.extend(ir.used_headers().map(|hdr| hdr.name.clone()));
 
     Ok(quote! {
         #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
@@ -2359,6 +2369,10 @@ mod tests {
         assert_rs_not_matches,
     };
     use token_stream_printer::{rs_tokens_to_formatted_string_for_tests, tokens_to_string};
+
+    fn generate_bindings_tokens(ir: &IR) -> Result<BindingsTokens> {
+        super::generate_bindings_tokens(ir, "crubit/rs_bindings_support")
+    }
 
     #[test]
     fn test_disable_thread_safety_warnings() -> Result<()> {

@@ -31,6 +31,14 @@ function test::cmd_line_api() {
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 | \
+      grep 'please specify --crubit_support_path' > /dev/null" \
+    "generator should show help message for --crubit_support_path"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" 2>&1 \
+      --crubit_support_path=test/crubit/support/path | \
       grep 'please specify --public_headers' > /dev/null" \
     "generator should show help message for --public_headers"
 
@@ -41,6 +49,7 @@ function test::cmd_line_api() {
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --public_headers=\"${hdr}\" 2>&1 | \
       grep 'please specify --targets_and_headers' > /dev/null" \
     "generator should show help message for --targets_and_headers"
@@ -55,6 +64,7 @@ EOT
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
 
@@ -76,6 +86,7 @@ EOT
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" \
       --do_nothing"
@@ -105,6 +116,7 @@ EOT
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
 
@@ -132,6 +144,7 @@ EOT
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --public_headers=\"${header_1},${header_2}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
 
@@ -158,6 +171,7 @@ EOT
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
 
@@ -184,6 +198,7 @@ EOF
     "\"${RS_BINDINGS_FROM_CC}\" \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/crubit/support/path \
       --rustfmt_config_path=\"${rustfmt_config_path}\" \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
@@ -201,6 +216,33 @@ EOF
   EXPECT_SUCCEED \
     "grep \"^[^a-z]*arg1:[^a-z]*i32,[^a-z]*\\\$\" \"${rs_out}\"" \
     "Verify function args are *not on single line when using default rustfmt config (2)"
+}
+
+function test::crubit_support_path() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+
+  local hdr="${TEST_TMPDIR}/hello_world.h"
+  echo "int MyFunction();" > "${hdr}"
+
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"]}]
+EOT
+)"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --crubit_support_path=test/specific/crubit/support/path \
+      --public_headers=\"${hdr}\" \
+      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+
+  EXPECT_FILE_NOT_EMPTY "${cc_out}"
+  EXPECT_SUCCEED \
+    "grep \"#include.*test/specific/crubit/support/path/[a-z]\" \"${cc_out}\"" \
+    "Verify #include paths are based on the argument of --crubit_support_path"
 }
 
 gbash::unit::main "$@"

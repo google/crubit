@@ -26,11 +26,12 @@ class Cmdline {
   // `rs_out`, and so forth.
   static absl::StatusOr<Cmdline> CreateForTesting(
       std::string cc_out, std::string rs_out, std::string ir_out,
-      std::string rustfmt_config_path, bool do_nothing,
-      std::vector<std::string> public_headers,
+      std::string crubit_support_path, std::string rustfmt_config_path,
+      bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str) {
-    return CreateFromArgs(cc_out, rs_out, ir_out, rustfmt_config_path,
-                          do_nothing, public_headers, targets_and_headers_str);
+    return CreateFromArgs(cc_out, rs_out, ir_out, crubit_support_path,
+                          rustfmt_config_path, do_nothing, public_headers,
+                          targets_and_headers_str);
   }
 
   Cmdline(const Cmdline&) = delete;
@@ -41,6 +42,7 @@ class Cmdline {
   absl::string_view cc_out() const { return cc_out_; }
   absl::string_view rs_out() const { return rs_out_; }
   absl::string_view ir_out() const { return ir_out_; }
+  absl::string_view crubit_support_path() const { return crubit_support_path_; }
   absl::string_view rustfmt_config_path() const { return rustfmt_config_path_; }
   bool do_nothing() const { return do_nothing_; }
 
@@ -60,8 +62,8 @@ class Cmdline {
 
   static absl::StatusOr<Cmdline> CreateFromArgs(
       std::string cc_out, std::string rs_out, std::string ir_out,
-      std::string rustfmt_config_path, bool do_nothing,
-      std::vector<std::string> public_headers,
+      std::string crubit_support_path, std::string rustfmt_config_path,
+      bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str);
 
   absl::StatusOr<BazelLabel> FindHeader(const HeaderName& header) const;
@@ -69,6 +71,7 @@ class Cmdline {
   std::string cc_out_;
   std::string rs_out_;
   std::string ir_out_;
+  std::string crubit_support_path_;
   std::string rustfmt_config_path_;
   bool do_nothing_ = true;
 

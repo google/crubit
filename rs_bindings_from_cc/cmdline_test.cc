@@ -25,22 +25,25 @@ namespace {
 
 absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
                                     const std::string& targets_and_headers) {
-  return Cmdline::CreateForTesting(
-      "cc_out", "rs_out", "ir_out", "rustfmt_config_path",
-      /* do_nothing= */ false, public_headers, targets_and_headers);
+  return Cmdline::CreateForTesting("cc_out", "rs_out", "ir_out",
+                                   "crubit_support_path", "rustfmt_config_path",
+                                   /* do_nothing= */ false, public_headers,
+                                   targets_and_headers);
 }
 
 }  // namespace
 
 TEST(CmdlineTest, BasicCorrectInput) {
-  ASSERT_OK_AND_ASSIGN(Cmdline cmdline,
-                       Cmdline::CreateForTesting(
-                           "cc_out", "rs_out", "ir_out", "rustfmt_config_path",
-                           /* do_nothing= */ false, {"h1"},
-                           R"([{"t": "t1", "h": ["h1", "h2"]}])"));
+  ASSERT_OK_AND_ASSIGN(
+      Cmdline cmdline,
+      Cmdline::CreateForTesting("cc_out", "rs_out", "ir_out",
+                                "crubit_support_path", "rustfmt_config_path",
+                                /* do_nothing= */ false, {"h1"},
+                                R"([{"t": "t1", "h": ["h1", "h2"]}])"));
   EXPECT_EQ(cmdline.cc_out(), "cc_out");
   EXPECT_EQ(cmdline.rs_out(), "rs_out");
   EXPECT_EQ(cmdline.ir_out(), "ir_out");
+  EXPECT_EQ(cmdline.crubit_support_path(), "crubit_support_path");
   EXPECT_EQ(cmdline.rustfmt_config_path(), "rustfmt_config_path");
   EXPECT_EQ(cmdline.do_nothing(), false);
   EXPECT_EQ(cmdline.current_target().value(), "t1");
@@ -183,7 +186,8 @@ TEST(CmdlineTest, CcOutEmpty) {
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(Cmdline::CreateForTesting(
-                  /* cc_out= */ "", "rs_out", "ir_out", "rustfmt_config_path",
+                  /* cc_out= */ "", "rs_out", "ir_out", "crubit_support_path",
+                  "rustfmt_config_path",
                   /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("please specify --cc_out")));
@@ -194,7 +198,8 @@ TEST(CmdlineTest, RsOutEmpty) {
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(Cmdline::CreateForTesting(
-                  "cc_out", /* rs_out= */ "", "ir_out", "rustfmt_config_path",
+                  "cc_out", /* rs_out= */ "", "ir_out", "crubit_support_path",
+                  "rustfmt_config_path",
                   /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("please specify --rs_out")));
@@ -205,8 +210,21 @@ TEST(CmdlineTest, IrOutEmpty) {
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_OK(Cmdline::CreateForTesting(
-      "cc_out", "rs_out", /* ir_out= */ "", "rustfmt_config_path",
+      "cc_out", "rs_out", /* ir_out= */ "", "crubit_support_path",
+      "rustfmt_config_path",
       /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders));
+}
+
+TEST(CmdlineTest, CrubitSupportPathEmpty) {
+  constexpr char kTargetsAndHeaders[] = R"([
+    {"t": "target1", "h": ["a.h", "b.h"]}
+  ])";
+  ASSERT_THAT(Cmdline::CreateForTesting(
+                  "cc_out", "rs_out", "ir_out", /* crubit_support_path= */ "",
+                  "rustfmt_config_path",
+                  /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("please specify --crubit_support_path")));
 }
 
 TEST(CmdlineTest, RustfmtTomlPathEmpty) {
@@ -214,7 +232,8 @@ TEST(CmdlineTest, RustfmtTomlPathEmpty) {
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_OK(Cmdline::CreateForTesting(
-      "cc_out", "rs_out", "ir_out", /* rustfmt_config_path= */ "",
+      "cc_out", "rs_out", "ir_out", "crubit_support_path",
+      /* rustfmt_config_path= */ "",
       /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders));
 }
 

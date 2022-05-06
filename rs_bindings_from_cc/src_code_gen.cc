@@ -22,6 +22,7 @@ struct FfiBindings {
 
 // This function is implemented in Rust.
 extern "C" FfiBindings GenerateBindingsImpl(FfiU8Slice json,
+                                            FfiU8Slice crubit_support_path,
                                             FfiU8Slice rustfmt_config_path);
 
 // Creates `Bindings` instance from copied data from `ffi_bindings`.
@@ -49,11 +50,13 @@ static void FreeFfiBindings(FfiBindings ffi_bindings) {
   FreeFfiU8SliceBox(ffi_bindings.rs_api_impl);
 }
 
-Bindings GenerateBindings(const IR& ir, absl::string_view rustfmt_config_path) {
+Bindings GenerateBindings(const IR& ir, absl::string_view crubit_support_path,
+                          absl::string_view rustfmt_config_path) {
   std::string json = llvm::formatv("{0}", ir.ToJson());
 
   FfiBindings ffi_bindings = GenerateBindingsImpl(
-      MakeFfiU8Slice(json), MakeFfiU8Slice(rustfmt_config_path));
+      MakeFfiU8Slice(json), MakeFfiU8Slice(crubit_support_path),
+      MakeFfiU8Slice(rustfmt_config_path));
   Bindings bindings = MakeBindingsFromFfiBindings(ffi_bindings);
   FreeFfiBindings(ffi_bindings);
   return bindings;
