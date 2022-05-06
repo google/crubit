@@ -199,7 +199,7 @@ class DeclImporterBase : public DeclImporter {
   std::optional<IR::Item> ImportDecl(clang::Decl* decl) {
     return Import(clang::cast<D>(decl));
   }
-  virtual std::optional<IR::Item> Import(D*);
+  virtual std::optional<IR::Item> Import(D*) = 0;
 };
 
 }  // namespace crubit
