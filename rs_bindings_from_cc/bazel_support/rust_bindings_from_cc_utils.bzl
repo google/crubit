@@ -219,6 +219,8 @@ def _generate_bindings(
                 rs_output.path,
                 "--cc_out",
                 cc_output.path,
+                "--rustfmt_config_path",
+                "external/rustfmt/rustfmt.toml",
             ] + _get_hdrs_command_line(public_hdrs),
             "targets_and_headers": targets_and_headers,
         },

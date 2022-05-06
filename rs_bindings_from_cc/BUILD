@@ -301,6 +301,7 @@ cc_library(
         ":cc_ir",
         ":src_code_gen_impl",  # buildcleaner: keep
         "//common:cc_ffi_types",
+        "@absl//strings",
         "@llvm///clang:format",
         "@llvm///llvm:Support",
     ],

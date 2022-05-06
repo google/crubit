@@ -9,10 +9,11 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
+use std::ffi::{OsStr, OsString};
 use std::iter::Iterator;
 use std::panic::catch_unwind;
 use std::process;
-use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
+use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string, RustfmtConfig};
 
 /// FFI equivalent of `Bindings`.
 #[repr(C)]
@@ -28,20 +29,28 @@ pub struct FfiBindings {
 /// # Safety
 ///
 /// Expectations:
-///    * function expects that param `json` is a FfiU8Slice for a valid array of
-///      bytes with the given size.
-///    * function expects that param `json` doesn't change during the call.
+///    * `json` should be a FfiU8Slice for a valid array of bytes with the given
+///      size.
+///    * `rustfmt_config_path` should be a FfiU8Slice for a valid array of bytes
+///      representing an UTF8-encoded string (without the UTF-8 requirement, it
+///      seems that Rust doesn't offer a way to convert to OsString on Windows)
+///    * `json` and `rustfmt_config_path` shouldn't change during the call.
 ///
 /// Ownership:
 ///    * function doesn't take ownership of (in other words it borrows) the
-///      param `json`
+///      input params: `json`, and `rustfmt_config_path`
 ///    * function passes ownership of the returned value to the caller
 #[no_mangle]
-pub unsafe extern "C" fn GenerateBindingsImpl(json: FfiU8Slice) -> FfiBindings {
+pub unsafe extern "C" fn GenerateBindingsImpl(
+    json: FfiU8Slice,
+    rustfmt_config_path: FfiU8Slice,
+) -> FfiBindings {
+    let json: &[u8] = json.as_slice();
+    let rustfmt_config_path: OsString =
+        std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         // It is ok to abort here.
-        let Bindings { rs_api, rs_api_impl } = generate_bindings(json.as_slice()).unwrap();
-
+        let Bindings { rs_api, rs_api_impl } = generate_bindings(json, &rustfmt_config_path).unwrap();
         FfiBindings {
             rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
             rs_api_impl: FfiU8SliceBox::from_boxed_slice(
@@ -68,8 +77,18 @@ struct BindingsTokens {
     rs_api_impl: TokenStream,
 }
 
-fn generate_bindings(json: &[u8]) -> Result<Bindings> {
+fn generate_bindings(json: &[u8], rustfmt_config_path: &OsStr) -> Result<Bindings> {
     let ir = deserialize_ir(json)?;
+
+    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+    let rs_api = {
+        let rustfmt_config = if rustfmt_config_path.is_empty() {
+            RustfmtConfig::default()
+        } else {
+            RustfmtConfig::from_config_path(rustfmt_config_path)
+        };
+        rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
+    };
 
     // The code is formatted with a non-default rustfmt configuration. Prevent
     // downstream workflows from reformatting with a different configuration by
@@ -82,14 +101,13 @@ fn generate_bindings(json: &[u8]) -> Result<Bindings> {
     //
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
     // be needed when `@generated` comment/keyword is present...
-    let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
     let rs_api = format!(
         "// Automatically @generated Rust bindings for C++ target\n\
         // {target}\n\
         #![rustfmt::skip]\n\
         {code}",
         target = ir.current_target().0,
-        code = rs_tokens_to_formatted_string(rs_api)?
+        code = rs_api,
     );
     let rs_api_impl = tokens_to_string(rs_api_impl)?;
 
@@ -2340,7 +2358,7 @@ mod tests {
         assert_cc_matches, assert_cc_not_matches, assert_ir_matches, assert_rs_matches,
         assert_rs_not_matches,
     };
-    use token_stream_printer::tokens_to_string;
+    use token_stream_printer::{rs_tokens_to_formatted_string_for_tests, tokens_to_string};
 
     #[test]
     fn test_disable_thread_safety_warnings() -> Result<()> {
@@ -3055,7 +3073,8 @@ mod tests {
              struct SecondStruct {};",
         )?;
 
-        let rs_api = rs_tokens_to_formatted_string(generate_bindings_tokens(&ir)?.rs_api)?;
+        let rs_api =
+            rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(&ir)?.rs_api)?;
 
         let idx = |s: &str| rs_api.find(s).ok_or_else(|| anyhow!("'{}' missing", s));
 
@@ -4009,7 +4028,7 @@ mod tests {
     #[test]
     fn test_no_impl_drop() -> Result<()> {
         let ir = ir_from_cc("struct Trivial {};")?;
-        let rs_api = rs_tokens_to_formatted_string(generate_bindings_tokens(&ir)?.rs_api)?;
+        let rs_api = tokens_to_string(generate_bindings_tokens(&ir)?.rs_api)?;
         assert!(!rs_api.contains("impl Drop"));
         Ok(())
     }

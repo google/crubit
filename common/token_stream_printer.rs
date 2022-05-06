@@ -4,13 +4,58 @@
 
 use anyhow::{bail, Result};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
+use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
 use std::io::Write as _;
 use std::process::{Command, Stdio};
 
+// TODO: The `RustfmtConfig` struct should be replaced with
+// `rustfmt_nightly::Config` once we switch to using rustfmt as a library
+// (instead of invoking the `rustfmt` executable).
+pub struct RustfmtConfig {
+    args: Vec<OsString>,
+}
+
+impl RustfmtConfig {
+    /// Creates a config that passes the provided `rustfmt_config_path` argument
+    /// as `rustfmt`'s `--config-path` cmdline parameter.
+    pub fn from_config_path(rustfmt_config_path: &OsStr) -> Self {
+        let mut config_path_arg: OsString = "--config-path=".into();
+        config_path_arg.push(rustfmt_config_path);
+        Self { args: vec![config_path_arg] }.append_config_overrides()
+    }
+
+    pub fn default() -> Self {
+        Self { args: vec!["--edition=2021".into(), "--config=version=Two".into()] }
+            .append_config_overrides()
+    }
+
+    fn append_config_overrides(mut self: Self) -> Self {
+        self.args.extend(vec![
+            // We are representing doc comments as attributes in the token stream and use rustfmt
+            // to unpack them again.
+            "--config=normalize_doc_attributes=true".into(),
+            // We don't want rustfmt to reflow C++ doc comments, so we turn off wrapping globally
+            // and reflow generated comments manually.
+            "--config=wrap_comments=false".into(),
+        ]);
+        self
+    }
+}
+
 /// Like `tokens_to_string` but also runs the result through rustfmt.
-pub fn rs_tokens_to_formatted_string(tokens: TokenStream) -> Result<String> {
-    rustfmt(tokens_to_string(tokens)?)
+pub fn rs_tokens_to_formatted_string(
+    tokens: TokenStream,
+    config: &RustfmtConfig,
+) -> Result<String> {
+    rustfmt(tokens_to_string(tokens)?, config)
+}
+
+/// Like `rs_tokens_to_formatted_string`, but always using a Crubit-internal,
+/// default rustfmt config.  This should only be called by tests - product code
+/// should support custom `rustfmt.toml`.
+pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<String> {
+    rs_tokens_to_formatted_string(input, &RustfmtConfig::default())
 }
 
 /// Produces source code out of the token stream.
@@ -89,28 +134,23 @@ fn is_ident_or_literal(tt: &TokenTree) -> bool {
     }
 }
 
-fn rustfmt(input: String) -> Result<String> {
-    // TODO(forster): This should use rustfmt as a library as soon as b/200503084 is
-    // fixed.
+fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
+    // TODO(b/230021743): Avoid hardcoding the path to `rustfmt`.  Either:
+    // - Long-term: TODO(b/231320237): This should use rustfmt as a library as soon
+    //   as b/200503084 is fixed.
+    // - Short-term: Add a way to specify `rustfmt_exe_path` as a command line
+    //   parameter. Or just return `input` if the executable is not found at the
+    //   given path.
+    let rustfmt_exe_path: &OsStr =
+        OsStr::new("third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt");
 
-    let rustfmt = "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
-
-    let mut child = Command::new(rustfmt)
-        .args(&[
-            // TODO(forster): Add a way to specify this as a command line parameter.
-            "--config-path=external/rustfmt/rustfmt.toml",
-            // We are representing doc comments as attributes in the token stream and use rustfmt
-            // to unpack them again.
-            "--config=normalize_doc_attributes=true",
-            // We don't want rustfmt to reflow C++ doc comments, so we turn off wrapping globally
-            // and reflow generated comments manually.
-            "--config=wrap_comments=false",
-        ])
+    let mut child = Command::new(rustfmt_exe_path)
+        .args(config.args.iter())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at '{}'", rustfmt));
+        .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at {:?}", rustfmt_exe_path));
 
     let mut stdin = child.stdin.take().expect("Failed to open rustfmt stdin");
     std::thread::spawn(move || {
@@ -216,11 +256,11 @@ mod tests {
         // token_stream_printer (and rustfmt) don't put a space between /// and the doc
         // comment, if the space is desired, it has to appear in the annotation.
         assert_eq!(
-            rs_tokens_to_formatted_string(quote! { #[doc = "hello"] struct X {} })?,
+            rs_tokens_to_formatted_string_for_tests(quote! { #[doc = "hello"] struct X {} })?,
             "///hello\nstruct X {}\n"
         );
         assert_eq!(
-            rs_tokens_to_formatted_string(quote! { #[doc = "hello\nworld"] struct X {} })?,
+            rs_tokens_to_formatted_string_for_tests(quote! { #[doc = "hello\nworld"] struct X {} })?,
             "///hello\n///world\nstruct X {}\n"
         );
         Ok(())
@@ -229,11 +269,11 @@ mod tests {
     #[test]
     fn test_doc_comment_leading_spaces() -> Result<()> {
         assert_eq!(
-            rs_tokens_to_formatted_string(quote! { #[doc = " hello"] struct X {} })?,
+            rs_tokens_to_formatted_string_for_tests(quote! { #[doc = " hello"] struct X {} })?,
             "/// hello\nstruct X {}\n"
         );
         assert_eq!(
-            rs_tokens_to_formatted_string(quote! { #[doc = " hello\n world"] struct X {} })?,
+            rs_tokens_to_formatted_string_for_tests(quote! { #[doc = " hello\n world"] struct X {} })?,
             "/// hello\n/// world\nstruct X {}\n"
         );
         Ok(())

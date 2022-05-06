@@ -122,8 +122,6 @@ function test::public_headers() {
   echo "int function_1();" > "${header_1}"
   echo "int function_2();" > "${header_2}"
 
-  local hdr="${TEST_TMPDIR}/hello_world.h"
-  echo "int foo(); But this is not C++;" > "${hdr}"
   local json
   json="$(cat <<-EOT
   [{"t": "//foo/bar:baz", "h": ["${header_1}", "${header_2}"]}]
@@ -139,6 +137,70 @@ EOT
 
   EXPECT_SUCCEED "grep function_1 \"${rs_out}\"" "function_1 was not imported"
   EXPECT_SUCCEED "grep function_2 \"${rs_out}\"" "function_2 was not imported"
+}
+
+function test::rustfmt_config_path() {
+  local rs_out="${TEST_TMPDIR}/rs_api.rs"
+  local cc_out="${TEST_TMPDIR}/rs_api_impl.cc"
+
+  local hdr="${TEST_TMPDIR}/hello_world.h"
+  echo "int MyFunction(int arg1, int arg2);" > "${hdr}"
+
+  local json
+  json="$(cat <<-EOT
+  [{"t": "//foo/bar:baz", "h": ["${hdr}"]}]
+EOT
+)"
+
+  #########################################################
+  # Testing the default `rustfmt` config.
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --public_headers=\"${hdr}\" \
+      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+
+  EXPECT_FILE_NOT_EMPTY "${rs_out}"
+
+  # Expecting:
+  #     pub fn MyFunction(arg1: i32, arg2: i32) -> i32
+  EXPECT_SUCCEED \
+    "grep \"MyFunction.*arg1:.*i32,.*arg2:.*i32.*)\" \"${rs_out}\"" \
+    "Verify function args are on single line when using default rustfmt config (1)"
+  EXPECT_FAIL \
+    "grep \"^[^a-z]*arg1:[^a-z]*i32,[^a-z]*\\\$\" \"${rs_out}\"" \
+    "Verify function args are *not on single line when using default rustfmt config (2)"
+
+  #########################################################
+  # Testing a custom `rustfmt` config.
+  local rustfmt_config_path="${TEST_TMPDIR}/rustfmt.toml"
+  cat >"${rustfmt_config_path}" <<EOF
+    edition = "2021"
+    version = "Two"
+    fn_args_layout="Vertical"
+EOF
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" \
+      --rustfmt_config_path=\"${rustfmt_config_path}\" \
+      --public_headers=\"${hdr}\" \
+      --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
+
+  EXPECT_FILE_NOT_EMPTY "${rs_out}"
+
+  # Expecting:
+  #     pub fn MyFunction(
+  #         arg1: i32,
+  #         arg2: i32,
+  #     ) -> i32
+  EXPECT_FAIL \
+    "grep \"MyFunction.*arg1:.*i32,.*arg2:.*i32.*)\" \"${rs_out}\"" \
+    "Verify function args are *not* on single line when using default rustfmt config (1)"
+  EXPECT_SUCCEED \
+    "grep \"^[^a-z]*arg1:[^a-z]*i32,[^a-z]*\\\$\" \"${rs_out}\"" \
+    "Verify function args are *not on single line when using default rustfmt config (2)"
 }
 
 gbash::unit::main "$@"

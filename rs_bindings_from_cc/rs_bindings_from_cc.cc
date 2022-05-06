@@ -59,7 +59,8 @@ absl::Status Main(std::vector<char*> args) {
         cmdline.ir_out(), std::string(llvm::formatv("{0:2}", ir.ToJson()))));
   }
 
-  crubit::Bindings bindings = crubit::GenerateBindings(ir);
+  crubit::Bindings bindings =
+      crubit::GenerateBindings(ir, cmdline.rustfmt_config_path());
   CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.rs_out(), bindings.rs_api));
   CRUBIT_RETURN_IF_ERROR(
       SetFileContents(cmdline.cc_out(), bindings.rs_api_impl));

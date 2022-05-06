@@ -51,11 +51,11 @@ macro_rules! assert_cc_matches {
 macro_rules! assert_rs_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::match_tokens(
-            &$input,
-            &$pattern,
-            &$crate::internal::rs_tokens_to_formatted_string,
-        )
-        .expect("input unexpectedly didn't match the pattern");
+                                    &$input,
+                                    &$pattern,
+                                    &$crate::internal::rs_tokens_to_formatted_string_for_tests,
+                                )
+                                .expect("input unexpectedly didn't match the pattern");
     };
 }
 
@@ -76,11 +76,11 @@ macro_rules! assert_cc_not_matches {
 macro_rules! assert_rs_not_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::mismatch_tokens(
-            &$input,
-            &$pattern,
-            &$crate::internal::rs_tokens_to_formatted_string,
-        )
-        .unwrap();
+                                    &$input,
+                                    &$pattern,
+                                    &$crate::internal::rs_tokens_to_formatted_string_for_tests,
+                                )
+                                .unwrap();
     };
 }
 
@@ -133,7 +133,9 @@ pub mod internal {
     use proc_macro2::TokenTree;
     use quote::quote;
     use std::iter;
-    pub use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string};
+    pub use token_stream_printer::{
+        rs_tokens_to_formatted_string, rs_tokens_to_formatted_string_for_tests, tokens_to_string,
+    };
 
     pub fn match_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {
         match_tokens(&ir_to_token_stream(ir)?, pattern, &ir_to_string)
@@ -157,7 +159,7 @@ pub mod internal {
         // struct expression into the body of a function, format it, and then remove
         // the function.
         let input_stream = quote! { fn make_rustfmt_happy() { #input } };
-        let formatted = rs_tokens_to_formatted_string(input_stream)?;
+        let formatted = rs_tokens_to_formatted_string_for_tests(input_stream)?;
         let snippet = formatted
             .strip_prefix("fn make_rustfmt_happy() {\n")
             .unwrap()
@@ -611,7 +613,7 @@ Caused by:
                 match_tokens(
                     &quote! {struct A { a: i64, b: i64 }},
                     &quote! {struct B},
-                    &rs_tokens_to_formatted_string
+                    &rs_tokens_to_formatted_string_for_tests,
                 )
                 .expect_err("unexpected match")
             ),
