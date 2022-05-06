@@ -78,8 +78,7 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, NontrivialCustomType>,)>
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("ContainingStruct"), ContainingStruct);
 

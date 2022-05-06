@@ -1014,13 +1014,21 @@ fn generate_record(
         repr_attributes.push(quote! {align(#alignment)});
     }
 
-    // Adjust the struct to also include base class subobjects. We use an opaque
-    // field because subobjects can live in the alignment of base class
-    // subobjects.
-    let base_subobjects_field = if let Some(base_size) = record.base_size {
-        let n = proc_macro2::Literal::usize_unsuffixed(base_size);
+    // Adjust the struct to also include base class subobjects, vtables, etc.
+    let head_padding = if let Some(first_field) = record.fields.first() {
+        first_field.offset / 8
+    } else {
+        record.size
+    };
+    // TODO(b/231664029): Rework this check.
+    // It is probably fine to be a derived class, if it is trivially-relocatable
+    // (and thus implicit-lifetime), then we can initialize it through copying.
+    // The more important issue is that we should not sidestep user-defined
+    // constructors!
+    let head_padding = if head_padding > 0 || record.is_derived_class {
+        let n = proc_macro2::Literal::usize_unsuffixed(head_padding);
         quote! {
-            __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; #n],
+            __non_field_data: [rust_std::mem::MaybeUninit<u8>; #n],
         }
     } else {
         quote! {}
@@ -1032,16 +1040,6 @@ fn generate_record(
     let incomplete_definition = quote! {
         forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #ident);
     };
-
-    let empty_struct_placeholder_field =
-        if record.fields.is_empty() && record.base_size.unwrap_or(0) == 0 {
-            quote! {
-              /// Prevent empty C++ struct being zero-size in Rust.
-              placeholder: rust_std::mem::MaybeUninit<u8>,
-            }
-        } else {
-            quote! {}
-        };
 
     let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, ir)?;
     let mut record_generated_items = record
@@ -1079,9 +1077,8 @@ fn generate_record(
         #derives
         #[repr(#( #repr_attributes ),*)]
         pub #record_kind #ident {
-            #base_subobjects_field
+            #head_padding
             #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
-            #empty_struct_placeholder_field
         }
 
         #incomplete_definition
@@ -3094,7 +3091,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 10],
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 10],
                     pub z: i16,
                 }
             }
@@ -3119,7 +3116,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 10],
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 10],
                     pub z: i16,
                 }
             }
@@ -3144,7 +3141,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 10],
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 10],
                     pub z: i16,
                 }
             }
@@ -3168,7 +3165,7 @@ mod tests {
             quote! {
                 #[repr(C, align(8))]
                 pub struct Derived {
-                    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 9],
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 16],
                 }
             }
         );
@@ -3189,9 +3186,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct Derived {
-                    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 0],
-                    /// Prevent empty C++ struct being zero-size in Rust.
-                    placeholder: rust_std::mem::MaybeUninit<u8>,
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -3203,18 +3198,19 @@ mod tests {
         let ir = ir_from_cc(
             r#"
             class Base {};
-            struct Derived final : Base {};
+            struct Derived final : Base {
+                __INT16_TYPE__ x;
+            };
         "#,
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[repr(C)]
+                #[repr(C, align(2))]
                 pub struct Derived {
-                    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 0],
-                    /// Prevent empty C++ struct being zero-size in Rust.
-                    placeholder: rust_std::mem::MaybeUninit<u8>,
+                    __non_field_data:  [rust_std::mem::MaybeUninit<u8>; 0],
+                    pub x: i16,
                 }
             }
         );
@@ -3683,6 +3679,37 @@ mod tests {
     }
 
     #[test]
+    fn test_empty_struct() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct EmptyStruct final {};
+            "#,
+        )?;
+        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[derive(Clone, Copy)]
+                #[repr(C)]
+                pub struct EmptyStruct {
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                const _: () = assert!(rust_std::mem::size_of::<EmptyStruct>() == 1usize);
+                const _: () = assert!(rust_std::mem::align_of::<EmptyStruct>() == 1usize);
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
     fn test_empty_union() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -3697,8 +3724,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub union EmptyUnion {
-                    /// Prevent empty C++ struct being zero-size in Rust.
-                    placeholder: rust_std::mem::MaybeUninit<u8>,
+                    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
                 }
             }
         );

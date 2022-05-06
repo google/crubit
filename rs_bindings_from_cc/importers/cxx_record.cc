@@ -59,20 +59,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   const clang::ASTRecordLayout& layout =
       ictx_.ctx_.getASTRecordLayout(record_decl);
 
-  llvm::Optional<size_t> base_size;
-  bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>();
-  if (record_decl->getNumBases() != 0) {
-    // The size of the base class subobjects is easy to compute, so long as we
-    // know that fields start after the base class subobjects. (This is not
-    // guaranteed by the standard, but is true on the ABIs we work with.)
-    base_size = layout.getFieldCount() == 0
-                    ? static_cast<size_t>(layout.getDataSize().getQuantity())
-                    : layout.getFieldOffset(0) / 8;
-    // Ideally, we'd only include an alignment adjustment if one of the base
-    // classes is more-aligned than any of the fields, but it is simpler do it
-    // whenever there are any base classes at all.
-    override_alignment = true;
-  }
+  bool is_derived_class = record_decl->getNumBases() != 0;
+  bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>() ||
+                            is_derived_class || layout.hasOwnVFPtr();
 
   absl::StatusOr<std::vector<Field>> fields = ImportFields(record_decl);
   if (!fields.ok()) {
@@ -99,7 +88,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .fields = *std::move(fields),
       .size = layout.getSize().getQuantity(),
       .alignment = layout.getAlignment().getQuantity(),
-      .base_size = base_size,
+      .is_derived_class = is_derived_class,
       .override_alignment = override_alignment,
       .copy_constructor = GetCopyCtorSpecialMemberFunc(*record_decl),
       .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),

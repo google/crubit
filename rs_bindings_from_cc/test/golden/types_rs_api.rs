@@ -19,8 +19,7 @@ use memoffset_unstable_const::offset_of;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), SomeStruct);
 
@@ -59,8 +58,7 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union EmptyUnion {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), EmptyUnion);
 

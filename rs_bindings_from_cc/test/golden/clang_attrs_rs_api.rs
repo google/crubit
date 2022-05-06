@@ -18,8 +18,7 @@ use memoffset_unstable_const::offset_of;
 
 #[repr(C, align(64))]
 pub struct HasCustomAlignment {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("HasCustomAlignment"), HasCustomAlignment);
 
@@ -78,9 +77,7 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 0],
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
@@ -117,8 +114,7 @@ unsafe impl oops::Inherits<HasCustomAlignment> for InheritsFromBaseWithCustomAli
 
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),

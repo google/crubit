@@ -390,7 +390,7 @@ llvm::json::Value Record::ToJson() const {
       {"lifetime_params", lifetime_params},
       {"size", size},
       {"alignment", alignment},
-      {"base_size", base_size},
+      {"is_derived_class", is_derived_class},
       {"override_alignment", override_alignment},
       {"copy_constructor", copy_constructor},
       {"move_constructor", move_constructor},

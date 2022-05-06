@@ -24,8 +24,7 @@ pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct S {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), S);
 

@@ -23,7 +23,7 @@ use memoffset_unstable_const::offset_of;
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 #[repr(C, align(8))]
 pub struct Derived2 {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 20],
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 20],
     pub derived_1: u8,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), Derived2);
@@ -68,7 +68,7 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for Derived2 {
 
 #[repr(C, align(8))]
 pub struct VirtualDerived2 {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 32],
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 32],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived2"), VirtualDerived2);
 

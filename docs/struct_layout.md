@@ -15,11 +15,22 @@ In particular:
 *   Public subobjects must have the same offsets in C++ and Rust versions of the
     structs.
 
-## Empty Structs
+## Non-field data
 
-In C++, an empty struct or class (e.g. `struct Empty{};`) has size `1`, while in
-Rust, it has size `0`. To make the layout match up, bindings for empty structs
-have a private `MaybeUninit<u8>` field.
+Rust bindings introduce a `__non_field_data: [MaybeUninit<u8>; N]` field to
+cover data within the object that is not part of individual fields. This
+includes:
+
+*   Base classes.
+*   VTable pointers.
+*   Empty struct padding.
+
+### Empty Structs
+
+One notable special case of this is the empty struct padding. An empty struct or
+class (e.g. `struct Empty{};`) has size `1`, while in Rust, it has size `0`. To
+make the layout match up, bindings for empty structs will always enforce that
+the struct has size of at least 1, via `__non_field_data`.
 
 (In C++, different array elements are guaranteed to have different addresses,
 and also, arrays are guaranteed to be contiguous. Therefore, no object in C++
@@ -90,7 +101,7 @@ struct B {
   // and Rust wouldn't permit `z` to live inside of it.
   // Nor do we align the array, for the same reason -- correct alignment must be
   // achieved via the repr(align(2)) at the top.
-  __base_class_subobjects : [MaybeUninit<u8>; 3];
+  __non_field_data : [MaybeUninit<u8>; 3];
   pub z: i8,
 }
 ```

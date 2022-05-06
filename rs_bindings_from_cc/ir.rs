@@ -354,7 +354,7 @@ pub struct Record {
     pub lifetime_params: Vec<LifetimeName>,
     pub size: usize,
     pub alignment: usize,
-    pub base_size: Option<usize>,
+    pub is_derived_class: bool,
     pub override_alignment: bool,
     pub copy_constructor: SpecialMemberFunc,
     pub move_constructor: SpecialMemberFunc,

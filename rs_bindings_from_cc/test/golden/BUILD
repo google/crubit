@@ -64,7 +64,6 @@ DEPS = {
 ) for name in TESTS if name not in [
     # TODO(hlopko): These tests fail to compile, fix them.
     "namespace",
-    "polymorphic",
     "types",
 ]]
 

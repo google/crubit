@@ -831,9 +831,8 @@ fn test_record_base_with_unsupported_field() -> Result<()> {
                }], ...
                size: 8,
                alignment: 4,
-               base_size: Some(4),
+               is_derived_class: true,
                override_alignment: true,
-               ...
                ...
            }),
         }

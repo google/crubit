@@ -7,9 +7,16 @@
 
 #pragma clang lifetime_elision
 
-class PolymorphicClass {
+class PolymorphicBase {
  public:
-  virtual ~PolymorphicClass();
+  virtual ~PolymorphicBase();
 };
+class PolymorphicBase2 {
+ public:
+  virtual void Foo();
+  virtual ~PolymorphicBase2();
+};
+
+class PolymorphicDerived : PolymorphicBase, PolymorphicBase2 {};
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_

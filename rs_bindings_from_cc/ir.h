@@ -553,13 +553,8 @@ struct Record {
   int64_t size;
   int64_t alignment;
 
-  // The size of the base class subobjects, or null if there are none.
-  //
-  // More information: docs/struct_layout
-  //
-  // `llvm::Optional` is used because it integrates better with `llvm::json`
-  // library than `std::optional`.
-  llvm::Optional<size_t> base_size;
+  // True if any base classes exist.
+  bool is_derived_class;
 
   // True if the alignment may differ from what the fields would imply.
   //

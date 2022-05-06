@@ -21,8 +21,7 @@ use memoffset_unstable_const::offset_of;
 /// objects, even if the POD type is potentially-overlapping.
 #[repr(C)]
 pub struct Base0 {
-    /// Prevent empty C++ struct being zero-size in Rust.
-    placeholder: rust_std::mem::MaybeUninit<u8>,
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), Base0);
 
@@ -108,7 +107,7 @@ impl !Unpin for Base2 {}
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Derived {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 12],
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), Derived);
@@ -151,7 +150,7 @@ unsafe impl oops::Inherits<Base2> for Derived {
 
 #[repr(C, align(8))]
 pub struct VirtualBase1 {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 17],
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 24],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), VirtualBase1);
 
@@ -185,7 +184,7 @@ unsafe impl oops::Inherits<Base1> for VirtualBase1 {
 
 #[repr(C, align(8))]
 pub struct VirtualBase2 {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 17],
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 24],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), VirtualBase2);
 
@@ -219,7 +218,7 @@ unsafe impl oops::Inherits<Base1> for VirtualBase2 {
 
 #[repr(C, align(8))]
 pub struct VirtualDerived {
-    __base_class_subobjects: [rust_std::mem::MaybeUninit<u8>; 32],
+    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 32],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), VirtualDerived);
 
