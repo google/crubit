@@ -106,3 +106,18 @@ rust_test(
         "@crates_io//quote/v1:quote",
     ],
 )
+
+cc_library(
+    name = "test_utils",
+    testonly = True,
+    srcs = ["test_utils.cc"],
+    hdrs = ["test_utils.h"],
+    deps = [
+        ":check",
+        ":file_io",
+        "//testing/base/public:gunit_for_library_testonly",
+        "@absl//flags:flag",
+        "@absl//strings",
+        "@llvm///llvm:Support",
+    ],
+)
