@@ -129,51 +129,52 @@ TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeader) {
 }
 
 TEST(CmdlineTest, TargetsAndHeadersDuplicateHeader) {
-  constexpr char kTestInput[] = R"([
+  constexpr absl::string_view kTestInput = R"([
       {"t": "t1", "h": ["h1"]},
       {"t": "t2", "h": ["h1"]} ])";
   ASSERT_THAT(
-      TestCmdline({"h1"}, kTestInput),
+      TestCmdline({"h1"}, std::string(kTestInput)),
       StatusIs(absl::StatusCode::kInvalidArgument,
                AllOf(HasSubstr("--targets_and_headers"), HasSubstr("conflict"),
                      HasSubstr("h1"), HasSubstr("t1"), HasSubstr("t2"))));
 }
 
 TEST(CmdlineTest, PublicHeadersEmpty) {
-  constexpr char kTargetsAndHeaders[] = R"([
+  constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
-  ASSERT_THAT(TestCmdline({}, kTargetsAndHeaders),
+  ASSERT_THAT(TestCmdline({}, std::string(kTargetsAndHeaders)),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("please specify --public_headers")));
 }
 
 TEST(CmdlineTest, PublicHeadersWhereFirstHeaderMissingInMap) {
-  constexpr char kTargetsAndHeaders[] = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
-  ])";
-  ASSERT_THAT(TestCmdline({"missing-in-map.h"}, kTargetsAndHeaders),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("missing-in-map.h"),
-                             HasSubstr("Couldn't find"))));
-}
-
-TEST(CmdlineTest, PublicHeadersWhereSecondHeaderMissingInMap) {
-  constexpr char kTargetsAndHeaders[] = R"([
+  constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
-      TestCmdline({"a.h", "missing.h"}, kTargetsAndHeaders),
+      TestCmdline({"missing-in-map.h"}, std::string(kTargetsAndHeaders)),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          AllOf(HasSubstr("missing-in-map.h"), HasSubstr("Couldn't find"))));
+}
+
+TEST(CmdlineTest, PublicHeadersWhereSecondHeaderMissingInMap) {
+  constexpr absl::string_view kTargetsAndHeaders = R"([
+    {"t": "target1", "h": ["a.h", "b.h"]}
+  ])";
+  ASSERT_THAT(
+      TestCmdline({"a.h", "missing.h"}, std::string(kTargetsAndHeaders)),
       StatusIs(absl::StatusCode::kInvalidArgument,
                AllOf(HasSubstr("missing.h"), HasSubstr("Couldn't find"))));
 }
 
 TEST(CmdlineTest, PublicHeadersCoveringMultipleTargets) {
-  constexpr char kTargetsAndHeaders[] = R"([
+  constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]},
     {"t": "target2", "h": ["c.h", "d.h"]}
   ])";
-  ASSERT_THAT(TestCmdline({"a.h", "c.h"}, kTargetsAndHeaders),
+  ASSERT_THAT(TestCmdline({"a.h", "c.h"}, std::string(kTargetsAndHeaders)),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("Expected all public headers to belong "
                                        "to the current target"),
@@ -182,59 +183,39 @@ TEST(CmdlineTest, PublicHeadersCoveringMultipleTargets) {
 }
 
 TEST(CmdlineTest, CcOutEmpty) {
-  constexpr char kTargetsAndHeaders[] = R"([
+  constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
-  ASSERT_THAT(Cmdline::CreateForTesting(
-                  /* cc_out= */ "", "rs_out", "ir_out", "crubit_support_path",
-                  "rustfmt_config_path",
-                  /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("please specify --cc_out")));
+  ASSERT_THAT(
+      Cmdline::CreateForTesting(
+          /* cc_out= */ "", "rs_out", "ir_out", "crubit_support_path",
+          "rustfmt_config_path",
+          /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders)),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("please specify --cc_out")));
 }
 
 TEST(CmdlineTest, RsOutEmpty) {
-  constexpr char kTargetsAndHeaders[] = R"([
+  constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
-  ASSERT_THAT(Cmdline::CreateForTesting(
-                  "cc_out", /* rs_out= */ "", "ir_out", "crubit_support_path",
-                  "rustfmt_config_path",
-                  /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("please specify --rs_out")));
+  ASSERT_THAT(
+      Cmdline::CreateForTesting("cc_out", /* rs_out= */ "", "ir_out",
+                                "crubit_support_path", "rustfmt_config_path",
+                                /* do_nothing= */ false, {"a.h"},
+                                std::string(kTargetsAndHeaders)),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("please specify --rs_out")));
 }
 
 TEST(CmdlineTest, IrOutEmpty) {
-  constexpr char kTargetsAndHeaders[] = R"([
+  constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_OK(Cmdline::CreateForTesting(
       "cc_out", "rs_out", /* ir_out= */ "", "crubit_support_path",
       "rustfmt_config_path",
-      /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders));
-}
-
-TEST(CmdlineTest, CrubitSupportPathEmpty) {
-  constexpr char kTargetsAndHeaders[] = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
-  ])";
-  ASSERT_THAT(Cmdline::CreateForTesting(
-                  "cc_out", "rs_out", "ir_out", /* crubit_support_path= */ "",
-                  "rustfmt_config_path",
-                  /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("please specify --crubit_support_path")));
-}
-
-TEST(CmdlineTest, RustfmtTomlPathEmpty) {
-  constexpr char kTargetsAndHeaders[] = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
-  ])";
-  ASSERT_OK(Cmdline::CreateForTesting(
-      "cc_out", "rs_out", "ir_out", "crubit_support_path",
-      /* rustfmt_config_path= */ "",
-      /* do_nothing= */ false, {"a.h"}, kTargetsAndHeaders));
+      /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders)));
 }
 
 }  // namespace
