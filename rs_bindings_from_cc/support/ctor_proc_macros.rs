@@ -232,7 +232,7 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
         impl #name {
             #[must_use]
             #[inline(always)]
-            fn project(self: ::std::pin::Pin<&mut Self>) -> #projected_ident {
+            pub fn project(self: ::std::pin::Pin<&mut Self>) -> #projected_ident {
                 #projected_ident::new(self)
             }
         }

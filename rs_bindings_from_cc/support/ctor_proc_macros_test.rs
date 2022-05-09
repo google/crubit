@@ -92,6 +92,15 @@ fn test_recursively_pinned_fieldless_enum() {
 }
 
 #[test]
+fn test_recursively_pinned_in_module() {
+    mod submodule {
+        #[::ctor::recursively_pinned]
+        pub struct S;
+    }
+    let _: ::ctor::projected!(submodule::S) = Box::pin(submodule::S).as_mut().project();
+}
+
+#[test]
 fn test_recursively_pinned_struct() {
     #[::ctor::recursively_pinned]
     struct S {
