@@ -21,10 +21,7 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
             if let syn::Fields::Unit = data.fields {
                 quote! {}
             } else {
-                let filled_fields = data.fields
-                .iter()
-                .enumerate()
-                .map(|(i, field)| {
+                let filled_fields = data.fields.iter().enumerate().map(|(i, field)| {
                     let field_i = syn::Index::from(i);
                     let field_name = match &field.ident {
                         None => quote! {#field_i},
@@ -39,7 +36,16 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
                 quote! {{ #(#filled_fields),* }}
             }
         }
-        _ => unimplemented!(),
+        syn::Data::Enum(e) => {
+            return syn::Error::new(e.enum_token.span, "Enums are not supported")
+                .into_compile_error()
+                .into();
+        }
+        syn::Data::Union(u) => {
+            return syn::Error::new(u.union_token.span, "Unions are not supported")
+                .into_compile_error()
+                .into();
+        }
     };
 
     let expanded = quote! {
@@ -73,12 +79,23 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn projected(name: TokenStream) -> TokenStream {
     let mut name = syn::parse_macro_input!(name as syn::Path);
-    {
-        let last = name.segments.last_mut().expect("Path must have at least one element");
-        if let syn::PathArguments::Parenthesized(..) = &last.arguments {
-            panic!("Parenthesized patns (e.g. fn, Fn) do not have projected equivalents.")
+    match name.segments.last_mut() {
+        None => {
+            return syn::Error::new(name.span(), "Path must have at least one element")
+                .into_compile_error()
+                .into();
         }
-        last.ident = projected_ident(&last.ident);
+        Some(last) => {
+            if let syn::PathArguments::Parenthesized(p) = &last.arguments {
+                return syn::Error::new(
+                    p.span(),
+                    "Parenthesized paths (e.g. fn, Fn) do not have projected equivalents.",
+                )
+                .into_compile_error()
+                .into();
+            }
+            last.ident = projected_ident(&last.ident);
+        }
     }
     TokenStream::from(quote! { #name })
 }
@@ -87,7 +104,9 @@ fn projected_ident(ident: &Ident) -> Ident {
     Ident::new(&format!("__CrubitProjected{}", ident), Span::call_site())
 }
 
-fn projected_struct(s: syn::DeriveInput) -> (syn::DeriveInput, proc_macro2::TokenStream) {
+fn projected_struct(
+    s: syn::DeriveInput,
+) -> syn::Result<(syn::DeriveInput, proc_macro2::TokenStream)> {
     let mut projected = s;
     // TODO(jeanpierreda): check attributes for repr(packed)
     projected.attrs.clear();
@@ -105,7 +124,9 @@ fn projected_struct(s: syn::DeriveInput) -> (syn::DeriveInput, proc_macro2::Toke
     let is_fieldless = match &projected.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
         syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
-        syn::Data::Union(_) => unimplemented!(),
+        syn::Data::Union(u) => {
+            return Err(syn::Error::new(u.union_token.span, "Unions are not supported"));
+        }
     };
 
     let lifetime;
@@ -179,7 +200,9 @@ fn projected_struct(s: syn::DeriveInput) -> (syn::DeriveInput, proc_macro2::Toke
                 }
             };
         }
-        syn::Data::Union(_) => unimplemented!("Unions are not supported"),
+        syn::Data::Union(u) => {
+            return Err(syn::Error::new(u.union_token.span, "Unions are not supported"));
+        }
     }
     let impl_block = quote! {
         impl<#lifetime> #projected_ident<#lifetime> {
@@ -191,7 +214,7 @@ fn projected_struct(s: syn::DeriveInput) -> (syn::DeriveInput, proc_macro2::Toke
             }
         }
     };
-    (projected, impl_block)
+    Ok((projected, impl_block))
 }
 
 /// #[recursively_pinned] pins every field, similar to #[pin_project], and marks the struct `!Unpin`.
@@ -219,7 +242,10 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
     assert!(args.is_empty(), "recursively_pinned does not take any arguments.");
     let input = syn::parse_macro_input!(item as syn::DeriveInput);
 
-    let (projected, projected_impl) = projected_struct(input.clone());
+    let (projected, projected_impl) = match projected_struct(input.clone()) {
+        Ok(ok) => ok,
+        Err(e) => return e.into_compile_error().into(),
+    };
     let projected_ident = &projected.ident;
 
     let name = input.ident.clone();
