@@ -33,6 +33,8 @@ namespace crubit {
 //   `//test:testing_target`. Headers from `virtual_headers_contents` are not
 //   added automatically.
 // * `args`: additional command line arguments for Clang
+// * `extra_instantiations`: names of full C++ class template specializations
+// to instantiate and generate bindings from.
 //
 absl::StatusOr<IR> IrFromCc(
     absl::string_view extra_source_code,
@@ -42,7 +44,8 @@ absl::StatusOr<IR> IrFromCc(
         virtual_headers_contents = {},
     absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets =
         {},
-    absl::Span<const absl::string_view> args = {});
+    absl::Span<const absl::string_view> args = {},
+    absl::Span<const std::string> extra_instantiations = {});
 
 }  // namespace crubit
 

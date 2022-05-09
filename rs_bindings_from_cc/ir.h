@@ -21,6 +21,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
 #include "common/check.h"
 #include "common/strong_int.h"
@@ -714,10 +715,20 @@ struct IR {
                             UnsupportedItem, Comment, Namespace>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
+  absl::flat_hash_map<std::string, std::string> instantiations;
 };
 
 inline std::string IrToJson(const IR& ir) {
   return std::string(llvm::formatv("{0:2}", ir.ToJson()));
+}
+
+// Instantiations from the `IR` serialized as JSON.
+inline std::string InstantiationsAsJson(const IR& ir) {
+  llvm::json::Object obj;
+  for (const auto& entry : ir.instantiations) {
+    obj[entry.first] = entry.second;
+  }
+  return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
 }
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {

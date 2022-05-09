@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
 #include "common/status_macros.h"
+#include "rs_bindings_from_cc/collect_instantiations.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
 
@@ -17,11 +18,16 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                          clang_args.end());
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, crubit::IrFromCc(
-                 /* extra_source_code= */ "", cmdline.current_target(),
-                 cmdline.public_headers(),
-                 /* virtual_headers_contents= */ {},
-                 cmdline.headers_to_targets(), clang_args_view));
+      std::vector<std::string> requested_instantiations,
+      crubit::CollectInstantiations(cmdline.rust_sources()));
+
+  CRUBIT_ASSIGN_OR_RETURN(
+      IR ir,
+      crubit::IrFromCc(
+          /* extra_source_code= */ "", cmdline.current_target(),
+          cmdline.public_headers(),
+          /* virtual_headers_contents= */ {}, cmdline.headers_to_targets(),
+          clang_args_view, requested_instantiations));
 
   crubit::Bindings bindings = crubit::GenerateBindings(
       ir, cmdline.crubit_support_path(), cmdline.rustfmt_config_path());

@@ -18,10 +18,7 @@
 #include "common/check.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/frontend_action.h"
-#include "rs_bindings_from_cc/importer.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/FileSystemOptions.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Tooling/Tooling.h"
 
@@ -38,10 +35,15 @@ absl::StatusOr<IR> IrFromCc(
     absl::flat_hash_map<const HeaderName, const std::string>
         virtual_headers_contents,
     absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets,
-    absl::Span<const absl::string_view> args) {
+    absl::Span<const absl::string_view> args,
+    absl::Span<const std::string> extra_instantiations) {
   // Caller should verify that the inputs are not empty.
-  CRUBIT_CHECK(!extra_source_code.empty() || !public_headers.empty());
-  CRUBIT_CHECK(!extra_source_code.empty() || !headers_to_targets.empty());
+  // TODO(b/440066049): Generate a source file for requested instantiations once
+  // cl/430823388 is submitted.
+  CRUBIT_CHECK(!extra_source_code.empty() || !public_headers.empty() ||
+               !extra_instantiations.empty());
+  CRUBIT_CHECK(!extra_source_code.empty() || !headers_to_targets.empty() ||
+               !extra_instantiations.empty());
 
   std::vector<HeaderName> entrypoint_headers(public_headers.begin(),
                                              public_headers.end());

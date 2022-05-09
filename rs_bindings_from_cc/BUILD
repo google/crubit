@@ -85,6 +85,7 @@ cc_library(
     srcs = ["generate_bindings_and_metadata.cc"],
     hdrs = ["generate_bindings_and_metadata.h"],
     deps = [
+        ":cc_collect_instantiations",
         ":cc_ir",
         ":cmdline",
         ":ir_from_cc",
@@ -99,8 +100,9 @@ cc_test(
     deps = [
         ":cmdline",
         ":generate_bindings_and_metadata",
-        "//common:file_io",
+        "//common:test_utils",
         "//testing/base/public:gunit_main",
+        "@absl//strings",
         "@rust//support:rust_okay_here",
     ],
 )
@@ -231,6 +233,7 @@ cc_library(
         ":bazel_types",
         "//common:check",
         "//common:strong_int",
+        "@absl//container:flat_hash_map",
         "@absl//strings",
         "@llvm///clang:ast",
         "@llvm///llvm:Support",

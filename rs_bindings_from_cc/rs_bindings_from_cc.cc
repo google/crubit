@@ -63,8 +63,9 @@ absl::Status Main(std::vector<char*> args) {
       SetFileContents(cmdline.cc_out(), bindings_and_metadata.rs_api_impl));
 
   if (!cmdline.instantiations_out().empty()) {
-    CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.instantiations_out(),
-                                           "// not implemented yet"));
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(
+        cmdline.instantiations_out(),
+        crubit::InstantiationsAsJson(bindings_and_metadata.ir)));
   }
 
   return absl::OkStatus();
