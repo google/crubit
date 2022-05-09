@@ -48,6 +48,40 @@ fn test_derive_default_tuple_struct() {
 }
 
 #[test]
+fn test_recursively_pinned_unit_struct() {
+    #[::ctor::recursively_pinned]
+    struct S;
+    let _ = Box::pin(S).as_mut().project();
+    assert_eq!(::std::mem::size_of::<::ctor::projected!(S)>(), 0);
+}
+
+#[test]
+fn test_recursively_pinned_fieldless_struct() {
+    #[::ctor::recursively_pinned]
+    struct S {}
+    let _ = Box::pin(S {}).as_mut().project();
+    assert_eq!(::std::mem::size_of::<::ctor::projected!(S)>(), 0);
+}
+
+#[test]
+fn test_recursively_pinned_fieldless_tuple_struct() {
+    #[::ctor::recursively_pinned]
+    struct S();
+    let _ = Box::pin(S()).as_mut().project();
+    assert_eq!(::std::mem::size_of::<::ctor::projected!(S)>(), 0);
+}
+
+#[test]
+fn test_recursively_pinned_fieldless_enum() {
+    #[::ctor::recursively_pinned]
+    enum E {
+        A,
+    }
+    let <::ctor::projected!(E)>::A = Box::pin(E::A).as_mut().project();
+    assert_eq!(::std::mem::size_of::<::ctor::projected!(E)>(), 0);
+}
+
+#[test]
 fn test_recursively_pinned_struct() {
     #[::ctor::recursively_pinned]
     struct S {

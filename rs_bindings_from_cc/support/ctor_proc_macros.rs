@@ -98,16 +98,29 @@ fn projected_struct(s: syn::DeriveInput) -> (syn::DeriveInput, proc_macro2::Toke
     projected.ident = projected_ident(&projected.ident);
     let projected_ident = &projected.ident;
 
-    let lifetime = syn::Lifetime::new("'proj", Span::call_site());
     assert_eq!(
         projected.generics.params.len(),
         0,
         "pin projection is currently not implemented for generic structs"
     );
-    projected
-        .generics
-        .params
-        .push(syn::GenericParam::Lifetime(syn::LifetimeDef::new(lifetime.clone())));
+
+    let is_fieldless = match &projected.data {
+        syn::Data::Struct(data) => data.fields.is_empty(),
+        syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
+        syn::Data::Union(_) => unimplemented!(),
+    };
+
+    let lifetime;
+    if is_fieldless {
+        lifetime = quote! {};
+    } else {
+        let syn_lifetime = syn::Lifetime::new("'proj", Span::call_site());
+        projected
+            .generics
+            .params
+            .push(syn::GenericParam::Lifetime(syn::LifetimeDef::new(syn_lifetime.clone())));
+        lifetime = quote! {#syn_lifetime};
+    }
 
     let project_field = |field: &mut syn::Field| {
         field.attrs.clear();
@@ -219,7 +232,9 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
         #projected_impl
 
         impl #name {
-            fn project(self: ::std::pin::Pin<&mut Self>) -> #projected_ident<'_> {
+            #[must_use]
+            #[inline(always)]
+            fn project(self: ::std::pin::Pin<&mut Self>) -> #projected_ident {
                 #projected_ident::new(self)
             }
         }
