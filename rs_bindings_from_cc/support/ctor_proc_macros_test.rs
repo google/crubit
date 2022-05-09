@@ -21,6 +21,16 @@ mod ctor {}
 mod pin_project {}
 
 #[test]
+fn test_derive_default_unit_struct() {
+    #[derive(::ctor::CtorFrom_Default)]
+    struct Struct;
+    unsafe impl ::ctor::RecursivelyPinned for Struct {}
+    impl !Unpin for Struct {}
+
+    ::ctor::emplace! {let _p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
+}
+
+#[test]
 fn test_derive_default_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     struct Struct {

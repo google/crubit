@@ -16,15 +16,12 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
     let struct_name = input.ident;
     let struct_ctor_name =
         Ident::new(&format!("_ctor_derive_{}_CtorType_Default", struct_name), Span::call_site());
-    let filled_fields: Vec<_> = match &input.data {
+    let fields: proc_macro2::TokenStream = match &input.data {
         syn::Data::Struct(data) => {
             if let syn::Fields::Unit = data.fields {
-                // The generated code will not work as is for `struct Foo;` because we would
-                // create the literal `Foo {}`, which is not valid.
-                // TODO(jeanpierreda): special-case this.
-                todo!();
-            }
-            data.fields
+                quote! {}
+            } else {
+                let filled_fields = data.fields
                 .iter()
                 .enumerate()
                 .map(|(i, field)| {
@@ -38,8 +35,9 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
                     quote_spanned! {field.span() =>
                         #field_name: <#field_type as ::ctor::CtorNew<()>>::ctor_new(())
                     }
-                })
-                .collect()
+                });
+                quote! {{ #(#filled_fields),* }}
+            }
         }
         _ => unimplemented!(),
     };
@@ -51,7 +49,7 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
             type Output = #struct_name;
             unsafe fn ctor(self, dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self::Output>>) {
                 ::ctor::ctor!(
-                    #struct_name { #(#filled_fields),* }
+                    #struct_name #fields
                 ).ctor(dest)
             }
         }
