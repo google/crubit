@@ -40,6 +40,10 @@ absl::Status Main(std::vector<char*> args) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
         cmdline.cc_out(),
         "// intentionally left empty because --do_nothing was passed."));
+    if (!cmdline.instantiations_out().empty()) {
+      CRUBIT_RETURN_IF_ERROR(
+          SetFileContents(cmdline.instantiations_out(), "[]"));
+    }
     return absl::OkStatus();
   }
 
@@ -57,6 +61,11 @@ absl::Status Main(std::vector<char*> args) {
   if (!cmdline.ir_out().empty()) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
         cmdline.ir_out(), std::string(llvm::formatv("{0:2}", ir.ToJson()))));
+  }
+
+  if (!cmdline.instantiations_out().empty()) {
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.instantiations_out(),
+                                           "// not implemented yet"));
   }
 
   crubit::Bindings bindings = crubit::GenerateBindings(

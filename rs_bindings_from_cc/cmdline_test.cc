@@ -25,10 +25,13 @@ namespace {
 
 absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
                                     const std::string& targets_and_headers) {
-  return Cmdline::CreateForTesting("cc_out", "rs_out", "ir_out",
-                                   "crubit_support_path", "rustfmt_config_path",
-                                   /* do_nothing= */ false, public_headers,
-                                   targets_and_headers);
+  return Cmdline::CreateForTesting(
+      "cc_out", "rs_out", "ir_out", "crubit_support_path",
+      "rustfmt_config_path",
+
+      /* do_nothing= */ false, std::move(public_headers),
+      std::move(targets_and_headers), /* rust_sources= */ {},
+      /* instantiations_out= */ "");
 }
 
 }  // namespace
@@ -39,15 +42,18 @@ TEST(CmdlineTest, BasicCorrectInput) {
       Cmdline::CreateForTesting("cc_out", "rs_out", "ir_out",
                                 "crubit_support_path", "rustfmt_config_path",
                                 /* do_nothing= */ false, {"h1"},
-                                R"([{"t": "t1", "h": ["h1", "h2"]}])"));
+                                R"([{"t": "t1", "h": ["h1", "h2"]}])",
+                                {"lib.rs"}, "instantiations_out"));
   EXPECT_EQ(cmdline.cc_out(), "cc_out");
   EXPECT_EQ(cmdline.rs_out(), "rs_out");
   EXPECT_EQ(cmdline.ir_out(), "ir_out");
   EXPECT_EQ(cmdline.crubit_support_path(), "crubit_support_path");
   EXPECT_EQ(cmdline.rustfmt_config_path(), "rustfmt_config_path");
+  EXPECT_EQ(cmdline.instantiations_out(), "instantiations_out");
   EXPECT_EQ(cmdline.do_nothing(), false);
   EXPECT_EQ(cmdline.current_target().value(), "t1");
   EXPECT_THAT(cmdline.public_headers(), ElementsAre(HeaderName("h1")));
+  EXPECT_THAT(cmdline.rust_sources(), ElementsAre("lib.rs"));
   EXPECT_THAT(cmdline.headers_to_targets(),
               UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("t1")),
                                    Pair(HeaderName("h2"), BazelLabel("t1"))));
@@ -182,17 +188,52 @@ TEST(CmdlineTest, PublicHeadersCoveringMultipleTargets) {
                              HasSubstr("c.h"))));
 }
 
-TEST(CmdlineTest, CcOutEmpty) {
+TEST(CmdlineTest, InstantiationsOutEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
-      Cmdline::CreateForTesting(
-          /* cc_out= */ "", "rs_out", "ir_out", "crubit_support_path",
-          "rustfmt_config_path",
-          /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders)),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("please specify --cc_out")));
+      (Cmdline::CreateForTesting("cc_out", "rs_out", "ir_out",
+                                 "crubit_support_path", "rustfmt_config_path",
+                                 /* do_nothing= */ false, {"a.h"},
+                                 std::string(kTargetsAndHeaders), {"lib.rs"},
+                                 /* instantiations_out= */ "")),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "please specify both --rust_sources and --instantiations_out "
+              "when requesting a template instantiation mode")));
+}
+
+TEST(CmdlineTest, RustSourcesEmpty) {
+  constexpr absl::string_view kTargetsAndHeaders = R"([
+    {"t": "target1", "h": ["a.h", "b.h"]}
+  ])";
+  ASSERT_THAT(
+      Cmdline::CreateForTesting("cc_out", "rs_out", "ir_out",
+                                "crubit_support_path", "rustfmt_config_path",
+                                /* do_nothing= */ false, {"a.h"},
+                                std::string(kTargetsAndHeaders),
+                                /* rust_sources= */ {}, "instantiations_out"),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "please specify both --rust_sources and --instantiations_out "
+              "when requesting a template instantiation mode")));
+}
+
+TEST(CmdlineTest, CcOutEmpty) {
+  constexpr absl::string_view kTargetsAndHeaders = R"([
+    {"t": "target1", "h": ["a.h", "b.h"]}
+  ])";
+  ASSERT_THAT(Cmdline::CreateForTesting(
+                  /* cc_out= */ "", "rs_out", "ir_out", "crubit_support_path",
+                  "rustfmt_config_path",
+                  /* do_nothing= */ false, {"a.h"},
+                  std::string(kTargetsAndHeaders), /* rust_sources= */ {},
+                  /* instantiations_out= */ ""),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("please specify --cc_out")));
 }
 
 TEST(CmdlineTest, RsOutEmpty) {
@@ -203,7 +244,9 @@ TEST(CmdlineTest, RsOutEmpty) {
       Cmdline::CreateForTesting("cc_out", /* rs_out= */ "", "ir_out",
                                 "crubit_support_path", "rustfmt_config_path",
                                 /* do_nothing= */ false, {"a.h"},
-                                std::string(kTargetsAndHeaders)),
+                                std::string(kTargetsAndHeaders),
+                                /* rust_sources= */ {},
+                                /* instantiations_out= */ ""),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --rs_out")));
 }
@@ -215,7 +258,9 @@ TEST(CmdlineTest, IrOutEmpty) {
   ASSERT_OK(Cmdline::CreateForTesting(
       "cc_out", "rs_out", /* ir_out= */ "", "crubit_support_path",
       "rustfmt_config_path",
-      /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders)));
+      /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
+      /* rust_sources= */ {},
+      /* instantiations_out= */ ""));
 }
 
 }  // namespace

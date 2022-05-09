@@ -47,6 +47,13 @@ ABSL_FLAG(std::string, targets_and_headers, std::string(),
           "  },\n"
           "...\n"
           "]");
+ABSL_FLAG(std::vector<std::string>, rust_sources, std::vector<std::string>(),
+          "[template instantiation mode only] all Rust source files of a crate "
+          "for which we are instantiating templates.");
+ABSL_FLAG(std::string, instantiations_out, "",
+          "[template instantiation mode only] output path for the JSON file "
+          "with mapping from a template instantiation to a generated Rust "
+          "struct name. This file is used by cc_template! macro expansion.");
 
 namespace crubit {
 
@@ -71,14 +78,17 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
       absl::GetFlag(FLAGS_ir_out), absl::GetFlag(FLAGS_crubit_support_path),
       absl::GetFlag(FLAGS_rustfmt_config_path), absl::GetFlag(FLAGS_do_nothing),
       absl::GetFlag(FLAGS_public_headers),
-      absl::GetFlag(FLAGS_targets_and_headers));
+      absl::GetFlag(FLAGS_targets_and_headers),
+      absl::GetFlag(FLAGS_rust_sources),
+      absl::GetFlag(FLAGS_instantiations_out));
 }
 
 absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     std::string cc_out, std::string rs_out, std::string ir_out,
     std::string crubit_support_path, std::string rustfmt_config_path,
     bool do_nothing, std::vector<std::string> public_headers,
-    std::string targets_and_headers_str) {
+    std::string targets_and_headers_str, std::vector<std::string> rust_sources,
+    std::string instantiations_out) {
   Cmdline cmdline;
 
   if (rs_out.empty()) {
@@ -107,6 +117,14 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
   std::transform(public_headers.begin(), public_headers.end(),
                  std::back_inserter(cmdline.public_headers_),
                  [](const std::string& s) { return HeaderName(s); });
+
+  if (rust_sources.empty() != instantiations_out.empty()) {
+    return absl::InvalidArgumentError(
+        "please specify both --rust_sources and --instantiations_out when "
+        "requesting a template instantiation mode");
+  }
+  cmdline.instantiations_out_ = std::move(instantiations_out);
+  cmdline.rust_sources_ = std::move(rust_sources);
 
   if (targets_and_headers_str.empty()) {
     return absl::InvalidArgumentError("please specify --targets_and_headers");

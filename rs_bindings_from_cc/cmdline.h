@@ -28,10 +28,14 @@ class Cmdline {
       std::string cc_out, std::string rs_out, std::string ir_out,
       std::string crubit_support_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
-      std::string targets_and_headers_str) {
-    return CreateFromArgs(cc_out, rs_out, ir_out, crubit_support_path,
-                          rustfmt_config_path, do_nothing, public_headers,
-                          targets_and_headers_str);
+      std::string targets_and_headers_str,
+      std::vector<std::string> rust_sources, std::string instantiations_out) {
+    return CreateFromArgs(
+        std::move(cc_out), std::move(rs_out), std::move(ir_out),
+        std::move(crubit_support_path), std::move(rustfmt_config_path),
+        do_nothing, std::move(public_headers),
+        std::move(targets_and_headers_str), std::move(rust_sources),
+        std::move(instantiations_out));
   }
 
   Cmdline(const Cmdline&) = delete;
@@ -44,11 +48,14 @@ class Cmdline {
   absl::string_view ir_out() const { return ir_out_; }
   absl::string_view crubit_support_path() const { return crubit_support_path_; }
   absl::string_view rustfmt_config_path() const { return rustfmt_config_path_; }
+  absl::string_view instantiations_out() const { return instantiations_out_; }
   bool do_nothing() const { return do_nothing_; }
 
   const std::vector<HeaderName>& public_headers() const {
     return public_headers_;
   }
+
+  const std::vector<std::string>& rust_sources() const { return rust_sources_; }
 
   const BazelLabel& current_target() const { return current_target_; }
 
@@ -64,7 +71,8 @@ class Cmdline {
       std::string cc_out, std::string rs_out, std::string ir_out,
       std::string crubit_support_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
-      std::string targets_and_headers_str);
+      std::string targets_and_headers_str,
+      std::vector<std::string> rust_sources, std::string instantiations_out);
 
   absl::StatusOr<BazelLabel> FindHeader(const HeaderName& header) const;
 
@@ -78,6 +86,9 @@ class Cmdline {
   BazelLabel current_target_;
   std::vector<HeaderName> public_headers_;
   absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets_;
+
+  std::string instantiations_out_;
+  std::vector<std::string> rust_sources_;
 };
 
 }  // namespace crubit
