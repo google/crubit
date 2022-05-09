@@ -49,7 +49,6 @@ rust_test(
     name = "ctor_test",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
-    deps = ["@crates_io//pin_project/v1:pin_project"],
 )
 
 rust_test(
@@ -57,7 +56,6 @@ rust_test(
     srcs = ["ctor_proc_macros_test.rs"],
     deps = [
         ":ctor",
-        "@crates_io//pin_project/v1:pin_project",
     ],
 )
 

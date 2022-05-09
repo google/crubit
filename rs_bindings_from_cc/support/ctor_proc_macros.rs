@@ -22,12 +22,6 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
                 // The generated code will not work as is for `struct Foo;` because we would
                 // create the literal `Foo {}`, which is not valid.
                 // TODO(jeanpierreda): special-case this.
-                // Note: this is not important right now, because pin_project doesn't support
-                // fieldless structs to begin with, so either way it fails to compile.
-                // We could generate the code for Foo {} and have it fail inside pin_project,
-                // but if pin_project ever added support for empty structs, this
-                // would unexpectedly start working, but with unexpected
-                // results.
                 todo!();
             }
             data.fields
@@ -73,11 +67,123 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// #[recursively_pinned] pins every field using #[pin_project]. All macro
-/// arguments are forwarded.
+/// `projected!(foo::T)` is the name of the type returned by
+/// `foo::T::project()`.
 ///
-/// To use this macro, you must depend directly on pin_project. (This is due to
-/// limitations of procedural macros, which do not have a `$crate` equivalent.)
+/// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
+/// would have used, but is essentially useless.
+#[proc_macro]
+pub fn projected(name: TokenStream) -> TokenStream {
+    let mut name = syn::parse_macro_input!(name as syn::Path);
+    {
+        let last = name.segments.last_mut().expect("Path must have at least one element");
+        if let syn::PathArguments::Parenthesized(..) = &last.arguments {
+            panic!("Parenthesized patns (e.g. fn, Fn) do not have projected equivalents.")
+        }
+        last.ident = projected_ident(&last.ident);
+    }
+    TokenStream::from(quote! { #name })
+}
+
+fn projected_ident(ident: &Ident) -> Ident {
+    Ident::new(&format!("__CrubitProjected{}", ident), Span::call_site())
+}
+
+fn projected_struct(s: syn::DeriveInput) -> (syn::DeriveInput, proc_macro2::TokenStream) {
+    let mut projected = s;
+    // TODO(jeanpierreda): check attributes for repr(packed)
+    projected.attrs.clear();
+
+    let original_ident = projected.ident.clone();
+    projected.ident = projected_ident(&projected.ident);
+    let projected_ident = &projected.ident;
+
+    let lifetime = syn::Lifetime::new("'proj", Span::call_site());
+    assert_eq!(
+        projected.generics.params.len(),
+        0,
+        "pin projection is currently not implemented for generic structs"
+    );
+    projected
+        .generics
+        .params
+        .push(syn::GenericParam::Lifetime(syn::LifetimeDef::new(lifetime.clone())));
+
+    let project_field = |field: &mut syn::Field| {
+        field.attrs.clear();
+        let field_ty = &field.ty;
+        let pin_ty = syn::parse_quote!(::std::pin::Pin<& #lifetime mut #field_ty>);
+        field.ty = syn::Type::Path(pin_ty);
+    };
+    // returns the braced parts of a projection pattern and return value.
+    // e.g. {foo, bar}, {foo: Pin::new_unchecked(foo), bar: Pin::new_unchecked(bar)}
+    let pat_project = |fields: &mut syn::Fields| {
+        let mut pat = quote! {};
+        let mut project = quote! {};
+        for (i, field) in fields.iter_mut().enumerate() {
+            // TODO(jeanpierreda): check attributes for e.g. #[unpin]
+            field.attrs.clear();
+            let lhs;
+            let rhs;
+            if let Some(ident) = &field.ident {
+                lhs = quote! {#ident};
+                rhs = ident.clone();
+                pat.extend(quote! {#lhs,});
+            } else {
+                lhs = proc_macro2::Literal::usize_unsuffixed(i).into_token_stream();
+                rhs = Ident::new(&format!("item_{i}"), Span::call_site());
+                pat.extend(quote! {#lhs: #rhs,});
+            }
+            project.extend(quote! {#lhs: ::std::pin::Pin::new_unchecked(#rhs),});
+        }
+        (quote! {{#pat}}, quote! {{#project}})
+    };
+    let project_body;
+    match &mut projected.data {
+        syn::Data::Struct(data) => {
+            for field in &mut data.fields {
+                project_field(field);
+            }
+            let (pat, project) = pat_project(&mut data.fields);
+            project_body = quote! {
+                let #original_ident #pat = from;
+                Self #project
+            };
+        }
+        syn::Data::Enum(e) => {
+            let mut match_body = quote! {};
+            for variant in &mut e.variants {
+                for field in &mut variant.fields {
+                    project_field(field);
+                }
+                let (pat, project) = pat_project(&mut variant.fields);
+                let variant_ident = &variant.ident;
+                match_body.extend(quote! {
+                    #original_ident::#variant_ident #pat => Self::#variant_ident #project,
+                });
+            }
+            project_body = quote! {
+                match from  {
+                    #match_body
+                }
+            };
+        }
+        syn::Data::Union(_) => unimplemented!("Unions are not supported"),
+    }
+    let impl_block = quote! {
+        impl<#lifetime> #projected_ident<#lifetime> {
+            fn new(from: ::std::pin::Pin<& #lifetime mut #original_ident>) -> Self {
+                unsafe {
+                    let from = ::std::pin::Pin::into_inner_unchecked(from);
+                    #project_body
+                }
+            }
+        }
+    };
+    (projected, impl_block)
+}
+
+/// #[recursively_pinned] pins every field, similar to #[pin_project], and marks the struct `!Unpin`.
 ///
 /// Example:
 ///
@@ -88,50 +194,38 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
 /// }
 /// ```
 ///
-/// This is equivalent to using pin_project directly, but pinning every field,
-/// as so:
+/// This is analogous to using pin_project, pinning every field, as so:
 ///
 /// ```
-/// #[pin_project]
+/// #[pin_project(!Unpin)]
 /// struct S {
 ///   #[pin]
 ///   field: i32,
 /// }
 /// ```
-///
-/// Note that recursively_pinned doesn't mark a struct as `!Unpin` -- to do
-/// that, use a `!Unpin` member such as `PhantomPinned` member (initialized via
-/// e.g. `PhantomPinnedCtor`), or pass in `UnsafeUnpin`.
 #[proc_macro_attribute]
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
-    let args: proc_macro2::TokenStream = args.into();
-    let mut input = syn::parse_macro_input!(item as syn::DeriveInput);
+    assert!(args.is_empty(), "recursively_pinned does not take any arguments.");
+    let input = syn::parse_macro_input!(item as syn::DeriveInput);
 
-    input.attrs.insert(0, syn::parse_quote!(#[::pin_project::pin_project(#args)]));
-    let pin: syn::Attribute = syn::parse_quote!(#[pin]);
-    match &mut input.data {
-        syn::Data::Struct(data) => {
-            for field in &mut data.fields {
-                field.attrs.push(pin.clone());
-            }
-        }
-        syn::Data::Enum(e) => {
-            for variant in &mut e.variants {
-                for field in &mut variant.fields {
-                    field.attrs.push(pin.clone());
-                }
-            }
-        }
-        syn::Data::Union(_) => unimplemented!(),
-    }
+    let (projected, projected_impl) = projected_struct(input.clone());
+    let projected_ident = &projected.ident;
 
     let name = input.ident.clone();
-    let input = input.into_token_stream();
 
     let expanded = quote! {
         #input
+        #projected
+        #projected_impl
+
+        impl #name {
+            fn project(self: ::std::pin::Pin<&mut Self>) -> #projected_ident<'_> {
+                #projected_ident::new(self)
+            }
+        }
 
         unsafe impl ::ctor::RecursivelyPinned for #name {}
+        impl !Unpin for #name {}
     };
 
     TokenStream::from(expanded)

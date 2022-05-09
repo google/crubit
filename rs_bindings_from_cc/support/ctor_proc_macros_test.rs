@@ -12,7 +12,8 @@
 
 #![cfg(test)]
 // Callers are expected to enable `negative_impls`.
-#![feature(negative_impls)]
+// more_qualified_paths is used to make projected!() simpler to use.
+#![feature(negative_impls, more_qualified_paths)]
 
 // pathological shadowed names: shadow important modules that the macros use.
 mod std {}
@@ -52,24 +53,24 @@ fn test_recursively_pinned_struct() {
     struct S {
         x: i32,
     }
-    let _: ::std::pin::Pin<&mut i32> = ::std::pin::Pin::new(&mut S { x: 42 }).project().x;
+    let _: ::std::pin::Pin<&mut i32> = Box::pin(S { x: 42 }).as_mut().project().x;
 }
 
 #[test]
 fn test_recursively_pinned_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S(i32);
-    let _: ::std::pin::Pin<&mut i32> = ::std::pin::Pin::new(&mut S(42)).project().0;
+    let _: ::std::pin::Pin<&mut i32> = Box::pin(S(42)).as_mut().project().0;
 }
 
 #[test]
 fn test_recursively_pinned_enum_struct() {
-    #[::ctor::recursively_pinned(project = EPin)]
+    #[::ctor::recursively_pinned]
     enum E {
         A { x: i32 },
     }
-    match ::std::pin::Pin::new(&mut E::A { x: 42 }).project() {
-        EPin::A { x } => {
+    match Box::pin(E::A { x: 42 }).as_mut().project() {
+        <::ctor::projected!(E)>::A { x } => {
             let _: ::std::pin::Pin<&mut i32> = x;
         }
     }
@@ -77,12 +78,12 @@ fn test_recursively_pinned_enum_struct() {
 
 #[test]
 fn test_recursively_pinned_enum_tuple() {
-    #[::ctor::recursively_pinned(project = EPin)]
+    #[::ctor::recursively_pinned]
     enum E {
         A(i32),
     }
-    match ::std::pin::Pin::new(&mut E::A(42)).project() {
-        EPin::A(x) => {
+    match Box::pin(E::A(42)).as_mut().project() {
+        <::ctor::projected!(E)>::A(x) => {
             let _: ::std::pin::Pin<&mut i32> = x;
         }
     }
