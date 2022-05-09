@@ -435,3 +435,54 @@ bindings_for_toolchain_headers(
     public_hdrs = STD_HEADERS,
     visibility = ["//visibility:public"],
 )
+
+cc_library(
+    name = "cc_collect_instantiations",
+    srcs = ["collect_instantiations.cc"],
+    hdrs = ["collect_instantiations.h"],
+    deps = [
+        ":collect_instantiations",
+        "//common:cc_ffi_types",
+        "//common:check",
+        "@absl//status:statusor",
+        "@absl//types:span",
+        "@llvm///llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "cc_collect_instantiations_test",
+    srcs = ["collect_instantiations_test.cc"],
+    deps = [
+        ":cc_collect_instantiations",
+        "//common:test_utils",
+        "//testing/base/public:gunit_main",
+        "@rust//support:rust_okay_here",
+    ],
+)
+
+rust_library(
+    name = "collect_instantiations",
+    srcs = ["collect_instantiations.rs"],
+    deps = [
+        "//common:ffi_types",
+        "//common:token_stream_printer",
+        "@crates_io//anyhow/v1:anyhow",
+        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crates_io//serde_json/v1:serde_json",
+        "@crates_io//syn/v1:syn",
+    ],
+)
+
+rust_test(
+    name = "collect_instantiations_test",
+    args = [
+        # To prevent tests from polluting the environment variables for each other.
+        "--test-threads",
+        "1",
+    ],
+    crate = ":collect_instantiations",
+    deps = [
+        "@crates_io//quote/v1:quote",
+    ],
+)
