@@ -67,8 +67,7 @@ cc_binary(
         ":bazel_types",
         ":cc_ir",
         ":cmdline",
-        ":ir_from_cc",
-        ":src_code_gen",
+        ":generate_bindings_and_metadata",
         "//common:file_io",
         "//common:status_macros",
         "@absl//container:flat_hash_map",
@@ -77,6 +76,31 @@ cc_binary(
         "@absl//status:statusor",
         "@absl//strings",
         "@llvm///llvm:Support",
+        "@rust//support:rust_okay_here",
+    ],
+)
+
+cc_library(
+    name = "generate_bindings_and_metadata",
+    srcs = ["generate_bindings_and_metadata.cc"],
+    hdrs = ["generate_bindings_and_metadata.h"],
+    deps = [
+        ":cc_ir",
+        ":cmdline",
+        ":ir_from_cc",
+        ":src_code_gen",
+        "//common:status_macros",
+    ],
+)
+
+cc_test(
+    name = "generate_bindings_and_metadata_test",
+    srcs = ["generate_bindings_and_metadata_test.cc"],
+    deps = [
+        ":cmdline",
+        ":generate_bindings_and_metadata",
+        "//common:file_io",
+        "//testing/base/public:gunit_main",
         "@rust//support:rust_okay_here",
     ],
 )

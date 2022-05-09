@@ -19,9 +19,7 @@
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/cmdline.h"
-#include "rs_bindings_from_cc/ir.h"
-#include "rs_bindings_from_cc/ir_from_cc.h"
-#include "rs_bindings_from_cc/src_code_gen.h"
+#include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
@@ -47,32 +45,27 @@ absl::Status Main(std::vector<char*> args) {
     return absl::OkStatus();
   }
 
-  std::vector<absl::string_view> args_as_string_views;
-  args_as_string_views.insert(args_as_string_views.end(), args.begin(),
-                              args.end());
+  std::vector<std::string> clang_args;
+  clang_args.insert(clang_args.end(), args.begin(), args.end());
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, crubit::IrFromCc(
-                 /* extra_source_code= */ "", cmdline.current_target(),
-                 cmdline.public_headers(),
-                 /* virtual_headers_contents= */ {},
-                 cmdline.headers_to_targets(), args_as_string_views));
+      crubit::BindingsAndMetadata bindings_and_metadata,
+      crubit::GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
 
   if (!cmdline.ir_out().empty()) {
-    CRUBIT_RETURN_IF_ERROR(SetFileContents(
-        cmdline.ir_out(), std::string(llvm::formatv("{0:2}", ir.ToJson()))));
+    CRUBIT_RETURN_IF_ERROR(
+        SetFileContents(cmdline.ir_out(), IrToJson(bindings_and_metadata.ir)));
   }
+
+  CRUBIT_RETURN_IF_ERROR(
+      SetFileContents(cmdline.rs_out(), bindings_and_metadata.rs_api));
+  CRUBIT_RETURN_IF_ERROR(
+      SetFileContents(cmdline.cc_out(), bindings_and_metadata.rs_api_impl));
 
   if (!cmdline.instantiations_out().empty()) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.instantiations_out(),
                                            "// not implemented yet"));
   }
-
-  crubit::Bindings bindings = crubit::GenerateBindings(
-      ir, cmdline.crubit_support_path(), cmdline.rustfmt_config_path());
-  CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.rs_out(), bindings.rs_api));
-  CRUBIT_RETURN_IF_ERROR(
-      SetFileContents(cmdline.cc_out(), bindings.rs_api_impl));
 
   return absl::OkStatus();
 }

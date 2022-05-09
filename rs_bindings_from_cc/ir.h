@@ -716,8 +716,12 @@ struct IR {
   std::vector<ItemId> top_level_item_ids;
 };
 
+inline std::string IrToJson(const IR& ir) {
+  return std::string(llvm::formatv("{0:2}", ir.ToJson()));
+}
+
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
-  return o << std::string(llvm::formatv("{0:2}", ir.ToJson()));
+  return o << IrToJson(ir);
 }
 }  // namespace crubit
 
