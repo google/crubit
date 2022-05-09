@@ -21,7 +21,7 @@ use memoffset_unstable_const::offset_of;
 pub struct SomeStruct {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), SomeStruct);
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
     #[inline(always)]
@@ -34,9 +34,9 @@ impl Default for SomeStruct {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, SomeStruct>> for SomeStruct {
+impl<'b> From<ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, SomeStruct>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::SomeStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
@@ -60,7 +60,7 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 pub union EmptyUnion {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), EmptyUnion);
+forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
 impl Default for EmptyUnion {
     #[inline(always)]
@@ -73,9 +73,9 @@ impl Default for EmptyUnion {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, EmptyUnion>> for EmptyUnion {
+impl<'b> From<ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, EmptyUnion>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::EmptyUnion>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
@@ -141,24 +141,24 @@ pub struct FieldTypeTestStruct {
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut i32,
-    pub struct_field: SomeStruct,
-    pub struct_ptr_field: *mut SomeStruct,
-    pub const_struct_ptr_field: *const SomeStruct,
-    pub struct_ref_field: *mut SomeStruct,
-    pub const_struct_ref_field: *const SomeStruct,
+    pub struct_field: crate::SomeStruct,
+    pub struct_ptr_field: *mut crate::SomeStruct,
+    pub const_struct_ptr_field: *const crate::SomeStruct,
+    pub struct_ref_field: *mut crate::SomeStruct,
+    pub const_struct_ref_field: *const crate::SomeStruct,
     /// TODO(b/226580208): Uncomment when these don't cause struct import to fail.
     /// SomeStruct&& struct_rvalue_ref_field;
     /// const SomeStruct&& const_struct_rvalue_ref_field;
-    pub forward_declared_ptr_field: *mut ForwardDeclaredStruct,
+    pub forward_declared_ptr_field: *mut crate::ForwardDeclaredStruct,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("FieldTypeTestStruct"),
-    FieldTypeTestStruct
+    crate::FieldTypeTestStruct
 );
 
-impl<'b> From<ctor::RvalueReference<'b, FieldTypeTestStruct>> for FieldTypeTestStruct {
+impl<'b> From<ctor::RvalueReference<'b, crate::FieldTypeTestStruct>> for FieldTypeTestStruct {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
@@ -177,7 +177,7 @@ pub union NonEmptyUnion {
     pub int32_field: i32,
     pub int64_field: i64,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), NonEmptyUnion);
+forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
 impl Default for NonEmptyUnion {
     #[inline(always)]
@@ -190,9 +190,9 @@ impl Default for NonEmptyUnion {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, NonEmptyUnion>> for NonEmptyUnion {
+impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, NonEmptyUnion>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
@@ -221,29 +221,29 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<SomeStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<SomeStruct>,
-            __param_0: ctor::RvalueReference<'b, SomeStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeStruct>,
+            __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10EmptyUnionC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<EmptyUnion>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::EmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN10EmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<EmptyUnion>,
-            __param_0: ctor::RvalueReference<'b, EmptyUnion>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::EmptyUnion>,
+            __param_0: ctor::RvalueReference<'b, crate::EmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<FieldTypeTestStruct>,
-            __param_0: ctor::RvalueReference<'b, FieldTypeTestStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
+            __param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NonEmptyUnion>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NonEmptyUnion>,
-            __param_0: ctor::RvalueReference<'b, NonEmptyUnion>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
+            __param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
@@ -251,111 +251,116 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<SomeStruct>() == 1usize);
-const _: () = assert!(rust_std::mem::align_of::<SomeStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::SomeStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 1usize);
 const _: () = {
-    static_assertions::assert_impl_all!(SomeStruct: Clone);
+    static_assertions::assert_impl_all!(crate::SomeStruct: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(SomeStruct: Copy);
+    static_assertions::assert_impl_all!(crate::SomeStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(SomeStruct: Drop);
-};
-
-const _: () = assert!(rust_std::mem::size_of::<EmptyUnion>() == 1usize);
-const _: () = assert!(rust_std::mem::align_of::<EmptyUnion>() == 1usize);
-const _: () = {
-    static_assertions::assert_impl_all!(EmptyUnion: Clone);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(EmptyUnion: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(EmptyUnion: Drop);
+    static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<FieldTypeTestStruct>() == 288usize);
-const _: () = assert!(rust_std::mem::align_of::<FieldTypeTestStruct>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::EmptyUnion>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::EmptyUnion>() == 1usize);
 const _: () = {
-    static_assertions::assert_impl_all!(FieldTypeTestStruct: Clone);
+    static_assertions::assert_impl_all!(crate::EmptyUnion: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(FieldTypeTestStruct: Copy);
+    static_assertions::assert_impl_all!(crate::EmptyUnion: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(FieldTypeTestStruct: Drop);
+    static_assertions::assert_not_impl_all!(crate::EmptyUnion: Drop);
 };
-const _: () = assert!(offset_of!(FieldTypeTestStruct, bool_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, char_field) * 8 == 8usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, unsigned_char_field) * 8 == 16usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, signed_char_field) * 8 == 24usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, char16_t_field) * 8 == 32usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, char32_t_field) * 8 == 64usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, wchar_t_field) * 8 == 96usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, short_field) * 8 == 128usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, int_field) * 8 == 160usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, long_field) * 8 == 192usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, long_long_field) * 8 == 256usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, unsigned_short_field) * 8 == 320usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, unsigned_int_field) * 8 == 352usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, unsigned_long_field) * 8 == 384usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, unsigned_long_long_field) * 8 == 448usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, signed_short_field) * 8 == 512usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, signed_int_field) * 8 == 544usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, signed_long_field) * 8 == 576usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, signed_long_long_field) * 8 == 640usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, int8_t_field) * 8 == 704usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, int16_t_field) * 8 == 720usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, int32_t_field) * 8 == 736usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, int64_t_field) * 8 == 768usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int8_t_field) * 8 == 832usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int16_t_field) * 8 == 848usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int32_t_field) * 8 == 864usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_int64_t_field) * 8 == 896usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint8_t_field) * 8 == 960usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint16_t_field) * 8 == 976usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint32_t_field) * 8 == 992usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uint64_t_field) * 8 == 1024usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint8_t_field) * 8 == 1088usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint16_t_field) * 8 == 1104usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint32_t_field) * 8 == 1120usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uint64_t_field) * 8 == 1152usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, ptrdiff_t_field) * 8 == 1216usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, size_t_field) * 8 == 1280usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, intptr_t_field) * 8 == 1344usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, uintptr_t_field) * 8 == 1408usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_ptrdiff_t_field) * 8 == 1472usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_size_t_field) * 8 == 1536usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_intptr_t_field) * 8 == 1600usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, std_uintptr_t_field) * 8 == 1664usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, float_field) * 8 == 1728usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, double_field) * 8 == 1792usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, ptr_field) * 8 == 1856usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_field) * 8 == 1920usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ptr_field) * 8 == 1984usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ptr_field) * 8 == 2048usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, struct_ref_field) * 8 == 2112usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, const_struct_ref_field) * 8 == 2176usize);
-const _: () = assert!(offset_of!(FieldTypeTestStruct, forward_declared_ptr_field) * 8 == 2240usize);
 
-const _: () = assert!(rust_std::mem::size_of::<NonEmptyUnion>() == 8usize);
-const _: () = assert!(rust_std::mem::align_of::<NonEmptyUnion>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::FieldTypeTestStruct>() == 288usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::FieldTypeTestStruct>() == 8usize);
 const _: () = {
-    static_assertions::assert_impl_all!(NonEmptyUnion: Clone);
+    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(NonEmptyUnion: Copy);
+    static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(NonEmptyUnion: Drop);
+    static_assertions::assert_not_impl_all!(crate::FieldTypeTestStruct: Drop);
 };
-const _: () = assert!(offset_of!(NonEmptyUnion, bool_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(NonEmptyUnion, char_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(NonEmptyUnion, int16_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(NonEmptyUnion, int_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(NonEmptyUnion, int32_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(NonEmptyUnion, int64_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, bool_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, char_field) * 8 == 8usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, unsigned_char_field) * 8 == 16usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, signed_char_field) * 8 == 24usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, char16_t_field) * 8 == 32usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, char32_t_field) * 8 == 64usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, wchar_t_field) * 8 == 96usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, short_field) * 8 == 128usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, int_field) * 8 == 160usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, long_field) * 8 == 192usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, long_long_field) * 8 == 256usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, unsigned_short_field) * 8 == 320usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, unsigned_int_field) * 8 == 352usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, unsigned_long_field) * 8 == 384usize);
+const _: () =
+    assert!(offset_of!(crate::FieldTypeTestStruct, unsigned_long_long_field) * 8 == 448usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, signed_short_field) * 8 == 512usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, signed_int_field) * 8 == 544usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, signed_long_field) * 8 == 576usize);
+const _: () =
+    assert!(offset_of!(crate::FieldTypeTestStruct, signed_long_long_field) * 8 == 640usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, int8_t_field) * 8 == 704usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, int16_t_field) * 8 == 720usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, int32_t_field) * 8 == 736usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, int64_t_field) * 8 == 768usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_int8_t_field) * 8 == 832usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_int16_t_field) * 8 == 848usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_int32_t_field) * 8 == 864usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_int64_t_field) * 8 == 896usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, uint8_t_field) * 8 == 960usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, uint16_t_field) * 8 == 976usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, uint32_t_field) * 8 == 992usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, uint64_t_field) * 8 == 1024usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_uint8_t_field) * 8 == 1088usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_uint16_t_field) * 8 == 1104usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_uint32_t_field) * 8 == 1120usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_uint64_t_field) * 8 == 1152usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, ptrdiff_t_field) * 8 == 1216usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, size_t_field) * 8 == 1280usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, intptr_t_field) * 8 == 1344usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, uintptr_t_field) * 8 == 1408usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_ptrdiff_t_field) * 8 == 1472usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_size_t_field) * 8 == 1536usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_intptr_t_field) * 8 == 1600usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, std_uintptr_t_field) * 8 == 1664usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, float_field) * 8 == 1728usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, double_field) * 8 == 1792usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, ptr_field) * 8 == 1856usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, struct_field) * 8 == 1920usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) * 8 == 1984usize);
+const _: () =
+    assert!(offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) * 8 == 2048usize);
+const _: () = assert!(offset_of!(crate::FieldTypeTestStruct, struct_ref_field) * 8 == 2112usize);
+const _: () =
+    assert!(offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) * 8 == 2176usize);
+const _: () =
+    assert!(offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) * 8 == 2240usize);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::NonEmptyUnion>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::NonEmptyUnion>() == 8usize);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::NonEmptyUnion: Drop);
+};
+const _: () = assert!(offset_of!(crate::NonEmptyUnion, bool_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::NonEmptyUnion, char_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::NonEmptyUnion, int16_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::NonEmptyUnion, int_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::NonEmptyUnion, int32_field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::NonEmptyUnion, int64_field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
 };

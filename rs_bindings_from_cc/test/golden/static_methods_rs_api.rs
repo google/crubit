@@ -21,7 +21,7 @@ use memoffset_unstable_const::offset_of;
 pub struct SomeClass {
     field_: i32,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), SomeClass);
+forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 
 impl Default for SomeClass {
     #[inline(always)]
@@ -34,9 +34,9 @@ impl Default for SomeClass {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
+impl<'b> From<ctor::RvalueReference<'b, crate::SomeClass>> for SomeClass {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, SomeClass>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::SomeClass>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
@@ -56,7 +56,7 @@ impl<'b> From<ctor::RvalueReference<'b, SomeClass>> for SomeClass {
 impl SomeClass {
     /// Example of a factory method.
     #[inline(always)]
-    pub fn static_factory_method(initial_value_of_field: i32) -> SomeClass {
+    pub fn static_factory_method(initial_value_of_field: i32) -> crate::SomeClass {
         unsafe {
             detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(initial_value_of_field)
         }
@@ -80,16 +80,16 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<SomeClass>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeClass>,
         );
         pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<SomeClass>,
-            __param_0: ctor::RvalueReference<'b, SomeClass>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeClass>,
+            __param_0: ctor::RvalueReference<'b, crate::SomeClass>,
         );
         #[link_name = "_ZN9SomeClass21static_factory_methodEi"]
         pub(crate) fn __rust_thunk___ZN9SomeClass21static_factory_methodEi(
             initial_value_of_field: i32,
-        ) -> SomeClass;
+        ) -> crate::SomeClass;
         #[link_name = "_ZN9SomeClass38static_method_that_multiplies_its_argsEii"]
         pub(crate) fn __rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
             x: i32,
@@ -100,15 +100,15 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<SomeClass>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<SomeClass>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::SomeClass>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::SomeClass>() == 4usize);
 const _: () = {
-    static_assertions::assert_impl_all!(SomeClass: Clone);
+    static_assertions::assert_impl_all!(crate::SomeClass: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(SomeClass: Copy);
+    static_assertions::assert_impl_all!(crate::SomeClass: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(SomeClass: Drop);
+    static_assertions::assert_not_impl_all!(crate::SomeClass: Drop);
 };
-const _: () = assert!(offset_of!(SomeClass, field_) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::SomeClass, field_) * 8 == 0usize);

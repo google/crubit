@@ -25,7 +25,7 @@ use memoffset_unstable_const::offset_of;
 pub struct Nontrivial {
     pub field: i32,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), Nontrivial);
+forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
 impl !Unpin for Nontrivial {}
 
@@ -85,10 +85,10 @@ impl ctor::CtorNew<(i32, i32)> for Nontrivial {
     }
 }
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>> for Nontrivial {
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::Nontrivial>> for Nontrivial {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, Nontrivial>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -100,12 +100,12 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>> for Nontrivial {
         )
     }
 }
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, Nontrivial>,)> for Nontrivial {
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nontrivial {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, Nontrivial>,)) -> Self::CtorType {
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::Nontrivial>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, Nontrivial>>>::ctor_new(arg)
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::Nontrivial>>>::ctor_new(arg)
     }
 }
 
@@ -131,7 +131,10 @@ impl Nontrivial {
 pub struct NontrivialInline {
     pub field: i32,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("NontrivialInline"), NontrivialInline);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialInline"),
+    crate::NontrivialInline
+);
 
 impl !Unpin for NontrivialInline {}
 
@@ -191,10 +194,10 @@ impl ctor::CtorNew<(i32, i32)> for NontrivialInline {
     }
 }
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>> for NontrivialInline {
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::NontrivialInline>> for NontrivialInline {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, NontrivialInline>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::NontrivialInline>) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -206,12 +209,12 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>> for Nontrivi
         )
     }
 }
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, NontrivialInline>,)> for NontrivialInline {
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialInline>,)> for NontrivialInline {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, NontrivialInline>,)) -> Self::CtorType {
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::NontrivialInline>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, NontrivialInline>>>::ctor_new(arg)
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::NontrivialInline>>>::ctor_new(arg)
     }
 }
 
@@ -236,9 +239,12 @@ impl NontrivialInline {
 /// each field.
 #[repr(C)]
 pub struct NontrivialMembers {
-    pub nontrivial_member: rust_std::mem::ManuallyDrop<Nontrivial>,
+    pub nontrivial_member: rust_std::mem::ManuallyDrop<crate::Nontrivial>,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("NontrivialMembers"), NontrivialMembers);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialMembers"),
+    crate::NontrivialMembers
+);
 
 impl !Unpin for NontrivialMembers {}
 
@@ -257,10 +263,10 @@ impl ctor::CtorNew<()> for NontrivialMembers {
     }
 }
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>> for NontrivialMembers {
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::NontrivialMembers>> for NontrivialMembers {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, NontrivialMembers>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::NontrivialMembers>) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -272,12 +278,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>> for Nontriv
         )
     }
 }
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, NontrivialMembers>,)> for NontrivialMembers {
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialMembers>,)>
+    for NontrivialMembers
+{
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, NontrivialMembers>,)) -> Self::CtorType {
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::NontrivialMembers>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, NontrivialMembers>>>::ctor_new(arg)
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::NontrivialMembers>>>::ctor_new(arg)
     }
 }
 
@@ -294,7 +302,10 @@ impl Drop for NontrivialMembers {
 pub struct NontrivialUnpin {
     pub field: i32,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("NontrivialUnpin"), NontrivialUnpin);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("NontrivialUnpin"),
+    crate::NontrivialUnpin
+);
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=53
 // Error while generating bindings for item 'NontrivialUnpin::operator=':
@@ -319,9 +330,9 @@ impl Default for NontrivialUnpin {
 // Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
 // More than 1 constructor parameter is not supported yet
 
-impl<'b> From<ctor::RvalueReference<'b, Nontrivial>> for NontrivialUnpin {
+impl<'b> From<ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpin {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, Nontrivial>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::Nontrivial>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial(&mut tmp, __param_0);
@@ -353,7 +364,7 @@ impl NontrivialUnpin {
 // Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
 
 #[inline(always)]
-pub fn TakesByValueUnpin(nontrivial: NontrivialUnpin) {
+pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) {
     unsafe { detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(nontrivial) }
 }
 
@@ -362,29 +373,33 @@ pub fn TakesByValueUnpin(nontrivial: NontrivialUnpin) {
 // Non-trivial_abi type 'struct Nontrivial' is not supported by value as a return type
 
 #[inline(always)]
-pub fn ReturnsByValueUnpin() -> NontrivialUnpin {
+pub fn ReturnsByValueUnpin() -> crate::NontrivialUnpin {
     unsafe { detail::__rust_thunk___Z19ReturnsByValueUnpinv() }
 }
 
 #[inline(always)]
-pub fn TakesByConstReference<'a>(nontrivial: &'a Nontrivial) -> &'a Nontrivial {
+pub fn TakesByConstReference<'a>(nontrivial: &'a crate::Nontrivial) -> &'a crate::Nontrivial {
     unsafe { detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
 }
 
 #[inline(always)]
 pub fn TakesByReference<'a>(
-    nontrivial: rust_std::pin::Pin<&'a mut Nontrivial>,
-) -> rust_std::pin::Pin<&'a mut Nontrivial> {
+    nontrivial: rust_std::pin::Pin<&'a mut crate::Nontrivial>,
+) -> rust_std::pin::Pin<&'a mut crate::Nontrivial> {
     unsafe { detail::__rust_thunk___Z16TakesByReferenceR10Nontrivial(nontrivial) }
 }
 
 #[inline(always)]
-pub fn TakesByConstReferenceUnpin<'a>(nontrivial: &'a NontrivialUnpin) -> &'a NontrivialUnpin {
+pub fn TakesByConstReferenceUnpin<'a>(
+    nontrivial: &'a crate::NontrivialUnpin,
+) -> &'a crate::NontrivialUnpin {
     unsafe { detail::__rust_thunk___Z26TakesByConstReferenceUnpinRK15NontrivialUnpin(nontrivial) }
 }
 
 #[inline(always)]
-pub fn TakesByReferenceUnpin<'a>(nontrivial: &'a mut NontrivialUnpin) -> &'a mut NontrivialUnpin {
+pub fn TakesByReferenceUnpin<'a>(
+    nontrivial: &'a mut crate::NontrivialUnpin,
+) -> &'a mut crate::NontrivialUnpin {
     unsafe { detail::__rust_thunk___Z21TakesByReferenceUnpinR15NontrivialUnpin(nontrivial) }
 }
 
@@ -396,148 +411,154 @@ mod detail {
     extern "C" {
         #[link_name = "_ZN10NontrivialC1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::Nontrivial>,
         );
         #[link_name = "_ZN10NontrivialC1Ei"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Ei<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::Nontrivial>,
             field: i32,
         );
         #[link_name = "_ZN10NontrivialC1Eii"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Eii<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::Nontrivial>,
             field: i32,
             unused: i32,
         );
         #[link_name = "_ZN10NontrivialC1EOS_"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<Nontrivial>,
-            __param_0: ctor::RvalueReference<'b, Nontrivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::Nontrivial>,
+            __param_0: ctor::RvalueReference<'b, crate::Nontrivial>,
         );
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: *mut Nontrivial);
+        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: *mut crate::Nontrivial);
         #[link_name = "_ZN10Nontrivial14MemberFunctionEv"]
         pub(crate) fn __rust_thunk___ZN10Nontrivial14MemberFunctionEv<'a>(
-            __this: rust_std::pin::Pin<&'a mut Nontrivial>,
+            __this: rust_std::pin::Pin<&'a mut crate::Nontrivial>,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialInline>,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ei<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialInline>,
             field: i32,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Eii<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialInline>,
             field: i32,
             unused: i32,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialInline>,
-            __param_0: ctor::RvalueReference<'b, NontrivialInline>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialInline>,
+            __param_0: ctor::RvalueReference<'b, crate::NontrivialInline>,
         );
-        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(__this: *mut NontrivialInline);
+        pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(
+            __this: *mut crate::NontrivialInline,
+        );
         pub(crate) fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
-            __this: rust_std::pin::Pin<&'a mut NontrivialInline>,
+            __this: rust_std::pin::Pin<&'a mut crate::NontrivialInline>,
         );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialMembers>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialMembers>,
         );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialMembers>,
-            __param_0: ctor::RvalueReference<'b, NontrivialMembers>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialMembers>,
+            __param_0: ctor::RvalueReference<'b, crate::NontrivialMembers>,
         );
-        pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(__this: *mut NontrivialMembers);
+        pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(
+            __this: *mut crate::NontrivialMembers,
+        );
         #[link_name = "_ZN15NontrivialUnpinC1Ev"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialUnpin>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialUnpin>,
         );
         #[link_name = "_ZN15NontrivialUnpinC1EO10Nontrivial"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1EO10Nontrivial<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<NontrivialUnpin>,
-            __param_0: ctor::RvalueReference<'b, Nontrivial>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialUnpin>,
+            __param_0: ctor::RvalueReference<'b, crate::Nontrivial>,
         );
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
-        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(__this: *mut NontrivialUnpin);
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
+            __this: *mut crate::NontrivialUnpin,
+        );
         #[link_name = "_ZN15NontrivialUnpin14MemberFunctionEv"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'a>(
-            __this: &'a mut NontrivialUnpin,
+            __this: &'a mut crate::NontrivialUnpin,
         );
         #[link_name = "_Z17TakesByValueUnpin15NontrivialUnpin"]
         pub(crate) fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
-            nontrivial: NontrivialUnpin,
+            nontrivial: crate::NontrivialUnpin,
         );
         #[link_name = "_Z19ReturnsByValueUnpinv"]
-        pub(crate) fn __rust_thunk___Z19ReturnsByValueUnpinv() -> NontrivialUnpin;
+        pub(crate) fn __rust_thunk___Z19ReturnsByValueUnpinv() -> crate::NontrivialUnpin;
         #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]
         pub(crate) fn __rust_thunk___Z21TakesByConstReferenceRK10Nontrivial<'a>(
-            nontrivial: &'a Nontrivial,
-        ) -> &'a Nontrivial;
+            nontrivial: &'a crate::Nontrivial,
+        ) -> &'a crate::Nontrivial;
         #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
         pub(crate) fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'a>(
-            nontrivial: rust_std::pin::Pin<&'a mut Nontrivial>,
-        ) -> rust_std::pin::Pin<&'a mut Nontrivial>;
+            nontrivial: rust_std::pin::Pin<&'a mut crate::Nontrivial>,
+        ) -> rust_std::pin::Pin<&'a mut crate::Nontrivial>;
         #[link_name = "_Z26TakesByConstReferenceUnpinRK15NontrivialUnpin"]
         pub(crate) fn __rust_thunk___Z26TakesByConstReferenceUnpinRK15NontrivialUnpin<'a>(
-            nontrivial: &'a NontrivialUnpin,
-        ) -> &'a NontrivialUnpin;
+            nontrivial: &'a crate::NontrivialUnpin,
+        ) -> &'a crate::NontrivialUnpin;
         #[link_name = "_Z21TakesByReferenceUnpinR15NontrivialUnpin"]
         pub(crate) fn __rust_thunk___Z21TakesByReferenceUnpinR15NontrivialUnpin<'a>(
-            nontrivial: &'a mut NontrivialUnpin,
-        ) -> &'a mut NontrivialUnpin;
+            nontrivial: &'a mut crate::NontrivialUnpin,
+        ) -> &'a mut crate::NontrivialUnpin;
     }
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<Nontrivial>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<Nontrivial>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::Nontrivial>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::Nontrivial>() == 4usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(Nontrivial: Copy);
+    static_assertions::assert_not_impl_all!(crate::Nontrivial: Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(Nontrivial: Drop);
+    static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
 };
-const _: () = assert!(offset_of!(Nontrivial, field) * 8 == 0usize);
-const _: () = {
-    static_assertions::assert_impl_all!(i32: Copy);
-};
-
-const _: () = assert!(rust_std::mem::size_of::<NontrivialInline>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<NontrivialInline>() == 4usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(NontrivialInline: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(NontrivialInline: Drop);
-};
-const _: () = assert!(offset_of!(NontrivialInline, field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::Nontrivial, field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(i32: Copy);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<NontrivialMembers>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<NontrivialMembers>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialInline>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialInline>() == 4usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(NontrivialMembers: Copy);
+    static_assertions::assert_not_impl_all!(crate::NontrivialInline: Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(NontrivialMembers: Drop);
+    static_assertions::assert_impl_all!(crate::NontrivialInline: Drop);
 };
-const _: () = assert!(offset_of!(NontrivialMembers, nontrivial_member) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::NontrivialInline, field) * 8 == 0usize);
+const _: () = {
+    static_assertions::assert_impl_all!(i32: Copy);
+};
 
-const _: () = assert!(rust_std::mem::size_of::<NontrivialUnpin>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<NontrivialUnpin>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialMembers>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialMembers>() == 4usize);
 const _: () = {
-    static_assertions::assert_impl_all!(NontrivialUnpin: Clone);
+    static_assertions::assert_not_impl_all!(crate::NontrivialMembers: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(NontrivialUnpin: Copy);
+    static_assertions::assert_impl_all!(crate::NontrivialMembers: Drop);
+};
+const _: () = assert!(offset_of!(crate::NontrivialMembers, nontrivial_member) * 8 == 0usize);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialUnpin>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialUnpin>() == 4usize);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::NontrivialUnpin: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(NontrivialUnpin: Drop);
+    static_assertions::assert_not_impl_all!(crate::NontrivialUnpin: Copy);
 };
-const _: () = assert!(offset_of!(NontrivialUnpin, field) * 8 == 0usize);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::NontrivialUnpin: Drop);
+};
+const _: () = assert!(offset_of!(crate::NontrivialUnpin, field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(i32: Copy);
 };

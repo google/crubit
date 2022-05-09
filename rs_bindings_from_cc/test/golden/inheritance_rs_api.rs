@@ -23,7 +23,7 @@ use memoffset_unstable_const::offset_of;
 pub struct Base0 {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), Base0);
+forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
 impl !Unpin for Base0 {}
 
@@ -52,7 +52,7 @@ pub struct Base1 {
     b1_1_: i64,
     b1_2_: u8,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), Base1);
+forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
 impl !Unpin for Base1 {}
 
@@ -80,7 +80,7 @@ impl !Unpin for Base1 {}
 pub struct Base2 {
     b2_1_: i16,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), Base2);
+forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
 impl !Unpin for Base2 {}
 
@@ -110,7 +110,7 @@ pub struct Derived {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), Derived);
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=23
 // Error while generating bindings for item 'Derived::Derived':
@@ -132,19 +132,19 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), Derived);
 // Error while generating bindings for item 'Derived::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<Base0> for Derived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base0 {
-        (derived as *const _ as *const u8).offset(0) as *const Base0
+unsafe impl oops::Inherits<crate::Base0> for Derived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base0 {
+        (derived as *const _ as *const u8).offset(0) as *const crate::Base0
     }
 }
-unsafe impl oops::Inherits<Base1> for Derived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
-        (derived as *const _ as *const u8).offset(0) as *const Base1
+unsafe impl oops::Inherits<crate::Base1> for Derived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
+        (derived as *const _ as *const u8).offset(0) as *const crate::Base1
     }
 }
-unsafe impl oops::Inherits<Base2> for Derived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base2 {
-        (derived as *const _ as *const u8).offset(10) as *const Base2
+unsafe impl oops::Inherits<crate::Base2> for Derived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base2 {
+        (derived as *const _ as *const u8).offset(10) as *const crate::Base2
     }
 }
 
@@ -152,7 +152,7 @@ unsafe impl oops::Inherits<Base2> for Derived {
 pub struct VirtualBase1 {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 24],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), VirtualBase1);
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
 impl !Unpin for VirtualBase1 {}
 
@@ -176,8 +176,8 @@ impl !Unpin for VirtualBase1 {}
 // Error while generating bindings for item 'VirtualBase1::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualBase1 &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<Base1> for VirtualBase1 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+unsafe impl oops::Inherits<crate::Base1> for VirtualBase1 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(derived)
     }
 }
@@ -186,7 +186,7 @@ unsafe impl oops::Inherits<Base1> for VirtualBase1 {
 pub struct VirtualBase2 {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 24],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), VirtualBase2);
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
 impl !Unpin for VirtualBase2 {}
 
@@ -210,8 +210,8 @@ impl !Unpin for VirtualBase2 {}
 // Error while generating bindings for item 'VirtualBase2::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualBase2 &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<Base1> for VirtualBase2 {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+unsafe impl oops::Inherits<crate::Base1> for VirtualBase2 {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(derived)
     }
 }
@@ -220,7 +220,7 @@ unsafe impl oops::Inherits<Base1> for VirtualBase2 {
 pub struct VirtualDerived {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 32],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), VirtualDerived);
+forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
 impl !Unpin for VirtualDerived {}
 
@@ -244,18 +244,18 @@ impl !Unpin for VirtualDerived {}
 // Error while generating bindings for item 'VirtualDerived::operator=':
 // Parameter #0 is not supported: Unsupported type 'class VirtualDerived &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<VirtualBase1> for VirtualDerived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase1 {
+unsafe impl oops::Inherits<crate::VirtualBase1> for VirtualDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase1 {
         detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(derived)
     }
 }
-unsafe impl oops::Inherits<Base1> for VirtualDerived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const Base1 {
+unsafe impl oops::Inherits<crate::Base1> for VirtualDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(derived)
     }
 }
-unsafe impl oops::Inherits<VirtualBase2> for VirtualDerived {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase2 {
+unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase2 {
         detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(derived)
     }
 }
@@ -268,90 +268,90 @@ mod detail {
     extern "C" {
         pub fn __crubit_dynamic_upcast__VirtualBase1__to__Base1(
             from: *const VirtualBase1,
-        ) -> *const Base1;
+        ) -> *const crate::Base1;
         pub fn __crubit_dynamic_upcast__VirtualBase2__to__Base1(
             from: *const VirtualBase2,
-        ) -> *const Base1;
+        ) -> *const crate::Base1;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(
             from: *const VirtualDerived,
-        ) -> *const VirtualBase1;
+        ) -> *const crate::VirtualBase1;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__Base1(
             from: *const VirtualDerived,
-        ) -> *const Base1;
+        ) -> *const crate::Base1;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(
             from: *const VirtualDerived,
-        ) -> *const VirtualBase2;
+        ) -> *const crate::VirtualBase2;
     }
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<Base0>() == 1usize);
-const _: () = assert!(rust_std::mem::align_of::<Base0>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::Base0>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::Base0>() == 1usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(Base0: Copy);
+    static_assertions::assert_not_impl_all!(crate::Base0: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(Base0: Drop);
-};
-
-const _: () = assert!(rust_std::mem::size_of::<Base1>() == 16usize);
-const _: () = assert!(rust_std::mem::align_of::<Base1>() == 8usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(Base1: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(Base1: Drop);
-};
-const _: () = assert!(offset_of!(Base1, b1_1_) * 8 == 0usize);
-const _: () = assert!(offset_of!(Base1, b1_2_) * 8 == 64usize);
-
-const _: () = assert!(rust_std::mem::size_of::<Base2>() == 2usize);
-const _: () = assert!(rust_std::mem::align_of::<Base2>() == 2usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(Base2: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(Base2: Drop);
-};
-const _: () = assert!(offset_of!(Base2, b2_1_) * 8 == 0usize);
-
-const _: () = assert!(rust_std::mem::size_of::<Derived>() == 16usize);
-const _: () = assert!(rust_std::mem::align_of::<Derived>() == 8usize);
-const _: () = {
-    static_assertions::assert_impl_all!(Derived: Clone);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(Derived: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(Derived: Drop);
-};
-const _: () = assert!(offset_of!(Derived, derived_1) * 8 == 96usize);
-
-const _: () = assert!(rust_std::mem::size_of::<VirtualBase1>() == 24usize);
-const _: () = assert!(rust_std::mem::align_of::<VirtualBase1>() == 8usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualBase1: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualBase1: Drop);
+    static_assertions::assert_not_impl_all!(crate::Base0: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<VirtualBase2>() == 24usize);
-const _: () = assert!(rust_std::mem::align_of::<VirtualBase2>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::Base1>() == 16usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::Base1>() == 8usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualBase2: Copy);
+    static_assertions::assert_not_impl_all!(crate::Base1: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualBase2: Drop);
+    static_assertions::assert_not_impl_all!(crate::Base1: Drop);
+};
+const _: () = assert!(offset_of!(crate::Base1, b1_1_) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::Base1, b1_2_) * 8 == 64usize);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::Base2>() == 2usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::Base2>() == 2usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::Base2: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::Base2: Drop);
+};
+const _: () = assert!(offset_of!(crate::Base2, b2_1_) * 8 == 0usize);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::Derived>() == 16usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::Derived>() == 8usize);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Derived: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Derived: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::Derived: Drop);
+};
+const _: () = assert!(offset_of!(crate::Derived, derived_1) * 8 == 96usize);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::VirtualBase1>() == 24usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::VirtualBase1>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::VirtualBase1: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::VirtualBase1: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<VirtualDerived>() == 32usize);
-const _: () = assert!(rust_std::mem::align_of::<VirtualDerived>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::VirtualBase2>() == 24usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::VirtualBase2>() == 8usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualDerived: Copy);
+    static_assertions::assert_not_impl_all!(crate::VirtualBase2: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualDerived: Drop);
+    static_assertions::assert_not_impl_all!(crate::VirtualBase2: Drop);
+};
+
+const _: () = assert!(rust_std::mem::size_of::<crate::VirtualDerived>() == 32usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::VirtualDerived>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::VirtualDerived: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::VirtualDerived: Drop);
 };

@@ -26,7 +26,7 @@ pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
 pub struct S {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("S"), S);
+forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
@@ -50,14 +50,14 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), S);
 
 impl S {
     #[inline(always)]
-    pub unsafe fn const_method(__this: *const S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+    pub unsafe fn const_method(__this: *const crate::S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
 }
 
 impl S {
     #[inline(always)]
-    pub unsafe fn method(__this: *mut S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+    pub unsafe fn method(__this: *mut crate::S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
@@ -77,13 +77,13 @@ mod detail {
         pub(crate) fn __rust_thunk___Z13free_functionRi(p1: *mut i32) -> *mut i32;
         #[link_name = "_ZNK1S12const_methodERiS0_"]
         pub(crate) fn __rust_thunk___ZNK1S12const_methodERiS0_(
-            __this: *const S,
+            __this: *const crate::S,
             p1: *mut i32,
             p2: *mut i32,
         ) -> *mut i32;
         #[link_name = "_ZN1S6methodERiS0_"]
         pub(crate) fn __rust_thunk___ZN1S6methodERiS0_(
-            __this: *mut S,
+            __this: *mut crate::S,
             p1: *mut i32,
             p2: *mut i32,
         ) -> *mut i32;
@@ -94,14 +94,14 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<S>() == 1usize);
-const _: () = assert!(rust_std::mem::align_of::<S>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::S>() == 1usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::S>() == 1usize);
 const _: () = {
-    static_assertions::assert_impl_all!(S: Clone);
+    static_assertions::assert_impl_all!(crate::S: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(S: Copy);
+    static_assertions::assert_impl_all!(crate::S: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(S: Drop);
+    static_assertions::assert_not_impl_all!(crate::S: Drop);
 };

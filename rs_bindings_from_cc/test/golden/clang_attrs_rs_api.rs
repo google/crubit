@@ -20,7 +20,10 @@ use memoffset_unstable_const::offset_of;
 pub struct HasCustomAlignment {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("HasCustomAlignment"), HasCustomAlignment);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("HasCustomAlignment"),
+    crate::HasCustomAlignment
+);
 
 impl !Unpin for HasCustomAlignment {}
 
@@ -46,11 +49,11 @@ impl !Unpin for HasCustomAlignment {}
 
 #[repr(C)]
 pub struct HasFieldWithCustomAlignment {
-    pub field: HasCustomAlignment,
+    pub field: crate::HasCustomAlignment,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasFieldWithCustomAlignment"),
-    HasFieldWithCustomAlignment
+    crate::HasFieldWithCustomAlignment
 );
 
 impl !Unpin for HasFieldWithCustomAlignment {}
@@ -81,7 +84,7 @@ pub struct InheritsFromBaseWithCustomAlignment {
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
-    InheritsFromBaseWithCustomAlignment
+    crate::InheritsFromBaseWithCustomAlignment
 );
 
 impl !Unpin for InheritsFromBaseWithCustomAlignment {}
@@ -106,9 +109,9 @@ impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
 
-unsafe impl oops::Inherits<HasCustomAlignment> for InheritsFromBaseWithCustomAlignment {
-    unsafe fn upcast_ptr(derived: *const Self) -> *const HasCustomAlignment {
-        (derived as *const _ as *const u8).offset(0) as *const HasCustomAlignment
+unsafe impl oops::Inherits<crate::HasCustomAlignment> for InheritsFromBaseWithCustomAlignment {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::HasCustomAlignment {
+        (derived as *const _ as *const u8).offset(0) as *const crate::HasCustomAlignment
     }
 }
 
@@ -118,7 +121,7 @@ pub struct HasCustomAlignmentWithGnuAttr {
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
-    HasCustomAlignmentWithGnuAttr
+    crate::HasCustomAlignmentWithGnuAttr
 );
 
 impl !Unpin for HasCustomAlignmentWithGnuAttr {}
@@ -147,39 +150,41 @@ impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<HasCustomAlignment>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<HasCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::HasCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::HasCustomAlignment>() == 64usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(HasCustomAlignment: Copy);
+    static_assertions::assert_not_impl_all!(crate::HasCustomAlignment: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(HasCustomAlignment: Drop);
-};
-
-const _: () = assert!(rust_std::mem::size_of::<HasFieldWithCustomAlignment>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<HasFieldWithCustomAlignment>() == 64usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(HasFieldWithCustomAlignment: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(HasFieldWithCustomAlignment: Drop);
-};
-const _: () = assert!(offset_of!(HasFieldWithCustomAlignment, field) * 8 == 0usize);
-
-const _: () = assert!(rust_std::mem::size_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<InheritsFromBaseWithCustomAlignment>() == 64usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(InheritsFromBaseWithCustomAlignment: Drop);
+    static_assertions::assert_not_impl_all!(crate::HasCustomAlignment: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<HasCustomAlignmentWithGnuAttr>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Copy);
+    static_assertions::assert_not_impl_all!(crate::HasFieldWithCustomAlignment: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(HasCustomAlignmentWithGnuAttr: Drop);
+    static_assertions::assert_not_impl_all!(crate::HasFieldWithCustomAlignment: Drop);
+};
+const _: () = assert!(offset_of!(crate::HasFieldWithCustomAlignment, field) * 8 == 0usize);
+
+const _: () =
+    assert!(rust_std::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64usize);
+const _: () =
+    assert!(rust_std::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Drop);
+};
+
+const _: () = assert!(rust_std::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Drop);
 };

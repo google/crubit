@@ -19,4 +19,5 @@ void i();
 }  // namespace inner
 }  // namespace test_namespace_bindings
 
+test_namespace_bindings::S identity(test_namespace_bindings::S s);
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_

@@ -912,6 +912,26 @@ fn needs_manually_drop(ty: &ir::RsType, ir: &IR) -> Result<bool> {
     Ok(!ty_implements_copy)
 }
 
+/// Returns the namespace qualifier for the given item.
+fn generate_namespace_qualifier(item_id: ItemId, ir: &IR) -> Result<impl Iterator<Item = Ident>> {
+    let mut namespaces = vec![];
+    let item: &Item = ir.find_decl(item_id)?;
+    let mut enclosing_namespace_id = item.enclosing_namespace_id();
+    while let Some(parent_id) = enclosing_namespace_id {
+        let namespace_item = ir.find_decl(parent_id)?;
+        match namespace_item {
+            Item::Namespace(ns) => {
+                namespaces.push(make_rs_ident(&ns.name.identifier));
+                enclosing_namespace_id = ns.enclosing_namespace_id;
+            }
+            _ => {
+                bail!("Expected namespace");
+            }
+        }
+    }
+    Ok(namespaces.into_iter().rev())
+}
+
 /// Generates Rust source code for a given incomplete record declaration.
 fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<TokenStream> {
     let ident = make_rs_ident(&incomplete_record.cc_name);
@@ -931,6 +951,11 @@ fn generate_record(
     overloaded_funcs: &HashSet<FunctionId>,
 ) -> Result<GeneratedItem> {
     let ident = make_rs_ident(&record.rs_name);
+    let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
+    let qualified_ident = {
+        quote! { crate:: #(#namespace_qualifier::)* #ident }
+    };
+
     let doc_comment = generate_doc_comment(&record.doc_comment);
     let field_idents =
         record.fields.iter().map(|f| make_rs_ident(&f.identifier.identifier)).collect_vec();
@@ -996,7 +1021,7 @@ fn generate_record(
             quote! {
                 // The IR contains the offset in bits, while offset_of!()
                 // returns the offset in bytes, so we need to convert.
-                const _: () = assert!(offset_of!(#ident, #field_ident) * 8 == #offset);
+                const _: () = assert!(offset_of!(#qualified_ident, #field_ident) * 8 == #offset);
             }
         });
     // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_all!`
@@ -1066,7 +1091,7 @@ fn generate_record(
     // name.
     let incomplete_symbol = &record.cc_name;
     let incomplete_definition = quote! {
-        forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #ident);
+        forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #qualified_ident);
     };
 
     let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, ir)?;
@@ -1120,7 +1145,7 @@ fn generate_record(
     };
 
     let record_trait_assertions = {
-        let record_type_name = RsTypeKind::new_record(record, ir).to_token_stream();
+        let record_type_name = RsTypeKind::new_record(record, ir)?.to_token_stream();
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -1146,8 +1171,8 @@ fn generate_record(
         assertions
     };
     let assertion_tokens = quote! {
-        const _: () = assert!(rust_std::mem::size_of::<#ident>() == #size);
-        const _: () = assert!(rust_std::mem::align_of::<#ident>() == #alignment);
+        const _: () = assert!(rust_std::mem::size_of::<#qualified_ident>() == #size);
+        const _: () = assert!(rust_std::mem::align_of::<#qualified_ident>() == #alignment);
         #( #record_trait_assertions )*
         #( #field_offset_assertions )*
         #( #field_copy_trait_assertions )*
@@ -1603,16 +1628,22 @@ enum RsTypeKind<'ir> {
 
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
+        /// The namespace qualifier for this record.
+        namespace_qualifier: Vec<Ident>,
     },
     /// A complete record type.
     Record {
         record: &'ir Record,
+        /// The namespace qualifier for this record.
+        namespace_qualifier: Vec<Ident>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
     TypeAlias {
         type_alias: &'ir TypeAlias,
         underlying_type: Box<RsTypeKind<'ir>>,
+        /// The namespace qualifier for this alias.
+        namespace_qualifier: Vec<Ident>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
@@ -1655,11 +1686,13 @@ impl<'ir> RsTypeKind<'ir> {
                 match ir.item_for_type(ty)? {
                     Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                         incomplete_record,
+                        namespace_qualifier: generate_namespace_qualifier(incomplete_record.id, ir)?.collect_vec(),
                         crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, ir),
                     },
-                    Item::Record(record) => RsTypeKind::new_record(record, ir),
+                    Item::Record(record) => RsTypeKind::new_record(record, ir)?,
                     Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
                         type_alias,
+                        namespace_qualifier: generate_namespace_qualifier(type_alias.id, ir)?.collect_vec(),
                         crate_ident: rs_imported_crate_name(&type_alias.owning_target, ir),
                         underlying_type: Box::new(RsTypeKind::new(
                             &type_alias.underlying_type.rs_type,
@@ -1722,11 +1755,12 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(result)
     }
 
-    pub fn new_record(record: &'ir Record, ir: &'ir IR) -> Self {
-        RsTypeKind::Record {
+    pub fn new_record(record: &'ir Record, ir: &'ir IR) -> Result<Self> {
+        Ok(RsTypeKind::Record {
             record,
+            namespace_qualifier: generate_namespace_qualifier(record.id, ir)?.collect_vec(),
             crate_ident: rs_imported_crate_name(&record.owning_target, ir),
-        }
+        })
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -1927,20 +1961,41 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 let return_frag = return_type.format_as_return_type_fragment();
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
-            RsTypeKind::IncompleteRecord { incomplete_record, crate_ident } => {
+            RsTypeKind::IncompleteRecord { incomplete_record, namespace_qualifier, crate_ident } => {
                 let record_ident = make_rs_ident(&incomplete_record.cc_name);
-                let crate_ident = crate_ident.iter();
-                quote! {#(#crate_ident::)* #record_ident}
+                let namespace_idents = namespace_qualifier.iter();
+                match crate_ident {
+                    Some(ci) => {
+                        quote!{ #ci #(#namespace_idents::)*  #record_ident }
+                    },
+                    None => {
+                        quote!{ crate:: #(#namespace_idents::)*  #record_ident }
+                    }
+                }
             }
-            RsTypeKind::Record { record, crate_ident } => {
-                let record_ident = make_rs_ident(&record.rs_name);
-                let crate_ident = crate_ident.iter();
-                quote! {#(#crate_ident::)* #record_ident}
+            RsTypeKind::Record { record, namespace_qualifier, crate_ident } => {
+                let ident = make_rs_ident(&record.rs_name);
+                let namespace_idents = namespace_qualifier.iter();
+                match crate_ident {
+                    Some(ci) => {
+                        quote!{ #ci:: #(#namespace_idents::)*  #ident }
+                    },
+                    None => {
+                        quote!{ crate:: #(#namespace_idents::)*  #ident }
+                    }
+                }
             }
-            RsTypeKind::TypeAlias { type_alias, crate_ident, .. } => {
-                let alias_ident = make_rs_ident(&type_alias.identifier.identifier);
-                let crate_ident = crate_ident.iter();
-                quote! {#(#crate_ident::)* #alias_ident}
+            RsTypeKind::TypeAlias { type_alias, namespace_qualifier, crate_ident, .. } => {
+                let ident = make_rs_ident(&type_alias.identifier.identifier);
+                let namespace_idents = namespace_qualifier.iter();
+                match crate_ident {
+                    Some(ci) => {
+                        quote!{ #ci:: #(#namespace_idents::)*  #ident }
+                    },
+                    None => {
+                        quote!{ crate:: #(#namespace_idents::)*  #ident }
+                    }
+                }
             }
             RsTypeKind::Unit => quote! {()},
             RsTypeKind::Other { name, type_args } => {
@@ -2001,16 +2056,18 @@ fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
         .with_context(|| format!("Failed to format Rust type {:?}", ty))
 }
 
-fn cc_type_name_for_item(item: &ir::Item) -> Result<TokenStream> {
+fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     Ok(match item {
         Item::Record(record) => {
             let ident = format_cc_ident(&record.cc_name);
+            let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
             let tag_kind = tag_kind(record);
-            quote! { #tag_kind #ident }
+            quote! { #tag_kind #(#namespace_qualifier::)*  #ident }
         }
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
-            quote! { #ident }
+            let namespace_qualifier = generate_namespace_qualifier(type_alias.id, ir)?;
+            quote! { #(#namespace_qualifier::)* #ident }
         }
         _ => bail!("Item does not define a type: {:?}", item),
     })
@@ -2101,16 +2158,18 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
         }
     } else {
         let item = ir.item_for_type(ty)?;
-        let type_name = cc_type_name_for_item(item)?;
+        let type_name = cc_type_name_for_item(item, ir)?;
         Ok(quote! {#const_fragment #type_name})
     }
 }
 
-fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
+fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
-        return quote! {};
+        return Ok(quote! {});
     }
     let record_ident = format_cc_ident(&record.cc_name);
+    let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
+    let namespace_qualifier = quote! { #(#namespace_qualifier::)* };
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = tag_kind(record);
@@ -2121,14 +2180,14 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> TokenStream {
             // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
             // offset in bytes, so we need to convert.
             quote! {
-                static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #record_ident) * 8 == #offset);
+                static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident) * 8 == #offset);
             }
         });
-    quote! {
-        static_assert(sizeof(#tag_kind #record_ident) == #size);
-        static_assert(alignof(#tag_kind #record_ident) == #alignment);
+    Ok(quote! {
+        static_assert(sizeof(#tag_kind #namespace_qualifier #record_ident) == #size);
+        static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
         #( #field_assertions )*
-    }
+    })
 }
 
 // Returns the accessor functions for no_unique_address member variables.
@@ -2171,7 +2230,7 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
         let base_record: &Record = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_name = RsTypeKind::new_record(base_record, ir).into_token_stream();
+        let base_name = RsTypeKind::new_record(base_record, ir)?.into_token_stream();
         let derived_name = make_rs_ident(&record.rs_name);
         let body;
         if let Some(offset) = base.offset {
@@ -2248,8 +2307,10 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
                 match static_method_metadata {
                     None => quote! {#fn_ident},
                     Some(meta) => {
-                        let record_ident = format_cc_ident(&meta.find_record(ir)?.cc_name);
-                        quote! { #record_ident :: #fn_ident }
+                        let record = meta.find_record(ir)?;
+                        let record_ident = format_cc_ident(&record.cc_name);
+                        let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
+                        quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }
                     }
                 }
             }
@@ -2319,7 +2380,10 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
         });
     }
 
-    let layout_assertions = ir.records().map(|record| cc_struct_layout_assertion(record, ir));
+    let layout_assertions = ir
+        .records()
+        .map(|record| cc_struct_layout_assertion(record, ir))
+        .collect::<Result<Vec<_>>>()?;
 
     let mut standard_headers = <BTreeSet<Ident>>::new();
     standard_headers.insert(format_ident!("memory")); // ubiquitous.
@@ -2546,14 +2610,14 @@ mod tests {
             rs_api,
             quote! {
                 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
-                const _: () = assert!(rust_std::mem::size_of::<SomeStruct>() == 12usize);
-                const _: () = assert!(rust_std::mem::align_of::<SomeStruct>() == 4usize);
-                const _: () = { static_assertions::assert_impl_all!(SomeStruct: Clone); };
-                const _: () = { static_assertions::assert_impl_all!(SomeStruct: Copy); };
-                const _: () = { static_assertions::assert_not_impl_all!(SomeStruct: Drop); };
-                const _: () = assert!(offset_of!(SomeStruct, public_int) * 8 == 0usize);
-                const _: () = assert!(offset_of!(SomeStruct, protected_int) * 8 == 32usize);
-                const _: () = assert!(offset_of!(SomeStruct, private_int) * 8 == 64usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::SomeStruct>() == 12usize);
+                const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 4usize);
+                const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Clone); };
+                const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Copy); };
+                const _: () = { static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop); };
+                const _: () = assert!(offset_of!(crate::SomeStruct, public_int) * 8 == 0usize);
+                const _: () = assert!(offset_of!(crate::SomeStruct, protected_int) * 8 == 32usize);
+                const _: () = assert!(offset_of!(crate::SomeStruct, private_int) * 8 == 64usize);
             }
         );
         assert_cc_matches!(
@@ -3282,11 +3346,11 @@ mod tests {
             rs_api,
             quote! {
                 impl Struct {
-                    pub fn field1(&self) -> &Field1 {
-                        unsafe {&* (&self.field1 as *const _ as *const Field1)}
+                    pub fn field1(&self) -> &crate::Field1 {
+                        unsafe {&* (&self.field1 as *const _ as *const crate::Field1)}
                     }
-                    pub fn field2(&self) -> &Field2 {
-                        unsafe {&* (&self.field2 as *const _ as *const Field2)}
+                    pub fn field2(&self) -> &crate::Field2 {
+                        unsafe {&* (&self.field2 as *const _ as *const crate::Field2)}
                     }
                 }
             }
@@ -3693,19 +3757,19 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<SomeUnionWithPrivateFields>() == 8usize);
-                const _: () = assert!(rust_std::mem::align_of::<SomeUnionWithPrivateFields>() == 8usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8usize);
+                const _: () = assert!(rust_std::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8usize);
                 const _: () = {
-                  static_assertions::assert_impl_all!(SomeUnionWithPrivateFields: Clone);
+                  static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Clone);
                 };
                 const _: () = {
-                  static_assertions::assert_impl_all!(SomeUnionWithPrivateFields: Copy);
+                  static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy);
                 };
                 const _: () = {
-                  static_assertions::assert_not_impl_all!(SomeUnionWithPrivateFields: Drop);
+                  static_assertions::assert_not_impl_all!(crate::SomeUnionWithPrivateFields: Drop);
                 };
-                const _: () = assert!(offset_of!(SomeUnionWithPrivateFields, public_field) * 8 == 0usize);
-                const _: () = assert!(offset_of!(SomeUnionWithPrivateFields, private_field) * 8 == 0usize);
+                const _: () = assert!(offset_of!(crate::SomeUnionWithPrivateFields, public_field) * 8 == 0usize);
+                const _: () = assert!(offset_of!(crate::SomeUnionWithPrivateFields, private_field) * 8 == 0usize);
             }
         );
         Ok(())
@@ -3734,8 +3798,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<EmptyStruct>() == 1usize);
-                const _: () = assert!(rust_std::mem::align_of::<EmptyStruct>() == 1usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::EmptyStruct>() == 1usize);
+                const _: () = assert!(rust_std::mem::align_of::<crate::EmptyStruct>() == 1usize);
             }
         );
 
@@ -3765,8 +3829,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<EmptyUnion>() == 1usize);
-                const _: () = assert!(rust_std::mem::align_of::<EmptyUnion>() == 1usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::EmptyUnion>() == 1usize);
+                const _: () = assert!(rust_std::mem::align_of::<crate::EmptyUnion>() == 1usize);
             }
         );
 
@@ -3793,7 +3857,7 @@ mod tests {
                 #[repr(C)]
                 pub union UnionWithNontrivialField {
                     pub trivial_field: i32,
-                    pub nontrivial_field: rust_std::mem::ManuallyDrop<NontrivialStruct>,
+                    pub nontrivial_field: rust_std::mem::ManuallyDrop<crate::NontrivialStruct>,
                 }
             }
         );
@@ -3801,8 +3865,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<UnionWithNontrivialField>() == 4usize);
-                const _: () = assert!(rust_std::mem::align_of::<UnionWithNontrivialField>() == 4usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::UnionWithNontrivialField>() == 4usize);
+                const _: () = assert!(rust_std::mem::align_of::<crate::UnionWithNontrivialField>() == 4usize);
             }
         );
         Ok(())
@@ -3850,9 +3914,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> From<ctor::RvalueReference<'b, UnionWithDefaultConstructors>> for UnionWithDefaultConstructors {
+                impl<'b> From<ctor::RvalueReference<'b, crate::UnionWithDefaultConstructors>> for UnionWithDefaultConstructors {
                     #[inline(always)]
-                    fn from(__param_0: ctor::RvalueReference<'b, UnionWithDefaultConstructors>) -> Self {
+                    fn from(__param_0: ctor::RvalueReference<'b, crate::UnionWithDefaultConstructors>) -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
@@ -3884,8 +3948,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                unsafe impl oops::Inherits<VirtualBase> for Derived {
-                    unsafe fn upcast_ptr(derived: *const Self) -> *const VirtualBase {
+                unsafe impl oops::Inherits<crate::VirtualBase> for Derived {
+                    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase {
                         detail::__crubit_dynamic_upcast__Derived__to__VirtualBase(derived)
                     }
                 }
@@ -3893,23 +3957,23 @@ mod tests {
         );
         assert_rs_matches!(
             rs_api,
-            quote! { unsafe impl oops::Inherits<UnambiguousPublicBase> for Derived }
+            quote! { unsafe impl oops::Inherits<crate::UnambiguousPublicBase> for Derived }
         );
         assert_rs_matches!(
             rs_api,
-            quote! { unsafe impl oops::Inherits<MultipleInheritance> for Derived }
+            quote! { unsafe impl oops::Inherits<crate::MultipleInheritance> for Derived }
         );
         assert_rs_not_matches!(
             rs_api,
-            quote! {unsafe impl oops::Inherits<PrivateBase> for Derived}
+            quote! {unsafe impl oops::Inherits<crate::PrivateBase> for Derived}
         );
         assert_rs_not_matches!(
             rs_api,
-            quote! {unsafe impl oops::Inherits<ProtectedBase> for Derived}
+            quote! {unsafe impl oops::Inherits<crate::ProtectedBase> for Derived}
         );
         assert_rs_not_matches!(
             rs_api,
-            quote! {unsafe impl oops::Inherits<AmbiguousPublicBase> for Derived}
+            quote! {unsafe impl oops::Inherits<crate::AmbiguousPublicBase> for Derived}
         );
         Ok(())
     }
@@ -3937,7 +4001,10 @@ mod tests {
             "",
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_not_matches!(rs_api, quote! { unsafe impl oops::Inherits<Base> for Derived });
+        assert_rs_not_matches!(
+            rs_api,
+            quote! { unsafe impl oops::Inherits<crate::Base> for Derived }
+        );
         Ok(())
     }
 
@@ -4074,7 +4141,7 @@ mod tests {
         assert_rs_matches!(rs_api, quote! {pub x: i32,});
         assert_rs_matches!(
             rs_api,
-            quote! {pub nts: rust_std::mem::ManuallyDrop<NontrivialStruct>,}
+            quote! {pub nts: rust_std::mem::ManuallyDrop<crate::NontrivialStruct>,}
         );
         Ok(())
     }
@@ -4110,10 +4177,10 @@ mod tests {
             }
         );
         assert_rs_matches!(rs_api, quote! {pub x: i32,});
-        assert_rs_matches!(rs_api, quote! {pub ts: TrivialStruct,});
+        assert_rs_matches!(rs_api, quote! {pub ts: crate::TrivialStruct,});
         assert_rs_matches!(
             rs_api,
-            quote! {pub udd: rust_std::mem::ManuallyDrop<UserDefinedDestructor>,}
+            quote! {pub udd: rust_std::mem::ManuallyDrop<crate::UserDefinedDestructor>,}
         );
         Ok(())
     }
@@ -4297,9 +4364,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> From<&'b SomeOtherStruct> for StructUnderTest {
+                impl<'b> From<&'b crate::SomeOtherStruct> for StructUnderTest {
                     #[inline(always)]
-                    fn from(other: &'b SomeOtherStruct) -> Self {
+                    fn from(other: &'b crate::SomeOtherStruct) -> Self {
                         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             detail::__rust_thunk___ZN15StructUnderTestC1ERK15SomeOtherStruct(
@@ -4328,9 +4395,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq<SomeStruct> for SomeStruct {
+                impl PartialEq<crate::SomeStruct> for SomeStruct {
                     #[inline(always)]
-                    fn eq<'a, 'b>(&'a self, other: &'b SomeStruct) -> bool {
+                    fn eq<'a, 'b>(&'a self, other: &'b crate::SomeStruct) -> bool {
                         unsafe { detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
                     }
                 }
@@ -4361,9 +4428,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq<SomeStruct> for SomeStruct {
+                impl PartialEq<crate::SomeStruct> for SomeStruct {
                     #[inline(always)]
-                    fn eq<'a, 'b>(&'a self, rhs: &'b SomeStruct) -> bool {
+                    fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeStruct) -> bool {
                         unsafe { detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
                     }
                 }
@@ -4439,7 +4506,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut S, i: &'b mut i32)
+                pub(crate) fn __rust_thunk___ZN1S1fERi<'a, 'b>(__this: &'a mut crate::S, i: &'b mut i32)
                     -> &'a mut i32;
             }
         );
@@ -4565,10 +4632,13 @@ mod tests {
             }
         );
         assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl = i32; });
-        assert_rs_matches!(rs_api, quote! { pub type MyTypeAliasDecl_Alias = MyTypeAliasDecl; });
-        assert_rs_matches!(rs_api, quote! { pub type S_Alias = S; });
-        assert_rs_matches!(rs_api, quote! { pub type S_Alias_Alias = S_Alias; });
-        assert_rs_matches!(rs_api, quote! { pub fn f(t: MyTypedefDecl) });
+        assert_rs_matches!(
+            rs_api,
+            quote! { pub type MyTypeAliasDecl_Alias = crate::MyTypeAliasDecl; }
+        );
+        assert_rs_matches!(rs_api, quote! { pub type S_Alias = crate::S; });
+        assert_rs_matches!(rs_api, quote! { pub type S_Alias_Alias = crate::S_Alias; });
+        assert_rs_matches!(rs_api, quote! { pub fn f(t: crate::MyTypedefDecl) });
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -4617,16 +4687,16 @@ mod tests {
             Test { cc: "int*", lifetimes: false, rs: "*mut i32", is_copy: true },
             // Tests below have been thought-through and verified "manually".
             // TrivialStruct is expected to derive Copy.
-            Test { cc: "TrivialStruct", lifetimes: true, rs: "TrivialStruct", is_copy: true },
+            Test { cc: "TrivialStruct", lifetimes: true, rs: "crate::TrivialStruct", is_copy: true },
             Test {
                 cc: "UserDefinedCopyConstructor",
                 lifetimes: true,
-                rs: "UserDefinedCopyConstructor",
+                rs: "crate::UserDefinedCopyConstructor",
                 is_copy: false,
             },
-            Test { cc: "IntAlias", lifetimes: true, rs: "IntAlias", is_copy: true },
-            Test { cc: "TrivialAlias", lifetimes: true, rs: "TrivialAlias", is_copy: true },
-            Test { cc: "NonTrivialAlias", lifetimes: true, rs: "NonTrivialAlias", is_copy: false },
+            Test { cc: "IntAlias", lifetimes: true, rs: "crate::IntAlias", is_copy: true },
+            Test { cc: "TrivialAlias", lifetimes: true, rs: "crate::TrivialAlias", is_copy: true },
+            Test { cc: "NonTrivialAlias", lifetimes: true, rs: "crate::NonTrivialAlias", is_copy: false },
         ];
         for test in tests.iter() {
             let test_name = format!("cc='{}', lifetimes={}", test.cc, test.lifetimes);
@@ -4834,7 +4904,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                fn Function<'a>(s: &'a S) { ... }
+                fn Function<'a>(s: &'a crate::S) { ... }
             }
         );
         Ok(())
@@ -4854,7 +4924,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                fn Function<'a>(s: rust_std::pin::Pin<&'a mut S>) { ... }
+                fn Function<'a>(s: rust_std::pin::Pin<&'a mut crate::S>) { ... }
             }
         );
         Ok(())
@@ -5133,10 +5203,10 @@ mod tests {
                 pub mod test_namespace_bindings {
                     use super::*;
                     ...
-                    const _: () = assert!(rust_std::mem::size_of::<S>() == 4usize);
-                    const _: () = assert!(rust_std::mem::align_of::<S>() == 4usize);
+                    const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
+                    const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
                     ...
-                    const _: () = assert!(offset_of!(S, i) * 8 == 0usize);
+                    const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
                 }
             }
         );

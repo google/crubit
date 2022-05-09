@@ -20,7 +20,10 @@ use memoffset_unstable_const::offset_of;
 pub struct PolymorphicBase {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 8],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("PolymorphicBase"), PolymorphicBase);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PolymorphicBase"),
+    crate::PolymorphicBase
+);
 
 impl !Unpin for PolymorphicBase {}
 
@@ -39,10 +42,10 @@ impl ctor::CtorNew<()> for PolymorphicBase {
     }
 }
 
-impl<'b> ctor::CtorNew<&'b PolymorphicBase> for PolymorphicBase {
+impl<'b> ctor::CtorNew<&'b crate::PolymorphicBase> for PolymorphicBase {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: &'b PolymorphicBase) -> Self::CtorType {
+    fn ctor_new(args: &'b crate::PolymorphicBase) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -54,12 +57,12 @@ impl<'b> ctor::CtorNew<&'b PolymorphicBase> for PolymorphicBase {
         )
     }
 }
-impl<'b> ctor::CtorNew<(&'b PolymorphicBase,)> for PolymorphicBase {
+impl<'b> ctor::CtorNew<(&'b crate::PolymorphicBase,)> for PolymorphicBase {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (&'b PolymorphicBase,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b crate::PolymorphicBase,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b PolymorphicBase>>::ctor_new(arg)
+        <Self as ctor::CtorNew<&'b crate::PolymorphicBase>>::ctor_new(arg)
     }
 }
 
@@ -78,7 +81,10 @@ impl Drop for PolymorphicBase {
 pub struct PolymorphicBase2 {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 8],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("PolymorphicBase2"), PolymorphicBase2);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PolymorphicBase2"),
+    crate::PolymorphicBase2
+);
 
 impl !Unpin for PolymorphicBase2 {}
 
@@ -97,10 +103,10 @@ impl ctor::CtorNew<()> for PolymorphicBase2 {
     }
 }
 
-impl<'b> ctor::CtorNew<&'b PolymorphicBase2> for PolymorphicBase2 {
+impl<'b> ctor::CtorNew<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: &'b PolymorphicBase2) -> Self::CtorType {
+    fn ctor_new(args: &'b crate::PolymorphicBase2) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -112,12 +118,12 @@ impl<'b> ctor::CtorNew<&'b PolymorphicBase2> for PolymorphicBase2 {
         )
     }
 }
-impl<'b> ctor::CtorNew<(&'b PolymorphicBase2,)> for PolymorphicBase2 {
+impl<'b> ctor::CtorNew<(&'b crate::PolymorphicBase2,)> for PolymorphicBase2 {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (&'b PolymorphicBase2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b crate::PolymorphicBase2,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b PolymorphicBase2>>::ctor_new(arg)
+        <Self as ctor::CtorNew<&'b crate::PolymorphicBase2>>::ctor_new(arg)
     }
 }
 
@@ -143,7 +149,10 @@ impl Drop for PolymorphicBase2 {
 pub struct PolymorphicDerived {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 16],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("PolymorphicDerived"), PolymorphicDerived);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("PolymorphicDerived"),
+    crate::PolymorphicDerived
+);
 
 impl !Unpin for PolymorphicDerived {}
 
@@ -162,10 +171,10 @@ impl ctor::CtorNew<()> for PolymorphicDerived {
     }
 }
 
-impl<'b> ctor::CtorNew<&'b PolymorphicDerived> for PolymorphicDerived {
+impl<'b> ctor::CtorNew<&'b crate::PolymorphicDerived> for PolymorphicDerived {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: &'b PolymorphicDerived) -> Self::CtorType {
+    fn ctor_new(args: &'b crate::PolymorphicDerived) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -177,19 +186,21 @@ impl<'b> ctor::CtorNew<&'b PolymorphicDerived> for PolymorphicDerived {
         )
     }
 }
-impl<'b> ctor::CtorNew<(&'b PolymorphicDerived,)> for PolymorphicDerived {
+impl<'b> ctor::CtorNew<(&'b crate::PolymorphicDerived,)> for PolymorphicDerived {
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (&'b PolymorphicDerived,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b crate::PolymorphicDerived,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b PolymorphicDerived>>::ctor_new(arg)
+        <Self as ctor::CtorNew<&'b crate::PolymorphicDerived>>::ctor_new(arg)
     }
 }
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, PolymorphicDerived>> for PolymorphicDerived {
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::PolymorphicDerived>>
+    for PolymorphicDerived
+{
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, PolymorphicDerived>) -> Self::CtorType {
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::PolymorphicDerived>) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
@@ -201,12 +212,14 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, PolymorphicDerived>> for Polymo
         )
     }
 }
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, PolymorphicDerived>,)> for PolymorphicDerived {
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::PolymorphicDerived>,)>
+    for PolymorphicDerived
+{
     type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, PolymorphicDerived>,)) -> Self::CtorType {
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::PolymorphicDerived>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, PolymorphicDerived>>>::ctor_new(arg)
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::PolymorphicDerived>>>::ctor_new(arg)
     }
 }
 
@@ -232,66 +245,70 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN15PolymorphicBaseC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicBase>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicBase>,
         );
         pub(crate) fn __rust_thunk___ZN15PolymorphicBaseC1ERKS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicBase>,
-            __param_0: &'b PolymorphicBase,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicBase>,
+            __param_0: &'b crate::PolymorphicBase,
         );
-        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(__this: *mut PolymorphicBase);
+        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
+            __this: *mut crate::PolymorphicBase,
+        );
         pub(crate) fn __rust_thunk___ZN16PolymorphicBase2C1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicBase2>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicBase2>,
         );
         pub(crate) fn __rust_thunk___ZN16PolymorphicBase2C1ERKS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicBase2>,
-            __param_0: &'b PolymorphicBase2,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicBase2>,
+            __param_0: &'b crate::PolymorphicBase2,
         );
         pub(crate) fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
-            __this: rust_std::pin::Pin<&'a mut PolymorphicBase2>,
+            __this: rust_std::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
-        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(__this: *mut PolymorphicBase2);
+        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
+            __this: *mut crate::PolymorphicBase2,
+        );
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicDerived>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicDerived>,
         );
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1ERKS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicDerived>,
-            __param_0: &'b PolymorphicDerived,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicDerived>,
+            __param_0: &'b crate::PolymorphicDerived,
         );
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<PolymorphicDerived>,
-            __param_0: ctor::RvalueReference<'b, PolymorphicDerived>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::PolymorphicDerived>,
+            __param_0: ctor::RvalueReference<'b, crate::PolymorphicDerived>,
         );
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
-            __this: *mut PolymorphicDerived,
+            __this: *mut crate::PolymorphicDerived,
         );
     }
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<PolymorphicBase>() == 8usize);
-const _: () = assert!(rust_std::mem::align_of::<PolymorphicBase>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::PolymorphicBase>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::PolymorphicBase>() == 8usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(PolymorphicBase: Copy);
+    static_assertions::assert_not_impl_all!(crate::PolymorphicBase: Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(PolymorphicBase: Drop);
-};
-
-const _: () = assert!(rust_std::mem::size_of::<PolymorphicBase2>() == 8usize);
-const _: () = assert!(rust_std::mem::align_of::<PolymorphicBase2>() == 8usize);
-const _: () = {
-    static_assertions::assert_not_impl_all!(PolymorphicBase2: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(PolymorphicBase2: Drop);
+    static_assertions::assert_impl_all!(crate::PolymorphicBase: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<PolymorphicDerived>() == 16usize);
-const _: () = assert!(rust_std::mem::align_of::<PolymorphicDerived>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::PolymorphicBase2>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::PolymorphicBase2>() == 8usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(PolymorphicDerived: Copy);
+    static_assertions::assert_not_impl_all!(crate::PolymorphicBase2: Copy);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(PolymorphicDerived: Drop);
+    static_assertions::assert_impl_all!(crate::PolymorphicBase2: Drop);
+};
+
+const _: () = assert!(rust_std::mem::size_of::<crate::PolymorphicDerived>() == 16usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::PolymorphicDerived>() == 8usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::PolymorphicDerived: Copy);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::PolymorphicDerived: Drop);
 };

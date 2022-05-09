@@ -26,7 +26,7 @@ pub struct Derived2 {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 20],
     pub derived_1: u8,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), Derived2);
+forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
 
 impl !Unpin for Derived2 {}
 
@@ -70,7 +70,10 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for Derived2 {
 pub struct VirtualDerived2 {
     __non_field_data: [rust_std::mem::MaybeUninit<u8>; 32],
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived2"), VirtualDerived2);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("VirtualDerived2"),
+    crate::VirtualDerived2
+);
 
 impl !Unpin for VirtualDerived2 {}
 
@@ -133,21 +136,21 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<Derived2>() == 24usize);
-const _: () = assert!(rust_std::mem::align_of::<Derived2>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::Derived2>() == 24usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::Derived2>() == 8usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(Derived2: Copy);
+    static_assertions::assert_not_impl_all!(crate::Derived2: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(Derived2: Drop);
+    static_assertions::assert_not_impl_all!(crate::Derived2: Drop);
 };
-const _: () = assert!(offset_of!(Derived2, derived_1) * 8 == 160usize);
+const _: () = assert!(offset_of!(crate::Derived2, derived_1) * 8 == 160usize);
 
-const _: () = assert!(rust_std::mem::size_of::<VirtualDerived2>() == 32usize);
-const _: () = assert!(rust_std::mem::align_of::<VirtualDerived2>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::VirtualDerived2>() == 32usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::VirtualDerived2>() == 8usize);
 const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualDerived2: Copy);
+    static_assertions::assert_not_impl_all!(crate::VirtualDerived2: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(VirtualDerived2: Drop);
+    static_assertions::assert_not_impl_all!(crate::VirtualDerived2: Drop);
 };

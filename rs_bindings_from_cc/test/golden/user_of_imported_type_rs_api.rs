@@ -26,7 +26,10 @@ pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial
 pub struct UserOfImportedType {
     pub trivial: *mut trivial_type_cc::Trivial,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("UserOfImportedType"), UserOfImportedType);
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("UserOfImportedType"),
+    crate::UserOfImportedType
+);
 
 impl Default for UserOfImportedType {
     #[inline(always)]
@@ -39,9 +42,9 @@ impl Default for UserOfImportedType {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, UserOfImportedType>> for UserOfImportedType {
+impl<'b> From<ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfImportedType {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, UserOfImportedType>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::UserOfImportedType>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
@@ -69,26 +72,26 @@ mod detail {
             t: trivial_type_cc::Trivial,
         ) -> trivial_type_cc::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<UserOfImportedType>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
         );
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<UserOfImportedType>,
-            __param_0: ctor::RvalueReference<'b, UserOfImportedType>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __param_0: ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
     }
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<UserOfImportedType>() == 8usize);
-const _: () = assert!(rust_std::mem::align_of::<UserOfImportedType>() == 8usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::UserOfImportedType>() == 8usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::UserOfImportedType>() == 8usize);
 const _: () = {
-    static_assertions::assert_impl_all!(UserOfImportedType: Clone);
+    static_assertions::assert_impl_all!(crate::UserOfImportedType: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(UserOfImportedType: Copy);
+    static_assertions::assert_impl_all!(crate::UserOfImportedType: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(UserOfImportedType: Drop);
+    static_assertions::assert_not_impl_all!(crate::UserOfImportedType: Drop);
 };
-const _: () = assert!(offset_of!(UserOfImportedType, trivial) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::UserOfImportedType, trivial) * 8 == 0usize);

@@ -23,7 +23,10 @@ pub mod test_namespace_bindings {
     pub struct S {
         pub i: i32,
     }
-    forward_declare::unsafe_define!(forward_declare::symbol!("S"), S);
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("S"),
+        crate::test_namespace_bindings::S
+    );
 
     impl !Unpin for S {}
 
@@ -49,7 +52,7 @@ pub mod test_namespace_bindings {
 
     /// Free comment inside namespace
     #[inline(always)]
-    pub fn f(s: S) -> i32 {
+    pub fn f(s: crate::test_namespace_bindings::S) -> i32 {
         unsafe { detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s) }
     }
 
@@ -78,23 +81,41 @@ pub mod test_namespace_bindings {
         use super::*;
         extern "C" {
             #[link_name = "_ZN23test_namespace_bindings1fENS_1SE"]
-            pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s: S) -> i32;
+            pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
+                s: crate::test_namespace_bindings::S,
+            ) -> i32;
         }
     }
 
-    const _: () = assert!(rust_std::mem::size_of::<S>() == 4usize);
-    const _: () = assert!(rust_std::mem::align_of::<S>() == 4usize);
+    const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
+    const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
     const _: () = {
-        static_assertions::assert_not_impl_all!(S: Copy);
+        static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Copy);
     };
     const _: () = {
-        static_assertions::assert_not_impl_all!(S: Drop);
+        static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Drop);
     };
-    const _: () = assert!(offset_of!(S, i) * 8 == 0usize);
+    const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
 }
 
 // namespace test_namespace_bindings
 
+#[inline(always)]
+pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
+    unsafe { detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
+}
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        #[link_name = "_Z8identityN23test_namespace_bindings1SE"]
+        pub(crate) fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
+            s: crate::test_namespace_bindings::S,
+        ) -> crate::test_namespace_bindings::S;
+    }
+}
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());

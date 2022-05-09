@@ -21,7 +21,7 @@ use memoffset_unstable_const::offset_of;
 pub struct FirstStruct {
     pub field: i32,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), FirstStruct);
+forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::FirstStruct);
 
 impl Default for FirstStruct {
     #[inline(always)]
@@ -34,9 +34,9 @@ impl Default for FirstStruct {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, FirstStruct>> for FirstStruct {
+impl<'b> From<ctor::RvalueReference<'b, crate::FirstStruct>> for FirstStruct {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, FirstStruct>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::FirstStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
@@ -63,7 +63,7 @@ pub fn first_func() -> i32 {
 pub struct SecondStruct {
     pub field: i32,
 }
-forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), SecondStruct);
+forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate::SecondStruct);
 
 impl Default for SecondStruct {
     #[inline(always)]
@@ -76,9 +76,9 @@ impl Default for SecondStruct {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, SecondStruct>> for SecondStruct {
+impl<'b> From<ctor::RvalueReference<'b, crate::SecondStruct>> for SecondStruct {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, SecondStruct>) -> Self {
+    fn from(__param_0: ctor::RvalueReference<'b, crate::SecondStruct>) -> Self {
         let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
@@ -107,19 +107,19 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<FirstStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::FirstStruct>,
         );
         pub(crate) fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<FirstStruct>,
-            __param_0: ctor::RvalueReference<'b, FirstStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::FirstStruct>,
+            __param_0: ctor::RvalueReference<'b, crate::FirstStruct>,
         );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<SecondStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::SecondStruct>,
         );
         pub(crate) fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<SecondStruct>,
-            __param_0: ctor::RvalueReference<'b, SecondStruct>,
+            __this: &'a mut rust_std::mem::MaybeUninit<crate::SecondStruct>,
+            __param_0: ctor::RvalueReference<'b, crate::SecondStruct>,
         );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
@@ -127,28 +127,28 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<FirstStruct>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<FirstStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::FirstStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::FirstStruct>() == 4usize);
 const _: () = {
-    static_assertions::assert_impl_all!(FirstStruct: Clone);
+    static_assertions::assert_impl_all!(crate::FirstStruct: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(FirstStruct: Copy);
+    static_assertions::assert_impl_all!(crate::FirstStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(FirstStruct: Drop);
+    static_assertions::assert_not_impl_all!(crate::FirstStruct: Drop);
 };
-const _: () = assert!(offset_of!(FirstStruct, field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::FirstStruct, field) * 8 == 0usize);
 
-const _: () = assert!(rust_std::mem::size_of::<SecondStruct>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<SecondStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::SecondStruct>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::SecondStruct>() == 4usize);
 const _: () = {
-    static_assertions::assert_impl_all!(SecondStruct: Clone);
+    static_assertions::assert_impl_all!(crate::SecondStruct: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(SecondStruct: Copy);
+    static_assertions::assert_impl_all!(crate::SecondStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(SecondStruct: Drop);
+    static_assertions::assert_not_impl_all!(crate::SecondStruct: Drop);
 };
-const _: () = assert!(offset_of!(SecondStruct, field) * 8 == 0usize);
+const _: () = assert!(offset_of!(crate::SecondStruct, field) * 8 == 0usize);
