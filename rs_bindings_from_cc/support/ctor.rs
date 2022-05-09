@@ -679,9 +679,11 @@ macro_rules! ctor {
         {
             use $t $(:: $ts)* as Type;
             $crate::FnCtor::new(|x: $crate::macro_internal::Pin<&mut $crate::macro_internal::MaybeUninit<Type>>| {
-                use ::std::ptr::addr_of_mut;
+                // Unused if Type is fieldless.
+                #[allow(unused_imports)] use ::std::ptr::addr_of_mut;
                 let drop_guard = ();
                 let x_mut = unsafe{$crate::macro_internal::Pin::into_inner_unchecked(x)}.as_mut_ptr();
+                let _ = &x_mut; // silence unused_variables warning if Type is fieldless.
 
                 // Enforce that the ctor!() expression resembles a valid direct initialization
                 // expression, by using the names in a conventional literal.
@@ -690,6 +692,7 @@ macro_rules! ctor {
                 // In both cases, this ensures that we only compile when expressions corresponding
                 // to normal init are used, with unsurprising semantics.
                 let _ = |x: Type| {
+                    let _ = &x; // silence unused_variables warning if Type is fieldless.
                     // If this fails to compile, not every field was specified in the ctor! invocation.
                     // The `panic!(...)` allows us to avoid moving out of x, while still pretending to
                     // fill in each field.
@@ -718,6 +721,9 @@ macro_rules! ctor {
             })
         }
     };
+
+    // Unit struct ctor.
+    ($t:ident $(:: $ts:ident)*) => {$crate::ctor!($t $(:: $ts)* {  })};
 
     // Conventional tuple struct syntax (with parens, no integer names) supported for < 8 fields.
     // Otherwise, use MyTupleStruct{0: ..., 1: ...} syntax, which works for any number of fields.
@@ -1170,6 +1176,14 @@ mod test {
             x: 0,
             y: 0,
         });
+    }
+
+    #[test]
+    fn test_ctor_macro_unit_struct() {
+        struct MyStruct;
+        unsafe impl RecursivelyPinned for MyStruct {}
+        emplace! { let _my_struct = ctor!(MyStruct);}
+        emplace! { let _my_struct = ctor!(MyStruct {});}
     }
 
     #[test]
