@@ -61,10 +61,7 @@ DEPS = {
     name = name + "_rs_test",
     srcs = ["empty_rs_test.rs"],
     cc_deps = ["%s_cc" % name],
-) for name in TESTS if name not in [
-    # TODO(hlopko): These tests fail to compile, fix them.
-    "types",
-]]
+) for name in TESTS]
 
 # Only there so build-cleaner doesn't try to add separate targets for generated files.
 filegroup(

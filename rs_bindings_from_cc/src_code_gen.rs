@@ -1016,7 +1016,11 @@ fn generate_record(
         .collect_vec();
     let size = record.size;
     let alignment = record.alignment;
-    let field_offset_assertions =
+    let field_offset_assertions = if record.is_union {
+        // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
+        // offsetof supports them.
+        vec![]
+    } else {
         record.fields.iter().zip(field_idents.iter()).map(|(field, field_ident)| {
             let offset = field.offset;
             quote! {
@@ -1024,7 +1028,8 @@ fn generate_record(
                 // returns the offset in bytes, so we need to convert.
                 const _: () = assert!(offset_of!(#qualified_ident, #field_ident) * 8 == #offset);
             }
-        });
+        }).collect_vec()
+    };
     // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_all!`
     // assertions about the `Copy` trait - this trait should be implemented
     // iff `should_implement_drop(record)` is false.
@@ -3739,6 +3744,24 @@ mod tests {
     }
 
     #[test]
+    // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
+    // offsetof supports them.
+    fn test_currently_no_offset_assertions_for_unions() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            union SomeUnion {
+                int some_field;
+                long long some_bigger_field;
+            };
+            "#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+
+        assert_rs_not_matches!(rs_api, quote! { offset_of! });
+        Ok(())
+    }
+
+    #[test]
     fn test_union_with_private_fields() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -3778,8 +3801,6 @@ mod tests {
                 const _: () = {
                   static_assertions::assert_not_impl_all!(crate::SomeUnionWithPrivateFields: Drop);
                 };
-                const _: () = assert!(offset_of!(crate::SomeUnionWithPrivateFields, public_field) * 8 == 0usize);
-                const _: () = assert!(offset_of!(crate::SomeUnionWithPrivateFields, private_field) * 8 == 0usize);
             }
         );
         Ok(())

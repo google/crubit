@@ -355,12 +355,6 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::NonEmptyUnion: Drop);
 };
-const _: () = assert!(offset_of!(crate::NonEmptyUnion, bool_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::NonEmptyUnion, char_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::NonEmptyUnion, int16_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::NonEmptyUnion, int_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::NonEmptyUnion, int32_field) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::NonEmptyUnion, int64_field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
 };
