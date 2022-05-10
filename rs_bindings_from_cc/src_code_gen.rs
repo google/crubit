@@ -55,7 +55,8 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         // It is ok to abort here.
-        let Bindings { rs_api, rs_api_impl } = generate_bindings(json, crubit_support_path, &rustfmt_config_path).unwrap();
+        let Bindings { rs_api, rs_api_impl } =
+            generate_bindings(json, crubit_support_path, &rustfmt_config_path).unwrap();
         FfiBindings {
             rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
             rs_api_impl: FfiU8SliceBox::from_boxed_slice(
@@ -1686,13 +1687,18 @@ impl<'ir> RsTypeKind<'ir> {
                 match ir.item_for_type(ty)? {
                     Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                         incomplete_record,
-                        namespace_qualifier: generate_namespace_qualifier(incomplete_record.id, ir)?.collect_vec(),
+                        namespace_qualifier: generate_namespace_qualifier(
+                            incomplete_record.id,
+                            ir,
+                        )?
+                        .collect_vec(),
                         crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, ir),
                     },
                     Item::Record(record) => RsTypeKind::new_record(record, ir)?,
                     Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
                         type_alias,
-                        namespace_qualifier: generate_namespace_qualifier(type_alias.id, ir)?.collect_vec(),
+                        namespace_qualifier: generate_namespace_qualifier(type_alias.id, ir)?
+                            .collect_vec(),
                         crate_ident: rs_imported_crate_name(&type_alias.owning_target, ir),
                         underlying_type: Box::new(RsTypeKind::new(
                             &type_alias.underlying_type.rs_type,
@@ -1961,15 +1967,19 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 let return_frag = return_type.format_as_return_type_fragment();
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
-            RsTypeKind::IncompleteRecord { incomplete_record, namespace_qualifier, crate_ident } => {
+            RsTypeKind::IncompleteRecord {
+                incomplete_record,
+                namespace_qualifier,
+                crate_ident,
+            } => {
                 let record_ident = make_rs_ident(&incomplete_record.cc_name);
                 let namespace_idents = namespace_qualifier.iter();
                 match crate_ident {
                     Some(ci) => {
-                        quote!{ #ci #(#namespace_idents::)*  #record_ident }
-                    },
+                        quote! { #ci #(#namespace_idents::)*  #record_ident }
+                    }
                     None => {
-                        quote!{ crate:: #(#namespace_idents::)*  #record_ident }
+                        quote! { crate:: #(#namespace_idents::)*  #record_ident }
                     }
                 }
             }
@@ -1978,10 +1988,10 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 let namespace_idents = namespace_qualifier.iter();
                 match crate_ident {
                     Some(ci) => {
-                        quote!{ #ci:: #(#namespace_idents::)*  #ident }
-                    },
+                        quote! { #ci:: #(#namespace_idents::)*  #ident }
+                    }
                     None => {
-                        quote!{ crate:: #(#namespace_idents::)*  #ident }
+                        quote! { crate:: #(#namespace_idents::)*  #ident }
                     }
                 }
             }
@@ -1990,10 +2000,10 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 let namespace_idents = namespace_qualifier.iter();
                 match crate_ident {
                     Some(ci) => {
-                        quote!{ #ci:: #(#namespace_idents::)*  #ident }
-                    },
+                        quote! { #ci:: #(#namespace_idents::)*  #ident }
+                    }
                     None => {
-                        quote!{ crate:: #(#namespace_idents::)*  #ident }
+                        quote! { crate:: #(#namespace_idents::)*  #ident }
                     }
                 }
             }
@@ -4687,7 +4697,12 @@ mod tests {
             Test { cc: "int*", lifetimes: false, rs: "*mut i32", is_copy: true },
             // Tests below have been thought-through and verified "manually".
             // TrivialStruct is expected to derive Copy.
-            Test { cc: "TrivialStruct", lifetimes: true, rs: "crate::TrivialStruct", is_copy: true },
+            Test {
+                cc: "TrivialStruct",
+                lifetimes: true,
+                rs: "crate::TrivialStruct",
+                is_copy: true,
+            },
             Test {
                 cc: "UserDefinedCopyConstructor",
                 lifetimes: true,
@@ -4696,7 +4711,12 @@ mod tests {
             },
             Test { cc: "IntAlias", lifetimes: true, rs: "crate::IntAlias", is_copy: true },
             Test { cc: "TrivialAlias", lifetimes: true, rs: "crate::TrivialAlias", is_copy: true },
-            Test { cc: "NonTrivialAlias", lifetimes: true, rs: "crate::NonTrivialAlias", is_copy: false },
+            Test {
+                cc: "NonTrivialAlias",
+                lifetimes: true,
+                rs: "crate::NonTrivialAlias",
+                is_copy: false,
+            },
         ];
         for test in tests.iter() {
             let test_name = format!("cc='{}', lifetimes={}", test.cc, test.lifetimes);
