@@ -984,8 +984,6 @@ fn generate_record(
             let mut formatted = format_rs_type(&f.type_.rs_type, ir).with_context(|| {
                 format!("Failed to format type for field {:?} on record {:?}", f, record)
             })?;
-            // TODO(b/212696226): Verify cases where ManuallyDrop<T> is skipped
-            // via static asserts in the generated code.
             if should_implement_drop(record) || record.is_union {
                 if needs_manually_drop(&f.type_.rs_type, ir)? {
                     // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
