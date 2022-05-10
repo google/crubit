@@ -1237,12 +1237,12 @@ fn generate_enum(enum_: &Enum, ir: &IR) -> Result<TokenStream> {
         }
         impl From<#underlying_type> for #name {
             fn from(value: #underlying_type) -> #name {
-                #name(v)
+                #name(value)
             }
         }
         impl From<#name> for #underlying_type {
             fn from(value: #name) -> #underlying_type {
-                v.0
+                value.0
             }
         }
     })
@@ -3466,12 +3466,12 @@ mod tests {
                 }
                 impl From<u32> for Color {
                     fn from(value: u32) -> Color {
-                        Color(v)
+                        Color(value)
                     }
                 }
                 impl From<Color> for u32 {
                     fn from(value: Color) -> u32 {
-                        v.0
+                        value.0
                     }
                 }
             }
@@ -3495,12 +3495,12 @@ mod tests {
                 }
                 impl From<i32> for Color {
                     fn from(value: i32) -> Color {
-                        Color(v)
+                        Color(value)
                     }
                 }
                 impl From<Color> for i32 {
                     fn from(value: Color) -> i32 {
-                        v.0
+                        value.0
                     }
                 }
             }
@@ -3529,12 +3529,12 @@ mod tests {
                 }
                 impl From<i64> for Color {
                     fn from(value: i64) -> Color {
-                        Color(v)
+                        Color(value)
                     }
                 }
                 impl From<Color> for i64 {
                     fn from(value: Color) -> i64 {
-                        v.0
+                        value.0
                     }
                 }
             }
@@ -3561,12 +3561,12 @@ mod tests {
                 }
                 impl From<u64> for Color {
                     fn from(value: u64) -> Color {
-                        Color(v)
+                        Color(value)
                     }
                 }
                 impl From<Color> for u64 {
                     fn from(value: Color) -> u64 {
-                        v.0
+                        value.0
                     }
                 }
             }
@@ -3595,12 +3595,12 @@ mod tests {
                 }
                 impl From<i32> for Color {
                     fn from(value: i32) -> Color {
-                        Color(v)
+                        Color(value)
                     }
                 }
                 impl From<Color> for i32 {
                     fn from(value: Color) -> i32 {
-                        v.0
+                        value.0
                     }
                 }
             }
@@ -3625,12 +3625,12 @@ mod tests {
                 }
                 impl From<u32> for Color {
                     fn from(value: u32) -> Color {
-                        Color(v)
+                        Color(value)
                     }
                 }
                 impl From<Color> for u32 {
                     fn from(value: Color) -> u32 {
-                        v.0
+                        value.0
                     }
                 }
             }

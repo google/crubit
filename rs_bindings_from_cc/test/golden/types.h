@@ -96,4 +96,6 @@ union NonEmptyUnion {
 
 inline void VoidReturningFunction() {}
 
+enum Color : unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_

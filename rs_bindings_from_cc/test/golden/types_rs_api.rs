@@ -214,6 +214,25 @@ pub fn VoidReturningFunction() {
     unsafe { detail::__rust_thunk___Z21VoidReturningFunctionv() }
 }
 
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+pub struct Color(u32);
+impl Color {
+    pub const kRed: Color = Color(0);
+    pub const kBlue: Color = Color(1);
+    pub const kLimeGreen: Color = Color(4294967295);
+}
+impl From<u32> for Color {
+    fn from(value: u32) -> Color {
+        Color(value)
+    }
+}
+impl From<Color> for u32 {
+    fn from(value: Color) -> u32 {
+        value.0
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
 mod detail {
