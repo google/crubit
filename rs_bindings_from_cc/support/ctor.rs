@@ -601,6 +601,14 @@ pub mod macro_internal {
     pub use std::mem::MaybeUninit;
     pub use std::pin::Pin;
 
+    /// Trait which causes compilation error if a `#[recursively_pinned]` struct
+    /// impls `Drop`.
+    ///
+    /// Idea from https://docs.rs/pin-project/latest/pin_project/attr.pin_project.html#safety
+    pub trait DoNotImplDrop {}
+    #[allow(drop_bounds)]
+    impl<T: Drop> DoNotImplDrop for T {}
+
     /// Drops a pointer when dropped.
     ///
     /// Safety: this will drop the pointer, so this is only safe if no other
@@ -634,11 +642,11 @@ pub mod macro_internal {
     pub fn require_recursively_pinned<_T: RecursivelyPinned>() {}
 }
 
-// =====
-// ctor!
-// =====
+// =====================
+// #[recursively_pinned]
+// =====================
 
-/// The RecursivelyPinned trait asserts that when the struct is pinned, every
+/// The `RecursivelyPinned` trait asserts that when the struct is pinned, every
 /// field is also pinned.
 ///
 /// Safety: Only use if you never directly access fields of a pinned object. For
@@ -647,6 +655,33 @@ pub mod macro_internal {
 /// This trait is automatically implemented for any `#[recursively_pinned]`
 /// struct.
 pub unsafe trait RecursivelyPinned {}
+
+/// The drop trait for `#[recursively_pinned(PinnedDrop)]` types.
+///
+/// It is never valid to implement `Drop` for a recursively-pinned type, as this
+/// would be unsound: the `&mut self` in `drop` would allow the pin guarantee to
+/// be violated.
+///
+/// Instead, if such a struct is to implement drop, it must pass `PinnedDrop` to
+/// `recursively_pinned`, and implement the `PinnedDrop` trait.
+///
+/// See also the [analogous `pin_project` feature](https://docs.rs/pin-project/latest/pin_project/attr.pinned_drop.html)
+pub trait PinnedDrop {
+    /// Run the drop logic for self.
+    ///
+    /// ## Safety
+    ///
+    /// If called from anywhere other than the automatically-generated
+    /// `Drop::drop`, the behavior is undefined.
+    ///
+    /// To manually drop the value, use `ManuallyDrop` or use
+    /// `std::ptr::drop_in_place` (etc.) instead.
+    unsafe fn pinned_drop(self: Pin<&mut Self>);
+}
+
+// =====
+// ctor!
+// =====
 
 /// The `ctor!` macro evaluates to a `Ctor` for a Rust struct, with
 /// user-specified fields.

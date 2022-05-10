@@ -192,3 +192,33 @@ fn test_recursively_pinned_actually_pinned() {
     assert_eq!(p.y, 0.0);
     // TODO(jeanpierreda): negative compilation test for e.g. `p.x = 1;`
 }
+
+// TODO(jeanpierreda): negative compilation tests for invalid parameters to
+// #[recursively_pinned]:
+// * unknown parameter
+// * passing the same parameter twice
+// * extra parameters after parameter parsing is complete
+
+// TODO(jeanpierreda): negative compilation tests for Drop / PinnedDrop failures:
+// * implemented Drop
+// * forgot to implement PinnedDrop
+// * implemented PinnedDrop, but forgot to pass in PinnedDrop to
+//   `::ctor::recursively_pinned`.
+
+#[test]
+fn test_pinned_drop() {
+    use ::std::cell::Cell;
+    use ::std::rc::Rc;
+
+    #[::ctor::recursively_pinned(PinnedDrop)]
+    struct DropStruct(Rc<Cell<bool>>);
+    impl ::ctor::PinnedDrop for DropStruct {
+        unsafe fn pinned_drop(self: ::std::pin::Pin<&mut Self>) {
+            (&*self.project().0).set(true);
+        }
+    }
+
+    let called_drop = Rc::new(Cell::new(false));
+    let _ = DropStruct(called_drop.clone());
+    assert!(called_drop.get(), "PinnedDrop::pinned_drop was not called");
+}

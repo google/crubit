@@ -5,7 +5,9 @@
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, quote_spanned, ToTokens as _};
+use syn::parse::Parse;
 use syn::spanned::Spanned as _;
+use syn::Token;
 
 // TODO(jeanpierreda): derive constructors and assignment for copy and move.
 
@@ -217,7 +219,37 @@ fn projected_struct(
     Ok((projected, impl_block))
 }
 
-/// #[recursively_pinned] pins every field, similar to #[pin_project], and marks the struct `!Unpin`.
+#[derive(Default)]
+struct RecursivelyPinnedArgs {
+    is_pinned_drop: bool,
+}
+
+impl Parse for RecursivelyPinnedArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let args = <syn::punctuated::Punctuated<Ident, Token![,]>>::parse_terminated(input)?;
+        if args.len() > 1 {
+            return Err(syn::Error::new(
+                input.span(), // not args.span(), as that is only for the first argument.
+                &format!("expected at most 1 argument, got: {}", args.len()),
+            ));
+        }
+        let is_pinned_drop = if let Some(arg) = args.first() {
+            if arg != "PinnedDrop" {
+                return Err(syn::Error::new(
+                    arg.span(),
+                    "unexpected argument (wasn't `PinnedDrop`)",
+                ));
+            }
+            true
+        } else {
+            false
+        };
+        Ok(RecursivelyPinnedArgs { is_pinned_drop })
+    }
+}
+
+/// `#[recursively_pinned]` pins every field, similar to `#[pin_project]`, and
+/// marks the struct `!Unpin`.
 ///
 /// Example:
 ///
@@ -237,9 +269,35 @@ fn projected_struct(
 ///   field: i32,
 /// }
 /// ```
+///
+/// ## Arguments
+///
+/// ### `PinnedDrop`
+///
+/// To define a destructor for a recursively-pinned struct, pass `PinnedDrop`
+/// and implement the `PinnedDrop` trait.
+///
+/// `#[recursively_pinned]` prohibits implementing `Drop`, as that would make it
+/// easy to violate the `Pin` guarantee. Instead, to define a destructor, one
+/// must define a `PinnedDrop` impl, as so:
+///
+/// ```
+/// #[recursively_pinned(PinnedDrop)]
+/// struct S {
+///   field: i32,
+/// }
+///
+/// impl PinnedDrop for S {
+///   unsafe fn pinned_drop(self: Pin<&mut Self>) {
+///     println!("I am being destroyed!");
+///   }
+/// }
+/// ```
+///
+/// (This is analogous to `#[pin_project(PinnedDrop)]`.)
 #[proc_macro_attribute]
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
-    assert!(args.is_empty(), "recursively_pinned does not take any arguments.");
+    let args = syn::parse_macro_input!(args as RecursivelyPinnedArgs);
     let input = syn::parse_macro_input!(item as syn::DeriveInput);
 
     let (projected, projected_impl) = match projected_struct(input.clone()) {
@@ -249,6 +307,25 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
     let projected_ident = &projected.ident;
 
     let name = input.ident.clone();
+
+    let drop_impl = if args.is_pinned_drop {
+        quote! {
+            impl Drop for #name {
+                fn drop(&mut self) {
+                    unsafe {::ctor::PinnedDrop::pinned_drop(::std::pin::Pin::new_unchecked(self))}
+                }
+            }
+        }
+    } else {
+        quote! {
+            impl ::ctor::macro_internal::DoNotImplDrop for #name {}
+            /// A no-op PinnedDrop that will cause an error if the user also defines PinnedDrop,
+            /// due to forgetting to pass `PinnedDrop` to #[recursively_pinned(PinnedDrop)]`.
+            impl ::ctor::PinnedDrop for #name {
+                unsafe fn pinned_drop(self: ::std::pin::Pin<&mut Self>) {}
+            }
+        }
+    };
 
     let expanded = quote! {
         #input
@@ -262,6 +339,8 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
                 #projected_ident::new(self)
             }
         }
+
+        #drop_impl
 
         unsafe impl ::ctor::RecursivelyPinned for #name {}
         impl !Unpin for #name {}
