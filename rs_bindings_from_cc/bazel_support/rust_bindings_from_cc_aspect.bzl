@@ -38,13 +38,8 @@ def _filter_hdrs(input_list):
     return [hdr for hdr in input_list if _is_hdr(hdr)]
 
 public_headers_to_remove = {
-    "//base:base": [
-        "base/callback.h",  # //base:callback
-        "base/callback-specializations.h",  # //base:callback
-        "base/callback-types.h",  # //base:callback
-        "base/googleinit.h",  # //base:googleinit
-        "base/logging.h",  # //base:logging
-    ],
+}
+private_headers_to_remove = {
 }
 
 def _collect_hdrs(ctx):
@@ -56,8 +51,13 @@ def _collect_hdrs(ctx):
         for h in public_hdrs
         if h.short_path not in public_headers_to_remove.get(label, [])
     ]
+    private_hdrs = [
+        h
+        for h in private_hdrs
+        if h.short_path not in private_headers_to_remove.get(label, [])
+    ]
 
-    all_standalone_hdrs = public_hdrs + private_hdrs
+    all_standalone_hdrs = depset(public_hdrs + private_hdrs).to_list()
     return public_hdrs, all_standalone_hdrs
 
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
