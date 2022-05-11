@@ -17,6 +17,7 @@ cc_library(
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
     deps = [
+        "@absl//strings",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm///clang:ast",

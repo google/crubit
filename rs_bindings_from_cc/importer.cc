@@ -21,7 +21,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
-#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
@@ -29,31 +28,22 @@
 #include "common/check.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
-#include "rs_bindings_from_cc/ast_convert.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
-#include "clang/AST/Attrs.inc"
-#include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
-#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
-#include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
-#include "clang/Sema/Sema.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -657,51 +647,6 @@ absl::StatusOr<MappedType> TypeMapper::ConvertQualType(
   return type;
 }
 
-absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
-    clang::CXXRecordDecl* record_decl) {
-  // Provisionally assume that we know this RecordDecl so that we'll be able
-  // to import fields whose type contains the record itself.
-  TypeMapper temp_import_mapper(ictx_.type_mapper_);
-  temp_import_mapper.Insert(record_decl);
-
-  clang::AccessSpecifier default_access =
-      record_decl->isClass() ? clang::AS_private : clang::AS_public;
-  std::vector<Field> fields;
-  const clang::ASTRecordLayout& layout =
-      ictx_.ctx_.getASTRecordLayout(record_decl);
-  for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
-    auto type =
-        temp_import_mapper.ConvertQualType(field_decl->getType(), no_lifetimes);
-    if (!type.ok()) {
-      return absl::UnimplementedError(absl::Substitute(
-          "Type of field '$0' is not supported: $1",
-          field_decl->getNameAsString(), type.status().message()));
-    }
-    clang::AccessSpecifier access = field_decl->getAccess();
-    if (access == clang::AS_none) {
-      access = default_access;
-    }
-
-    std::optional<Identifier> field_name =
-        ictx_.GetTranslatedIdentifier(field_decl);
-    if (!field_name.has_value()) {
-      return absl::UnimplementedError(
-          absl::Substitute("Cannot translate name for field '$0'",
-                           field_decl->getNameAsString()));
-    }
-    fields.push_back(
-        {.identifier = *std::move(field_name),
-         .doc_comment = ictx_.GetComment(field_decl),
-         .type = *type,
-         .access = TranslateAccessSpecifier(access),
-         .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
-         .is_no_unique_address =
-             field_decl->hasAttr<clang::NoUniqueAddressAttr>()});
-  }
-  return fields;
-}
-
 std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
   clang::GlobalDecl decl;
 
@@ -788,84 +733,6 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
       return std::nullopt;
   }
-}
-
-std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
-    const clang::CXXRecordDecl& record_decl) const {
-  // This function is unfortunate: the only way to correctly get information
-  // about the bases is lookupInBases. It runs a complex O(N^3) algorithm for
-  // e.g. correctly determining virtual base paths, etc.
-  //
-  // However, lookupInBases does not recurse into a class once it's found.
-  // So we need to call lookupInBases once per class, making this O(N^4).
-
-  llvm::SmallPtrSet<const clang::CXXRecordDecl*, 4> seen;
-  std::vector<BaseClass> bases;
-  clang::CXXBasePaths paths;
-  // the const cast is a common pattern, apparently, see e.g.
-  // https://clang.llvm.org/doxygen/CXXInheritance_8cpp_source.html#l00074
-  paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&record_decl));
-
-  auto next_class = [&]() {
-    const clang::CXXRecordDecl* found = nullptr;
-
-    // Matches the first new class it encounters (and adds it to `seen`, so
-    // that future runs don't rediscover it.)
-    auto is_new_class = [&](const clang::CXXBaseSpecifier* base_specifier,
-                            clang::CXXBasePath&) {
-      const auto* record_decl = base_specifier->getType()->getAsCXXRecordDecl();
-      if (found) {
-        return record_decl == found;
-      }
-
-      if (record_decl && seen.insert(record_decl).second) {
-        found = record_decl;
-        return true;
-      }
-      return false;
-    };
-    return record_decl.lookupInBases(is_new_class, paths);
-  };
-
-  for (; next_class(); paths.clear()) {
-    for (const clang::CXXBasePath& path : paths) {
-      if (path.Access != clang::AS_public) {
-        continue;
-      }
-      const clang::CXXBaseSpecifier& base_specifier =
-          *path[path.size() - 1].Base;
-      const clang::QualType& base = base_specifier.getType();
-      if (paths.isAmbiguous(ictx_.ctx_.getCanonicalType(base))) {
-        continue;
-      }
-
-      clang::CXXRecordDecl* base_record_decl =
-          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      if (!ictx_.type_mapper_.ConvertTypeDecl(base_record_decl).status().ok()) {
-        continue;
-      }
-
-      llvm::Optional<int64_t> offset = {0};
-      for (const clang::CXXBasePathElement& base_path_element : path) {
-        if (base_path_element.Base->isVirtual()) {
-          offset.reset();
-          break;
-        }
-        *offset +=
-            {ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
-                 .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
-                     base_path_element.Base->getType()->getAsCXXRecordDecl()))
-                 .getQuantity()};
-      }
-      CRUBIT_CHECK((!offset.hasValue() || *offset >= 0) &&
-                   "Concrete base classes should have non-negative offsets.");
-      bases.push_back(
-          BaseClass{.base_record_id = GenerateItemId(base_record_decl),
-                    .offset = offset});
-      break;
-    }
-  }
-  return bases;
 }
 
 }  // namespace crubit
