@@ -4,9 +4,20 @@
 
 #include "common/file_io.h"
 
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
+
+absl::StatusOr<std::string> GetFileContents(absl::string_view path) {
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> err_or_buffer =
+      llvm::MemoryBuffer::getFileOrSTDIN(path.data(), /* IsText= */ true);
+  if (std::error_code err = err_or_buffer.getError()) {
+    return absl::Status(absl::StatusCode::kInternal, err.message());
+  }
+
+  return std::string((*err_or_buffer)->getBuffer());
+}
 
 absl::Status SetFileContents(absl::string_view path,
                              absl::string_view contents) {

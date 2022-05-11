@@ -11,6 +11,8 @@
 
 namespace crubit {
 
+absl::StatusOr<std::string> GetFileContents(absl::string_view path);
+
 absl::Status SetFileContents(absl::string_view path,
                              absl::string_view contents);
 
