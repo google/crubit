@@ -331,7 +331,7 @@ def generate_and_compile_bindings(
     ]
 
 def _get_hdrs_command_line(hdrs):
-    return ["--public_headers=" + ",".join([x.short_path for x in hdrs])]
+    return ["--public_headers=" + ",".join([x.path for x in hdrs])]
 
 bindings_attrs = {
     "_cc_toolchain": attr.label(

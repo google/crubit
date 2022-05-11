@@ -239,25 +239,30 @@ def _test_toolchain_headers_in_header_analysis_action():
         target_under_test = ":somelib_with_aspect",
     )
 
-def _generated_headers_do_not_contain_output_directory_prefix_impl(ctx):
+def _generated_headers_specified_with_full_path_impl(ctx):
     env = analysistest.begin(ctx)
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
     asserts.equals(env, 1, len(targets_and_headers))
-    asserts.equals(
+    header_path = targets_and_headers[0]["h"][0]
+    asserts.true(
         env,
-        ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/generated.h"],
-        targets_and_headers[0]["h"],
+        header_path
+            .endswith("rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/generated.h"),
+    )
+    asserts.true(
+        env,
+        header_path.startswith("bazel-out"),
     )
 
     return analysistest.end(env)
 
-generated_headers_do_not_contain_output_directory_prefix_test = analysistest.make(
-    _generated_headers_do_not_contain_output_directory_prefix_impl,
+generated_headers_specified_with_full_path_test = analysistest.make(
+    _generated_headers_specified_with_full_path_impl,
 )
 
-def _test_generated_headers_do_not_contain_output_directory_prefix():
+def _test_generated_headers_specified_with_full_path():
     native.genrule(
         name = "generate_header",
         outs = ["generated.h"],
@@ -271,8 +276,8 @@ def _test_generated_headers_do_not_contain_output_directory_prefix():
     )
     attach_aspect(name = "generated_header_with_aspect", dep = ":use_generated")
 
-    generated_headers_do_not_contain_output_directory_prefix_test(
-        name = "generated_headers_do_not_contain_output_directory_prefix_test",
+    generated_headers_specified_with_full_path_test(
+        name = "generated_headers_specified_with_full_path_test",
         target_under_test = ":generated_header_with_aspect",
     )
 
@@ -287,7 +292,7 @@ def rust_bindings_from_cc_aspect_test(name):
     _test_textual_hdrs_not_in_targets_and_hdrs()
     _test_lib_has_toolchain_targets_and_headers()
     _test_toolchain_headers_in_header_analysis_action()
-    _test_generated_headers_do_not_contain_output_directory_prefix()
+    _test_generated_headers_specified_with_full_path()
 
     native.test_suite(
         name = name,
@@ -298,6 +303,6 @@ def rust_bindings_from_cc_aspect_test(name):
             ":textual_hdrs_not_in_targets_and_hdrs_test",
             ":lib_has_toolchain_targets_and_headers_test",
             ":toolchain_headers_in_header_analysis_action_test",
-            ":generated_headers_do_not_contain_output_directory_prefix_test",
+            ":generated_headers_specified_with_full_path_test",
         ],
     )
