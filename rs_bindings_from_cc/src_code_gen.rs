@@ -1308,21 +1308,12 @@ fn generate_namespace(
 
     let name = make_rs_ident(&namespace.name.identifier);
 
-    // TODO(rosica): Instead of generating thunks and assertions within
-    // the namespace, we could put them at the end of the file.
-    // For this we need to have fully qualified identifiers.
-    let mod_detail = if thunks.is_empty() {
-        quote! {}
-    } else {
-        quote! {
-            mod detail {
-                #[allow(unused_imports)]
-                use super::*;
-                extern "C" {
-                    #( #thunks )*
-                }
-            }
-        }
+    let thunks_tokens = quote! {
+        #( #thunks )*
+    };
+
+    let assertions_tokens = quote! {
+        #( #assertions )*
     };
 
     let namespace_tokens = quote! {
@@ -1330,12 +1321,6 @@ fn generate_namespace(
             use super::*; __NEWLINE__ __NEWLINE__
 
             #( #items __NEWLINE__ __NEWLINE__ )*
-
-            __NEWLINE__ __NEWLINE__
-            #mod_detail __NEWLINE__ __NEWLINE__
-
-            #( #assertions __NEWLINE__ __NEWLINE__ )*
-
         }
     };
 
@@ -1343,6 +1328,8 @@ fn generate_namespace(
         item: namespace_tokens,
         features: features,
         has_record: has_record,
+        thunks: thunks_tokens,
+        assertions: assertions_tokens,
         ..Default::default()
     })
 }
@@ -5195,7 +5182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_namespace_module_contains_detail() -> Result<()> {
+    fn test_detail_outside_of_namespace_module() -> Result<()> {
         let rs_api = generate_bindings_tokens(&ir_from_cc(
             r#"
             namespace test_namespace_bindings {
@@ -5209,23 +5196,24 @@ mod tests {
             quote! {
                 pub mod test_namespace_bindings {
                     ...
-                    mod detail {
-                        #[allow(unused_imports)]
-                        use super::*;
-                        extern "C" {
-                            #[link_name = "_ZN23test_namespace_bindings1fEv"]
-                            pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> i32;
-                        }
-                    }
-                    ...
                 }
+                ...
+                mod detail {
+                    #[allow(unused_imports)]
+                    use super::*;
+                    extern "C" {
+                        #[link_name = "_ZN23test_namespace_bindings1fEv"]
+                        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fEv() -> i32;
+                    }
+                }
+                ...
             }
         );
         Ok(())
     }
 
     #[test]
-    fn test_namespace_module_contains_assertions() -> Result<()> {
+    fn test_assertions_outside_of_namespace_module() -> Result<()> {
         let rs_api = generate_bindings_tokens(&ir_from_cc(
             r#"
             namespace test_namespace_bindings {
@@ -5240,13 +5228,13 @@ mod tests {
             rs_api,
             quote! {
                 pub mod test_namespace_bindings {
-                    use super::*;
                     ...
-                    const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
-                    const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
-                    ...
-                    const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
                 }
+                ...
+                const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
+                const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
+                ...
+                const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
             }
         );
         Ok(())

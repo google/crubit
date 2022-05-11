@@ -63,39 +63,9 @@ pub mod test_namespace_bindings {
         pub fn i() {
             unsafe { detail::__rust_thunk___ZN23test_namespace_bindings5inner1iEv() }
         }
-
-        mod detail {
-            #[allow(unused_imports)]
-            use super::*;
-            extern "C" {
-                #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
-                pub(crate) fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
-            }
-        }
     }
 
     // namespace inner
-
-    mod detail {
-        #[allow(unused_imports)]
-        use super::*;
-        extern "C" {
-            #[link_name = "_ZN23test_namespace_bindings1fENS_1SE"]
-            pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
-                s: crate::test_namespace_bindings::S,
-            ) -> i32;
-        }
-    }
-
-    const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
-    const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
-    const _: () = {
-        static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Copy);
-    };
-    const _: () = {
-        static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Drop);
-    };
-    const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
 }
 
 // namespace test_namespace_bindings
@@ -111,6 +81,12 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        #[link_name = "_ZN23test_namespace_bindings1fENS_1SE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
+            s: crate::test_namespace_bindings::S,
+        ) -> i32;
+        #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
         #[link_name = "_Z8identityN23test_namespace_bindings1SE"]
         pub(crate) fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
             s: crate::test_namespace_bindings::S,
@@ -119,3 +95,13 @@ mod detail {
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+
+const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
+const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Drop);
+};
+const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
