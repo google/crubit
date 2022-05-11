@@ -75,6 +75,58 @@ pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_b
     unsafe { detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
 }
 
+pub mod test_namespace_bindings_reopened {
+    use super::*;
+
+    #[inline(always)]
+    pub fn x() {
+        unsafe { detail::__rust_thunk___ZN32test_namespace_bindings_reopened1xEv() }
+    }
+
+    pub mod inner {
+        use super::*;
+
+        #[repr(C)]
+        pub struct S {
+            __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("S"),
+            crate::test_namespace_bindings_reopened::inner::S
+        );
+
+        impl !Unpin for S {}
+
+        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // Error while generating bindings for item 'S::S':
+        // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // Error while generating bindings for item 'S::S':
+        // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // Error while generating bindings for item 'test_namespace_bindings_reopened::inner::S::S':
+        // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings_reopened::inner::S &&': Unsupported type: && without lifetime
+
+        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // Error while generating bindings for item 'S::operator=':
+        // Bindings for this kind of operator are not supported
+
+        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // Error while generating bindings for item 'test_namespace_bindings_reopened::inner::S::operator=':
+        // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings_reopened::inner::S &&': Unsupported type: && without lifetime
+    }
+
+    // namespace inner
+}
+
+// namespace test_namespace_bindings_reopened
+
+// namespace inner
+
+// namespace test_namespace_bindings_reopened
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
 
 mod detail {
@@ -91,6 +143,8 @@ mod detail {
         pub(crate) fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
             s: crate::test_namespace_bindings::S,
         ) -> crate::test_namespace_bindings::S;
+        #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
     }
 }
 
@@ -105,3 +159,20 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Drop);
 };
 const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
+
+const _: () = assert!(
+    rust_std::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1usize
+);
+const _: () = assert!(
+    rust_std::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1usize
+);
+const _: () = {
+    static_assertions::assert_not_impl_all!(
+        crate::test_namespace_bindings_reopened::inner::S: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(
+        crate::test_namespace_bindings_reopened::inner::S: Drop
+    );
+};

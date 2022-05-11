@@ -1721,9 +1721,46 @@ fn test_enclosing_namespace_ids() {
             Item::UnsupportedItem(_) => {}
             Item::Comment(_) => {}
             _ => {
-                dbg!("{:?}", item);
                 assert!(item.enclosing_namespace_id() == Some(namespace.id));
             }
         }
     }
+}
+
+#[test]
+fn test_namespace_canonical_id() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+          struct T {};
+        }
+        int i;
+        namespace test_namespace_bindings {
+          struct Y {};
+        }"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Namespace {
+                name: "test_namespace_bindings" ...
+                id: ItemId(...) ...
+                canonical_namespace_id: ItemId(...) ...
+            }
+            ...
+        }
+    );
+
+    let namespaces = ir.namespaces().collect_vec();
+    assert_eq!(namespaces.len(), 1);
+    assert_eq!(namespaces[0].id, namespaces[0].canonical_namespace_id);
+    // TODO(rosica): We actually need to have 2 namespaces here, but
+    // we currently only generate IR for the canonical decls.
+    // Enable the commented out assertion once we generate IR for all
+    // namespace segments.
+    // assert_eq!(namespaces[0].canonical_namespace_id,
+    // namespaces[1].canonical_namespace_id);
 }

@@ -96,7 +96,13 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
 
 inline ItemId GenerateItemId(const clang::Decl* decl) {
-  return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
+  const clang::Decl* decl_for_id;
+  if (auto namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
+    decl_for_id = namespace_decl;
+  } else {
+    decl_for_id = decl->getCanonicalDecl();
+  }
+  return ItemId(reinterpret_cast<uintptr_t>(decl_for_id));
 }
 
 inline ItemId GenerateItemId(const clang::RawComment* comment) {
@@ -681,6 +687,7 @@ struct Namespace {
 
   Identifier name;
   ItemId id;
+  ItemId canonical_namespace_id;
   BazelLabel owning_target;
   std::vector<ItemId> child_item_ids;
   llvm::Optional<ItemId> enclosing_namespace_id;

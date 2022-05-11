@@ -20,4 +20,18 @@ void i();
 }  // namespace test_namespace_bindings
 
 test_namespace_bindings::S identity(test_namespace_bindings::S s);
+
+namespace test_namespace_bindings_reopened {
+void x();
+namespace inner {
+struct S {};
+}  // namespace inner
+}  // namespace test_namespace_bindings_reopened
+
+namespace test_namespace_bindings_reopened {
+void y();
+namespace inner {
+void z(S s);
+}  // namespace inner
+}  // namespace test_namespace_bindings_reopened
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
