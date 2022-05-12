@@ -1611,6 +1611,20 @@ fn test_namespaces() {
     let namespace_items =
         namespace.child_item_ids.iter().map(|id| ir.find_decl(*id).unwrap()).collect_vec();
 
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Namespace {
+                name: "test_namespace_bindings" ...
+                id: ItemId(...) ...
+                canonical_namespace_id: ItemId(...) ...
+                owning_target: BazelLabel("//test:testing_target") ...
+            }
+            ...
+        }
+    );
+
     assert_items_match!(
         namespace_items,
         vec![

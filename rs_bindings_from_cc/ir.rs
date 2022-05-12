@@ -453,6 +453,7 @@ pub struct Namespace {
     pub name: Identifier,
     pub id: ItemId,
     pub canonical_namespace_id: ItemId,
+    pub owning_target: BazelLabel,
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
