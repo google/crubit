@@ -165,8 +165,14 @@ absl::StatusOr<absl::string_view> ConvertCcCallConvIntoRsAbi(
     case clang::CC_PreserveMost:  // __attribute__((preserve_most))
     case clang::CC_PreserveAll:   // __attribute__((preserve_all))
     case clang::CC_AArch64VectorCall:  // __attribute__((aarch64_vector_pcs))
+      // TODO(hlopko): Uncomment once we integrate the upstream change that
+      // introduced it:
+      // case clang::CC_AArch64SVEPCS: __attribute__((aarch64_sve_pcs))
+
       // These don't seem to have any Rust equivalents.
       break;
+    default:
+      LOG(WARNING) << "Unexpected calling convention: " << cc_call_conv;
   }
   return absl::UnimplementedError(
       absl::StrCat("Unsupported calling convention: ",
