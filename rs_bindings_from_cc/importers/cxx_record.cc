@@ -132,13 +132,13 @@ absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
 
     std::optional<Identifier> field_name =
         ictx_.GetTranslatedIdentifier(field_decl);
-    if (!field_name.has_value()) {
-      return absl::UnimplementedError(
-          absl::Substitute("Cannot translate name for field '$0'",
-                           field_decl->getNameAsString()));
-    }
+    CRUBIT_CHECK(
+        field_name ||
+        !field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
+            "Unnamed fields can't be annotated with [[no_unique_address]]");
     fields.push_back(
-        {.identifier = *std::move(field_name),
+        {.identifier = field_name ? *std::move(field_name)
+                                  : llvm::Optional<Identifier>(llvm::None),
          .doc_comment = ictx_.GetComment(field_decl),
          .type = *type,
          .access = TranslateAccessSpecifier(access),

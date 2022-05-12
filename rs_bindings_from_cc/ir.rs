@@ -305,7 +305,7 @@ pub enum AccessSpecifier {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Field {
-    pub identifier: Identifier,
+    pub identifier: Option<Identifier>,
     pub doc_comment: Option<String>,
     #[serde(rename(deserialize = "type"))]
     pub type_: MappedType,

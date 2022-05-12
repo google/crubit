@@ -958,8 +958,16 @@ fn generate_record(
     };
 
     let doc_comment = generate_doc_comment(&record.doc_comment);
-    let field_idents =
-        record.fields.iter().map(|f| make_rs_ident(&f.identifier.identifier)).collect_vec();
+    let field_idents = record
+        .fields
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            make_rs_ident(
+                f.identifier.as_ref().map_or(&format!("__unnamed_field{}", i), |id| &id.identifier),
+            )
+        })
+        .collect_vec();
     let field_doc_coments =
         record.fields.iter().map(|f| generate_doc_comment(&f.doc_comment)).collect_vec();
 
@@ -2172,15 +2180,18 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = tag_kind(record);
     let field_assertions =
-        record.fields.iter().filter(|f| f.access == AccessSpecifier::Public).map(|field| {
-            let field_ident = format_cc_ident(&field.identifier.identifier);
-            let offset = Literal::usize_unsuffixed(field.offset);
-            // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
-            // offset in bytes, so we need to convert.
-            quote! {
-                static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident) * 8 == #offset);
+        record.fields.iter()
+            .filter(|f| f.access == AccessSpecifier::Public && f.identifier.is_some())
+            .map(|field| {
+                let field_ident = format_cc_ident(&field.identifier.as_ref().unwrap().identifier);
+                let offset = Literal::usize_unsuffixed(field.offset);
+                // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
+                // offset in bytes, so we need to convert.
+                quote! {
+                    static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident) * 8 == #offset);
+                }
             }
-        });
+        );
     Ok(quote! {
         static_assert(sizeof(#tag_kind #namespace_qualifier #record_ident) == #size);
         static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
@@ -2196,7 +2207,8 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
         }
-        fields.push(make_rs_ident(&field.identifier.identifier));
+        fields.push(make_rs_ident(&field.identifier.as_ref()
+            .expect("Unnamed fields can't be annotated with [[no_unique_address]]").identifier));
         types.push(format_rs_type(&field.type_.rs_type, ir).with_context(|| {
             format!("Failed to format type for field {:?} on record {:?}", field, record)
         })?)

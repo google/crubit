@@ -476,7 +476,7 @@ std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access);
 struct Field {
   llvm::json::Value ToJson() const;
 
-  Identifier identifier;
+  llvm::Optional<Identifier> identifier;
   llvm::Optional<std::string> doc_comment;
   MappedType type;
   AccessSpecifier access;
