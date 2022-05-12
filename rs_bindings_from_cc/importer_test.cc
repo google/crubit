@@ -17,7 +17,6 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
-#include "clang/AST/ASTContext.h"
 
 namespace crubit {
 namespace {

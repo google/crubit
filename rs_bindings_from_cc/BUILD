@@ -158,8 +158,7 @@ cc_library(
     hdrs = ["frontend_action.h"],
     deps = [
         ":ast_consumer",
-        ":importer",
-        "//lifetime_annotations",
+        ":decl_importer",
         "@llvm///clang:ast",
         "@llvm///clang:frontend",
     ],
@@ -170,6 +169,7 @@ cc_library(
     srcs = ["ast_consumer.cc"],
     hdrs = ["ast_consumer.h"],
     deps = [
+        ":decl_importer",
         ":importer",
         "//common:check",
         "@llvm///clang:ast",

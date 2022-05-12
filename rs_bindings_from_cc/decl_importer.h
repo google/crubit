@@ -110,8 +110,8 @@ class ImportContext {
  public:
   ImportContext(Invocation& invocation, clang::ASTContext& ctx,
                 clang::Sema& sema)
-      : invocation_(invocation), ctx_(ctx), sema_(sema), type_mapper_(&ctx){};
-  virtual ~ImportContext(){};
+      : invocation_(invocation), ctx_(ctx), sema_(sema), type_mapper_(&ctx) {}
+  virtual ~ImportContext() {}
 
   // Imports all decls contained in a `DeclContext`.
   virtual void ImportDeclsFromDeclContext(
@@ -172,8 +172,8 @@ class ImportContext {
 // Interface for components that can import decls of a certain category.
 class DeclImporter {
  public:
-  DeclImporter(ImportContext& ictx) : ictx_(ictx){};
-  virtual ~DeclImporter(){};
+  DeclImporter(ImportContext& ictx) : ictx_(ictx) {}
+  virtual ~DeclImporter() {}
 
   // Determines whether this importer is autoritative for a decl. This does not
   // imply that the import will be succesful.

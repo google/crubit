@@ -5,7 +5,7 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_AST_CONSUMER_H_
 
-#include "rs_bindings_from_cc/importer.h"
+#include "rs_bindings_from_cc/decl_importer.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/Frontend/CompilerInstance.h"

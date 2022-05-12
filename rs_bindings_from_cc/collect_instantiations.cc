@@ -6,7 +6,6 @@
 
 #include "absl/status/statusor.h"
 #include "absl/types/span.h"
-#include "common/check.h"
 #include "common/ffi_types.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
