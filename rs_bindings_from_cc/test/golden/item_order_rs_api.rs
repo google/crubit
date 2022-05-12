@@ -26,9 +26,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN11FirstStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -37,9 +37,9 @@ impl Default for FirstStruct {
 impl<'b> From<ctor::RvalueReference<'b, crate::FirstStruct>> for FirstStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::FirstStruct>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -55,7 +55,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::FirstStruct>> for FirstStruct {
 
 #[inline(always)]
 pub fn first_func() -> i32 {
-    unsafe { detail::__rust_thunk___Z10first_funcv() }
+    unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
 #[derive(Clone, Copy)]
@@ -68,9 +68,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate:
 impl Default for SecondStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN12SecondStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -79,9 +79,9 @@ impl Default for SecondStruct {
 impl<'b> From<ctor::RvalueReference<'b, crate::SecondStruct>> for SecondStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::SecondStruct>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -97,7 +97,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::SecondStruct>> for SecondStruct {
 
 #[inline(always)]
 pub fn second_func() -> i32 {
-    unsafe { detail::__rust_thunk___Z11second_funcv() }
+    unsafe { crate::detail::__rust_thunk___Z11second_funcv() }
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_ITEM_ORDER_H_
@@ -107,18 +107,18 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN11FirstStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::FirstStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::FirstStruct>,
         );
         pub(crate) fn __rust_thunk___ZN11FirstStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::FirstStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::FirstStruct>,
             __param_0: ctor::RvalueReference<'b, crate::FirstStruct>,
         );
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SecondStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SecondStruct>,
         );
         pub(crate) fn __rust_thunk___ZN12SecondStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SecondStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SecondStruct>,
             __param_0: ctor::RvalueReference<'b, crate::SecondStruct>,
         );
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;

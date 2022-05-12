@@ -17,8 +17,6 @@ use memoffset_unstable_const::offset_of;
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_namespace_bindings {
-    use super::*;
-
     #[repr(C)]
     pub struct S {
         pub i: i32,
@@ -53,15 +51,13 @@ pub mod test_namespace_bindings {
     /// Free comment inside namespace
     #[inline(always)]
     pub fn f(s: crate::test_namespace_bindings::S) -> i32 {
-        unsafe { detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s) }
+        unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s) }
     }
 
     pub mod inner {
-        use super::*;
-
         #[inline(always)]
         pub fn i() {
-            unsafe { detail::__rust_thunk___ZN23test_namespace_bindings5inner1iEv() }
+            unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings5inner1iEv() }
         }
     }
 
@@ -72,23 +68,19 @@ pub mod test_namespace_bindings {
 
 #[inline(always)]
 pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
-    unsafe { detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
+    unsafe { crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
 }
 
 pub mod test_namespace_bindings_reopened {
-    use super::*;
-
     #[inline(always)]
     pub fn x() {
-        unsafe { detail::__rust_thunk___ZN32test_namespace_bindings_reopened1xEv() }
+        unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1xEv() }
     }
 
     pub mod inner {
-        use super::*;
-
         #[repr(C)]
         pub struct S {
-            __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+            __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
         }
         forward_declare::unsafe_define!(
             forward_declare::symbol!("S"),

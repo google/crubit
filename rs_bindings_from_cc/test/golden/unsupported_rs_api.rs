@@ -35,9 +35,9 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::NontrivialCustomType>>
     fn ctor_new(args: ctor::RvalueReference<'b, crate::NontrivialCustomType>) -> Self::CtorType {
         let __param_0 = args;
         ctor::FnCtor::new(
-            move |dest: rust_std::pin::Pin<&mut rust_std::mem::MaybeUninit<Self>>| unsafe {
-                detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
-                    rust_std::pin::Pin::into_inner_unchecked(dest),
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
             },
@@ -82,7 +82,7 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialCustomType>,)
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("ContainingStruct"),
@@ -92,9 +92,9 @@ forward_declare::unsafe_define!(
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN16ContainingStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -103,9 +103,9 @@ impl Default for ContainingStruct {
 impl<'b> From<ctor::RvalueReference<'b, crate::ContainingStruct>> for ContainingStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::ContainingStruct>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -131,14 +131,14 @@ mod detail {
     extern "C" {
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
         pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::NontrivialCustomType>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NontrivialCustomType>,
             __param_0: ctor::RvalueReference<'b, crate::NontrivialCustomType>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::ContainingStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::ContainingStruct>,
         );
         pub(crate) fn __rust_thunk___ZN16ContainingStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::ContainingStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::ContainingStruct>,
             __param_0: ctor::RvalueReference<'b, crate::ContainingStruct>,
         );
     }

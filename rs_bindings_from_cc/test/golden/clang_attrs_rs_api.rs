@@ -18,7 +18,7 @@ use memoffset_unstable_const::offset_of;
 
 #[repr(C, align(64))]
 pub struct HasCustomAlignment {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignment"),
@@ -80,7 +80,7 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
@@ -117,7 +117,7 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment> for InheritsFromBaseWithCu
 
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 64],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 64],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),

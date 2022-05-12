@@ -26,9 +26,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::So
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -37,9 +37,9 @@ impl Default for SomeClass {
 impl<'b> From<ctor::RvalueReference<'b, crate::SomeClass>> for SomeClass {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::SomeClass>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -58,7 +58,9 @@ impl SomeClass {
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: i32) -> crate::SomeClass {
         unsafe {
-            detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(initial_value_of_field)
+            crate::detail::__rust_thunk___ZN9SomeClass21static_factory_methodEi(
+                initial_value_of_field,
+            )
         }
     }
 }
@@ -68,7 +70,9 @@ impl SomeClass {
     #[inline(always)]
     pub fn static_method_that_multiplies_its_args(x: i32, y: i32) -> i32 {
         unsafe {
-            detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(x, y)
+            crate::detail::__rust_thunk___ZN9SomeClass38static_method_that_multiplies_its_argsEii(
+                x, y,
+            )
         }
     }
 }
@@ -80,10 +84,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeClass>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeClass>,
         );
         pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeClass>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeClass>,
             __param_0: ctor::RvalueReference<'b, crate::SomeClass>,
         );
         #[link_name = "_ZN9SomeClass21static_factory_methodEi"]

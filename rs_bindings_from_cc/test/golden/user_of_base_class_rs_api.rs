@@ -23,7 +23,7 @@ use memoffset_unstable_const::offset_of;
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 #[repr(C, align(8))]
 pub struct Derived2 {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 20],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 20],
     pub derived_1: u8,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
@@ -52,7 +52,7 @@ impl !Unpin for Derived2 {}
 
 unsafe impl oops::Inherits<inheritance_cc::Base0> for Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base0 {
-        detail::__crubit_dynamic_upcast__Derived2__to__Base0(derived)
+        crate::detail::__crubit_dynamic_upcast__Derived2__to__Base0(derived)
     }
 }
 unsafe impl oops::Inherits<inheritance_cc::Base1> for Derived2 {
@@ -68,7 +68,7 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for Derived2 {
 
 #[repr(C, align(8))]
 pub struct VirtualDerived2 {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 32],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 32],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("VirtualDerived2"),
@@ -99,17 +99,17 @@ impl !Unpin for VirtualDerived2 {}
 
 unsafe impl oops::Inherits<inheritance_cc::VirtualBase1> for VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase1 {
-        detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(derived)
     }
 }
 unsafe impl oops::Inherits<inheritance_cc::Base1> for VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
-        detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(derived)
     }
 }
 unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase2 {
-        detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(derived)
     }
 }
 

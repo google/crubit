@@ -33,9 +33,9 @@ forward_declare::unsafe_define!(
 impl<'b> From<ctor::RvalueReference<'b, crate::DocCommentSlashes>> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::DocCommentSlashes>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN17DocCommentSlashesC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -54,9 +54,9 @@ impl<'b> From<ctor::RvalueReference<'b, crate::DocCommentSlashes>> for DocCommen
 impl Default for DocCommentSlashes {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -67,9 +67,9 @@ impl Default for DocCommentSlashes {
 impl From<i32> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: i32) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesC1Ei(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -79,7 +79,7 @@ impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> i32 {
-        unsafe { detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
+        unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
     }
 }
 
@@ -87,7 +87,9 @@ impl DocCommentSlashes {
     /// A non-static member function (non-`const` flavor).
     #[inline(always)]
     pub fn set_field_value<'a>(&'a mut self, new_value: i32) {
-        unsafe { detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value) }
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashes15set_field_valueEi(self, new_value)
+        }
     }
 }
 
@@ -95,7 +97,7 @@ impl DocCommentSlashes {
     /// A static method.
     #[inline(always)]
     pub fn static_method() -> i32 {
-        unsafe { detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
+        unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
     }
 }
 
@@ -113,9 +115,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crat
 impl Default for DocCommentBang {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN14DocCommentBangC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN14DocCommentBangC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -124,9 +126,9 @@ impl Default for DocCommentBang {
 impl<'b> From<ctor::RvalueReference<'b, crate::DocCommentBang>> for DocCommentBang {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::DocCommentBang>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN14DocCommentBangC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN14DocCommentBangC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -157,9 +159,9 @@ forward_declare::unsafe_define!(
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -170,9 +172,9 @@ impl<'b> From<ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>>
 {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -200,9 +202,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::
 impl Default for LineComment {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN11LineCommentC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN11LineCommentC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -211,9 +213,9 @@ impl Default for LineComment {
 impl<'b> From<ctor::RvalueReference<'b, crate::LineComment>> for LineComment {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::LineComment>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN11LineCommentC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN11LineCommentC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -244,9 +246,9 @@ forward_declare::unsafe_define!(
 impl Default for MultilineOneStar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN16MultilineOneStarC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -255,9 +257,9 @@ impl Default for MultilineOneStar {
 impl<'b> From<ctor::RvalueReference<'b, crate::MultilineOneStar>> for MultilineOneStar {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::MultilineOneStar>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN16MultilineOneStarC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN16MultilineOneStarC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -274,7 +276,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::MultilineOneStar>> for MultilineO
 /// A function
 #[inline(always)]
 pub fn foo() -> i32 {
-    unsafe { detail::__rust_thunk___Z3foov() }
+    unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
 /// A type alias
@@ -287,16 +289,16 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::DocCommentSlashes>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DocCommentSlashes>,
             __param_0: ctor::RvalueReference<'b, crate::DocCommentSlashes>,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::DocCommentSlashes>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DocCommentSlashes>,
         );
         #[link_name = "_ZN17DocCommentSlashesC1Ei"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ei<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::DocCommentSlashes>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DocCommentSlashes>,
             __param_0: i32,
         );
         #[link_name = "_ZNK17DocCommentSlashes15get_field_valueEv"]
@@ -311,31 +313,31 @@ mod detail {
         #[link_name = "_ZN17DocCommentSlashes13static_methodEv"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashes13static_methodEv() -> i32;
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::DocCommentBang>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DocCommentBang>,
         );
         pub(crate) fn __rust_thunk___ZN14DocCommentBangC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::DocCommentBang>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DocCommentBang>,
             __param_0: ctor::RvalueReference<'b, crate::DocCommentBang>,
         );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
         );
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
             __param_0: ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>,
         );
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::LineComment>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::LineComment>,
         );
         pub(crate) fn __rust_thunk___ZN11LineCommentC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::LineComment>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::LineComment>,
             __param_0: ctor::RvalueReference<'b, crate::LineComment>,
         );
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::MultilineOneStar>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::MultilineOneStar>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::MultilineOneStar>,
             __param_0: ctor::RvalueReference<'b, crate::MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;

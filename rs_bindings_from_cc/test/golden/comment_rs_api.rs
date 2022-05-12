@@ -36,9 +36,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Foo"), crate::Foo);
 impl Default for Foo {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN3FooC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -47,9 +47,9 @@ impl Default for Foo {
 impl<'b> From<ctor::RvalueReference<'b, crate::Foo>> for Foo {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::Foo>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -81,7 +81,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::Foo>> for Foo {
 /// foo
 #[inline(always)]
 pub fn foo() {
-    unsafe { detail::__rust_thunk___Z3foov() }
+    unsafe { crate::detail::__rust_thunk___Z3foov() }
 }
 
 /// Bar
@@ -95,9 +95,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Bar"), crate::Bar);
 impl Default for Bar {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN3BarC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -106,9 +106,9 @@ impl Default for Bar {
 impl<'b> From<ctor::RvalueReference<'b, crate::Bar>> for Bar {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::Bar>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -133,9 +133,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("HasNoComments"), crate
 impl Default for HasNoComments {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -144,9 +144,9 @@ impl Default for HasNoComments {
 impl<'b> From<ctor::RvalueReference<'b, crate::HasNoComments>> for HasNoComments {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::HasNoComments>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -169,25 +169,25 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN3FooC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::Foo>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Foo>,
         );
         pub(crate) fn __rust_thunk___ZN3FooC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::Foo>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Foo>,
             __param_0: ctor::RvalueReference<'b, crate::Foo>,
         );
         pub(crate) fn __rust_thunk___Z3foov();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::Bar>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Bar>,
         );
         pub(crate) fn __rust_thunk___ZN3BarC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::Bar>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Bar>,
             __param_0: ctor::RvalueReference<'b, crate::Bar>,
         );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::HasNoComments>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasNoComments>,
         );
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::HasNoComments>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasNoComments>,
             __param_0: ctor::RvalueReference<'b, crate::HasNoComments>,
         );
     }

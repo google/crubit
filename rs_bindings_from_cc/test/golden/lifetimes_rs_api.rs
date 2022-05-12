@@ -17,31 +17,31 @@ use ::std as rust_std;
 
 #[inline(always)]
 pub fn AddHook(__param_0: Option<extern "C" fn()>) {
-    unsafe { detail::__rust_thunk___Z7AddHookPFvvE(__param_0) }
+    unsafe { crate::detail::__rust_thunk___Z7AddHookPFvvE(__param_0) }
 }
 
 pub type FunctionPointer = Option<extern "C" fn()>;
 
 #[inline(always)]
 pub fn AddHookWithTypedef(hook: Option<extern "C" fn()>) {
-    unsafe { detail::__rust_thunk___Z18AddHookWithTypedefPFvvE(hook) }
+    unsafe { crate::detail::__rust_thunk___Z18AddHookWithTypedefPFvvE(hook) }
 }
 
 #[inline(always)]
 pub fn AddAnotherHook(__param_0: extern "C" fn()) {
-    unsafe { detail::__rust_thunk___Z14AddAnotherHookRFvvE(__param_0) }
+    unsafe { crate::detail::__rust_thunk___Z14AddAnotherHookRFvvE(__param_0) }
 }
 
 pub type FunctionReference = extern "C" fn();
 
 #[inline(always)]
 pub fn AddAnotherHookWithTypedef(hook: extern "C" fn()) {
-    unsafe { detail::__rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook) }
+    unsafe { crate::detail::__rust_thunk___Z25AddAnotherHookWithTypedefRFvvE(hook) }
 }
 
 #[inline(always)]
 pub unsafe fn ConsumeArray(pair: *mut i32) {
-    detail::__rust_thunk___Z12ConsumeArrayPi(pair)
+    crate::detail::__rust_thunk___Z12ConsumeArrayPi(pair)
 }
 
 // rs_bindings_from_cc/test/golden/lifetimes.h;l=20
@@ -50,7 +50,7 @@ pub unsafe fn ConsumeArray(pair: *mut i32) {
 
 #[inline(always)]
 pub unsafe fn ConsumeArrayWithTypedef(__param_0: *mut i32) {
-    detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)
+    crate::detail::__rust_thunk___Z23ConsumeArrayWithTypedefPi(__param_0)
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_LIFETIMES_H_

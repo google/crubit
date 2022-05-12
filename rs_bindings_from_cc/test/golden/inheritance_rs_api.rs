@@ -21,7 +21,7 @@ use memoffset_unstable_const::offset_of;
 /// objects, even if the POD type is potentially-overlapping.
 #[repr(C)]
 pub struct Base0 {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
@@ -107,7 +107,7 @@ impl !Unpin for Base2 {}
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Derived {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 12],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 12],
     pub derived_1: u8,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
@@ -150,7 +150,7 @@ unsafe impl oops::Inherits<crate::Base2> for Derived {
 
 #[repr(C, align(8))]
 pub struct VirtualBase1 {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 24],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 24],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
@@ -178,13 +178,13 @@ impl !Unpin for VirtualBase1 {}
 
 unsafe impl oops::Inherits<crate::Base1> for VirtualBase1 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
-        detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(derived)
     }
 }
 
 #[repr(C, align(8))]
 pub struct VirtualBase2 {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 24],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 24],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
@@ -212,13 +212,13 @@ impl !Unpin for VirtualBase2 {}
 
 unsafe impl oops::Inherits<crate::Base1> for VirtualBase2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
-        detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(derived)
     }
 }
 
 #[repr(C, align(8))]
 pub struct VirtualDerived {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 32],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 32],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
@@ -246,17 +246,17 @@ impl !Unpin for VirtualDerived {}
 
 unsafe impl oops::Inherits<crate::VirtualBase1> for VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase1 {
-        detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(derived)
     }
 }
 unsafe impl oops::Inherits<crate::Base1> for VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
-        detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(derived)
     }
 }
 unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase2 {
-        detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(derived)
+        crate::detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(derived)
     }
 }
 

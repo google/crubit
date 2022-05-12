@@ -18,7 +18,7 @@ use memoffset_unstable_const::offset_of;
 
 #[inline(always)]
 pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial {
-    unsafe { detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
+    unsafe { crate::detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
 }
 
 #[derive(Clone, Copy)]
@@ -34,9 +34,9 @@ forward_declare::unsafe_define!(
 impl Default for UserOfImportedType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -45,9 +45,9 @@ impl Default for UserOfImportedType {
 impl<'b> From<ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfImportedType {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::UserOfImportedType>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -72,10 +72,10 @@ mod detail {
             t: trivial_type_cc::Trivial,
         ) -> trivial_type_cc::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
         );
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
             __param_0: ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
     }

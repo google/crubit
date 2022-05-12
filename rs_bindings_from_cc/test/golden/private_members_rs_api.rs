@@ -27,9 +27,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::So
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN9SomeClassC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -38,9 +38,9 @@ impl Default for SomeClass {
 impl<'b> From<ctor::RvalueReference<'b, crate::SomeClass>> for SomeClass {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::SomeClass>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN9SomeClassC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -57,14 +57,14 @@ impl<'b> From<ctor::RvalueReference<'b, crate::SomeClass>> for SomeClass {
 impl SomeClass {
     #[inline(always)]
     pub fn public_method<'a>(&'a mut self) {
-        unsafe { detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass13public_methodEv(self) }
     }
 }
 
 impl SomeClass {
     #[inline(always)]
     pub fn public_static_method() {
-        unsafe { detail::__rust_thunk___ZN9SomeClass20public_static_methodEv() }
+        unsafe { crate::detail::__rust_thunk___ZN9SomeClass20public_static_methodEv() }
     }
 }
 
@@ -75,10 +75,10 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN9SomeClassC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeClass>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeClass>,
         );
         pub(crate) fn __rust_thunk___ZN9SomeClassC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeClass>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeClass>,
             __param_0: ctor::RvalueReference<'b, crate::SomeClass>,
         );
         #[link_name = "_ZN9SomeClass13public_methodEv"]

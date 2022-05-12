@@ -19,16 +19,16 @@ use memoffset_unstable_const::offset_of;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -37,9 +37,9 @@ impl Default for SomeStruct {
 impl<'b> From<ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::SomeStruct>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -58,16 +58,16 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union EmptyUnion {
-    __non_field_data: [rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
 impl Default for EmptyUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -76,9 +76,9 @@ impl Default for EmptyUnion {
 impl<'b> From<ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::EmptyUnion>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -159,9 +159,9 @@ forward_declare::unsafe_define!(
 impl<'b> From<ctor::RvalueReference<'b, crate::FieldTypeTestStruct>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -182,9 +182,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate
 impl Default for NonEmptyUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -193,9 +193,9 @@ impl Default for NonEmptyUnion {
 impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion {
     #[inline(always)]
     fn from(__param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>) -> Self {
-        let mut tmp = rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
         }
     }
@@ -211,7 +211,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion
 
 #[inline(always)]
 pub fn VoidReturningFunction() {
-    unsafe { detail::__rust_thunk___Z21VoidReturningFunctionv() }
+    unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
 }
 
 #[repr(transparent)]
@@ -240,28 +240,28 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10EmptyUnionC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::EmptyUnion>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::EmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN10EmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::EmptyUnion>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::EmptyUnion>,
             __param_0: ctor::RvalueReference<'b, crate::EmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
             __param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1Ev<'a>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
             __param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
