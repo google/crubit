@@ -8,6 +8,7 @@
 #![feature(const_ptr_offset_from, custom_inner_attributes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
 
 use ::std as rust_std;
 use memoffset_unstable_const::offset_of;

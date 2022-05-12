@@ -1527,7 +1527,8 @@ fn generate_bindings_tokens(ir: &IR, crubit_support_path: &str) -> Result<Bindin
         rs_api: quote! {
             #features __NEWLINE__
             #![allow(non_camel_case_types)] __NEWLINE__
-            #![allow(non_snake_case)] __NEWLINE__ __NEWLINE__
+            #![allow(non_snake_case)] __NEWLINE__
+            #![allow(non_upper_case_globals)] __NEWLINE__ __NEWLINE__
 
             #imports __NEWLINE__ __NEWLINE__
 
