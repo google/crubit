@@ -20,9 +20,10 @@ load(
 )
 
 def _is_public_std_header(input, public_hdrs):
-    return ("grte" not in input.path and
-            input.basename in public_hdrs and
-            "experimental" not in input.short_path)
+    return (
+        input.basename in public_hdrs and
+        "experimental" not in input.short_path
+    )
 
 def _collect_std_hdrs(input_list, public_hdrs):
     return [hdr for hdr in input_list if _is_public_std_header(hdr, public_hdrs)]
