@@ -11,7 +11,6 @@
 #![allow(non_upper_case_globals)]
 
 use ::std as rust_std;
-use memoffset_unstable_const::offset_of;
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -293,7 +292,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::Trivial: Drop);
 };
-const _: () = assert!(offset_of!(crate::Trivial, trivial_field) * 8 == 0usize);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::Trivial, trivial_field) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::TrivialWithDefaulted>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::TrivialWithDefaulted>() == 4usize);
@@ -306,7 +306,9 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::TrivialWithDefaulted: Drop);
 };
-const _: () = assert!(offset_of!(crate::TrivialWithDefaulted, trivial_field) * 8 == 0usize);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::TrivialWithDefaulted, trivial_field) * 8 == 0usize
+);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::TrivialNonfinal>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::TrivialNonfinal>() == 4usize);
@@ -316,4 +318,6 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::TrivialNonfinal: Drop);
 };
-const _: () = assert!(offset_of!(crate::TrivialNonfinal, trivial_field) * 8 == 0usize);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::TrivialNonfinal, trivial_field) * 8 == 0usize
+);

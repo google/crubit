@@ -11,7 +11,6 @@
 #![allow(non_upper_case_globals)]
 
 use ::std as rust_std;
-use memoffset_unstable_const::offset_of;
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -358,7 +357,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::DocCommentSlashes: Drop);
 };
-const _: () = assert!(offset_of!(crate::DocCommentSlashes, i) * 8 == 0usize);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::DocCommentSlashes, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::DocCommentBang>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::DocCommentBang>() == 4usize);
@@ -371,7 +371,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::DocCommentBang: Drop);
 };
-const _: () = assert!(offset_of!(crate::DocCommentBang, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::DocCommentBang, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::MultilineCommentTwoStars>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::MultilineCommentTwoStars>() == 4usize);
@@ -384,7 +384,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::MultilineCommentTwoStars: Drop);
 };
-const _: () = assert!(offset_of!(crate::MultilineCommentTwoStars, i) * 8 == 0usize);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::MultilineCommentTwoStars, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::LineComment>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::LineComment>() == 4usize);
@@ -397,7 +398,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::LineComment: Drop);
 };
-const _: () = assert!(offset_of!(crate::LineComment, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::LineComment, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::MultilineOneStar>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::MultilineOneStar>() == 4usize);
@@ -410,4 +411,5 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::MultilineOneStar: Drop);
 };
-const _: () = assert!(offset_of!(crate::MultilineOneStar, i) * 8 == 0usize);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::MultilineOneStar, i) * 8 == 0usize);

@@ -11,7 +11,6 @@
 #![allow(non_upper_case_globals)]
 
 use ::std as rust_std;
-use memoffset_unstable_const::offset_of;
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -522,7 +521,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
 };
-const _: () = assert!(offset_of!(crate::Nontrivial, field) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Nontrivial, field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(i32: Copy);
 };
@@ -535,7 +534,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialInline: Drop);
 };
-const _: () = assert!(offset_of!(crate::NontrivialInline, field) * 8 == 0usize);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::NontrivialInline, field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(i32: Copy);
 };
@@ -548,7 +548,9 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialMembers: Drop);
 };
-const _: () = assert!(offset_of!(crate::NontrivialMembers, nontrivial_member) * 8 == 0usize);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::NontrivialMembers, nontrivial_member) * 8 == 0usize
+);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialUnpin>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialUnpin>() == 4usize);
@@ -561,7 +563,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialUnpin: Drop);
 };
-const _: () = assert!(offset_of!(crate::NontrivialUnpin, field) * 8 == 0usize);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::NontrivialUnpin, field) * 8 == 0usize);
 const _: () = {
     static_assertions::assert_impl_all!(i32: Copy);
 };

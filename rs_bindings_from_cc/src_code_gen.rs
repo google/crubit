@@ -1032,7 +1032,7 @@ fn generate_record(
             quote! {
                 // The IR contains the offset in bits, while offset_of!()
                 // returns the offset in bytes, so we need to convert.
-                const _: () = assert!(offset_of!(#qualified_ident, #field_ident) * 8 == #offset);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8 == #offset);
             }
         }).collect_vec()
     };
@@ -1507,7 +1507,6 @@ fn generate_bindings_tokens(ir: &IR, crubit_support_path: &str) -> Result<Bindin
     let imports = if has_record {
         quote! {
             use ::std as rust_std;
-            use memoffset_unstable_const::offset_of;
         }
     } else {
         quote! {
@@ -2626,9 +2625,9 @@ mod tests {
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Clone); };
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Copy); };
                 const _: () = { static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop); };
-                const _: () = assert!(offset_of!(crate::SomeStruct, public_int) * 8 == 0usize);
-                const _: () = assert!(offset_of!(crate::SomeStruct, protected_int) * 8 == 32usize);
-                const _: () = assert!(offset_of!(crate::SomeStruct, private_int) * 8 == 64usize);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) * 8 == 0usize);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) * 8 == 32usize);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) * 8 == 64usize);
             }
         );
         assert_cc_matches!(
@@ -5227,7 +5226,7 @@ mod tests {
                 const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
                 const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
                 ...
-                const _: () = assert!(offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
             }
         );
         Ok(())

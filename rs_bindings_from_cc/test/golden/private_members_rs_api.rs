@@ -11,7 +11,6 @@
 #![allow(non_upper_case_globals)]
 
 use ::std as rust_std;
-use memoffset_unstable_const::offset_of;
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -104,5 +103,9 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::SomeClass: Drop);
 };
-const _: () = assert!(offset_of!(crate::SomeClass, public_member_variable_) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::SomeClass, private_member_variable_) * 8 == 32usize);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::SomeClass, public_member_variable_) * 8 == 0usize
+);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::SomeClass, private_member_variable_) * 8 == 32usize
+);

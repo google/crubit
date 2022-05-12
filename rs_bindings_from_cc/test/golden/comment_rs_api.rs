@@ -11,7 +11,6 @@
 #![allow(non_upper_case_globals)]
 
 use ::std as rust_std;
-use memoffset_unstable_const::offset_of;
 
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
@@ -207,8 +206,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::Foo: Drop);
 };
-const _: () = assert!(offset_of!(crate::Foo, i) * 8 == 0usize);
-const _: () = assert!(offset_of!(crate::Foo, j) * 8 == 32usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Foo, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Foo, j) * 8 == 32usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::Bar>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::Bar>() == 4usize);
@@ -221,7 +220,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::Bar: Drop);
 };
-const _: () = assert!(offset_of!(crate::Bar, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Bar, i) * 8 == 0usize);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::HasNoComments>() == 4usize);
 const _: () = assert!(rust_std::mem::align_of::<crate::HasNoComments>() == 4usize);
@@ -234,4 +233,4 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasNoComments: Drop);
 };
-const _: () = assert!(offset_of!(crate::HasNoComments, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::HasNoComments, i) * 8 == 0usize);
