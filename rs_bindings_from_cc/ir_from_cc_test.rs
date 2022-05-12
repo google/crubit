@@ -825,30 +825,36 @@ fn test_record_with_unsupported_field() -> Result<()> {
 }
 
 #[test]
-fn test_record_base_with_unsupported_field() -> Result<()> {
+fn test_record_with_unsupported_base() -> Result<()> {
     let ir = ir_from_cc(
-        r#" // Using a nested struct because it's currently not supported.
-            // But... any other unsupported type would also work for this test
-            struct BaseClass {
-              struct NestedStruct {};
-              NestedStruct base_field;
+        r#" struct OuterStruct {
+              struct NestedStruct {
+                // Having a field here avoids empty base class optimization
+                // and forces `derived_field` to be at a non-zero offset.
+                // See also: https://en.cppreference.com/w/cpp/language/ebo
+                char nested_field;
+              };
             };
-            struct DerivedClass : public BaseClass {
+
+            // Using a nested struct as a base class because nested structs are
+            // currently unsupported.  But... any other unsupported base class
+            // would also work for this test.
+            struct DerivedClass : public OuterStruct::NestedStruct {
               int derived_field;
             }; "#,
     )?;
     // Verify that `unambiguous_public_bases` are empty (instead of containing a
-    // dangling `ItemId` of the `BaseClass` (which got imported as
+    // dangling `ItemId` of the `NestedStruct` (which got imported as
     // `UnsupportedItem` rather than as a `Record`).
     assert_ir_matches!(
         ir,
         quote! {
-           Record(Record {
+           Record {
                rs_name: "DerivedClass",
                cc_name: "DerivedClass",
                id: ItemId(...),
                owning_target: BazelLabel("//test:testing_target"),
-               doc_comment: None,
+               doc_comment: Some(...),
                unambiguous_public_bases: [],
                fields: [Field {
                    identifier: Some("derived_field"), ...
@@ -859,20 +865,20 @@ fn test_record_base_with_unsupported_field() -> Result<()> {
                is_derived_class: true,
                override_alignment: true,
                ...
-           }),
+           }
         }
     );
-    // Verify that the BaseClass is unsupported (this is mostly verification that
-    // the test input correctly sets up the test scenario;  the real
+    // Verify that the NestedStruct is unsupported (this is mostly verification
+    // that the test input correctly sets up the test scenario;  the real
     // verification is above).
     assert_ir_matches!(
         ir,
         quote! {
-           UnsupportedItem(UnsupportedItem {
-               name: "BaseClass",
-               message: "UNIMPLEMENTED: Type of field 'base_field' is not supported: Unsupported type 'struct BaseClass::NestedStruct': No generated bindings found for 'NestedStruct'",
+           UnsupportedItem {
+               name: "OuterStruct::NestedStruct",
+               message: "Nested classes are not supported yet",
                ...
-           })
+           }
         }
     );
     Ok(())
@@ -1275,13 +1281,14 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
 #[test]
 fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
     // We will have to rewrite this test to use something else that is unsupported
-    // once we start importing structs from namespaces.
+    // once we start importing nested structs.
     let ir = ir_from_cc_dependency(
-        "struct MyOtherStruct { my_namespace::StructFromNamespaceIsUnsupported my_struct; };",
-        "namespace my_namespace { struct StructFromNamespaceIsUnsupported {}; }",
+        "struct MyOtherStruct { OuterStruct::NestedStructIsUnsupported my_field; };",
+        "struct OuterStruct { struct NestedStructIsUnsupported {}; };",
     )?;
     let names = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
-    assert_strings_dont_contain(names.as_slice(), "my_namespace::StructFromNamespaceIsUnsupported");
+    assert_strings_dont_contain(names.as_slice(), "OuterStruct");
+    assert_strings_dont_contain(names.as_slice(), "NestedStructIsUnsupported");
     assert_strings_contain(names.as_slice(), "MyOtherStruct");
     Ok(())
 }
@@ -1310,11 +1317,11 @@ fn assert_strings_contain(strings: &[&str], expected_string: &str) {
     );
 }
 
-fn assert_strings_dont_contain(strings: &[&str], unexpected_string: &str) {
+fn assert_strings_dont_contain(strings: &[&str], unexpected_pattern: &str) {
     assert!(
-        strings.iter().all(|s| *s != unexpected_string),
-        "Value '{}' was unexpectedly found in {:?}",
-        unexpected_string,
+        strings.iter().all(|s| !s.contains(unexpected_pattern)),
+        "Pattern {:?} was unexpectedly found in {:?}",
+        unexpected_pattern,
         strings
     );
 }
