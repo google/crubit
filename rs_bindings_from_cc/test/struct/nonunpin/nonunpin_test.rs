@@ -2,11 +2,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-//#[cfg(test)]
+#[cfg(test)]
 mod tests {
     use ctor::CtorNew as _;
-    use ctor::{ConstRvalueReference, RvalueReference};
-    use nonunpin::Nonunpin;
+    use ctor::{ctor, ConstRvalueReference, RvalueReference};
+    use nonunpin::{Nonunpin, NonunpinStruct};
     use std::pin::Pin;
 
     /// When a value is constructed in-place, it is initialized, has the correct
@@ -89,5 +89,20 @@ mod tests {
             let x: ConstRvalueReference<Nonunpin> = x.AsConstRvalueRef();
             assert_eq!(nonunpin::GetValueFromConstRvalueRef(x), 42);
         }
+    }
+    #[test]
+    fn test_aggregate() {
+        ctor::emplace! {
+            let mut x = ctor!(NonunpinStruct {value: 42});
+        }
+        assert_eq!(x.value, 42);
+        {
+            // Read/write via a pin-projection.
+            let mut x = x.as_mut().project();
+            assert_eq!(*x.value, 42);
+            *x.value = 0;
+            assert_eq!(*x.value, 0);
+        }
+        assert_eq!(x.value, 0);
     }
 }

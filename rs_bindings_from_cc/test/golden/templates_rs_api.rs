@@ -33,6 +33,7 @@ pub type AliasToTemplateWithTwoParams = crate::__CcTemplateInst21TemplateWithTwo
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIiE {
     value_: i32,
@@ -41,8 +42,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<int>"),
     crate::__CcTemplateInst10MyTemplateIiE
 );
-
-impl !Unpin for __CcTemplateInst10MyTemplateIiE {}
 
 // rs_bindings_from_cc/test/golden/templates.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
@@ -80,6 +79,7 @@ impl __CcTemplateInst10MyTemplateIiE {
     }
 }
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInst21TemplateWithTwoParamsIifE {
     pub value1: i32,
@@ -89,8 +89,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("TemplateWithTwoParams<int, float>"),
     crate::__CcTemplateInst21TemplateWithTwoParamsIifE
 );
-
-impl !Unpin for __CcTemplateInst21TemplateWithTwoParamsIifE {}
 
 // rs_bindings_from_cc/test/golden/templates.h;l=27
 // Error while generating bindings for item 'TemplateWithTwoParams<int, float>::TemplateWithTwoParams<int, float>':

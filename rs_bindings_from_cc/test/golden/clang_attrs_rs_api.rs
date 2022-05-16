@@ -17,6 +17,7 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct HasCustomAlignment {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 64],
@@ -26,8 +27,6 @@ forward_declare::unsafe_define!(
     crate::HasCustomAlignment
 );
 
-impl !Unpin for HasCustomAlignment {}
-
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
 // Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
@@ -48,6 +47,7 @@ impl !Unpin for HasCustomAlignment {}
 // Error while generating bindings for item 'HasCustomAlignment::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported type: && without lifetime
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct HasFieldWithCustomAlignment {
     pub field: crate::HasCustomAlignment,
@@ -57,8 +57,6 @@ forward_declare::unsafe_define!(
     crate::HasFieldWithCustomAlignment
 );
 
-impl !Unpin for HasFieldWithCustomAlignment {}
-
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
@@ -79,6 +77,7 @@ impl !Unpin for HasFieldWithCustomAlignment {}
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
 // Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported type: && without lifetime
 
+#[ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct InheritsFromBaseWithCustomAlignment {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 64],
@@ -87,8 +86,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("InheritsFromBaseWithCustomAlignment"),
     crate::InheritsFromBaseWithCustomAlignment
 );
-
-impl !Unpin for InheritsFromBaseWithCustomAlignment {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
@@ -116,6 +113,7 @@ unsafe impl oops::Inherits<crate::HasCustomAlignment> for InheritsFromBaseWithCu
     }
 }
 
+#[ctor::recursively_pinned]
 #[repr(C, align(64))]
 pub struct HasCustomAlignmentWithGnuAttr {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 64],
@@ -124,8 +122,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("HasCustomAlignmentWithGnuAttr"),
     crate::HasCustomAlignmentWithGnuAttr
 );
-
-impl !Unpin for HasCustomAlignmentWithGnuAttr {}
 
 // rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':

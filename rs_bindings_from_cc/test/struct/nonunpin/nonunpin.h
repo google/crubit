@@ -43,4 +43,9 @@ inline int GetValueFromConstRvalueRef(const Nonunpin&& nonunpin) {
   return nonunpin.value();
 }
 
+// A deliberately !Unpin (aggregate) struct.
+struct NonunpinStruct {
+  int value;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NONUNPIN_NONUNPIN_H_

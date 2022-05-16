@@ -17,6 +17,7 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct NontrivialCustomType {
     pub i: i32,
@@ -25,8 +26,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialCustomType"),
     crate::NontrivialCustomType
 );
-
-impl !Unpin for NontrivialCustomType {}
 
 impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::NontrivialCustomType>>
     for NontrivialCustomType

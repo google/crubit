@@ -20,13 +20,12 @@ use ::std as rust_std;
 /// Using classes to force these to be non-POD.
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct Base0 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
-
-impl !Unpin for Base0 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=13
 // Error while generating bindings for item 'Base0::Base0':
@@ -48,6 +47,7 @@ impl !Unpin for Base0 {}
 // Error while generating bindings for item 'Base0::operator=':
 // Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported type: && without lifetime
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct Base1 {
     b1_1_: i64,
@@ -55,8 +55,6 @@ pub struct Base1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
-impl !Unpin for Base1 {}
-
 // rs_bindings_from_cc/test/golden/inheritance.h;l=14
 // Error while generating bindings for item 'Base1::Base1':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
@@ -77,13 +75,12 @@ impl !Unpin for Base1 {}
 // Error while generating bindings for item 'Base1::operator=':
 // Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported type: && without lifetime
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct Base2 {
     b2_1_: i16,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
-
-impl !Unpin for Base2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=19
 // Error while generating bindings for item 'Base2::Base2':
@@ -149,13 +146,12 @@ unsafe impl oops::Inherits<crate::Base2> for Derived {
     }
 }
 
+#[ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualBase1 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 24],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
-
-impl !Unpin for VirtualBase1 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=27
 // Error while generating bindings for item 'VirtualBase1::VirtualBase1':
@@ -183,13 +179,12 @@ unsafe impl oops::Inherits<crate::Base1> for VirtualBase1 {
     }
 }
 
+#[ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualBase2 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 24],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
-
-impl !Unpin for VirtualBase2 {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=28
 // Error while generating bindings for item 'VirtualBase2::VirtualBase2':
@@ -217,13 +212,12 @@ unsafe impl oops::Inherits<crate::Base1> for VirtualBase2 {
     }
 }
 
+#[ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualDerived {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 32],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
-
-impl !Unpin for VirtualDerived {}
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=29
 // Error while generating bindings for item 'VirtualDerived::VirtualDerived':

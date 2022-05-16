@@ -17,6 +17,7 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct WithUnnamedFields {
     pub foo: i32,
@@ -29,8 +30,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("WithUnnamedFields"),
     crate::WithUnnamedFields
 );
-
-impl !Unpin for WithUnnamedFields {}
 
 // rs_bindings_from_cc/test/golden/unnamed_fields.h;l=8
 // Error while generating bindings for item 'WithUnnamedFields::WithUnnamedFields':

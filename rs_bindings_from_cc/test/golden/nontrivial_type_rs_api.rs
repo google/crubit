@@ -22,13 +22,12 @@ use ::std as rust_std;
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
+#[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct Nontrivial {
     pub field: i32,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
-
-impl !Unpin for Nontrivial {}
 
 impl ctor::CtorNew<()> for Nontrivial {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -110,10 +109,10 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nont
     }
 }
 
-impl Drop for Nontrivial {
+impl ::ctor::PinnedDrop for Nontrivial {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self) }
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN10NontrivialD1Ev(self)
     }
 }
 
@@ -128,6 +127,7 @@ impl Nontrivial {
 ///
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
+#[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct NontrivialInline {
     pub field: i32,
@@ -136,8 +136,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialInline"),
     crate::NontrivialInline
 );
-
-impl !Unpin for NontrivialInline {}
 
 impl ctor::CtorNew<()> for NontrivialInline {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -219,10 +217,10 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialInline>,)> fo
     }
 }
 
-impl Drop for NontrivialInline {
+impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self) }
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN16NontrivialInlineD1Ev(self)
     }
 }
 
@@ -238,6 +236,7 @@ impl NontrivialInline {
 /// This changes how the destructor / drop impl work -- instead of calling
 /// the destructor for NontrivialMembers, it just calls the destructors for
 /// each field.
+#[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct NontrivialMembers {
     pub nontrivial_member: crate::rust_std::mem::ManuallyDrop<crate::Nontrivial>,
@@ -246,8 +245,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("NontrivialMembers"),
     crate::NontrivialMembers
 );
-
-impl !Unpin for NontrivialMembers {}
 
 impl ctor::CtorNew<()> for NontrivialMembers {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -290,10 +287,10 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialMembers>,)>
     }
 }
 
-impl Drop for NontrivialMembers {
+impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
     }
 }
 
@@ -433,7 +430,9 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, crate::Nontrivial>,
         );
         #[link_name = "_ZN10NontrivialD1Ev"]
-        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(__this: *mut crate::Nontrivial);
+        pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Nontrivial>,
+        );
         #[link_name = "_ZN10Nontrivial14MemberFunctionEv"]
         pub(crate) fn __rust_thunk___ZN10Nontrivial14MemberFunctionEv<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::Nontrivial>,
@@ -455,7 +454,7 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, crate::NontrivialInline>,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineD1Ev<'a>(
-            __this: *mut crate::NontrivialInline,
+            __this: crate::rust_std::pin::Pin<&'a mut crate::NontrivialInline>,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInline14MemberFunctionEv<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::NontrivialInline>,
@@ -468,7 +467,7 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, crate::NontrivialMembers>,
         );
         pub(crate) fn __rust_thunk___ZN17NontrivialMembersD1Ev<'a>(
-            __this: *mut crate::NontrivialMembers,
+            __this: crate::rust_std::pin::Pin<&'a mut crate::NontrivialMembers>,
         );
         #[link_name = "_ZN15NontrivialUnpinC1Ev"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinC1Ev<'a>(
@@ -481,7 +480,7 @@ mod detail {
         );
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
-            __this: *mut crate::NontrivialUnpin,
+            __this: &'a mut crate::NontrivialUnpin,
         );
         #[link_name = "_ZN15NontrivialUnpin14MemberFunctionEv"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'a>(

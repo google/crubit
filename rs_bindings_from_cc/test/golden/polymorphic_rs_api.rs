@@ -17,6 +17,7 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 pub struct PolymorphicBase {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 8],
@@ -25,8 +26,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicBase"),
     crate::PolymorphicBase
 );
-
-impl !Unpin for PolymorphicBase {}
 
 impl ctor::CtorNew<()> for PolymorphicBase {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -71,13 +70,14 @@ impl<'b> ctor::CtorNew<(&'b crate::PolymorphicBase,)> for PolymorphicBase {
 // Error while generating bindings for item 'PolymorphicBase::operator=':
 // Bindings for this kind of operator are not supported
 
-impl Drop for PolymorphicBase {
+impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN15PolymorphicBaseD1Ev(self) }
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN15PolymorphicBaseD1Ev(self)
     }
 }
 
+#[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 pub struct PolymorphicBase2 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 8],
@@ -86,8 +86,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicBase2"),
     crate::PolymorphicBase2
 );
-
-impl !Unpin for PolymorphicBase2 {}
 
 impl ctor::CtorNew<()> for PolymorphicBase2 {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -139,13 +137,14 @@ impl PolymorphicBase2 {
     }
 }
 
-impl Drop for PolymorphicBase2 {
+impl ::ctor::PinnedDrop for PolymorphicBase2 {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self) }
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN16PolymorphicBase2D1Ev(self)
     }
 }
 
+#[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(8))]
 pub struct PolymorphicDerived {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 16],
@@ -154,8 +153,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("PolymorphicDerived"),
     crate::PolymorphicDerived
 );
-
-impl !Unpin for PolymorphicDerived {}
 
 impl ctor::CtorNew<()> for PolymorphicDerived {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -224,10 +221,10 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::PolymorphicDerived>,)>
     }
 }
 
-impl Drop for PolymorphicDerived {
+impl ::ctor::PinnedDrop for PolymorphicDerived {
     #[inline(always)]
-    fn drop<'a>(&'a mut self) {
-        unsafe { crate::detail::__rust_thunk___ZN18PolymorphicDerivedD1Ev(self) }
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN18PolymorphicDerivedD1Ev(self)
     }
 }
 
@@ -253,7 +250,7 @@ mod detail {
             __param_0: &'b crate::PolymorphicBase,
         );
         pub(crate) fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
-            __this: *mut crate::PolymorphicBase,
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase>,
         );
         pub(crate) fn __rust_thunk___ZN16PolymorphicBase2C1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::PolymorphicBase2>,
@@ -266,7 +263,7 @@ mod detail {
             __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
         pub(crate) fn __rust_thunk___ZN16PolymorphicBase2D1Ev<'a>(
-            __this: *mut crate::PolymorphicBase2,
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::PolymorphicDerived>,
@@ -280,7 +277,7 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, crate::PolymorphicDerived>,
         );
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
-            __this: *mut crate::PolymorphicDerived,
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicDerived>,
         );
     }
 }

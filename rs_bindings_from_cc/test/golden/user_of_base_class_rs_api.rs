@@ -22,14 +22,13 @@ use ::std as rust_std;
 /// This tests inheritance across library boundaries.
 ///
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
+#[ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct Derived2 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 20],
     pub derived_1: u8,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
-
-impl !Unpin for Derived2 {}
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=15
 // Error while generating bindings for item 'Derived2::Derived2':
@@ -67,6 +66,7 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for Derived2 {
     }
 }
 
+#[ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualDerived2 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 32],
@@ -75,8 +75,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("VirtualDerived2"),
     crate::VirtualDerived2
 );
-
-impl !Unpin for VirtualDerived2 {}
 
 // rs_bindings_from_cc/test/golden/user_of_base_class.h;l=19
 // Error while generating bindings for item 'VirtualDerived2::VirtualDerived2':

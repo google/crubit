@@ -262,8 +262,8 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
     })
 }
 
-/// The name of a trait, with extra entries for specially-understood traits and
-/// families of traits.
+/// The name of a one-function trait, with extra entries for
+/// specially-understood traits and families of traits.
 enum TraitName<'ir> {
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
@@ -271,12 +271,12 @@ enum TraitName<'ir> {
     /// An Unpin constructor trait, e.g. From or Clone.
     UnpinConstructor(TokenStream),
     /// Any other trait, e.g. Eq.
-    Other(TokenStream),
+    Other { name: TokenStream, is_unsafe_fn: bool },
 }
 impl<'ir> ToTokens for TraitName<'ir> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Self::UnpinConstructor(t) | Self::Other(t) => t.to_tokens(tokens),
+            Self::UnpinConstructor(name) | Self::Other { name, .. } => name.to_tokens(tokens),
             Self::CtorNew(arg_types) => {
                 let arg_types = format_tuple_except_singleton(arg_types);
                 quote! { ctor::CtorNew < #arg_types > }.to_tokens(tokens)
@@ -356,7 +356,12 @@ impl<'ir> ImplKind<'ir> {
     }
     /// Returns whether the function is defined as `unsafe fn ...`.
     fn is_unsafe(&self) -> bool {
-        matches!(self, Self::None { is_unsafe: true, .. } | Self::Struct { is_unsafe: true, .. })
+        matches!(
+            self,
+            Self::None { is_unsafe: true, .. }
+                | Self::Struct { is_unsafe: true, .. }
+                | Self::Trait { trait_name: TraitName::Other { is_unsafe_fn: true, .. }, .. }
+        )
     }
 }
 
@@ -396,7 +401,10 @@ fn api_func_shape<'ir>(
                         // needs to have its lifetime declared next to `fn`, not
                         // next to `impl`.
                         impl_kind = ImplKind::new_trait(
-                            TraitName::Other(quote! {PartialEq<#rhs>}),
+                            TraitName::Other {
+                                name: quote! {PartialEq<#rhs>},
+                                is_unsafe_fn: false,
+                            },
                             lhs,
                             /* format_first_param_as_self= */ true,
                         );
@@ -444,12 +452,21 @@ fn api_func_shape<'ir>(
             if !should_implement_drop(record) {
                 return Ok(None);
             }
-            impl_kind = ImplKind::new_trait(
-                TraitName::Other(quote! {Drop}),
-                make_rs_ident(&record.rs_name),
-                /* format_first_param_as_self= */ true,
-            );
-            func_name = make_rs_ident("drop");
+            if record.is_unpin() {
+                impl_kind = ImplKind::new_trait(
+                    TraitName::Other { name: quote! {Drop}, is_unsafe_fn: false },
+                    make_rs_ident(&record.rs_name),
+                    /* format_first_param_as_self= */ true,
+                );
+                func_name = make_rs_ident("drop");
+            } else {
+                impl_kind = ImplKind::new_trait(
+                    TraitName::Other { name: quote! {::ctor::PinnedDrop}, is_unsafe_fn: true },
+                    make_rs_ident(&record.rs_name),
+                    /* format_first_param_as_self= */ true,
+                );
+                func_name = make_rs_ident("pinned_drop");
+            }
         }
         UnqualifiedIdentifier::Constructor => {
             let member_func_metadata = func
@@ -809,16 +826,6 @@ fn generate_func_thunk(
                 func.params.get(0)
             )
         })?);
-    } else if func.name == UnqualifiedIdentifier::Destructor {
-        let first_param = param_types
-            .next()
-            .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
-        self_param = Some(first_param.format_ref_as_raw_ptr().with_context(|| {
-            format!(
-                "Failed to format `__this` param for a destructor thunk: {:?}",
-                func.params.get(0)
-            )
-        })?);
     }
 
     let thunk_ident = thunk_ident(func);
@@ -1066,16 +1073,17 @@ fn generate_record(
     } else {
         quote! { struct }
     };
-    let unpin_impl = if record.is_unpin() {
+    let recursively_pinned_attribute = if record.is_unpin() {
         quote! {}
     } else {
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
         record_features.insert(make_rs_ident("negative_impls"));
-        quote! {
-            __NEWLINE__  __NEWLINE__
-            impl !Unpin for #ident {}
+        if should_implement_drop(record) {
+            quote! {#[ctor::recursively_pinned(PinnedDrop)]}
+        } else {
+            quote! {#[ctor::recursively_pinned]}
         }
     };
 
@@ -1146,6 +1154,7 @@ fn generate_record(
     let record_tokens = quote! {
         #doc_comment
         #derives
+        #recursively_pinned_attribute
         #[repr(#( #repr_attributes ),*)]
         pub #record_kind #ident {
             #head_padding
@@ -1155,8 +1164,6 @@ fn generate_record(
         #incomplete_definition
 
         #no_unique_address_accessors
-
-        #unpin_impl
 
         __NEWLINE__ __NEWLINE__
         #( #items __NEWLINE__ __NEWLINE__)*
@@ -1803,55 +1810,55 @@ impl<'ir> RsTypeKind<'ir> {
         }
     }
 
-    /// Formats a reference or pointer as a raw pointer.
-    pub fn format_ref_as_raw_ptr(&self) -> Result<TokenStream> {
-        match self {
-            RsTypeKind::Reference { referent: pointee, mutability, .. }
-            | RsTypeKind::Pointer { pointee, mutability } => {
-                let mut_ = mutability.format_for_pointer();
-                Ok(quote! { * #mut_ #pointee })
-            }
-            _ => bail!("Expected reference to format as raw ptr, got: {:?}", self),
-        }
-    }
-
     /// Formats this RsTypeKind as the `self` parameter: usually, `&'a self` or
     /// `&'a mut self`.
     ///
     /// If this is !Unpin, however, it uses `self: Pin<&mut Self>` instead.
     pub fn format_as_self_param(&self, func: &Func, ir: &IR) -> Result<TokenStream> {
-        if func.name == UnqualifiedIdentifier::Destructor {
-            let record = func
-                .member_func_metadata
-                .as_ref()
-                .ok_or_else(|| anyhow!("Destructors must be member functions: {:?}", func))?
-                .find_record(ir)?;
-            if self.is_mut_ptr_to(record) {
+        let referent;
+        let mutability;
+        let lifetime;
+        match self {
+            RsTypeKind::Pointer { pointee, mutability: pointer_mutability } => {
+                if func.name != UnqualifiedIdentifier::Destructor {
+                    bail!("`self` cannot be an unsafe pointer except for destructors: {:?}", self)
+                }
+                let record = func
+                    .member_func_metadata
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("Destructors must be member functions: {:?}", func))?
+                    .find_record(ir)?;
+                if !pointee.is_record(record) {
+                    bail!("`self` is a pointer to the wrong type for this destructor: {:?}", self)
+                }
+
                 // Even in C++ it is UB to retain `this` pointer and dereference it
                 // after a destructor runs. Therefore it is safe to use `&self` or
                 // `&mut self` in Rust even if IR represents `__this` as a Rust
                 // pointer (e.g. when lifetime annotations are missing - lifetime
                 // annotations are required to represent it as a Rust reference).
-                return Ok(quote! { &mut self });
+                referent = pointee;
+                mutability = pointer_mutability;
+                lifetime = quote! {};
             }
-        }
-
-        match self {
-            RsTypeKind::Reference { referent, lifetime, mutability } => {
-                let mut_ = mutability.format_for_reference();
-                let lifetime = format_lifetime_name(&lifetime.name);
-                if mutability == &Mutability::Mut
-                    && !referent.is_unpin()
-                    && func.name != UnqualifiedIdentifier::Destructor
-                {
-                    // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use
-                    // `Pin`.
-                    Ok(quote! {self: crate::rust_std::pin::Pin< & #lifetime #mut_ Self>})
-                } else {
-                    Ok(quote! { & #lifetime #mut_ self })
-                }
+            RsTypeKind::Reference {
+                referent: reference_pointee,
+                lifetime: reference_lifetime,
+                mutability: reference_mutability,
+            } => {
+                referent = reference_pointee;
+                mutability = reference_mutability;
+                lifetime = format_lifetime_name(&reference_lifetime.name);
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
+        }
+        let mut_ = mutability.format_for_reference();
+        if mutability == &Mutability::Mut && !referent.is_unpin() {
+            // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use
+            // `Pin`.
+            Ok(quote! {self: crate::rust_std::pin::Pin< & #lifetime #mut_ Self>})
+        } else {
+            Ok(quote! { & #lifetime #mut_ self })
         }
     }
 
@@ -1878,15 +1885,6 @@ impl<'ir> RsTypeKind<'ir> {
                 // of their `type_args` are `Copy`.
                 type_args.iter().all(|t| t.implements_copy())
             }
-        }
-    }
-
-    pub fn is_mut_ptr_to(&self, expected_record: &Record) -> bool {
-        match self {
-            RsTypeKind::Pointer { pointee, mutability: Mutability::Mut, .. } => {
-                pointee.is_record(expected_record)
-            }
-            _ => false,
         }
     }
 
@@ -2214,8 +2212,13 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
         }
-        fields.push(make_rs_ident(&field.identifier.as_ref()
-            .expect("Unnamed fields can't be annotated with [[no_unique_address]]").identifier));
+        fields.push(make_rs_ident(
+            &field
+                .identifier
+                .as_ref()
+                .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
+                .identifier,
+        ));
         types.push(format_rs_type(&field.type_.rs_type, ir).with_context(|| {
             format!("Failed to format type for field {:?} on record {:?}", field, record)
         })?)
@@ -4250,7 +4253,7 @@ mod tests {
     fn test_no_negative_impl_unpin() -> Result<()> {
         let ir = ir_from_cc("struct Trivial final {};")?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_not_matches!(rs_api, quote! {impl !Unpin});
+        assert_rs_not_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         Ok(())
     }
 
@@ -4260,7 +4263,7 @@ mod tests {
     fn test_negative_impl_unpin_nonfinal() -> Result<()> {
         let ir = ir_from_cc("struct Nonfinal {};")?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {impl !Unpin for Nonfinal {}});
+        assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         Ok(())
     }
 
@@ -4269,8 +4272,9 @@ mod tests {
     #[test]
     fn test_no_impl_drop() -> Result<()> {
         let ir = ir_from_cc("struct Trivial {};")?;
-        let rs_api = tokens_to_string(generate_bindings_tokens(&ir)?.rs_api)?;
-        assert!(!rs_api.contains("impl Drop"));
+        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {impl Drop});
+        assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
         Ok(())
     }
 
@@ -4290,10 +4294,10 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl Drop for UserDefinedDestructor {
+                impl ::ctor::PinnedDrop for UserDefinedDestructor {
                     #[inline(always)]
-                    fn drop(&mut self) {
-                        unsafe { crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self) }
+                    unsafe fn pinned_drop(self: crate::rust_std::pin::Pin<&mut Self>) {
+                        crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self)
                     }
                 }
             }
@@ -4328,10 +4332,10 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl Drop for NontrivialMembers {
+                impl ::ctor::PinnedDrop for NontrivialMembers {
                     #[inline(always)]
-                    fn drop(&mut self) {
-                        unsafe { crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self) }
+                    unsafe fn pinned_drop(self: crate::rust_std::pin::Pin<&mut Self>) {
+                        crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
                     }
                 }
             }
@@ -4357,6 +4361,7 @@ mod tests {
         )?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
+        assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
         assert_rs_matches!(rs_api, quote! {pub x: i32});
         // TODO(b/213326125): Avoid generating thunk impls that are never called.
         // (The test assertion below should be reversed once this bug is fixed.)
@@ -5156,7 +5161,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                fn drop(&mut self) { ... }
+                unsafe fn pinned_drop(self: crate::rust_std::pin::Pin<&mut Self>) { ... }
             }
         );
         Ok(())
@@ -5170,7 +5175,7 @@ mod tests {
             struct HasConstructor {explicit HasConstructor() {}};"#,
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {impl !Unpin for HasConstructor {} });
+        assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5200,7 +5205,7 @@ mod tests {
             struct HasConstructor {explicit HasConstructor(unsigned char input) {}};"#,
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {impl !Unpin for HasConstructor {} });
+        assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5230,7 +5235,7 @@ mod tests {
             struct HasConstructor {explicit HasConstructor(unsigned char input1, signed char input2) {}};"#,
         )?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
-        assert_rs_matches!(rs_api, quote! {impl !Unpin for HasConstructor {} });
+        assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         assert_rs_matches!(
             rs_api,
             quote! {

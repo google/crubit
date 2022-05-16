@@ -18,6 +18,7 @@ use ::std as rust_std;
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_namespace_bindings {
+    #[ctor::recursively_pinned]
     #[repr(C)]
     pub struct S {
         pub i: i32,
@@ -26,8 +27,6 @@ pub mod test_namespace_bindings {
         forward_declare::symbol!("S"),
         crate::test_namespace_bindings::S
     );
-
-    impl !Unpin for S {}
 
     // rs_bindings_from_cc/test/golden/namespace.h;l=9
     // Error while generating bindings for item 'S::S':
@@ -79,6 +78,7 @@ pub mod test_namespace_bindings_reopened {
     }
 
     pub mod inner {
+        #[ctor::recursively_pinned]
         #[repr(C)]
         pub struct S {
             __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
@@ -87,8 +87,6 @@ pub mod test_namespace_bindings_reopened {
             forward_declare::symbol!("S"),
             crate::test_namespace_bindings_reopened::inner::S
         );
-
-        impl !Unpin for S {}
 
         // rs_bindings_from_cc/test/golden/namespace.h;l=27
         // Error while generating bindings for item 'S::S':

@@ -100,6 +100,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::TrivialWithDefaulted>> for Trivia
 
 /// This struct is trivial, and therefore trivially relocatable etc., but still
 /// not safe to pass by reference as it is not final.
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub struct TrivialNonfinal {
     pub trivial_field: i32,
@@ -108,8 +109,6 @@ forward_declare::unsafe_define!(
     forward_declare::symbol!("TrivialNonfinal"),
     crate::TrivialNonfinal
 );
-
-impl !Unpin for TrivialNonfinal {}
 
 impl ctor::CtorNew<()> for TrivialNonfinal {
     type CtorType = impl ctor::Ctor<Output = Self>;
