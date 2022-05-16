@@ -414,7 +414,6 @@ STD_HEADERS = [
     "cstdint",
     "new",
     "typeinfo",
-    "source_location",
     "exception",
     "initializer_list",
     "compare",
