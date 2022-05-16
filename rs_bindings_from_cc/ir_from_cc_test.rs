@@ -1066,6 +1066,53 @@ fn test_aliased_class_template_partially_instantiated_in_header() -> Result<()> 
 }
 
 #[test]
+fn test_subst_template_type_parm_pack_type() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            template <typename... TArgs>
+            struct MyStruct {
+                static int GetSum(TArgs... my_args) { return (0 + ... + my_args); }
+            };
+            using MyTypeAlias = MyStruct<int, int>; "#,
+    )?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Record(Record {
+            rs_name: "__CcTemplateInst8MyStructIJiiEE", ...
+            cc_name: "MyStruct<int, int>", ...
+          }),
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                name: "GetSum", ...
+                mangled_name: "_ZN8MyStructIJiiEE6GetSumEii___test_testing_target", ...
+                params: [
+                    FuncParam {
+                        type_: MappedType {
+                            rs_type: RsType { name: Some("i32"), ...  },
+                            cc_type: CcType { name: Some("int"), ...  },
+                        },
+                        identifier: "__my_args_0",
+                    },
+                    FuncParam {
+                        type_: MappedType {
+                            rs_type: RsType { name: Some("i32"), ...  },
+                            cc_type: CcType { name: Some("int"), ...  },
+                        },
+                        identifier: "__my_args_1",
+                    },
+                ], ...
+            }
+        }
+    );
+    Ok(())
+}
+
+#[test]
 fn test_no_instantiation_of_template_only_used_in_private_field() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision

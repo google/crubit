@@ -810,12 +810,20 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl->getName());
-      if (name.empty()) {
-        if (const clang::ParmVarDecl* param_decl =
-                clang::dyn_cast<clang::ParmVarDecl>(named_decl)) {
-          int param_pos = param_decl->getFunctionScopeIndex();
+      if (const clang::ParmVarDecl* param_decl =
+              clang::dyn_cast<clang::ParmVarDecl>(named_decl)) {
+        int param_pos = param_decl->getFunctionScopeIndex();
+        if (name.empty()) {
           return {Identifier(absl::StrCat("__param_", param_pos))};
         }
+        if (auto* sttpt = param_decl->getType()
+                              ->getAs<clang::SubstTemplateTypeParmType>();
+            sttpt && sttpt->getReplacedParameter()->isParameterPack()) {
+          // Avoid giving the same name to all parameters expanded from a pack.
+          return {Identifier(absl::StrCat("__", name, "_", param_pos))};
+        }
+      }
+      if (name.empty()) {
         // TODO(lukasza): Handle anonymous structs (probably this won't be an
         // issue until nested types are handled - b/200067824).
         return std::nullopt;
