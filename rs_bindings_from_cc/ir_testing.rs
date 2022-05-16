@@ -27,11 +27,15 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
     )
 }
 
+/// Target of the dependency used by `ir_from_cc_dependency`.
+/// Needs to be kept in sync with `kDependencyTarget` in `json_from_cc.cc`.
+pub const DEPENDENCY_TARGET: &str = "//test:dependency";
+
 /// Generates `IR` from a header that depends on another header.
 ///
 /// `header_source` of the header will be updated to contain the `#include` line
 /// for the header with `dependency_header_source`. The name of the dependency
-/// target is assumed to be `"//test:dependency"`.
+/// target is exposed as `DEPENDENCY_TARGET`.
 pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str) -> Result<IR> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 

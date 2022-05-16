@@ -28,6 +28,7 @@
 #include "common/check.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
+#include "rs_bindings_from_cc/ast_util.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
@@ -41,6 +42,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
+#include "clang/Sema/Sema.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
@@ -52,6 +54,17 @@ namespace {
 constexpr absl::string_view kTypeStatusPayloadUrl =
     "type.googleapis.com/devtools.rust.cc_interop.rs_binding_from_cc.type";
 
+// Checks if the return value from `GetDeclItem` indicates that the import was
+// successful.
+absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
+  if (!item.has_value()) {
+    return absl::InvalidArgumentError("The import has been skipped");
+  }
+  if (auto* unsupported = std::get_if<UnsupportedItem>(&*item)) {
+    return absl::InvalidArgumentError(unsupported->message);
+  }
+  return absl::OkStatus();
+}
 }
 
 // A mapping of C++ standard types to their equivalent Rust types.
@@ -322,6 +335,27 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   return ordered_item_ids;
 }
 
+std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
+    const {
+  std::vector<SourceLocationComparator::OrderedItemId> items;
+  items.reserve(class_template_instantiations_for_current_target_.size());
+  for (const auto* decl : class_template_instantiations_for_current_target_) {
+    items.push_back(
+        {decl->getSourceRange(), GetDeclOrder(decl), GenerateItemId(decl)});
+  }
+
+  clang::SourceManager& sm = ctx_.getSourceManager();
+  auto compare_locations = SourceLocationComparator(sm);
+  llvm::sort(items, compare_locations);
+
+  std::vector<ItemId> ordered_item_ids;
+  ordered_item_ids.reserve(items.size());
+  for (const auto& ordered_item : items) {
+    ordered_item_ids.push_back(std::get<2>(ordered_item));
+  }
+  return ordered_item_ids;
+}
+
 void Importer::ImportFreeComments() {
   clang::SourceManager& sm = ctx_.getSourceManager();
   for (const auto& header : invocation_.entry_headers_) {
@@ -369,6 +403,11 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   }
   invocation_.ir_.top_level_item_ids =
       GetItemIdsInSourceOrder(translation_unit_decl);
+
+  // TODO(b/222001243): Consider placing the generated template instantiations
+  // into a separate namespace (maybe `crubit::instantiated_templates` ?).
+  llvm::copy(GetOrderedItemIdsOfTemplateInstantiations(),
+             std::back_inserter(invocation_.ir_.top_level_item_ids));
 }
 
 void Importer::ImportDeclsFromDeclContext(
@@ -408,6 +447,12 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
 }
 
 BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
+  // Template instantiations need to be generated in the target that triggered
+  // the instantiation (not in the target where the template is defined).
+  if (IsFullClassTemplateSpecializationOrChild(decl)) {
+    return invocation_.target_;
+  }
+
   clang::SourceManager& source_manager = ctx_.getSourceManager();
   auto source_location = decl->getLocation();
 
@@ -502,6 +547,53 @@ SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   return SourceLoc{.filename = filename.str(),
                    .line = sm.getSpellingLineNumber(loc),
                    .column = sm.getSpellingColumnNumber(loc)};
+}
+
+absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
+    const clang::TemplateSpecializationType* type) {
+  // Qualifiers are handled separately in TypeMapper::ConvertQualType().
+  std::string type_string = clang::QualType(type, 0).getAsString();
+
+  auto* specialization_decl =
+      clang::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(
+          type->getAsCXXRecordDecl());
+  if (!specialization_decl) {
+    return absl::InvalidArgumentError(absl::Substitute(
+        "Template specialization '$0' without an associated record decl "
+        "is not supported.",
+        type_string));
+  }
+
+  if (IsFromCurrentTarget(specialization_decl) &&
+      !specialization_decl->isExplicitSpecialization()) {
+    // Store implicit `specialization_decl`s so that they will get included in
+    // IR::top_level_item_ids.
+    class_template_instantiations_for_current_target_.insert(
+        specialization_decl);
+  }
+
+  // `Sema::isCompleteType` will try to instantiate the class template as a
+  // side-effect and we rely on this here. `decl->getDefinition()` can
+  // return nullptr before the call to sema and return its definition
+  // afterwards.
+  if (!sema_.isCompleteType(specialization_decl->getLocation(),
+                            ctx_.getRecordType(specialization_decl))) {
+    return absl::InvalidArgumentError(absl::Substitute(
+        "'$0' template specialization is incomplete", type_string));
+  }
+
+  // TODO(lukasza): Limit specialization depth? (e.g. using
+  // `isSpecializationDepthGreaterThan` from earlier prototypes).
+
+  absl::Status import_status =
+      CheckImportStatus(GetDeclItem(specialization_decl));
+  if (!import_status.ok()) {
+    return absl::InvalidArgumentError(absl::Substitute(
+        "Failed to create bindings for template specialization type $0: $1",
+        type_string, import_status.message()));
+  }
+
+  return type_mapper_.ConvertTypeDecl(specialization_decl);
 }
 
 absl::StatusOr<MappedType> TypeMapper::ConvertTypeDecl(
@@ -623,6 +715,9 @@ absl::StatusOr<MappedType> TypeMapper::ConvertType(
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
+  } else if (const auto* subst_type =
+                 type->getAs<clang::SubstTemplateTypeParmType>()) {
+    return ConvertQualType(subst_type->getReplacementType(), lifetimes);
   }
 
   return absl::UnimplementedError(absl::StrCat(
@@ -654,6 +749,26 @@ absl::StatusOr<MappedType> TypeMapper::ConvertQualType(
 }
 
 std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
+  if (auto specialization_decl =
+          clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(named_decl)) {
+    // Itanium mangler produces valid Rust identifiers, use it to generate a
+    // name for this instantiation.
+    llvm::SmallString<128> storage;
+    llvm::raw_svector_ostream buffer(storage);
+    mangler_->mangleTypeName(ctx_.getRecordType(specialization_decl), buffer);
+
+    // The Itanium mangler does not provide a way to get the mangled
+    // representation of a type. Instead, we call mangleTypeName() that
+    // returns the name of the RTTI typeinfo symbol, and remove the _ZTS
+    // prefix. Then we prepend __CcTemplateInst to reduce chances of conflict
+    // with regular C and C++ structs.
+    constexpr llvm::StringRef kZtsPrefix = "_ZTS";
+    constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
+    CRUBIT_CHECK(buffer.str().take_front(4) == kZtsPrefix);
+    return llvm::formatv("{0}{1}", kCcTemplatePrefix,
+                         buffer.str().drop_front(kZtsPrefix.size()));
+  }
+
   clang::GlobalDecl decl;
 
   // There are only three named decl types that don't work with the GlobalDecl

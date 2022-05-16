@@ -73,8 +73,15 @@ class Importer : public ImportContext {
   llvm::Optional<std::string> GetComment(
       const clang::Decl* decl) const override;
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const override;
+  absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
+      const clang::TemplateSpecializationType* type) override;
 
  private:
+  // Returns the item ids of template instantiations that have been triggered
+  // from the current target.  The returned items are in an arbitrary,
+  // deterministic/reproducible order.
+  std::vector<ItemId> GetOrderedItemIdsOfTemplateInstantiations() const;
+
   // Returns the Item of a Decl, importing it first if necessary.
   std::optional<IR::Item> GetDeclItem(clang::Decl* decl);
 
@@ -89,6 +96,8 @@ class Importer : public ImportContext {
   std::unique_ptr<clang::MangleContext> mangler_;
   absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
       import_cache_;
+  absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
+      class_template_instantiations_for_current_target_;
   std::vector<const clang::RawComment*> comments_;
 };  // class Importer
 

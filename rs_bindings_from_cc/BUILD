@@ -108,9 +108,24 @@ cc_test(
 )
 
 cc_library(
+    name = "ast_util",
+    srcs = ["ast_util.cc"],
+    hdrs = ["ast_util.h"],
+    visibility = ["//third_party/crubit:__subpackages__"],
+    deps = [
+        "//common:check",
+        "@llvm///clang:ast",
+    ],
+)
+
+cc_library(
     name = "bazel_types",
+    srcs = ["bazel_types.cc"],
     hdrs = ["bazel_types.h"],
-    deps = ["//common:string_type"],
+    deps = [
+        "//common:string_type",
+        "@absl//strings",
+    ],
 )
 
 cc_library(
@@ -149,6 +164,7 @@ cc_library(
         "//lifetime_annotations",
         "@absl//container:flat_hash_map",
         "@absl//status:statusor",
+        "@llvm///clang:ast",
     ],
 )
 
@@ -189,6 +205,7 @@ cc_library(
         "//common:check",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
+        "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc/importers:class_template",
         "//rs_bindings_from_cc/importers:cxx_record",
         "//rs_bindings_from_cc/importers:enum",

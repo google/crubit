@@ -47,7 +47,7 @@ struct OffsetOfHelper<void(T)> {
 
 // CRUBIT_OFFSET_OF is a wrapper around the standard `offsetof` macro [1] that
 // adds support for using a type name (i.e. `T...`) that contains commas (e.g.
-// `TemplateClassWithTwoTemplateParameters<int, int>`).
+// `ClassTemplateWithTwoTemplateParameters<int, int>`).
 //
 // CRUBIT_OFFSET_OF doesn't require wrapping the type name in an extra set of
 // parens.  This aspect is achieved by making CRUBIT_OFFSET_OF a variadic macro

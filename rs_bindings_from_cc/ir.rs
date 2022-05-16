@@ -282,6 +282,7 @@ pub struct Func {
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,
     pub has_c_calling_convention: bool,
+    pub is_member_or_descendant_of_class_template: bool,
     pub source_loc: SourceLoc,
     pub id: ItemId,
     pub enclosing_namespace_id: Option<ItemId>,

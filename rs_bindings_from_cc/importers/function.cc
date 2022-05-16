@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/function.h"
 
 #include "absl/strings/substitute.h"
+#include "rs_bindings_from_cc/ast_util.h"
 
 namespace crubit {
 
@@ -187,8 +188,33 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   bool has_c_calling_convention =
       function_decl->getType()->getAs<clang::FunctionType>()->getCallConv() ==
       clang::CC_C;
+  bool is_member_or_descendant_of_class_template =
+      IsFullClassTemplateSpecializationOrChild(function_decl);
   std::optional<UnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(function_decl);
+
+  llvm::Optional<std::string> doc_comment = ictx_.GetComment(function_decl);
+  if (!doc_comment.hasValue() && is_member_or_descendant_of_class_template) {
+    // Despite `is_member_or_descendant_of_class_template` check above, we are
+    // not guaranteed that a `func_pattern` exists below.  For example, it may
+    // be missing when `function_decl` is an implicitly defined constructor of a
+    // class template -- such decls are generated, not instantiated.
+    if (clang::FunctionDecl* func_pattern =
+            function_decl->getTemplateInstantiationPattern()) {
+      doc_comment = ictx_.GetComment(func_pattern);
+    }
+  }
+
+  std::string mangled_name = ictx_.GetMangledName(function_decl);
+  if (is_member_or_descendant_of_class_template) {
+    // TODO(b/222001243): Avoid calling `ConvertToCcIdentifier(target)` to
+    // distinguish multiple definitions of a template instantiation.  Instead
+    // help the linker merge all the definitions into one, by defining the
+    // thunk via a function template - see "Handling thunks" section in
+    // <internal link>
+    mangled_name += '_';
+    mangled_name += ConvertToCcIdentifier(ictx_.GetOwningTarget(function_decl));
+  }
 
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
@@ -198,14 +224,16 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     return Func{
         .name = *translated_name,
         .owning_target = ictx_.GetOwningTarget(function_decl),
-        .doc_comment = ictx_.GetComment(function_decl),
-        .mangled_name = ictx_.GetMangledName(function_decl),
+        .doc_comment = std::move(doc_comment),
+        .mangled_name = std::move(mangled_name),
         .return_type = *return_type,
         .params = std::move(params),
         .lifetime_params = std::move(lifetime_params),
         .is_inline = function_decl->isInlined(),
         .member_func_metadata = std::move(member_func_metadata),
         .has_c_calling_convention = has_c_calling_convention,
+        .is_member_or_descendant_of_class_template =
+            is_member_or_descendant_of_class_template,
         .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
         .id = GenerateItemId(function_decl),
         .enclosing_namespace_id = GetEnclosingNamespaceId(function_decl),

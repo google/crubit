@@ -283,7 +283,135 @@ pub fn foo() -> i32 {
 /// A type alias
 pub type MyTypeAlias = crate::DocCommentSlashes;
 
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=75
+// Error while generating bindings for item 'MyTemplate':
+// Class templates are not supported yet
+
+/// Class template specialization.
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct __CcTemplateInst10MyTemplateIfE {
+    /// Data member in a specialization.
+    pub value: f32,
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate<float>"),
+    crate::__CcTemplateInst10MyTemplateIfE
+);
+
+impl Default for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>>
+    for __CcTemplateInst10MyTemplateIfE
+{
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>) -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+// Error while generating bindings for item 'MyTemplate<float>::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+// Error while generating bindings for item 'MyTemplate<float>::operator=':
+// Bindings for this kind of operator are not supported
+
+impl __CcTemplateInst10MyTemplateIfE {
+    /// A non-static member function in a specialization.
+    #[inline(always)]
+    pub fn get_field_value<'a>(&'a self) -> &'a f32 {
+        unsafe {
+            crate::detail::__rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(self)
+        }
+    }
+}
+
+/// Type alias to template instantiation.
+pub type MyInstantiation = crate::__CcTemplateInst10MyTemplateIiE;
+
+/// Type alias to instantiation of a template specialization.
+pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=101
+// Error while generating bindings for item 'OuterTemplate':
+// Class templates are not supported yet
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=111
+// Error while generating bindings for item 'ConcreteNestedStruct':
+// Unsupported type 'OuterTemplate<int>::NestedStruct': No generated bindings found for 'NestedStruct'
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
+
+/// Class template.
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct __CcTemplateInst10MyTemplateIiE {
+    /// Data member.
+    pub value: i32,
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyTemplate<int>"),
+    crate::__CcTemplateInst10MyTemplateIiE
+);
+
+impl Default for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>) -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+// Error while generating bindings for item 'MyTemplate<int>::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+// Error while generating bindings for item 'MyTemplate<int>::operator=':
+// Bindings for this kind of operator are not supported
+
+// A non-static member function.
+
+impl __CcTemplateInst10MyTemplateIiE {
+    /// A non-static member function.
+    #[inline(always)]
+    pub fn get_field_value<'a>(&'a self) -> &'a i32 {
+        unsafe {
+            crate::detail::__rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(self)
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -342,6 +470,48 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, crate::MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+            'a,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIfE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIfE,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
+        );
+        pub(crate) fn __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+            'a,
+        >(
+            __this: &'a crate::__CcTemplateInst10MyTemplateIfE,
+        ) -> &'a f32;
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+            'a,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIiE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIiE,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
+        );
+        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+            'a,
+        >(
+            __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
+        ) -> &'a i32;
     }
 }
 
@@ -414,3 +584,37 @@ const _: () = {
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::MultilineOneStar, i) * 8 == 0usize);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4usize);
+const _: () =
+    assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4usize);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
+};
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) * 8
+        == 0usize
+);
+
+const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4usize);
+const _: () =
+    assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4usize);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
+};
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) * 8
+        == 0usize
+);

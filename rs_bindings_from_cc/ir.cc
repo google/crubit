@@ -291,6 +291,8 @@ llvm::json::Value Func::ToJson() const {
       {"is_inline", is_inline},
       {"member_func_metadata", member_func_metadata},
       {"has_c_calling_convention", has_c_calling_convention},
+      {"is_member_or_descendant_of_class_template",
+       is_member_or_descendant_of_class_template},
       {"source_loc", source_loc},
       {"id", id},
       {"enclosing_namespace_id", enclosing_namespace_id},

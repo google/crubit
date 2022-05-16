@@ -173,6 +173,12 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
     if func.is_inline {
         return false;
     }
+    // ## Member functions (or descendants) of class templates
+    //
+    // A thunk is required to force/guarantee template instantiation.
+    if func.is_member_or_descendant_of_class_template {
+        return false;
+    }
     // ## Virtual functions
     //
     // When calling virtual `A::Method()`, it's not necessarily the case that we'll
@@ -2586,6 +2592,133 @@ mod tests {
             quote! {
                 extern "C" class ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(class ParamStruct param) {
                     return DoSomething(std::forward<decltype(param)>(param));
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
+        // See also the test with the same name in `ir_from_cc_test.rs`.
+        let ir = {
+            let dependency_src = r#" #pragma clang lifetime_elision
+                    template <typename T>
+                    struct MyTemplate {
+                        T GetValue() { return field; }
+                        T field;
+                    }; "#;
+            let current_target_src = r#" #pragma clang lifetime_elision
+                    using MyAliasOfTemplate = MyTemplate<int>; "#;
+            ir_from_cc_dependency(current_target_src, dependency_src)?
+        };
+
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C)]
+                pub struct __CcTemplateInst10MyTemplateIiE {
+                    pub field: i32,
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl __CcTemplateInst10MyTemplateIiE {
+                    #[inline(always)]
+                    pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> i32 { unsafe {
+                        crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv___test_testing_target(
+                            self)
+                    }}
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub type MyAliasOfTemplate = crate::__CcTemplateInst10MyTemplateIiE;
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                mod detail {
+                    ...
+                    extern "C" {
+                        ...
+                        pub(crate) fn
+                        __rust_thunk___ZN10MyTemplateIiE8GetValueEv___test_testing_target<'a>(
+                            __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
+                        ) -> i32;
+                        ...
+                    }
+                }
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" int __rust_thunk___ZN10MyTemplateIiE8GetValueEv___test_testing_target(
+                        class MyTemplate<int>* __this) {
+                    return __this->GetValue();
+                }
+            }
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_template_with_out_of_line_definition() -> Result<()> {
+        // See also an end-to-end test in the `test/templates/out_of_line_definition`
+        // directory.
+        let ir = ir_from_cc(
+            r#" #pragma clang lifetime_elision
+                template <typename T>
+                class MyTemplate final {
+                 public:
+                  static MyTemplate Create(T value);
+                  const T& value() const;
+
+                 private:
+                  T value_;
+                };
+
+                using MyTypeAlias = MyTemplate<int>; "#,
+        )?;
+
+        let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens(&ir)?;
+
+        // Even though the member functions above are *not* defined inline (e.g.
+        // IR::Func::is_inline is false), they still need to have thunks generated for
+        // them (to force/guarantee that the class template and its members get
+        // instantiated).  This is also covered in the following end-to-end
+        // tests:
+        // - test/templates/out_of_line_definition/ - without a thunk, the template
+        //   won't be instantiated and Rust bindings won't be able to call the member
+        //   function (there will be no instantiation of the member function in the C++
+        //   object files)
+        // - test/templates/definition_in_cc/ - the instantiation happens in the .cc
+        //   file and therefore the thunk is not *required* (but it doesn't hurt to have
+        //   the thunk)
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" class MyTemplate<int>
+                __rust_thunk___ZN10MyTemplateIiE6CreateEi___test_testing_target(int value) {
+                    return MyTemplate<int>::Create(std::forward<decltype(value)>(value));
+                }
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" int const&
+                __rust_thunk___ZNK10MyTemplateIiE5valueEv___test_testing_target(
+                        const class MyTemplate<int>*__this) {
+                    return __this->value();
                 }
             }
         );

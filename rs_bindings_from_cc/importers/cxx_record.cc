@@ -13,6 +13,19 @@
 
 namespace crubit {
 
+namespace {
+
+std::string GetClassTemplateSpecializationCcName(
+    const clang::ASTContext& ast_context,
+    const clang::ClassTemplateSpecializationDecl* specialization_decl) {
+  clang::PrintingPolicy policy(ast_context.getLangOpts());
+  policy.IncludeTagDefinition = false;
+  return clang::QualType(specialization_decl->getTypeForDecl(), 0)
+      .getAsString(policy);
+}
+
+}  // namespace
+
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
@@ -26,14 +39,35 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return ictx_.ImportUnsupportedItem(record_decl,
                                        "Nested classes are not supported yet");
   }
+  if (clang::isa<clang::ClassTemplatePartialSpecializationDecl>(record_decl)) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl, "Partially-specialized class templates are not supported");
+  }
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;
   }
 
-  std::optional<Identifier> record_name =
-      ictx_.GetTranslatedIdentifier(record_decl);
-  if (!record_name.has_value()) {
-    return std::nullopt;
+  std::string rs_name, cc_name;
+  llvm::Optional<std::string> doc_comment;
+  if (auto* specialization_decl =
+          clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+              record_decl)) {
+    rs_name = ictx_.GetMangledName(specialization_decl);
+    cc_name =
+        GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl);
+    doc_comment = ictx_.GetComment(specialization_decl);
+    if (!doc_comment.hasValue()) {
+      doc_comment =
+          ictx_.GetComment(specialization_decl->getSpecializedTemplate());
+    }
+  } else {
+    std::optional<Identifier> record_name =
+        ictx_.GetTranslatedIdentifier(record_decl);
+    if (!record_name.has_value()) {
+      return std::nullopt;
+    }
+    rs_name = cc_name = record_name->Ident();
+    doc_comment = ictx_.GetComment(record_decl);
   }
 
   if (clang::CXXRecordDecl* complete = record_decl->getDefinition()) {
@@ -42,18 +76,10 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     CRUBIT_CHECK(!record_decl->isCompleteDefinition());
     ictx_.type_mapper_.Insert(record_decl);
     return IncompleteRecord{
-        .cc_name = std::string(record_name->Ident()),
+        .cc_name = std::move(cc_name),
         .id = GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
         .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
-  }
-
-  // To compute the memory layout of the record, it needs to be a concrete type,
-  // not a template.
-  if (record_decl->getDescribedClassTemplate() ||
-      clang::isa<clang::ClassTemplateSpecializationDecl>(record_decl)) {
-    return ictx_.ImportUnsupportedItem(record_decl,
-                                       "Class templates are not supported yet");
   }
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
@@ -81,11 +107,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
   return Record{
-      .rs_name = std::string(record_name->Ident()),
-      .cc_name = std::string(record_name->Ident()),
+      .rs_name = std::move(rs_name),
+      .cc_name = std::move(cc_name),
       .id = GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
-      .doc_comment = ictx_.GetComment(record_decl),
+      .doc_comment = std::move(doc_comment),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = *std::move(fields),
       .size = layout.getSize().getQuantity(),

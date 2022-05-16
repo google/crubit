@@ -71,4 +71,43 @@ inline int foo() { return 42; }
 /// A type alias
 using MyTypeAlias = DocCommentSlashes;
 
+/// Class template.
+template <typename T>
+struct MyTemplate final {
+  /// A non-static member function.
+  const T& get_field_value() const { return value; }
+
+  /// Data member.
+  T value;
+};
+
+/// Class template specialization.
+template <>
+struct MyTemplate<float> final {
+  /// A non-static member function in a specialization.
+  const float& get_field_value() const { return value; }
+
+  /// Data member in a specialization.
+  float value;
+};
+
+/// Type alias to template instantiation.
+using MyInstantiation = MyTemplate<int>;
+
+/// Type alias to instantiation of a template specialization.
+using MySpecializedInstantiation = MyTemplate<float>;
+
+/// Class template with nested struct inside.
+template <typename T>
+struct OuterTemplate final {
+  /// Doc comment for the nested struct.
+  struct NestedStruct {
+    /// Data member in a nested struct.
+    T value;
+  };
+};
+
+/// Type alias to a struct nested in a template instantiation.
+using ConcreteNestedStruct = OuterTemplate<int>::NestedStruct;
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_

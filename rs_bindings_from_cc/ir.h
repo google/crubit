@@ -454,6 +454,7 @@ struct Func {
   // If null, this is not a member function.
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
   bool has_c_calling_convention = true;
+  bool is_member_or_descendant_of_class_template = false;
   SourceLoc source_loc;
   ItemId id;
   llvm::Optional<ItemId> enclosing_namespace_id;

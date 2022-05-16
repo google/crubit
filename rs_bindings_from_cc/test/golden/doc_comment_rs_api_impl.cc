@@ -142,6 +142,76 @@ extern "C" class MultilineOneStar& __rust_thunk___ZN16MultilineOneStaraSEOS_(
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" int __rust_thunk___Z3foov() { return foo(); }
+extern "C" void
+__rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<int>* __this) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIiEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<int>* __this, const class MyTemplate<int>& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<int>* __this, class MyTemplate<int>&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIiED1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<int>* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" class MyTemplate<int>&
+__rust_thunk___ZN10MyTemplateIiEaSERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<int>* __this, const class MyTemplate<int>& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+} extern "C" class MyTemplate<int>&
+__rust_thunk___ZN10MyTemplateIiEaSEOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<int>* __this, class MyTemplate<int>&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+} extern "C" int const&
+__rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    const class MyTemplate<int>* __this) {
+  return __this->get_field_value();
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIfEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<float>* __this) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIfEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<float>* __this, const class MyTemplate<float>& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIfEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<float>* __this, class MyTemplate<float>&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void
+__rust_thunk___ZN10MyTemplateIfED1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<float>* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" class MyTemplate<float>&
+__rust_thunk___ZN10MyTemplateIfEaSERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<float>* __this, const class MyTemplate<float>& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+} extern "C" class MyTemplate<float>&
+__rust_thunk___ZN10MyTemplateIfEaSEOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    class MyTemplate<float>* __this, class MyTemplate<float>&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+} extern "C" float const&
+__rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(
+    const class MyTemplate<float>* __this) {
+  return __this->get_field_value();
+}
 
 static_assert(sizeof(class DocCommentSlashes) == 4);
 static_assert(alignof(class DocCommentSlashes) == 4);
@@ -162,5 +232,13 @@ static_assert(CRUBIT_OFFSET_OF(i, class LineComment) * 8 == 0);
 static_assert(sizeof(class MultilineOneStar) == 4);
 static_assert(alignof(class MultilineOneStar) == 4);
 static_assert(CRUBIT_OFFSET_OF(i, class MultilineOneStar) * 8 == 0);
+
+static_assert(sizeof(class MyTemplate<int>) == 4);
+static_assert(alignof(class MyTemplate<int>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<int>) * 8 == 0);
+
+static_assert(sizeof(class MyTemplate<float>) == 4);
+static_assert(alignof(class MyTemplate<float>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<float>) * 8 == 0);
 
 #pragma clang diagnostic pop

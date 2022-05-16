@@ -10,6 +10,7 @@
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "clang/AST/DeclTemplate.h"
 
 namespace crubit {
 
@@ -162,6 +163,11 @@ class ImportContext {
 
   // Converts a Clang source location to IR.
   virtual SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const = 0;
+
+  // Converts `type` into a MappedType, after first importing the Record behind
+  // the template instantiation.
+  virtual absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
+      const clang::TemplateSpecializationType* type) = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;
