@@ -1,3 +1,5 @@
+# High-level design of C++/Rust interop
+
 ## Introduction
 
 This document describes the high-level design choices of Crubit, a C++/Rust
@@ -8,62 +10,60 @@ Bidirectional Interop Tool.
 **The primary goal of C++/Rust interop tooling is to enable Rust to be used
 side-by-side with C++ in large existing codebases.**
 
-In the short term we would
-like to focus on codebases that roughly follow the Google C++ style guide to improve the interop
-fidelity. Other, more diverse codebases are possible prospective users
-in the long term, and their needs will be addressed by customization and
-extension points.
+In the short term we would like to focus on codebases that roughly follow the
+Google C++ style guide to improve the interop fidelity. Other, more diverse
+codebases are possible prospective users in the long term, and their needs will
+be addressed by customization and extension points.
 
 ## C++/Rust interop requirements
 
 In support of the interop goal, we identify the following requirements:
 
-1. **Enable using existing C++ libraries from Rust with high fidelity**
+1.  **Enable using existing C++ libraries from Rust with high fidelity**
     *   **High fidelity means that interop will make C++ APIs available in Rust,
-        even when those API projections would not be idiomatic, ergonomic,
-        or safe** in Rust, to facilitate cheap, small step incremental migration
+        even when those API projections would not be idiomatic, ergonomic, or
+        safe** in Rust, to facilitate cheap, small step incremental migration
         workflow. Based on the experience of other cross-language
         interoperability systems and language migrations (for example,
         Objective-C/Swift, Java/Kotlin, JavaScript/TypeScript), we believe that
         working in a mixed C++/Rust codebase would be significantly harder if
         some C++ APIs were not available in Rust.
-    *   **Interop will bridge C++ constructs to Rust constructs only
-        when the semantics match closely**. Bridging large semantic gaps creates
-        a risk of making C++ APIs unusable in Rust, as well as a risk of
-        creating performance problems. For example, interop will not bridge
-        destructive Rust moves and non-destructive C++ moves; instead it will
-        make C++ move constructors and move assignment operators available to
-        use in Rust code. As another example, interop will not bridge C++
-        templates and Rust generics by default.
-    *   Interop should be **performant**, as close to having no runtime cost
-        as possible. The performance costs of the interop should be documented,
-        and where possible, intuitive to the user.
+    *   **Interop will bridge C++ constructs to Rust constructs only when the
+        semantics match closely**. Bridging large semantic gaps creates a risk
+        of making C++ APIs unusable in Rust, as well as a risk of creating
+        performance problems. For example, interop will not bridge destructive
+        Rust moves and non-destructive C++ moves; instead it will make C++ move
+        constructors and move assignment operators available to use in Rust
+        code. As another example, interop will not bridge C++ templates and Rust
+        generics by default.
+    *   Interop should be **performant**, as close to having no runtime cost as
+        possible. The performance costs of the interop should be documented, and
+        where possible, intuitive to the user.
     *   Interop should be **ergonomic and safe**, as long as ergonomic and
-        safety accommodations do not hurt performance or fidelity.
-        Where a tradeoff is possible, the interop will choose performance
-        and fidelity over ergonomics; the user will be allowed to override
-        this choice.
+        safety accommodations do not hurt performance or fidelity. Where a
+        tradeoff is possible, the interop will choose performance and fidelity
+        over ergonomics; the user will be allowed to override this choice.
     *   **Enable owners of the C++ API to control their Rust API projection**,
         for example, with attributes in C++ headers and by extending generated
-        bindings with a manually implemented overlay. Such an overlay will
-        wrap or extend generated bindings to improve ergonomics and safety.
-2. **Enable using Rust libraries from C++**
-    *   However, using C++ libraries from Rust has a higher priority than
-        using Rust libraries from C++.
-3. **Put little to no barriers to entry**
-    *   **Ideally, no boilerplate code** needs to be written in order to
-        start using a C++ library from Rust. Adding some extra information
-        can make the generated bindings more ergonomic to use.
+        bindings with a manually implemented overlay. Such an overlay will wrap
+        or extend generated bindings to improve ergonomics and safety.
+2.  **Enable using Rust libraries from C++**
+    *   However, using C++ libraries from Rust has a higher priority than using
+        Rust libraries from C++.
+3.  **Put little to no barriers to entry**
+    *   **Ideally, no boilerplate code** needs to be written in order to start
+        using a C++ library from Rust. Adding some extra information can make
+        the generated bindings more ergonomic to use.
     *   The amount of **duplicated API information is minimized**.
-    *   **Future evolution of C++ APIs should be minimally hindered
-        by the presence of Rust users**.
+    *   **Future evolution of C++ APIs should be minimally hindered by the
+        presence of Rust users**.
 
 ## Proposal and high-level design
 
 **We propose to develop our own C++/Rust interop tooling.** There are no
-existing tools that satisfy all of our requirements. Modifying an existing
-tool to fulfill these requirements would take more effort than building a new
-tool from scratch or might require forking its codebase given that some existing
+existing tools that satisfy all of our requirements. Modifying an existing tool
+to fulfill these requirements would take more effort than building a new tool
+from scratch or might require forking its codebase given that some existing
 tools have goals that conflict with our goals.
 
 See the "alternatives considered" section for a discussion of existing tools.
@@ -72,28 +72,25 @@ See the "alternatives considered" section for a discussion of existing tools.
 
 **Interop tooling will read C++ headers**, as they contain the information
 needed to generate Rust API projections and the necessary glue code. Interop
-tooling that is used during builds will not read C++ source files,
-to maintain the principle that C++ API information is only located in headers,
-and that a C++ library can't break the build of its dependencies by
-changing source files.
+tooling that is used during builds will not read C++ source files, to maintain
+the principle that C++ API information is only located in headers, and that a
+C++ library can't break the build of its dependencies by changing source files.
 
-Some interop-adjacent tools (e.g., large-scale refactoring tools that seed the initial set of
-lifetime annotations) will also read C++ sources. These tools will not be
-used during builds.
+Some interop-adjacent tools (e.g., large-scale refactoring tools that seed the
+initial set of lifetime annotations) will also read C++ sources. These tools
+will not be used during builds.
 
 **Pros**
 
-*   **Minimal barrier to entry**: minimal amount of manual work is
-    required to start using a C++ library from Rust.
-    *   Encourages leaf projects to start incrementally adopting Rust in
-        new code, or incrementally rewriting C++ targets in Rust.
-*   **C++ API information is located only in headers**,
-    regardless of the language that the API consumer is
-    written in (C++ or Rust).
-*   **Interop tooling that generates Rust API projections
-    from a C++ header can get exactly the same information that the C++
-    compiler has** when processing a translation unit that uses one of the APIs
-    declared within that header.
+*   **Minimal barrier to entry**: minimal amount of manual work is required to
+    start using a C++ library from Rust.
+    *   Encourages leaf projects to start incrementally adopting Rust in new
+        code, or incrementally rewriting C++ targets in Rust.
+*   **C++ API information is located only in headers**, regardless of the
+    language that the API consumer is written in (C++ or Rust).
+*   **Interop tooling that generates Rust API projections from a C++ header can
+    get exactly the same information that the C++ compiler has** when processing
+    a translation unit that uses one of the APIs declared within that header.
     *   Interop tooling can generate the most performant calls to C++ APIs,
         without C++-side thunks that translate the C++ ABI into a C ABI.
     *   Interop tooling can autodetect implementation details that are critical
@@ -112,8 +109,8 @@ used during builds.
     *   These are not trivially accessible.
     *   There is a limit on how readable these files can be made.
     *   We can mitigate these issues by building tooling that shows the Rust
-        view of a C++ header (for example in Code Search, or in editors as
-        an alternative go-to-definition target).
+        view of a C++ header (for example in Code Search, or in editors as an
+        alternative go-to-definition target).
 
 ### Customizability
 
@@ -121,27 +118,27 @@ Interop tooling will be sufficiently customizable to accommodate the unique
 needs of different C++ libraries in the codebase. Interop should be customizable
 enough to accommodate existing codebases. C++ API owners can:
 
-*   **Guide how interop tooling generates Rust API projections
-    from C++ headers**. For example, headers can provide:
-    *   Custom Rust names for C++ function overloads
-        (instead of applying the general interop strategy for
-        function overloads),
+*   **Guide how interop tooling generates Rust API projections from C++
+    headers**. For example, headers can provide:
+    *   Custom Rust names for C++ function overloads (instead of applying the
+        general interop strategy for function overloads),
     *   Custom Rust names for overloaded C++ operators,
-    *   Custom Rust lifetimes for pointers and references mentioned in
-        the C++ API,
+    *   Custom Rust lifetimes for pointers and references mentioned in the C++
+        API,
     *   Nullability information for pointers in the C++ API,
-    *   Assertions (verified at compile time) and promises (not verified
-        by tooling) that certain C++ types are trivially relocatable.
+    *   Assertions (verified at compile time) and promises (not verified by
+        tooling) that certain C++ types are trivially relocatable.
 *   **Provide custom logic to bridge types**, for example, mapping C++
     `absl::StatusOr` to Rust `Result`.
 *   **Provide API overlays** that improve the automatically generated Rust API.
     *   For example, the overlays could inject additional methods into
-        automatically generated Rust types or hide some of the generated methods.
+        automatically generated Rust types or hide some of the generated
+        methods.
 
 More intrusive customization techniques will be useful for template and
-macro-heavy libraries where the baseline
-import rules just won't work. We believe customizability will be an essential
-enabler for providing high-fidelity interop.
+macro-heavy libraries where the baseline import rules just won't work. We
+believe customizability will be an essential enabler for providing high-fidelity
+interop.
 
 ### Source of additional information that customizes C++ API projection into Rust
 
@@ -154,14 +151,14 @@ Examples of additional information that interop tooling will need:
 
 *   **Nullability annotations.** C++ APIs often expose pointers that are
     documented or assumed by convention to be never null, but can't be
-    refactored to references due to language limitations
-    (for example, `std::vector<MyProtobuf *>`). If C++ headers don't provide
-    nullability information for pointers in a machine-readable form, interop
-    tooling has to conservatively mark all C++ pointers as nullable in the Rust
-    API projection. The Rust compiler will then force users to write unnecessary
-    (and untestable) null checks.
-*   **Lifetimes of references and pointers** in C++ headers are not described
-    in a machine-readable way (and sometimes are not even documented in prose).
+    refactored to references due to language limitations (for example,
+    `std::vector<MyProtobuf *>`). If C++ headers don't provide nullability
+    information for pointers in a machine-readable form, interop tooling has to
+    conservatively mark all C++ pointers as nullable in the Rust API projection.
+    The Rust compiler will then force users to write unnecessary (and
+    untestable) null checks.
+*   **Lifetimes of references and pointers** in C++ headers are not described in
+    a machine-readable way (and sometimes are not even documented in prose).
     Lifetime information is essential to generate safe and idiomatic Rust APIs
     from C++ headers.
 
@@ -169,40 +166,40 @@ Examples of additional information that interop tooling will need:
 
 **Pros**
 
-*   **Additional information needed for C++/Rust interop will be expressed
-    as annotations on existing syntactic elements in C++.**
+*   **Additional information needed for C++/Rust interop will be expressed as
+    annotations on existing syntactic elements in C++.**
     *   The annotations are located in the most logical place.
-    *   The annotations are more likely to be noticed and updated by
-        C++ API owners.
+    *   The annotations are more likely to be noticed and updated by C++ API
+        owners.
     *   API owners retain full control over how the API looks in Rust.
 *   **C++ users may find lifetime and nullability annotations useful.** For
-    example, information about lifetimes is highly important to C++ and
-    Rust users alike.
-*   **C++ API definitions are only written once,** minimizing duplication
-    and maintenance burden.
+    example, information about lifetimes is highly important to C++ and Rust
+    users alike.
+*   **C++ API definitions are only written once,** minimizing duplication and
+    maintenance burden.
 
 **Cons**
 
 *   **Annotations that benefit Rust users can bother C++ API owners** who don't
-    care about Rust. Especially at the beginning of integrating Rust into an existing codebase, C++ API
-    owners can push back on adding annotations.
+    care about Rust. Especially at the beginning of integrating Rust into an
+    existing codebase, C++ API owners can push back on adding annotations.
     *   To encourage adoption of annotations, we can develop tooling for C++
         that uses lifetime and nullability annotations to find bugs in C++ code.
-    *   The pushback is likely to be short-term: if Rust takes off in a C++ codebase,
-        C++ library owners in that codebase will need to care about Rust users
-        and how their API looks in Rust.
-*   **There may be headers that we cannot (or would not want to) change**,
-    for example, headers in third-party code, headers that are open-sourced,
-    or when first-party owners are not cooperating.
+    *   The pushback is likely to be short-term: if Rust takes off in a C++
+        codebase, C++ library owners in that codebase will need to care about
+        Rust users and how their API looks in Rust.
+*   **There may be headers that we cannot (or would not want to) change**, for
+    example, headers in third-party code, headers that are open-sourced, or when
+    first-party owners are not cooperating.
     *   We can apply the sidecar strategy to these headers.
 
 #### Additional information is stored in sidecar files
 
 Additional information needed for C++/Rust interop can be stored in sidecar
 files, similarly to Swift APINotes, CLIF etc. If sidecar files get sufficiently
-broad adoption (for example, if annotating third-party code turns out to be sufficiently
-important that optimizing C++/Rust interop ergonomics there
-would be worth it), it would make sense to write sidecar files in a Rust-like
+broad adoption (for example, if annotating third-party code turns out to be
+sufficiently important that optimizing C++/Rust interop ergonomics there would
+be worth it), it would make sense to write sidecar files in a Rust-like
 language, as that provides the most natural way to define Rust APIs.
 
 **Pros**
@@ -215,28 +212,29 @@ language, as that provides the most natural way to define Rust APIs.
 
 **Cons**
 
-*   Like in the [Use Rust code to customize API projection into Rust](#use-rust-code-to-customize-api-projection-into-rust)
-    alternative, **some part of C++ API information is duplicated**,
-    which is a burden for the C++ API owners.
+*   Like in the
+    [Use Rust code to customize API projection into Rust](#use-rust-code-to-customize-api-projection-into-rust)
+    alternative, **some part of C++ API information is duplicated**, which is a
+    burden for the C++ API owners.
 *   The projection of C++ APIs to Rust is defined in a new language.
     *   C++ API owners and Rust users will have to learn this language.
     *   If we expect wide adoption of sidecar files, we will need to create
         tooling to parse, edit, and run LSCs against this language.
-*   **Annotations in sidecar files are more prone to become out of sync with
-    the C++ code.** When making changes to C++ code, engineers are less likely
-    to notice and update the annotations in sidecar files.
+*   **Annotations in sidecar files are more prone to become out of sync with the
+    C++ code.** When making changes to C++ code, engineers are less likely to
+    notice and update the annotations in sidecar files.
     *   Presubmits can catch some cases of desynchronization between C++ headers
-        and sidecar filles. However, presubmit errors that remind engineers
-        to edit more files create an inferior user experience.
+        and sidecar filles. However, presubmit errors that remind engineers to
+        edit more files create an inferior user experience.
 *   **Sidecar files create extra friction to modify the code.** Where previously
     one had to edit only a C++ header and a C++ source file, now one also likely
     needs to update a sidecar file.
-    *   When engineers realize that they need to update a sidecar file,
-        opening another file and finding the right place to update creates
-        extra friction to modify code.
-    *   Once engineers understand the extra maintenance burden associated
-        with sidecar files that tend to go out of sync with headers, they will
-        be less likely to adopt annotations in the first place.
+    *   When engineers realize that they need to update a sidecar file, opening
+        another file and finding the right place to update creates extra
+        friction to modify code.
+    *   Once engineers understand the extra maintenance burden associated with
+        sidecar files that tend to go out of sync with headers, they will be
+        less likely to adopt annotations in the first place.
 
 ### Glue code generation
 
@@ -244,45 +242,45 @@ C++/Rust interop tooling will generate executable glue code and type definitions
 in Rust and in C++ (not just merely `extern "C"` function declarations) in order
 to achieve the following goals:
 
-*   **Enable instantiating C++ templates from Rust, and
-    monomorphizing Rust generics from C++. Enable Rust types to participate in
-    C++ inheritance hierarchies.**
+*   **Enable instantiating C++ templates from Rust, and monomorphizing Rust
+    generics from C++. Enable Rust types to participate in C++ inheritance
+    hierarchies.**
     *   For example, imagine Rust code using an object of type
-        `std::vector<MyProtobuf>`, while C++ code in the same program is
-        never instantiating this type. The Bazel `rust_library` target that mentions this
-        type must therefore be responsible for instantiating this template and
-        linking the resulting executable code into the final program. We propose
-        that this instantiation happens in an automatically generated "glue" C++
-        translation unit that is a part of that `rust_library`.
-*   **Enable automatically wrapping C++ code to be more ergonomic in Rust.**
-    For example:
+        `std::vector<MyProtobuf>`, while C++ code in the same program is never
+        instantiating this type. The Bazel `rust_library` target that mentions
+        this type must therefore be responsible for instantiating this template
+        and linking the resulting executable code into the final program. We
+        propose that this instantiation happens in an automatically generated
+        "glue" C++ translation unit that is a part of that `rust_library`.
+*   **Enable automatically wrapping C++ code to be more ergonomic in Rust.** For
+    example:
     *   `extern "C"` functions in Rust are necessarily unsafe (it is a language
         rule). We would like the vast majority of C++ API projections into Rust
         to be safe. In the current Rust language, we can achieve that only by
         wrapping the unsafe `extern "C"` function in a safe function marked with
         `#[inline(always)]`.
-    *   C++ API owners can provide rules for automatic type bridging,
-        for example, mapping C++ `absl::StatusOr` to Rust `Result`.
-        This conversion necessitates generation of a Rust wrapper function
-        around a C++ entry point that takes advantage of such type bridging.
+    *   C++ API owners can provide rules for automatic type bridging, for
+        example, mapping C++ `absl::StatusOr` to Rust `Result`. This conversion
+        necessitates generation of a Rust wrapper function around a C++ entry
+        point that takes advantage of such type bridging.
 *   **Provide stable locations (C++ modules, Rust crates) that "own" the types
     from the language point of view.**
     *   For example, when we project a C++ type into Rust, its Rust definition
         must be located in a Rust crate. Furthermore, all Rust users of this
-        type must observe it as being defined in the same crate (otherwise,
-        two identical type definitions in different crates are unrelated types
-        in Rust).
-    *   When we project a Rust type into C++ we could repeat its C++
-        definition in C++ code any number of times (for example, in every C++
-        user of a Rust type). This is technically fine because C++ allows
-        the same type to be defined multiple types within a program.
-        Nevertheless, such duplication is error-prone.
+        type must observe it as being defined in the same crate (otherwise, two
+        identical type definitions in different crates are unrelated types in
+        Rust).
+    *   When we project a Rust type into C++ we could repeat its C++ definition
+        in C++ code any number of times (for example, in every C++ user of a
+        Rust type). This is technically fine because C++ allows the same type to
+        be defined multiple types within a program. Nevertheless, such
+        duplication is error-prone.
 
 ### Glue code is generated as C++ and Rust source code
 
-Interop tooling will generate glue code as C++ and Rust source files, which
-are then compiled with an unmodified compiler for that language. The alternative
-is to generate LLVM IR or object files with machine code directly from interop
+Interop tooling will generate glue code as C++ and Rust source files, which are
+then compiled with an unmodified compiler for that language. The alternative is
+to generate LLVM IR or object files with machine code directly from interop
 tooling.
 
 **Pros**
@@ -324,13 +322,13 @@ details of the target execution environment. For example:
 Implementation details of the target execution environment that are considered
 stable enough will be reflected in API projections, for example:
 
-*   The C++ standard does not specify sizes of integer types
-    (`short`, `int`, `long` etc.) To map them to Rust, interop tooling will need
-    to assume a size that they have on the platform that targets in
-    practice. The alternative would be to create target-agnostic integer types
-    (for example, `Int` in Swift is a strong typedef for `Int32` on 32-bit
-    targets, and `Int64` on 64-bit targets), but this makes it harder to
-    provide idiomatic, transparent, high-performance interop.
+*   The C++ standard does not specify sizes of integer types (`short`, `int`,
+    `long` etc.) To map them to Rust, interop tooling will need to assume a size
+    that they have on the platform that targets in practice. The alternative
+    would be to create target-agnostic integer types (for example, `Int` in
+    Swift is a strong typedef for `Int32` on 32-bit targets, and `Int64` on
+    64-bit targets), but this makes it harder to provide idiomatic, transparent,
+    high-performance interop.
 *   The C++ standard does not specify whether standard library types like
     `std::vector` are trivially relocatable; it is an implementation detail.
     Universal interop tooling would have to conservatively assume
@@ -340,15 +338,15 @@ stable enough will be reflected in API projections, for example:
 
 **Pros**
 
-*   **Interop tooling will generate the most performant code sequences**
-    to call foreign language functions.
-    *   If interop tooling generates portable code, it would
-        have some overhead. The overhead can be eliminated by C++
-        and Rust optimizers at least in some cases, but at the cost of increased
-        build times. For example, eliminating thunks would require
-        turning on LTO, which is not fast, and usually only used for release builds.
-        It is much preferable to not generate thunks in the first place,
-        if the target platform does not need them.
+*   **Interop tooling will generate the most performant code sequences** to call
+    foreign language functions.
+    *   If interop tooling generates portable code, it would have some overhead.
+        The overhead can be eliminated by C++ and Rust optimizers at least in
+        some cases, but at the cost of increased build times. For example,
+        eliminating thunks would require turning on LTO, which is not fast, and
+        usually only used for release builds. It is much preferable to not
+        generate thunks in the first place, if the target platform does not need
+        them.
 *   **Ergonomics of API projections will be improved.**
     *   For example, whether a C++ type is trivially relocatable or not is an
         implementation detail in C++, transparent to C++ users of that type, but
@@ -362,23 +360,22 @@ stable enough will be reflected in API projections, for example:
         break Rust users.
 *   **It would be more difficult to switch internal environments to a different
     C++ standard library.**
-*   **Code that is deployed in environments that have
-    incompatible implementation details won't be able to use this C++/Rust
-    interop system.**
+*   **Code that is deployed in environments that have incompatible
+    implementation details won't be able to use this C++/Rust interop system.**
     *   Alternatively, these executables would have to bring a suitable
         execution environment with them (e.g., a copy of libc++).
 
 ### Interop tooling should be maintainable and evolvable for a long time
 
-We should design and implement C++/Rust interop tooling in
-such a way that we can maintain and evolve it for more than a decade. If Rust
-becomes tightly integrated into an existing C++ project, specific requirements for interop
-and API projection rules will keep changing. The more Rust adoption we will
-have, the more library and team-specific interop customizations we will have to
+We should design and implement C++/Rust interop tooling in such a way that we
+can maintain and evolve it for more than a decade. If Rust becomes tightly
+integrated into an existing C++ project, specific requirements for interop and
+API projection rules will keep changing. The more Rust adoption we will have,
+the more library and team-specific interop customizations we will have to
 support, and the more it will make sense for the performance team to tweak
-generated code to implement sweeping optimizations. These kinds of changes should
-be readily possible, and they should not create conflicts of interest between
-diferent users of the interop tooling.
+generated code to implement sweeping optimizations. These kinds of changes
+should be readily possible, and they should not create conflicts of interest
+between diferent users of the interop tooling.
 
 ### Interop tooling should facilitate C++ to Rust migration
 
@@ -405,8 +402,8 @@ in the cxx crate, or in sidecar files in a completely new format.
 *   The **most natural way to define Rust APIs** is by using Rust code or
     Rust-like syntax in sidecar files.
 *   **Available Rust APIs are defined in easily accessible checked-in files.**
-*   **API definitions written by a human might have higher quality,
-    on average.**
+*   **API definitions written by a human might have higher quality, on
+    average.**
 
 **Cons**
 
@@ -418,10 +415,10 @@ in the cxx crate, or in sidecar files in a completely new format.
 *   The need to create a sidecar file creates a **barrier to start using C++
     libraries from Rust.**
     *   While the duplication overhead is justifiable for widely-used libraries,
-        it is relatively high for libraries with few users and binaries,
-        making it less likely that leaf teams will start adopting Rust.
-*   **When the C++ API is changed, the Rust definitions become out-of-sync
-    with it.** Tooling needs to detect this, and the Rust definitions need to be
+        it is relatively high for libraries with few users and binaries, making
+        it less likely that leaf teams will start adopting Rust.
+*   **When the C++ API is changed, the Rust definitions become out-of-sync with
+    it.** Tooling needs to detect this, and the Rust definitions need to be
     changed (either manually or tool-assisted).
 *   There is no effective way to verify Rust binding code at the presubmit time
     of a C++ library other than building downstream projects.
@@ -469,10 +466,10 @@ compiler APIs to generate rmeta and rlib files with Rust glue code.
     *   We can solve this problem, but it makes the system more fragile,
         compared to using existing C++ and Rust compilers to compile generated
         sources.
-*   From time to time LLVM introduces bugs that cause miscompilations. If interop tooling
-    embeds LLVM, we would be adding another tool that toolchain engineers will need to
-    look into when debugging a miscompilation. We would be making the job of
-    C++ toolchain maintainers harder.
+*   From time to time LLVM introduces bugs that cause miscompilations. If
+    interop tooling embeds LLVM, we would be adding another tool that toolchain
+    engineers will need to look into when debugging a miscompilation. We would
+    be making the job of C++ toolchain maintainers harder.
 
 ## Alternatives Considered: Existing tools
 
@@ -482,15 +479,16 @@ compiler APIs to generate rmeta and rlib files with Rust glue code.
 Rust bindings from C and C++ headers**, which it consumes using libclang. The
 generated **bindings are pure Rust code** that interfaces with C and C++ using
 Rust’s [built-in FFI for C](https://doc.rust-lang.org/nomicon/ffi.html)
-(`#[repr(C)]` to indicate that a struct should use C memory layout and
-`extern "C"` to indicate that a function should use a C calling convention). C++
+(`#[repr(C)]` to indicate that a struct should use C memory layout and `extern
+"C"` to indicate that a function should use a C calling convention). C++
 functions are handled by generating a Rust `extern "C"` function that has the
-same ABI as the C++ function and attaching a `link_name` attribute with
-the mangled name.
+same ABI as the C++ function and attaching a `link_name` attribute with the
+mangled name.
 
-See [here](https://manishearth.github.io/blog/2021/02/22/integrating-rust-and-c-plus-plus-in-firefox/)
-for an in-depth description of the use of bindgen in Stylo,
-a Rust component in Firefox.
+See
+[here](https://manishearth.github.io/blog/2021/02/22/integrating-rust-and-c-plus-plus-in-firefox/)
+for an in-depth description of the use of bindgen in Stylo, a Rust component in
+Firefox.
 
 **Pros**
 
@@ -501,27 +499,27 @@ a Rust component in Firefox.
 *   **Deficiencies in safety and ergonomics**, for example:
     *   References are imported as pointers. No lifetimes, no null-safety.
     *   Constructors and destructors are not called automatically.
-    *   Overloads are distinguished by a numbered suffix in Rust.
-        These numbers clutter the source code and are hard to remember,
-        as they have no meaning. Adding overloads can change the numbering
-        and hence break Rust callers.
-*   It is **impossible to use C++ inline functions and templates**
-    from Rust because of bindgen’s architecture[^1]. The architecture is
-    unlikely to change, and therefore, this is a dealbreaker.
+    *   Overloads are distinguished by a numbered suffix in Rust. These numbers
+        clutter the source code and are hard to remember, as they have no
+        meaning. Adding overloads can change the numbering and hence break Rust
+        callers.
+*   It is **impossible to use C++ inline functions and templates** from Rust
+    because of bindgen’s architecture[^1]. The architecture is unlikely to
+    change, and therefore, this is a dealbreaker.
 
 **Evaluation**
 
-bindgen could be used in a project that has
-very limited C++ interop needs. However, creating safe and ergonomic wrappers
-for the generated bindings would require additional effort. Our vision and goals
-for C++ interop are very different from what bindgen provides.
+bindgen could be used in a project that has very limited C++ interop needs.
+However, creating safe and ergonomic wrappers for the generated bindings would
+require additional effort. Our vision and goals for C++ interop are very
+different from what bindgen provides.
 
 ### cxx
 
 [cxx](https://cxx.rs/) generates **Rust bindings for C++ APIs and vice versa**
-from an **interface definition language (IDL) included inline in Rust
-source code.** cxx generates Rust and C++ source code from IDL definitions.
-To check that the IDL definitions match the actual C++ API, cxx inserts static
+from an **interface definition language (IDL) included inline in Rust source
+code.** cxx generates Rust and C++ source code from IDL definitions. To check
+that the IDL definitions match the actual C++ API, cxx inserts static
 assertions[^2] into the generated C++ code; it does not, however, read the C++
 headers itself. cxx contains built-in bindings for various Rust and C++ standard
 library types that are not customizable.
@@ -530,11 +528,11 @@ As far as we understand, cxx has the following design constraints and goals:
 
 *   **Ship a stable product for its intended audience.**
     *   As a consequence, improvements such as integrating move semantics are
-        not going to be accepted soon. We understand that cxx is not a
-        vehicle for experimentation. cxx maintainers would prefer
-        us to first show that our ideas work in a fork of cxx or in a different
-        system, such as autocxx, and that our improvements pull their weight
-        given the added complexity.
+        not going to be accepted soon. We understand that cxx is not a vehicle
+        for experimentation. cxx maintainers would prefer us to first show that
+        our ideas work in a fork of cxx or in a different system, such as
+        autocxx, and that our improvements pull their weight given the added
+        complexity.
 *   **Remain simple and transparent.** There is a limit on the amount of
     complexity that will be tolerated.
     *   There is a chance that improvements such as modeling C++ move semantics
@@ -545,10 +543,10 @@ As far as we understand, cxx has the following design constraints and goals:
         parts communicate through a narrow interface.
 *   **Non-goal: Automatically provide the most performant interop in as many
     cases as possible.** For example:
-    *   cxx does not attempt to eliminate C++-side thunks. Instead, using LTO
-        is recommended.
-    *   cxx considers it acceptable to allocate all objects of "opaque" types
-        on the heap. Users who find these heap allocations unacceptable for
+    *   cxx does not attempt to eliminate C++-side thunks. Instead, using LTO is
+        recommended.
+    *   cxx considers it acceptable to allocate all objects of "opaque" types on
+        the heap. Users who find these heap allocations unacceptable for
         performance reasons are expected to implement a different C++ entry
         point that does not hit this limitation and bind it to Rust instead of
         the original C++ API. Heap allocation is acceptable for many C++ classes
@@ -557,93 +555,94 @@ As far as we understand, cxx has the following design constraints and goals:
 
 **Pros**
 
-*   **Mature and ergonomic enough today for mixing C++ and Rust in existing codebases
-    with limited C++ interop needs.**
+*   **Mature and ergonomic enough today for mixing C++ and Rust in existing
+    codebases with limited C++ interop needs.**
 *   We avoid being on a tech island.
 
 **Cons**
 
 *   cxx’s stability goal makes it **hard to experiment with how the Rust API
     looks.**
-*   **Our goals are unlikely to align well with the goals of the intended
-    user audience of cxx.** We would be pulling cxx in directions that make
-    it a worse product for its current users.
+*   **Our goals are unlikely to align well with the goals of the intended user
+    audience of cxx.** We would be pulling cxx in directions that make it a
+    worse product for its current users.
 *   **Almost no customizability**. Users who are not satisfied with what cxx
-    does are expected to wrap the target C++ API in a different C++ API that
-    is more friendly to cxx.
-*   cxx tries to be compatible with most standard C++ implementations found
-    in the real world, so it **cannot take advantage of unique guarantees
-    provided by the target execution environment.**
+    does are expected to wrap the target C++ API in a different C++ API that is
+    more friendly to cxx.
+*   cxx tries to be compatible with most standard C++ implementations found in
+    the real world, so it **cannot take advantage of unique guarantees provided
+    by the target execution environment.**
 
 **Evaluation**
 
-cxx could be used in projects with limited C++/Rust interop
-requirements. However, we would not be able to implement many interop features
-that we consider essential (for example, move semantics, templates).
+cxx could be used in projects with limited C++/Rust interop requirements.
+However, we would not be able to implement many interop features that we
+consider essential (for example, move semantics, templates).
 
 ### autocxx
 
 [autocxx](https://github.com/google/autocxx) **automatically generates Rust
-bindings from C++ headers**. As the name implies, it automatically generates
-IDL definitions for cxx, which then produces the actual bindings. In addition,
+bindings from C++ headers**. As the name implies, it automatically generates IDL
+definitions for cxx, which then produces the actual bindings. In addition,
 autocxx generates its own Rust and C++ code to extend the Rust API beyond what
 cxx itself would provide, for example to support passing POD types by value.
 autocxx consumes C++ headers indirectly by first running bindgen on them and
 then parsing the Rust code output by bindgen.
 
-autocxx’s [design goals](https://www.chromium.org/Home/chromium-security/memory-safety/rust-and-c-interoperability)
+autocxx’s
+[design goals](https://www.chromium.org/Home/chromium-security/memory-safety/rust-and-c-interoperability)
 are similar to our own in this document.
 
-We did a case study on using an existing project's C++ API from Rust
-using autocxx.
+We did a case study on using an existing project's C++ API from Rust using
+autocxx.
 
 **Pros**
 
-*   **Low barrier to entry**: Bindings are generated from C++ headers,
-    no need to write duplicate API definitions.
+*   **Low barrier to entry**: Bindings are generated from C++ headers, no need
+    to write duplicate API definitions.
 *   **Ergonomic mappings** for many C++ constructs.
-*   **Open to contributions that change the generated Rust APIs** or
-    make architectural changes.
+*   **Open to contributions that change the generated Rust APIs** or make
+    architectural changes.
 
 **Cons**
 
 *   **Relatively new and immature.**
-*   **Cannot (yet) consume complex headers without errors.**
-    We’ve managed to import some actual Spanner headers, but there are still
-    enough outstanding issues that we can’t yet do anything useful with Spanner.
-*   **Architecture can make modifications difficult.** autocxx is built on
-    top of two other tools, bindgen and cxx, and the interfaces between these
+*   **Cannot (yet) consume complex headers without errors.** We’ve managed to
+    import some actual Spanner headers, but there are still enough outstanding
+    issues that we can’t yet do anything useful with Spanner.
+*   **Architecture can make modifications difficult.** autocxx is built on top
+    of two other tools, bindgen and cxx, and the interfaces between these
     components can make it harder to make a modification than it would be in a
     monolithic tool. Specifically:
     *   autocxx uses bindgen to generate a description of the C++ API that it
         can parse easily (as opposed to trying to parse C++ headers either
         directly or using Clang APIs). Since bindgen was not intended for this
-        purpose, its output lacks some information that autocxx needs,
-        so autocxx [has forked](https://crates.io/crates/autocxx-bindgen)
-        bindgen to adapt it to its needs. The forked version emits additional
-        information about the C++ API in the form of attributes attached
-        to various API elements.
+        purpose, its output lacks some information that autocxx needs, so
+        autocxx [has forked](https://crates.io/crates/autocxx-bindgen) bindgen
+        to adapt it to its needs. The forked version emits additional
+        information about the C++ API in the form of attributes attached to
+        various API elements.
     *   bindgen in turn is built on the libclang API, which doesn’t surface all
         of the functionality available through Clang’s C++ API. Adding features
-        to libclang requires additional effort and has a 6 month lead time to appear in a stable release (to become eligible to be used from bindgen).
+        to libclang requires additional effort and has a 6 month lead time to
+        appear in a stable release (to become eligible to be used from bindgen).
     *   When errors occur, it can be hard to figure out which of the components
         is responsible.
-    *   Adding features can require touching multiple components,
-        which requires commits to multiple repositories.
+    *   Adding features can require touching multiple components, which requires
+        commits to multiple repositories.
 
 **Evaluation**
 
 We initially intended to use autocxx to prototype various interop ideas and
 potentially as a basis for a field trial. We still believe this would be
-feasible, but after trying to modify autocxx and its bindgen fork
-during an internal C++/Rust interop study, we feel that autocxx’s complex
-architecture is enough of an impediment that we could achieve our goals with
-less total effort by creating an interop tool from scratch that consists of
-a single codebase and uses the Clang C++ API to directly interface with Clang.
+feasible, but after trying to modify autocxx and its bindgen fork during an
+internal C++/Rust interop study, we feel that autocxx’s complex architecture is
+enough of an impediment that we could achieve our goals with less total effort
+by creating an interop tool from scratch that consists of a single codebase and
+uses the Clang C++ API to directly interface with Clang.
 
 [^1]: Doing so would require either generating C++ source code or interfacing
-deeply enough with Clang to generate object code for inline functions and
-template instantiation.
-
+    deeply enough with Clang to generate object code for inline functions and
+    template instantiation.
 [^2]: And tricks such as suitable type conversions that force the C++ compiler
-to perform appropriate checks at compile time.
+    to perform appropriate checks at compile time.
