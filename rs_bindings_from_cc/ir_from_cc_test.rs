@@ -1084,6 +1084,30 @@ fn test_no_instantiation_of_template_only_used_in_private_field() -> Result<()> 
     Ok(())
 }
 
+fn test_template_with_decltype_and_with_auto() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            template <typename T1, typename T2>
+            struct MyTemplate {
+                static decltype(auto) TemplatedAdd(T1 a, T2 b) { return a + b; }
+            };
+            using MyAlias = MyTemplate<unsigned int, long long>; "#,
+    )?;
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+               name: "TemplatedAdd", ...
+               return_type: MappedType {
+                   rs_type: RsType { name: Some("i64"), ... },
+                   cc_type: CcType { name: Some("long long"), ... },
+               }, ...
+            }
+        }
+    );
+    Ok(())
+}
+
 #[test]
 fn test_subst_template_type_parm_type_vs_const_when_non_const_template_param() -> Result<()> {
     // This test (and
