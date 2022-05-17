@@ -957,6 +957,13 @@ fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<To
     })
 }
 
+fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
+    match field.identifier.as_ref() {
+        None => make_rs_ident(&format!("__unnamed_field{}", field_index)),
+        Some(Identifier { identifier }) => make_rs_ident(identifier),
+    }
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(
@@ -969,70 +976,68 @@ fn generate_record(
     let qualified_ident = {
         quote! { crate:: #(#namespace_qualifier::)* #ident }
     };
-
     let doc_comment = generate_doc_comment(&record.doc_comment);
-    let field_idents = record
-        .fields
-        .iter()
-        .enumerate()
-        .map(|(i, f)| {
-            make_rs_ident(
-                f.identifier.as_ref().map_or(&format!("__unnamed_field{}", i), |id| &id.identifier),
-            )
-        })
-        .collect_vec();
-    let field_doc_coments =
-        record.fields.iter().map(|f| generate_doc_comment(&f.doc_comment)).collect_vec();
 
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
-    let field_types = record
+    let field_definitions = record
         .fields
         .iter()
         .enumerate()
-        .map(|(i, f)| {
+        .map(|(field_index, field)| {
             // [[no_unique_address]] fields are replaced by an unaligned block of memory
             // which fills space up to the next field.
             // See: docs/struct_layout
-            if f.is_no_unique_address {
-                let next_offset = if let Some(next) = record.fields.get(i + 1) {
+            //
+            // TODO(b/226580208): Fields of unsupported types should also be represented as an
+            // opaque blob of bytes.
+            let is_opaque_blob = field.is_no_unique_address;
+
+            let ident = make_rs_field_ident(field, field_index);
+            let doc_comment = generate_doc_comment(&field.doc_comment);
+            let access = if field.access == AccessSpecifier::Public && !is_opaque_blob {
+                quote! { pub }
+            } else {
+                quote! {}
+            };
+
+            let field_type = if is_opaque_blob {
+                let next_offset = if let Some(next) = record.fields.get(field_index + 1) {
                     next.offset
                 } else {
                     record.size * 8
                 };
-                let width = Literal::usize_unsuffixed((next_offset - f.offset) / 8);
-                return Ok(quote! {[crate::rust_std::mem::MaybeUninit<u8>; #width]});
-            }
-            let mut formatted = format_rs_type(&f.type_.rs_type, ir).with_context(|| {
-                format!("Failed to format type for field {:?} on record {:?}", f, record)
-            })?;
-            if should_implement_drop(record) || record.is_union {
-                if needs_manually_drop(&f.type_.rs_type, ir)? {
-                    // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
-                    // if we can ask Rust to preserve field destruction order if the
-                    // destructor is the SpecialMemberDefinition::NontrivialMembers
-                    // case.
-                    formatted = quote! { crate::rust_std::mem::ManuallyDrop<#formatted> }
-                } else {
-                    field_copy_trait_assertions.push(quote! {
-                        const _: () = { static_assertions::assert_impl_all!(#formatted: Copy); };
-                    });
-                }
+                let width = Literal::usize_unsuffixed((next_offset - field.offset) / 8);
+                quote! {[crate::rust_std::mem::MaybeUninit<u8>; #width]}
+            } else {
+                let mut formatted =
+                    format_rs_type(&field.type_.rs_type, ir).with_context(|| {
+                        format!(
+                            "Failed to format type for field {:?} on record {:?}",
+                            field, record
+                        )
+                    })?;
+                if should_implement_drop(record) || record.is_union {
+                    if needs_manually_drop(&field.type_.rs_type, ir)? {
+                        // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
+                        // if we can ask Rust to preserve field destruction order if the
+                        // destructor is the SpecialMemberDefinition::NontrivialMembers
+                        // case.
+                        formatted = quote! { crate::rust_std::mem::ManuallyDrop<#formatted> }
+                    } else {
+                        field_copy_trait_assertions.push(quote! {
+                            const _: () = {
+                                static_assertions::assert_impl_all!(#formatted: Copy);
+                            };
+                        });
+                    }
+                };
+                formatted
             };
-            Ok(formatted)
+
+            Ok(quote! { #doc_comment #access #ident: #field_type })
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let field_accesses = record
-        .fields
-        .iter()
-        .map(|f| {
-            if f.access == AccessSpecifier::Public && !f.is_no_unique_address {
-                quote! { pub }
-            } else {
-                quote! {}
-            }
-        })
-        .collect_vec();
     let size = record.size;
     let alignment = record.alignment;
     let field_offset_assertions = if record.is_union {
@@ -1040,12 +1045,20 @@ fn generate_record(
         // offsetof supports them.
         vec![]
     } else {
-        record.fields.iter().zip(field_idents.iter()).map(|(field, field_ident)| {
-            let offset = field.offset;
-            quote! {
+        record
+        .fields
+        .iter()
+        .enumerate()
+        .map(|(field_index, field)| {
+            let field_ident = make_rs_field_ident(field, field_index);
+            let expected_offset = field.offset;
+            let actual_offset_expr = quote! {
                 // The IR contains the offset in bits, while offset_of!()
                 // returns the offset in bytes, so we need to convert.
-                const _: () = assert!(memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8 == #offset);
+                memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8
+            };
+            quote! {
+                const _: () = assert!(#actual_offset_expr == #expected_offset);
             }
         }).collect_vec()
     };
@@ -1158,7 +1171,7 @@ fn generate_record(
         #[repr(#( #repr_attributes ),*)]
         pub #record_kind #ident {
             #head_padding
-            #( #field_doc_coments #field_accesses #field_idents: #field_types, )*
+            #( #field_definitions, )*
         }
 
         #incomplete_definition
