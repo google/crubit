@@ -95,8 +95,8 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::S>() == 1usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::S>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::S>() == 1);
+const _: () = assert!(rust_std::mem::align_of::<crate::S>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::S: Clone);
 };

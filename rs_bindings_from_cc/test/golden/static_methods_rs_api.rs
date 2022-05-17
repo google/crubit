@@ -105,8 +105,8 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::SomeClass>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::SomeClass>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::SomeClass>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::SomeClass>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::SomeClass: Clone);
 };
@@ -116,4 +116,4 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::SomeClass: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeClass, field_) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeClass, field_) * 8 == 0);

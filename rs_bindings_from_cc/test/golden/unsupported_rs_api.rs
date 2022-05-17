@@ -146,8 +146,8 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialCustomType>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialCustomType>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialCustomType>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialCustomType>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::NontrivialCustomType: Copy);
 };
@@ -155,10 +155,10 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::NontrivialCustomType: Drop);
 };
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::NontrivialCustomType, i) * 8 == 0usize);
+    assert!(memoffset_unstable_const::offset_of!(crate::NontrivialCustomType, i) * 8 == 0);
 
-const _: () = assert!(rust_std::mem::size_of::<crate::ContainingStruct>() == 1usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::ContainingStruct>() == 1usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::ContainingStruct>() == 1);
+const _: () = assert!(rust_std::mem::align_of::<crate::ContainingStruct>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::ContainingStruct: Clone);
 };

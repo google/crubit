@@ -125,9 +125,8 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4usize);
-const _: () =
-    assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
 };
@@ -135,16 +134,13 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value_) * 8
-        == 0usize
+    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value_) * 8 == 0
 );
 
-const _: () = assert!(
-    rust_std::mem::size_of::<crate::__CcTemplateInst21TemplateWithTwoParamsIifE>() == 8usize
-);
-const _: () = assert!(
-    rust_std::mem::align_of::<crate::__CcTemplateInst21TemplateWithTwoParamsIifE>() == 4usize
-);
+const _: () =
+    assert!(rust_std::mem::size_of::<crate::__CcTemplateInst21TemplateWithTwoParamsIifE>() == 8);
+const _: () =
+    assert!(rust_std::mem::align_of::<crate::__CcTemplateInst21TemplateWithTwoParamsIifE>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_all!(
         crate::__CcTemplateInst21TemplateWithTwoParamsIifE: Copy
@@ -160,12 +156,12 @@ const _: () = assert!(
         crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
         value1
     ) * 8
-        == 0usize
+        == 0
 );
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(
         crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
         value2
     ) * 8
-        == 32usize
+        == 32
 );

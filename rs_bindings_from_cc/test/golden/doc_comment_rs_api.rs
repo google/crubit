@@ -517,8 +517,8 @@ mod detail {
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::DocCommentSlashes>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::DocCommentSlashes>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::DocCommentSlashes>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::DocCommentSlashes>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::DocCommentSlashes: Clone);
 };
@@ -528,11 +528,10 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::DocCommentSlashes: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::DocCommentSlashes, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::DocCommentSlashes, i) * 8 == 0);
 
-const _: () = assert!(rust_std::mem::size_of::<crate::DocCommentBang>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::DocCommentBang>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::DocCommentBang>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::DocCommentBang>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::DocCommentBang: Clone);
 };
@@ -542,10 +541,10 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::DocCommentBang: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::DocCommentBang, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::DocCommentBang, i) * 8 == 0);
 
-const _: () = assert!(rust_std::mem::size_of::<crate::MultilineCommentTwoStars>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::MultilineCommentTwoStars>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::MultilineCommentTwoStars>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::MultilineCommentTwoStars>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars: Clone);
 };
@@ -556,10 +555,10 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::MultilineCommentTwoStars: Drop);
 };
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::MultilineCommentTwoStars, i) * 8 == 0usize);
+    assert!(memoffset_unstable_const::offset_of!(crate::MultilineCommentTwoStars, i) * 8 == 0);
 
-const _: () = assert!(rust_std::mem::size_of::<crate::LineComment>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::LineComment>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::LineComment>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::LineComment>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::LineComment: Clone);
 };
@@ -569,10 +568,10 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::LineComment: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::LineComment, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::LineComment, i) * 8 == 0);
 
-const _: () = assert!(rust_std::mem::size_of::<crate::MultilineOneStar>() == 4usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::MultilineOneStar>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::MultilineOneStar>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::MultilineOneStar>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::MultilineOneStar: Clone);
 };
@@ -582,12 +581,10 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::MultilineOneStar: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::MultilineOneStar, i) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::MultilineOneStar, i) * 8 == 0);
 
-const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4usize);
-const _: () =
-    assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Clone);
 };
@@ -598,13 +595,11 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) * 8
-        == 0usize
+    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) * 8 == 0
 );
 
-const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4usize);
-const _: () =
-    assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Clone);
 };
@@ -615,6 +610,5 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) * 8
-        == 0usize
+    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) * 8 == 0
 );

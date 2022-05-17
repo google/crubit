@@ -55,23 +55,22 @@ forward_declare::unsafe_define!(
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::WithUnnamedFields>() == 20usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::WithUnnamedFields>() == 4usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::WithUnnamedFields>() == 20);
+const _: () = assert!(rust_std::mem::align_of::<crate::WithUnnamedFields>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::WithUnnamedFields: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::WithUnnamedFields: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, foo) * 8 == 0usize);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, foo) * 8 == 0);
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, __unnamed_field1) * 8 == 32usize
+    memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, __unnamed_field1) * 8 == 32
 );
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, bar) * 8 == 64usize);
+    assert!(memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, bar) * 8 == 64);
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, __unnamed_field3) * 8 == 96usize
+    memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, __unnamed_field3) * 8 == 96
 );
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, baz) * 8 == 128usize);
+    assert!(memoffset_unstable_const::offset_of!(crate::WithUnnamedFields, baz) * 8 == 128);

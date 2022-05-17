@@ -147,8 +147,8 @@ forward_declare::unsafe_define!(
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::HasCustomAlignment>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::HasCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::HasCustomAlignment>() == 64);
+const _: () = assert!(rust_std::mem::align_of::<crate::HasCustomAlignment>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasCustomAlignment: Copy);
 };
@@ -156,8 +156,8 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasCustomAlignment: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::HasFieldWithCustomAlignment>() == 64);
+const _: () = assert!(rust_std::mem::align_of::<crate::HasFieldWithCustomAlignment>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasFieldWithCustomAlignment: Copy);
 };
@@ -165,13 +165,12 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasFieldWithCustomAlignment: Drop);
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::HasFieldWithCustomAlignment, field) * 8 == 0usize
+    memoffset_unstable_const::offset_of!(crate::HasFieldWithCustomAlignment, field) * 8 == 0
 );
 
+const _: () = assert!(rust_std::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
 const _: () =
-    assert!(rust_std::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64usize);
-const _: () =
-    assert!(rust_std::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64usize);
+    assert!(rust_std::mem::align_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Copy);
 };
@@ -179,8 +178,8 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::InheritsFromBaseWithCustomAlignment: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64usize);
-const _: () = assert!(rust_std::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64usize);
+const _: () = assert!(rust_std::mem::size_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
+const _: () = assert!(rust_std::mem::align_of::<crate::HasCustomAlignmentWithGnuAttr>() == 64);
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasCustomAlignmentWithGnuAttr: Copy);
 };

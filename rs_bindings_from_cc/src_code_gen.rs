@@ -1038,8 +1038,8 @@ fn generate_record(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let size = record.size;
-    let alignment = record.alignment;
+    let size = Literal::usize_unsuffixed(record.size);
+    let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_offset_assertions = if record.is_union {
         // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
         // offsetof supports them.
@@ -1051,7 +1051,7 @@ fn generate_record(
         .enumerate()
         .map(|(field_index, field)| {
             let field_ident = make_rs_field_ident(field, field_index);
-            let expected_offset = field.offset;
+            let expected_offset = Literal::usize_unsuffixed(field.offset);
             let actual_offset_expr = quote! {
                 // The IR contains the offset in bits, while offset_of!()
                 // returns the offset in bytes, so we need to convert.
@@ -2770,14 +2770,14 @@ mod tests {
             rs_api,
             quote! {
                 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
-                const _: () = assert!(rust_std::mem::size_of::<crate::SomeStruct>() == 12usize);
-                const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 4usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::SomeStruct>() == 12);
+                const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 4);
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Clone); };
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Copy); };
                 const _: () = { static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop); };
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) * 8 == 0usize);
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) * 8 == 32usize);
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) * 8 == 64usize);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) * 8 == 0);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) * 8 == 32);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) * 8 == 64);
             }
         );
         assert_cc_matches!(
@@ -3935,8 +3935,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8usize);
-                const _: () = assert!(rust_std::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::SomeUnionWithPrivateFields>() == 8);
+                const _: () = assert!(rust_std::mem::align_of::<crate::SomeUnionWithPrivateFields>() == 8);
                 const _: () = {
                   static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Clone);
                 };
@@ -3974,8 +3974,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<crate::EmptyStruct>() == 1usize);
-                const _: () = assert!(rust_std::mem::align_of::<crate::EmptyStruct>() == 1usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::EmptyStruct>() == 1);
+                const _: () = assert!(rust_std::mem::align_of::<crate::EmptyStruct>() == 1);
             }
         );
 
@@ -4005,8 +4005,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<crate::EmptyUnion>() == 1usize);
-                const _: () = assert!(rust_std::mem::align_of::<crate::EmptyUnion>() == 1usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::EmptyUnion>() == 1);
+                const _: () = assert!(rust_std::mem::align_of::<crate::EmptyUnion>() == 1);
             }
         );
 
@@ -4041,8 +4041,8 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                const _: () = assert!(rust_std::mem::size_of::<crate::UnionWithNontrivialField>() == 4usize);
-                const _: () = assert!(rust_std::mem::align_of::<crate::UnionWithNontrivialField>() == 4usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::UnionWithNontrivialField>() == 4);
+                const _: () = assert!(rust_std::mem::align_of::<crate::UnionWithNontrivialField>() == 4);
             }
         );
         Ok(())
@@ -5375,10 +5375,10 @@ mod tests {
                     ...
                 }
                 ...
-                const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4usize);
-                const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4usize);
+                const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
+                const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                 ...
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0usize);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0);
             }
         );
         Ok(())
