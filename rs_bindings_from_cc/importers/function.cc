@@ -6,6 +6,7 @@
 
 #include "absl/strings/substitute.h"
 #include "rs_bindings_from_cc/ast_util.h"
+#include "clang/Sema/Sema.h"
 
 namespace crubit {
 
@@ -88,6 +89,14 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     std::optional<Identifier> param_name = ictx_.GetTranslatedIdentifier(param);
     CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({*param_type, *std::move(param_name)});
+  }
+
+  if (function_decl->getReturnType()->isUndeducedType()) {
+    bool still_undeduced = ictx_.sema_.DeduceReturnType(
+        function_decl, function_decl->getLocation());
+    if (still_undeduced) {
+      add_error("Couldn't deduce the return type");
+    }
   }
 
   if (const clang::RecordType* record_return_type =

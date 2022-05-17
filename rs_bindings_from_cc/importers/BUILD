@@ -44,6 +44,7 @@ cc_library(
         "@absl//strings",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
+        "@llvm///clang:sema",
     ],
 )
 

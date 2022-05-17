@@ -718,6 +718,11 @@ absl::StatusOr<MappedType> TypeMapper::ConvertType(
   } else if (const auto* subst_type =
                  type->getAs<clang::SubstTemplateTypeParmType>()) {
     return ConvertQualType(subst_type->getReplacementType(), lifetimes);
+  } else if (const auto* deduced_type = type->getAs<clang::DeducedType>()) {
+    // Deduction should have taken place earlier (e.g. via DeduceReturnType
+    // called from FunctionDeclImporter::Import).
+    CRUBIT_CHECK(deduced_type->isDeduced());
+    return ConvertQualType(deduced_type->getDeducedType(), lifetimes);
   }
 
   return absl::UnimplementedError(absl::StrCat(

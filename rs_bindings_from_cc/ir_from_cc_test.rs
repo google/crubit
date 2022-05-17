@@ -1131,6 +1131,7 @@ fn test_no_instantiation_of_template_only_used_in_private_field() -> Result<()> 
     Ok(())
 }
 
+#[test]
 fn test_template_with_decltype_and_with_auto() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision
