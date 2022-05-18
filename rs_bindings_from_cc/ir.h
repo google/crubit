@@ -478,16 +478,17 @@ std::ostream& operator<<(std::ostream& o, const AccessSpecifier& access);
 struct Field {
   llvm::json::Value ToJson() const;
 
+  // Name of the field.  This may be missing for "unnamed members" - see:
+  // - https://en.cppreference.com/w/c/language/struct
+  // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
   llvm::Optional<Identifier> identifier;
+
   llvm::Optional<std::string> doc_comment;
   absl::StatusOr<MappedType> type;
   AccessSpecifier access;
-  // Field offset in bits.
-  uint64_t offset;
-  // Field size in bits.
-  uint64_t size;
-  // True if the field is [[no_unique_address]].
-  bool is_no_unique_address;
+  uint64_t offset;            // Field offset in bits.
+  uint64_t size;              // Field size in bits.
+  bool is_no_unique_address;  // True if the field is [[no_unique_address]].
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {

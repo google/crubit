@@ -224,12 +224,15 @@ fn test_record_member_variable_access_specifiers() {
 }
 
 #[test]
-fn test_unnamed_fields() {
+fn test_struct_with_unnamed_bitfield_member() {
+    // This test input causes `field_decl->getName()` to return an empty string.
+    // This example is based on `struct timex` from
+    // /usr/grte/v5/include/bits/timex.h
     let ir = ir_from_cc(
         r#"
         struct WithUnnamedFields {
             int foo;
-            int :32;
+            int :32;  // <- unnamed bitfield
         };"#,
     )
     .unwrap();
@@ -243,6 +246,56 @@ fn test_unnamed_fields() {
                     Field { identifier: Some("foo") ... },
                     Field { identifier: None ... },
                 ] ...
+            }
+        }
+    );
+}
+
+#[test]
+fn test_struct_with_unnamed_struct_and_union_members() {
+    // This test input causes `field_decl->getName()` to return an empty string.
+    // See also:
+    // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member
+    //   of a struct whose type is a struct without name is known as anonymous
+    //   struct."
+    // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
+    let ir = ir_from_cc(
+        r#"
+        struct StructWithUnnamedMembers {
+          struct {
+            int anonymous_struct_field_1;
+            int anonymous_struct_field_2;
+          };
+          union {
+            int anonymous_union_field_1;
+            int anonymous_union_field_2;
+          };
+        }; "#,
+    )
+    .unwrap();
+
+    // TODO(b/200067824): `type_` should not be `Err(...)` in the expectations below
+    // / we should support nested structs eventually.
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Record {
+                rs_name: "StructWithUnnamedMembers" ...
+                cc_name: "StructWithUnnamedMembers" ...
+                fields: [
+                    Field {
+                        identifier: None, ...
+                        type_ : Err(...), ...
+                        offset: 0, ...
+                    } ...
+                    Field {
+                        identifier: None, ...
+                        type_ : Err(...), ...
+                        offset: 64, ...
+                    } ...
+                ], ...
+                size: 12, ...
+                alignment: 4, ...
             }
         }
     );

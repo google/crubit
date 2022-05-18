@@ -2985,6 +2985,96 @@ mod tests {
     }
 
     #[test]
+    fn test_struct_with_unnamed_bitfield_member() -> Result<()> {
+        // This test input causes `field_decl->getName()` to return an empty string.
+        // This example is based on `struct timex` from
+        // /usr/grte/v5/include/bits/timex.h
+        let ir = ir_from_cc(
+            r#"
+            struct SomeStruct {
+                int first_field;
+                int :32;
+                int last_field;
+            }; "#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+               #[repr(C)]
+               pub struct SomeStruct {
+                   pub first_field: i32,
+                   pub __unnamed_field1: i32,
+                   pub last_field: i32,
+               }
+               ...
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::SomeStruct, first_field) * 8 == 0);
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::SomeStruct, __unnamed_field1) * 8 == 32);
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::SomeStruct, last_field) * 8 == 64);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
+        // This test input causes `field_decl->getName()` to return an empty string.
+        // See also:
+        // - https://en.cppreference.com/w/c/language/struct: "[...] an unnamed member
+        //   of a struct whose type is a struct without name is known as anonymous
+        //   struct."
+        // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
+        let ir = ir_from_cc(
+            r#"
+            struct StructWithUnnamedMembers {
+              int first_field;
+
+              struct {
+                int anonymous_struct_field_1;
+                int anonymous_struct_field_2;
+              };
+              union {
+                int anonymous_union_field_1;
+                int anonymous_union_field_2;
+              };
+
+              int last_field;
+            }; "#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        // TODO(b/200067824): Once nested structs anhd unions are supported,
+        // `__unnamed_field1` and `__unnamed_field2` should have a real, usable
+        // type.
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+               #[repr(C, align(4))]
+               pub struct StructWithUnnamedMembers {
+                   pub first_field: i32,
+                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
+                   __unnamed_field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
+                   __unnamed_field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                   pub last_field: i32,
+               }
+               ...
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::StructWithUnnamedMembers, first_field) * 8 == 0);
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::StructWithUnnamedMembers, __unnamed_field1) * 8 == 32);
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::StructWithUnnamedMembers, __unnamed_field2) * 8 == 96);
+               const _: () = assert!(memoffset_unstable_const::offset_of!(
+                       crate::StructWithUnnamedMembers, last_field) * 8 == 128);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_struct_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
