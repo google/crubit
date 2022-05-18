@@ -82,6 +82,10 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
   }
 
+  // At this point we know that the import of `record_decl` will succeed /
+  // cannot fail.
+  ictx_.type_mapper_.Insert(record_decl);
+
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
 
   const clang::ASTRecordLayout& layout =
@@ -91,19 +95,13 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   bool override_alignment = record_decl->hasAttr<clang::AlignedAttr>() ||
                             is_derived_class || layout.hasOwnVFPtr();
 
-  absl::StatusOr<std::vector<Field>> fields = ImportFields(record_decl);
-  if (!fields.ok()) {
-    return ictx_.ImportUnsupportedItem(record_decl, fields.status().ToString());
-  }
-
-  for (const Field& field : *fields) {
+  std::vector<Field> fields = ImportFields(record_decl);
+  for (const Field& field : fields) {
     if (field.is_no_unique_address || !field.type.ok()) {
       override_alignment = true;
       break;
     }
   }
-
-  ictx_.type_mapper_.Insert(record_decl);
 
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
   return Record{
@@ -113,7 +111,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .owning_target = ictx_.GetOwningTarget(record_decl),
       .doc_comment = std::move(doc_comment),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
-      .fields = *std::move(fields),
+      .fields = std::move(fields),
       .size = layout.getSize().getQuantity(),
       .alignment = layout.getAlignment().getQuantity(),
       .is_derived_class = is_derived_class,
@@ -130,13 +128,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   };
 }
 
-absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
+std::vector<Field> CXXRecordDeclImporter::ImportFields(
     clang::CXXRecordDecl* record_decl) {
-  // Provisionally assume that we know this RecordDecl so that we'll be able
-  // to import fields whose type contains the record itself.
-  TypeMapper temp_import_mapper(ictx_.type_mapper_);
-  temp_import_mapper.Insert(record_decl);
-
   clang::AccessSpecifier default_access =
       record_decl->isClass() ? clang::AS_private : clang::AS_public;
   std::vector<Field> fields;
@@ -145,7 +138,7 @@ absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
     absl::StatusOr<MappedType> type =
-        temp_import_mapper.ConvertQualType(field_decl->getType(), no_lifetimes);
+        ictx_.type_mapper_.ConvertQualType(field_decl->getType(), no_lifetimes);
 
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {
