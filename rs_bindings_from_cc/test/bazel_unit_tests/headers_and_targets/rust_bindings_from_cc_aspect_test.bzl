@@ -61,7 +61,7 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
     asserts.equals(
         env,
         targets_and_headers[1]["t"],
-        "//:_builtin_hdrs",
+        "//:_nothing_should_depend_on_private_builtin_hdrs",
     )
 
     return analysistest.end(env)
@@ -83,7 +83,8 @@ def _no_targets_and_headers_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, 0, len(targets_and_headers))
+    # only headers and targets from the libc++ are there
+    asserts.equals(env, 1, len(targets_and_headers))
 
     return analysistest.end(env)
 
@@ -102,15 +103,15 @@ def _targets_and_headers_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, 1, len(targets_and_headers))
+    asserts.equals(env, 2, len(targets_and_headers))
     asserts.equals(
         env,
-        targets_and_headers[0]["t"],
+        targets_and_headers[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:mylib",
     )
     asserts.equals(
         env,
-        targets_and_headers[0]["h"],
+        targets_and_headers[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/lib.h"],
     )
 
@@ -132,27 +133,27 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, 2, len(targets_and_headers))
+    asserts.equals(env, 3, len(targets_and_headers))
 
     asserts.equals(
         env,
-        targets_and_headers[0]["t"],
+        targets_and_headers[1]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:bottom",
     )
     asserts.equals(
         env,
-        targets_and_headers[0]["h"],
+        targets_and_headers[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/lib.h"],
     )
 
     asserts.equals(
         env,
-        targets_and_headers[1]["t"],
+        targets_and_headers[2]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:top",
     )
     asserts.equals(
         env,
-        targets_and_headers[1]["h"],
+        targets_and_headers[2]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/top.h"],
     )
 
@@ -179,10 +180,10 @@ def _textual_hdrs_not_in_targets_and_hdrs_impl(ctx):
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
     # Check that none of the textual headers made it into the targets_and_headers provider.
-    asserts.equals(env, 1, len(targets_and_headers))
+    asserts.equals(env, 2, len(targets_and_headers))
     asserts.equals(
         env,
-        targets_and_headers[0]["h"],
+        targets_and_headers[1]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/nontextual.h"],
     )
 
@@ -244,8 +245,8 @@ def _generated_headers_specified_with_full_path_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, 1, len(targets_and_headers))
-    header_path = targets_and_headers[0]["h"][0]
+    asserts.equals(env, 2, len(targets_and_headers))
+    header_path = targets_and_headers[1]["h"][0]
     asserts.true(
         env,
         header_path

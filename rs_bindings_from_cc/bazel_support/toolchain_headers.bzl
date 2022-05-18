@@ -19,57 +19,63 @@ load(
     "generate_and_compile_bindings",
 )
 
-def _is_public_std_header(input, public_hdrs):
-    return (
-        input.basename in public_hdrs and
-        "experimental" not in input.short_path
-    )
+def _has_suffix(input, suffices):
+    for suffix in suffices:
+        if input.short_path.endswith(suffix):
+            return True
+    return False
 
-def _collect_std_hdrs(input_list, public_hdrs):
-    return [hdr for hdr in input_list if _is_public_std_header(hdr, public_hdrs)]
+def _filter_headers_with_suffices(input_list, suffices):
+    return [hdr for hdr in input_list if _has_suffix(hdr, suffices)]
 
-def _collect_nonstd_hdrs(input_list, public_hdrs):
-    return [hdr for hdr in input_list if not _is_public_std_header(hdr, public_hdrs)]
+def _filter_headers_without_suffices(input_list, suffices):
+    return [hdr for hdr in input_list if not _has_suffix(hdr, suffices)]
+
+def _add_prefix(strings, prefix):
+    return [prefix + s for s in strings]
 
 def _bindings_for_toolchain_headers_impl(ctx):
-    std_hdrs = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + ctx.files.hdrs
-    all_std_hdrs = depset(direct = ctx.files.hdrs + ctx.files._builtin_hdrs, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
+    std_files = ctx.attr._stl[CcInfo].compilation_context.headers.to_list() + ctx.files.hdrs
+    std_and_builtin_files = depset(direct = ctx.files.hdrs + ctx.files._builtin_hdrs, transitive = [ctx.attr._stl[CcInfo].compilation_context.headers])
 
-    # The clang builtin headers also contain some standard headers. We'll consider those part of
-    # the C++ Standard library target, so we generate bindings for them.
-    builtin_std_hdrs = _collect_std_hdrs(ctx.files._builtin_hdrs, ctx.attr.public_hdrs)
-    builtin_nonstd_hdrs = _collect_nonstd_hdrs(
+    prefixed_libcxx_hdrs = _add_prefix(ctx.attr.public_libcxx_hdrs, "c++/v1/")
+
+    # The clang builtin headers also contain some libc++ headers. We consider those part of
+    # the libc++ target, so we generate bindings for them.
+    builtin_libcxx_files = _filter_headers_with_suffices(ctx.files._builtin_hdrs, prefixed_libcxx_hdrs)
+    builtin_nonstd_files = _filter_headers_without_suffices(
         ctx.files._builtin_hdrs,
-        ctx.attr.public_hdrs,
+        ctx.attr.public_libcxx_hdrs,
     )
 
     targets_and_headers = depset(
         direct = [
             json.encode({
                 "t": str(ctx.label),
-                "h": [hdr.path for hdr in std_hdrs + builtin_std_hdrs],
+                "h": [hdr.path for hdr in std_files + builtin_libcxx_files],
             }),
             json.encode({
-                "t": "//:_builtin_hdrs",
-                "h": [h.path for h in builtin_nonstd_hdrs],
+                "t": "//:_nothing_should_depend_on_private_builtin_hdrs",
+                "h": [h.path for h in builtin_nonstd_files],
             }),
         ],
     )
 
-    public_std_hdrs = _collect_std_hdrs(std_hdrs, ctx.attr.public_hdrs)
+    public_libcxx_files = _filter_headers_with_suffices(std_files, prefixed_libcxx_hdrs)
+    public_libc_files = _filter_headers_with_suffices(std_files, _add_prefix(ctx.attr.public_libc_hdrs, "v5/include/"))
 
     header_includes = []
-    for hdr in public_std_hdrs:
+    for hdr in ctx.attr.public_libcxx_hdrs + ctx.attr.public_libc_hdrs:
         header_includes.append("-include")
-        header_includes.append(hdr.basename)
+        header_includes.append(hdr)
 
-    return [RustToolchainHeadersInfo(headers = all_std_hdrs)] + generate_and_compile_bindings(
+    return [RustToolchainHeadersInfo(headers = std_and_builtin_files)] + generate_and_compile_bindings(
         ctx,
         ctx.attr,
         compilation_context = ctx.attr._stl[CcInfo].compilation_context,
-        public_hdrs = public_std_hdrs,
+        public_hdrs = public_libc_files + public_libcxx_files,
         header_includes = header_includes,
-        action_inputs = all_std_hdrs,
+        action_inputs = std_and_builtin_files,
         targets_and_headers = targets_and_headers,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
@@ -80,8 +86,8 @@ bindings_for_toolchain_headers = rule(
     attrs = dict(
         bindings_attrs.items() + {
             "hdrs": attr.label(),
-            "public_hdrs": attr.string_list(),
-            "deps": attr.label_list(),
+            "public_libc_hdrs": attr.string_list(),
+            "public_libcxx_hdrs": attr.string_list(),
             "_stl": attr.label(default = "//third_party/stl:stl"),
         }.items(),
     ),

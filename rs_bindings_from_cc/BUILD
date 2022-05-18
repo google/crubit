@@ -422,7 +422,7 @@ rust_test(
     ],
 )
 
-STD_HEADERS = [
+LIBCXX_HEADERS = [
     "cstddef",
     "cstdlib",
     "version",
@@ -444,6 +444,8 @@ STD_HEADERS = [
     "stddef.h",
     "stdlib.h",
 ]
+
+LIBC_HEADERS = []
 
 config_setting(
     name = "llvm_unstable",
@@ -475,7 +477,8 @@ filegroup(
 bindings_for_toolchain_headers(
     name = "cc_std",
     hdrs = ":toolchain_headers",
-    public_hdrs = STD_HEADERS,
+    public_libc_hdrs = LIBC_HEADERS,
+    public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = ["//visibility:public"],
 )
 

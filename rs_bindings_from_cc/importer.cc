@@ -468,7 +468,7 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
     llvm::Optional<llvm::StringRef> filename =
         source_manager.getNonBuiltinFilenameForID(id);
     if (!filename) {
-      return BazelLabel("//:builtin");
+      return BazelLabel("//:_nothing_should_depend_on_private_builtin_hdrs");
     }
     if (filename->startswith("./")) {
       filename = filename->substr(2);
