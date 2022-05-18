@@ -98,7 +98,7 @@ mod tests {
         assert_eq!(x.value, 42);
         {
             // Read/write via a pin-projection.
-            let mut x = x.as_mut().project();
+            let mut x = x.as_mut().project_pin();
             assert_eq!(*x.value, 42);
             *x.value = 0;
             assert_eq!(*x.value, 0);

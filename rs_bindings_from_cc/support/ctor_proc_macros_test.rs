@@ -12,7 +12,7 @@
 
 #![cfg(test)]
 // Callers are expected to enable `negative_impls`.
-// more_qualified_paths is used to make projected!() simpler to use.
+// more_qualified_paths is used to make project_pin_type!() simpler to use.
 #![feature(negative_impls, more_qualified_paths)]
 
 // pathological shadowed names: shadow important modules that the macros use.
@@ -61,24 +61,24 @@ fn test_derive_default_tuple_struct() {
 fn test_recursively_pinned_unit_struct() {
     #[::ctor::recursively_pinned]
     struct S;
-    let _ = Box::pin(S).as_mut().project();
-    assert_eq!(::std::mem::size_of::<::ctor::projected!(S)>(), 0);
+    let _ = Box::pin(S).as_mut().project_pin();
+    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
 }
 
 #[test]
 fn test_recursively_pinned_fieldless_struct() {
     #[::ctor::recursively_pinned]
     struct S {}
-    let _ = Box::pin(S {}).as_mut().project();
-    assert_eq!(::std::mem::size_of::<::ctor::projected!(S)>(), 0);
+    let _ = Box::pin(S {}).as_mut().project_pin();
+    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
 }
 
 #[test]
 fn test_recursively_pinned_fieldless_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S();
-    let _ = Box::pin(S()).as_mut().project();
-    assert_eq!(::std::mem::size_of::<::ctor::projected!(S)>(), 0);
+    let _ = Box::pin(S()).as_mut().project_pin();
+    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(S)>(), 0);
 }
 
 #[test]
@@ -87,8 +87,8 @@ fn test_recursively_pinned_fieldless_enum() {
     enum E {
         A,
     }
-    let <::ctor::projected!(E)>::A = Box::pin(E::A).as_mut().project();
-    assert_eq!(::std::mem::size_of::<::ctor::projected!(E)>(), 0);
+    let <::ctor::project_pin_type!(E)>::A = Box::pin(E::A).as_mut().project_pin();
+    assert_eq!(::std::mem::size_of::<::ctor::project_pin_type!(E)>(), 0);
 }
 
 #[test]
@@ -97,7 +97,7 @@ fn test_recursively_pinned_in_module() {
         #[::ctor::recursively_pinned]
         pub struct S;
     }
-    let _: ::ctor::projected!(submodule::S) = Box::pin(submodule::S).as_mut().project();
+    let _: ::ctor::project_pin_type!(submodule::S) = Box::pin(submodule::S).as_mut().project_pin();
 }
 
 #[test]
@@ -106,14 +106,14 @@ fn test_recursively_pinned_struct() {
     struct S {
         x: i32,
     }
-    let _: ::std::pin::Pin<&mut i32> = Box::pin(S { x: 42 }).as_mut().project().x;
+    let _: ::std::pin::Pin<&mut i32> = Box::pin(S { x: 42 }).as_mut().project_pin().x;
 }
 
 #[test]
 fn test_recursively_pinned_tuple_struct() {
     #[::ctor::recursively_pinned]
     struct S(i32);
-    let _: ::std::pin::Pin<&mut i32> = Box::pin(S(42)).as_mut().project().0;
+    let _: ::std::pin::Pin<&mut i32> = Box::pin(S(42)).as_mut().project_pin().0;
 }
 
 #[test]
@@ -122,8 +122,8 @@ fn test_recursively_pinned_enum_struct() {
     enum E {
         A { x: i32 },
     }
-    match Box::pin(E::A { x: 42 }).as_mut().project() {
-        <::ctor::projected!(E)>::A { x } => {
+    match Box::pin(E::A { x: 42 }).as_mut().project_pin() {
+        <::ctor::project_pin_type!(E)>::A { x } => {
             let _: ::std::pin::Pin<&mut i32> = x;
         }
     }
@@ -135,8 +135,8 @@ fn test_recursively_pinned_enum_tuple() {
     enum E {
         A(i32),
     }
-    match Box::pin(E::A(42)).as_mut().project() {
-        <::ctor::projected!(E)>::A(x) => {
+    match Box::pin(E::A(42)).as_mut().project_pin() {
+        <::ctor::project_pin_type!(E)>::A(x) => {
             let _: ::std::pin::Pin<&mut i32> = x;
         }
     }
@@ -214,7 +214,7 @@ fn test_pinned_drop() {
     struct DropStruct(Rc<Cell<bool>>);
     impl ::ctor::PinnedDrop for DropStruct {
         unsafe fn pinned_drop(self: ::std::pin::Pin<&mut Self>) {
-            (&*self.project().0).set(true);
+            (&*self.project_pin().0).set(true);
         }
     }
 

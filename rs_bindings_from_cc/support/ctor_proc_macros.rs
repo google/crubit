@@ -73,13 +73,13 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-/// `projected!(foo::T)` is the name of the type returned by
-/// `foo::T::project()`.
+/// `project_pin_type!(foo::T)` is the name of the type returned by
+/// `foo::T::project_pin()`.
 ///
 /// If `foo::T` is not `#[recursively_pinned]`, then this returns the name it
 /// would have used, but is essentially useless.
 #[proc_macro]
-pub fn projected(name: TokenStream) -> TokenStream {
+pub fn project_pin_type(name: TokenStream) -> TokenStream {
     let mut name = syn::parse_macro_input!(name as syn::Path);
     match name.segments.last_mut() {
         None => {
@@ -96,14 +96,14 @@ pub fn projected(name: TokenStream) -> TokenStream {
                 .into_compile_error()
                 .into();
             }
-            last.ident = projected_ident(&last.ident);
+            last.ident = project_pin_ident(&last.ident);
         }
     }
     TokenStream::from(quote! { #name })
 }
 
-fn projected_ident(ident: &Ident) -> Ident {
-    Ident::new(&format!("__CrubitProjected{}", ident), Span::call_site())
+fn project_pin_ident(ident: &Ident) -> Ident {
+    Ident::new(&format!("__CrubitProjectPin{}", ident), Span::call_site())
 }
 
 fn projected_struct(
@@ -114,13 +114,13 @@ fn projected_struct(
     projected.attrs.clear();
 
     let original_ident = projected.ident.clone();
-    projected.ident = projected_ident(&projected.ident);
+    projected.ident = project_pin_ident(&projected.ident);
     let projected_ident = &projected.ident;
 
     assert_eq!(
         projected.generics.params.len(),
         0,
-        "pin projection is currently not implemented for generic structs"
+        "projection is currently not implemented for generic structs"
     );
 
     let is_fieldless = match &projected.data {
@@ -300,11 +300,11 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = syn::parse_macro_input!(args as RecursivelyPinnedArgs);
     let input = syn::parse_macro_input!(item as syn::DeriveInput);
 
-    let (projected, projected_impl) = match projected_struct(input.clone()) {
+    let (project_pin_struct, project_pin_struct_impl) = match projected_struct(input.clone()) {
         Ok(ok) => ok,
         Err(e) => return e.into_compile_error().into(),
     };
-    let projected_ident = &projected.ident;
+    let project_pin_ident = &project_pin_struct.ident;
 
     let name = input.ident.clone();
 
@@ -329,14 +329,14 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #input
-        #projected
-        #projected_impl
+        #project_pin_struct
+        #project_pin_struct_impl
 
         impl #name {
             #[must_use]
             #[inline(always)]
-            pub fn project(self: ::std::pin::Pin<&mut Self>) -> #projected_ident {
-                #projected_ident::new(self)
+            pub fn project_pin(self: ::std::pin::Pin<&mut Self>) -> #project_pin_ident {
+                #project_pin_ident::new(self)
             }
         }
 
