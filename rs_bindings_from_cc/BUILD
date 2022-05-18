@@ -251,6 +251,7 @@ cc_library(
         "//common:check",
         "//common:strong_int",
         "@absl//container:flat_hash_map",
+        "@absl//status:statusor",
         "@absl//strings",
         "@llvm///clang:ast",
         "@llvm///llvm:Support",

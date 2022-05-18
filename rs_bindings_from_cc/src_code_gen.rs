@@ -964,14 +964,19 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
     }
 }
 
-fn should_represent_field_as_opaque_blob(field: &Field) -> bool {
-    // [[no_unique_address]] fields are replaced by an unaligned block of memory
-    // which fills space up to the next field.
+/// Gets the type of `field` for layout purposes.
+///
+/// Note that `get_field_rs_type_for_layout` may return Err (for
+/// `is_no_unique_address` fields) even if `field.type_` is Ok.
+fn get_field_rs_type_for_layout(field: &Field) -> Result<&RsType, &str> {
+    // [[no_unique_address]] fields are replaced by a type-less, unaligned block of
+    // memory which fills space up to the next field.
     // See: docs/struct_layout
-    //
-    // TODO(b/226580208): Fields of unsupported types should also be represented as
-    // an opaque blob of bytes.
-    field.is_no_unique_address
+    if field.is_no_unique_address {
+        return Err("`[[no_unique_address]]` attribute was present.");
+    }
+
+    field.type_.as_ref().map(|t| &t.rs_type).map_err(String::as_str)
 }
 
 /// Generates Rust source code for a given `Record` and associated assertions as
@@ -994,48 +999,61 @@ fn generate_record(
         .iter()
         .enumerate()
         .map(|(field_index, field)| {
-            let is_opaque_blob = should_represent_field_as_opaque_blob(field);
-
             let ident = make_rs_field_ident(field, field_index);
-            let doc_comment = generate_doc_comment(&field.doc_comment);
-            let access = if field.access == AccessSpecifier::Public && !is_opaque_blob {
+            let doc_comment = match field.type_.as_ref() {
+                Ok(_) => generate_doc_comment(&field.doc_comment),
+                Err(msg) => {
+                    let supplemental_text =
+                        format!("Reason for representing this field as a blob of bytes:\n{}", msg);
+                    let new_text = match field.doc_comment.as_ref() {
+                        None => supplemental_text,
+                        Some(old_text) => format!("{}\n\n{}", old_text, supplemental_text),
+                    };
+                    generate_doc_comment(&Some(new_text))
+                }
+            };
+            let access = if field.access == AccessSpecifier::Public
+                && get_field_rs_type_for_layout(field).is_ok()
+            {
                 quote! { pub }
             } else {
                 quote! {}
             };
 
-            let field_type = if is_opaque_blob {
-                let next_offset = if let Some(next) = record.fields.get(field_index + 1) {
-                    next.offset
-                } else {
-                    record.size * 8
-                };
-                let width = Literal::usize_unsuffixed((next_offset - field.offset) / 8);
-                quote! {[crate::rust_std::mem::MaybeUninit<u8>; #width]}
-            } else {
-                let mut formatted =
-                    format_rs_type(&field.type_.rs_type, ir).with_context(|| {
+            let field_type = match get_field_rs_type_for_layout(field) {
+                Err(_) => {
+                    let next_offset = if let Some(next) = record.fields.get(field_index + 1) {
+                        next.offset
+                    } else {
+                        record.size * 8
+                    };
+                    let width = Literal::usize_unsuffixed((next_offset - field.offset) / 8);
+                    quote! {[crate::rust_std::mem::MaybeUninit<u8>; #width]}
+                }
+                Ok(rs_type) => {
+                    let mut formatted = format_rs_type(&rs_type, ir).with_context(|| {
                         format!(
                             "Failed to format type for field {:?} on record {:?}",
                             field, record
                         )
                     })?;
-                if should_implement_drop(record) || record.is_union {
-                    if needs_manually_drop(&field.type_.rs_type, ir)? {
-                        // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
-                        // if we can ask Rust to preserve field destruction order if the
-                        // destructor is the SpecialMemberDefinition::NontrivialMembers
-                        // case.
-                        formatted = quote! { crate::rust_std::mem::ManuallyDrop<#formatted> }
-                    } else {
-                        field_copy_trait_assertions.push(quote! {
-                            const _: () = {
-                                static_assertions::assert_impl_all!(#formatted: Copy);
-                            };
-                        });
-                    }
-                };
-                formatted
+                    if should_implement_drop(record) || record.is_union {
+                        if needs_manually_drop(rs_type, ir)? {
+                            // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
+                            // if we can ask Rust to preserve field destruction order if the
+                            // destructor is the SpecialMemberDefinition::NontrivialMembers
+                            // case.
+                            formatted = quote! { crate::rust_std::mem::ManuallyDrop<#formatted> }
+                        } else {
+                            field_copy_trait_assertions.push(quote! {
+                                const _: () = {
+                                    static_assertions::assert_impl_all!(#formatted: Copy);
+                                };
+                            });
+                        }
+                    };
+                    formatted
+                }
             };
 
             // `is_opaque_blob` representation is always unaligned, even though the actual
@@ -1048,11 +1066,11 @@ fn generate_record(
             };
             let padding_size_in_bytes = match prev_field {
                 None => 0,
-                // No padding should be needed if the type of the current field is present
+                // No padding should be needed if the type of the current field is known
                 // (i.e. if the current field is correctly aligned based on its original type).
-                Some(_) if !is_opaque_blob => 0,
+                Some(_) if get_field_rs_type_for_layout(field).is_ok() => 0,
                 Some(prev_field) => {
-                    let current_offset = if should_represent_field_as_opaque_blob(prev_field) {
+                    let current_offset = if get_field_rs_type_for_layout(prev_field).is_err() {
                         field.offset
                     } else {
                         prev_field.offset + prev_field.size
@@ -2270,16 +2288,20 @@ fn cc_struct_no_unique_address_impl(record: &Record, ir: &IR) -> Result<TokenStr
         if field.access != AccessSpecifier::Public || !field.is_no_unique_address {
             continue;
         }
-        fields.push(make_rs_ident(
-            &field
-                .identifier
-                .as_ref()
-                .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
-                .identifier,
-        ));
-        types.push(format_rs_type(&field.type_.rs_type, ir).with_context(|| {
-            format!("Failed to format type for field {:?} on record {:?}", field, record)
-        })?)
+        // Can't use `get_field_rs_type_for_layout` here, because we want to dig into
+        // no_unique_address fields, despite laying them out as opaque blobs of bytes.
+        if let Ok(rs_type) = field.type_.as_ref().map(|t| &t.rs_type) {
+            fields.push(make_rs_ident(
+                &field
+                    .identifier
+                    .as_ref()
+                    .expect("Unnamed fields can't be annotated with [[no_unique_address]]")
+                    .identifier,
+            ));
+            types.push(format_rs_type(rs_type, ir).with_context(|| {
+                format!("Failed to format type for field {:?} on record {:?}", field, record)
+            })?)
+        }
     }
 
     if fields.is_empty() {
@@ -2923,6 +2945,40 @@ mod tests {
                         const class SomeStruct* __this, int arg) {
                     return __this->some_func(std::forward<decltype(arg)>(arg));
                 }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_record_with_unsupported_field_type() -> Result<()> {
+        // Using a nested struct because it's currently not supported.
+        // But... any other unsupported type would also work for this test.
+        let ir = ir_from_cc(
+            r#"
+            struct StructWithUnsupportedField {
+              struct NestedStruct {
+                int nested_field;
+              };
+
+              // Doc comment for `my_field`.
+              NestedStruct my_field;
+            };
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(4))]
+                pub struct StructWithUnsupportedField {
+                    #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'"]
+                    my_field: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                }
+                ...
+                const _: () = assert!(
+                    memoffset_unstable_const::offset_of!(
+                        crate::StructWithUnsupportedField, my_field) * 8 == 0);
             }
         );
         Ok(())

@@ -359,7 +359,7 @@ fn test_pointer_member_variable() {
         quote! {
             Field {
                 identifier: Some("ptr") ...
-                type_: MappedType {
+                type_: Ok(MappedType {
                     rs_type: RsType {
                         name: Some("*mut") ...
                         type_args: [RsType {
@@ -378,7 +378,7 @@ fn test_pointer_member_variable() {
                         }],
                         decl_id: None,
                     },
-                } ...
+                }) ...
             }
         }
     );
@@ -576,9 +576,10 @@ fn test_type_conversion() -> Result<()> {
     let fields = ir.records().next().unwrap().fields.iter();
     let type_mapping: HashMap<_, _> = fields
         .map(|f| {
+
             (
-                f.type_.cc_type.name.as_ref().unwrap().as_str(),
-                f.type_.rs_type.name.as_ref().unwrap().as_str(),
+                f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_str(),
+                f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_str(),
             )
         })
         .collect();
@@ -779,10 +780,10 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
             fields: [Field {
                 identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of `value` field."), ...
-                type_: MappedType {
+                type_: Ok(MappedType {
                     rs_type: RsType { name: Some("i32"), ... },
                     cc_type: CcType { name: Some("int"), ... },
-                },
+                }),
                 access: Public,
                 offset: 0, ...
             }], ...
@@ -890,10 +891,10 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             fields: [Field {
                 identifier: Some("value"), ...
                 doc_comment: Some("Doc comment of the `value` field specialization for T=int."), ...
-                type_: MappedType {
+                type_: Ok(MappedType {
                     rs_type: RsType { name: Some("i32"), ... },
                     cc_type: CcType { name: Some("int"), ... },
-                },
+                }),
                 access: Public,
                 offset: 0, ...
             }], ...
@@ -1564,13 +1565,15 @@ fn test_records_nested_in_records_not_supported_yet() {
 }
 
 #[test]
-fn test_record_with_unsupported_field() -> Result<()> {
+fn test_record_with_unsupported_field_type() -> Result<()> {
     // Using a nested struct because it's currently not supported.
     // But... any other unsupported type would also work for this test.
     let ir = ir_from_cc(
         r#"
         struct StructWithUnsupportedField {
           struct NestedStruct {};
+
+          // Doc comment for `my_field`.
           NestedStruct my_field;
         };
     "#,
@@ -1578,11 +1581,36 @@ fn test_record_with_unsupported_field() -> Result<()> {
     assert_ir_matches!(
         ir,
         quote! {
-              UnsupportedItem(UnsupportedItem {
-                name: "StructWithUnsupportedField",
-                message: "UNIMPLEMENTED: Type of field 'my_field' is not supported: Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'",
+           Record {
+               rs_name: "StructWithUnsupportedField",
+               cc_name: "StructWithUnsupportedField",
+               ...
+               fields: [Field {
+                   identifier: Some("my_field"),
+                   doc_comment: Some("Doc comment for `my_field`."),
+                   type_: Err(
+                       "Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'",
+                   ),
+                   access: Public,
+                   offset: 0,
+                   size: 8,
+                   is_no_unique_address: false,
+               }],
+               ...
+               size: 1,
+               alignment: 1,
+               ...
+           }
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "StructWithUnsupportedField::NestedStruct",
+                message: "Nested classes are not supported yet",
                 ...
-            })
+            }
         }
     );
     Ok(())
@@ -1756,19 +1784,19 @@ fn test_struct() {
                 fields: [
                     Field {
                         identifier: Some("first_field"), ...
-                        type_ : MappedType {
+                        type_: Ok(MappedType {
                             rs_type : RsType { name : Some ("i32"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
-                         }, ...
+                         }), ...
                         offset: 0, ...
                         size: 32, ...
                     },
                     Field {
                         identifier: Some("second_field"), ...
-                        type_ : MappedType {
+                        type_: Ok(MappedType {
                             rs_type : RsType { name : Some ("i32"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
-                         }, ...
+                         }), ...
                         offset: 32, ...
                         size: 32, ...
                     },
@@ -1799,19 +1827,19 @@ fn test_union() {
                 fields: [
                     Field {
                         identifier: Some("first_field"), ...
-                        type_ : MappedType {
+                        type_: Ok(MappedType {
                             rs_type : RsType { name : Some ("i32"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
-                         }, ...
+                         }), ...
                         offset: 0, ...
                         size: 32, ...
                     },
                     Field {
                         identifier: Some("second_field"), ...
-                        type_ : MappedType {
+                        type_: Ok(MappedType {
                             rs_type : RsType { name : Some ("i32"), ...},
                             cc_type : CcType { name : Some ("int"), ...},
-                         }, ...
+                         }), ...
                         offset: 0, ...
                         size: 32, ...
                     },
@@ -2057,7 +2085,6 @@ fn test_unsupported_items_from_dependency_are_not_emitted() -> Result<()> {
     let names = ir.unsupported_items().map(|i| i.name.as_str()).collect_vec();
     assert_strings_dont_contain(names.as_slice(), "OuterStruct");
     assert_strings_dont_contain(names.as_slice(), "NestedStructIsUnsupported");
-    assert_strings_contain(names.as_slice(), "MyOtherStruct");
     Ok(())
 }
 

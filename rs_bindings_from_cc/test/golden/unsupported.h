@@ -32,6 +32,9 @@ struct ContainingStruct final {
     void NonStaticMemberFunction();
     void StaticMemberFunction();
   };
+
+  // Doc comment for an unsupported field.
+  NestedStruct nested_struct;
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNSUPPORTED_H_

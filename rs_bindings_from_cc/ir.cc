@@ -36,6 +36,14 @@ llvm::json::Value toJSON(const crubit::StringType<TTag> string_type) {
   return llvm::json::Value(string_type.value());
 }
 
+template <class T>
+llvm::json::Value toJSON(const absl::StatusOr<T>& t) {
+  if (t.ok()) {
+    return llvm::json::Object{{"Ok", *t}};
+  }
+  return llvm::json::Object{{"Err", std::string(t.status().message())}};
+}
+
 llvm::json::Value HeaderName::ToJson() const {
   return llvm::json::Object{
       {"name", name_},

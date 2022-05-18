@@ -82,7 +82,11 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialCustomType>,)
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    /// Doc comment for an unsupported field.
+    ///
+    /// Reason for representing this field as a blob of bytes:
+    /// Unsupported type 'struct ContainingStruct::NestedStruct': No generated bindings found for 'NestedStruct'
+    nested_struct: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("ContainingStruct"),
@@ -168,3 +172,5 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::ContainingStruct: Drop);
 };
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::ContainingStruct, nested_struct) * 8 == 0);

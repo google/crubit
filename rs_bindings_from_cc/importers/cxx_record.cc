@@ -97,7 +97,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   for (const Field& field : *fields) {
-    if (field.is_no_unique_address) {
+    if (field.is_no_unique_address || !field.type.ok()) {
       override_alignment = true;
       break;
     }
@@ -144,13 +144,9 @@ absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
       ictx_.ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
-    auto type =
+    absl::StatusOr<MappedType> type =
         temp_import_mapper.ConvertQualType(field_decl->getType(), no_lifetimes);
-    if (!type.ok()) {
-      return absl::UnimplementedError(absl::Substitute(
-          "Type of field '$0' is not supported: $1",
-          field_decl->getNameAsString(), type.status().message()));
-    }
+
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {
       access = default_access;
@@ -166,7 +162,7 @@ absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
         {.identifier = field_name ? *std::move(field_name)
                                   : llvm::Optional<Identifier>(llvm::None),
          .doc_comment = ictx_.GetComment(field_decl),
-         .type = *type,
+         .type = std::move(type),
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
          .size = ictx_.ctx_.getTypeSize(field_decl->getType()),

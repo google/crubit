@@ -48,5 +48,6 @@ static_assert(CRUBIT_OFFSET_OF(i, class NontrivialCustomType) * 8 == 0);
 
 static_assert(sizeof(class ContainingStruct) == 1);
 static_assert(alignof(class ContainingStruct) == 1);
+static_assert(CRUBIT_OFFSET_OF(nested_struct, class ContainingStruct) * 8 == 0);
 
 #pragma clang diagnostic pop

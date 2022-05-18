@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "common/check.h"
 #include "common/strong_int.h"
@@ -479,7 +480,7 @@ struct Field {
 
   llvm::Optional<Identifier> identifier;
   llvm::Optional<std::string> doc_comment;
-  MappedType type;
+  absl::StatusOr<MappedType> type;
   AccessSpecifier access;
   // Field offset in bits.
   uint64_t offset;

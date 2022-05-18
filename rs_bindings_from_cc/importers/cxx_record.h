@@ -15,6 +15,8 @@ class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
   std::optional<IR::Item> Import(clang::CXXRecordDecl*);
 
  private:
+  // TODO(b/226580208): absl::StatusOr is obsolete below / ImportFields cannot
+  // fail.
   absl::StatusOr<std::vector<Field>> ImportFields(clang::CXXRecordDecl*);
   std::vector<BaseClass> GetUnambiguousPublicBases(
       const clang::CXXRecordDecl& record_decl) const;

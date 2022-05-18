@@ -309,7 +309,7 @@ pub struct Field {
     pub identifier: Option<Identifier>,
     pub doc_comment: Option<String>,
     #[serde(rename(deserialize = "type"))]
-    pub type_: MappedType,
+    pub type_: Result<MappedType, String>,
     pub access: AccessSpecifier,
     pub offset: usize,
     pub size: usize,
