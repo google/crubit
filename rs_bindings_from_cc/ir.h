@@ -483,6 +483,8 @@ struct Field {
   AccessSpecifier access;
   // Field offset in bits.
   uint64_t offset;
+  // Field size in bits.
+  uint64_t size;
   // True if the field is [[no_unique_address]].
   bool is_no_unique_address;
 };

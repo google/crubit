@@ -169,6 +169,7 @@ absl::StatusOr<std::vector<Field>> CXXRecordDeclImporter::ImportFields(
          .type = *type,
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
+         .size = ictx_.ctx_.getTypeSize(field_decl->getType()),
          .is_no_unique_address =
              field_decl->hasAttr<clang::NoUniqueAddressAttr>()});
   }

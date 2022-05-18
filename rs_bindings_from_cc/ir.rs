@@ -312,6 +312,7 @@ pub struct Field {
     pub type_: MappedType,
     pub access: AccessSpecifier,
     pub offset: usize,
+    pub size: usize,
     pub is_no_unique_address: bool,
 }
 

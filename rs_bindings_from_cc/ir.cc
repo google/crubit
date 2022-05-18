@@ -325,6 +325,7 @@ llvm::json::Value Field::ToJson() const {
       {"type", type},
       {"access", AccessToString(access)},
       {"offset", offset},
+      {"size", size},
       {"is_no_unique_address", is_no_unique_address},
   };
 }

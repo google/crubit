@@ -964,6 +964,16 @@ fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
     }
 }
 
+fn should_represent_field_as_opaque_blob(field: &Field) -> bool {
+    // [[no_unique_address]] fields are replaced by an unaligned block of memory
+    // which fills space up to the next field.
+    // See: docs/struct_layout
+    //
+    // TODO(b/226580208): Fields of unsupported types should also be represented as
+    // an opaque blob of bytes.
+    field.is_no_unique_address
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(
@@ -984,13 +994,7 @@ fn generate_record(
         .iter()
         .enumerate()
         .map(|(field_index, field)| {
-            // [[no_unique_address]] fields are replaced by an unaligned block of memory
-            // which fills space up to the next field.
-            // See: docs/struct_layout
-            //
-            // TODO(b/226580208): Fields of unsupported types should also be represented as an
-            // opaque blob of bytes.
-            let is_opaque_blob = field.is_no_unique_address;
+            let is_opaque_blob = should_represent_field_as_opaque_blob(field);
 
             let ident = make_rs_field_ident(field, field_index);
             let doc_comment = generate_doc_comment(&field.doc_comment);
@@ -1034,7 +1038,48 @@ fn generate_record(
                 formatted
             };
 
-            Ok(quote! { #doc_comment #access #ident: #field_type })
+            // `is_opaque_blob` representation is always unaligned, even though the actual
+            // C++ field might be aligned.  To put the current field at the
+            // right offset, we might need to insert some extra padding.
+            let prev_field = if record.is_union || field_index == 0 {
+                None
+            } else {
+                record.fields.get(field_index - 1)
+            };
+            let padding_size_in_bytes = match prev_field {
+                None => 0,
+                // No padding should be needed if the type of the current field is present
+                // (i.e. if the current field is correctly aligned based on its original type).
+                Some(_) if !is_opaque_blob => 0,
+                Some(prev_field) => {
+                    let current_offset = if should_represent_field_as_opaque_blob(prev_field) {
+                        field.offset
+                    } else {
+                        prev_field.offset + prev_field.size
+                    };
+                    assert!(
+                        current_offset <= field.offset,
+                        "Unexpected offset+size for field {:?} in record {}",
+                        prev_field,
+                        record.cc_name
+                    );
+                    let padding_size_in_bits = field.offset - current_offset;
+                    assert_eq!(padding_size_in_bits % 8, 0);
+                    padding_size_in_bits / 8
+                }
+            };
+            let padding = if padding_size_in_bytes == 0 {
+                quote! {}
+            } else {
+                let padding_name = make_rs_ident(&format!("__padding{}", field_index));
+                let padding_size = Literal::usize_unsuffixed(padding_size_in_bytes);
+                quote! {
+                    #padding_name: [crate::rust_std::mem::MaybeUninit<u8>;
+                                    #padding_size],
+                }
+            };
+
+            Ok(quote! { #padding #doc_comment #access #ident: #field_type })
         })
         .collect::<Result<Vec<_>>>()?;
 
