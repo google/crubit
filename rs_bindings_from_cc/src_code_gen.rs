@@ -1109,21 +1109,22 @@ fn generate_record(
         vec![]
     } else {
         record
-        .fields
-        .iter()
-        .enumerate()
-        .map(|(field_index, field)| {
-            let field_ident = make_rs_field_ident(field, field_index);
-            let expected_offset = Literal::usize_unsuffixed(field.offset);
-            let actual_offset_expr = quote! {
-                // The IR contains the offset in bits, while offset_of!()
-                // returns the offset in bytes, so we need to convert.
-                memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8
-            };
-            quote! {
-                const _: () = assert!(#actual_offset_expr == #expected_offset);
-            }
-        }).collect_vec()
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(field_index, field)| {
+                let field_ident = make_rs_field_ident(field, field_index);
+                let expected_offset = Literal::usize_unsuffixed(field.offset);
+                let actual_offset_expr = quote! {
+                    // The IR contains the offset in bits, while offset_of!()
+                    // returns the offset in bytes, so we need to convert.
+                    memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8
+                };
+                quote! {
+                    const _: () = assert!(#actual_offset_expr == #expected_offset);
+                }
+            })
+            .collect_vec()
     };
     // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_all!`
     // assertions about the `Copy` trait - this trait should be implemented
@@ -1175,12 +1176,23 @@ fn generate_record(
     } else {
         record.size
     };
-    // TODO(b/231664029): Rework this check.
-    // It is probably fine to be a derived class, if it is trivially-relocatable
-    // (and thus implicit-lifetime), then we can initialize it through copying.
-    // The more important issue is that we should not sidestep user-defined
-    // constructors!
-    let head_padding = if head_padding > 0 || record.is_derived_class {
+    // Prevent direct initialization for non-aggregate structs.
+    //
+    // Technically, any implicit-lifetime type is going to be fine to initialize
+    // using direct initialization of the fields, even if it is not an aggregate,
+    // because this is "just" setting memory to the appropriate values, and
+    // implicit-lifetime types can automatically begin their lifetime without
+    // running a constructor at all.
+    //
+    // However, not all types used in interop are implicit-lifetime. For example,
+    // while any `Unpin` C++ value is, some `!Unpin` structs (e.g. `std::list`)
+    // will not be. So for consistency, we apply the same rule for both
+    // implicit-lifetime and non-implicit-lifetime types: the C++ rule, that the
+    // type must be an *aggregate* type.
+    //
+    // TODO(b/232969667): Protect unions from direct initialization, too.
+    let allow_direct_init = record.is_aggregate || record.is_union;
+    let head_padding = if head_padding > 0 || !allow_direct_init {
         let n = proc_macro2::Literal::usize_unsuffixed(head_padding);
         quote! {
             __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; #n],
@@ -2827,6 +2839,7 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub struct SomeStruct {
+                    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
                     pub public_int: i32,
                     protected_int: i32,
                     private_int: i32,
@@ -3655,8 +3668,37 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[repr(C, align(2))]
                 pub struct Derived {
+                    // TODO(b/232984274): delete this.
+                    // Currently, our tests use C++14 instead of C++17. In C++14, `Derived`
+                    // is not an aggregate, because it has a base class. C++17 removed this
+                    // restriction, and allows aggregates to have base classes.
+                    __non_field_data:  [crate::rust_std::mem::MaybeUninit<u8>; 0],
+                    pub x: i16,
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// Non-aggregate structs can't be directly initialized, because we add
+    /// a zero-sized private field to the bindings.
+    #[test]
+    fn test_non_aggregate_struct_private_field() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct NonAggregate {
+                NonAggregate() {}
+
+                __INT16_TYPE__ x = 0;
+            };
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub struct NonAggregate {
                     __non_field_data:  [crate::rust_std::mem::MaybeUninit<u8>; 0],
                     pub x: i16,
                 }

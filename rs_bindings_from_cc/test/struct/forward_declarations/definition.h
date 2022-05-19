@@ -7,14 +7,10 @@
 #pragma clang lifetime_elision
 
 struct UnpinStruct final {
-  UnpinStruct() = default;
-  UnpinStruct(int value) : field(value) {}
   int field = 0;
 };
 
 struct NonunpinStruct /* non-final */ {
-  NonunpinStruct() = default;
-  NonunpinStruct(int value) : field(value) {}
   int field = 0;
 };
 

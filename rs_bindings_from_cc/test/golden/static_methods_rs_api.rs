@@ -20,6 +20,7 @@ use ::std as rust_std;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeClass {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     field_: i32,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);

@@ -123,6 +123,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_inheritable =
           !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
       .is_union = record_decl->isUnion(),
+      .is_aggregate = record_decl->isAggregate(),
       .child_item_ids = std::move(item_ids),
       .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl),
   };

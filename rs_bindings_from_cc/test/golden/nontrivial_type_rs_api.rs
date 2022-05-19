@@ -25,6 +25,7 @@ use ::std as rust_std;
 #[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct Nontrivial {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     pub field: i32,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
@@ -130,6 +131,7 @@ impl Nontrivial {
 #[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct NontrivialInline {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     pub field: i32,
 }
 forward_declare::unsafe_define!(
@@ -298,6 +300,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
 #[derive(Clone)]
 #[repr(C)]
 pub struct NontrivialUnpin {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     pub field: i32,
 }
 forward_declare::unsafe_define!(

@@ -1,7 +1,6 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-use ctor::CtorNew as _;
 use forward_declare::IncompleteCast as _;
 use std::pin::Pin;
 
@@ -94,7 +93,7 @@ fn test_write_incomplete_unpin() {
 #[test]
 fn test_read_complete_nonunpin() {
     ctor::emplace! {
-      let mut s = definition::NonunpinStruct::ctor_new(42);
+      let mut s = ctor::ctor!(definition::NonunpinStruct {field: 42});
     }
 
     // The normal way to call it, if you have a complete type (and know it).
@@ -114,7 +113,7 @@ fn test_read_complete_nonunpin() {
 #[test]
 fn test_write_complete_nonunpin() {
     ctor::emplace! {
-      let mut s = definition::NonunpinStruct::ctor_new(42);
+      let mut s = ctor::ctor!(definition::NonunpinStruct {field: 42});
     }
 
     // The normal way to call it, if you have a complete type (and know it).
@@ -138,7 +137,7 @@ fn test_write_complete_nonunpin() {
 #[test]
 fn test_read_incomplete_nonunpin() {
     ctor::emplace! {
-      let mut s = definition::NonunpinStruct::ctor_new(42);
+      let mut s = ctor::ctor!(definition::NonunpinStruct {field: 42});
     }
     let mut decl1_s: Pin<&mut declaration_1::NonunpinStruct> = s.incomplete_cast();
 
@@ -159,7 +158,7 @@ fn test_read_incomplete_nonunpin() {
 #[test]
 fn test_write_incomplete_nonunpin() {
     ctor::emplace! {
-      let mut s = definition::NonunpinStruct::ctor_new(42);
+      let mut s = ctor::ctor!(definition::NonunpinStruct {field: 42});
     }
     let mut decl1_s: Pin<&mut declaration_1::NonunpinStruct> = s.incomplete_cast();
 

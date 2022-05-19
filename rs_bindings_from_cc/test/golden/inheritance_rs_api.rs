@@ -50,6 +50,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0)
 #[ctor::recursively_pinned]
 #[repr(C)]
 pub struct Base1 {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     b1_1_: i64,
     b1_2_: u8,
 }
@@ -78,6 +79,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1)
 #[ctor::recursively_pinned]
 #[repr(C)]
 pub struct Base2 {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     b2_1_: i16,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);

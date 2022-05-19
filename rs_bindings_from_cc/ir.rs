@@ -364,6 +364,7 @@ pub struct Record {
     pub is_trivial_abi: bool,
     pub is_inheritable: bool,
     pub is_union: bool,
+    pub is_aggregate: bool,
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
 }

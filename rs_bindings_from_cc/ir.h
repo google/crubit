@@ -604,6 +604,13 @@ struct Record {
   // Whether this type is a C++ union (rather than a struct)
   bool is_union = false;
 
+  // Whether this type can be initialized using aggregate initialization syntax.
+  //
+  // For more context, see:
+  // * https://en.cppreference.com/w/cpp/types/is_aggregate
+  // * https://en.cppreference.com/w/cpp/language/aggregate_initialization
+  bool is_aggregate = false;
+
   std::vector<ItemId> child_item_ids;
   llvm::Optional<ItemId> enclosing_namespace_id;
 };

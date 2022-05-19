@@ -409,6 +409,7 @@ llvm::json::Value Record::ToJson() const {
       {"is_trivial_abi", is_trivial_abi},
       {"is_inheritable", is_inheritable},
       {"is_union", is_union},
+      {"is_aggregate", is_aggregate},
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_namespace_id", enclosing_namespace_id},
   };

@@ -223,6 +223,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
 pub struct FieldInTailPadding {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     inner_struct: [crate::rust_std::mem::MaybeUninit<u8>; 5],
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: u8,

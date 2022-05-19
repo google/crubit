@@ -23,6 +23,7 @@ use ::std as rust_std;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentSlashes {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     /// A field.
     pub i: i32,
 }

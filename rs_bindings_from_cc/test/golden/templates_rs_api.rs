@@ -36,6 +36,7 @@ pub type AliasToTemplateWithTwoParams = crate::__CcTemplateInst21TemplateWithTwo
 #[ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIiE {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     value_: i32,
 }
 forward_declare::unsafe_define!(
