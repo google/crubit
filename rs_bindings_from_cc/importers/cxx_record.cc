@@ -159,9 +159,12 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
          .type = std::move(type),
          .access = TranslateAccessSpecifier(access),
          .offset = layout.getFieldOffset(field_decl->getFieldIndex()),
-         .size = ictx_.ctx_.getTypeSize(field_decl->getType()),
+         .size = field_decl->isBitField()
+                     ? field_decl->getBitWidthValue(ictx_.ctx_)
+                     : ictx_.ctx_.getTypeSize(field_decl->getType()),
          .is_no_unique_address =
-             field_decl->hasAttr<clang::NoUniqueAddressAttr>()});
+             field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
+         .is_bitfield = field_decl->isBitField()});
   }
   return fields;
 }

@@ -335,6 +335,7 @@ llvm::json::Value Field::ToJson() const {
       {"offset", offset},
       {"size", size},
       {"is_no_unique_address", is_no_unique_address},
+      {"is_bitfield", is_bitfield},
   };
 }
 

@@ -10,7 +10,7 @@ use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
 use std::ffi::{OsStr, OsString};
-use std::iter::Iterator;
+use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
 use std::process;
 use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string, RustfmtConfig};
@@ -979,6 +979,13 @@ fn get_field_rs_type_for_layout(field: &Field) -> Result<&RsType, &str> {
     field.type_.as_ref().map(|t| &t.rs_type).map_err(String::as_str)
 }
 
+/// Returns the type of a type-less, unaligned block of memory that can hold a
+/// specified number of bits, rounded up to the next multiple of 8.
+fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
+    let padding_size = Literal::usize_unsuffixed((padding_size_in_bits + 7) / 8);
+    quote! { [crate::rust_std::mem::MaybeUninit<u8>; #padding_size] }
+}
+
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(
@@ -994,11 +1001,103 @@ fn generate_record(
     let doc_comment = generate_doc_comment(&record.doc_comment);
 
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
-    let field_definitions = record
-        .fields
-        .iter()
+
+    let fields_with_bounds = (record.fields.iter())
+        .map(|field| {
+            (
+                // We don't represent bitfields directly in Rust. We drop the field itself here
+                // and only retain the offset information. Adjacent bitfields then get merged in
+                // the next step.
+                if field.is_bitfield { None } else { Some(field) },
+                field.offset,
+                // We retain the end offset of fields only if we have a matching Rust type
+                // to represent them. Otherwise we'll fill up all the space to the next field.
+                // See: docs/struct_layout
+                get_field_rs_type_for_layout(field).ok().map(|_| field.offset + field.size),
+                vec![format!(
+                    "{} : {} bits",
+                    field.identifier.as_ref().map(|i| i.identifier.clone()).unwrap_or("".into()),
+                    field.size
+                )],
+            )
+        })
+        // Merge consecutive bitfields. This is necessary, because they may share storage in the
+        // same byte.
+        .coalesce(|first, second| match (first, second) {
+            ((None, offset, _, desc1), (None, _, end, desc2)) => {
+                Ok((None, offset, end, [desc1, desc2].concat()))
+            }
+            pair => Err(pair),
+        });
+
+    // Pair up fields with the preceeding and following fields (if any):
+    // - the end offset of the previous field determines if we need to insert
+    //   padding.
+    // - the start offset of the next field may be need to grow the current field to
+    //   there.
+    // This uses two separate `map` invocations on purpose to limit available state.
+    let field_definitions = iter::once(None)
+        .chain(fields_with_bounds.clone().map(Some))
+        .chain(iter::once(None))
+        .tuple_windows()
+        .map(|(prev, cur, next)| {
+            let (field, offset, end, desc) = cur.unwrap();
+            let prev_end = prev.as_ref().map(|(_, _, e, _)| *e).flatten().unwrap_or(offset);
+            let next_offset = next.map(|(_, o, _, _)| o);
+            let end = end.or(next_offset).unwrap_or(record.size * 8);
+
+            if let Some((Some(prev_field), _, Some(prev_end), _)) = prev {
+                assert!(
+                    record.is_union || prev_end <= offset,
+                    "Unexpected offset+size for field {:?} in record {}",
+                    prev_field,
+                    record.cc_name
+                );
+            }
+
+            (field, prev_end, offset, end, desc)
+        })
         .enumerate()
-        .map(|(field_index, field)| {
+        .map(|(field_index, (field, prev_end, offset, end, desc))| {
+            // `is_opaque_blob` and bitfield representations are always
+            // unaligned, even though the actual C++ field might be aligned.
+            // To put the current field at the right offset, we might need to
+            // insert some extra padding.
+            //
+            // No padding should be needed if the type of the current field is
+            // known (i.e. if the current field is correctly aligned based on
+            // its original type).
+            //
+            // We also don't need padding if we're in a union.
+            let padding_size_in_bits = if record.is_union
+                || (field.is_some() && get_field_rs_type_for_layout(field.unwrap()).is_ok())
+            {
+                0
+            } else {
+                let padding_start = (prev_end + 7) / 8 * 8; // round up to byte boundary
+                offset - padding_start
+            };
+
+            let padding = if padding_size_in_bits == 0 {
+                quote! {}
+            } else {
+                let padding_name = make_rs_ident(&format!("__padding{}", field_index));
+                let padding_type = bit_padding(padding_size_in_bits);
+                quote! { #padding_name: #padding_type, }
+            };
+
+            // Bitfields get represented by private padding to ensure overall
+            // struct layout is compatible.
+            if field.is_none() {
+                let name = make_rs_ident(&format!("__bitfields{}", field_index));
+                let bitfield_padding = bit_padding(end - offset);
+                return Ok(quote! {
+                    __NEWLINE__ #(  __COMMENT__ #desc )*
+                    #padding #name: #bitfield_padding
+                });
+            }
+            let field = field.unwrap();
+
             let ident = make_rs_field_ident(field, field_index);
             let doc_comment = match field.type_.as_ref() {
                 Ok(_) => generate_doc_comment(&field.doc_comment),
@@ -1021,15 +1120,7 @@ fn generate_record(
             };
 
             let field_type = match get_field_rs_type_for_layout(field) {
-                Err(_) => {
-                    let next_offset = if let Some(next) = record.fields.get(field_index + 1) {
-                        next.offset
-                    } else {
-                        record.size * 8
-                    };
-                    let width = Literal::usize_unsuffixed((next_offset - field.offset) / 8);
-                    quote! {[crate::rust_std::mem::MaybeUninit<u8>; #width]}
-                }
+                Err(_) => bit_padding(end - field.offset),
                 Ok(rs_type) => {
                     let mut formatted = format_rs_type(&rs_type, ir).with_context(|| {
                         format!(
@@ -1056,47 +1147,6 @@ fn generate_record(
                 }
             };
 
-            // `is_opaque_blob` representation is always unaligned, even though the actual
-            // C++ field might be aligned.  To put the current field at the
-            // right offset, we might need to insert some extra padding.
-            let prev_field = if record.is_union || field_index == 0 {
-                None
-            } else {
-                record.fields.get(field_index - 1)
-            };
-            let padding_size_in_bytes = match prev_field {
-                None => 0,
-                // No padding should be needed if the type of the current field is known
-                // (i.e. if the current field is correctly aligned based on its original type).
-                Some(_) if get_field_rs_type_for_layout(field).is_ok() => 0,
-                Some(prev_field) => {
-                    let current_offset = if get_field_rs_type_for_layout(prev_field).is_err() {
-                        field.offset
-                    } else {
-                        prev_field.offset + prev_field.size
-                    };
-                    assert!(
-                        current_offset <= field.offset,
-                        "Unexpected offset+size for field {:?} in record {}",
-                        prev_field,
-                        record.cc_name
-                    );
-                    let padding_size_in_bits = field.offset - current_offset;
-                    assert_eq!(padding_size_in_bits % 8, 0);
-                    padding_size_in_bits / 8
-                }
-            };
-            let padding = if padding_size_in_bytes == 0 {
-                quote! {}
-            } else {
-                let padding_name = make_rs_ident(&format!("__padding{}", field_index));
-                let padding_size = Literal::usize_unsuffixed(padding_size_in_bytes);
-                quote! {
-                    #padding_name: [crate::rust_std::mem::MaybeUninit<u8>;
-                                    #padding_size],
-                }
-            };
-
             Ok(quote! { #padding #doc_comment #access #ident: #field_type })
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1108,20 +1158,22 @@ fn generate_record(
         // offsetof supports them.
         vec![]
     } else {
-        record
-            .fields
-            .iter()
+        fields_with_bounds
             .enumerate()
-            .map(|(field_index, field)| {
-                let field_ident = make_rs_field_ident(field, field_index);
-                let expected_offset = Literal::usize_unsuffixed(field.offset);
-                let actual_offset_expr = quote! {
-                    // The IR contains the offset in bits, while offset_of!()
-                    // returns the offset in bytes, so we need to convert.
-                    memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8
-                };
-                quote! {
-                    const _: () = assert!(#actual_offset_expr == #expected_offset);
+            .map(|(field_index, (field, _, _, _))| {
+                if let Some(field) = field {
+                    let field_ident = make_rs_field_ident(field, field_index);
+                    let expected_offset = Literal::usize_unsuffixed(field.offset);
+                    let actual_offset_expr = quote! {
+                        // The IR contains the offset in bits, while offset_of!()
+                        // returns the offset in bytes, so we need to convert.
+                        memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8
+                    };
+                    quote! {
+                        const _: () = assert!(#actual_offset_expr == #expected_offset);
+                    }
+                } else {
+                    quote! {}
                 }
             })
             .collect_vec()
@@ -2275,6 +2327,10 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     let field_assertions =
         record.fields.iter()
             .filter(|f| f.access == AccessSpecifier::Public && f.identifier.is_some())
+            // https://en.cppreference.com/w/cpp/types/offsetof points out that "if member is [...]
+            // a bit-field [...] the behavior [of `offsetof` macro] is undefined.".  In such
+            // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
+            .filter(|f| !f.is_bitfield)
             .map(|field| {
                 let field_ident = format_cc_ident(&field.identifier.as_ref().unwrap().identifier);
                 let offset = Literal::usize_unsuffixed(field.offset);
@@ -3016,15 +3072,13 @@ mod tests {
             quote! {
                #[repr(C)]
                pub struct SomeStruct {
-                   pub first_field: i32,
-                   pub __unnamed_field1: i32,
+                   pub first_field: i32, ...
+                   __bitfields1: [crate::rust_std::mem::MaybeUninit<u8>; 4],
                    pub last_field: i32,
                }
                ...
                const _: () = assert!(memoffset_unstable_const::offset_of!(
                        crate::SomeStruct, first_field) * 8 == 0);
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::SomeStruct, __unnamed_field1) * 8 == 32);
                const _: () = assert!(memoffset_unstable_const::offset_of!(
                        crate::SomeStruct, last_field) * 8 == 64);
             }

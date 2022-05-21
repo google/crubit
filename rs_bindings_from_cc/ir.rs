@@ -314,6 +314,7 @@ pub struct Field {
     pub offset: usize,
     pub size: usize,
     pub is_no_unique_address: bool,
+    pub is_bitfield: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

@@ -489,6 +489,7 @@ struct Field {
   uint64_t offset;            // Field offset in bits.
   uint64_t size;              // Field size in bits.
   bool is_no_unique_address;  // True if the field is [[no_unique_address]].
+  bool is_bitfield;           // True if the field is a bitfield.
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {
