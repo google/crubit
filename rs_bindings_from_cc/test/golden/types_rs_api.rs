@@ -58,43 +58,6 @@ forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::s
 
 #[derive(Clone, Copy)]
 #[repr(C)]
-pub union EmptyUnion {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
-}
-forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
-
-impl Default for EmptyUnion {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
-            tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
-    #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::EmptyUnion>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/types.h;l=17
-// Error while generating bindings for item 'EmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=17
-// Error while generating bindings for item 'EmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
-
-#[derive(Clone, Copy)]
-#[repr(C)]
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: u8,
@@ -168,48 +131,6 @@ impl<'b> From<ctor::RvalueReference<'b, crate::FieldTypeTestStruct>> for FieldTy
     }
 }
 
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub union NonEmptyUnion {
-    pub bool_field: bool,
-    pub char_field: u8,
-    pub int16_field: i16,
-    pub int_field: i32,
-    pub int32_field: i32,
-    pub int64_field: i64,
-}
-forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
-
-impl Default for NonEmptyUnion {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
-            tmp.assume_init()
-        }
-    }
-}
-
-impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion {
-    #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/types.h;l=88
-// Error while generating bindings for item 'NonEmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
-
-// rs_bindings_from_cc/test/golden/types.h;l=88
-// Error while generating bindings for item 'NonEmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
-
 #[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
@@ -247,23 +168,9 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
         );
-        pub(crate) fn __rust_thunk___ZN10EmptyUnionC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::EmptyUnion>,
-        );
-        pub(crate) fn __rust_thunk___ZN10EmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::EmptyUnion>,
-            __param_0: ctor::RvalueReference<'b, crate::EmptyUnion>,
-        );
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
             __param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
-        );
-        pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
-        );
-        pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
-            __param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
@@ -281,18 +188,6 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop);
-};
-
-const _: () = assert!(rust_std::mem::size_of::<crate::EmptyUnion>() == 1);
-const _: () = assert!(rust_std::mem::align_of::<crate::EmptyUnion>() == 1);
-const _: () = {
-    static_assertions::assert_impl_all!(crate::EmptyUnion: Clone);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(crate::EmptyUnion: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(crate::EmptyUnion: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<crate::FieldTypeTestStruct>() == 288);
@@ -473,33 +368,3 @@ const _: () = assert!(
         * 8
         == 2240
 );
-
-const _: () = assert!(rust_std::mem::size_of::<crate::NonEmptyUnion>() == 8);
-const _: () = assert!(rust_std::mem::align_of::<crate::NonEmptyUnion>() == 8);
-const _: () = {
-    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Clone);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(crate::NonEmptyUnion: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NonEmptyUnion: Drop);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(bool: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(u8: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(i16: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(i32: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(i32: Copy);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(i64: Copy);
-};

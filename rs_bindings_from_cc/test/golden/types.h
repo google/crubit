@@ -14,8 +14,6 @@ struct SomeStruct final {};
 
 struct ForwardDeclaredStruct;
 
-union EmptyUnion {};
-
 struct FieldTypeTestStruct final {
   bool bool_field;
   char char_field;
@@ -83,15 +81,6 @@ struct FieldTypeTestStruct final {
   // const SomeStruct&& const_struct_rvalue_ref_field;
 
   ForwardDeclaredStruct* forward_declared_ptr_field;
-};
-
-union NonEmptyUnion {
-  bool bool_field;
-  char char_field;
-  int16_t int16_field;
-  int int_field;
-  int32_t int32_field;
-  int64_t int64_field;
 };
 
 inline void VoidReturningFunction() {}
