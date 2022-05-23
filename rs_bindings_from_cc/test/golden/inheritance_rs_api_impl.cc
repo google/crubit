@@ -134,7 +134,7 @@ static_assert(alignof(class Base2) == 2);
 
 static_assert(sizeof(class Derived) == 16);
 static_assert(alignof(class Derived) == 8);
-static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived) * 8 == 96);
+static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived) == 12);
 
 static_assert(sizeof(class VirtualBase1) == 24);
 static_assert(alignof(class VirtualBase1) == 8);

@@ -159,8 +159,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::NontrivialCustomType: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::NontrivialCustomType, i) * 8 == 0);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::NontrivialCustomType, i) == 0);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::ContainingStruct>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::ContainingStruct>() == 1);
@@ -174,4 +173,4 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::ContainingStruct: Drop);
 };
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::ContainingStruct, nested_struct) * 8 == 0);
+    assert!(memoffset_unstable_const::offset_of!(crate::ContainingStruct, nested_struct) == 0);

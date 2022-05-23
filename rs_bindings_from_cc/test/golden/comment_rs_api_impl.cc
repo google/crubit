@@ -89,15 +89,15 @@ extern "C" class HasNoComments& __rust_thunk___ZN13HasNoCommentsaSEOS_(
 
 static_assert(sizeof(class Foo) == 8);
 static_assert(alignof(class Foo) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class Foo) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(j, class Foo) * 8 == 32);
+static_assert(CRUBIT_OFFSET_OF(i, class Foo) == 0);
+static_assert(CRUBIT_OFFSET_OF(j, class Foo) == 4);
 
 static_assert(sizeof(class Bar) == 4);
 static_assert(alignof(class Bar) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class Bar) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class Bar) == 0);
 
 static_assert(sizeof(class HasNoComments) == 4);
 static_assert(alignof(class HasNoComments) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class HasNoComments) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class HasNoComments) == 0);
 
 #pragma clang diagnostic pop

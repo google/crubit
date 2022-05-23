@@ -73,6 +73,6 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::WithBitfields: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f2) * 8 == 32);
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f5) * 8 == 160);
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f7) * 8 == 216);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f2) == 4);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f5) == 20);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f7) == 27);

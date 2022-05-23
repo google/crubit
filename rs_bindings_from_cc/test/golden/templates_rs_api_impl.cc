@@ -69,11 +69,9 @@ static_assert(alignof(class MyTemplate<int>) == 4);
 
 static_assert(sizeof(class TemplateWithTwoParams<int, float>) == 8);
 static_assert(alignof(class TemplateWithTwoParams<int, float>) == 4);
-static_assert(
-    CRUBIT_OFFSET_OF(value1, class TemplateWithTwoParams<int, float>) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(value1,
+                               class TemplateWithTwoParams<int, float>) == 0);
 static_assert(CRUBIT_OFFSET_OF(value2,
-                               class TemplateWithTwoParams<int, float>) *
-                  8 ==
-              32);
+                               class TemplateWithTwoParams<int, float>) == 4);
 
 #pragma clang diagnostic pop

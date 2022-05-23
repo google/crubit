@@ -44,6 +44,6 @@ __rust_thunk___ZN18UserOfImportedTypeaSEOS_(
 
 static_assert(sizeof(class UserOfImportedType) == 8);
 static_assert(alignof(class UserOfImportedType) == 8);
-static_assert(CRUBIT_OFFSET_OF(trivial, class UserOfImportedType) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(trivial, class UserOfImportedType) == 0);
 
 #pragma clang diagnostic pop

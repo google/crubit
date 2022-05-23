@@ -215,30 +215,30 @@ __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv___third_party_crubit_rs_bin
 
 static_assert(sizeof(class DocCommentSlashes) == 4);
 static_assert(alignof(class DocCommentSlashes) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class DocCommentSlashes) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class DocCommentSlashes) == 0);
 
 static_assert(sizeof(class DocCommentBang) == 4);
 static_assert(alignof(class DocCommentBang) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class DocCommentBang) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class DocCommentBang) == 0);
 
 static_assert(sizeof(class MultilineCommentTwoStars) == 4);
 static_assert(alignof(class MultilineCommentTwoStars) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class MultilineCommentTwoStars) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class MultilineCommentTwoStars) == 0);
 
 static_assert(sizeof(class LineComment) == 4);
 static_assert(alignof(class LineComment) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class LineComment) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class LineComment) == 0);
 
 static_assert(sizeof(class MultilineOneStar) == 4);
 static_assert(alignof(class MultilineOneStar) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class MultilineOneStar) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class MultilineOneStar) == 0);
 
 static_assert(sizeof(class MyTemplate<int>) == 4);
 static_assert(alignof(class MyTemplate<int>) == 4);
-static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<int>) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<int>) == 0);
 
 static_assert(sizeof(class MyTemplate<float>) == 4);
 static_assert(alignof(class MyTemplate<float>) == 4);
-static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<float>) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<float>) == 0);
 
 #pragma clang diagnostic pop

@@ -202,169 +202,142 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::FieldTypeTestStruct: Drop);
 };
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, bool_field) * 8 == 0);
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, bool_field) == 0);
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, char_field) * 8 == 8);
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, char_field) == 1);
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_char_field) * 8 == 16
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_char_field) == 2
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_char_field) * 8 == 24
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, char16_t_field) * 8 == 32
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, char32_t_field) * 8 == 64
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, wchar_t_field) * 8 == 96
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, short_field) * 8 == 128
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_char_field) == 3
 );
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int_field) * 8 == 160);
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, char16_t_field) == 4);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, char32_t_field) == 8);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, wchar_t_field) == 12);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, short_field) == 16);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int_field) == 20);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, long_field) == 24);
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, long_field) * 8 == 192
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, long_long_field) == 32
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, long_long_field) * 8 == 256
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_short_field) == 40
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_short_field) * 8
-        == 320
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_int_field) == 44
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_int_field) * 8 == 352
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_long_field) == 48
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_long_field) * 8
-        == 384
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_long_long_field)
+        == 56
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, unsigned_long_long_field) * 8
-        == 448
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_short_field) == 64
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_short_field) * 8 == 512
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_int_field) == 68
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_int_field) * 8 == 544
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_long_field) == 72
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_long_field) * 8 == 576
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_long_long_field) == 80
+);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int8_t_field) == 88);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int16_t_field) == 90);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int32_t_field) == 92);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int64_t_field) == 96);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int8_t_field) == 104
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, signed_long_long_field) * 8
-        == 640
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int16_t_field) == 106
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int8_t_field) * 8 == 704
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int32_t_field) == 108
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int16_t_field) * 8 == 720
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int64_t_field) == 112
+);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint8_t_field) == 120);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint16_t_field) == 122
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int32_t_field) * 8 == 736
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint32_t_field) == 124
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, int64_t_field) * 8 == 768
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint64_t_field) == 128
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int8_t_field) * 8 == 832
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint8_t_field) == 136
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int16_t_field) * 8 == 848
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint16_t_field) == 138
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int32_t_field) * 8 == 864
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint32_t_field) == 140
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_int64_t_field) * 8 == 896
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint64_t_field) == 144
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint8_t_field) * 8 == 960
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, ptrdiff_t_field) == 152
+);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, size_t_field) == 160);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, intptr_t_field) == 168
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint16_t_field) * 8 == 976
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uintptr_t_field) == 176
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint32_t_field) * 8 == 992
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_ptrdiff_t_field) == 184
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uint64_t_field) * 8 == 1024
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_size_t_field) == 192
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint8_t_field) * 8 == 1088
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_intptr_t_field) == 200
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint16_t_field) * 8
-        == 1104
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uintptr_t_field) == 208
+);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, float_field) == 216);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, double_field) == 224);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, ptr_field) == 232);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, struct_field) == 240);
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) == 248
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint32_t_field) * 8
-        == 1120
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) == 256
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uint64_t_field) * 8
-        == 1152
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) == 264
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, ptrdiff_t_field) * 8 == 1216
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, size_t_field) * 8 == 1280
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, intptr_t_field) * 8 == 1344
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, uintptr_t_field) * 8 == 1408
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_ptrdiff_t_field) * 8
-        == 1472
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_size_t_field) * 8 == 1536
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_intptr_t_field) * 8
-        == 1600
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, std_uintptr_t_field) * 8
-        == 1664
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, float_field) * 8 == 1728
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, double_field) * 8 == 1792
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, ptr_field) * 8 == 1856
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, struct_field) * 8 == 1920
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) * 8 == 1984
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) * 8
-        == 2048
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) * 8 == 2112
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) * 8
-        == 2176
+    memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 272
 );
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field)
-        * 8
-        == 2240
+        == 280
 );

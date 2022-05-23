@@ -38,6 +38,6 @@ extern "C" class type& __rust_thunk___ZN4typeaSEOS_(class type* __this,
 
 static_assert(sizeof(class type) == 4);
 static_assert(alignof(class type) == 4);
-static_assert(CRUBIT_OFFSET_OF(dyn, class type) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(dyn, class type) == 0);
 
 #pragma clang diagnostic pop

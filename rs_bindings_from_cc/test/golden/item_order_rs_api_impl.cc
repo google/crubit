@@ -66,10 +66,10 @@ extern "C" int __rust_thunk___Z11second_funcv() { return second_func(); }
 
 static_assert(sizeof(class FirstStruct) == 4);
 static_assert(alignof(class FirstStruct) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, class FirstStruct) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class FirstStruct) == 0);
 
 static_assert(sizeof(class SecondStruct) == 4);
 static_assert(alignof(class SecondStruct) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, class SecondStruct) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class SecondStruct) == 0);
 
 #pragma clang diagnostic pop

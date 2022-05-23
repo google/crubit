@@ -55,7 +55,7 @@ __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_(
 
 static_assert(sizeof(class test_namespace_bindings::S) == 4);
 static_assert(alignof(class test_namespace_bindings::S) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class test_namespace_bindings::S) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(i, class test_namespace_bindings::S) == 0);
 
 static_assert(sizeof(class test_namespace_bindings_reopened::inner::S) == 1);
 static_assert(alignof(class test_namespace_bindings_reopened::inner::S) == 1);

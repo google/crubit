@@ -135,7 +135,7 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value_) * 8 == 0
+    memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value_) == 0
 );
 
 const _: () =
@@ -156,13 +156,11 @@ const _: () = assert!(
     memoffset_unstable_const::offset_of!(
         crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
         value1
-    ) * 8
-        == 0
+    ) == 0
 );
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(
         crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
         value2
-    ) * 8
-        == 32
+    ) == 4
 );

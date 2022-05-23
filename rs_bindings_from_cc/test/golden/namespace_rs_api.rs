@@ -150,7 +150,7 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Drop);
 };
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0);
+    assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) == 0);
 
 const _: () =
     assert!(rust_std::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);

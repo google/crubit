@@ -64,20 +64,19 @@ extern "C" class NontrivialUnpin& __rust_thunk___ZN15NontrivialUnpinaSERKS_(
 
 static_assert(sizeof(class Nontrivial) == 4);
 static_assert(alignof(class Nontrivial) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, class Nontrivial) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class Nontrivial) == 0);
 
 static_assert(sizeof(class NontrivialInline) == 4);
 static_assert(alignof(class NontrivialInline) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, class NontrivialInline) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class NontrivialInline) == 0);
 
 static_assert(sizeof(class NontrivialMembers) == 4);
 static_assert(alignof(class NontrivialMembers) == 4);
-static_assert(CRUBIT_OFFSET_OF(nontrivial_member, class NontrivialMembers) *
-                  8 ==
+static_assert(CRUBIT_OFFSET_OF(nontrivial_member, class NontrivialMembers) ==
               0);
 
 static_assert(sizeof(class NontrivialUnpin) == 4);
 static_assert(alignof(class NontrivialUnpin) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, class NontrivialUnpin) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(field, class NontrivialUnpin) == 0);
 
 #pragma clang diagnostic pop

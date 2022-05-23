@@ -300,8 +300,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::Base1: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Base1, b1_1_) * 8 == 0);
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Base1, b1_2_) * 8 == 64);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Base1, b1_1_) == 0);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Base1, b1_2_) == 8);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::Base2>() == 2);
 const _: () = assert!(rust_std::mem::align_of::<crate::Base2>() == 2);
@@ -311,7 +311,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::Base2: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Base2, b2_1_) * 8 == 0);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Base2, b2_1_) == 0);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::Derived>() == 16);
 const _: () = assert!(rust_std::mem::align_of::<crate::Derived>() == 8);
@@ -324,7 +324,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::Derived: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Derived, derived_1) * 8 == 96);
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Derived, derived_1) == 12);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::VirtualBase1>() == 24);
 const _: () = assert!(rust_std::mem::align_of::<crate::VirtualBase1>() == 8);

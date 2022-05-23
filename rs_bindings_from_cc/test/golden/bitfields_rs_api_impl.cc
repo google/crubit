@@ -31,8 +31,8 @@ extern "C" class WithBitfields& __rust_thunk___ZN13WithBitfieldsaSERKS_(
 
 static_assert(sizeof(class WithBitfields) == 32);
 static_assert(alignof(class WithBitfields) == 4);
-static_assert(CRUBIT_OFFSET_OF(f2, class WithBitfields) * 8 == 32);
-static_assert(CRUBIT_OFFSET_OF(f5, class WithBitfields) * 8 == 160);
-static_assert(CRUBIT_OFFSET_OF(f7, class WithBitfields) * 8 == 216);
+static_assert(CRUBIT_OFFSET_OF(f2, class WithBitfields) == 4);
+static_assert(CRUBIT_OFFSET_OF(f5, class WithBitfields) == 20);
+static_assert(CRUBIT_OFFSET_OF(f7, class WithBitfields) == 27);
 
 #pragma clang diagnostic pop

@@ -49,9 +49,9 @@ static_assert(alignof(union EmptyUnion) == 1);
 
 static_assert(sizeof(union NonEmptyUnion) == 8);
 static_assert(alignof(union NonEmptyUnion) == 8);
-static_assert(CRUBIT_OFFSET_OF(bool_field, union NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(char_field, union NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(int_field, union NonEmptyUnion) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(long_long_field, union NonEmptyUnion) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(bool_field, union NonEmptyUnion) == 0);
+static_assert(CRUBIT_OFFSET_OF(char_field, union NonEmptyUnion) == 0);
+static_assert(CRUBIT_OFFSET_OF(int_field, union NonEmptyUnion) == 0);
+static_assert(CRUBIT_OFFSET_OF(long_long_field, union NonEmptyUnion) == 0);
 
 #pragma clang diagnostic pop

@@ -1163,11 +1163,15 @@ fn generate_record(
             .map(|(field_index, (field, _, _, _))| {
                 if let Some(field) = field {
                     let field_ident = make_rs_field_ident(field, field_index);
-                    let expected_offset = Literal::usize_unsuffixed(field.offset);
+
+                    // The assertion below reinforces that the division by 8 on the next line is
+                    // justified (because the bitfields have been coallesced / filtered out
+                    // earlier).
+                    assert_eq!(field.offset % 8, 0);
+                    let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+
                     let actual_offset_expr = quote! {
-                        // The IR contains the offset in bits, while offset_of!()
-                        // returns the offset in bytes, so we need to convert.
-                        memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident) * 8
+                        memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident)
                     };
                     quote! {
                         const _: () = assert!(#actual_offset_expr == #expected_offset);
@@ -2332,13 +2336,18 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
             // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
             .filter(|f| !f.is_bitfield)
             .map(|field| {
+                // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the offset
+                // in bytes, so we need to convert.  We can assert that `field.offset` is always at
+                // field boundaries, because the bitfields have been filtered out earlier.
+                assert_eq!(field.offset % 8, 0);
+                let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+
                 let field_ident = format_cc_ident(&field.identifier.as_ref().unwrap().identifier);
-                let offset = Literal::usize_unsuffixed(field.offset);
-                // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
-                // offset in bytes, so we need to convert.
-                quote! {
-                    static_assert(CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident) * 8 == #offset);
-                }
+                let actual_offset = quote!{
+                    CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident)
+                };
+
+                quote! { static_assert( #actual_offset == #expected_offset); }
             }
         );
     Ok(quote! {
@@ -2911,9 +2920,9 @@ mod tests {
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Clone); };
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Copy); };
                 const _: () = { static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop); };
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) * 8 == 0);
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) * 8 == 32);
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) * 8 == 64);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) == 0);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) == 4);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) == 8);
             }
         );
         assert_cc_matches!(
@@ -2929,7 +2938,7 @@ mod tests {
             quote! {
                 static_assert(sizeof(class SomeStruct) == 12);
                 static_assert(alignof(class SomeStruct) == 4);
-                static_assert(CRUBIT_OFFSET_OF(public_int, class SomeStruct) * 8 == 0);
+                static_assert(CRUBIT_OFFSET_OF(public_int, class SomeStruct) == 0);
             }
         );
         Ok(())
@@ -3047,7 +3056,7 @@ mod tests {
                 ...
                 const _: () = assert!(
                     memoffset_unstable_const::offset_of!(
-                        crate::StructWithUnsupportedField, my_field) * 8 == 0);
+                        crate::StructWithUnsupportedField, my_field) == 0);
             }
         );
         Ok(())
@@ -3078,9 +3087,9 @@ mod tests {
                }
                ...
                const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::SomeStruct, first_field) * 8 == 0);
+                       crate::SomeStruct, first_field) == 0);
                const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::SomeStruct, last_field) * 8 == 64);
+                       crate::SomeStruct, last_field) == 8);
             }
         );
         Ok(())
@@ -3129,13 +3138,13 @@ mod tests {
                }
                ...
                const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::StructWithUnnamedMembers, first_field) * 8 == 0);
+                       crate::StructWithUnnamedMembers, first_field) == 0);
                const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::StructWithUnnamedMembers, __unnamed_field1) * 8 == 32);
+                       crate::StructWithUnnamedMembers, __unnamed_field1) == 4);
                const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::StructWithUnnamedMembers, __unnamed_field2) * 8 == 96);
+                       crate::StructWithUnnamedMembers, __unnamed_field2) == 12);
                const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::StructWithUnnamedMembers, last_field) * 8 == 128);
+                       crate::StructWithUnnamedMembers, last_field) == 16);
             }
         );
         Ok(())
@@ -4166,11 +4175,11 @@ mod tests {
         assert_cc_matches!(rs_api_impl, quote! { static_assert(alignof(union SomeUnion)==8) });
         assert_cc_matches!(
             rs_api_impl,
-            quote! { static_assert(CRUBIT_OFFSET_OF(some_field, union SomeUnion)*8==0) }
+            quote! { static_assert(CRUBIT_OFFSET_OF(some_field, union SomeUnion)==0) }
         );
         assert_cc_matches!(
             rs_api_impl,
-            quote! { static_assert(CRUBIT_OFFSET_OF(some_bigger_field, union SomeUnion)*8==0) }
+            quote! { static_assert(CRUBIT_OFFSET_OF(some_bigger_field, union SomeUnion)==0) }
         );
         Ok(())
     }
@@ -5665,7 +5674,7 @@ mod tests {
                 const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
                 const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                 ...
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) * 8 == 0);
+                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) == 0);
             }
         );
         Ok(())

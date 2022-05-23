@@ -105,9 +105,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::SomeClass: Drop);
 };
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::SomeClass, public_member_variable_) * 8 == 0
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::SomeClass, private_member_variable_) * 8 == 32
-);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::SomeClass, public_member_variable_) == 0);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::SomeClass, private_member_variable_) == 4);

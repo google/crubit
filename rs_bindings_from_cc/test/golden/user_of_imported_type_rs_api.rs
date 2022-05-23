@@ -96,4 +96,4 @@ const _: () = {
     static_assertions::assert_not_impl_all!(crate::UserOfImportedType: Drop);
 };
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::UserOfImportedType, trivial) * 8 == 0);
+    assert!(memoffset_unstable_const::offset_of!(crate::UserOfImportedType, trivial) == 0);

@@ -97,8 +97,7 @@ static_assert(alignof(class HasCustomAlignment) == 64);
 
 static_assert(sizeof(class HasFieldWithCustomAlignment) == 64);
 static_assert(alignof(class HasFieldWithCustomAlignment) == 64);
-static_assert(CRUBIT_OFFSET_OF(field, class HasFieldWithCustomAlignment) * 8 ==
-              0);
+static_assert(CRUBIT_OFFSET_OF(field, class HasFieldWithCustomAlignment) == 0);
 
 static_assert(sizeof(class InheritsFromBaseWithCustomAlignment) == 64);
 static_assert(alignof(class InheritsFromBaseWithCustomAlignment) == 64);

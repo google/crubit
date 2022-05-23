@@ -46,7 +46,7 @@ extern "C" class VirtualDerived2& __rust_thunk___ZN15VirtualDerived2aSERKS_(
 
 static_assert(sizeof(class Derived2) == 24);
 static_assert(alignof(class Derived2) == 8);
-static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived2) * 8 == 160);
+static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived2) == 20);
 
 static_assert(sizeof(class VirtualDerived2) == 32);
 static_assert(alignof(class VirtualDerived2) == 8);

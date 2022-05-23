@@ -164,9 +164,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::HasFieldWithCustomAlignment: Drop);
 };
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::HasFieldWithCustomAlignment, field) * 8 == 0
-);
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::HasFieldWithCustomAlignment, field) == 0);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::InheritsFromBaseWithCustomAlignment>() == 64);
 const _: () =

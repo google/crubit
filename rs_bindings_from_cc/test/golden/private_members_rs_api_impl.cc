@@ -38,7 +38,6 @@ extern "C" class SomeClass& __rust_thunk___ZN9SomeClassaSEOS_(
 
 static_assert(sizeof(class SomeClass) == 8);
 static_assert(alignof(class SomeClass) == 4);
-static_assert(CRUBIT_OFFSET_OF(public_member_variable_, class SomeClass) * 8 ==
-              0);
+static_assert(CRUBIT_OFFSET_OF(public_member_variable_, class SomeClass) == 0);
 
 #pragma clang diagnostic pop

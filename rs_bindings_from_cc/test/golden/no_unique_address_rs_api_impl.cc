@@ -133,32 +133,25 @@ extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1Eicc(
 
 static_assert(sizeof(class Struct) == 8);
 static_assert(alignof(class Struct) == 4);
-static_assert(CRUBIT_OFFSET_OF(field1, class Struct) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(field2, class Struct) * 8 == 32);
+static_assert(CRUBIT_OFFSET_OF(field1, class Struct) == 0);
+static_assert(CRUBIT_OFFSET_OF(field2, class Struct) == 4);
 
 static_assert(sizeof(class PaddingBetweenFields) == 8);
 static_assert(alignof(class PaddingBetweenFields) == 4);
-static_assert(CRUBIT_OFFSET_OF(field1, class PaddingBetweenFields) * 8 == 0);
-static_assert(CRUBIT_OFFSET_OF(field2, class PaddingBetweenFields) * 8 == 32);
+static_assert(CRUBIT_OFFSET_OF(field1, class PaddingBetweenFields) == 0);
+static_assert(CRUBIT_OFFSET_OF(field2, class PaddingBetweenFields) == 4);
 
 static_assert(sizeof(class FieldInTailPadding_InnerStruct) == 8);
 static_assert(alignof(class FieldInTailPadding_InnerStruct) == 4);
 static_assert(CRUBIT_OFFSET_OF(inner_int_field,
-                               class FieldInTailPadding_InnerStruct) *
-                  8 ==
-              0);
+                               class FieldInTailPadding_InnerStruct) == 0);
 static_assert(CRUBIT_OFFSET_OF(inner_char_field,
-                               class FieldInTailPadding_InnerStruct) *
-                  8 ==
-              32);
+                               class FieldInTailPadding_InnerStruct) == 4);
 
 static_assert(sizeof(class FieldInTailPadding) == 8);
 static_assert(alignof(class FieldInTailPadding) == 4);
-static_assert(CRUBIT_OFFSET_OF(inner_struct, class FieldInTailPadding) * 8 ==
-              0);
+static_assert(CRUBIT_OFFSET_OF(inner_struct, class FieldInTailPadding) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_in_tail_padding_of_prev_field,
-                               class FieldInTailPadding) *
-                  8 ==
-              40);
+                               class FieldInTailPadding) == 5);
 
 #pragma clang diagnostic pop

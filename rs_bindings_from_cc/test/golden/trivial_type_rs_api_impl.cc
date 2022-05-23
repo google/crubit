@@ -96,15 +96,14 @@ extern "C" class TrivialNonfinal& __rust_thunk___ZN15TrivialNonfinalaSEOS_(
 
 static_assert(sizeof(class Trivial) == 4);
 static_assert(alignof(class Trivial) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, class Trivial) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, class Trivial) == 0);
 
 static_assert(sizeof(class TrivialWithDefaulted) == 4);
 static_assert(alignof(class TrivialWithDefaulted) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialWithDefaulted) * 8 ==
-              0);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialWithDefaulted) == 0);
 
 static_assert(sizeof(class TrivialNonfinal) == 4);
 static_assert(alignof(class TrivialNonfinal) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialNonfinal) * 8 == 0);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialNonfinal) == 0);
 
 #pragma clang diagnostic pop
