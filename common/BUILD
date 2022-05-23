@@ -8,15 +8,15 @@ load(
 
 licenses(["notice"])
 
-package(default_visibility = ["//third_party/crubit:__subpackages__"])
+package(default_visibility = ["//:__subpackages__"])
 
 cc_library(
     name = "file_io",
     srcs = ["file_io.cc"],
     hdrs = ["file_io.h"],
     deps = [
-        "@absl//status:statusor",
-        "@llvm///llvm:Support",
+        "@absl//absl/status:statusor",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -24,17 +24,17 @@ cc_library(
     name = "cc_ffi_types",
     srcs = ["ffi_types.cc"],
     hdrs = ["ffi_types.h"],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":ffi_types",  # buildcleaner: keep
-        "@absl//strings",
+        "@absl//absl/strings",
     ],
 )
 
 rust_library(
     name = "ffi_types",
     srcs = ["ffi_types.rs"],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 rust_test(
@@ -46,8 +46,8 @@ cc_library(
     name = "check",
     hdrs = ["check.h"],
     deps = [
-        "@absl//base:core_headers",
-        "@llvm///llvm:Support",
+        "@absl//absl/base:core_headers",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -55,8 +55,8 @@ cc_library(
     name = "strong_int",
     hdrs = ["strong_int.h"],
     deps = [
-        "@absl//base:core_headers",
-        "@absl//meta:type_traits",
+        "@absl//absl/base:core_headers",
+        "@absl//absl/meta:type_traits",
     ],
 )
 
@@ -64,10 +64,10 @@ cc_library(
     name = "string_type",
     hdrs = ["string_type.h"],
     deps = [
-        "@absl//container:flat_hash_set",
-        "@absl//flags:marshalling",
-        "@absl//meta:type_traits",
-        "@absl//strings",
+        "@absl//absl/container:flat_hash_set",
+        "@absl//absl/flags:marshalling",
+        "@absl//absl/meta:type_traits",
+        "@absl//absl/strings",
     ],
 )
 
@@ -75,10 +75,9 @@ cc_library(
     name = "status_macros",
     hdrs = ["status_macros.h"],
     deps = [
-        "@absl//base:core_headers",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//types:source_location",
+        "@absl//absl/base:core_headers",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
     ],
 )
 
@@ -86,12 +85,10 @@ rust_library(
     name = "token_stream_printer",
     srcs = ["token_stream_printer.rs"],
     data = [
-        "@rust//toolchains/nightly:bin/rustfmt",
-        "@rustfmt//:rustfmt.toml",
     ],
     deps = [
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//proc_macro2/v1:proc_macro2",
+        "@crate_index//:anyhow",
+        "@crate_index//:proc-macro2",
     ],
 )
 
@@ -99,11 +96,11 @@ rust_test(
     name = "token_stream_printer_test",
     crate = ":token_stream_printer",
     data = [
-        "@rust//toolchains/nightly:bin/rustfmt",
-        "@rustfmt//:rustfmt.toml",
+        "//nowhere:rustfmt.toml",
+        "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
     ],
     deps = [
-        "@crates_io//quote/v1:quote",
+        "@crate_index//:quote",
     ],
 )
 
@@ -116,8 +113,13 @@ cc_library(
         ":check",
         ":file_io",
         "//testing/base/public:gunit_for_library_testonly",
-        "@absl//flags:flag",
-        "@absl//strings",
-        "@llvm///llvm:Support",
+        "@absl//absl/flags:flag",
+        "@absl//absl/strings",
+        "@llvm-project//llvm:Support",
     ],
+)
+
+cc_library(
+    name = "rust_allocator_shims",
+    srcs = ["rust_allocator_shims.c"],
 )

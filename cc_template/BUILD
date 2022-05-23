@@ -11,7 +11,7 @@ rust_proc_macro(
     visibility = ["//visibility:public"],
     deps = [
         ":cc_template_impl",
-        "@crates_io//syn/v1:syn",
+        "@crate_index//:syn",
     ],
 )
 
@@ -20,11 +20,11 @@ rust_library(
     srcs = ["cc_template_impl.rs"],
     deps = [
         "//common:token_stream_printer",
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//quote/v1:quote",
-        "@crates_io//serde_json/v1:serde_json",
-        "@crates_io//syn/v1:syn",
+        "@crate_index//:anyhow",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:serde_json",
+        "@crate_index//:syn",
     ],
 )
 
@@ -37,7 +37,7 @@ rust_test(
     ],
     crate = ":cc_template_impl",
     deps = [
-        "@crates_io//itertools/v0_10:itertools",
-        "@crates_io//maplit/v1:maplit",
+        "@crate_index//:itertools",
+        "@crate_index//:maplit",
     ],
 )

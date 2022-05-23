@@ -16,8 +16,8 @@ load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
 
 # buildifier: disable=bzl-visibility
 load("@rules_rust//rust/private:rustc.bzl", "rustc_compile_action")
-load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 RustBindingsFromCcInfo = provider(
     doc = ("A provider that contains compile and linking information for the generated" +
@@ -222,7 +222,7 @@ def _generate_bindings(
                 "--crubit_support_path",
                 "rs_bindings_from_cc/support",
                 "--rustfmt_config_path",
-                "external/rustfmt/rustfmt.toml",
+                "nowhere/rustfmt.toml",
             ] + _get_hdrs_command_line(public_hdrs),
             "targets_and_headers": targets_and_headers,
         },
@@ -335,7 +335,7 @@ def _get_hdrs_command_line(hdrs):
 
 bindings_attrs = {
     "_cc_toolchain": attr.label(
-        default = "//tools/cpp:current_cc_toolchain",
+        default = "@bazel_tools//tools/cpp:current_cc_toolchain",
     ),
     "_generator": attr.label(
         default = "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_target",
@@ -348,17 +348,17 @@ bindings_attrs = {
     ),
     "_grep_includes": attr.label(
         allow_single_file = True,
-        default = Label("//tools/cpp:grep-includes"),
+        default = Label("@bazel_tools//tools/cpp:grep-includes"),
         cfg = "host",
     ),
     "_rustfmt": attr.label(
-        default = "@rust//toolchains/nightly:bin/rustfmt",
+        default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
         executable = True,
         allow_single_file = True,
         cfg = "exec",
     ),
     "_rustfmt_cfg": attr.label(
-        default = "@rustfmt//:rustfmt.toml",
+        default = "//nowhere:rustfmt.toml",
         allow_single_file = True,
     ),
     "_error_format": attr.label(

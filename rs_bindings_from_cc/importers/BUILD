@@ -8,7 +8,7 @@ cc_library(
     hdrs = ["class_template.h"],
     deps = [
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -17,12 +17,12 @@ cc_library(
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
     deps = [
-        "@absl//strings",
+        "@absl//absl/strings",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:ast",
-        "@llvm///clang:sema",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:sema",
     ],
 )
 
@@ -32,7 +32,7 @@ cc_library(
     hdrs = ["enum.h"],
     deps = [
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -41,10 +41,10 @@ cc_library(
     srcs = ["function.cc"],
     hdrs = ["function.h"],
     deps = [
-        "@absl//strings",
+        "@absl//absl/strings",
         "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:sema",
+        "@llvm-project//clang:sema",
     ],
 )
 
@@ -54,7 +54,7 @@ cc_library(
     hdrs = ["function_template.h"],
     deps = [
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -63,9 +63,9 @@ cc_library(
     srcs = ["namespace.cc"],
     hdrs = ["namespace.h"],
     deps = [
-        "@absl//strings",
+        "@absl//absl/strings",
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -75,6 +75,6 @@ cc_library(
     hdrs = ["typedef_name.h"],
     deps = [
         "//rs_bindings_from_cc:decl_importer",
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )

@@ -185,7 +185,7 @@ absl::StatusOr<absl::string_view> ConvertCcCallConvIntoRsAbi(
       // These don't seem to have any Rust equivalents.
       break;
     default:
-      LOG(WARNING) << "Unexpected calling convention: " << cc_call_conv;
+      break;
   }
   return absl::UnimplementedError(
       absl::StrCat("Unsupported calling convention: ",

@@ -37,7 +37,7 @@ with_cc_toolchain_flags(
 rust_bindings_from_cc_binary(
     name = "rs_bindings_from_cc",
     binary = ":rs_bindings_from_cc_impl",
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 deps_for_bindings(
@@ -48,15 +48,15 @@ deps_for_bindings(
     deps_for_generated_rs_file = [
         # Required for struct layout assertions added to the generated
         # Rust code.
-        "@crates_io//memoffset/v0_6:memoffset_unstable_const",
+        "@crate_index//:memoffset",
         "//rs_bindings_from_cc/support:ctor",
         "//rs_bindings_from_cc/support:forward_declare",
         "//rs_bindings_from_cc/support:oops",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
-        "@crates_io//static_assertions/v1:static_assertions",
+        "@crate_index//:static_assertions",
     ],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 cc_binary(
@@ -69,14 +69,14 @@ cc_binary(
         ":cmdline",
         ":generate_bindings_and_metadata",
         "//common:file_io",
+        "//common:rust_allocator_shims",
         "//common:status_macros",
-        "@absl//container:flat_hash_map",
-        "@absl//flags:parse",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@llvm///llvm:Support",
-        "@rust//support:rust_okay_here",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/flags:parse",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -100,10 +100,10 @@ cc_test(
     deps = [
         ":cmdline",
         ":generate_bindings_and_metadata",
+        "//common:rust_allocator_shims",
         "//common:test_utils",
         "//testing/base/public:gunit_main",
-        "@absl//strings",
-        "@rust//support:rust_okay_here",
+        "@absl//absl/strings",
     ],
 )
 
@@ -111,10 +111,10 @@ cc_library(
     name = "ast_util",
     srcs = ["ast_util.cc"],
     hdrs = ["ast_util.h"],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = [
         "//common:check",
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -124,7 +124,7 @@ cc_library(
     hdrs = ["bazel_types.h"],
     deps = [
         "//common:string_type",
-        "@absl//strings",
+        "@absl//absl/strings",
     ],
 )
 
@@ -136,11 +136,11 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         "//common:status_macros",
-        "@absl//container:flat_hash_map",
-        "@absl//flags:flag",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@llvm///llvm:Support",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/flags:flag",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -157,14 +157,14 @@ cc_test(
 cc_library(
     name = "decl_importer",
     hdrs = ["decl_importer.h"],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     deps = [
         "cc_ir",
         ":bazel_types",
         "//lifetime_annotations",
-        "@absl//container:flat_hash_map",
-        "@absl//status:statusor",
-        "@llvm///clang:ast",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/status:statusor",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -175,8 +175,8 @@ cc_library(
     deps = [
         ":ast_consumer",
         ":decl_importer",
-        "@llvm///clang:ast",
-        "@llvm///clang:frontend",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
     ],
 )
 
@@ -188,8 +188,8 @@ cc_library(
         ":decl_importer",
         ":importer",
         "//common:check",
-        "@llvm///clang:ast",
-        "@llvm///clang:frontend",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
     ],
 )
 
@@ -213,16 +213,16 @@ cc_library(
         "//rs_bindings_from_cc/importers:function_template",
         "//rs_bindings_from_cc/importers:namespace",
         "//rs_bindings_from_cc/importers:typedef_name",
-        "@absl//container:flat_hash_map",
-        "@absl//container:flat_hash_set",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@absl//strings:cord",
-        "@llvm///clang:ast",
-        "@llvm///clang:basic",
-        "@llvm///clang:sema",
-        "@llvm///llvm:Support",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/container:flat_hash_set",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/strings:cord",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -234,11 +234,11 @@ cc_test(
         ":cc_ir",
         ":ir_from_cc",
         "//testing/base/public:gunit_main",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@absl//types:span",
-        "@llvm///clang:ast",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/types:span",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -250,11 +250,11 @@ cc_library(
         ":bazel_types",
         "//common:check",
         "//common:strong_int",
-        "@absl//container:flat_hash_map",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@llvm///clang:ast",
-        "@llvm///llvm:Support",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@llvm-project//clang:ast",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -262,12 +262,12 @@ rust_library(
     name = "ir",
     srcs = ["ir.rs"],
     deps = [
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//itertools/v0_10:itertools",
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//quote/v1:quote",
-        "@crates_io//serde/v1:serde",
-        "@crates_io//serde_json/v1:serde_json",
+        "@crate_index//:anyhow",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:serde",
+        "@crate_index//:serde_json",
     ],
 )
 
@@ -284,8 +284,8 @@ rust_library(
         ":ir",
         ":json_from_cc",
         "//common:ffi_types",
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//itertools/v0_10:itertools",
+        "@crate_index//:anyhow",
+        "@crate_index//:itertools",
     ],
 )
 
@@ -299,14 +299,14 @@ cc_library(
         ":frontend_action",
         ":importer",
         "//common:check",
-        "@absl//container:flat_hash_map",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@absl//types:span",
-        "@llvm///clang:basic",
-        "@llvm///clang:frontend",
-        "@llvm///clang:tooling",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/types:span",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:tooling",
     ],
 )
 
@@ -318,8 +318,8 @@ cc_library(
         ":cc_ir",
         ":ir_from_cc",
         "//common:cc_ffi_types",
-        "@absl//status:statusor",
-        "@llvm///llvm:Support",
+        "@absl//absl/status:statusor",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -330,10 +330,10 @@ rust_test(
         ":ir",
         ":ir_testing",
         ":token_stream_matchers",
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//itertools/v0_10:itertools",
-        "@crates_io//quote/v1:quote",
-        "@rust//support:rust_okay_here",
+        "//common:rust_allocator_shims",
+        "@crate_index//:anyhow",
+        "@crate_index//:itertools",
+        "@crate_index//:quote",
     ],
 )
 
@@ -345,9 +345,9 @@ cc_library(
         ":cc_ir",
         ":src_code_gen_impl",  # buildcleaner: keep
         "//common:cc_ffi_types",
-        "@absl//strings",
-        "@llvm///clang:format",
-        "@llvm///llvm:Support",
+        "@absl//absl/strings",
+        "@llvm-project//clang:format",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -358,12 +358,12 @@ rust_library(
         ":ir",
         "//common:ffi_types",
         "//common:token_stream_printer",
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//itertools/v0_10:itertools",
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//quote/v1:quote",
-        "@crates_io//serde_json/v1:serde_json",
-        "@crates_io//syn/v1:syn",
+        "@crate_index//:anyhow",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:serde_json",
+        "@crate_index//:syn",
     ],
 )
 
@@ -371,14 +371,12 @@ rust_test(
     name = "src_code_gen_impl_test",
     crate = ":src_code_gen_impl",
     data = [
-        "@rust//toolchains/nightly:bin/rustfmt",
-        "@rustfmt//:rustfmt.toml",
     ],
     deps = [
         ":ir_testing",
         ":token_stream_matchers",
-        "@crates_io//static_assertions/v1:static_assertions",
-        "@rust//support:rust_okay_here",
+        "//common:rust_allocator_shims",
+        "@crate_index//:static_assertions",
     ],
 )
 
@@ -390,9 +388,9 @@ cc_library(
     deps = [
         ":cc_ir",
         "//common:check",
-        "@absl//functional:function_ref",
-        "@llvm///clang:ast",
-        "@llvm///clang:basic",
+        "@absl//absl/functional:function_ref",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
     ],
 )
 
@@ -402,10 +400,10 @@ rust_library(
     deps = [
         ":ir",
         "//common:token_stream_printer",
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//itertools/v0_10:itertools",
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//quote/v1:quote",
+        "@crate_index//:anyhow",
+        "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
     ],
 )
 
@@ -413,12 +411,10 @@ rust_test(
     name = "token_stream_matchers_test",
     crate = ":token_stream_matchers",
     data = [
-        "@rust//toolchains/nightly:bin/rustfmt",
-        "@rustfmt//:rustfmt.toml",
     ],
     deps = [
         ":ir_testing",
-        "@rust//support:rust_okay_here",
+        "//common:rust_allocator_shims",
     ],
 )
 
@@ -450,15 +446,15 @@ LIBC_HEADERS = []
 config_setting(
     name = "llvm_unstable",
     values = {
-        "crosstool_top": "@clang//:everything",
+        "crosstool_top": "//nowhere/llvm:everything",
     },
 )
 
 filegroup(
     name = "toolchain_headers",
     srcs = select({
-        ":llvm_unstable": ["@clang//:cc-std-headers"],
-        "//conditions:default": ["@clang//:cc-std-headers"],
+        ":llvm_unstable": ["//nowhere/llvm:cc-std-headers"],
+        "//conditions:default": ["//nowhere/llvm:cc-std-headers"],
     }) + [
         "//third_party/grte/v5_x86/release/usr/grte/v5:compile",
     ],
@@ -467,9 +463,9 @@ filegroup(
 filegroup(
     name = "builtin_headers",
     srcs = [
-        "@llvm///clang:builtin_headers_filegroup",
-        "@llvm///compiler-rt:fuzzer_filegroup",
-        "@llvm///compiler-rt:sanitizer_filegroup",
+        "@llvm-project//clang:builtin_headers_filegroup",
+        "@llvm-project//compiler-rt:fuzzer_filegroup",
+        "@llvm-project//compiler-rt:sanitizer_filegroup",
     ],
     visibility = ["//visibility:public"],
 )
@@ -490,9 +486,9 @@ cc_library(
         ":collect_instantiations",
         "//common:cc_ffi_types",
         "//common:check",
-        "@absl//status:statusor",
-        "@absl//types:span",
-        "@llvm///llvm:Support",
+        "@absl//absl/status:statusor",
+        "@absl//absl/types:span",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -501,9 +497,9 @@ cc_test(
     srcs = ["collect_instantiations_test.cc"],
     deps = [
         ":cc_collect_instantiations",
+        "//common:rust_allocator_shims",
         "//common:test_utils",
         "//testing/base/public:gunit_main",
-        "@rust//support:rust_okay_here",
     ],
 )
 
@@ -513,10 +509,10 @@ rust_library(
     deps = [
         "//common:ffi_types",
         "//common:token_stream_printer",
-        "@crates_io//anyhow/v1:anyhow",
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//serde_json/v1:serde_json",
-        "@crates_io//syn/v1:syn",
+        "@crate_index//:anyhow",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:serde_json",
+        "@crate_index//:syn",
     ],
 )
 
@@ -529,6 +525,6 @@ rust_test(
     ],
     crate = ":collect_instantiations",
     deps = [
-        "@crates_io//quote/v1:quote",
+        "@crate_index//:quote",
     ],
 )

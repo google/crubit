@@ -2,15 +2,15 @@
 
 licenses(["notice"])
 
-package(default_visibility = ["/visibility:public"])
+package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "lifetime",
     srcs = ["lifetime.cc"],
     hdrs = ["lifetime.h"],
     deps = [
-        "@absl//strings",
-        "@llvm///llvm:Support",
+        "@absl//absl/strings",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -38,11 +38,11 @@ cc_library(
         ":lifetime_substitutions",
         ":lifetime_symbol_table",
         ":pointee_type",
-        "@absl//strings",
-        "@absl//strings:str_format",
-        "@llvm///clang:ast",
-        "@llvm///clang:basic",
-        "@llvm///llvm:Support",
+        "@absl//absl/strings",
+        "@absl//absl/strings:str_format",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -54,12 +54,12 @@ cc_library(
         ":lifetime_symbol_table",
         ":pointee_type",
         ":type_lifetimes",
-        "@absl//strings",
-        "@llvm///clang:ast",
-        "@llvm///clang:basic",
-        "@llvm///clang:frontend",
-        "@llvm///clang:lex",
-        "@llvm///llvm:Support",
+        "@absl//absl/strings",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:lex",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -71,8 +71,8 @@ cc_test(
         "//testing/base/public:gunit_main",
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
-        "@llvm///clang:ast_matchers",
-        "@llvm///llvm:Support",
+        "@llvm-project//clang:ast_matchers",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -81,9 +81,9 @@ cc_library(
     srcs = ["lifetime_substitutions.cc"],
     hdrs = ["lifetime_substitutions.h"],
     deps = [
-        "@absl//strings",
+        "@absl//absl/strings",
         "//lifetime_annotations:lifetime",
-        "@llvm///llvm:Support",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -102,7 +102,7 @@ cc_library(
     hdrs = ["lifetime_symbol_table.h"],
     deps = [
         ":lifetime",
-        "@llvm///llvm:Support",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -120,6 +120,6 @@ cc_library(
     srcs = ["pointee_type.cc"],
     hdrs = ["pointee_type.h"],
     deps = [
-        "@llvm///clang:ast",
+        "@llvm-project//clang:ast",
     ],
 )

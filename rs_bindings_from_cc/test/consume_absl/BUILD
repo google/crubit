@@ -7,5 +7,5 @@ licenses(["notice"])
 rust_test(
     name = "main",
     srcs = ["test.rs"],
-    cc_deps = ["@absl//time"],
+    cc_deps = ["@absl//absl/time"],
 )

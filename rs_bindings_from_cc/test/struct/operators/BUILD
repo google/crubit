@@ -15,6 +15,6 @@ rust_test(
     srcs = ["test.rs"],
     cc_deps = [":operators"],
     deps = [
-        "@crates_io//static_assertions/v1:static_assertions",
+        "@crate_index//:static_assertions",
     ],
 )

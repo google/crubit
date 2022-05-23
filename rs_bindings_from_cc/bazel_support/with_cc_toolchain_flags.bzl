@@ -10,8 +10,8 @@ Disclaimer: This project is experimental, under heavy development, and should
 not be used yet.
 """
 
-load("//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 DISABLED_FEATURES = ["module_maps"]
 
@@ -99,7 +99,7 @@ with_cc_toolchain_flags = rule(
             doc = "Additional flags to be passed right after the binary.",
         ),
         "_cc_toolchain": attr.label(
-            default = Label("//tools/cpp:current_cc_toolchain"),
+            default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
         ),
         "_stl": attr.label(default = Label("//third_party/stl")),
     },

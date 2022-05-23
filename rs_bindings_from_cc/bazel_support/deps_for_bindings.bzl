@@ -59,7 +59,7 @@ deps_for_bindings = rule(
             default = [],
         ),
         "_allowlist_function_transition": attr.label(
-            default = "//tools/allowlists/function_transition_allowlist",
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
     },
     cfg = rust_bindings_from_cc_deps_transition,

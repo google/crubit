@@ -9,7 +9,7 @@ cc_library(
         "cxx20_backports.h",
         "offsetof.h",
     ],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
     # It is important to be thoughtful when adding new dependencies for
     # `rs_api_impl_support` (and possibly other targets in this BUILD file).
     # Even simple dependencies like `absl` may be tricky in practice, because
@@ -32,16 +32,16 @@ rust_library(
     name = "ctor",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 rust_proc_macro(
     name = "ctor_proc_macros",
     srcs = ["ctor_proc_macros.rs"],
     deps = [
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//quote/v1:quote",
-        "@crates_io//syn/v1:syn",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
     ],
 )
 
@@ -71,16 +71,16 @@ rust_library(
     name = "forward_declare",
     srcs = ["forward_declare.rs"],
     proc_macro_deps = [":forward_declare_proc_macros"],
-    visibility = ["//third_party/crubit:__subpackages__"],
+    visibility = ["//:__subpackages__"],
 )
 
 rust_proc_macro(
     name = "forward_declare_proc_macros",
     srcs = ["forward_declare_proc_macros.rs"],
     deps = [
-        "@crates_io//proc_macro2/v1:proc_macro2",
-        "@crates_io//quote/v1:quote",
-        "@crates_io//syn/v1:syn",
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
     ],
 )
 
@@ -94,7 +94,7 @@ rust_library(
     name = "oops",
     srcs = ["oops.rs"],
     visibility = [
-        "//third_party/crubit:__subpackages__",
+        "//:__subpackages__",
     ],
 )
 

@@ -24,7 +24,7 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "crubit_support_path",
-          "external/rustfmt/rustfmt.toml",
+          "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {},
@@ -47,7 +47,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "crubit_support_path",
-          "external/rustfmt/rustfmt.toml",
+          "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {},
@@ -71,7 +71,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "crubit_support_path",
-          "external/rustfmt/rustfmt.toml",
+          "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {a_rs_path}, "instantiations_out"));

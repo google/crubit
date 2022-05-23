@@ -24,6 +24,6 @@ rust_test(
         ":no_elided_lifetimes",
     ],
     deps = [
-        "@crates_io//static_assertions/v1:static_assertions",
+        "@crate_index//:static_assertions",
     ],
 )

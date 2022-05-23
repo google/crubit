@@ -8,15 +8,15 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         ":rs_from_cc_lib",
-        "@absl//flags:flag",
-        "@absl//flags:parse",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//strings",
+        "@absl//absl/flags:flag",
+        "@absl//absl/flags:parse",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
         "//common:check",
         "//common:file_io",
-        "@llvm///llvm:Support",
-        "@rust//support:rust_okay_here",
+        "@llvm-project//llvm:Support",
+        "//common:rust_allocator_shims",
     ],
 )
 
@@ -28,8 +28,8 @@ cc_library(
         ":ast_consumer",
         ":converter",
         "//lifetime_annotations",
-        "@llvm///clang:ast",
-        "@llvm///clang:frontend",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
     ],
 )
 
@@ -40,8 +40,8 @@ cc_library(
     deps = [
         ":converter",
         "//common:check",
-        "@llvm///clang:ast",
-        "@llvm///clang:frontend",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:frontend",
     ],
 )
 
@@ -50,15 +50,15 @@ cc_library(
     srcs = ["converter.cc"],
     hdrs = ["converter.h"],
     deps = [
-        "@absl//container:flat_hash_map",
-        "@absl//container:flat_hash_set",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@absl//types:span",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/container:flat_hash_set",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/types:span",
         "//lifetime_annotations",
-        "@llvm///clang:ast",
-        "@llvm///clang:basic",
-        "@llvm///clang:sema",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:sema",
         "//third_party/re2",
     ],
 )
@@ -69,9 +69,9 @@ cc_test(
     deps = [
         ":rs_from_cc_lib",
         "//testing/base/public:gunit_main",
-        "@absl//status",
-        "@absl//strings",
-        "@llvm///clang:ast",
+        "@absl//absl/status",
+        "@absl//absl/strings",
+        "@llvm-project//clang:ast",
     ],
 )
 
@@ -82,13 +82,13 @@ cc_library(
     deps = [
         ":converter",
         ":frontend_action",
-        "@absl//container:flat_hash_map",
-        "@absl//status",
-        "@absl//status:statusor",
-        "@absl//strings",
-        "@absl//types:span",
-        "@llvm///clang:basic",
-        "@llvm///clang:frontend",
-        "@llvm///clang:tooling",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/types:span",
+        "@llvm-project//clang:basic",
+        "@llvm-project//clang:frontend",
+        "@llvm-project//clang:tooling",
     ],
 )

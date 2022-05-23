@@ -1,0 +1,9 @@
+# generic_clang from @llvm-raw//utils/bazel, but c++17 to match Google
+build:generic_clang --repo_env=CC=clang
+build:generic_clang --cxxopt=-std=c++17 --host_cxxopt=-std=c++17
+build:generic_clang --copt=-Wall --copt=-Werror --host_copt=-Wall --host_copt=-Werror
+build:generic_clang --cxxopt=-Wno-range-loop-analysis --host_cxxopt=-Wno-range-loop-analysis
+build:generic_clang --copt=-Wno-deprecated --host_copt=-Wno-deprecated
+
+build --config=generic_clang
+build --sandbox_base=/dev/shm

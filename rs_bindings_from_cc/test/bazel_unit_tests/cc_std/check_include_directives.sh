@@ -16,10 +16,10 @@ has_clang_builtin_isystem=0
 has_grte_isystem=0
 
 stl_isystem="third_party/stl/cxx17"
-cc_std_lib_isystem="external/clang/toolchain/include/c++/v1"
-cc_std_lib_unstable_isystem="external/clang/toolchain/include/c++/v1"
+cc_std_lib_isystem="nowhere/llvm/toolchain/include/c++/v1"
+cc_std_lib_unstable_isystem="nowhere/llvm/toolchain/include/c++/v1"
 clang_builtin_isystem="third_party/llvm/llvm-project/clang/lib/Headers"
-grte_isystem="@libc//include"
+grte_isystem="//nowhere/libcinclude"
 
 function fail () {
     cat > "${path_to_test_executable}" <<EOF

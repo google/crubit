@@ -12,7 +12,6 @@
 #include "absl/base/optimization.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/types/source_location.h"
 
 // Evaluates an expression that produces a `absl::Status`. If the status is not
 // ok, returns it from the current function.
@@ -77,8 +76,7 @@
       rexpr,                                                              \
       return absl::Status(std::move(CRUBIT_STATUS_MACROS_IMPL_CONCAT_(    \
                                         _status_or_value, __LINE__))      \
-                              .status(),                                  \
-                          ABSL_LOC))
+                              .status()))
 
 // =================================================================
 // == Implementation details, do not rely on anything below here. ==
@@ -106,7 +104,7 @@ constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
         "using CRUBIT_ASSIGN_OR_RETURN");                                 \
   }                                                                       \
   CRUBIT_STATUS_MACROS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =        \
-      std::move(statusor).ValueOrDie()
+      std::move(statusor).value()
 
 // Internal helpers for macro expansion.
 #define CRUBIT_STATUS_MACROS_IMPL_EAT(...)

@@ -4,7 +4,7 @@ licenses(["notice"])
 
 package(default_visibility = [
     "//lifetime_analysis:__subpackages__",
-    "//third_party/crubit:__subpackages__",
+    "//:__subpackages__",
 ])
 
 cc_library(
@@ -16,7 +16,7 @@ cc_library(
         "//testing/base/public:gunit_for_library_testonly",
         "//lifetime_annotations:lifetime_symbol_table",
         "//lifetime_annotations:type_lifetimes",
-        "@llvm///llvm:Support",
+        "@llvm-project//llvm:Support",
     ],
 )
 
@@ -27,8 +27,8 @@ cc_library(
     hdrs = ["run_on_code.h"],
     deps = [
         "//lifetime_annotations",
-        "@llvm///clang:ast",
-        "@llvm///clang:tooling",
-        "@llvm///llvm:Support",
+        "@llvm-project//clang:ast",
+        "@llvm-project//clang:tooling",
+        "@llvm-project//llvm:Support",
     ],
 )

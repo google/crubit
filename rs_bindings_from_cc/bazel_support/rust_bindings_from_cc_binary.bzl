@@ -40,16 +40,16 @@ rust_bindings_from_cc_binary = rule(
                    "C++ code."),
         ),
         "_allowlist_function_transition": attr.label(
-            default = "//tools/allowlists/function_transition_allowlist",
+            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
         "_rustfmt": attr.label(
-            default = "@rust//toolchains/nightly:bin/rustfmt",
+            default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
             executable = True,
             allow_single_file = True,
             cfg = "exec",
         ),
         "_rustfmt_cfg": attr.label(
-            default = "@rustfmt//:rustfmt.toml",
+            default = "//nowhere:rustfmt.toml",
             allow_single_file = True,
         ),
     },

@@ -49,7 +49,7 @@ rust_test(
 cc_library(
     name = "consumes_header_from_includes",
     hdrs = ["consumes_header_from_includes.h"],
-    deps = ["//targets_for_testing:uses_includes"],
+    deps = ["//nowhere/experimentstargets_for_testing:uses_includes"],
 )
 
 rust_test(
@@ -61,7 +61,7 @@ rust_test(
 cc_library(
     name = "consumes_header_with_include_prefix",
     hdrs = ["consumes_header_with_include_prefix.h"],
-    deps = ["//targets_for_testing:uses_include_prefix"],
+    deps = ["//nowhere/experimentstargets_for_testing:uses_include_prefix"],
 )
 
 rust_test(
