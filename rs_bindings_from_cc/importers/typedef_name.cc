@@ -45,6 +45,13 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
         typedef_name_decl->getUnderlyingType(), no_lifetimes);
   }
   if (underlying_type.ok()) {
+    if (const auto* tag_decl = type->getAsTagDecl();
+        tag_decl && tag_decl->getDeclContext() == decl_context &&
+        tag_decl->getName() == typedef_name_decl->getName()) {
+      return ictx_.ImportUnsupportedItem(
+          typedef_name_decl,
+          "Typedef only used to introduce a name in C. Not importing.");
+    }
     ictx_.type_mapper_.Insert(typedef_name_decl);
     return TypeAlias{
         .identifier = *identifier,

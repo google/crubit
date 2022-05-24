@@ -694,7 +694,6 @@ fn test_type_conversion() -> Result<()> {
     let fields = ir.records().next().unwrap().fields.iter();
     let type_mapping: HashMap<_, _> = fields
         .map(|f| {
-
             (
                 f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_str(),
                 f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_str(),
@@ -1659,6 +1658,102 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
 fn test_dont_import_typedef_nested_in_func() {
     let ir = ir_from_cc("inline void f() { typedef int MyTypedefDecl; }").unwrap();
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyTypedefDecl" ... } });
+}
+
+#[test]
+fn test_dont_import_typedef_for_structs_from_c() {
+    let ir = ir_from_cc("struct MyStruct {}; typedef struct MyStruct MyStruct;").unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+}
+
+#[test]
+fn test_ignore_typedef_but_import_struct_from_c() {
+    let ir = ir_from_cc("typedef struct {} MyStruct;").unwrap();
+    // TODO(b/233653968): Import typedeffed C structs.
+    // assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+}
+
+#[test]
+fn test_import_struct_typedef_from_different_decl_context() {
+    let ir = ir_from_cc(
+        "struct MyStruct {}; namespace test_namespace_bindings { typedef MyStruct MyStruct; }",
+    )
+    .unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+}
+
+#[test]
+fn test_ignore_struct_typedef_from_decl_context_redecl() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings { struct MyStruct {}; }
+        namespace test_namespace_bindings { typedef MyStruct MyStruct; }
+    "#,
+    )
+    .unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+}
+
+#[test]
+fn test_ignore_struct_typedef_from_decl_context_redecl_from_multiple_targets() {
+    let ir = ir_from_cc_dependency(
+        "namespace test_namespace_bindings { typedef MyStruct MyStruct; }",
+        "namespace test_namespace_bindings { struct MyStruct {}; }",
+    )
+    .unwrap();
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+}
+
+#[test]
+fn test_dont_import_typedef_for_unions_from_c() {
+    let ir = ir_from_cc("union MyUnion {}; typedef union MyUnion MyUnion;").unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
+}
+
+#[test]
+fn test_ignore_typedef_but_import_union_from_c() {
+    let ir = ir_from_cc("typedef union {} MyUnion;").unwrap();
+    // TODO(b/233653968): Import typedeffed C unions.
+    // assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
+}
+
+#[test]
+fn test_import_union_typedef_from_different_decl_context() {
+    let ir = ir_from_cc(
+        "union MyUnion {}; namespace test_namespace_bindings { typedef MyUnion MyUnion; }",
+    )
+    .unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
+    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
+}
+
+#[test]
+fn test_ignore_union_typedef_from_decl_context_redecl() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings { union MyUnion {}; }
+        namespace test_namespace_bindings { typedef MyUnion MyUnion; }
+    "#,
+    )
+    .unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
+}
+
+#[test]
+fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
+    let ir = ir_from_cc_dependency(
+        "namespace test_namespace_bindings { typedef MyUnion MyUnion; }",
+        "namespace test_namespace_bindings { union MyUnion {}; }",
+    )
+    .unwrap();
+    assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
 
 #[test]
