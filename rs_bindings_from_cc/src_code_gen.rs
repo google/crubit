@@ -1206,8 +1206,7 @@ fn generate_record(
     } else {
         quote! { struct }
     };
-    // TODO(b/233603159): not all unions are unpin, remove `record.is_union` once
-    // `ctor` supports unions.
+
     let recursively_pinned_attribute = if record.is_unpin() {
         quote! {}
     } else {
@@ -2333,28 +2332,29 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = tag_kind(record);
-    let field_assertions =
-        record.fields.iter()
-            .filter(|f| f.access == AccessSpecifier::Public && f.identifier.is_some())
-            // https://en.cppreference.com/w/cpp/types/offsetof points out that "if member is [...]
-            // a bit-field [...] the behavior [of `offsetof` macro] is undefined.".  In such
-            // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
-            .filter(|f| !f.is_bitfield)
-            .map(|field| {
-                // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the offset
-                // in bytes, so we need to convert.  We can assert that `field.offset` is always at
-                // field boundaries, because the bitfields have been filtered out earlier.
-                assert_eq!(field.offset % 8, 0);
-                let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
+    let field_assertions = record
+        .fields
+        .iter()
+        .filter(|f| f.access == AccessSpecifier::Public && f.identifier.is_some())
+        // https://en.cppreference.com/w/cpp/types/offsetof points out that "if member is [...]
+        // a bit-field [...] the behavior [of `offsetof` macro] is undefined.".  In such
+        // scenario clang reports an error: cannot compute offset of bit-field 'field_name'.
+        .filter(|f| !f.is_bitfield)
+        .map(|field| {
+            // The IR contains the offset in bits, while `CRUBIT_OFFSET_OF` returns the
+            // offset in bytes, so we need to convert.  We can assert that
+            // `field.offset` is always at field boundaries, because the
+            // bitfields have been filtered out earlier.
+            assert_eq!(field.offset % 8, 0);
+            let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
 
-                let field_ident = format_cc_ident(&field.identifier.as_ref().unwrap().identifier);
-                let actual_offset = quote!{
-                    CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident)
-                };
+            let field_ident = format_cc_ident(&field.identifier.as_ref().unwrap().identifier);
+            let actual_offset = quote! {
+                CRUBIT_OFFSET_OF(#field_ident, #tag_kind #namespace_qualifier #record_ident)
+            };
 
-                quote! { static_assert( #actual_offset == #expected_offset); }
-            }
-        );
+            quote! { static_assert( #actual_offset == #expected_offset); }
+        });
     Ok(quote! {
         static_assert(sizeof(#tag_kind #namespace_qualifier #record_ident) == #size);
         static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
@@ -4270,9 +4270,14 @@ mod tests {
 
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
-        // TODO(b/233603159): not all unions are unpin, add a test verifying that unions
-        // get recursively pinned correctly once `ctor` supports unions.
-        assert_rs_not_matches!(rs_api, quote! {recursively_pinned});
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[ctor::recursively_pinned]
+                #[repr(C)]
+                pub union UnionWithNontrivialField { ... }
+            }
+        );
         Ok(())
     }
 

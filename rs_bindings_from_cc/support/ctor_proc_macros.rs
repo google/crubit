@@ -106,30 +106,30 @@ fn project_pin_ident(ident: &Ident) -> Ident {
     Ident::new(&format!("__CrubitProjectPin{}", ident), Span::call_site())
 }
 
-fn projected_struct(
-    s: syn::DeriveInput,
-) -> syn::Result<(syn::DeriveInput, proc_macro2::TokenStream)> {
-    let mut projected = s;
-    // TODO(jeanpierreda): check attributes for repr(packed)
-    projected.attrs.clear();
-
-    let original_ident = projected.ident.clone();
-    projected.ident = project_pin_ident(&projected.ident);
-    let projected_ident = &projected.ident;
-
-    assert_eq!(
-        projected.generics.params.len(),
-        0,
-        "projection is currently not implemented for generic structs"
-    );
-
-    let is_fieldless = match &projected.data {
+/// Defines the `project_pin` function, and its return value.
+///
+/// If the input is a union, this returns nothing, and pin-projection is not
+/// implemented.
+fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+    let is_fieldless = match &s.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
         syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
-        syn::Data::Union(u) => {
-            return Err(syn::Error::new(u.union_token.span, "Unions are not supported"));
+        syn::Data::Union(_) => {
+            return Ok(quote! {});
         }
     };
+
+    let mut projected = s.clone();
+    // TODO(jeanpierreda): check attributes for repr(packed)
+    projected.attrs.clear();
+    projected.ident = project_pin_ident(&projected.ident);
+
+    if projected.generics.params.len() != 0 {
+        return Err(syn::Error::new(
+            projected.generics.span(),
+            "projection is currently not implemented for generic structs",
+        ));
+    }
 
     let lifetime;
     if is_fieldless {
@@ -173,6 +173,8 @@ fn projected_struct(
         (quote! {{#pat}}, quote! {{#project}})
     };
     let project_body;
+    let original_ident = &s.ident;
+    let projected_ident = &projected.ident;
     match &mut projected.data {
         syn::Data::Struct(data) => {
             for field in &mut data.fields {
@@ -181,7 +183,7 @@ fn projected_struct(
             let (pat, project) = pat_project(&mut data.fields);
             project_body = quote! {
                 let #original_ident #pat = from;
-                Self #project
+                #projected_ident #project
             };
         }
         syn::Data::Enum(e) => {
@@ -193,7 +195,7 @@ fn projected_struct(
                 let (pat, project) = pat_project(&mut variant.fields);
                 let variant_ident = &variant.ident;
                 match_body.extend(quote! {
-                    #original_ident::#variant_ident #pat => Self::#variant_ident #project,
+                    #original_ident::#variant_ident #pat => #projected_ident::#variant_ident #project,
                 });
             }
             project_body = quote! {
@@ -202,21 +204,22 @@ fn projected_struct(
                 }
             };
         }
-        syn::Data::Union(u) => {
-            return Err(syn::Error::new(u.union_token.span, "Unions are not supported"));
-        }
+        syn::Data::Union(_) => unreachable!("project_pin_impl should early return when it finds a union"),
     }
-    let impl_block = quote! {
-        impl<#lifetime> #projected_ident<#lifetime> {
-            fn new(from: ::std::pin::Pin<& #lifetime mut #original_ident>) -> Self {
+
+    Ok(quote! {
+        #projected
+
+        impl #original_ident {
+            #[must_use]
+            pub fn project_pin(self: ::std::pin::Pin<&mut Self>) -> #projected_ident {
                 unsafe {
-                    let from = ::std::pin::Pin::into_inner_unchecked(from);
+                    let from = ::std::pin::Pin::into_inner_unchecked(self);
                     #project_body
                 }
             }
         }
-    };
-    Ok((projected, impl_block))
+    })
 }
 
 #[derive(Default)]
@@ -295,16 +298,21 @@ impl Parse for RecursivelyPinnedArgs {
 /// ```
 ///
 /// (This is analogous to `#[pin_project(PinnedDrop)]`.)
+///
+/// ## Supported types
+///
+/// Structs, enums, and unions are all supported. However, unions do not receive
+/// a `pin_project` method, as there is no way to implement pin projection for
+/// unions. (One cannot know which field is active.)
 #[proc_macro_attribute]
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
     let args = syn::parse_macro_input!(args as RecursivelyPinnedArgs);
     let input = syn::parse_macro_input!(item as syn::DeriveInput);
 
-    let (project_pin_struct, project_pin_struct_impl) = match projected_struct(input.clone()) {
+    let project_pin_impl = match project_pin_impl(&input) {
         Ok(ok) => ok,
         Err(e) => return e.into_compile_error().into(),
     };
-    let project_pin_ident = &project_pin_struct.ident;
 
     let name = input.ident.clone();
 
@@ -329,16 +337,7 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #input
-        #project_pin_struct
-        #project_pin_struct_impl
-
-        impl #name {
-            #[must_use]
-            #[inline(always)]
-            pub fn project_pin(self: ::std::pin::Pin<&mut Self>) -> #project_pin_ident {
-                #project_pin_ident::new(self)
-            }
-        }
+        #project_pin_impl
 
         #drop_impl
 

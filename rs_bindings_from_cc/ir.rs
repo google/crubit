@@ -401,9 +401,7 @@ impl Record {
     /// TODO(b/200067242): Actually force mut references to !is_unpin to be
     /// Pin<&mut T>.
     pub fn is_unpin(&self) -> bool {
-        // TODO(b/233603159): not all unions are unpin, remove `record.is_union` once
-        // `ctor` supports unions.
-        self.is_union || (self.is_trivial_abi && !self.is_inheritable)
+        self.is_trivial_abi && !self.is_inheritable
     }
 }
 

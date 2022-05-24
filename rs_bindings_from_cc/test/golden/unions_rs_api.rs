@@ -90,6 +90,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
 // Parameter #0 is not supported: Unsupported type 'union NonEmptyUnion &&': Unsupported type: && without lifetime
 
+#[ctor::recursively_pinned]
 #[repr(C)]
 pub union NonCopyUnion {
     pub trivial_member: bool,
