@@ -1206,6 +1206,8 @@ fn generate_record(
     } else {
         quote! { struct }
     };
+    // TODO(b/233603159): not all unions are unpin, remove `record.is_union` once
+    // `ctor` supports unions.
     let recursively_pinned_attribute = if record.is_unpin() {
         quote! {}
     } else {
@@ -1366,6 +1368,9 @@ fn should_derive_clone(record: &Record) -> bool {
     record.is_unpin()
         && record.copy_constructor.access == ir::AccessSpecifier::Public
         && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
+        // Unions are Copy/Clone only if all their data members are.
+        // TODO(b/233604311): Properly detect if imported fields are Copy/Clone. The code below assumes that only opaque fields are non trivial.
+        && (!record.is_union || record.fields.iter().all(|f| f.type_.is_ok()))
 }
 
 fn should_derive_copy(record: &Record) -> bool {
@@ -4244,6 +4249,30 @@ mod tests {
                 };
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nontrivial_unions() -> Result<()> {
+        let ir = ir_from_cc_dependency(
+            r#"
+            union UnionWithNontrivialField {
+                NonTrivialStruct my_field;
+            };
+            "#,
+            r#"
+            struct NonTrivialStruct {
+                NonTrivialStruct(NonTrivialStruct&&);
+            };
+            "#,
+        )?;
+        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
+        // TODO(b/233603159): not all unions are unpin, add a test verifying that unions
+        // get recursively pinned correctly once `ctor` supports unions.
+        assert_rs_not_matches!(rs_api, quote! {recursively_pinned});
         Ok(())
     }
 

@@ -26,6 +26,9 @@ extern "C" union EmptyUnion& __rust_thunk___ZN10EmptyUnionaSERKS_(
     union EmptyUnion* __this, const union EmptyUnion& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN10NontrivialD1Ev(class Nontrivial* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
     union NonEmptyUnion* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
@@ -43,9 +46,37 @@ extern "C" union NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSERKS_(
     union NonEmptyUnion* __this, const union NonEmptyUnion& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN12NonCopyUnionD1Ev(
+    union NonCopyUnion* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
+    union UnionWithOpaqueField* __this) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1ERKS_(
+    union UnionWithOpaqueField* __this,
+    const union UnionWithOpaqueField& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldD1Ev(
+    union UnionWithOpaqueField* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" union UnionWithOpaqueField&
+__rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_(
+    union UnionWithOpaqueField* __this,
+    const union UnionWithOpaqueField& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 
 static_assert(sizeof(union EmptyUnion) == 1);
 static_assert(alignof(union EmptyUnion) == 1);
+
+static_assert(sizeof(class Nontrivial) == 4);
+static_assert(alignof(class Nontrivial) == 4);
+static_assert(CRUBIT_OFFSET_OF(field, class Nontrivial) == 0);
 
 static_assert(sizeof(union NonEmptyUnion) == 8);
 static_assert(alignof(union NonEmptyUnion) == 8);
@@ -53,5 +84,15 @@ static_assert(CRUBIT_OFFSET_OF(bool_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(int_field, union NonEmptyUnion) == 0);
 static_assert(CRUBIT_OFFSET_OF(long_long_field, union NonEmptyUnion) == 0);
+
+static_assert(sizeof(union NonCopyUnion) == 4);
+static_assert(alignof(union NonCopyUnion) == 4);
+static_assert(CRUBIT_OFFSET_OF(trivial_member, union NonCopyUnion) == 0);
+static_assert(CRUBIT_OFFSET_OF(nontrivial_member, union NonCopyUnion) == 0);
+
+static_assert(sizeof(union UnionWithOpaqueField) == 42);
+static_assert(alignof(union UnionWithOpaqueField) == 1);
+static_assert(CRUBIT_OFFSET_OF(constant_array_field_not_yet_supported,
+                               union UnionWithOpaqueField) == 0);
 
 #pragma clang diagnostic pop
