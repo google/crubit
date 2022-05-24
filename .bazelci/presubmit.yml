@@ -1,0 +1,27 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+---
+default_linux_targets: &default_linux_targets
+  # TODO: Make the whole repo buildable/testable with //...
+  # Targets below are only a rudimentary smoke test.
+  - "//rs_bindings_from_cc:rs_bindings_from_cc_impl"
+  - "//rs_bindings_from_cc:ir_from_cc_test"
+  - "//rs_bindings_from_cc:src_code_gen_impl_test"
+default_linux_task: &default_linux_task
+  platform: ubuntu2004
+  shell_commands:
+    - "sudo apt -y update && sudo apt -y install lld"
+  build_flags:
+    - "--repo_env=CC=clang"
+  build_targets: *default_linux_targets
+  test_targets: *default_linux_targets
+tasks:
+  ubuntu2004:
+    name: Stable Bazel Version With Clang and LLD
+    <<: *default_linux_task
+  ubuntu2004_rolling:
+    name: Rolling Bazel Version With Clang and LLD
+    bazel: "rolling"
+    <<: *default_linux_task
