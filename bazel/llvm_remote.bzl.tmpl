@@ -1,0 +1,21 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Provide LLVM with upstream's Bazel build support.
+#
+# refs:
+#   https://github.com/llvm/llvm-project/blob/main/utils/bazel/examples/http_archive/WORKSPACE
+#   https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.0
+
+load("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure", "llvm_disable_optional_support_deps")
+
+# Pass through to LLVM's Bazel configuration to create the repository.
+def llvm_repository(name):
+    if name != "llvm-project":
+        # this *must* be llvm-project, it's hardcoded in the Bazel build
+        # e.g. https://github.com/llvm/llvm-project/blob/aaddfbf9/utils/bazel/llvm-project-overlay/clang/BUILD.bazel#L1473
+        fail("""name must be llvm-project""")
+
+    llvm_configure(name = "llvm-project")
+    llvm_disable_optional_support_deps()

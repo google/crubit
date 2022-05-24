@@ -1,0 +1,48 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Provide LLVM from a local tree built with CMake.
+
+prebuilt_llvm_tree_build_file_contents = """
+package(default_visibility = ["//visibility:public"])
+
+# An extremely coarse-grained target that provides *all* headers and libraries.
+cc_library(
+    name = "all",
+    srcs = glob([
+        "${CMAKE_BUILD_DIR}/lib/*.a",
+    ], exclude = [
+        "**/*.i386.a",
+    ]),
+    hdrs = glob([
+        "${CMAKE_BUILD_DIR}/include/**",
+        "${CMAKE_BUILD_DIR}/tools/clang/include/**",
+        "clang/include/**",
+        "llvm/include/**",
+    ]),
+    includes = [
+        "${CMAKE_BUILD_DIR}/include/",
+        "${CMAKE_BUILD_DIR}/tools/clang/include/",
+        "clang/include/",
+        "llvm/include/",
+    ],
+    linkopts = ["-lncurses", "-lz"],
+)
+"""
+
+def llvm_repository(name):
+    # First, create an intermediate repo that overlays the BUILD file onto the
+    # prebuilt LLVM tree, yielding the single ":all" target.
+    native.new_local_repository(
+        name = "prebuilt-llvm",
+        path = "${PREBUILT_LLVM_PATH}",  # template value
+        build_file_content = prebuilt_llvm_tree_build_file_contents,
+    )
+
+    # Next, create the final repo that emulates the layout of Bazel targets in
+    # llvm-project.
+    native.local_repository(
+        name = name,
+        path = "bazel/llvm_project",
+    )

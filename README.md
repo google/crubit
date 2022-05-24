@@ -14,3 +14,15 @@ $ git clone git@github.com:google/crubit.git
 $ cd crubit
 $ bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindings_from_cc_impl
 ```
+
+### Using a prebuilt LLVM tree
+
+```
+$ git clone https://github.com/llvm/llvm-project
+$ cd llvm-project
+$ CC=clang CXX=clang++ cmake -S llvm -B build -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build -j
+$ # wait...
+$ cd ../crubit
+$ PREBUILT_LLVM_PATH=../llvm-project bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
+```

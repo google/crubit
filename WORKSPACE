@@ -102,21 +102,12 @@ http_archive(
     urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.zip"],
 )
 
-# https://github.com/llvm/llvm-project/blob/main/utils/bazel/examples/http_archive/WORKSPACE
-# https://github.com/llvm/llvm-project/releases/tag/llvmorg-14.0.0
+# Create the "loader" repository, then use it to configure the desired LLVM
+# repository. For more details, see the comment in bazel/llvm.bzl.
 
-http_archive(
-    name = "llvm-raw",
-    build_file_content = "# empty",
-    sha256 = "eb7437b60a6f78e7910d08911975f100e99e9c714f069a5487119c7eadc79171",
-    strip_prefix = "llvm-project-llvmorg-14.0.0",
-    urls = ["https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-14.0.0.zip"],
-)
+load("//bazel:llvm.bzl", "llvm_loader_repository_dependencies", "llvm_loader_repository")
+llvm_loader_repository_dependencies()
+llvm_loader_repository(name = "llvm-loader")
 
-load("@llvm-raw//utils/bazel:configure.bzl", "llvm_configure", "llvm_disable_optional_support_deps")
-
-# this *must* be llvm-project, it's hardcoded in the Bazel build
-# e.g. https://github.com/llvm/llvm-project/blob/aaddfbf9/utils/bazel/llvm-project-overlay/clang/BUILD.bazel#L1473
-llvm_configure(name = "llvm-project")
-
-llvm_disable_optional_support_deps()
+load("@llvm-loader//:llvm.bzl", "llvm_repository")
+llvm_repository(name = "llvm-project")
