@@ -16,6 +16,7 @@ namespace crubit_rs_from_cc {
 namespace {
 
 using ::testing::Eq;
+using ::testing::IsEmpty;
 using ::testing::status::StatusIs;
 
 TEST(RsFromCcTest, Noop) {
@@ -23,49 +24,13 @@ TEST(RsFromCcTest, Noop) {
   // generated.
   ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc(" "));
 
-  EXPECT_THAT(rs_code, Eq(R"end_of_string(
-// Unsupported decl:
-//
-// TranslationUnitDecl <<invalid sloc>> <invalid sloc>
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
-// | `-BuiltinType '__int128'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
-// | `-BuiltinType 'unsigned __int128'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __NSConstantString '__NSConstantString_tag'
-// | `-RecordType '__NSConstantString_tag'
-// |   `-CXXRecord '__NSConstantString_tag'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __builtin_ms_va_list 'char *'
-// | `-PointerType 'char *'
-// |   `-BuiltinType 'char'
-// `-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __builtin_va_list '__va_list_tag[1]'
-//   `-ConstantArrayType '__va_list_tag[1]' 1
-//     `-RecordType '__va_list_tag'
-//       `-CXXRecord '__va_list_tag'
-)end_of_string"));
+  EXPECT_THAT(rs_code, IsEmpty());
 }
 
 TEST(RsFromCcTest, Comment) {
   ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc("// This is a comment"));
 
-  EXPECT_THAT(rs_code, Eq(R"end_of_string(
-// Unsupported decl:
-//
-// TranslationUnitDecl <<invalid sloc>> <invalid sloc>
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
-// | `-BuiltinType '__int128'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
-// | `-BuiltinType 'unsigned __int128'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __NSConstantString '__NSConstantString_tag'
-// | `-RecordType '__NSConstantString_tag'
-// |   `-CXXRecord '__NSConstantString_tag'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __builtin_ms_va_list 'char *'
-// | `-PointerType 'char *'
-// |   `-BuiltinType 'char'
-// `-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __builtin_va_list '__va_list_tag[1]'
-//   `-ConstantArrayType '__va_list_tag[1]' 1
-//     `-RecordType '__va_list_tag'
-//       `-CXXRecord '__va_list_tag'
-)end_of_string"));
+  EXPECT_THAT(rs_code, IsEmpty());
 }
 
 TEST(RsFromCcTest, ErrorOnInvalidInput) {
@@ -74,27 +39,13 @@ TEST(RsFromCcTest, ErrorOnInvalidInput) {
 }
 
 TEST(RsFromCcTest, FunctionDeclaration) {
-  ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc("void f();"));
+  ASSERT_OK_AND_ASSIGN(std::string rs_code, RsFromCc("void f() {}"));
 
   EXPECT_THAT(rs_code, Eq(R"end_of_string(
 // Unsupported decl:
 //
-// TranslationUnitDecl <<invalid sloc>> <invalid sloc>
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __int128_t '__int128'
-// | `-BuiltinType '__int128'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'
-// | `-BuiltinType 'unsigned __int128'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __NSConstantString '__NSConstantString_tag'
-// | `-RecordType '__NSConstantString_tag'
-// |   `-CXXRecord '__NSConstantString_tag'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __builtin_ms_va_list 'char *'
-// | `-PointerType 'char *'
-// |   `-BuiltinType 'char'
-// |-TypedefDecl <<invalid sloc>> <invalid sloc> implicit __builtin_va_list '__va_list_tag[1]'
-// | `-ConstantArrayType '__va_list_tag[1]' 1
-// |   `-RecordType '__va_list_tag'
-// |     `-CXXRecord '__va_list_tag'
-// `-FunctionDecl <testing/file_name.cc:1:1, col:8> col:6 f 'void ()'
+// FunctionDecl <testing/file_name.cc:1:1, col:11> col:6 f 'void ()'
+// `-CompoundStmt <col:10, col:11>
 )end_of_string"));
 }
 

@@ -42,14 +42,13 @@ class Converter {
   explicit Converter(Invocation& invocation, clang::ASTContext& ctx)
       : result_(invocation.rs_code_), ctx_(ctx) {}
 
-  // Import all visible declarations from a translation unit.
-  void Convert(const clang::TranslationUnitDecl* decl);
-
-  // "converts" a not-yet-supported declaration to Rust by dumping the C++ AST
-  // into a comment.
-  void ConvertUnsupported(const clang::Decl* decl);
+  void Convert(const clang::TranslationUnitDecl* translation_unit);
 
  private:
+  void Convert(const clang::Decl* decl);
+
+  void ConvertUnhandled(const clang::Decl* decl);
+
   // The main output of the conversion process (Rust code).
   std::string& result_;
 
