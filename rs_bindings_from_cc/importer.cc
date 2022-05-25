@@ -298,9 +298,20 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   }
 
   absl::flat_hash_set<ItemId> visited_item_ids;
-  for (auto child : decl_context->decls()) {
+  std::vector<clang::Decl*> decls_to_visit;
+  llvm::copy(decl_context->decls(), std::back_inserter(decls_to_visit));
+
+  while (!decls_to_visit.empty()) {
+    clang::Decl* child = decls_to_visit.back();
+    decls_to_visit.pop_back();
     auto decl = child->getCanonicalDecl();
     if (!IsFromCurrentTarget(decl)) continue;
+
+    if (const auto* linkage_spec_decl =
+            llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
+      absl::c_copy(linkage_spec_decl->decls(),
+                   std::back_inserter(decls_to_visit));
+    }
 
     // We remove comments attached to a child decl or that are within a child
     // decl.
@@ -413,9 +424,14 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext* decl_context) {
   for (auto decl : decl_context->decls()) {
-    // TODO(rosica): We don't always want the canonical decl here (especially
-    // not in namespaces).
-    GetDeclItem(decl->getCanonicalDecl());
+    if (const auto* linkage_spec_decl =
+            llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
+      ImportDeclsFromDeclContext(linkage_spec_decl);
+    } else {
+      // TODO(rosica): We don't always want the canonical decl here (especially
+      // not in namespaces).
+      GetDeclItem(decl->getCanonicalDecl());
+    }
   }
 }
 

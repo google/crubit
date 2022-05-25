@@ -2856,3 +2856,44 @@ fn test_namespace_canonical_id() {
     // assert_eq!(namespaces[0].canonical_namespace_id,
     // namespaces[1].canonical_namespace_id);
 }
+
+#[test]
+fn test_items_inside_linkage_spec_decl_are_imported() {
+    let ir = ir_from_cc(
+        r#"
+          extern "C" {
+            struct MyStruct {};
+          }
+      "#,
+    )
+    .unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ... } })
+}
+
+#[test]
+fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
+    // The test below assumes the first top_level_item_ids element is the one added
+    // by the the source code under test. Let's double check that assumption here.
+    assert!(ir_from_cc("").unwrap().top_level_item_ids().next().is_none());
+
+    let ir = ir_from_cc(
+        r#"
+    extern "C" {
+      struct MyStruct {};
+    }"#,
+    )
+    .unwrap();
+    let item_id = proc_macro2::Literal::usize_unsuffixed(ir.top_level_item_ids().next().unwrap().0);
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+          ...
+          Record {
+            ... cc_name: "MyStruct" ...
+            ... id: ItemId(#item_id) ...
+          }
+          ...
+        }
+    );
+}

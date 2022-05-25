@@ -335,6 +335,7 @@ rust_test(
         "//common:rust_allocator_shims",
         "@crate_index//:anyhow",
         "@crate_index//:itertools",
+        "@crate_index//:proc-macro2",
         "@crate_index//:quote",
     ],
 )
