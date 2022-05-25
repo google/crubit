@@ -2071,6 +2071,39 @@ fn test_union() {
 }
 
 #[test]
+fn test_union_with_data_members_with_different_sizes() {
+    let ir = ir_from_cc(
+        r#"
+    union MyUnion {
+      char first_field[56];
+      int second_field;
+    };
+  "#,
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+              Record { ...
+                rs_name: "MyUnion"...
+                fields: [
+                  Field {
+                    identifier: Some("first_field") ...
+                    offset: 0 ...
+                    size: 448 ...
+                  },
+                  Field {
+                    identifier: Some("second_field") ...
+                    offset: 0 ...
+                    size: 32 ...
+                  } ...
+                ] ...
+              }
+        }
+    );
+}
+
+#[test]
 fn test_member_function_params() {
     let ir = ir_from_cc(
         r#"

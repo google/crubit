@@ -1013,7 +1013,18 @@ fn generate_record(
                 // We retain the end offset of fields only if we have a matching Rust type
                 // to represent them. Otherwise we'll fill up all the space to the next field.
                 // See: docs/struct_layout
-                get_field_rs_type_for_layout(field).ok().map(|_| field.offset + field.size),
+                match get_field_rs_type_for_layout(field) {
+                    // Regular field
+                    Ok(_rs_type) => Some(field.offset + field.size),
+                    // Opaque field
+                    Err(_error) => {
+                        if record.is_union {
+                            Some(field.size)
+                        } else {
+                            None
+                        }
+                    }
+                },
                 vec![format!(
                     "{} : {} bits",
                     field.identifier.as_ref().map(|i| i.identifier.clone()).unwrap_or("".into()),
@@ -4185,6 +4196,40 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! { static_assert(CRUBIT_OFFSET_OF(some_bigger_field, union SomeUnion)==0) }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_union_with_opaque_field() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            union MyUnion {
+                char first_field[56];
+                int second_field;
+              };
+            "#,
+        )?;
+        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(C, align(4))]
+                pub union MyUnion { ...
+                    first_field: [crate::rust_std::mem::MaybeUninit<u8>; 56],
+                    pub second_field: i32,
+                }
+            }
+        );
+
+        assert_rs_matches!(
+            rs_api,
+            quote! { const _: () = assert!(rust_std::mem::size_of::<crate::MyUnion>() == 56); }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {  const _: () = assert!(rust_std::mem::align_of::<crate::MyUnion>() == 4); }
         );
         Ok(())
     }
