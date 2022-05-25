@@ -13,7 +13,7 @@ cc_library(
     srcs = ["named_func_lifetimes.cc"],
     hdrs = ["named_func_lifetimes.h"],
     deps = [
-        "//testing/base/public:gunit_for_library_testonly",
+        "@com_google_googletest//:gtest",
         "//lifetime_annotations:lifetime_symbol_table",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//llvm:Support",

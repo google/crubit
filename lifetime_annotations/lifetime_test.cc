@@ -4,8 +4,8 @@
 
 #include "lifetime_annotations/lifetime.h"
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace clang {
 namespace tidy {

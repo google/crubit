@@ -24,7 +24,7 @@ cc_test(
     srcs = ["offsetof_test.cc"],
     deps = [
         ":rs_api_impl_support",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

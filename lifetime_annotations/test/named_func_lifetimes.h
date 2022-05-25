@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "llvm/ADT/StringMap.h"

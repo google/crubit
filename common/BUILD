@@ -112,10 +112,20 @@ cc_library(
     deps = [
         ":check",
         ":file_io",
-        "//testing/base/public:gunit_for_library_testonly",
-        "@absl//absl/flags:flag",
         "@absl//absl/strings",
+        "@com_google_googletest//:gtest",
         "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "status_test_matchers",
+    testonly = True,
+    hdrs = ["status_test_matchers.h"],
+    deps = [
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@com_google_googletest//:gtest",
     ],
 )
 

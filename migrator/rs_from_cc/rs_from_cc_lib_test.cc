@@ -6,18 +6,19 @@
 
 #include <variant>
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "common/status_test_matchers.h"
 #include "clang/AST/ASTContext.h"
 
 namespace crubit_rs_from_cc {
 namespace {
 
+using crubit::StatusIs;
 using ::testing::Eq;
 using ::testing::IsEmpty;
-using ::testing::status::StatusIs;
 
 TEST(RsFromCcTest, Noop) {
   // Nothing interesting there, but also not empty, so that the header gets

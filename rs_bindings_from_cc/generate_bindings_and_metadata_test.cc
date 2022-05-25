@@ -4,8 +4,8 @@
 
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
 

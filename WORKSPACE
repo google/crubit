@@ -102,6 +102,14 @@ http_archive(
     urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.zip"],
 )
 
+# https://google.github.io/googletest/quickstart-bazel.html
+
+http_archive(
+  name = "com_google_googletest",
+  urls = ["https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip"],
+  strip_prefix = "googletest-609281088cfefc76f9d0ce82e1ff6c30cc3591e5",
+)
+
 # Create the "loader" repository, then use it to configure the desired LLVM
 # repository. For more details, see the comment in bazel/llvm.bzl.
 

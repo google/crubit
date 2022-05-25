@@ -6,8 +6,9 @@
 
 #include <climits>
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "common/status_test_matchers.h"
 #include "common/test_utils.h"
 
 namespace crubit {
@@ -16,7 +17,6 @@ namespace {
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 using ::testing::StrEq;
-using ::testing::status::IsOkAndHolds;
 
 // A minimal test showing that C++ and Rust link and talk to each other.
 TEST(CollectInstantiationsTest, EmptyRustFileReturnsEmptyCollectionTest) {

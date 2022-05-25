@@ -7,8 +7,9 @@
 #include <string>
 #include <vector>
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "common/status_test_matchers.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 
 namespace crubit {
@@ -19,7 +20,6 @@ using ::testing::ElementsAre;
 using ::testing::HasSubstr;
 using ::testing::Pair;
 using ::testing::UnorderedElementsAre;
-using ::testing::status::StatusIs;
 
 namespace {
 

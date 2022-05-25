@@ -68,9 +68,10 @@ cc_test(
     srcs = ["rs_from_cc_lib_test.cc"],
     deps = [
         ":rs_from_cc_lib",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
         "@absl//absl/status",
         "@absl//absl/strings",
+        "//common:status_test_matchers",
         "@llvm-project//clang:ast",
     ],
 )

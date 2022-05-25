@@ -19,7 +19,7 @@ cc_test(
     srcs = ["lifetime_test.cc"],
     deps = [
         ":lifetime",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -68,7 +68,9 @@ cc_test(
     srcs = ["lifetime_annotations_test.cc"],
     deps = [
         ":lifetime_annotations",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
+        "@absl//absl/status",
+        "//common:status_test_matchers",
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
         "@llvm-project//clang:ast_matchers",
@@ -92,7 +94,7 @@ cc_test(
     srcs = ["lifetime_substitutions_test.cc"],
     deps = [
         ":lifetime_substitutions",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -111,7 +113,7 @@ cc_test(
     srcs = ["lifetime_symbol_table_test.cc"],
     deps = [
         ":lifetime_symbol_table",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

@@ -7,8 +7,10 @@
 #include <string>
 #include <utility>
 
-#include "testing/base/public/gmock.h"
-#include "testing/base/public/gunit.h"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "common/status_test_matchers.h"
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 #include "lifetime_annotations/test/run_on_code.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -20,9 +22,9 @@ namespace tidy {
 namespace lifetimes {
 namespace {
 
+using crubit::IsOkAndHolds;
+using crubit::StatusIs;
 using testing::StartsWith;
-using testing::status::IsOkAndHolds;
-using testing::status::StatusIs;
 
 bool IsOverloaded(const clang::FunctionDecl* func) {
   return !func->getDeclContext()->lookup(func->getDeclName()).isSingleResult();

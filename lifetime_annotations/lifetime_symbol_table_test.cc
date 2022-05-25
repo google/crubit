@@ -4,7 +4,7 @@
 
 #include "lifetime_annotations/lifetime_symbol_table.h"
 
-#include "testing/base/public/gunit.h"
+#include "gtest/gtest.h"
 
 namespace clang {
 namespace tidy {

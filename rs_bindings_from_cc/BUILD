@@ -102,8 +102,8 @@ cc_test(
         ":generate_bindings_and_metadata",
         "//common:rust_allocator_shims",
         "//common:test_utils",
-        "//testing/base/public:gunit_main",
         "@absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -150,7 +150,8 @@ cc_test(
     deps = [
         ":bazel_types",
         ":cmdline",
-        "//testing/base/public:gunit_main",
+        "//common:status_test_matchers",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -233,12 +234,13 @@ cc_test(
         ":bazel_types",
         ":cc_ir",
         ":ir_from_cc",
-        "//testing/base/public:gunit_main",
+        "//common:status_test_matchers",
+        "//common:test_utils",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@absl//absl/types:span",
-        "@llvm-project//clang:ast",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -498,8 +500,9 @@ cc_test(
     deps = [
         ":cc_collect_instantiations",
         "//common:rust_allocator_shims",
+        "//common:status_test_matchers",
         "//common:test_utils",
-        "//testing/base/public:gunit_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

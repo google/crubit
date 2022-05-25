@@ -7,8 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "testing/base/public/gunit.h"
-#include "absl/flags/flag.h"
+#include "gtest/gtest.h"
 #include "common/check.h"
 #include "common/file_io.h"
 #include "llvm/Support/FileSystem.h"
@@ -19,8 +18,8 @@ namespace crubit {
 static std::string MakeTmpdirForCurrentTest() {
   absl::string_view current_test_name =
       testing::UnitTest::GetInstance()->current_test_info()->name();
-  std::string current_test_tmpdir_path = absl::StrCat(
-      absl::GetFlag(FLAGS_test_tmpdir), "/", current_test_name, "/");
+  std::string current_test_tmpdir_path =
+      absl::StrCat(testing::TempDir(), "/", current_test_name, "/");
   llvm::StringRef parent_dir =
       llvm::sys::path::parent_path(current_test_tmpdir_path);
   CRUBIT_CHECK(!llvm::sys::fs::create_directories(parent_dir));

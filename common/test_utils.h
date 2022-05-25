@@ -24,5 +24,4 @@ std::string WriteFileForCurrentTest(absl::string_view filename,
 std::vector<std::string> DefaultClangArgs();
 
 }  // namespace crubit
-
 #endif  // THIRD_PARTY_CRUBIT_COMMON_TEST_UTILS_H_
