@@ -2858,6 +2858,25 @@ fn test_namespace_canonical_id() {
 }
 
 #[test]
+fn test_records_from_namespaces_not_imported_yet() {
+    let ir = ir_from_cc(
+        r#"
+          namespace my_namespace {
+            template <typename T> struct MyStruct { T t; };
+          }
+          typedef my_namespace::MyStruct<int> MySpecialization;
+          void my_func(MySpecialization param);
+    "#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "my_namespace" ...} });
+    let msg = "Parameter #0 is not supported: Unsupported type 'MySpecialization': \
+        No generated bindings found for 'MySpecialization'";
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "my_func", message: #msg ...} });
+}
+
+#[test]
 fn test_items_inside_linkage_spec_decl_are_imported() {
     let ir = ir_from_cc(
         r#"

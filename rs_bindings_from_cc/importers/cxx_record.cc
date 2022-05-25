@@ -32,6 +32,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (decl_context->isFunctionOrMethod()) {
     return std::nullopt;
   }
+  if (const auto* enclosing_namespace = llvm::dyn_cast<clang::NamespaceDecl>(
+          decl_context->getEnclosingNamespaceContext())) {
+    if (!absl::StrContains(enclosing_namespace->getQualifiedNameAsString(),
+                           "test_namespace_bindings")) {
+      // TODO(b/202933018): Remove this guard when namespaces are supported.
+      return ictx_.ImportUnsupportedItem(
+          record_decl, "Records from namespaces are not supported yet");
+    }
+  }
   if (record_decl->isInjectedClassName()) {
     return std::nullopt;
   }
