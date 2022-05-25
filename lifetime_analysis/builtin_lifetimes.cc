@@ -1,0 +1,96 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#include "lifetime_analysis/builtin_lifetimes.h"
+
+#include <optional>
+#include <string>
+
+#include "absl/strings/str_cat.h"
+#include "lifetime_annotations/function_lifetimes.h"
+#include "lifetime_annotations/lifetime.h"
+#include "lifetime_annotations/lifetime_annotations.h"
+#include "lifetime_annotations/type_lifetimes.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/Decl.h"
+#include "clang/AST/Type.h"
+#include "clang/Basic/Builtins.h"
+#include "llvm/ADT/StringRef.h"
+
+namespace clang {
+namespace tidy {
+namespace lifetimes {
+
+namespace {
+
+class ForwardAndMoveFactory : public FunctionLifetimeFactory {
+  llvm::Expected<ValueLifetimes> CreateParamLifetimes(
+      clang::QualType type) const override {
+    return ValueLifetimes::Create(type, [](clang::QualType, llvm::StringRef) {
+      return Lifetime::CreateVariable();
+    });
+  }
+
+  llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
+      clang::QualType type,
+      const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
+      const std::optional<ValueLifetimes>& /*this_lifetimes*/) const override {
+    assert(param_lifetimes.size() == 1);
+    // `forward` and `move` convert from one type of reference to the other; the
+    // lifetimes in the pointees of these references are the same.
+    return ValueLifetimes::ForPointerLikeType(
+        type, param_lifetimes[0].GetPointeeLifetimes());
+  }
+};
+
+}  // namespace
+
+FunctionLifetimesOrError GetBuiltinLifetimes(const clang::FunctionDecl* decl) {
+  unsigned builtin_id = decl->getBuiltinID();
+  const auto& builtin_info = decl->getASTContext().BuiltinInfo;
+  assert(builtin_id != 0);
+
+  if (!builtin_info.hasPtrArgsOrResult(builtin_id) &&
+      !builtin_info.hasReferenceArgsOrResult(builtin_id)) {
+    return FunctionLifetimes::CreateForDecl(
+               decl, FunctionLifetimeFactorySingleCallback(
+                         [](clang::QualType, llvm::StringRef) {
+                           assert(false);
+                           return Lifetime();
+                         }))
+        .get();
+  }
+  switch (builtin_id) {
+    case clang::Builtin::BI__builtin_addressof:
+      return ParseLifetimeAnnotations(decl, "a -> a").get();
+    case clang::Builtin::BIstrtod:
+    case clang::Builtin::BIstrtof:
+      return ParseLifetimeAnnotations(decl, "a, (a, b)").get();
+    case clang::Builtin::BIstrtoll:
+    case clang::Builtin::BIstrtol:
+      return ParseLifetimeAnnotations(decl, "a, (a, b), ()").get();
+    case clang::Builtin::BI__builtin_memchr:
+      return ParseLifetimeAnnotations(decl, "a, (), () -> a").get();
+    case clang::Builtin::BI__builtin_strchr:
+    case clang::Builtin::BI__builtin_strrchr:
+      return ParseLifetimeAnnotations(decl, "a, () -> a").get();
+    case clang::Builtin::BI__builtin_strstr:
+    case clang::Builtin::BI__builtin_strpbrk:
+      return ParseLifetimeAnnotations(decl, "a, b -> a").get();
+    case clang::Builtin::BIforward:
+    case clang::Builtin::BImove: {
+      FunctionLifetimes result;
+      return FunctionLifetimes::CreateForDecl(decl, ForwardAndMoveFactory())
+          .get();
+    }
+    // TODO(veluca): figure out variadic functions.
+    default:
+      return FunctionAnalysisError(absl::StrCat(
+          "Unknown builtin: '", builtin_info.getName(builtin_id), "'"));
+  }
+}
+
+}  // namespace lifetimes
+}  // namespace tidy
+}  // namespace clang

@@ -2,7 +2,7 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 # Create a loader/trampoline repository that we can call into to load LLVM.
 #
@@ -58,12 +58,12 @@ def _llvm_loader_repository(repository_ctx):
 def llvm_loader_repository_dependencies():
     # This *declares* the dependency, but it won't actually be *downloaded*
     # unless it's used.
-    http_archive(
+    new_git_repository(
         name = "llvm-raw",
         build_file_content = "# empty",
-        sha256 = "eb7437b60a6f78e7910d08911975f100e99e9c714f069a5487119c7eadc79171",
-        strip_prefix = "llvm-project-llvmorg-14.0.0",
-        urls = ["https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-14.0.0.zip"],
+        commit = "llvmorg-15-init-10717-ge00cbbec",
+        shallow_since = "2022-05-18",
+        remote = "https://github.com/llvm/llvm-project.git",
     )
 
 llvm_loader_repository = repository_rule(
