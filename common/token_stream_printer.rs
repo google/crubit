@@ -9,29 +9,53 @@ use std::fmt::Write as _;
 use std::io::Write as _;
 use std::process::{Command, Stdio};
 
-// TODO: The `RustfmtConfig` struct should be replaced with
+// TODO(b/231320237): The `RustfmtConfig` struct should be replaced with
 // `rustfmt_nightly::Config` once we switch to using rustfmt as a library
 // (instead of invoking the `rustfmt` executable).
 pub struct RustfmtConfig {
-    args: Vec<OsString>,
+    /// Path to the `rustfmt` executable.
+    exe_path: OsString,
+
+    /// Cmdline arguments to be passed to the `rustfmt` executable.
+    cmdline_args: Vec<OsString>,
 }
 
 impl RustfmtConfig {
-    /// Creates a config that passes the provided `rustfmt_config_path` argument
-    /// as `rustfmt`'s `--config-path` cmdline parameter.
-    pub fn from_config_path(rustfmt_config_path: &OsStr) -> Self {
+    /// Creates a config that will invoke `rustfmt` at the given
+    /// `rustfmt_exe_path`.  If `rustfmt_config_path` is a non-empty string,
+    /// then a `rustfmt.toml` file at that path will be used to configure
+    /// the formatting details;  otherwise a default formatting will be used.
+    pub fn new(rustfmt_exe_path: &OsStr, rustfmt_config_path: &OsStr) -> Self {
+        Self {
+            exe_path: rustfmt_exe_path.into(),
+            cmdline_args: if rustfmt_config_path.is_empty() {
+                Self::default_cmdline_args()
+            } else {
+                Self::cmdline_args_with_custom_config_path(rustfmt_config_path)
+            },
+        }
+    }
+
+    fn for_testing() -> Self {
+        Self {
+            exe_path: "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"
+                .into(),
+            cmdline_args: Self::default_cmdline_args(),
+        }
+    }
+
+    fn cmdline_args_with_custom_config_path(rustfmt_config_path: &OsStr) -> Vec<OsString> {
         let mut config_path_arg: OsString = "--config-path=".into();
         config_path_arg.push(rustfmt_config_path);
-        Self { args: vec![config_path_arg] }.append_config_overrides()
+        Self::append_config_overrides(vec![config_path_arg])
     }
 
-    pub fn default() -> Self {
-        Self { args: vec!["--edition=2021".into(), "--config=version=Two".into()] }
-            .append_config_overrides()
+    fn default_cmdline_args() -> Vec<OsString> {
+        Self::append_config_overrides(vec!["--edition=2021".into(), "--config=version=Two".into()])
     }
 
-    fn append_config_overrides(mut self: Self) -> Self {
-        self.args.extend(vec![
+    fn append_config_overrides(mut cmdline_args: Vec<OsString>) -> Vec<OsString> {
+        cmdline_args.extend(vec![
             // We are representing doc comments as attributes in the token stream and use rustfmt
             // to unpack them again.
             "--config=normalize_doc_attributes=true".into(),
@@ -39,7 +63,7 @@ impl RustfmtConfig {
             // and reflow generated comments manually.
             "--config=wrap_comments=false".into(),
         ]);
-        self
+        cmdline_args
     }
 }
 
@@ -55,7 +79,7 @@ pub fn rs_tokens_to_formatted_string(
 /// default rustfmt config.  This should only be called by tests - product code
 /// should support custom `rustfmt.toml`.
 pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<String> {
-    rs_tokens_to_formatted_string(input, &RustfmtConfig::default())
+    rs_tokens_to_formatted_string(input, &RustfmtConfig::for_testing())
 }
 
 /// Produces source code out of the token stream.
@@ -135,22 +159,13 @@ fn is_ident_or_literal(tt: &TokenTree) -> bool {
 }
 
 fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
-    // TODO(b/230021743): Avoid hardcoding the path to `rustfmt`.  Either:
-    // - Long-term: TODO(b/231320237): This should use rustfmt as a library as soon
-    //   as b/200503084 is fixed.
-    // - Short-term: Add a way to specify `rustfmt_exe_path` as a command line
-    //   parameter. Or just return `input` if the executable is not found at the
-    //   given path.
-    let rustfmt_exe_path: &OsStr =
-        OsStr::new("third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt");
-
-    let mut child = Command::new(rustfmt_exe_path)
-        .args(config.args.iter())
+    let mut child = Command::new(&config.exe_path)
+        .args(config.cmdline_args.iter())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at {:?}", rustfmt_exe_path));
+        .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at {:?}", config.exe_path));
 
     let mut stdin = child.stdin.take().expect("Failed to open rustfmt stdin");
     std::thread::spawn(move || {

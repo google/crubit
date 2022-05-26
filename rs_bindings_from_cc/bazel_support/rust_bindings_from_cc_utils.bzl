@@ -221,6 +221,8 @@ def _generate_bindings(
                 cc_output.path,
                 "--crubit_support_path",
                 "rs_bindings_from_cc/support",
+                "--rustfmt_exe_path",
+                "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt",
                 "--rustfmt_config_path",
                 "nowhere/rustfmt.toml",
             ] + _get_hdrs_command_line(public_hdrs),

@@ -14,6 +14,9 @@ namespace {
 
 using ::testing::StrEq;
 
+constexpr absl::string_view kDefaultRustfmtExePath =
+    "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
+
 TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h"]}
@@ -24,7 +27,7 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "crubit_support_path",
-          "nowhere/rustfmt.toml",
+          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {},
@@ -47,7 +50,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "crubit_support_path",
-          "nowhere/rustfmt.toml",
+          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {},
@@ -71,7 +74,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "crubit_support_path",
-          "nowhere/rustfmt.toml",
+          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {a_rs_path}, "instantiations_out"));

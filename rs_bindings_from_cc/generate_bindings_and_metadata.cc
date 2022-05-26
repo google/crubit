@@ -30,7 +30,8 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
           clang_args_view, requested_instantiations));
 
   crubit::Bindings bindings = crubit::GenerateBindings(
-      ir, cmdline.crubit_support_path(), cmdline.rustfmt_config_path());
+      ir, cmdline.crubit_support_path(), cmdline.rustfmt_exe_path(),
+      cmdline.rustfmt_config_path());
 
   return BindingsAndMetadata{
       .ir = ir,

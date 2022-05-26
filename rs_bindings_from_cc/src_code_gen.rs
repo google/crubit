@@ -33,30 +33,35 @@ pub struct FfiBindings {
 ///      size.
 ///    * `crubit_support_path` should be a FfiU8Slice for a valid array of bytes
 ///      representing an UTF8-encoded string
-///    * `rustfmt_config_path` should be a FfiU8Slice for a valid array of bytes
-///      representing an UTF8-encoded string (without the UTF-8 requirement, it
-///      seems that Rust doesn't offer a way to convert to OsString on Windows)
-///    * `json`, `crubit_support_path`, and `rustfmt_config_path` shouldn't
-///      change during the call.
+///    * `rustfmt_exe_path` and `rustfmt_config_path` should both be a
+///      FfiU8Slice for a valid array of bytes representing an UTF8-encoded
+///      string (without the UTF-8 requirement, it seems that Rust doesn't offer
+///      a way to convert to OsString on Windows)
+///    * `json`, `crubit_support_path`, `rustfmt_exe_path`, and
+///      `rustfmt_config_path` shouldn't change during the call.
 ///
 /// Ownership:
 ///    * function doesn't take ownership of (in other words it borrows) the
-///      input params: `json`, `crubit_support_path`, and `rustfmt_config_path`
+///      input params: `json`, `crubit_support_path`, `rustfmt_exe_path`, and
+///      `rustfmt_config_path`
 ///    * function passes ownership of the returned value to the caller
 #[no_mangle]
 pub unsafe extern "C" fn GenerateBindingsImpl(
     json: FfiU8Slice,
     crubit_support_path: FfiU8Slice,
+    rustfmt_exe_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
     let crubit_support_path: &str = std::str::from_utf8(crubit_support_path.as_slice()).unwrap();
+    let rustfmt_exe_path: OsString =
+        std::str::from_utf8(rustfmt_exe_path.as_slice()).unwrap().into();
     let rustfmt_config_path: OsString =
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         // It is ok to abort here.
         let Bindings { rs_api, rs_api_impl } =
-            generate_bindings(json, crubit_support_path, &rustfmt_config_path).unwrap();
+            generate_bindings(json, crubit_support_path, &rustfmt_exe_path, &rustfmt_config_path).unwrap();
         FfiBindings {
             rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
             rs_api_impl: FfiU8SliceBox::from_boxed_slice(
@@ -86,6 +91,7 @@ struct BindingsTokens {
 fn generate_bindings(
     json: &[u8],
     crubit_support_path: &str,
+    rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
 ) -> Result<Bindings> {
     let ir = deserialize_ir(json)?;
@@ -93,11 +99,7 @@ fn generate_bindings(
     let BindingsTokens { rs_api, rs_api_impl } =
         generate_bindings_tokens(&ir, crubit_support_path)?;
     let rs_api = {
-        let rustfmt_config = if rustfmt_config_path.is_empty() {
-            RustfmtConfig::default()
-        } else {
-            RustfmtConfig::from_config_path(rustfmt_config_path)
-        };
+        let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
         rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
     };
 
