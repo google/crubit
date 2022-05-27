@@ -73,6 +73,10 @@ class Importer : public ImportContext {
   llvm::Optional<std::string> GetComment(
       const clang::Decl* decl) const override;
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const override;
+  absl::StatusOr<MappedType> ConvertQualType(
+      clang::QualType qual_type,
+      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      bool nullable = true) const override;
   absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type) override;
   void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
@@ -94,6 +98,12 @@ class Importer : public ImportContext {
 
   // Stores the comments of this target in source order.
   void ImportFreeComments();
+
+  absl::StatusOr<MappedType> ConvertType(
+      const clang::Type* type,
+      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      bool nullable) const;
+  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
 
   std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
   std::unique_ptr<clang::MangleContext> mangler_;

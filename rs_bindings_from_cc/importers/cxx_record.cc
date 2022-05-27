@@ -152,7 +152,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
     std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
     absl::StatusOr<MappedType> type =
-        ictx_.type_mapper_.ConvertQualType(field_decl->getType(), no_lifetimes);
+        ictx_.ConvertQualType(field_decl->getType(), no_lifetimes);
 
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {

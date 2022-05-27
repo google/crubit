@@ -40,9 +40,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       if (lifetimes) {
         this_lifetimes = lifetimes->GetThisLifetimes();
       }
-      auto param_type = ictx_.type_mapper_.ConvertQualType(
-          method_decl->getThisType(), this_lifetimes,
-          /*nullable=*/false);
+      auto param_type =
+          ictx_.ConvertQualType(method_decl->getThisType(), this_lifetimes,
+                                /*nullable=*/false);
       if (!param_type.ok()) {
         add_error(absl::StrCat("`this` parameter is not supported: ",
                                param_type.status().message()));
@@ -62,8 +62,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     if (lifetimes) {
       param_lifetimes = lifetimes->GetParamLifetimes(i);
     }
-    auto param_type =
-        ictx_.type_mapper_.ConvertQualType(param->getType(), param_lifetimes);
+    auto param_type = ictx_.ConvertQualType(param->getType(), param_lifetimes);
     if (!param_type.ok()) {
       add_error(absl::Substitute("Parameter #$0 is not supported: $1", i,
                                  param_type.status().message()));
@@ -120,8 +119,8 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     return_lifetimes = lifetimes->GetReturnLifetimes();
   }
 
-  auto return_type = ictx_.type_mapper_.ConvertQualType(
-      function_decl->getReturnType(), return_lifetimes);
+  auto return_type =
+      ictx_.ConvertQualType(function_decl->getReturnType(), return_lifetimes);
   if (!return_type.ok()) {
     add_error(absl::StrCat("Return type is not supported: ",
                            return_type.status().message()));

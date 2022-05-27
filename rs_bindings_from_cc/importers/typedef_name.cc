@@ -41,7 +41,7 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     underlying_type = ictx_.ConvertTemplateSpecializationType(tst_type);
   } else {
     std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
-    underlying_type = ictx_.type_mapper_.ConvertQualType(
+    underlying_type = ictx_.ConvertQualType(
         typedef_name_decl->getUnderlyingType(), no_lifetimes);
   }
   if (underlying_type.ok()) {

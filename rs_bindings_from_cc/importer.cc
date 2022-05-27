@@ -609,12 +609,12 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  return type_mapper_.ConvertTypeDecl(specialization_decl);
+  return ConvertTypeDecl(specialization_decl);
 }
 
-absl::StatusOr<MappedType> TypeMapper::ConvertTypeDecl(
+absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
     const clang::TypeDecl* decl) const {
-  if (!known_type_decls_.contains(decl)) {
+  if (!HasBeenAlreadySuccessfullyImported(decl)) {
     return absl::NotFoundError(absl::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }
@@ -623,14 +623,14 @@ absl::StatusOr<MappedType> TypeMapper::ConvertTypeDecl(
   return MappedType::WithDeclId(decl_id);
 }
 
-absl::StatusOr<MappedType> TypeMapper::ConvertType(
+absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) const {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
-  if (auto maybe_mapped_type = MapKnownCcTypeToRsType(type_string);
+  if (auto maybe_mapped_type = type_mapper_.MapKnownCcTypeToRsType(type_string);
       maybe_mapped_type.has_value()) {
     return MappedType::Simple(std::string(*maybe_mapped_type), type_string);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||
@@ -717,7 +717,7 @@ absl::StatusOr<MappedType> TypeMapper::ConvertType(
         break;
       default:
         if (builtin_type->isIntegerType()) {
-          auto size = ctx_->getTypeSize(builtin_type);
+          auto size = ctx_.getTypeSize(builtin_type);
           if (size == 8 || size == 16 || size == 32 || size == 64) {
             return MappedType::Simple(
                 absl::Substitute(
@@ -745,7 +745,7 @@ absl::StatusOr<MappedType> TypeMapper::ConvertType(
       "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
 }
 
-absl::StatusOr<MappedType> TypeMapper::ConvertQualType(
+absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) const {

@@ -70,24 +70,8 @@ class TypeMapper {
   TypeMapper(const TypeMapper& other) = default;
   TypeMapper& operator=(const TypeMapper& other) = default;
 
-  // Converts the Clang type `qual_type` into an equivalent `MappedType`.
-  // Lifetimes for the type can optionally be specified using `lifetimes`.
-  // If `qual_type` is a pointer type, `nullable` specifies whether the
-  // pointer can be null.
-  // TODO(b/209390498): Currently, we're able to specify nullability only for
-  // top-level pointers. Extend this so that we can specify nullability for
-  // all pointers contained in `qual_type`, in the same way that `lifetimes`
-  // specifies lifetimes for all these pointers. Once this is done, make sure
-  // that all callers pass in the appropriate information, derived from
-  // nullability annotations.
-  absl::StatusOr<MappedType> ConvertQualType(
-      clang::QualType qual_type,
-      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-      bool nullable = true) const;
-  absl::StatusOr<MappedType> ConvertType(
-      const clang::Type* type,
-      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-      bool nullable) const;
+  // TODO(b/209390498): This method doesn't use any member variables or member
+  // functions - it should be a static method or a free function instead.
   std::optional<absl::string_view> MapKnownCcTypeToRsType(
       absl::string_view cc_type) const;
 
@@ -96,7 +80,6 @@ class TypeMapper {
   // disappear when TypeMapper class is removed / once TypeMapper is merged back
   // into Importer.
   friend class Importer;
-  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
 
   bool Contains(const clang::TypeDecl* decl) const {
     return known_type_decls_.contains(
@@ -108,7 +91,10 @@ class TypeMapper {
         clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
   }
 
+  // TODO(b/209390498): The `ctx_` field is unused - it will disappear when
+  // TypeMapper class is removed / once TypeMapper is merged back into Importer.
   const clang::ASTContext* ctx_;
+
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 };
 
@@ -170,6 +156,21 @@ class ImportContext {
 
   // Converts a Clang source location to IR.
   virtual SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const = 0;
+
+  // Converts the Clang type `qual_type` into an equivalent `MappedType`.
+  // Lifetimes for the type can optionally be specified using `lifetimes`.
+  // If `qual_type` is a pointer type, `nullable` specifies whether the
+  // pointer can be null.
+  // TODO(b/209390498): Currently, we're able to specify nullability only for
+  // top-level pointers. Extend this so that we can specify nullability for
+  // all pointers contained in `qual_type`, in the same way that `lifetimes`
+  // specifies lifetimes for all these pointers. Once this is done, make sure
+  // that all callers pass in the appropriate information, derived from
+  // nullability annotations.
+  virtual absl::StatusOr<MappedType> ConvertQualType(
+      clang::QualType qual_type,
+      std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
+      bool nullable = true) const = 0;
 
   // Converts `type` into a MappedType, after first importing the Record behind
   // the template instantiation.
