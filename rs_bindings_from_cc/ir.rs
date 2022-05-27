@@ -85,6 +85,14 @@ pub struct LifetimeName {
     pub id: LifetimeId,
 }
 
+impl ToTokens for LifetimeName {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let lifetime =
+            syn::Lifetime::new(&format!("'{}", self.name), proc_macro2::Span::call_site());
+        lifetime.to_tokens(tokens)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
     pub name: Option<String>,

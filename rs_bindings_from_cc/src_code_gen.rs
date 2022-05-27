@@ -717,7 +717,6 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             quote! {}
         };
 
-        let lifetimes = lifetimes.into_iter().map(|l| format_lifetime_name(&l.name));
         let fn_generic_params: TokenStream;
         if let ImplKind::Trait { declare_lifetimes: true, trait_generic_params, .. } =
             &mut impl_kind
@@ -831,7 +830,7 @@ fn generate_func_thunk(
     }
 
     let thunk_ident = thunk_ident(func);
-    let lifetimes = func.lifetime_params.iter().map(|l| format_lifetime_name(&l.name));
+    let lifetimes = func.lifetime_params.iter();
     let generic_params = format_generic_params(lifetimes);
     let param_types = self_param.into_iter().chain(param_types.map(|t| quote! {#t}));
 
@@ -1964,7 +1963,6 @@ impl<'ir> RsTypeKind<'ir> {
     pub fn format_mut_ref_as_uninitialized(&self) -> Result<TokenStream> {
         match self {
             RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } => {
-                let lifetime = format_lifetime_name(&lifetime.name);
                 Ok(quote! { & #lifetime mut crate::rust_std::mem::MaybeUninit< #referent > })
             }
             _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
@@ -2009,7 +2007,7 @@ impl<'ir> RsTypeKind<'ir> {
             } => {
                 referent = reference_pointee;
                 mutability = reference_mutability;
-                lifetime = format_lifetime_name(&reference_lifetime.name);
+                lifetime = quote! {#reference_lifetime};
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }
@@ -2104,7 +2102,6 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
             }
             RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
-                let lifetime = format_lifetime_name(&lifetime.name);
                 let reference = quote! {& #lifetime #mut_ #referent};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/200067242): Add a `use rust_std::pin::Pin` to the crate, and use
@@ -2117,7 +2114,6 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 }
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
-                let lifetime = format_lifetime_name(&lifetime.name);
                 // TODO(b/200067242): Add a `use ctor::RvalueReference` (etc.) to the crate.
                 if mutability == &Mutability::Mut {
                     quote! {ctor::RvalueReference<#lifetime, #referent>}
@@ -2214,12 +2210,6 @@ impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
             }
         }
     }
-}
-
-fn format_lifetime_name(lifetime_name: &str) -> TokenStream {
-    let lifetime =
-        syn::Lifetime::new(&format!("'{}", lifetime_name), proc_macro2::Span::call_site());
-    quote! { #lifetime }
 }
 
 fn format_rs_type(ty: &ir::RsType, ir: &IR) -> Result<TokenStream> {
