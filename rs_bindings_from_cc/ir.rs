@@ -729,6 +729,8 @@ impl IR {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quote::quote;
+    use token_stream_matchers::assert_rs_matches;
 
     #[test]
     fn test_identifier_debug_print() {
@@ -764,5 +766,11 @@ mod tests {
             items: vec![],
         };
         assert_eq!(ir.flat_ir, expected);
+    }
+
+    #[test]
+    fn test_lifetime_name_to_tokens() {
+        let lifetime = LifetimeName { name: "name".to_string(), id: LifetimeId(42) };
+        assert_rs_matches!(quote! { #lifetime }, quote! { 'name });
     }
 }

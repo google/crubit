@@ -277,6 +277,9 @@ rust_library(
 rust_test(
     name = "rs_ir_test",
     crate = ":ir",
+    deps = [
+        ":token_stream_matchers",
+    ],
 )
 
 rust_library(
