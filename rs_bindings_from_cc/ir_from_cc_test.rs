@@ -2916,3 +2916,10 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
         }
     );
 }
+
+#[test]
+// TODO(b/234104583): Delete the test once we support abstract classes.
+fn test_abstract_classes_not_supported() {
+    let ir = ir_from_cc("struct MyStruct { virtual void run() = 0; };").unwrap();
+    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "MyStruct" ... } });
+}

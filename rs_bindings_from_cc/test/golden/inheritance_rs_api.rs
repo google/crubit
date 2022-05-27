@@ -257,6 +257,10 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
     }
 }
 
+// rs_bindings_from_cc/test/golden/inheritance.h;l=32
+// Error while generating bindings for item 'MyAbstractClass':
+// Abstract classes are not supported yet
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 
 mod detail {

@@ -44,6 +44,10 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (record_decl->isInjectedClassName()) {
     return std::nullopt;
   }
+  if (record_decl->hasDefinition() && record_decl->isAbstract()) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl, "Abstract classes are not supported yet");
+  }
   if (decl_context->isRecord()) {
     return ictx_.ImportUnsupportedItem(record_decl,
                                        "Nested classes are not supported yet");

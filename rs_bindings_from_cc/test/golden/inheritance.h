@@ -29,4 +29,9 @@ class VirtualBase2 : public virtual Base1 {};
 class VirtualDerived : public virtual VirtualBase1,
                        public virtual VirtualBase2 {};
 
+class MyAbstractClass {
+  virtual void PureVirtualMethod() = 0;
+  virtual ~MyAbstractClass();
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
