@@ -29,7 +29,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    if (!ictx_.type_mapper_.Contains(method_decl->getParent())) {
+    if (!ictx_.HasBeenAlreadySuccessfullyImported(method_decl->getParent())) {
       return ictx_.ImportUnsupportedItem(function_decl,
                                          "Couldn't import the parent");
     }

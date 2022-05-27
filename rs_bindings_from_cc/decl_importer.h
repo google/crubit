@@ -61,6 +61,8 @@ class Invocation {
 
 // The currently known canonical type decls that we know how to map into
 // Rust.
+//
+// TODO(b/228868369): Merge TypeMapper back into Importer.
 class TypeMapper {
  public:
   TypeMapper(const clang::ASTContext* ctx) : ctx_(ctx) {}
@@ -90,17 +92,21 @@ class TypeMapper {
   std::optional<absl::string_view> MapKnownCcTypeToRsType(
       absl::string_view cc_type) const;
 
-  bool Contains(const clang::TypeDecl* decl) const {
-    return known_type_decls_.contains(
-        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
-  }
-
   void Insert(const clang::TypeDecl* decl) {
     known_type_decls_.insert(
         clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
   }
 
  private:
+  // TODO(b/209390498): The `friend`ship declaration is temporary - it will
+  // disappear when TypeMapper class is removed / once TypeMapper is merged back
+  // into Importer.
+  friend class Importer;
+  bool Contains(const clang::TypeDecl* decl) const {
+    return known_type_decls_.contains(
+        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+  }
+
   const clang::ASTContext* ctx_;
   absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 };
@@ -168,6 +174,12 @@ class ImportContext {
   // the template instantiation.
   virtual absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type) = 0;
+
+  // Returns whether the `decl` has been already successfully imported (maybe
+  // partially - e.g. CXXRecordDeclImporter::Import marks the import as success
+  // before importing the fields, because the latter cannot fail).
+  virtual bool HasBeenAlreadySuccessfullyImported(
+      const clang::TypeDecl* decl) const = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;
