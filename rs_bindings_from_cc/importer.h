@@ -75,6 +75,7 @@ class Importer : public ImportContext {
   SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const override;
   absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type) override;
+  void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const override;
 

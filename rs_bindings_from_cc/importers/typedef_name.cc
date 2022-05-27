@@ -52,7 +52,7 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
           typedef_name_decl,
           "Typedef only used to introduce a name in C. Not importing.");
     }
-    ictx_.type_mapper_.Insert(typedef_name_decl);
+    ictx_.MarkAsSuccessfullyImported(typedef_name_decl);
     return TypeAlias{
         .identifier = *identifier,
         .id = GenerateItemId(typedef_name_decl),

@@ -87,7 +87,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     record_decl = complete;
   } else {
     CRUBIT_CHECK(!record_decl->isCompleteDefinition());
-    ictx_.type_mapper_.Insert(record_decl);
+    ictx_.MarkAsSuccessfullyImported(record_decl);
     return IncompleteRecord{
         .cc_name = std::move(cc_name),
         .id = GenerateItemId(record_decl),
@@ -97,7 +97,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   // At this point we know that the import of `record_decl` will succeed /
   // cannot fail.
-  ictx_.type_mapper_.Insert(record_decl);
+  ictx_.MarkAsSuccessfullyImported(record_decl);
 
   ictx_.sema_.ForceDeclarationOfImplicitMembers(record_decl);
 

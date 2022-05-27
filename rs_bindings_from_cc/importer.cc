@@ -885,6 +885,10 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
   }
 }
 
+void Importer::MarkAsSuccessfullyImported(const clang::TypeDecl* decl) {
+  type_mapper_.Insert(decl);
+}
+
 bool Importer::HasBeenAlreadySuccessfullyImported(
     const clang::TypeDecl* decl) const {
   return type_mapper_.Contains(decl);

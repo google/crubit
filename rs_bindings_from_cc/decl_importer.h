@@ -91,19 +91,20 @@ class TypeMapper {
   std::optional<absl::string_view> MapKnownCcTypeToRsType(
       absl::string_view cc_type) const;
 
-  void Insert(const clang::TypeDecl* decl) {
-    known_type_decls_.insert(
-        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
-  }
-
  private:
   // TODO(b/209390498): The `friend`ship declaration is temporary - it will
   // disappear when TypeMapper class is removed / once TypeMapper is merged back
   // into Importer.
   friend class Importer;
   absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
+
   bool Contains(const clang::TypeDecl* decl) const {
     return known_type_decls_.contains(
+        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
+  }
+
+  void Insert(const clang::TypeDecl* decl) {
+    known_type_decls_.insert(
         clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
   }
 
@@ -175,9 +176,15 @@ class ImportContext {
   virtual absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
       const clang::TemplateSpecializationType* type) = 0;
 
+  // Marks `decl` as successfully imported.  Other pieces of code can check
+  // HasBeenAlreadySuccessfullyImported to avoid introducing dangling ItemIds
+  // that refer to an unimportable `decl`.
+  virtual void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) = 0;
+
   // Returns whether the `decl` has been already successfully imported (maybe
   // partially - e.g. CXXRecordDeclImporter::Import marks the import as success
-  // before importing the fields, because the latter cannot fail).
+  // before importing the fields, because the latter cannot fail).  See also
+  // MarkAsSuccessfullyImported.
   virtual bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const = 0;
 
