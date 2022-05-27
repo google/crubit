@@ -88,7 +88,6 @@ class TypeMapper {
       const clang::Type* type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
       bool nullable) const;
-  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
   std::optional<absl::string_view> MapKnownCcTypeToRsType(
       absl::string_view cc_type) const;
 
@@ -102,6 +101,7 @@ class TypeMapper {
   // disappear when TypeMapper class is removed / once TypeMapper is merged back
   // into Importer.
   friend class Importer;
+  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
   bool Contains(const clang::TypeDecl* decl) const {
     return known_type_decls_.contains(
         clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));

@@ -233,7 +233,7 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
 
       clang::CXXRecordDecl* base_record_decl =
           CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
-      if (!ictx_.type_mapper_.ConvertTypeDecl(base_record_decl).status().ok()) {
+      if (!ictx_.HasBeenAlreadySuccessfullyImported(base_record_decl)) {
         continue;
       }
 
