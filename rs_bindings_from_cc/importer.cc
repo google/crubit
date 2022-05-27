@@ -70,8 +70,8 @@ absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
 // A mapping of C++ standard types to their equivalent Rust types.
 // To produce more idiomatic results, these types receive special handling
 // instead of using the generic type mapping mechanism.
-std::optional<absl::string_view> TypeMapper::MapKnownCcTypeToRsType(
-    absl::string_view cc_type) const {
+std::optional<absl::string_view> MapKnownCcTypeToRsType(
+    absl::string_view cc_type) {
   static const auto* const kWellKnownTypes =
       new absl::flat_hash_map<absl::string_view, absl::string_view>({
           {"ptrdiff_t", "isize"},
@@ -630,7 +630,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
-  if (auto maybe_mapped_type = type_mapper_.MapKnownCcTypeToRsType(type_string);
+  if (auto maybe_mapped_type = MapKnownCcTypeToRsType(type_string);
       maybe_mapped_type.has_value()) {
     return MappedType::Simple(std::string(*maybe_mapped_type), type_string);
   } else if (type->isPointerType() || type->isLValueReferenceType() ||

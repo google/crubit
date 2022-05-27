@@ -59,27 +59,10 @@ class Invocation {
       header_targets_;
 };
 
-// The currently known canonical type decls that we know how to map into
-// Rust.
-//
-// TODO(b/228868369): Merge TypeMapper back into Importer.
-class TypeMapper {
- public:
-  TypeMapper(const clang::ASTContext* ctx) : ctx_(ctx) {}
-
-  TypeMapper(const TypeMapper& other) = default;
-  TypeMapper& operator=(const TypeMapper& other) = default;
-
-  // TODO(b/209390498): This method doesn't use any member variables or member
-  // functions - it should be a static method or a free function instead.
-  std::optional<absl::string_view> MapKnownCcTypeToRsType(
-      absl::string_view cc_type) const;
-
- private:
-  // TODO(b/209390498): The `ctx_` field is unused - it will disappear when
-  // TypeMapper class is removed / once TypeMapper is merged back into Importer.
-  const clang::ASTContext* ctx_;
-};
+// Converts primitive types like `std::usize` or `int64_t` into their Rust
+// equivalents.
+std::optional<absl::string_view> MapKnownCcTypeToRsType(
+    absl::string_view cc_type);
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to
 // interface with the global state of the importer.
@@ -87,7 +70,7 @@ class ImportContext {
  public:
   ImportContext(Invocation& invocation, clang::ASTContext& ctx,
                 clang::Sema& sema)
-      : invocation_(invocation), ctx_(ctx), sema_(sema), type_mapper_(&ctx) {}
+      : invocation_(invocation), ctx_(ctx), sema_(sema) {}
   virtual ~ImportContext() {}
 
   // Imports all decls contained in a `DeclContext`.
@@ -175,7 +158,6 @@ class ImportContext {
   Invocation& invocation_;
   clang::ASTContext& ctx_;
   clang::Sema& sema_;
-  TypeMapper type_mapper_;
 };
 
 // Interface for components that can import decls of a certain category.

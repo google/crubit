@@ -24,8 +24,7 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
 
   clang::QualType type =
       typedef_name_decl->getASTContext().getTypedefType(typedef_name_decl);
-  if (ictx_.type_mapper_.MapKnownCcTypeToRsType(type.getAsString())
-          .has_value()) {
+  if (MapKnownCcTypeToRsType(type.getAsString()).has_value()) {
     return std::nullopt;
   }
 
