@@ -886,12 +886,14 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
 }
 
 void Importer::MarkAsSuccessfullyImported(const clang::TypeDecl* decl) {
-  type_mapper_.Insert(decl);
+  known_type_decls_.insert(
+      clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
 }
 
 bool Importer::HasBeenAlreadySuccessfullyImported(
     const clang::TypeDecl* decl) const {
-  return type_mapper_.Contains(decl);
+  return known_type_decls_.contains(
+      clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
 }
 
 }  // namespace crubit

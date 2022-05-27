@@ -112,6 +112,11 @@ class Importer : public ImportContext {
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_for_current_target_;
   std::vector<const clang::RawComment*> comments_;
+
+  // Set of decls that have been successfully imported (i.e. that will be
+  // present in the IR output / that will not produce dangling ItemIds in the IR
+  // output).
+  absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 };  // class Importer
 
 }  // namespace crubit

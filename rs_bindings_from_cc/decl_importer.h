@@ -76,26 +76,9 @@ class TypeMapper {
       absl::string_view cc_type) const;
 
  private:
-  // TODO(b/209390498): The `friend`ship declaration is temporary - it will
-  // disappear when TypeMapper class is removed / once TypeMapper is merged back
-  // into Importer.
-  friend class Importer;
-
-  bool Contains(const clang::TypeDecl* decl) const {
-    return known_type_decls_.contains(
-        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
-  }
-
-  void Insert(const clang::TypeDecl* decl) {
-    known_type_decls_.insert(
-        clang::cast<clang::TypeDecl>(decl->getCanonicalDecl()));
-  }
-
   // TODO(b/209390498): The `ctx_` field is unused - it will disappear when
   // TypeMapper class is removed / once TypeMapper is merged back into Importer.
   const clang::ASTContext* ctx_;
-
-  absl::flat_hash_set<const clang::TypeDecl*> known_type_decls_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to
