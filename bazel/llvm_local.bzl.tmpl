@@ -4,28 +4,22 @@
 
 # Provide LLVM from a local tree built with CMake.
 
-prebuilt_llvm_tree_build_file_contents = """
+llvm_install_tree_build_file_contents = """
 package(default_visibility = ["//visibility:public"])
 
 # An extremely coarse-grained target that provides *all* headers and libraries.
 cc_library(
     name = "all",
     srcs = glob([
-        "${CMAKE_BUILD_DIR}/lib/*.a",
+        "lib/*.a",
     ], exclude = [
         "**/*.i386.a",
     ]),
     hdrs = glob([
-        "${CMAKE_BUILD_DIR}/include/**",
-        "${CMAKE_BUILD_DIR}/tools/clang/include/**",
-        "clang/include/**",
-        "llvm/include/**",
+        "include/**",
     ]),
     includes = [
-        "${CMAKE_BUILD_DIR}/include/",
-        "${CMAKE_BUILD_DIR}/tools/clang/include/",
-        "clang/include/",
-        "llvm/include/",
+        "include/",
     ],
     linkopts = ["-lncurses", "-lz"],
 )
@@ -36,8 +30,8 @@ def llvm_repository(name):
     # prebuilt LLVM tree, yielding the single ":all" target.
     native.new_local_repository(
         name = "prebuilt-llvm",
-        path = "${PREBUILT_LLVM_PATH}",  # template value
-        build_file_content = prebuilt_llvm_tree_build_file_contents,
+        path = "${LLVM_INSTALL_PATH}",  # template value
+        build_file_content = llvm_install_tree_build_file_contents,
     )
 
     # Next, create the final repo that emulates the layout of Bazel targets in

@@ -7,9 +7,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 # Create a loader/trampoline repository that we can call into to load LLVM.
 #
 # Our real goal is to choose between two different sources for LLVM binaries:
-#  - if `PREBUILT_LLVM_PATH` is in the environment, we treat it as the root of
-#    an LLVM tree that's been built with CMake and try to use headers and
-#    libraries from there
+#  - if `LLVM_INSTALL_PATH` is in the environment, we treat it as the root of
+#    an LLVM installation and try to use headers and libraries from there
 #  - otherwise, we build LLVM from source
 #
 # We *could* implement this choice directly as an if/else between `http_archive`
@@ -26,9 +25,9 @@ def _llvm_loader_repository(repository_ctx):
     repository_ctx.file("BUILD")
 
     # Create `llvm.bzl` from one of `llvm_{remote|local}.bzl.tmpl`.
-    if "PREBUILT_LLVM_PATH" in repository_ctx.os.environ:
-        # Use prebuilt LLVM
-        path = repository_ctx.os.environ["PREBUILT_LLVM_PATH"]
+    if "LLVM_INSTALL_PATH" in repository_ctx.os.environ:
+        # Use LLVM install
+        path = repository_ctx.os.environ["LLVM_INSTALL_PATH"]
 
         # If needed, resolve relative to root of *calling* repository
         if not path.startswith("/"):
@@ -41,8 +40,7 @@ def _llvm_loader_repository(repository_ctx):
             "llvm.bzl",
             Label("//bazel:llvm_local.bzl.tmpl"),
             substitutions = {
-                "${PREBUILT_LLVM_PATH}": str(path),
-                "${CMAKE_BUILD_DIR}": "build",
+                "${LLVM_INSTALL_PATH}": str(path),
             },
             executable = False,
         )
@@ -73,6 +71,6 @@ llvm_loader_repository = repository_rule(
         "file_at_root": attr.label(default = "//:BUILD"),
     },
     environ = [
-        "PREBUILT_LLVM_PATH",
+        "LLVM_INSTALL_PATH",
     ],
 )

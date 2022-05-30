@@ -20,9 +20,10 @@ $ bazel build --linkopt=-fuse-ld=/usr/bin/ld.lld //rs_bindings_from_cc:rs_bindin
 ```
 $ git clone https://github.com/llvm/llvm-project
 $ cd llvm-project
-$ CC=clang CXX=clang++ cmake -S llvm -B build -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_BUILD_TYPE=Release
+$ CC=clang CXX=clang++ cmake -S llvm -B build -DLLVM_ENABLE_PROJECTS='clang' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=install
 $ cmake --build build -j
 $ # wait...
+$ cmake --install build
 $ cd ../crubit
-$ PREBUILT_LLVM_PATH=../llvm-project bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
+$ LLVM_INSTALL_PATH=../llvm-project/install bazel build //rs_bindings_from_cc:rs_bindings_from_cc_impl
 ```
