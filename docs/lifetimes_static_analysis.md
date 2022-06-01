@@ -1,7 +1,5 @@
 # Static Analysis for C++ Lifetimes
 
-<internal link>
-
 <!--*
 # Document freshness: For more information, see <internal link>.
 freshness: { owner: 'mboehme' reviewed: '2022-06-01' }
