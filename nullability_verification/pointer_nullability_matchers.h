@@ -1,0 +1,23 @@
+// Part of the Crubit project, under the Apache License v2.0 with LLVM
+// Exceptions. See /LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+#ifndef CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_MATCHERS_H_
+#define CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_MATCHERS_H_
+
+#include "clang/ASTMatchers/ASTMatchersInternal.h"
+
+namespace clang {
+namespace tidy {
+namespace nullability {
+
+ast_matchers::internal::Matcher<Stmt> isPointerExpr();
+ast_matchers::internal::Matcher<Stmt> isPointerDereference();
+ast_matchers::internal::Matcher<Stmt> isNEQNullBinOp(llvm::StringRef BindID);
+ast_matchers::internal::Matcher<Stmt> isImplicitCastPtrToBool();
+
+}  // namespace nullability
+}  // namespace tidy
+}  // namespace clang
+
+#endif  // CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_MATCHERS_H_
