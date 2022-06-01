@@ -67,7 +67,32 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
             }
         }
     }
-    Ok(IR { flat_ir, item_id_to_item_idx, lifetimes })
+    let mut namespace_id_to_number_of_reopened_namespaces = HashMap::new();
+    let mut reopened_namespace_id_to_idx = HashMap::new();
+
+    flat_ir
+        .items
+        .iter()
+        .filter_map(|item| match item {
+            Item::Namespace(ns) if ns.owning_target == flat_ir.current_target => {
+                Some((ns.canonical_namespace_id, ns.id))
+            }
+            _ => None,
+        })
+        .for_each(|(canonical_id, id)| {
+            let current_count =
+                *namespace_id_to_number_of_reopened_namespaces.entry(canonical_id).or_insert(0);
+            reopened_namespace_id_to_idx.insert(id, current_count);
+            namespace_id_to_number_of_reopened_namespaces.insert(canonical_id, current_count + 1);
+        });
+
+    Ok(IR {
+        flat_ir,
+        item_id_to_item_idx,
+        lifetimes,
+        namespace_id_to_number_of_reopened_namespaces,
+        reopened_namespace_id_to_idx,
+    })
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -595,6 +620,8 @@ pub struct IR {
     // A map from a `decl_id` to an index of an `Item` in the `flat_ir.items` vec.
     item_id_to_item_idx: HashMap<ItemId, usize>,
     lifetimes: HashMap<LifetimeId, LifetimeName>,
+    namespace_id_to_number_of_reopened_namespaces: HashMap<ItemId, usize>,
+    reopened_namespace_id_to_idx: HashMap<ItemId, usize>,
 }
 
 impl IR {
@@ -723,6 +750,26 @@ impl IR {
 
     pub fn get_lifetime(&self, lifetime_id: LifetimeId) -> Option<&LifetimeName> {
         self.lifetimes.get(&lifetime_id)
+    }
+
+    pub fn get_reopened_namespace_idx(&self, id: ItemId) -> Result<usize> {
+        Ok(*self.reopened_namespace_id_to_idx.get(&id).with_context(|| {
+            format!("Could not find the reopened namespace index for namespace {:?}.", id)
+        })?)
+    }
+
+    pub fn is_last_reopened_namespace(&self, id: ItemId, canonical_id: ItemId) -> Result<bool> {
+        let idx = self.get_reopened_namespace_idx(id)?;
+        let last_item_idx = self
+            .namespace_id_to_number_of_reopened_namespaces
+            .get(&canonical_id)
+            .with_context(|| {
+            format!(
+                "Could not find number of reopened namespaces for namespace {:?}.",
+                canonical_id
+            )
+        })? - 1;
+        Ok(idx == last_item_idx)
     }
 }
 

@@ -1487,7 +1487,26 @@ fn generate_namespace(
         has_record = has_record || generated.has_record;
     }
 
-    let name = make_rs_ident(&namespace.name.identifier);
+    let reopened_namespace_idx = ir.get_reopened_namespace_idx(namespace.id)?;
+    let should_skip_index =
+        ir.is_last_reopened_namespace(namespace.id, namespace.canonical_namespace_id)?;
+
+    let name = if should_skip_index {
+        make_rs_ident(&namespace.name.identifier)
+    } else {
+        make_rs_ident(&format!("{}_{}", &namespace.name.identifier, reopened_namespace_idx))
+    };
+
+    let use_stmt_for_previous_namespace = if reopened_namespace_idx == 0 {
+        quote! {}
+    } else {
+        let previous_namespace_ident = make_rs_ident(&format!(
+            "{}_{}",
+            &namespace.name.identifier,
+            reopened_namespace_idx - 1
+        ));
+        quote! { pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__ }
+    };
 
     let thunks_tokens = quote! {
         #( #thunks )*
@@ -1499,6 +1518,8 @@ fn generate_namespace(
 
     let namespace_tokens = quote! {
         pub mod #name {
+            #use_stmt_for_previous_namespace
+
             #( #items __NEWLINE__ __NEWLINE__ )*
         }
     };
@@ -5746,6 +5767,42 @@ mod tests {
                 const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                 ...
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_reopened_namespaces() -> Result<()> {
+        let rs_api = generate_bindings_tokens(&ir_from_cc(
+            r#"
+        namespace test_namespace_bindings {
+        namespace inner {}
+        }  // namespace test_namespace_bindings
+
+        namespace test_namespace_bindings {
+        namespace inner {}
+        }  // namespace test_namespace_bindings"#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                ...
+                pub mod test_namespace_bindings_0 {
+                    pub mod inner_0 {} ...
+                }
+                ...
+                pub mod test_namespace_bindings {
+                    pub use super::test_namespace_bindings_0::*;
+                    ...
+                    pub mod inner {
+                        pub use super::inner_0::*;
+                        ...
+                    }
+                }
+                ...
             }
         );
         Ok(())

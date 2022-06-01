@@ -38,6 +38,7 @@
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/FileManager.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
@@ -304,7 +305,12 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   while (!decls_to_visit.empty()) {
     clang::Decl* child = decls_to_visit.back();
     decls_to_visit.pop_back();
-    auto decl = child->getCanonicalDecl();
+    clang::Decl* decl;
+    if (auto namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(child)) {
+      decl = namespace_decl;
+    } else {
+      decl = child->getCanonicalDecl();
+    }
     if (!IsFromCurrentTarget(decl)) continue;
 
     if (const auto* linkage_spec_decl =
@@ -428,9 +434,13 @@ void Importer::ImportDeclsFromDeclContext(
             llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
       ImportDeclsFromDeclContext(linkage_spec_decl);
     } else {
-      // TODO(rosica): We don't always want the canonical decl here (especially
-      // not in namespaces).
-      GetDeclItem(decl->getCanonicalDecl());
+      clang::Decl* decl_to_import;
+      if (auto namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
+        decl_to_import = namespace_decl;
+      } else {
+        decl_to_import = decl->getCanonicalDecl();
+      }
+      GetDeclItem(decl_to_import);
     }
   }
 }

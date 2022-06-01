@@ -71,13 +71,13 @@ pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_b
     unsafe { crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
 }
 
-pub mod test_namespace_bindings_reopened {
+pub mod test_namespace_bindings_reopened_0 {
     #[inline(always)]
     pub fn x() {
         unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1xEv() }
     }
 
-    pub mod inner {
+    pub mod inner_0 {
         #[ctor::recursively_pinned]
         #[repr(C)]
         pub struct S {
@@ -114,7 +114,29 @@ pub mod test_namespace_bindings_reopened {
 
 // namespace test_namespace_bindings_reopened
 
-// namespace inner
+pub mod test_namespace_bindings_reopened {
+    pub use super::test_namespace_bindings_reopened_0::*;
+
+    #[inline(always)]
+    pub fn y() {
+        unsafe { crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened1yEv() }
+    }
+
+    pub mod inner {
+        pub use super::inner_0::*;
+
+        #[inline(always)]
+        pub fn z(s: crate::test_namespace_bindings_reopened::inner::S) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
+                    s,
+                )
+            }
+        }
+    }
+
+    // namespace inner
+}
 
 // namespace test_namespace_bindings_reopened
 
@@ -136,6 +158,12 @@ mod detail {
         ) -> crate::test_namespace_bindings::S;
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
+        #[link_name = "_ZN32test_namespace_bindings_reopened1yEv"]
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
+        #[link_name = "_ZN32test_namespace_bindings_reopened5inner1zENS0_1SE"]
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
+            s: crate::test_namespace_bindings_reopened::inner::S,
+        );
     }
 }
 

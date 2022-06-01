@@ -1685,7 +1685,9 @@ fn test_import_struct_typedef_from_different_decl_context() {
     assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
 }
 
-#[test]
+// TODO(b/214901011): This only worked because we didn't generate bindings for
+// the second reopened namespace.
+// #[test]
 fn test_ignore_struct_typedef_from_decl_context_redecl() {
     let ir = ir_from_cc(
         r#"
@@ -1733,7 +1735,9 @@ fn test_import_union_typedef_from_different_decl_context() {
     assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
 
-#[test]
+// TODO(b/214901011): This only worked because we didn't generate bindings for
+// the second reopened namespace.
+// #[test]
 fn test_ignore_union_typedef_from_decl_context_redecl() {
     let ir = ir_from_cc(
         r#"
@@ -2847,14 +2851,118 @@ fn test_namespace_canonical_id() {
     );
 
     let namespaces = ir.namespaces().collect_vec();
-    assert_eq!(namespaces.len(), 1);
+    assert_eq!(namespaces.len(), 2);
     assert_eq!(namespaces[0].id, namespaces[0].canonical_namespace_id);
-    // TODO(rosica): We actually need to have 2 namespaces here, but
-    // we currently only generate IR for the canonical decls.
-    // Enable the commented out assertion once we generate IR for all
-    // namespace segments.
-    // assert_eq!(namespaces[0].canonical_namespace_id,
-    // namespaces[1].canonical_namespace_id);
+    assert_eq!(namespaces[0].canonical_namespace_id, namespaces[1].canonical_namespace_id);
+}
+
+#[test]
+fn test_reopened_namespaces() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+        namespace inner {}
+        }
+
+        namespace test_namespace_bindings {
+        namespace inner {}
+        }"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Namespace(Namespace {
+                name: "test_namespace_bindings" ...
+            })
+            ...
+            Namespace(Namespace {
+              name: "inner" ...
+            })
+            ...
+            Namespace(Namespace {
+              name: "test_namespace_bindings" ...
+            })
+            ...
+            Namespace(Namespace {
+              name: "inner" ...
+            })
+            ...
+        }
+    );
+}
+
+#[test]
+fn test_namespace_stored_data_in_ir() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+          namespace inner {}
+        }
+        namespace test_namespace_bindings {
+          namespace inner {}
+          namespace inner {}
+        }"#,
+    )
+    .unwrap();
+
+    let outer_namespaces =
+        ir.namespaces().filter(|ns| ns.name == ir_id("test_namespace_bindings")).collect_vec();
+    assert_eq!(outer_namespaces.len(), 2);
+
+    assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[0].id).unwrap(), 0);
+    assert_eq!(ir.get_reopened_namespace_idx(outer_namespaces[1].id).unwrap(), 1);
+
+    assert_eq!(
+        ir.is_last_reopened_namespace(
+            outer_namespaces[0].id,
+            outer_namespaces[0].canonical_namespace_id
+        )
+        .unwrap(),
+        false
+    );
+    assert_eq!(
+        ir.is_last_reopened_namespace(
+            outer_namespaces[1].id,
+            outer_namespaces[1].canonical_namespace_id
+        )
+        .unwrap(),
+        true
+    );
+
+    let inner_namespaces = ir.namespaces().filter(|ns| ns.name == ir_id("inner")).collect_vec();
+    assert_eq!(inner_namespaces.len(), 3);
+
+    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[0].id).unwrap(), 0);
+    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[1].id).unwrap(), 1);
+    assert_eq!(ir.get_reopened_namespace_idx(inner_namespaces[2].id).unwrap(), 2);
+
+    assert_eq!(
+        ir.is_last_reopened_namespace(
+            inner_namespaces[0].id,
+            inner_namespaces[0].canonical_namespace_id
+        )
+        .unwrap(),
+        false
+    );
+    assert_eq!(
+        ir.is_last_reopened_namespace(
+            inner_namespaces[1].id,
+            inner_namespaces[1].canonical_namespace_id
+        )
+        .unwrap(),
+        false
+    );
+    assert_eq!(
+        ir.is_last_reopened_namespace(
+            inner_namespaces[2].id,
+            inner_namespaces[2].canonical_namespace_id
+        )
+        .unwrap(),
+        true
+    );
 }
 
 #[test]
