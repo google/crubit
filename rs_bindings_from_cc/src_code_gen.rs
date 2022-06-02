@@ -2105,6 +2105,7 @@ impl<'ir> RsTypeKind<'ir> {
     pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
         self.dfs_iter().filter_map(|t| match t {
             RsTypeKind::Reference { lifetime, .. } => Some(lifetime.id),
+            RsTypeKind::RvalueReference { lifetime, .. } => Some(lifetime.id),
             _ => None,
         })
     }
@@ -5394,24 +5395,26 @@ mod tests {
             #pragma clang lifetime_elision
             using TypeAlias = int&;
             struct SomeStruct {};
-            void foo(int a, int& b, int* c, int** d, TypeAlias e, SomeStruct f); "#,
+            void foo(int a, int& b, int&& c, int* d, int** e, TypeAlias f, SomeStruct g); "#,
         )?;
-        let f = retrieve_func(&ir, "foo");
-        let ret = RsTypeKind::new(&f.return_type.rs_type, &ir)?;
-        let a = RsTypeKind::new(&f.params[0].type_.rs_type, &ir)?;
-        let b = RsTypeKind::new(&f.params[1].type_.rs_type, &ir)?;
-        let c = RsTypeKind::new(&f.params[2].type_.rs_type, &ir)?;
-        let d = RsTypeKind::new(&f.params[3].type_.rs_type, &ir)?;
-        let e = RsTypeKind::new(&f.params[4].type_.rs_type, &ir)?;
-        let f = RsTypeKind::new(&f.params[5].type_.rs_type, &ir)?;
+        let func = retrieve_func(&ir, "foo");
+        let ret = RsTypeKind::new(&func.return_type.rs_type, &ir)?;
+        let a = RsTypeKind::new(&func.params[0].type_.rs_type, &ir)?;
+        let b = RsTypeKind::new(&func.params[1].type_.rs_type, &ir)?;
+        let c = RsTypeKind::new(&func.params[2].type_.rs_type, &ir)?;
+        let d = RsTypeKind::new(&func.params[3].type_.rs_type, &ir)?;
+        let e = RsTypeKind::new(&func.params[4].type_.rs_type, &ir)?;
+        let f = RsTypeKind::new(&func.params[5].type_.rs_type, &ir)?;
+        let g = RsTypeKind::new(&func.params[6].type_.rs_type, &ir)?;
 
         assert_eq!(0, ret.lifetimes().count()); // No lifetimes on `void`.
         assert_eq!(0, a.lifetimes().count()); // No lifetimes on `int`.
         assert_eq!(1, b.lifetimes().count()); // `&'a i32` has a single lifetime.
-        assert_eq!(1, c.lifetimes().count()); // `Option<&'b i32>` has a single lifetime.
-        assert_eq!(2, d.lifetimes().count()); // `&'c Option<&'d i32>` has two lifetimes.
-        assert_eq!(1, e.lifetimes().count()); // Lifetime of underlying type should show through.
-        assert_eq!(0, f.lifetimes().count()); // No lifetimes on structs (yet).
+        assert_eq!(1, c.lifetimes().count()); // `RvalueReference<'a, i32>` has a single lifetime.
+        assert_eq!(1, d.lifetimes().count()); // `Option<&'b i32>` has a single lifetime.
+        assert_eq!(2, e.lifetimes().count()); // `&'c Option<&'d i32>` has two lifetimes.
+        assert_eq!(1, f.lifetimes().count()); // Lifetime of underlying type should show through.
+        assert_eq!(0, g.lifetimes().count()); // No lifetimes on structs (yet).
         Ok(())
     }
 
