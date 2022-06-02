@@ -15,11 +15,15 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
 
+  // TODO(lukasza, mboehme): Consider changing the GetLifetimeAnnotations API to
+  // distinguish 1) no lifetime annotations found vs 2) erroneous lifetime
+  // annotations found.  This will allow avoiding the call to
+  // `expectedToOptional` which can sometimes indicate design problems.
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
-  llvm::Expected<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
-      clang::tidy::lifetimes::GetLifetimeAnnotations(
+  llvm::Optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
+      expectedToOptional(clang::tidy::lifetimes::GetLifetimeAnnotations(
           function_decl, *ictx_.invocation_.lifetime_context_,
-          &lifetime_symbol_table);
+          &lifetime_symbol_table));
 
   std::vector<FuncParam> params;
   std::set<std::string> errors;
