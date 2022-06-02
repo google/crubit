@@ -7,8 +7,10 @@
 #include <string>
 
 #include "common/ffi_types.h"
+#include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/Format/Format.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 
@@ -27,7 +29,8 @@ extern "C" FfiBindings GenerateBindingsImpl(FfiU8Slice json,
                                             FfiU8Slice rustfmt_config_path);
 
 // Creates `Bindings` instance from copied data from `ffi_bindings`.
-static Bindings MakeBindingsFromFfiBindings(const FfiBindings& ffi_bindings) {
+static absl::StatusOr<Bindings> MakeBindingsFromFfiBindings(
+    const FfiBindings& ffi_bindings) {
   Bindings bindings;
 
   const FfiU8SliceBox& rs_api = ffi_bindings.rs_api;
@@ -36,11 +39,17 @@ static Bindings MakeBindingsFromFfiBindings(const FfiBindings& ffi_bindings) {
   bindings.rs_api = std::string(rs_api.ptr, rs_api.size);
 
   std::string impl{rs_api_impl.ptr, rs_api_impl.size};
-  bindings.rs_api_impl = *clang::tooling::applyAllReplacements(
-      impl,
-      clang::format::reformat(
-          clang::format::getGoogleStyle(clang::format::FormatStyle::LK_Cpp),
-          impl, clang::tooling::Range(0, impl.size()), "<stdin>"));
+  llvm::Expected<std::string> maybe_formatted =
+      clang::tooling::applyAllReplacements(
+          impl,
+          clang::format::reformat(
+              clang::format::getGoogleStyle(clang::format::FormatStyle::LK_Cpp),
+              impl, clang::tooling::Range(0, impl.size()), "<stdin>"));
+  if (llvm::Error error = maybe_formatted.takeError()) {
+    return absl::InternalError(absl::StrCat("Failed to format rs_api_impl: ",
+                                            toString(std::move(error))));
+  }
+  bindings.rs_api_impl = *maybe_formatted;
 
   return bindings;
 }
@@ -51,15 +60,16 @@ static void FreeFfiBindings(FfiBindings ffi_bindings) {
   FreeFfiU8SliceBox(ffi_bindings.rs_api_impl);
 }
 
-Bindings GenerateBindings(const IR& ir, absl::string_view crubit_support_path,
-                          absl::string_view rustfmt_exe_path,
-                          absl::string_view rustfmt_config_path) {
+absl::StatusOr<Bindings> GenerateBindings(
+    const IR& ir, absl::string_view crubit_support_path,
+    absl::string_view rustfmt_exe_path, absl::string_view rustfmt_config_path) {
   std::string json = llvm::formatv("{0}", ir.ToJson());
 
   FfiBindings ffi_bindings = GenerateBindingsImpl(
       MakeFfiU8Slice(json), MakeFfiU8Slice(crubit_support_path),
       MakeFfiU8Slice(rustfmt_exe_path), MakeFfiU8Slice(rustfmt_config_path));
-  Bindings bindings = MakeBindingsFromFfiBindings(ffi_bindings);
+  CRUBIT_ASSIGN_OR_RETURN(Bindings bindings,
+                          MakeBindingsFromFfiBindings(ffi_bindings));
   FreeFfiBindings(ffi_bindings);
   return bindings;
 }

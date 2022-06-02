@@ -91,6 +91,7 @@ cc_library(
         ":ir_from_cc",
         ":src_code_gen",
         "//common:status_macros",
+        "@absl//absl/status:statusor",
     ],
 )
 
@@ -352,6 +353,8 @@ cc_library(
         ":cc_ir",
         ":src_code_gen_impl",  # buildcleaner: keep
         "//common:cc_ffi_types",
+        "//common:status_macros",
+        "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//clang:format",
         "@llvm-project//llvm:Support",

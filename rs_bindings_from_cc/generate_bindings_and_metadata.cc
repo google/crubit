@@ -29,9 +29,11 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
           /* virtual_headers_contents= */ {}, cmdline.headers_to_targets(),
           clang_args_view, requested_instantiations));
 
-  crubit::Bindings bindings = crubit::GenerateBindings(
-      ir, cmdline.crubit_support_path(), cmdline.rustfmt_exe_path(),
-      cmdline.rustfmt_config_path());
+  CRUBIT_ASSIGN_OR_RETURN(
+      crubit::Bindings bindings,
+      crubit::GenerateBindings(ir, cmdline.crubit_support_path(),
+                               cmdline.rustfmt_exe_path(),
+                               cmdline.rustfmt_config_path()));
 
   return BindingsAndMetadata{
       .ir = ir,

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/ir.h"
 

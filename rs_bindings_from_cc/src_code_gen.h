@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "rs_bindings_from_cc/ir.h"
 
@@ -21,9 +22,9 @@ struct Bindings {
 };
 
 // Generates bindings from the given `IR`.
-Bindings GenerateBindings(const IR& ir, absl::string_view crubit_support_path,
-                          absl::string_view rustfmt_exe_path,
-                          absl::string_view rustfmt_config_path);
+absl::StatusOr<Bindings> GenerateBindings(
+    const IR& ir, absl::string_view crubit_support_path,
+    absl::string_view rustfmt_exe_path, absl::string_view rustfmt_config_path);
 
 }  // namespace crubit
 
