@@ -54,6 +54,11 @@ pub mod test_namespace_bindings {
         unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings1fENS_1SE(s) }
     }
 
+    #[inline(always)]
+    pub fn inline_function() {
+        unsafe { crate::detail::__rust_thunk___ZN23test_namespace_bindings15inline_functionEv() }
+    }
+
     pub mod inner {
         #[inline(always)]
         pub fn i() {
@@ -88,23 +93,23 @@ pub mod test_namespace_bindings_reopened_0 {
             crate::test_namespace_bindings_reopened::inner::S
         );
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // rs_bindings_from_cc/test/golden/namespace.h;l=29
         // Error while generating bindings for item 'S::S':
         // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // rs_bindings_from_cc/test/golden/namespace.h;l=29
         // Error while generating bindings for item 'S::S':
         // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // rs_bindings_from_cc/test/golden/namespace.h;l=29
         // Error while generating bindings for item 'test_namespace_bindings_reopened::inner::S::S':
         // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings_reopened::inner::S &&': Unsupported type: && without lifetime
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // rs_bindings_from_cc/test/golden/namespace.h;l=29
         // Error while generating bindings for item 'S::operator=':
         // Bindings for this kind of operator are not supported
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=27
+        // rs_bindings_from_cc/test/golden/namespace.h;l=29
         // Error while generating bindings for item 'test_namespace_bindings_reopened::inner::S::operator=':
         // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings_reopened::inner::S &&': Unsupported type: && without lifetime
     }
@@ -150,6 +155,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: crate::test_namespace_bindings::S,
         ) -> i32;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
         #[link_name = "_Z8identityN23test_namespace_bindings1SE"]

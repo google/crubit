@@ -14,6 +14,8 @@ struct S {
 
 int f(S s);
 
+inline void inline_function() {}
+
 namespace inner {
 void i();
 }  // namespace inner

@@ -31,6 +31,10 @@ __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_(
     const class test_namespace_bindings::S& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings15inline_functionEv() {
+  test_namespace_bindings::inline_function();
+}
 extern "C" void __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
     class test_namespace_bindings_reopened::inner::S* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));

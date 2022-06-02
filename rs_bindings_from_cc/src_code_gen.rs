@@ -2489,17 +2489,20 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
             }
             UnqualifiedIdentifier::Identifier(id) => {
                 let fn_ident = format_cc_ident(&id.identifier);
-                let static_method_metadata = func
-                    .member_func_metadata
-                    .as_ref()
-                    .filter(|meta| meta.instance_method_metadata.is_none());
-                match static_method_metadata {
-                    None => quote! {#fn_ident},
+                match func.member_func_metadata.as_ref() {
                     Some(meta) => {
-                        let record = meta.find_record(ir)?;
-                        let record_ident = format_cc_ident(&record.cc_name);
-                        let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
-                        quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }
+                        if let Some(_) = meta.instance_method_metadata {
+                            quote! { #fn_ident }
+                        } else {
+                            let record = meta.find_record(ir)?;
+                            let record_ident = format_cc_ident(&record.cc_name);
+                            let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
+                            quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }
+                        }
+                    }
+                    None => {
+                        let namespace_qualifier = generate_namespace_qualifier(func.id, ir)?;
+                        quote! { #(#namespace_qualifier::)* #fn_ident }
                     }
                 }
             }
@@ -5787,6 +5790,36 @@ mod tests {
                         ...
                     }
                 }
+                ...
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_qualified_identifiers_in_impl_file() -> Result<()> {
+        let rs_api_impl = generate_bindings_tokens(&ir_from_cc(
+            r#"
+        namespace test_namespace_bindings {
+            inline void f() {};
+            struct S{};
+        }
+        inline void useS(test_namespace_bindings::S s) {};"#,
+        )?)?
+        .rs_api_impl;
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___ZN23test_namespace_bindings1fEv() {
+                    test_namespace_bindings::f();
+                }
+                ...
+                extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
+                    class test_namespace_bindings::S* __this) {...}
+                ...
+                extern "C" void __rust_thunk___Z4useSN23test_namespace_bindings1SE(
+                    class test_namespace_bindings::S s) { useS(std::forward<decltype(s)>(s)); }
                 ...
             }
         );
