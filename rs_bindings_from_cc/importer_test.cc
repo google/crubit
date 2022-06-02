@@ -276,12 +276,6 @@ auto Destructor(const Args&... matchers) {
 // Matches a Record which is trivial for calls.
 MATCHER(IsTrivialAbi, "") { return arg.is_trivial_abi; }
 
-// Matches a SpecialMemberFunc that has the given definition.
-MATCHER_P(DefinitionIs, definition, "") { return arg.definition == definition; }
-
-// Matches a Field that has the given access specifier.
-MATCHER_P(AccessIs, access, "") { return arg.access == access; }
-
 // Matches a Field that has the given offset.
 MATCHER_P(OffsetIs, offset, "") {
   if (arg.offset == offset) return true;
@@ -426,8 +420,8 @@ TEST(ImporterTest, TrivialCopyConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kTrivial)))));
+  EXPECT_THAT(records,
+              Each(Pointee(CopyConstructor(SpecialMemberFunc::kTrivial))));
 }
 
 TEST(ImporterTest, NontrivialUserDefinedCopyConstructor) {
@@ -449,9 +443,8 @@ TEST(ImporterTest, NontrivialUserDefinedCopyConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records,
-              Each(Pointee(CopyConstructor(DefinitionIs(
-                  SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
+  EXPECT_THAT(records, Each(Pointee(CopyConstructor(
+                           SpecialMemberFunc::kNontrivialUserDefined))));
 }
 
 TEST(ImporterTest, NontrivialMembersCopyConstructor) {
@@ -476,8 +469,7 @@ TEST(ImporterTest, NontrivialMembersCopyConstructor) {
       Each(Pointee(AnyOf(
           RsNameIs(
               "NontrivialUserDefined"),  // needed to create nontrivial members
-          CopyConstructor(DefinitionIs(
-              SpecialMemberFunc::Definition::kNontrivialMembers))))));
+          CopyConstructor(SpecialMemberFunc::kNontrivialMembers)))));
 }
 
 TEST(ImporterTest, DeletedCopyConstructor) {
@@ -495,8 +487,8 @@ TEST(ImporterTest, DeletedCopyConstructor) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(CopyConstructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kDeleted)))));
+  EXPECT_THAT(records,
+              Each(Pointee(CopyConstructor(SpecialMemberFunc::kUnavailable))));
 }
 
 TEST(ImporterTest, PublicCopyConstructor) {
@@ -514,7 +506,8 @@ TEST(ImporterTest, PublicCopyConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPublic)))));
+  EXPECT_THAT(records,
+              Each(Pointee(CopyConstructor(SpecialMemberFunc::kTrivial))));
 }
 
 TEST(ImporterTest, PrivateCopyConstructor) {
@@ -531,7 +524,8 @@ TEST(ImporterTest, PrivateCopyConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(CopyConstructor(AccessIs(kPrivate)))));
+  EXPECT_THAT(records,
+              Each(Pointee(CopyConstructor(SpecialMemberFunc::kUnavailable))));
 }
 
 TEST(ImporterTest, TrivialMoveConstructor) {
@@ -545,8 +539,8 @@ TEST(ImporterTest, TrivialMoveConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kTrivial)))));
+  EXPECT_THAT(records,
+              Each(Pointee(MoveConstructor(SpecialMemberFunc::kTrivial))));
 }
 
 TEST(ImporterTest, NontrivialUserDefinedMoveConstructor) {
@@ -567,9 +561,8 @@ TEST(ImporterTest, NontrivialUserDefinedMoveConstructor) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records,
-              Each(Pointee(MoveConstructor(DefinitionIs(
-                  SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
+  EXPECT_THAT(records, Each(Pointee(MoveConstructor(
+                           SpecialMemberFunc::kNontrivialUserDefined))));
 }
 
 TEST(ImporterTest, NontrivialMembersMoveConstructor) {
@@ -594,8 +587,7 @@ TEST(ImporterTest, NontrivialMembersMoveConstructor) {
       Each(Pointee(AnyOf(
           RsNameIs(
               "NontrivialUserDefined"),  // needed to create nontrivial members
-          MoveConstructor(DefinitionIs(
-              SpecialMemberFunc::Definition::kNontrivialMembers))))));
+          MoveConstructor(SpecialMemberFunc::kNontrivialMembers)))));
 }
 
 TEST(ImporterTest, DeletedMoveConstructor) {
@@ -613,8 +605,8 @@ TEST(ImporterTest, DeletedMoveConstructor) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(MoveConstructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kDeleted)))));
+  EXPECT_THAT(records,
+              Each(Pointee(MoveConstructor(SpecialMemberFunc::kUnavailable))));
 }
 
 TEST(ImporterTest, PublicMoveConstructor) {
@@ -632,7 +624,8 @@ TEST(ImporterTest, PublicMoveConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPublic)))));
+  EXPECT_THAT(records,
+              Each(Pointee(MoveConstructor(SpecialMemberFunc::kTrivial))));
 }
 
 TEST(ImporterTest, PrivateMoveConstructor) {
@@ -649,7 +642,8 @@ TEST(ImporterTest, PrivateMoveConstructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(MoveConstructor(AccessIs(kPrivate)))));
+  EXPECT_THAT(records,
+              Each(Pointee(MoveConstructor(SpecialMemberFunc::kUnavailable))));
 }
 
 TEST(ImporterTest, TrivialDestructor) {
@@ -663,8 +657,7 @@ TEST(ImporterTest, TrivialDestructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kTrivial)))));
+  EXPECT_THAT(records, Each(Pointee(Destructor(SpecialMemberFunc::kTrivial))));
 }
 
 TEST(ImporterTest, NontrivialUserDefinedDestructor) {
@@ -691,9 +684,9 @@ TEST(ImporterTest, NontrivialUserDefinedDestructor) {
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(4));
-  EXPECT_THAT(records,
-              Each(Pointee(Destructor(DefinitionIs(
-                  SpecialMemberFunc::Definition::kNontrivialUserDefined)))));
+  EXPECT_THAT(
+      records,
+      Each(Pointee(Destructor(SpecialMemberFunc::kNontrivialUserDefined))));
 }
 
 TEST(ImporterTest, NontrivialMembersDestructor) {
@@ -718,8 +711,7 @@ TEST(ImporterTest, NontrivialMembersDestructor) {
       Each(Pointee(AnyOf(
           RsNameIs(
               "NontrivialUserDefined"),  // needed to create nontrivial members
-          Destructor(DefinitionIs(
-              SpecialMemberFunc::Definition::kNontrivialMembers))))));
+          Destructor(SpecialMemberFunc::kNontrivialMembers)))));
 }
 
 TEST(ImporterTest, DeletedDestructor) {
@@ -735,8 +727,8 @@ TEST(ImporterTest, DeletedDestructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(Destructor(DefinitionIs(
-                           SpecialMemberFunc::Definition::kDeleted)))));
+  EXPECT_THAT(records,
+              Each(Pointee(Destructor(SpecialMemberFunc::kUnavailable))));
 }
 
 TEST(ImporterTest, PublicDestructor) {
@@ -754,7 +746,7 @@ TEST(ImporterTest, PublicDestructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(3));
-  EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPublic)))));
+  EXPECT_THAT(records, Each(Pointee(Destructor(SpecialMemberFunc::kTrivial))));
 }
 
 TEST(ImporterTest, PrivateDestructor) {
@@ -771,7 +763,8 @@ TEST(ImporterTest, PrivateDestructor) {
 
   std::vector<const Record*> records = ir.get_items_if<Record>();
   EXPECT_THAT(records, SizeIs(2));
-  EXPECT_THAT(records, Each(Pointee(Destructor(AccessIs(kPrivate)))));
+  EXPECT_THAT(records,
+              Each(Pointee(Destructor(SpecialMemberFunc::kUnavailable))));
 }
 
 TEST(ImporterTest, TrivialAbi) {

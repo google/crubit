@@ -507,29 +507,22 @@ inline std::ostream& operator<<(std::ostream& o, const Field& f) {
 // functions in narrow cases: even for a nontrivial special member function, if
 // it is kNontrivialMembers, we can directly implement it in Rust in terms of
 // the member variables.
-struct SpecialMemberFunc {
-  enum class Definition : char {
-    kTrivial,
-    // Nontrivial, but only because of a member variable with a nontrivial
-    // special member function.
-    kNontrivialMembers,
-    // Nontrivial because of a user-defined special member function in this or a
-    // base class. (May *also* be nontrivial due to member variables.)
-    kNontrivialUserDefined,
-    kDeleted,
-  };
-
-  llvm::json::Value ToJson() const;
-
-  Definition definition = Definition::kTrivial;
-  AccessSpecifier access = AccessSpecifier::kPublic;
+enum class SpecialMemberFunc : char {
+  kTrivial,
+  // Nontrivial, but only because of a member variable with a nontrivial
+  // special member function.
+  kNontrivialMembers,
+  // Nontrivial because of a user-defined special member function in this or a
+  // base class. (May *also* be nontrivial due to member variables.)
+  kNontrivialUserDefined,
+  // Deleted or non-public.
+  kUnavailable,
 };
 
-std::ostream& operator<<(std::ostream& o,
-                         const SpecialMemberFunc::Definition& definition);
+llvm::json::Value toJSON(const SpecialMemberFunc& f);
 
 inline std::ostream& operator<<(std::ostream& o, const SpecialMemberFunc& f) {
-  return o << std::string(llvm::formatv("{0:2}", f.ToJson()));
+  return o << std::string(llvm::formatv("{0:2}", toJSON(f)));
 }
 
 // A base class subobject of a struct or class.
@@ -580,9 +573,9 @@ struct Record {
   bool override_alignment = false;
 
   // Special member functions.
-  SpecialMemberFunc copy_constructor = {};
-  SpecialMemberFunc move_constructor = {};
-  SpecialMemberFunc destructor = {};
+  SpecialMemberFunc copy_constructor = SpecialMemberFunc::kUnavailable;
+  SpecialMemberFunc move_constructor = SpecialMemberFunc::kUnavailable;
+  SpecialMemberFunc destructor = SpecialMemberFunc::kUnavailable;
 
   // Whether this type is passed by value as if it were a trivial type (the same
   // as it would be if it were a struct in C).

@@ -339,30 +339,17 @@ llvm::json::Value Field::ToJson() const {
   };
 }
 
-static std::string SpecialMemberDefinitionToString(
-    SpecialMemberFunc::Definition def) {
-  switch (def) {
-    case SpecialMemberFunc::Definition::kTrivial:
+llvm::json::Value toJSON(const SpecialMemberFunc& f) {
+  switch (f) {
+    case SpecialMemberFunc::kTrivial:
       return "Trivial";
-    case SpecialMemberFunc::Definition::kNontrivialMembers:
+    case SpecialMemberFunc::kNontrivialMembers:
       return "NontrivialMembers";
-    case SpecialMemberFunc::Definition::kNontrivialUserDefined:
+    case SpecialMemberFunc::kNontrivialUserDefined:
       return "NontrivialUserDefined";
-    case SpecialMemberFunc::Definition::kDeleted:
-      return "Deleted";
+    case SpecialMemberFunc::kUnavailable:
+      return "Unavailable";
   }
-}
-
-std::ostream& operator<<(std::ostream& o,
-                         const SpecialMemberFunc::Definition& definition) {
-  return o << SpecialMemberDefinitionToString(definition);
-}
-
-llvm::json::Value SpecialMemberFunc::ToJson() const {
-  return llvm::json::Object{
-      {"definition", SpecialMemberDefinitionToString(definition)},
-      {"access", AccessToString(access)},
-  };
 }
 
 llvm::json::Value BaseClass::ToJson() const {

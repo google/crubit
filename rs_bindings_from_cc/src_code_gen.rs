@@ -896,25 +896,25 @@ fn format_tuple_except_singleton<T: ToTokens>(items: &[T]) -> TokenStream {
 }
 
 fn should_implement_drop(record: &Record) -> bool {
-    match record.destructor.definition {
+    match record.destructor {
         // TODO(b/202258760): Only omit destructor if `Copy` is specified.
-        SpecialMemberDefinition::Trivial => false,
+        SpecialMemberFunc::Trivial => false,
 
         // TODO(b/212690698): Avoid calling into the C++ destructor (e.g. let
         // Rust drive `drop`-ing) to avoid (somewhat unergonomic) ManuallyDrop
         // if we can ask Rust to preserve C++ field destruction order in
         // NontrivialMembers case.
-        SpecialMemberDefinition::NontrivialMembers => true,
+        SpecialMemberFunc::NontrivialMembers => true,
 
         // The `impl Drop` for NontrivialUserDefined needs to call into the
         // user-defined destructor on C++ side.
-        SpecialMemberDefinition::NontrivialUserDefined => true,
+        SpecialMemberFunc::NontrivialUserDefined => true,
 
         // TODO(b/213516512): Today the IR doesn't contain Func entries for
         // deleted functions/destructors/etc. But, maybe we should generate
         // `impl Drop` in this case? With `unreachable!`? With
         // `std::mem::forget`?
-        SpecialMemberDefinition::Deleted => false,
+        SpecialMemberFunc::Unavailable => false,
     }
 }
 
@@ -1160,7 +1160,7 @@ fn generate_record(
                         if needs_manually_drop(rs_type, ir)? {
                             // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
                             // if we can ask Rust to preserve field destruction order if the
-                            // destructor is the SpecialMemberDefinition::NontrivialMembers
+                            // destructor is the SpecialMemberFunc::NontrivialMembers
                             // case.
                             formatted = quote! { crate::rust_std::mem::ManuallyDrop<#formatted> }
                         } else {
@@ -1396,26 +1396,16 @@ fn should_derive_clone(record: &Record) -> bool {
         // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
         should_derive_copy(record)
     } else {
-        // TODO(lukasza): Deduplicate the condition below against
-        // `should_derive_copy` (most likely by getting rid of
-        // `SpecialMemberDefinition::access` and mapping non-public copy
-        // constructors into `SpecialMemberDefinition::Deleted`).
         record.is_unpin()
-            && record.copy_constructor.access == ir::AccessSpecifier::Public
-            && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
+            && record.copy_constructor == SpecialMemberFunc::Trivial
     }
 }
 
 fn should_derive_copy(record: &Record) -> bool {
     // TODO(b/202258760): Make `Copy` inclusion configurable.
-    // TODO(lukasza): Deduplicate part the condition below against
-    // `should_derive_copy` (most likely by getting rid of
-    // `SpecialMemberDefinition::access` and mapping non-public copy
-    // constructors into `SpecialMemberDefinition::Deleted`).
     record.is_unpin()
-        && record.copy_constructor.access == ir::AccessSpecifier::Public
-        && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
-        && record.destructor.definition == ir::SpecialMemberDefinition::Trivial
+        && record.copy_constructor == SpecialMemberFunc::Trivial
+        && record.destructor == ir::SpecialMemberFunc::Trivial
 }
 
 fn generate_derives(record: &Record) -> Vec<Ident> {
@@ -3228,32 +3218,23 @@ mod tests {
     }
 
     #[test]
-    fn test_copy_derives_ctor_nonpublic() {
-        let mut record = ir_record("S");
-        for access in [ir::AccessSpecifier::Protected, ir::AccessSpecifier::Private] {
-            record.copy_constructor.access = access;
-            assert_eq!(generate_derives(&record), &[""; 0]);
-        }
-    }
-
-    #[test]
     fn test_copy_derives_ctor_deleted() {
         let mut record = ir_record("S");
-        record.copy_constructor.definition = ir::SpecialMemberDefinition::Deleted;
+        record.copy_constructor = ir::SpecialMemberFunc::Unavailable;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nontrivial_members() {
         let mut record = ir_record("S");
-        record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialMembers;
+        record.copy_constructor = ir::SpecialMemberFunc::NontrivialMembers;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
     #[test]
     fn test_copy_derives_ctor_nontrivial_self() {
         let mut record = ir_record("S");
-        record.copy_constructor.definition = ir::SpecialMemberDefinition::NontrivialUserDefined;
+        record.copy_constructor = ir::SpecialMemberFunc::NontrivialUserDefined;
         assert_eq!(generate_derives(&record), &[""; 0]);
     }
 
@@ -3261,11 +3242,10 @@ mod tests {
     #[test]
     fn test_copy_derives_dtor_nontrivial_self() {
         let mut record = ir_record("S");
-        for definition in [
-            ir::SpecialMemberDefinition::NontrivialUserDefined,
-            ir::SpecialMemberDefinition::NontrivialMembers,
-        ] {
-            record.destructor.definition = definition;
+        for definition in
+            [ir::SpecialMemberFunc::NontrivialUserDefined, ir::SpecialMemberFunc::NontrivialMembers]
+        {
+            record.destructor = definition;
             assert_eq!(generate_derives(&record), &["Clone"]);
         }
     }

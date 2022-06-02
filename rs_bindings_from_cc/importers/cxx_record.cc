@@ -24,6 +24,24 @@ std::string GetClassTemplateSpecializationCcName(
       .getAsString(policy);
 }
 
+AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
+  switch (access) {
+    case clang::AS_public:
+      return kPublic;
+    case clang::AS_protected:
+      return kProtected;
+    case clang::AS_private:
+      return kPrivate;
+    case clang::AS_none:
+      CRUBIT_CHECK(
+          false &&
+          "We should never be encoding a 'none' access specifier in IR.");
+      // We have to return something. Conservatively return private so we don't
+      // inadvertently make a private member variable accessible in Rust.
+      return kPrivate;
+  }
+}
+
 }  // namespace
 
 std::optional<IR::Item> CXXRecordDeclImporter::Import(

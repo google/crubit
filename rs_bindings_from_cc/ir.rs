@@ -363,23 +363,17 @@ pub struct Field {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-pub enum SpecialMemberDefinition {
+pub enum SpecialMemberFunc {
     Trivial,
     NontrivialMembers,
     NontrivialUserDefined,
-    Deleted,
+    Unavailable,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct BaseClass {
     pub base_record_id: ItemId,
     pub offset: Option<i64>,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-pub struct SpecialMemberFunc {
-    pub definition: SpecialMemberDefinition,
-    pub access: AccessSpecifier,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

@@ -12,11 +12,8 @@
 
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
-#include "clang/Basic/Specifiers.h"
 
 namespace crubit {
-
-AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access);
 
 SpecialMemberFunc GetCopyCtorSpecialMemberFunc(
     const clang::RecordDecl& record_decl);

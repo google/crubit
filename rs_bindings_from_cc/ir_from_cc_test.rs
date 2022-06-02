@@ -429,9 +429,9 @@ fn test_record_special_member_access_specifiers() {
         quote! {
             Record {
                 rs_name: "SomeStruct" ...
-                copy_constructor: SpecialMemberFunc { ... access: Private ... },
-                move_constructor: SpecialMemberFunc { ... access: Protected ... },
-                destructor: SpecialMemberFunc { ... access: Public ... } ...
+                copy_constructor: Unavailable,
+                move_constructor: Unavailable,
+                destructor: NontrivialUserDefined ...
             }
         }
     );
@@ -456,9 +456,9 @@ fn test_record_special_member_definition() {
         quote! {
             Record {
                 rs_name: "SomeStruct" ...
-                copy_constructor: SpecialMemberFunc { definition: NontrivialUserDefined ... },
-                move_constructor: SpecialMemberFunc { definition: Deleted ... },
-                destructor: SpecialMemberFunc { definition: Trivial ... } ...
+                copy_constructor: Unavailable,
+                move_constructor: Unavailable,
+                destructor: Trivial ...
             }
         }
     );

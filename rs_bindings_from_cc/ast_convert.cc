@@ -68,54 +68,43 @@ SpecialMemberFunc GetSpecialMemberFunc(
     const clang::RecordDecl& record_decl,
     absl::FunctionRef<const clang::CXXMethodDecl*(const clang::CXXRecordDecl*)>
         getter) {
-  SpecialMemberFunc smf = {
-      .definition = SpecialMemberFunc::Definition::kTrivial,
-      .access = kPublic,
-  };
-
   const auto* cxx_record_decl =
       clang::dyn_cast<clang::CXXRecordDecl>(&record_decl);
   if (cxx_record_decl == nullptr) {
-    return smf;
+    return SpecialMemberFunc::kTrivial;
   }
 
   const clang::CXXMethodDecl* decl = getter(cxx_record_decl);
   if (decl == nullptr) {
-    smf.definition = SpecialMemberFunc::Definition::kDeleted;
-    return smf;
+    return SpecialMemberFunc::kUnavailable;
   }
 
-  smf.access = TranslateAccessSpecifier(decl->getAccess());
-  if (decl->isDeleted()) {
-    smf.definition = SpecialMemberFunc::Definition::kDeleted;
-  } else if (decl->isTrivial()) {
-    smf.definition = SpecialMemberFunc::Definition::kTrivial;
-  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, getter)) {
-    smf.definition = SpecialMemberFunc::Definition::kNontrivialMembers;
-  } else {
-    smf.definition = SpecialMemberFunc::Definition::kNontrivialUserDefined;
-  }
-  return smf;
-}
-}  // namespace
-
-AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
-  switch (access) {
+  switch (decl->getAccess()) {
     case clang::AS_public:
-      return kPublic;
+      break;
     case clang::AS_protected:
-      return kProtected;
     case clang::AS_private:
-      return kPrivate;
+      return SpecialMemberFunc::kUnavailable;
     case clang::AS_none:
       CRUBIT_CHECK(
           false &&
           "We should never be encoding a 'none' access specifier in IR.");
-      // We have to return something. Conservatively return private so we don't
-      // inadvertently make a private member variable accessible in Rust.
-      return kPrivate;
+      // We have to return something. kDeleted seems like a safe fallback.
+      return SpecialMemberFunc::kUnavailable;
+  }
+
+  if (decl->isDeleted()) {
+    return SpecialMemberFunc::kUnavailable;
+  } else if (decl->isTrivial()) {
+    return SpecialMemberFunc::kTrivial;
+  } else if (HasNoUserProvidedSpecialMember(cxx_record_decl, getter)) {
+    return SpecialMemberFunc::kNontrivialMembers;
+  } else {
+    return SpecialMemberFunc::kNontrivialUserDefined;
   }
 }
+
+}  // namespace
 
 SpecialMemberFunc GetCopyCtorSpecialMemberFunc(
     const clang::RecordDecl& record_decl) {
