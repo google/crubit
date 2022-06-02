@@ -271,15 +271,36 @@ enum TraitName<'ir> {
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
     CtorNew(Vec<RsTypeKind<'ir>>),
-    /// An Unpin constructor trait, e.g. From or Clone.
-    UnpinConstructor(TokenStream),
+    /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
+    /// types.
+    UnpinConstructor { name: TokenStream, params: Vec<RsTypeKind<'ir>> },
     /// Any other trait, e.g. Eq.
-    Other { name: TokenStream, is_unsafe_fn: bool },
+    Other { name: TokenStream, params: Vec<RsTypeKind<'ir>>, is_unsafe_fn: bool },
 }
+
+impl<'ir> TraitName<'ir> {
+    /// Returns the generic parameters in this trait name.
+    fn params(&self) -> impl Iterator<Item = &RsTypeKind<'ir>> {
+        match self {
+            Self::CtorNew(params)
+            | Self::UnpinConstructor { params, .. }
+            | Self::Other { params, .. } => params.iter(),
+        }
+    }
+
+    /// Returns the lifetimes used in this trait name.
+    pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
+        self.params().flat_map(|p| p.lifetimes())
+    }
+}
+
 impl<'ir> ToTokens for TraitName<'ir> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Self::UnpinConstructor(name) | Self::Other { name, .. } => name.to_tokens(tokens),
+            Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
+                let params = format_generic_params(params);
+                quote! {#name #params}.to_tokens(tokens)
+            }
             Self::CtorNew(arg_types) => {
                 let arg_types = format_tuple_except_singleton(arg_types);
                 quote! { ctor::CtorNew < #arg_types > }.to_tokens(tokens)
@@ -313,8 +334,6 @@ enum ImplKind<'ir> {
         /// For example, `quote!{ From<i32> }`.
         trait_name: TraitName<'ir>,
 
-        /// Where to declare lifetimes: `impl<'b>` VS `fn foo<'b>`.
-        declare_lifetimes: bool,
         /// The generic params of trait `impl` (e.g. `<'b>`). These start
         /// empty and only later are mutated into the correct value.
         trait_generic_params: TokenStream,
@@ -332,20 +351,6 @@ impl<'ir> ImplKind<'ir> {
         ImplKind::Trait {
             trait_name,
             record_name,
-            declare_lifetimes: false,
-            trait_generic_params: quote! {},
-            format_first_param_as_self,
-        }
-    }
-    fn new_generic_trait(
-        trait_name: TraitName<'ir>,
-        record_name: Ident,
-        format_first_param_as_self: bool,
-    ) -> Self {
-        ImplKind::Trait {
-            trait_name,
-            record_name,
-            declare_lifetimes: true,
             trait_generic_params: quote! {},
             format_first_param_as_self,
         }
@@ -399,13 +404,10 @@ fn api_func_shape<'ir>(
                     RsTypeKind::Record { record: lhs_record, .. } => {
                         let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
                         func_name = make_rs_ident("eq");
-                        // Not using `ImplKind::new_generic_trait`, because #rhs
-                        // should be stripped of references + because `&'a self`
-                        // needs to have its lifetime declared next to `fn`, not
-                        // next to `impl`.
                         impl_kind = ImplKind::new_trait(
                             TraitName::Other {
-                                name: quote! {PartialEq<#rhs>},
+                                name: quote! {PartialEq},
+                                params: vec![(**rhs).clone()],
                                 is_unsafe_fn: false,
                             },
                             lhs,
@@ -457,14 +459,18 @@ fn api_func_shape<'ir>(
             }
             if record.is_unpin() {
                 impl_kind = ImplKind::new_trait(
-                    TraitName::Other { name: quote! {Drop}, is_unsafe_fn: false },
+                    TraitName::Other { name: quote! {Drop}, params: vec![], is_unsafe_fn: false },
                     make_rs_ident(&record.rs_name),
                     /* format_first_param_as_self= */ true,
                 );
                 func_name = make_rs_ident("drop");
             } else {
                 impl_kind = ImplKind::new_trait(
-                    TraitName::Other { name: quote! {::ctor::PinnedDrop}, is_unsafe_fn: true },
+                    TraitName::Other {
+                        name: quote! {::ctor::PinnedDrop},
+                        params: vec![],
+                        is_unsafe_fn: true,
+                    },
                     make_rs_ident(&record.rs_name),
                     /* format_first_param_as_self= */ true,
                 );
@@ -499,7 +505,7 @@ fn api_func_shape<'ir>(
                 match param_types {
                     [] => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     [_this, params @ ..] => {
-                        impl_kind = ImplKind::new_generic_trait(
+                        impl_kind = ImplKind::new_trait(
                             TraitName::CtorNew(params.iter().cloned().collect()),
                             record_name,
                             /* format_first_param_as_self= */ false,
@@ -511,7 +517,7 @@ fn api_func_shape<'ir>(
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     1 => {
                         impl_kind = ImplKind::new_trait(
-                            TraitName::UnpinConstructor(quote! {Default}),
+                            TraitName::UnpinConstructor { name: quote! {Default}, params: vec![] },
                             record_name,
                             /* format_first_param_as_self= */ false,
                         );
@@ -524,7 +530,10 @@ fn api_func_shape<'ir>(
                                 return Ok(None);
                             } else {
                                 impl_kind = ImplKind::new_trait(
-                                    TraitName::UnpinConstructor(quote! {Clone}),
+                                    TraitName::UnpinConstructor {
+                                        name: quote! {Clone},
+                                        params: vec![],
+                                    },
                                     record_name,
                                     /* format_first_param_as_self= */ true,
                                 );
@@ -532,8 +541,11 @@ fn api_func_shape<'ir>(
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
                             let param_type = &param_types[1];
-                            impl_kind = ImplKind::new_generic_trait(
-                                TraitName::UnpinConstructor(quote! {From< #param_type >}),
+                            impl_kind = ImplKind::new_trait(
+                                TraitName::UnpinConstructor {
+                                    name: quote! {From},
+                                    params: vec![param_type.clone()],
+                                },
                                 record_name,
                                 /* format_first_param_as_self= */ false,
                             );
@@ -599,7 +611,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         let mut maybe_first_api_param = param_types.get(0);
 
         if let ImplKind::Trait {
-            trait_name: trait_name @ (TraitName::UnpinConstructor(..) | TraitName::CtorNew(..)),
+            trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
             ..
         } = &impl_kind
         {
@@ -680,7 +692,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
                     })
                 }
             }
-            ImplKind::Trait { trait_name: TraitName::UnpinConstructor(..), .. } => {
+            ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
                 // SAFETY: A user-defined constructor is not guaranteed to
                 // initialize all the fields. To make the `assume_init()` call
                 // below safe, the memory is zero-initialized first. This is a
@@ -719,11 +731,14 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         };
 
         let fn_generic_params: TokenStream;
-        if let ImplKind::Trait { declare_lifetimes: true, trait_generic_params, .. } =
-            &mut impl_kind
-        {
-            *trait_generic_params = format_generic_params(lifetimes);
-            fn_generic_params = quote! {}
+        if let ImplKind::Trait { trait_name, trait_generic_params, .. } = &mut impl_kind {
+            let trait_lifetimes: HashSet<LifetimeId> = trait_name.lifetimes().collect();
+            fn_generic_params = format_generic_params(
+                lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(&lifetime.id)),
+            );
+            *trait_generic_params = format_generic_params(
+                lifetimes.iter().filter(|lifetime| trait_lifetimes.contains(&lifetime.id)),
+            );
         } else {
             fn_generic_params = format_generic_params(lifetimes);
         }
