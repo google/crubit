@@ -5,6 +5,8 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
 
+#pragma clang lifetime_elision
+
 union EmptyUnion {};
 
 struct Nontrivial final {
@@ -12,6 +14,12 @@ struct Nontrivial final {
   Nontrivial(Nontrivial&&);
 
   int field;
+};
+
+struct TriviallyCopyableButNontriviallyDestructible {
+  TriviallyCopyableButNontriviallyDestructible(
+      const TriviallyCopyableButNontriviallyDestructible&) = default;
+  ~TriviallyCopyableButNontriviallyDestructible() {}
 };
 
 union NonEmptyUnion {
@@ -24,6 +32,11 @@ union NonEmptyUnion {
 union NonCopyUnion {
   bool trivial_member;
   Nontrivial nontrivial_member;
+};
+
+union NonCopyUnion2 {
+  bool trivial_member;
+  TriviallyCopyableButNontriviallyDestructible nontrivial_member;
 };
 
 union UnionWithOpaqueField {

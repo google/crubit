@@ -1377,18 +1377,30 @@ fn generate_record(
 }
 
 fn should_derive_clone(record: &Record) -> bool {
-    record.is_unpin()
-        && record.copy_constructor.access == ir::AccessSpecifier::Public
-        && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
-        // Unions are Copy/Clone only if all their data members are.
-        // TODO(b/233604311): Properly detect if imported fields are Copy/Clone. The code below assumes that only opaque fields are non trivial.
-        && (!record.is_union || record.fields.iter().all(|f| f.type_.is_ok()))
+    if record.is_union {
+        // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
+        should_derive_copy(record)
+    } else {
+        // TODO(lukasza): Deduplicate the condition below against
+        // `should_derive_copy` (most likely by getting rid of
+        // `SpecialMemberDefinition::access` and mapping non-public copy
+        // constructors into `SpecialMemberDefinition::Deleted`).
+        record.is_unpin()
+            && record.copy_constructor.access == ir::AccessSpecifier::Public
+            && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
+    }
 }
 
 fn should_derive_copy(record: &Record) -> bool {
     // TODO(b/202258760): Make `Copy` inclusion configurable.
-    record.destructor.definition == ir::SpecialMemberDefinition::Trivial
-        && should_derive_clone(record)
+    // TODO(lukasza): Deduplicate part the condition below against
+    // `should_derive_copy` (most likely by getting rid of
+    // `SpecialMemberDefinition::access` and mapping non-public copy
+    // constructors into `SpecialMemberDefinition::Deleted`).
+    record.is_unpin()
+        && record.copy_constructor.access == ir::AccessSpecifier::Public
+        && record.copy_constructor.definition == SpecialMemberDefinition::Trivial
+        && record.destructor.definition == ir::SpecialMemberDefinition::Trivial
 }
 
 fn generate_derives(record: &Record) -> Vec<Ident> {
@@ -4403,7 +4415,6 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[derive(Clone)]
                 #[repr(C)]
                 pub union UnionWithNontrivialField {
                     pub trivial_field: i32,
