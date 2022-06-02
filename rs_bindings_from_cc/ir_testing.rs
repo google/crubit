@@ -81,12 +81,21 @@ pub fn ir_record(name: &str) -> Record {
 /// Retrieves the function with the given name.
 /// Panics if no such function could be found.
 pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
-    for item in ir.items() {
-        if let Item::Func(func) = item {
-            if func.name == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
-                return func;
-            }
+    for func in ir.functions() {
+        if func.name == ir::UnqualifiedIdentifier::Identifier(ir_id(name)) {
+            return func;
         }
     }
     panic!("Didn't find function with name {}", name);
+}
+
+/// Retrieves the `Record` with the given name.
+/// Panics if no such record could be found.
+pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
+    for record in ir.records() {
+        if &record.cc_name == cc_name {
+            return record;
+        }
+    }
+    panic!("Didn't find record with cc_name {}", cc_name);
 }

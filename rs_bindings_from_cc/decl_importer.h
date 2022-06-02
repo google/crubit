@@ -136,12 +136,7 @@ class ImportContext {
   virtual absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-      bool nullable = true) const = 0;
-
-  // Converts `type` into a MappedType, after first importing the Record behind
-  // the template instantiation.
-  virtual absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
-      const clang::TemplateSpecializationType* type) = 0;
+      bool nullable = true) = 0;
 
   // Marks `decl` as successfully imported.  Other pieces of code can check
   // HasBeenAlreadySuccessfullyImported to avoid introducing dangling ItemIds

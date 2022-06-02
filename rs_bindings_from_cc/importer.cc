@@ -636,7 +636,7 @@ absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
 absl::StatusOr<MappedType> Importer::ConvertType(
     const clang::Type* type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-    bool nullable) const {
+    bool nullable) {
   // Qualifiers are handled separately in ConvertQualType().
   std::string type_string = clang::QualType(type, 0).getAsString();
 
@@ -741,6 +741,9 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
+  } else if (const auto* tst_type =
+                 type->getAs<clang::TemplateSpecializationType>()) {
+    return ConvertTemplateSpecializationType(tst_type);
   } else if (const auto* subst_type =
                  type->getAs<clang::SubstTemplateTypeParmType>()) {
     return ConvertQualType(subst_type->getReplacementType(), lifetimes);
@@ -758,7 +761,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
 absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-    bool nullable) const {
+    bool nullable) {
   std::string type_string = qual_type.getAsString();
   absl::StatusOr<MappedType> type =
       ConvertType(qual_type.getTypePtr(), lifetimes, nullable);

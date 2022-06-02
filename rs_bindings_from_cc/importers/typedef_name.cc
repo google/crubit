@@ -32,17 +32,9 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
       ictx_.GetTranslatedIdentifier(typedef_name_decl);
   CRUBIT_CHECK(identifier.has_value());  // This should never happen.
 
-  absl::StatusOr<MappedType> underlying_type;
-  // TODO(b/228868369): Move this "if" into the generic TypeMapper::ConvertType.
-  // This will extend support for template instantiations outside type aliases.
-  if (const auto* tst_type = typedef_name_decl->getUnderlyingType()
-                                 ->getAs<clang::TemplateSpecializationType>()) {
-    underlying_type = ictx_.ConvertTemplateSpecializationType(tst_type);
-  } else {
-    std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
-    underlying_type = ictx_.ConvertQualType(
-        typedef_name_decl->getUnderlyingType(), no_lifetimes);
-  }
+  std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
+  absl::StatusOr<MappedType> underlying_type = ictx_.ConvertQualType(
+      typedef_name_decl->getUnderlyingType(), no_lifetimes);
   if (underlying_type.ok()) {
     if (const auto* tag_decl = type->getAsTagDecl();
         tag_decl && tag_decl->getDeclContext() == decl_context &&

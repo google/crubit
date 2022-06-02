@@ -907,10 +907,10 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
           }
         }
     );
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
     // Make sure the instantiation of the class template appears exactly once in the
     // `top_level_item_ids`.
-    let record = ir.records().find(|r| r.cc_name == "MyStruct<int>").unwrap();
-    assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record.id).count());
+    assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
     // Type alias for the class template specialization.
     assert_ir_matches!(
         ir,
@@ -924,13 +924,13 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
                     name: None,
                     lifetime_args: [],
                     type_args: [],
-                    decl_id: Some(ItemId(...)),
+                    decl_id: Some(ItemId(#record_id)),
                 },
                 cc_type: CcType {
                     name: None,
                     is_const: false,
                     type_args: [],
-                    decl_id: Some(ItemId(...)),
+                    decl_id: Some(ItemId(#record_id)),
                 },
             } ...
           }
@@ -947,7 +947,7 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
             doc_comment: Some("Doc comment of GetValue method."), ...
             is_inline: true, ...
             member_func_metadata: Some(MemberFuncMetadata {
-                record_id: ItemId(...),
+                record_id: ItemId(#record_id),
                 instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
             }), ...
           }
@@ -992,10 +992,6 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             // Doc comment of MyTypeAlias.
             using MyTypeAlias = MyStruct<int>; "#,
     )?;
-    // Make sure the explicit specialization of the struct template appears exactly
-    // once in the `top_level_item_ids`.
-    let record = ir.records().find(|r| r.cc_name == "MyStruct<int>").unwrap();
-    assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record.id).count());
     // Instantiation of the struct template based on the specialization for T=int:
     assert_ir_matches!(
         ir,
@@ -1018,6 +1014,10 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           }
         }
     );
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    // Make sure the explicit specialization of the struct template appears exactly
+    // once in the `top_level_item_ids`.
+    assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
     // Instance method inside the struct template:
     assert_ir_matches!(
         ir,
@@ -1029,7 +1029,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
             is_inline: true, ...
             member_func_metadata: Some(MemberFuncMetadata {
-                record_id: ItemId(...),
+                record_id: ItemId(#record_id),
                 instance_method_metadata: Some(InstanceMethodMetadata { ... }), ...
             }), ...
           }
@@ -1231,7 +1231,187 @@ fn test_subst_template_type_parm_pack_type() -> Result<()> {
 }
 
 #[test]
-fn test_no_instantiation_of_template_only_used_in_private_field() -> Result<()> {
+fn test_fully_instantiated_template_in_function_return_type() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+
+            template <typename T>
+            struct MyStruct { T value; };
+
+            MyStruct<int> MyFunction(); "#,
+    )?;
+    // Instantiation of the struct template:
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Record {
+            rs_name: "__CcTemplateInst8MyStructIiE", ...
+            cc_name: "MyStruct<int>", ...
+            owning_target: BazelLabel("//test:testing_target"), ...
+          }
+        }
+    );
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    // Function that used the class template as a return type.
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Func {
+            name: "MyFunction",
+            owning_target: BazelLabel("//test:testing_target"), ...
+            return_type: MappedType {
+                rs_type: RsType {
+                    name: None,
+                    lifetime_args: [],
+                    type_args: [],
+                    decl_id: Some(ItemId(#record_id)),
+                },
+                cc_type: CcType {
+                    name: None,
+                    is_const: false,
+                    type_args: [],
+                    decl_id: Some(ItemId(#record_id)),
+                },
+            }, ...
+            params: [], ...
+            is_inline: false, ...
+            member_func_metadata: None, ...
+            has_c_calling_convention: true, ...
+            is_member_or_descendant_of_class_template: false, ...
+          }
+        }
+    );
+    Ok(())
+}
+
+#[test]
+fn test_fully_instantiated_template_in_function_param_type() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+
+            template <typename T>
+            struct MyStruct { T value; };
+
+            void MyFunction(const MyStruct<int>& my_param); "#,
+    )?;
+    // Instantiation of the struct template:
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Record {
+            rs_name: "__CcTemplateInst8MyStructIiE", ...
+            cc_name: "MyStruct<int>", ...
+            owning_target: BazelLabel("//test:testing_target"), ...
+          }
+        }
+    );
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    // Function that used the class template as a param type:
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Func {
+            name: "MyFunction",
+            owning_target: BazelLabel("//test:testing_target"), ...
+            params: [FuncParam {
+                type_: MappedType {
+                    rs_type: RsType {
+                        name: Some("&"),
+                        lifetime_args: [LifetimeId(...)],
+                        type_args: [RsType {
+                            name: None,
+                            lifetime_args: [],
+                            type_args: [],
+                            decl_id: Some(ItemId(#record_id)),
+                        }],
+                        decl_id: None,
+                    },
+                    cc_type: CcType {
+                        name: Some("&"),
+                        is_const: false,
+                        type_args: [CcType {
+                            name: None,
+                            is_const: true,
+                            type_args: [],
+                            decl_id: Some(ItemId(#record_id)),
+                        }],
+                        decl_id: None,
+                    },
+                },
+                identifier: "my_param",
+            }], ...
+            is_inline: false, ...
+            member_func_metadata: None, ...
+            has_c_calling_convention: true, ...
+            is_member_or_descendant_of_class_template: false, ...
+          }
+        }
+    );
+    Ok(())
+}
+
+#[test]
+fn test_fully_instantiated_template_in_public_field() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            template <typename T>
+            struct MyTemplate { T field; };
+
+            class MyStruct {
+             public:
+              MyTemplate<int> public_field;
+            }; "#,
+    )?;
+    // Instantiation of the struct template:
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Record {
+            rs_name: "__CcTemplateInst10MyTemplateIiE", ...
+            cc_name: "MyTemplate<int>", ...
+            owning_target: BazelLabel("//test:testing_target"), ...
+          }
+        }
+    );
+    let record_id = retrieve_record(&ir, "MyTemplate<int>").id;
+    // Struct that used the class template as a type of a public field:
+    assert_ir_matches!(
+        ir,
+        quote! {
+               Record {
+                   rs_name: "MyStruct",
+                   cc_name: "MyStruct", ...
+                   owning_target: BazelLabel("//test:testing_target"), ...
+                   fields: [Field {
+                       identifier: Some("public_field"), ...
+                       type_: Ok(MappedType {
+                           rs_type: RsType {
+                               name: None,
+                               lifetime_args: [],
+                               type_args: [],
+                               decl_id: Some(ItemId(#record_id)),
+                           },
+                           cc_type: CcType {
+                               name: None,
+                               is_const: false,
+                               type_args: [],
+                               decl_id: Some(ItemId(#record_id)),
+                           },
+                       }),
+                       access: Public,
+                       offset: 0,
+                       size: 32,
+                       is_no_unique_address: false,
+                       is_bitfield: false,
+                   }], ...
+               }
+        }
+    );
+    Ok(())
+}
+
+#[test]
+fn test_fully_instantiated_template_in_private_field() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision
             template <typename T>
@@ -1245,7 +1425,11 @@ fn test_no_instantiation_of_template_only_used_in_private_field() -> Result<()> 
     // There should be no instantiated template, just because of the private field.
     // To some extent this test is an early enforcement of the long-term plan for
     // b/226580208 and <internal link>.
-    assert_ir_not_matches!(ir, quote! { "field" });
+    //
+    // TODO(b/228868369): All private fields should be emitted as opaque blobs of bytes.
+    // After this is fixed, we should change the undesired test assertion below to the
+    // desirable `assert_ir_not_matches`.
+    assert_ir_matches!(ir, quote! { "field" });
     Ok(())
 }
 
@@ -2531,14 +2715,14 @@ fn test_unsupported_item_has_item_id() {
     let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
     let unsupported =
         ir.unsupported_items().find(|i| i.name == "SomeStruct::NestedStruct").unwrap();
-    assert_ne!(unsupported.id, ItemId(0));
+    assert_ne!(unsupported.id, ItemId::new_for_testing(0));
 }
 
 #[test]
 fn test_comment_has_item_id() {
     let ir = ir_from_cc("// Comment").unwrap();
     let comment = ir.comments().find(|i| i.text == "Comment").unwrap();
-    assert_ne!(comment.id, ItemId(0));
+    assert_ne!(comment.id, ItemId::new_for_testing(0));
 }
 
 #[test]
@@ -2546,7 +2730,7 @@ fn test_function_has_item_id() {
     let ir = ir_from_cc("int foo();").unwrap();
     let function =
         ir.functions().find(|i| i.name == UnqualifiedIdentifier::Identifier(ir_id("foo"))).unwrap();
-    assert_ne!(function.id, ItemId(0));
+    assert_ne!(function.id, ItemId::new_for_testing(0));
 }
 
 #[test]
@@ -3010,7 +3194,7 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
     }"#,
     )
     .unwrap();
-    let item_id = proc_macro2::Literal::usize_unsuffixed(ir.top_level_item_ids().next().unwrap().0);
+    let item_id = ir.top_level_item_ids().next().unwrap();
 
     assert_ir_matches!(
         ir,

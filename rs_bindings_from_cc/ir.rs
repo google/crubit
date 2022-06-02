@@ -218,7 +218,19 @@ impl fmt::Debug for Operator {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
 #[serde(transparent)]
-pub struct ItemId(pub usize);
+pub struct ItemId(usize);
+
+impl ItemId {
+    pub fn new_for_testing(value: usize) -> Self {
+        Self(value)
+    }
+}
+
+impl ToTokens for ItemId {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        proc_macro2::Literal::usize_unsuffixed(self.0).to_tokens(tokens)
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]

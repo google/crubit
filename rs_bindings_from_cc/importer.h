@@ -76,9 +76,7 @@ class Importer : public ImportContext {
   absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-      bool nullable = true) const override;
-  absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
-      const clang::TemplateSpecializationType* type) override;
+      bool nullable = true) override;
   void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const override;
@@ -102,8 +100,13 @@ class Importer : public ImportContext {
   absl::StatusOr<MappedType> ConvertType(
       const clang::Type* type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
-      bool nullable) const;
+      bool nullable);
   absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
+
+  // Converts `type` into a MappedType, after first importing the Record behind
+  // the template instantiation.
+  absl::StatusOr<MappedType> ConvertTemplateSpecializationType(
+      const clang::TemplateSpecializationType* type);
 
   std::vector<std::unique_ptr<DeclImporter>> decl_importers_;
   std::unique_ptr<clang::MangleContext> mangler_;
