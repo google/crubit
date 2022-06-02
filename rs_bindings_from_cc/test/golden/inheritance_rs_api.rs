@@ -48,11 +48,15 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0)
 // Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported type: && without lifetime
 
 #[ctor::recursively_pinned]
-#[repr(C)]
+#[repr(C, align(8))]
 pub struct Base1 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
-    b1_1_: i64,
-    b1_2_: u8,
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    b1_1_: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    b1_2_: [crate::rust_std::mem::MaybeUninit<u8>; 8],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
@@ -77,10 +81,12 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1)
 // Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported type: && without lifetime
 
 #[ctor::recursively_pinned]
-#[repr(C)]
+#[repr(C, align(2))]
 pub struct Base2 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
-    b2_1_: i16,
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    b2_1_: [crate::rust_std::mem::MaybeUninit<u8>; 2],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 

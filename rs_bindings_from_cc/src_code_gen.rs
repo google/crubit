@@ -2934,12 +2934,14 @@ mod tests {
             rs_api,
             quote! {
                 #[derive(Clone, Copy)]
-                #[repr(C)]
+                #[repr(C, align(4))]
                 pub struct SomeStruct {
                     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
                     pub public_int: i32,
-                    protected_int: i32,
-                    private_int: i32,
+                    #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
+                    protected_int: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                    #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
+                    private_int: [crate::rust_std::mem::MaybeUninit<u8>; 4],
                 }
             }
         );
@@ -4276,10 +4278,11 @@ mod tests {
             rs_api,
             quote! {
                 #[derive(Clone, Copy)]
-                #[repr(C)]
+                #[repr(C, align(8))]
                 pub union SomeUnionWithPrivateFields {
                     pub public_field: i32,
-                    private_field: i64,
+                    #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
+                    private_field: [crate::rust_std::mem::MaybeUninit<u8>; 8],
                 }
             }
         );

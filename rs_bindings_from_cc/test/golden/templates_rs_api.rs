@@ -34,10 +34,12 @@ pub type AliasToTemplateWithTwoParams = crate::__CcTemplateInst21TemplateWithTwo
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
 #[ctor::recursively_pinned]
-#[repr(C)]
+#[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIiE {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
-    value_: i32,
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    value_: [crate::rust_std::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<int>"),

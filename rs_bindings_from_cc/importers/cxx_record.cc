@@ -168,13 +168,28 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
   const clang::ASTRecordLayout& layout =
       ictx_.ctx_.getASTRecordLayout(record_decl);
   for (const clang::FieldDecl* field_decl : record_decl->fields()) {
-    std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
-    absl::StatusOr<MappedType> type =
-        ictx_.ConvertQualType(field_decl->getType(), no_lifetimes);
-
     clang::AccessSpecifier access = field_decl->getAccess();
     if (access == clang::AS_none) {
       access = default_access;
+    }
+
+    std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
+    absl::StatusOr<MappedType> type;
+    switch (access) {
+      case clang::AS_public:
+        type = ictx_.ConvertQualType(field_decl->getType(), no_lifetimes);
+        break;
+      case clang::AS_protected:
+      case clang::AS_private:
+      case clang::AS_none:
+        // As a performance optimization (i.e. to keep the generated code small)
+        // we can emit private fields as opaque blobs of bytes.  This may avoid
+        // the need to include supporting types in the generated code (e.g.
+        // avoiding extra template instantiations).  See also b/226580208 and
+        // <internal link>.
+        type = absl::UnavailableError(
+            "Types of non-public C++ fields can be elided away");
+        break;
     }
 
     std::optional<Identifier> field_name =

@@ -18,10 +18,12 @@ use ::std as rust_std;
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #[derive(Clone, Copy)]
-#[repr(C)]
+#[repr(C, align(4))]
 pub struct SomeClass {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
-    field_: i32,
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    field_: [crate::rust_std::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 

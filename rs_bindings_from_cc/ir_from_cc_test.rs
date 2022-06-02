@@ -1425,11 +1425,27 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
     // There should be no instantiated template, just because of the private field.
     // To some extent this test is an early enforcement of the long-term plan for
     // b/226580208 and <internal link>.
-    //
-    // TODO(b/228868369): All private fields should be emitted as opaque blobs of bytes.
-    // After this is fixed, we should change the undesired test assertion below to the
-    // desirable `assert_ir_not_matches`.
-    assert_ir_matches!(ir, quote! { "field" });
+    assert_ir_not_matches!(ir, quote! { "field" });
+    // Struct that used the class template as a type of a private field:
+    assert_ir_matches!(
+        ir,
+        quote! {
+               Record {
+                   rs_name: "MyStruct",
+                   cc_name: "MyStruct", ...
+                   owning_target: BazelLabel("//test:testing_target"), ...
+                   fields: [Field {
+                       identifier: Some("private_field_"), ...
+                       type_: Err("Types of non-public C++ fields can be elided away"), ...
+                       access: Private,
+                       offset: 0,
+                       size: 32,
+                       is_no_unique_address: false,
+                       is_bitfield: false,
+                   }], ...
+               }
+        }
+    );
     Ok(())
 }
 
