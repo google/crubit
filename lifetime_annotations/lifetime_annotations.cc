@@ -158,7 +158,14 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
       return ValueLifetimes::Create(
           param_type,
           [this](clang::QualType, llvm::StringRef) -> llvm::Expected<Lifetime> {
-            if (!elision_enabled) {
+            // As a special-case, lifetime is always inferred for the `this`
+            // parameter for destructors. The obvious lifetime is definitionally
+            // correct in this case: the object must be valid for the duration
+            // of the call, or else the behavior is undefined. So we can infer
+            // safely even if elision is disabled.
+            if (!elision_enabled &&
+                func->getDeclName().getNameKind() !=
+                    clang::DeclarationName::CXXDestructorName) {
               return llvm::createStringError(
                   llvm::inconvertibleErrorCode(),
                   absl::StrCat("Lifetime elision not enabled for '",

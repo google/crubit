@@ -61,7 +61,8 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     catch_unwind(|| {
         // It is ok to abort here.
         let Bindings { rs_api, rs_api_impl } =
-            generate_bindings(json, crubit_support_path, &rustfmt_exe_path, &rustfmt_config_path).unwrap();
+            generate_bindings(json, crubit_support_path, &rustfmt_exe_path, &rustfmt_config_path)
+                .unwrap();
         FfiBindings {
             rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
             rs_api_impl: FfiU8SliceBox::from_boxed_slice(
@@ -652,7 +653,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         if impl_kind.format_first_param_as_self() {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            let self_decl = first_api_param.format_as_self_param(func, ir).with_context(|| {
+            let self_decl = first_api_param.format_as_self_param().with_context(|| {
                 format!("Failed to format as `self` param: {:?}", first_api_param)
             })?;
             // Presence of element #0 is verified by `ok_or_else` on
@@ -1994,32 +1995,13 @@ impl<'ir> RsTypeKind<'ir> {
     /// `&'a mut self`.
     ///
     /// If this is !Unpin, however, it uses `self: Pin<&mut Self>` instead.
-    pub fn format_as_self_param(&self, func: &Func, ir: &IR) -> Result<TokenStream> {
+    pub fn format_as_self_param(&self) -> Result<TokenStream> {
         let referent;
         let mutability;
         let lifetime;
         match self {
-            RsTypeKind::Pointer { pointee, mutability: pointer_mutability } => {
-                if func.name != UnqualifiedIdentifier::Destructor {
-                    bail!("`self` cannot be an unsafe pointer except for destructors: {:?}", self)
-                }
-                let record = func
-                    .member_func_metadata
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Destructors must be member functions: {:?}", func))?
-                    .find_record(ir)?;
-                if !pointee.is_record(record) {
-                    bail!("`self` is a pointer to the wrong type for this destructor: {:?}", self)
-                }
-
-                // Even in C++ it is UB to retain `this` pointer and dereference it
-                // after a destructor runs. Therefore it is safe to use `&self` or
-                // `&mut self` in Rust even if IR represents `__this` as a Rust
-                // pointer (e.g. when lifetime annotations are missing - lifetime
-                // annotations are required to represent it as a Rust reference).
-                referent = pointee;
-                mutability = pointer_mutability;
-                lifetime = quote! {};
+            RsTypeKind::Pointer { .. } => {
+                bail!("`self` cannot be an unsafe pointer: {:?}", self)
             }
             RsTypeKind::Reference {
                 referent: reference_pointee,
@@ -4698,7 +4680,7 @@ mod tests {
             quote! {
                 impl ::ctor::PinnedDrop for UserDefinedDestructor {
                     #[inline(always)]
-                    unsafe fn pinned_drop(self: crate::rust_std::pin::Pin<&mut Self>) {
+                    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
                         crate::detail::__rust_thunk___ZN21UserDefinedDestructorD1Ev(self)
                     }
                 }
@@ -4736,7 +4718,7 @@ mod tests {
             quote! {
                 impl ::ctor::PinnedDrop for NontrivialMembers {
                     #[inline(always)]
-                    unsafe fn pinned_drop(self: crate::rust_std::pin::Pin<&mut Self>) {
+                    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
                         crate::detail::__rust_thunk___ZN17NontrivialMembersD1Ev(self)
                     }
                 }
@@ -5565,7 +5547,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                unsafe fn pinned_drop(self: crate::rust_std::pin::Pin<&mut Self>) { ... }
+                unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) { ... }
             }
         );
         Ok(())

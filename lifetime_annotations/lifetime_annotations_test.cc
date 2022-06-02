@@ -212,6 +212,16 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Method) {
               IsOkAndHolds(LifetimesAre({{"S::method", "a: b, c -> (a, a)"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_Destructor) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"cc(
+                // Note: this works even without #pragma clang lifetime_elision
+                struct S {
+                  ~S();
+                };
+              )cc"),
+              IsOkAndHolds(LifetimesAre({{"S::~S", "a:"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_ExplicitlyDefaultedCtor) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
           #pragma clang lifetime_elision

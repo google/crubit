@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:no_elided_lifetimes_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -63,6 +63,31 @@ impl S {
     }
 }
 
+#[ctor::recursively_pinned(PinnedDrop)]
+#[repr(C)]
+pub struct TriviallyCopyableButNontriviallyDestructible {
+    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
+    crate::TriviallyCopyableButNontriviallyDestructible
+);
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=15
+// Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::operator=':
+// Bindings for this kind of operator are not supported
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=16
+// Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
+    }
+}
+
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut i32) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
@@ -88,6 +113,12 @@ mod detail {
             p1: *mut i32,
             p2: *mut i32,
         ) -> *mut i32;
+        #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
+        pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<'a>(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
+        );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut i32);
     }
@@ -105,4 +136,17 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_all!(crate::S: Drop);
+};
+
+const _: () =
+    assert!(rust_std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+const _: () =
+    assert!(rust_std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+const _: () = {
+    static_assertions::assert_not_impl_all!(
+        crate::TriviallyCopyableButNontriviallyDestructible: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
 };

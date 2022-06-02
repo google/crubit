@@ -26,8 +26,24 @@ extern "C" class S& __rust_thunk___ZN1SaSERKS_(class S* __this,
                                                const class S& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" class TriviallyCopyableButNontriviallyDestructible&
+__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
+    class TriviallyCopyableButNontriviallyDestructible* __this,
+    const class TriviallyCopyableButNontriviallyDestructible& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void
+__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
+    class TriviallyCopyableButNontriviallyDestructible* __this,
+    const class TriviallyCopyableButNontriviallyDestructible& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 
 static_assert(sizeof(class S) == 1);
 static_assert(alignof(class S) == 1);
+
+static_assert(sizeof(class TriviallyCopyableButNontriviallyDestructible) == 1);
+static_assert(alignof(class TriviallyCopyableButNontriviallyDestructible) == 1);
 
 #pragma clang diagnostic pop
