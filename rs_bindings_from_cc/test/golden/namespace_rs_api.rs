@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:namespace_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -28,25 +28,77 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::S
     );
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=9
+    // rs_bindings_from_cc/test/golden/namespace.h;l=11
     // Error while generating bindings for item 'S::S':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+    // Cannot generate bindings for overloaded function
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=9
-    // Error while generating bindings for item 'S::S':
-    // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+    impl<'b> ctor::CtorNew<&'b crate::test_namespace_bindings::S> for S {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: &'b crate::test_namespace_bindings::S) -> Self::CtorType {
+            let __param_0 = args;
+            ctor::FnCtor::new(
+                move |dest: crate::rust_std::pin::Pin<
+                    &mut crate::rust_std::mem::MaybeUninit<Self>,
+                >| {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1ERKS0_(
+                            crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                            __param_0,
+                        );
+                    }
+                },
+            )
+        }
+    }
+    impl<'b> ctor::CtorNew<(&'b crate::test_namespace_bindings::S,)> for S {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: (&'b crate::test_namespace_bindings::S,)) -> Self::CtorType {
+            let (arg,) = args;
+            <Self as ctor::CtorNew<&'b crate::test_namespace_bindings::S>>::ctor_new(arg)
+        }
+    }
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=9
-    // Error while generating bindings for item 'test_namespace_bindings::S::S':
-    // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings::S &&': Unsupported type: && without lifetime
+    impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::test_namespace_bindings::S>> for S {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(
+            args: ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
+        ) -> Self::CtorType {
+            let __param_0 = args;
+            ctor::FnCtor::new(
+                move |dest: crate::rust_std::pin::Pin<
+                    &mut crate::rust_std::mem::MaybeUninit<Self>,
+                >| {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1EOS0_(
+                            crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                            __param_0,
+                        );
+                    }
+                },
+            )
+        }
+    }
+    impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,)> for S {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(
+            args: (ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,),
+        ) -> Self::CtorType {
+            let (arg,) = args;
+            <Self as ctor::CtorNew<ctor::RvalueReference<'b,crate::test_namespace_bindings::S>>>::ctor_new(arg)
+        }
+    }
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=9
+    // rs_bindings_from_cc/test/golden/namespace.h;l=11
     // Error while generating bindings for item 'S::operator=':
     // Bindings for this kind of operator are not supported
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=9
-    // Error while generating bindings for item 'test_namespace_bindings::S::operator=':
-    // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings::S &&': Unsupported type: && without lifetime
+    // rs_bindings_from_cc/test/golden/namespace.h;l=11
+    // Error while generating bindings for item 'S::operator=':
+    // Bindings for this kind of operator are not supported
 
     /// Free comment inside namespace
     #[inline(always)]
@@ -93,25 +145,87 @@ pub mod test_namespace_bindings_reopened_0 {
             crate::test_namespace_bindings_reopened::inner::S
         );
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=29
+        // rs_bindings_from_cc/test/golden/namespace.h;l=31
         // Error while generating bindings for item 'S::S':
-        // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+        // Cannot generate bindings for overloaded function
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=29
-        // Error while generating bindings for item 'S::S':
-        // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+        impl<'b> ctor::CtorNew<&'b crate::test_namespace_bindings_reopened::inner::S> for S {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: &'b crate::test_namespace_bindings_reopened::inner::S,
+            ) -> Self::CtorType {
+                let __param_0 = args;
+                ctor::FnCtor::new(
+                    move |dest: crate::rust_std::pin::Pin<
+                        &mut crate::rust_std::mem::MaybeUninit<Self>,
+                    >| {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1ERKS1_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                        }
+                    },
+                )
+            }
+        }
+        impl<'b> ctor::CtorNew<(&'b crate::test_namespace_bindings_reopened::inner::S,)> for S {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: (&'b crate::test_namespace_bindings_reopened::inner::S,),
+            ) -> Self::CtorType {
+                let (arg,) = args;
+                <Self as ctor::CtorNew<&'b crate::test_namespace_bindings_reopened::inner::S>>::ctor_new(arg)
+            }
+        }
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=29
-        // Error while generating bindings for item 'test_namespace_bindings_reopened::inner::S::S':
-        // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings_reopened::inner::S &&': Unsupported type: && without lifetime
+        impl<'b>
+            ctor::CtorNew<
+                ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+            > for S
+        {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+            ) -> Self::CtorType {
+                let __param_0 = args;
+                ctor::FnCtor::new(
+                    move |dest: crate::rust_std::pin::Pin<
+                        &mut crate::rust_std::mem::MaybeUninit<Self>,
+                    >| {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                        }
+                    },
+                )
+            }
+        }
+        impl<'b>
+            ctor::CtorNew<(
+                ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+            )> for S
+        {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: (
+                    ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+                ),
+            ) -> Self::CtorType {
+                let (arg,) = args;
+                <Self as ctor::CtorNew<
+                    ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+                >>::ctor_new(arg)
+            }
+        }
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=29
+        // rs_bindings_from_cc/test/golden/namespace.h;l=31
         // Error while generating bindings for item 'S::operator=':
         // Bindings for this kind of operator are not supported
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=29
-        // Error while generating bindings for item 'test_namespace_bindings_reopened::inner::S::operator=':
-        // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings_reopened::inner::S &&': Unsupported type: && without lifetime
+        // rs_bindings_from_cc/test/golden/namespace.h;l=31
+        // Error while generating bindings for item 'S::operator=':
+        // Bindings for this kind of operator are not supported
     }
 
     // namespace inner
@@ -151,6 +265,14 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1ERKS0_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+            __param_0: &'b crate::test_namespace_bindings::S,
+        );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
+        );
         #[link_name = "_ZN23test_namespace_bindings1fENS_1SE"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: crate::test_namespace_bindings::S,
@@ -164,6 +286,18 @@ mod detail {
         ) -> crate::test_namespace_bindings::S;
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1ERKS1_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings_reopened::inner::S,
+            >,
+            __param_0: &'b crate::test_namespace_bindings_reopened::inner::S,
+        );
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings_reopened::inner::S,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+        );
         #[link_name = "_ZN32test_namespace_bindings_reopened1yEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
         #[link_name = "_ZN32test_namespace_bindings_reopened5inner1zENS0_1SE"]

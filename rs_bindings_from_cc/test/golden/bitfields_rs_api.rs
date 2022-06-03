@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:bitfields_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -41,27 +41,96 @@ impl WithBitfields {
     }
 }
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=8
-// Error while generating bindings for item 'WithBitfields::WithBitfields':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for WithBitfields {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=8
-// Error while generating bindings for item 'WithBitfields::WithBitfields':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::WithBitfields> for WithBitfields {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::WithBitfields) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN13WithBitfieldsC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::WithBitfields,)> for WithBitfields {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::WithBitfields,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::WithBitfields>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=8
-// Error while generating bindings for item 'WithBitfields::WithBitfields':
-// Parameter #0 is not supported: Unsupported type 'struct WithBitfields &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::WithBitfields>> for WithBitfields {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::WithBitfields>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::WithBitfields>,)> for WithBitfields {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::WithBitfields>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::WithBitfields>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=8
+// rs_bindings_from_cc/test/golden/bitfields.h;l=10
 // Error while generating bindings for item 'WithBitfields::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=8
+// rs_bindings_from_cc/test/golden/bitfields.h;l=10
 // Error while generating bindings for item 'WithBitfields::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct WithBitfields &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_BITFIELDS_H_
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::WithBitfields>,
+        );
+        pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::WithBitfields>,
+            __param_0: &'b crate::WithBitfields,
+        );
+        pub(crate) fn __rust_thunk___ZN13WithBitfieldsC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::WithBitfields>,
+            __param_0: ctor::RvalueReference<'b, crate::WithBitfields>,
+        );
+    }
+}
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 

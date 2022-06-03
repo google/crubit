@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:templates_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -17,7 +17,7 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// rs_bindings_from_cc/test/golden/templates.h;l=8
+// rs_bindings_from_cc/test/golden/templates.h;l=10
 // Error while generating bindings for item 'MyTemplate':
 // Class templates are not supported yet
 
@@ -25,7 +25,7 @@ pub type MyTypeAlias = crate::__CcTemplateInst10MyTemplateIiE;
 
 pub type OtherTypeAliasInSameTarget = crate::__CcTemplateInst10MyTemplateIiE;
 
-// rs_bindings_from_cc/test/golden/templates.h;l=26
+// rs_bindings_from_cc/test/golden/templates.h;l=28
 // Error while generating bindings for item 'TemplateWithTwoParams':
 // Class templates are not supported yet
 
@@ -46,25 +46,80 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIiE
 );
 
-// rs_bindings_from_cc/test/golden/templates.h;l=9
-// Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for __CcTemplateInst10MyTemplateIiE {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=9
-// Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::__CcTemplateInst10MyTemplateIiE>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::__CcTemplateInst10MyTemplateIiE) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::__CcTemplateInst10MyTemplateIiE,)>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::__CcTemplateInst10MyTemplateIiE,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::__CcTemplateInst10MyTemplateIiE>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=9
-// Error while generating bindings for item 'MyTemplate<int>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<int> &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,)>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b,crate::__CcTemplateInst10MyTemplateIiE>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=9
+// rs_bindings_from_cc/test/golden/templates.h;l=11
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/templates.h;l=9
+// rs_bindings_from_cc/test/golden/templates.h;l=11
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<int> &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
@@ -77,8 +132,10 @@ impl __CcTemplateInst10MyTemplateIiE {
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
-    pub unsafe fn value(__this: *const crate::__CcTemplateInst10MyTemplateIiE) -> *const i32 {
-        crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(__this)
+    pub fn value<'a>(&'a self) -> &'a i32 {
+        unsafe {
+            crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(self)
+        }
     }
 }
 
@@ -93,36 +150,152 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst21TemplateWithTwoParamsIifE
 );
 
-// rs_bindings_from_cc/test/golden/templates.h;l=27
-// Error while generating bindings for item 'TemplateWithTwoParams<int, float>::TemplateWithTwoParams<int, float>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for __CcTemplateInst21TemplateWithTwoParamsIifE {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=27
-// Error while generating bindings for item 'TemplateWithTwoParams<int, float>::TemplateWithTwoParams<int, float>':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE>
+    for __CcTemplateInst21TemplateWithTwoParamsIifE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE,)>
+    for __CcTemplateInst21TemplateWithTwoParamsIifE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE>>::ctor_new(
+            arg,
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=27
-// Error while generating bindings for item 'TemplateWithTwoParams<int, float>::TemplateWithTwoParams':
-// Parameter #0 is not supported: Unsupported type 'struct TemplateWithTwoParams<int, float> &&': Unsupported type: && without lifetime
+impl<'b>
+    ctor::CtorNew<ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>>
+    for __CcTemplateInst21TemplateWithTwoParamsIifE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            },
+        )
+    }
+}
+impl<'b>
+    ctor::CtorNew<(ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>,)>
+    for __CcTemplateInst21TemplateWithTwoParamsIifE
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<
+            ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>,
+        >>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=27
+// rs_bindings_from_cc/test/golden/templates.h;l=29
 // Error while generating bindings for item 'TemplateWithTwoParams<int, float>::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/templates.h;l=27
+// rs_bindings_from_cc/test/golden/templates.h;l=29
 // Error while generating bindings for item 'TemplateWithTwoParams<int, float>::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct TemplateWithTwoParams<int, float> &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIiE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIiE,
+            >,
+            __param_0: &'b crate::__CcTemplateInst10MyTemplateIiE,
+        );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst10MyTemplateIiE,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
+        );
         pub(crate) fn __rust_thunk___ZN10MyTemplateIiE6CreateEi___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(
             value: i32,
         ) -> crate::__CcTemplateInst10MyTemplateIiE;
-        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE5valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(
-            __this: *const crate::__CcTemplateInst10MyTemplateIiE,
-        ) -> *const i32;
+        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE5valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+        >(
+            __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
+        ) -> &'a i32;
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+            __param_0: &'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+        );
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+            __param_0: ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+        );
     }
 }
 

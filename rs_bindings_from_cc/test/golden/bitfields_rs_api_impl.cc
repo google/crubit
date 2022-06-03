@@ -20,12 +20,21 @@ extern "C" void __rust_thunk___ZN13WithBitfieldsC1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN13WithBitfieldsC1EOS_(
+    class WithBitfields* __this, class WithBitfields&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN13WithBitfieldsD1Ev(
     class WithBitfields* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class WithBitfields& __rust_thunk___ZN13WithBitfieldsaSERKS_(
     class WithBitfields* __this, const class WithBitfields& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class WithBitfields& __rust_thunk___ZN13WithBitfieldsaSEOS_(
+    class WithBitfields* __this, class WithBitfields&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
