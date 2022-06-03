@@ -1,5 +1,7 @@
 # Crubit: C++/Rust Bidirectional Interop Tool
 
+[![Build status](https://badge.buildkite.com/7a57a14e68aa3a0ab70972cbf2a35fd79d342ba152fee4a5b4.svg)](https://buildkite.com/bazel/crubit)
+
 Extremely experimental interop tooling for C++ and Rust.
 
 Please don't use, this is an experiment and we don't yet know where will it take
