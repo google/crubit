@@ -1,0 +1,12 @@
+# <internal link>
+# proto-file: devtools/metadata/metadata.proto
+# proto-message: MetaData
+
+docs: {
+  # Language Platforms > Rust > C++/Rust Interop > Docs
+  doc_bug_component: 1142932
+
+  headerfooter {
+    name: "solace"
+  }
+}
