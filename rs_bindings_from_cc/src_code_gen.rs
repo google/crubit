@@ -393,9 +393,11 @@ fn api_func_shape<'ir>(
     let func_name: syn::Ident;
     match &func.name {
         UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
-            if param_types.len() != 2 {
-                bail!("Unexpected number of parameters in operator==: {:?}", func);
-            }
+            assert_eq!(
+                param_types.len(),
+                2,
+                "Unexpected number of parameters in operator==: {func:?}"
+            );
             match (&param_types[0], &param_types[1]) {
                 (
                     RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
