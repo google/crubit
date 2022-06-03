@@ -63,7 +63,6 @@ crates_repository(
             version = ">0.0.0",
         ),
         "static_assertions": crate.spec(
-            features = ["extra-traits"],
             version = ">0.0.0",
         ),
         "syn": crate.spec(
