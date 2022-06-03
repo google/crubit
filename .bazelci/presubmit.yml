@@ -4,11 +4,9 @@
 
 ---
 default_linux_targets: &default_linux_targets
-  # TODO: Make the whole repo buildable/testable with //...
-  # Targets below are only a rudimentary smoke test.
+  # TODO(b/234804076): Make the whole repo buildable/testable with //...
+  # Target below is only a rudimentary smoke test.
   - "//rs_bindings_from_cc:rs_bindings_from_cc_impl"
-  - "//rs_bindings_from_cc:ir_from_cc_test"
-  - "//rs_bindings_from_cc:src_code_gen_impl_test"
 default_linux_task: &default_linux_task
   platform: ubuntu2004
   shell_commands:
