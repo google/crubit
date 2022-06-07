@@ -242,7 +242,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::NonCopyUnion2>> for NonCopyUnion2
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
-    constant_array_field_not_yet_supported: [crate::rust_std::mem::MaybeUninit<u8>; 42],
+    pub(crate) constant_array_field_not_yet_supported: [crate::rust_std::mem::MaybeUninit<u8>; 42],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UnionWithOpaqueField"),

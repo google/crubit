@@ -1146,7 +1146,7 @@ fn generate_record(
             {
                 quote! { pub }
             } else {
-                quote! {}
+                quote! { pub(crate) }
             };
 
             let field_type = match get_field_rs_type_for_layout(field) {
@@ -2941,9 +2941,9 @@ mod tests {
                     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
                     pub public_int: i32,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                    protected_int: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                    pub(crate) protected_int: [crate::rust_std::mem::MaybeUninit<u8>; 4],
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                    private_int: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                    pub(crate) private_int: [crate::rust_std::mem::MaybeUninit<u8>; 4],
                 }
             }
         );
@@ -3087,7 +3087,7 @@ mod tests {
                 #[repr(C, align(4))]
                 pub struct StructWithUnsupportedField {
                     #[doc = " Doc comment for `my_field`.\n \n Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnsupportedField::NestedStruct': No generated bindings found for 'NestedStruct'"]
-                    my_field: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                    pub(crate) my_field: [crate::rust_std::mem::MaybeUninit<u8>; 4],
                 }
                 ...
                 const _: () = assert!(
@@ -3167,9 +3167,9 @@ mod tests {
                pub struct StructWithUnnamedMembers {
                    pub first_field: i32,
                    #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
-                   __unnamed_field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+                   pub(crate) __unnamed_field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
                    #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
-                   __unnamed_field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+                   pub(crate) __unnamed_field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
                    pub last_field: i32,
                }
                ...
@@ -3818,8 +3818,8 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C, align(8))]
                 pub struct Struct {
-                    field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
-                    field2: [crate::rust_std::mem::MaybeUninit<u8>; 2],
+                    pub(crate) field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+                    pub(crate) field2: [crate::rust_std::mem::MaybeUninit<u8>; 2],
                     pub z: i16,
                 }
             }
@@ -3861,8 +3861,8 @@ mod tests {
                 #[derive(Clone, Copy)]
                 #[repr(C, align(8))]
                 pub struct Struct {
-                    field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
-                    field2: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+                    pub(crate) field1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+                    pub(crate) field2: [crate::rust_std::mem::MaybeUninit<u8>; 8],
                 }
             }
         );
@@ -3886,7 +3886,7 @@ mod tests {
             quote! {
                 #[repr(C, align(4))]
                 pub struct Struct {
-                    field: [crate::rust_std::mem::MaybeUninit<u8>; 0],
+                    pub(crate) field: [crate::rust_std::mem::MaybeUninit<u8>; 0],
                     pub x: i32,
                 }
             }
@@ -3910,7 +3910,7 @@ mod tests {
             quote! {
                 #[repr(C)]
                 pub struct Struct {
-                    field: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+                    pub(crate) field: [crate::rust_std::mem::MaybeUninit<u8>; 1],
                 }
             }
         );
@@ -4284,7 +4284,7 @@ mod tests {
                 pub union SomeUnionWithPrivateFields {
                     pub public_field: i32,
                     #[doc = " Reason for representing this field as a blob of bytes:\n Types of non-public C++ fields can be elided away"]
-                    private_field: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+                    pub(crate) private_field: [crate::rust_std::mem::MaybeUninit<u8>; 8],
                 }
             }
         );

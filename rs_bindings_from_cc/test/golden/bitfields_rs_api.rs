@@ -30,7 +30,7 @@ pub struct WithBitfields {
     pub f5: i32,
     // f6 : 23 bits
     __bitfields4: [crate::rust_std::mem::MaybeUninit<u8>; 3],
-    f7: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    pub(crate) f7: [crate::rust_std::mem::MaybeUninit<u8>; 1],
     // f8 : 2 bits
     __bitfields6: [crate::rust_std::mem::MaybeUninit<u8>; 1],
 }

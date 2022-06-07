@@ -7,6 +7,7 @@
 
 #pragma clang lifetime_elision
 
+namespace test_namespace_bindings {
 class SomeClass final {
  public:
   void public_method();
@@ -18,5 +19,6 @@ class SomeClass final {
   static void private_static_method();
   int private_member_variable_;
 };
+}  // namespace test_namespace_bindings
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_MEMBERS_H_

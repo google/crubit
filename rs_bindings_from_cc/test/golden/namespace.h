@@ -38,4 +38,5 @@ namespace inner {
 void z(S s);
 }  // namespace inner
 }  // namespace test_namespace_bindings_reopened
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_

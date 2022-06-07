@@ -39,7 +39,7 @@ pub struct __CcTemplateInst10MyTemplateIiE {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    value_: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+    pub(crate) value_: [crate::rust_std::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("MyTemplate<int>"),

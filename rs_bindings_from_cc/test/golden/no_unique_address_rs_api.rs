@@ -27,8 +27,8 @@ use ::std as rust_std;
 pub struct Struct {
     /// Nobody would ever use a no_unique_address int/char field, this is just
     /// enough to test that the transmute is correct.
-    field1: [crate::rust_std::mem::MaybeUninit<u8>; 4],
-    field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field1: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Struct"), crate::Struct);
 impl Struct {
@@ -89,7 +89,7 @@ pub struct PaddingBetweenFields {
     pub field1: u8,
     __padding1: [crate::rust_std::mem::MaybeUninit<u8>; 3],
     /// size: 4, alignment: 4 => offset: 4
-    field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+    pub(crate) field2: [crate::rust_std::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("PaddingBetweenFields"),
@@ -224,7 +224,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 #[repr(C, align(4))]
 pub struct FieldInTailPadding {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
-    inner_struct: [crate::rust_std::mem::MaybeUninit<u8>; 5],
+    pub(crate) inner_struct: [crate::rust_std::mem::MaybeUninit<u8>; 5],
     /// offset: 5 (dsize of `s`).
     pub char_in_tail_padding_of_prev_field: u8,
 }

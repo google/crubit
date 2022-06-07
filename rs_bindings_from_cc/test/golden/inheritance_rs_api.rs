@@ -53,10 +53,10 @@ pub struct Base1 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    b1_1_: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+    pub(crate) b1_1_: [crate::rust_std::mem::MaybeUninit<u8>; 8],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    b1_2_: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+    pub(crate) b1_2_: [crate::rust_std::mem::MaybeUninit<u8>; 8],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
@@ -86,7 +86,7 @@ pub struct Base2 {
     __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    b2_1_: [crate::rust_std::mem::MaybeUninit<u8>; 2],
+    pub(crate) b2_1_: [crate::rust_std::mem::MaybeUninit<u8>; 2],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
