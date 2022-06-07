@@ -11,99 +11,125 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
-extern "C" void __rust_thunk___ZN7TrivialC1Ev(class Trivial* __this) {
+extern "C" void __rust_thunk___ZN23test_namespace_bindings7TrivialC1Ev(
+    class test_namespace_bindings::Trivial* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" void __rust_thunk___ZN7TrivialC1ERKS_(
-    class Trivial* __this, const class Trivial& __param_0) {
+extern "C" void __rust_thunk___ZN23test_namespace_bindings7TrivialC1ERKS0_(
+    class test_namespace_bindings::Trivial* __this,
+    const class test_namespace_bindings::Trivial& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN7TrivialC1EOS_(class Trivial* __this,
-                                                class Trivial&& __param_0) {
+extern "C" void __rust_thunk___ZN23test_namespace_bindings7TrivialC1EOS0_(
+    class test_namespace_bindings::Trivial* __this,
+    class test_namespace_bindings::Trivial&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN7TrivialD1Ev(class Trivial* __this) {
+extern "C" void __rust_thunk___ZN23test_namespace_bindings7TrivialD1Ev(
+    class test_namespace_bindings::Trivial* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class Trivial& __rust_thunk___ZN7TrivialaSERKS_(
-    class Trivial* __this, const class Trivial& __param_0) {
+extern "C" class test_namespace_bindings::Trivial&
+__rust_thunk___ZN23test_namespace_bindings7TrivialaSERKS0_(
+    class test_namespace_bindings::Trivial* __this,
+    const class test_namespace_bindings::Trivial& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class Trivial& __rust_thunk___ZN7TrivialaSEOS_(
-    class Trivial* __this, class Trivial&& __param_0) {
+extern "C" class test_namespace_bindings::Trivial&
+__rust_thunk___ZN23test_namespace_bindings7TrivialaSEOS0_(
+    class test_namespace_bindings::Trivial* __this,
+    class test_namespace_bindings::Trivial&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1Ev(
-    class TrivialWithDefaulted* __this) {
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1Ev(
+    class test_namespace_bindings::TrivialWithDefaulted* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1ERKS_(
-    class TrivialWithDefaulted* __this,
-    const class TrivialWithDefaulted& __param_0) {
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1ERKS0_(
+    class test_namespace_bindings::TrivialWithDefaulted* __this,
+    const class test_namespace_bindings::TrivialWithDefaulted& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class TrivialWithDefaulted&
-__rust_thunk___ZN20TrivialWithDefaultedaSERKS_(
-    class TrivialWithDefaulted* __this,
-    const class TrivialWithDefaulted& __param_0) {
+extern "C" class test_namespace_bindings::TrivialWithDefaulted&
+__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedaSERKS0_(
+    class test_namespace_bindings::TrivialWithDefaulted* __this,
+    const class test_namespace_bindings::TrivialWithDefaulted& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN20TrivialWithDefaultedC1EOS_(
-    class TrivialWithDefaulted* __this,
-    class TrivialWithDefaulted&& __param_0) {
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1EOS0_(
+    class test_namespace_bindings::TrivialWithDefaulted* __this,
+    class test_namespace_bindings::TrivialWithDefaulted&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class TrivialWithDefaulted&
-__rust_thunk___ZN20TrivialWithDefaultedaSEOS_(
-    class TrivialWithDefaulted* __this,
-    class TrivialWithDefaulted&& __param_0) {
+extern "C" class test_namespace_bindings::TrivialWithDefaulted&
+__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedaSEOS0_(
+    class test_namespace_bindings::TrivialWithDefaulted* __this,
+    class test_namespace_bindings::TrivialWithDefaulted&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN20TrivialWithDefaultedD1Ev(
-    class TrivialWithDefaulted* __this) {
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedD1Ev(
+    class test_namespace_bindings::TrivialWithDefaulted* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" void __rust_thunk___ZN15TrivialNonfinalC1Ev(
-    class TrivialNonfinal* __this) {
+extern "C" void __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1Ev(
+    class test_namespace_bindings::TrivialNonfinal* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" void __rust_thunk___ZN15TrivialNonfinalC1ERKS_(
-    class TrivialNonfinal* __this, const class TrivialNonfinal& __param_0) {
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1ERKS0_(
+    class test_namespace_bindings::TrivialNonfinal* __this,
+    const class test_namespace_bindings::TrivialNonfinal& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN15TrivialNonfinalC1EOS_(
-    class TrivialNonfinal* __this, class TrivialNonfinal&& __param_0) {
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1EOS0_(
+    class test_namespace_bindings::TrivialNonfinal* __this,
+    class test_namespace_bindings::TrivialNonfinal&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN15TrivialNonfinalD1Ev(
-    class TrivialNonfinal* __this) {
+extern "C" void __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalD1Ev(
+    class test_namespace_bindings::TrivialNonfinal* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class TrivialNonfinal& __rust_thunk___ZN15TrivialNonfinalaSERKS_(
-    class TrivialNonfinal* __this, const class TrivialNonfinal& __param_0) {
+extern "C" class test_namespace_bindings::TrivialNonfinal&
+__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSERKS0_(
+    class test_namespace_bindings::TrivialNonfinal* __this,
+    const class test_namespace_bindings::TrivialNonfinal& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class TrivialNonfinal& __rust_thunk___ZN15TrivialNonfinalaSEOS_(
-    class TrivialNonfinal* __this, class TrivialNonfinal&& __param_0) {
+extern "C" class test_namespace_bindings::TrivialNonfinal&
+__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSEOS0_(
+    class test_namespace_bindings::TrivialNonfinal* __this,
+    class test_namespace_bindings::TrivialNonfinal&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
-static_assert(sizeof(class Trivial) == 4);
-static_assert(alignof(class Trivial) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, class Trivial) == 0);
+static_assert(sizeof(class test_namespace_bindings::Trivial) == 4);
+static_assert(alignof(class test_namespace_bindings::Trivial) == 4);
+static_assert(CRUBIT_OFFSET_OF(trivial_field,
+                               class test_namespace_bindings::Trivial) == 0);
 
-static_assert(sizeof(class TrivialWithDefaulted) == 4);
-static_assert(alignof(class TrivialWithDefaulted) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialWithDefaulted) == 0);
+static_assert(sizeof(class test_namespace_bindings::TrivialWithDefaulted) == 4);
+static_assert(alignof(class test_namespace_bindings::TrivialWithDefaulted) ==
+              4);
+static_assert(
+    CRUBIT_OFFSET_OF(trivial_field,
+                     class test_namespace_bindings::TrivialWithDefaulted) == 0);
 
-static_assert(sizeof(class TrivialNonfinal) == 4);
-static_assert(alignof(class TrivialNonfinal) == 4);
-static_assert(CRUBIT_OFFSET_OF(trivial_field, class TrivialNonfinal) == 0);
+static_assert(sizeof(class test_namespace_bindings::TrivialNonfinal) == 4);
+static_assert(alignof(class test_namespace_bindings::TrivialNonfinal) == 4);
+static_assert(
+    CRUBIT_OFFSET_OF(trivial_field,
+                     class test_namespace_bindings::TrivialNonfinal) == 0);
 
 #pragma clang diagnostic pop

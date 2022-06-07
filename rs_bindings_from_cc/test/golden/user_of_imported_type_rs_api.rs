@@ -18,14 +18,18 @@ use ::std as rust_std;
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #[inline(always)]
-pub fn UsesImportedType(t: trivial_type_cc::Trivial) -> trivial_type_cc::Trivial {
-    unsafe { crate::detail::__rust_thunk___Z16UsesImportedType7Trivial(t) }
+pub fn UsesImportedType(
+    t: trivial_type_cc::test_namespace_bindings::Trivial,
+) -> trivial_type_cc::test_namespace_bindings::Trivial {
+    unsafe {
+        crate::detail::__rust_thunk___Z16UsesImportedTypeN23test_namespace_bindings7TrivialE(t)
+    }
 }
 
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct UserOfImportedType {
-    pub trivial: *mut trivial_type_cc::Trivial,
+    pub trivial: *mut trivial_type_cc::test_namespace_bindings::Trivial,
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UserOfImportedType"),
@@ -54,11 +58,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfIm
     }
 }
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=15
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=15
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // Bindings for this kind of operator are not supported
 
@@ -68,10 +72,10 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        #[link_name = "_Z16UsesImportedType7Trivial"]
-        pub(crate) fn __rust_thunk___Z16UsesImportedType7Trivial(
-            t: trivial_type_cc::Trivial,
-        ) -> trivial_type_cc::Trivial;
+        #[link_name = "_Z16UsesImportedTypeN23test_namespace_bindings7TrivialE"]
+        pub(crate) fn __rust_thunk___Z16UsesImportedTypeN23test_namespace_bindings7TrivialE(
+            t: trivial_type_cc::test_namespace_bindings::Trivial,
+        ) -> trivial_type_cc::test_namespace_bindings::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
         );

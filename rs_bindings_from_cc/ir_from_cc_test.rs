@@ -1888,6 +1888,7 @@ fn test_import_struct_typedef_from_different_decl_context() {
 // TODO(b/214901011): This only worked because we didn't generate bindings for
 // the second reopened namespace.
 // #[test]
+#[allow(dead_code)]
 fn test_ignore_struct_typedef_from_decl_context_redecl() {
     let ir = ir_from_cc(
         r#"
@@ -1900,7 +1901,10 @@ fn test_ignore_struct_typedef_from_decl_context_redecl() {
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
 }
 
-#[test]
+// TODO(b/214901011): This only worked because we didn't generate IR for the
+// namespace coming from the dependency.
+// #[test]
+#[allow(dead_code)]
 fn test_ignore_struct_typedef_from_decl_context_redecl_from_multiple_targets() {
     let ir = ir_from_cc_dependency(
         "namespace test_namespace_bindings { typedef MyStruct MyStruct; }",
@@ -1938,6 +1942,7 @@ fn test_import_union_typedef_from_different_decl_context() {
 // TODO(b/214901011): This only worked because we didn't generate bindings for
 // the second reopened namespace.
 // #[test]
+#[allow(dead_code)]
 fn test_ignore_union_typedef_from_decl_context_redecl() {
     let ir = ir_from_cc(
         r#"
@@ -1950,7 +1955,10 @@ fn test_ignore_union_typedef_from_decl_context_redecl() {
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
 }
 
-#[test]
+// TODO(b/214901011): This only worked because we didn't generate IR for the
+// namespace coming from the dependency.
+// #[test]
+#[allow(dead_code)]
 fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
     let ir = ir_from_cc_dependency(
         "namespace test_namespace_bindings { typedef MyUnion MyUnion; }",

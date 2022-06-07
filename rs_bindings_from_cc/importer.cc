@@ -311,12 +311,28 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     } else {
       decl = child->getCanonicalDecl();
     }
-    if (!IsFromCurrentTarget(decl)) continue;
 
     if (const auto* linkage_spec_decl =
             llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
       absl::c_copy(linkage_spec_decl->decls(),
                    std::back_inserter(decls_to_visit));
+    }
+
+    auto item = GetDeclItem(decl);
+    // We generated IR for top level items coming from different targets,
+    // however we shouldn't generate bindings for them, so we don't add them
+    // to ir.top_level_item_ids.
+    if (decl_context->isTranslationUnit() && !IsFromCurrentTarget(decl))
+      continue;
+    // Only add item ids for decls that can be successfully imported.
+    if (item.has_value()) {
+      auto item_id = GenerateItemId(decl);
+      // TODO(rosica): Drop this check when we start importing also other
+      // redecls, not just the canonical
+      if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
+        visited_item_ids.insert(item_id);
+        items.push_back({decl->getSourceRange(), GetDeclOrder(decl), item_id});
+      }
     }
 
     // We remove comments attached to a child decl or that are within a child
@@ -326,17 +342,6 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     }
     ordered_comments.erase(ordered_comments.lower_bound(decl->getBeginLoc()),
                            ordered_comments.upper_bound(decl->getEndLoc()));
-
-    // Only add item ids for decls that can be successfully imported.
-    if (GetDeclItem(decl)) {
-      auto item_id = GenerateItemId(decl);
-      // TODO(rosica): Drop this check when we start importing also other
-      // redecls, not just the canonical
-      if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
-        visited_item_ids.insert(item_id);
-        items.push_back({decl->getSourceRange(), GetDeclOrder(decl), item_id});
-      }
-    }
   }
 
   for (auto& [_, comment] : ordered_comments) {

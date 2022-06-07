@@ -10,7 +10,6 @@ namespace crubit {
 
 std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
-  if (!ictx_.IsFromCurrentTarget(namespace_decl)) return std::nullopt;
 
   // TODO(rosica) In order to fully enable namespaces we first need to ensure
   // that each decl Item contains information on its namespace parents.

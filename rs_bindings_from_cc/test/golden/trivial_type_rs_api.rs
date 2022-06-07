@@ -17,211 +17,259 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Implicitly defined special member functions are trivial on a struct with
-/// only trivial members.
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub struct Trivial {
-    pub trivial_field: i32,
-}
-forward_declare::unsafe_define!(forward_declare::symbol!("Trivial"), crate::Trivial);
+pub mod test_namespace_bindings {
+    /// Implicitly defined special member functions are trivial on a struct with
+    /// only trivial members.
+    #[derive(Clone, Copy)]
+    #[repr(C)]
+    pub struct Trivial {
+        pub trivial_field: i32,
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("Trivial"),
+        crate::test_namespace_bindings::Trivial
+    );
 
-impl Default for Trivial {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN7TrivialC1Ev(&mut tmp);
-            tmp.assume_init()
+    impl Default for Trivial {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings7TrivialC1Ev(&mut tmp);
+                tmp.assume_init()
+            }
         }
     }
-}
 
-impl<'b> From<ctor::RvalueReference<'b, crate::Trivial>> for Trivial {
-    #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::Trivial>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN7TrivialC1EOS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
-// Error while generating bindings for item 'Trivial::operator=':
-// Bindings for this kind of operator are not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=12
-// Error while generating bindings for item 'Trivial::operator=':
-// Bindings for this kind of operator are not supported
-
-/// Defaulted special member functions are trivial on a struct with only trivial
-/// members.
-#[derive(Clone, Copy)]
-#[repr(C)]
-pub struct TrivialWithDefaulted {
-    pub trivial_field: i32,
-}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TrivialWithDefaulted"),
-    crate::TrivialWithDefaulted
-);
-
-impl Default for TrivialWithDefaulted {
-    #[inline(always)]
-    fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1Ev(&mut tmp);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=22
-// Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Bindings for this kind of operator are not supported
-
-impl<'b> From<ctor::RvalueReference<'b, crate::TrivialWithDefaulted>> for TrivialWithDefaulted {
-    #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::TrivialWithDefaulted>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
-        unsafe {
-            crate::detail::__rust_thunk___ZN20TrivialWithDefaultedC1EOS_(&mut tmp, __param_0);
-            tmp.assume_init()
-        }
-    }
-}
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=24
-// Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-// Bindings for this kind of operator are not supported
-
-/// This struct is trivial, and therefore trivially relocatable etc., but still
-/// not safe to pass by reference as it is not final.
-#[ctor::recursively_pinned]
-#[repr(C)]
-pub struct TrivialNonfinal {
-    pub trivial_field: i32,
-}
-forward_declare::unsafe_define!(
-    forward_declare::symbol!("TrivialNonfinal"),
-    crate::TrivialNonfinal
-);
-
-impl ctor::CtorNew<()> for TrivialNonfinal {
-    type CtorType = impl ctor::Ctor<Output = Self>;
-    #[inline(always)]
-    fn ctor_new(args: ()) -> Self::CtorType {
-        let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1Ev(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+    impl<'b> From<ctor::RvalueReference<'b, crate::test_namespace_bindings::Trivial>> for Trivial {
+        #[inline(always)]
+        fn from(
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::Trivial>,
+        ) -> Self {
+            let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings7TrivialC1EOS0_(
+                    &mut tmp, __param_0,
                 );
-            },
-        )
+                tmp.assume_init()
+            }
+        }
     }
-}
 
-impl<'b> ctor::CtorNew<&'b crate::TrivialNonfinal> for TrivialNonfinal {
-    type CtorType = impl ctor::Ctor<Output = Self>;
-    #[inline(always)]
-    fn ctor_new(args: &'b crate::TrivialNonfinal) -> Self::CtorType {
-        let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1ERKS_(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
+    // rs_bindings_from_cc/test/golden/trivial_type.h;l=13
+    // Error while generating bindings for item 'Trivial::operator=':
+    // Bindings for this kind of operator are not supported
+
+    // rs_bindings_from_cc/test/golden/trivial_type.h;l=13
+    // Error while generating bindings for item 'Trivial::operator=':
+    // Bindings for this kind of operator are not supported
+
+    /// Defaulted special member functions are trivial on a struct with only trivial
+    /// members.
+    #[derive(Clone, Copy)]
+    #[repr(C)]
+    pub struct TrivialWithDefaulted {
+        pub trivial_field: i32,
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("TrivialWithDefaulted"),
+        crate::test_namespace_bindings::TrivialWithDefaulted
+    );
+
+    impl Default for TrivialWithDefaulted {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1Ev(
+                    &mut tmp,
                 );
-            },
-        )
+                tmp.assume_init()
+            }
+        }
     }
-}
-impl<'b> ctor::CtorNew<(&'b crate::TrivialNonfinal,)> for TrivialNonfinal {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+
+    // rs_bindings_from_cc/test/golden/trivial_type.h;l=23
+    // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
+    // Bindings for this kind of operator are not supported
+
+    impl<'b> From<ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialWithDefaulted>>
+        for TrivialWithDefaulted
+    {
+        #[inline(always)]
+        fn from(
+            __param_0: ctor::RvalueReference<
+                'b,
+                crate::test_namespace_bindings::TrivialWithDefaulted,
+            >,
+        ) -> Self {
+            let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1EOS0_(&mut tmp,__param_0);
+                tmp.assume_init()
+            }
+        }
+    }
+
+    // rs_bindings_from_cc/test/golden/trivial_type.h;l=25
+    // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
+    // Bindings for this kind of operator are not supported
+
+    /// This struct is trivial, and therefore trivially relocatable etc., but still
+    /// not safe to pass by reference as it is not final.
+    #[ctor::recursively_pinned]
+    #[repr(C)]
+    pub struct TrivialNonfinal {
+        pub trivial_field: i32,
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("TrivialNonfinal"),
+        crate::test_namespace_bindings::TrivialNonfinal
+    );
+
+    impl ctor::CtorNew<()> for TrivialNonfinal {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: ()) -> Self::CtorType {
+            let () = args;
+            ctor::FnCtor::new(
+                move |dest: crate::rust_std::pin::Pin<
+                    &mut crate::rust_std::mem::MaybeUninit<Self>,
+                >| {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1Ev(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+                    }
+                },
+            )
+        }
+    }
+
+    impl<'b> ctor::CtorNew<&'b crate::test_namespace_bindings::TrivialNonfinal> for TrivialNonfinal {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: &'b crate::test_namespace_bindings::TrivialNonfinal) -> Self::CtorType {
+            let __param_0 = args;
+            ctor::FnCtor::new(
+                move |dest: crate::rust_std::pin::Pin<
+                    &mut crate::rust_std::mem::MaybeUninit<Self>,
+                >| {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1ERKS0_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                    }
+                },
+            )
+        }
+    }
+    impl<'b> ctor::CtorNew<(&'b crate::test_namespace_bindings::TrivialNonfinal,)> for TrivialNonfinal {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(
+            args: (&'b crate::test_namespace_bindings::TrivialNonfinal,),
+        ) -> Self::CtorType {
+            let (arg,) = args;
+            <Self as ctor::CtorNew<&'b crate::test_namespace_bindings::TrivialNonfinal>>::ctor_new(
+                arg,
+            )
+        }
+    }
+
+    impl<'b>
+        ctor::CtorNew<ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>>
+        for TrivialNonfinal
+    {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(
+            args: ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
+        ) -> Self::CtorType {
+            let __param_0 = args;
+            ctor::FnCtor::new(
+                move |dest: crate::rust_std::pin::Pin<
+                    &mut crate::rust_std::mem::MaybeUninit<Self>,
+                >| {
+                    unsafe {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1EOS0_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                    }
+                },
+            )
+        }
+    }
+    impl<'b>
+        ctor::CtorNew<(ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,)>
+        for TrivialNonfinal
+    {
+        type CtorType = impl ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(
+            args: (ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,),
+        ) -> Self::CtorType {
+            let (arg,) = args;
+            <Self as ctor::CtorNew<
+                ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
+            >>::ctor_new(arg)
+        }
+    }
+
+    // rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    // Error while generating bindings for item 'TrivialNonfinal::operator=':
+    // Bindings for this kind of operator are not supported
+
+    // rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    // Error while generating bindings for item 'TrivialNonfinal::operator=':
+    // Bindings for this kind of operator are not supported
+
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::TrivialNonfinal,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ctor::CtorNew<&'b crate::TrivialNonfinal>>::ctor_new(arg)
+    pub fn TakesByValue(trivial: crate::test_namespace_bindings::Trivial) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings12TakesByValueENS_7TrivialE(
+                trivial,
+            )
+        }
     }
-}
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::TrivialNonfinal>> for TrivialNonfinal {
-    type CtorType = impl ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, crate::TrivialNonfinal>) -> Self::CtorType {
-        let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN15TrivialNonfinalC1EOS_(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+    pub fn TakesWithDefaultedByValue(
+        trivial: crate::test_namespace_bindings::TrivialWithDefaulted,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE(trivial)
+        }
     }
-}
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::TrivialNonfinal>,)> for TrivialNonfinal {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, crate::TrivialNonfinal>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::TrivialNonfinal>>>::ctor_new(arg)
+    pub fn TakesTrivialNonfinalByValue(trivial: crate::test_namespace_bindings::TrivialNonfinal) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(trivial)
+        }
+    }
+
+    #[inline(always)]
+    pub fn TakesByReference<'a>(trivial: &'a mut crate::test_namespace_bindings::Trivial) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings16TakesByReferenceERNS_7TrivialE(trivial)
+        }
+    }
+
+    #[inline(always)]
+    pub fn TakesWithDefaultedByReference<'a>(
+        trivial: &'a mut crate::test_namespace_bindings::TrivialWithDefaulted,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings29TakesWithDefaultedByReferenceERNS_20TrivialWithDefaultedE(trivial)
+        }
+    }
+
+    #[inline(always)]
+    pub fn TakesTrivialNonfinalByReference<'a>(
+        trivial: crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::TrivialNonfinal>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE(trivial)
+        }
     }
 }
 
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
-// Error while generating bindings for item 'TrivialNonfinal::operator=':
-// Bindings for this kind of operator are not supported
-
-// rs_bindings_from_cc/test/golden/trivial_type.h;l=33
-// Error while generating bindings for item 'TrivialNonfinal::operator=':
-// Bindings for this kind of operator are not supported
-
-#[inline(always)]
-pub fn TakesByValue(trivial: crate::Trivial) {
-    unsafe { crate::detail::__rust_thunk___Z12TakesByValue7Trivial(trivial) }
-}
-
-#[inline(always)]
-pub fn TakesWithDefaultedByValue(trivial: crate::TrivialWithDefaulted) {
-    unsafe {
-        crate::detail::__rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(trivial)
-    }
-}
-
-#[inline(always)]
-pub fn TakesTrivialNonfinalByValue(trivial: crate::TrivialNonfinal) {
-    unsafe {
-        crate::detail::__rust_thunk___Z27TakesTrivialNonfinalByValue15TrivialNonfinal(trivial)
-    }
-}
-
-#[inline(always)]
-pub fn TakesByReference<'a>(trivial: &'a mut crate::Trivial) {
-    unsafe { crate::detail::__rust_thunk___Z16TakesByReferenceR7Trivial(trivial) }
-}
-
-#[inline(always)]
-pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut crate::TrivialWithDefaulted) {
-    unsafe {
-        crate::detail::__rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted(
-            trivial,
-        )
-    }
-}
-
-#[inline(always)]
-pub fn TakesTrivialNonfinalByReference<'a>(
-    trivial: crate::rust_std::pin::Pin<&'a mut crate::TrivialNonfinal>,
-) {
-    unsafe {
-        crate::detail::__rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal(trivial)
-    }
-}
+// namespace test_namespace_bindings
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_
 
@@ -229,92 +277,139 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN7TrivialC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Trivial>,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings7TrivialC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::Trivial,
+            >,
         );
-        pub(crate) fn __rust_thunk___ZN7TrivialC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Trivial>,
-            __param_0: ctor::RvalueReference<'b, crate::Trivial>,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings7TrivialC1EOS0_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::Trivial,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::Trivial>,
         );
-        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialWithDefaulted>,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::TrivialWithDefaulted,
+            >,
         );
-        pub(crate) fn __rust_thunk___ZN20TrivialWithDefaultedC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialWithDefaulted>,
-            __param_0: ctor::RvalueReference<'b, crate::TrivialWithDefaulted>,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1EOS0_<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::TrivialWithDefaulted,
+            >,
+            __param_0: ctor::RvalueReference<
+                'b,
+                crate::test_namespace_bindings::TrivialWithDefaulted,
+            >,
         );
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialNonfinal>,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::TrivialNonfinal,
+            >,
         );
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1ERKS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialNonfinal>,
-            __param_0: &'b crate::TrivialNonfinal,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1ERKS0_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::TrivialNonfinal,
+            >,
+            __param_0: &'b crate::test_namespace_bindings::TrivialNonfinal,
         );
-        pub(crate) fn __rust_thunk___ZN15TrivialNonfinalC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialNonfinal>,
-            __param_0: ctor::RvalueReference<'b, crate::TrivialNonfinal>,
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1EOS0_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings::TrivialNonfinal,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
         );
-        #[link_name = "_Z12TakesByValue7Trivial"]
-        pub(crate) fn __rust_thunk___Z12TakesByValue7Trivial(trivial: crate::Trivial);
-        #[link_name = "_Z25TakesWithDefaultedByValue20TrivialWithDefaulted"]
-        pub(crate) fn __rust_thunk___Z25TakesWithDefaultedByValue20TrivialWithDefaulted(
-            trivial: crate::TrivialWithDefaulted,
+        #[link_name = "_ZN23test_namespace_bindings12TakesByValueENS_7TrivialE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings12TakesByValueENS_7TrivialE(
+            trivial: crate::test_namespace_bindings::Trivial,
         );
-        #[link_name = "_Z27TakesTrivialNonfinalByValue15TrivialNonfinal"]
-        pub(crate) fn __rust_thunk___Z27TakesTrivialNonfinalByValue15TrivialNonfinal(
-            trivial: crate::TrivialNonfinal,
+        #[link_name = "_ZN23test_namespace_bindings25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE(
+            trivial: crate::test_namespace_bindings::TrivialWithDefaulted,
         );
-        #[link_name = "_Z16TakesByReferenceR7Trivial"]
-        pub(crate) fn __rust_thunk___Z16TakesByReferenceR7Trivial<'a>(
-            trivial: &'a mut crate::Trivial,
+        #[link_name = "_ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
+            trivial: crate::test_namespace_bindings::TrivialNonfinal,
         );
-        #[link_name = "_Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted"]
-        pub(crate) fn __rust_thunk___Z29TakesWithDefaultedByReferenceR20TrivialWithDefaulted<'a>(
-            trivial: &'a mut crate::TrivialWithDefaulted,
+        #[link_name = "_ZN23test_namespace_bindings16TakesByReferenceERNS_7TrivialE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings16TakesByReferenceERNS_7TrivialE<
+            'a,
+        >(
+            trivial: &'a mut crate::test_namespace_bindings::Trivial,
         );
-        #[link_name = "_Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal"]
-        pub(crate) fn __rust_thunk___Z31TakesTrivialNonfinalByReferenceR15TrivialNonfinal<'a>(
-            trivial: crate::rust_std::pin::Pin<&'a mut crate::TrivialNonfinal>,
+        #[link_name = "_ZN23test_namespace_bindings29TakesWithDefaultedByReferenceERNS_20TrivialWithDefaultedE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings29TakesWithDefaultedByReferenceERNS_20TrivialWithDefaultedE<
+            'a,
+        >(
+            trivial: &'a mut crate::test_namespace_bindings::TrivialWithDefaulted,
+        );
+        #[link_name = "_ZN23test_namespace_bindings31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE"]
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE<
+            'a,
+        >(
+            trivial: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings::TrivialNonfinal,
+            >,
         );
     }
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::Trivial>() == 4);
-const _: () = assert!(rust_std::mem::align_of::<crate::Trivial>() == 4);
+const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::Trivial>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::Trivial>() == 4);
 const _: () = {
-    static_assertions::assert_impl_all!(crate::Trivial: Clone);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Trivial: Clone);
 };
 const _: () = {
-    static_assertions::assert_impl_all!(crate::Trivial: Copy);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Trivial: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::Trivial: Drop);
+    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::Trivial: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Trivial, trivial_field) == 0);
-
-const _: () = assert!(rust_std::mem::size_of::<crate::TrivialWithDefaulted>() == 4);
-const _: () = assert!(rust_std::mem::align_of::<crate::TrivialWithDefaulted>() == 4);
-const _: () = {
-    static_assertions::assert_impl_all!(crate::TrivialWithDefaulted: Clone);
-};
-const _: () = {
-    static_assertions::assert_impl_all!(crate::TrivialWithDefaulted: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(crate::TrivialWithDefaulted: Drop);
-};
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::Trivial, trivial_field)
+        == 0
+);
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::TrivialWithDefaulted, trivial_field) == 0);
-
-const _: () = assert!(rust_std::mem::size_of::<crate::TrivialNonfinal>() == 4);
-const _: () = assert!(rust_std::mem::align_of::<crate::TrivialNonfinal>() == 4);
-const _: () = {
-    static_assertions::assert_not_impl_all!(crate::TrivialNonfinal: Copy);
-};
-const _: () = {
-    static_assertions::assert_not_impl_all!(crate::TrivialNonfinal: Drop);
-};
+    assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::TrivialWithDefaulted>() == 4);
 const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::TrivialNonfinal, trivial_field) == 0);
+    assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::TrivialWithDefaulted>() == 4);
+const _: () = {
+    static_assertions::assert_impl_all!(
+        crate::test_namespace_bindings::TrivialWithDefaulted: Clone
+    );
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::TrivialWithDefaulted: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(
+        crate::test_namespace_bindings::TrivialWithDefaulted: Drop
+    );
+};
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(
+        crate::test_namespace_bindings::TrivialWithDefaulted,
+        trivial_field
+    ) == 0
+);
+const _: () =
+    assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::TrivialNonfinal>() == 4);
+const _: () =
+    assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::TrivialNonfinal>() == 4);
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::TrivialNonfinal: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::TrivialNonfinal: Drop);
+};
+const _: () = assert!(
+    memoffset_unstable_const::offset_of!(
+        crate::test_namespace_bindings::TrivialNonfinal,
+        trivial_field
+    ) == 0
+);
