@@ -1,10 +1,5 @@
 # Static Analysis for C++ Lifetimes
 
-<!--*
-# Document freshness: For more information, see <internal link>.
-freshness: { owner: 'mboehme' reviewed: '2022-06-01' }
-*-->
-
 [TOC]
 
 Summary: We describe a static analysis that infers lifetimes in C++ function
