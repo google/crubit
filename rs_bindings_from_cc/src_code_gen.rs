@@ -4973,6 +4973,24 @@ mod tests {
         Ok(())
     }
 
+    /// Methods with missing lifetimes for `self` should give a useful error
+    /// message.
+    #[test]
+    fn test_eq_nolifetime() -> Result<()> {
+        // Missing lifetimes currently only causes hard errors for trait impls,
+        // not For inherent methods.
+        let ir = ir_from_cc("struct SomeStruct{SomeStruct& operator=(const SomeStruct&);};")?;
+
+        let rs_api =
+            rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(&ir)?.rs_api)?;
+        assert!(rs_api.contains(
+            "// Error while generating bindings for item 'SomeStruct::operator=':\n\
+             // `self` has no lifetime. Use lifetime annotations or \
+                `#pragma clang lifetime_elision` to create bindings for this function."
+        ));
+        Ok(())
+    }
+
     #[test]
     fn test_impl_eq_for_member_function() -> Result<()> {
         let ir = ir_from_cc(
