@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:typedefs_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -24,31 +24,82 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=8
-// Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for SomeStruct {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10SomeStructC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=8
-// Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::SomeStruct> for SomeStruct {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::SomeStruct) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10SomeStructC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::SomeStruct,)> for SomeStruct {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::SomeStruct,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::SomeStruct>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=8
-// Error while generating bindings for item 'SomeStruct::SomeStruct':
-// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::SomeStruct>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::SomeStruct>,)> for SomeStruct {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::SomeStruct>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::SomeStruct>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=8
+// rs_bindings_from_cc/test/golden/typedefs.h;l=10
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=8
+// rs_bindings_from_cc/test/golden/typedefs.h;l=10
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct SomeStruct &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=9
+// rs_bindings_from_cc/test/golden/typedefs.h;l=11
 // Error while generating bindings for item 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=11
+// rs_bindings_from_cc/test/golden/typedefs.h;l=13
 // Error while generating bindings for item 'SomeOtherStruct':
 // Unsupported type 'struct SomeOtherStruct': No generated bindings found for ''
 
@@ -59,35 +110,70 @@ pub union SomeUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=14
-// Error while generating bindings for item 'SomeUnion::SomeUnion':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl Default for SomeUnion {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeUnionC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=14
-// Error while generating bindings for item 'SomeUnion::SomeUnion':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> From<ctor::RvalueReference<'b, crate::SomeUnion>> for SomeUnion {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, crate::SomeUnion>) -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeUnionC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=14
-// Error while generating bindings for item 'SomeUnion::SomeUnion':
-// Parameter #0 is not supported: Unsupported type 'union SomeUnion &&': Unsupported type: && without lifetime
-
-// rs_bindings_from_cc/test/golden/typedefs.h;l=14
+// rs_bindings_from_cc/test/golden/typedefs.h;l=16
 // Error while generating bindings for item 'SomeUnion::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=14
+// rs_bindings_from_cc/test/golden/typedefs.h;l=16
 // Error while generating bindings for item 'SomeUnion::operator=':
-// Parameter #0 is not supported: Unsupported type 'union SomeUnion &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+// rs_bindings_from_cc/test/golden/typedefs.h;l=17
 // Error while generating bindings for item 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=17
+// rs_bindings_from_cc/test/golden/typedefs.h;l=19
 // Error while generating bindings for item 'SomeOtherUnion':
 // Unsupported type 'union SomeOtherUnion': No generated bindings found for ''
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
+            __param_0: &'b crate::SomeStruct,
+        );
+        pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
+            __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
+        );
+        pub(crate) fn __rust_thunk___ZN9SomeUnionC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeUnion>,
+        );
+        pub(crate) fn __rust_thunk___ZN9SomeUnionC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeUnion>,
+            __param_0: ctor::RvalueReference<'b, crate::SomeUnion>,
+        );
+    }
+}
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 

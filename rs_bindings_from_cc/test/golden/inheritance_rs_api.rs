@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:inheritance_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -27,25 +27,76 @@ pub struct Base0 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=13
-// Error while generating bindings for item 'Base0::Base0':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for Base0 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base0C1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=13
-// Error while generating bindings for item 'Base0::Base0':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::Base0> for Base0 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::Base0) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base0C1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::Base0,)> for Base0 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::Base0,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::Base0>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=13
-// Error while generating bindings for item 'Base0::Base0':
-// Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::Base0>> for Base0 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::Base0>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base0C1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Base0>,)> for Base0 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::Base0>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::Base0>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=13
+// rs_bindings_from_cc/test/golden/inheritance.h;l=15
 // Error while generating bindings for item 'Base0::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=13
+// rs_bindings_from_cc/test/golden/inheritance.h;l=15
 // Error while generating bindings for item 'Base0::operator=':
-// Parameter #0 is not supported: Unsupported type 'class Base0 &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 #[ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -60,25 +111,76 @@ pub struct Base1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=14
-// Error while generating bindings for item 'Base1::Base1':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for Base1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base1C1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=14
-// Error while generating bindings for item 'Base1::Base1':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::Base1> for Base1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::Base1) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base1C1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::Base1,)> for Base1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::Base1,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::Base1>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=14
-// Error while generating bindings for item 'Base1::Base1':
-// Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::Base1>> for Base1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::Base1>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base1C1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Base1>,)> for Base1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::Base1>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::Base1>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=14
+// rs_bindings_from_cc/test/golden/inheritance.h;l=16
 // Error while generating bindings for item 'Base1::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=14
+// rs_bindings_from_cc/test/golden/inheritance.h;l=16
 // Error while generating bindings for item 'Base1::operator=':
-// Parameter #0 is not supported: Unsupported type 'class Base1 &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 #[ctor::recursively_pinned]
 #[repr(C, align(2))]
@@ -90,25 +192,76 @@ pub struct Base2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
-// Error while generating bindings for item 'Base2::Base2':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for Base2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base2C1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
-// Error while generating bindings for item 'Base2::Base2':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::Base2> for Base2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::Base2) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base2C1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::Base2,)> for Base2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::Base2,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::Base2>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
-// Error while generating bindings for item 'Base2::Base2':
-// Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::Base2>> for Base2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::Base2>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN5Base2C1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Base2>,)> for Base2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::Base2>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::Base2>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=21
 // Error while generating bindings for item 'Base2::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=19
+// rs_bindings_from_cc/test/golden/inheritance.h;l=21
 // Error while generating bindings for item 'Base2::operator=':
-// Parameter #0 is not supported: Unsupported type 'class Base2 &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
@@ -118,25 +271,35 @@ pub struct Derived {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=23
-// Error while generating bindings for item 'Derived::Derived':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl Default for Derived {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN7DerivedC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=23
-// Error while generating bindings for item 'Derived::Derived':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> From<ctor::RvalueReference<'b, crate::Derived>> for Derived {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, crate::Derived>) -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN7DerivedC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=23
-// Error while generating bindings for item 'Derived::Derived':
-// Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported type: && without lifetime
-
-// rs_bindings_from_cc/test/golden/inheritance.h;l=23
+// rs_bindings_from_cc/test/golden/inheritance.h;l=25
 // Error while generating bindings for item 'Derived::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=23
+// rs_bindings_from_cc/test/golden/inheritance.h;l=25
 // Error while generating bindings for item 'Derived::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Derived &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 unsafe impl oops::Inherits<crate::Base0> for Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base0 {
@@ -161,25 +324,76 @@ pub struct VirtualBase1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=27
-// Error while generating bindings for item 'VirtualBase1::VirtualBase1':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for VirtualBase1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN12VirtualBase1C1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=27
-// Error while generating bindings for item 'VirtualBase1::VirtualBase1':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::VirtualBase1> for VirtualBase1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::VirtualBase1) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN12VirtualBase1C1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::VirtualBase1,)> for VirtualBase1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::VirtualBase1,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::VirtualBase1>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=27
-// Error while generating bindings for item 'VirtualBase1::VirtualBase1':
-// Parameter #0 is not supported: Unsupported type 'class VirtualBase1 &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::VirtualBase1>> for VirtualBase1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::VirtualBase1>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN12VirtualBase1C1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::VirtualBase1>,)> for VirtualBase1 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::VirtualBase1>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::VirtualBase1>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
 // Error while generating bindings for item 'VirtualBase1::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=27
+// rs_bindings_from_cc/test/golden/inheritance.h;l=29
 // Error while generating bindings for item 'VirtualBase1::operator=':
-// Parameter #0 is not supported: Unsupported type 'class VirtualBase1 &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 unsafe impl oops::Inherits<crate::Base1> for VirtualBase1 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
@@ -194,25 +408,76 @@ pub struct VirtualBase2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=28
-// Error while generating bindings for item 'VirtualBase2::VirtualBase2':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for VirtualBase2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN12VirtualBase2C1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=28
-// Error while generating bindings for item 'VirtualBase2::VirtualBase2':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::VirtualBase2> for VirtualBase2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::VirtualBase2) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN12VirtualBase2C1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::VirtualBase2,)> for VirtualBase2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::VirtualBase2,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::VirtualBase2>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=28
-// Error while generating bindings for item 'VirtualBase2::VirtualBase2':
-// Parameter #0 is not supported: Unsupported type 'class VirtualBase2 &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::VirtualBase2>> for VirtualBase2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::VirtualBase2>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN12VirtualBase2C1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::VirtualBase2>,)> for VirtualBase2 {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::VirtualBase2>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::VirtualBase2>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// rs_bindings_from_cc/test/golden/inheritance.h;l=30
 // Error while generating bindings for item 'VirtualBase2::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=28
+// rs_bindings_from_cc/test/golden/inheritance.h;l=30
 // Error while generating bindings for item 'VirtualBase2::operator=':
-// Parameter #0 is not supported: Unsupported type 'class VirtualBase2 &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 unsafe impl oops::Inherits<crate::Base1> for VirtualBase2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
@@ -227,25 +492,76 @@ pub struct VirtualDerived {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
-// Error while generating bindings for item 'VirtualDerived::VirtualDerived':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for VirtualDerived {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN14VirtualDerivedC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
-// Error while generating bindings for item 'VirtualDerived::VirtualDerived':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::VirtualDerived> for VirtualDerived {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::VirtualDerived) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN14VirtualDerivedC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::VirtualDerived,)> for VirtualDerived {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::VirtualDerived,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::VirtualDerived>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
-// Error while generating bindings for item 'VirtualDerived::VirtualDerived':
-// Parameter #0 is not supported: Unsupported type 'class VirtualDerived &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::VirtualDerived>> for VirtualDerived {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::VirtualDerived>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN14VirtualDerivedC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::VirtualDerived>,)> for VirtualDerived {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::VirtualDerived>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::VirtualDerived>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// rs_bindings_from_cc/test/golden/inheritance.h;l=31
 // Error while generating bindings for item 'VirtualDerived::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
+// rs_bindings_from_cc/test/golden/inheritance.h;l=31
 // Error while generating bindings for item 'VirtualDerived::operator=':
-// Parameter #0 is not supported: Unsupported type 'class VirtualDerived &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 unsafe impl oops::Inherits<crate::VirtualBase1> for VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase1 {
@@ -263,7 +579,7 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=32
+// rs_bindings_from_cc/test/golden/inheritance.h;l=34
 // Error while generating bindings for item 'MyAbstractClass':
 // Abstract classes are not supported yet
 
@@ -273,12 +589,85 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN5Base0C1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base0>,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base0C1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base0>,
+            __param_0: &'b crate::Base0,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base0C1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base0>,
+            __param_0: ctor::RvalueReference<'b, crate::Base0>,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base1C1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base1>,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base1C1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base1>,
+            __param_0: &'b crate::Base1,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base1C1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base1>,
+            __param_0: ctor::RvalueReference<'b, crate::Base1>,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base2C1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base2>,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base2C1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base2>,
+            __param_0: &'b crate::Base2,
+        );
+        pub(crate) fn __rust_thunk___ZN5Base2C1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base2>,
+            __param_0: ctor::RvalueReference<'b, crate::Base2>,
+        );
+        pub(crate) fn __rust_thunk___ZN7DerivedC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Derived>,
+        );
+        pub(crate) fn __rust_thunk___ZN7DerivedC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Derived>,
+            __param_0: ctor::RvalueReference<'b, crate::Derived>,
+        );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase1C1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase1>,
+        );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase1C1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase1>,
+            __param_0: &'b crate::VirtualBase1,
+        );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase1C1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase1>,
+            __param_0: ctor::RvalueReference<'b, crate::VirtualBase1>,
+        );
         pub fn __crubit_dynamic_upcast__VirtualBase1__to__Base1(
             from: *const VirtualBase1,
         ) -> *const crate::Base1;
+        pub(crate) fn __rust_thunk___ZN12VirtualBase2C1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase2>,
+        );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase2C1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase2>,
+            __param_0: &'b crate::VirtualBase2,
+        );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase2C1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase2>,
+            __param_0: ctor::RvalueReference<'b, crate::VirtualBase2>,
+        );
         pub fn __crubit_dynamic_upcast__VirtualBase2__to__Base1(
             from: *const VirtualBase2,
         ) -> *const crate::Base1;
+        pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualDerived>,
+        );
+        pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualDerived>,
+            __param_0: &'b crate::VirtualDerived,
+        );
+        pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualDerived>,
+            __param_0: ctor::RvalueReference<'b, crate::VirtualDerived>,
+        );
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(
             from: *const VirtualDerived,
         ) -> *const crate::VirtualBase1;

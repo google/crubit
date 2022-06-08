@@ -19,11 +19,20 @@ extern "C" void __rust_thunk___ZN5Base0C1ERKS_(class Base0* __this,
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN5Base0C1EOS_(class Base0* __this,
+                                              class Base0&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN5Base0D1Ev(class Base0* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class Base0& __rust_thunk___ZN5Base0aSERKS_(
     class Base0* __this, const class Base0& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class Base0& __rust_thunk___ZN5Base0aSEOS_(class Base0* __this,
+                                                      class Base0&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN5Base1C1Ev(class Base1* __this) {
@@ -34,11 +43,20 @@ extern "C" void __rust_thunk___ZN5Base1C1ERKS_(class Base1* __this,
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN5Base1C1EOS_(class Base1* __this,
+                                              class Base1&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN5Base1D1Ev(class Base1* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class Base1& __rust_thunk___ZN5Base1aSERKS_(
     class Base1* __this, const class Base1& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class Base1& __rust_thunk___ZN5Base1aSEOS_(class Base1* __this,
+                                                      class Base1&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN5Base2C1Ev(class Base2* __this) {
@@ -49,11 +67,20 @@ extern "C" void __rust_thunk___ZN5Base2C1ERKS_(class Base2* __this,
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN5Base2C1EOS_(class Base2* __this,
+                                              class Base2&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN5Base2D1Ev(class Base2* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class Base2& __rust_thunk___ZN5Base2aSERKS_(
     class Base2* __this, const class Base2& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class Base2& __rust_thunk___ZN5Base2aSEOS_(class Base2* __this,
+                                                      class Base2&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN7DerivedC1Ev(class Derived* __this) {
@@ -64,11 +91,20 @@ extern "C" void __rust_thunk___ZN7DerivedC1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN7DerivedC1EOS_(class Derived* __this,
+                                                class Derived&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN7DerivedD1Ev(class Derived* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class Derived& __rust_thunk___ZN7DerivedaSERKS_(
     class Derived* __this, const class Derived& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class Derived& __rust_thunk___ZN7DerivedaSEOS_(
+    class Derived* __this, class Derived&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN12VirtualBase1C1Ev(
@@ -80,12 +116,21 @@ extern "C" void __rust_thunk___ZN12VirtualBase1C1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN12VirtualBase1C1EOS_(
+    class VirtualBase1* __this, class VirtualBase1&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN12VirtualBase1D1Ev(
     class VirtualBase1* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class VirtualBase1& __rust_thunk___ZN12VirtualBase1aSERKS_(
     class VirtualBase1* __this, const class VirtualBase1& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class VirtualBase1& __rust_thunk___ZN12VirtualBase1aSEOS_(
+    class VirtualBase1* __this, class VirtualBase1&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN12VirtualBase2C1Ev(
@@ -97,12 +142,21 @@ extern "C" void __rust_thunk___ZN12VirtualBase2C1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN12VirtualBase2C1EOS_(
+    class VirtualBase2* __this, class VirtualBase2&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN12VirtualBase2D1Ev(
     class VirtualBase2* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class VirtualBase2& __rust_thunk___ZN12VirtualBase2aSERKS_(
     class VirtualBase2* __this, const class VirtualBase2& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class VirtualBase2& __rust_thunk___ZN12VirtualBase2aSEOS_(
+    class VirtualBase2* __this, class VirtualBase2&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN14VirtualDerivedC1Ev(
@@ -114,12 +168,21 @@ extern "C" void __rust_thunk___ZN14VirtualDerivedC1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN14VirtualDerivedC1EOS_(
+    class VirtualDerived* __this, class VirtualDerived&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN14VirtualDerivedD1Ev(
     class VirtualDerived* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class VirtualDerived& __rust_thunk___ZN14VirtualDerivedaSERKS_(
     class VirtualDerived* __this, const class VirtualDerived& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class VirtualDerived& __rust_thunk___ZN14VirtualDerivedaSEOS_(
+    class VirtualDerived* __this, class VirtualDerived&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 

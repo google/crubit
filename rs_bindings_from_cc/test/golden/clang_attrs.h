@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
 
+#pragma clang lifetime_elision
+
 struct alignas(64) HasCustomAlignment {};
 
 struct HasFieldWithCustomAlignment {

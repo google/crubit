@@ -5,6 +5,8 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
 
+#pragma clang lifetime_elision
+
 struct SomeStruct {};
 typedef struct SomeStruct SomeStruct;
 

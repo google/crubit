@@ -19,11 +19,20 @@ extern "C" void __rust_thunk___ZN10SomeStructC1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
+    class SomeStruct* __this, class SomeStruct&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSERKS_(
     class SomeStruct* __this, const class SomeStruct& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class SomeStruct& __rust_thunk___ZN10SomeStructaSEOS_(
+    class SomeStruct* __this, class SomeStruct&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion* __this) {
@@ -34,11 +43,20 @@ extern "C" void __rust_thunk___ZN9SomeUnionC1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN9SomeUnionC1EOS_(union SomeUnion* __this,
+                                                  union SomeUnion&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN9SomeUnionD1Ev(union SomeUnion* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" union SomeUnion& __rust_thunk___ZN9SomeUnionaSERKS_(
     union SomeUnion* __this, const union SomeUnion& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" union SomeUnion& __rust_thunk___ZN9SomeUnionaSEOS_(
+    union SomeUnion* __this, union SomeUnion&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 

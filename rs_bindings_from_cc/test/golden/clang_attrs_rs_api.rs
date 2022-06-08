@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:clang_attrs_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -27,25 +27,80 @@ forward_declare::unsafe_define!(
     crate::HasCustomAlignment
 );
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
-// Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for HasCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
-// Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::HasCustomAlignment> for HasCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::HasCustomAlignment) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::HasCustomAlignment,)> for HasCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::HasCustomAlignment,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::HasCustomAlignment>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
-// Error while generating bindings for item 'HasCustomAlignment::HasCustomAlignment':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::HasCustomAlignment>>
+    for HasCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ctor::RvalueReference<'b, crate::HasCustomAlignment>) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN18HasCustomAlignmentC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::HasCustomAlignment>,)>
+    for HasCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (ctor::RvalueReference<'b, crate::HasCustomAlignment>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::HasCustomAlignment>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasCustomAlignment::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=8
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
 // Error while generating bindings for item 'HasCustomAlignment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignment &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 #[ctor::recursively_pinned]
 #[repr(C)]
@@ -57,25 +112,84 @@ forward_declare::unsafe_define!(
     crate::HasFieldWithCustomAlignment
 );
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
-// Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for HasFieldWithCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
-// Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment> for HasFieldWithCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::HasFieldWithCustomAlignment) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::HasFieldWithCustomAlignment,)> for HasFieldWithCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::HasFieldWithCustomAlignment,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
-// Error while generating bindings for item 'HasFieldWithCustomAlignment::HasFieldWithCustomAlignment':
-// Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>>
+    for HasFieldWithCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,)>
+    for HasFieldWithCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b,crate::HasFieldWithCustomAlignment>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
 // Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasFieldWithCustomAlignment &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 #[ctor::recursively_pinned]
 #[repr(C, align(64))]
@@ -87,25 +201,90 @@ forward_declare::unsafe_define!(
     crate::InheritsFromBaseWithCustomAlignment
 );
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
-// Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for InheritsFromBaseWithCustomAlignment {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
-// Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>
+    for InheritsFromBaseWithCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::InheritsFromBaseWithCustomAlignment) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::InheritsFromBaseWithCustomAlignment,)>
+    for InheritsFromBaseWithCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::InheritsFromBaseWithCustomAlignment,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
-// Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::InheritsFromBaseWithCustomAlignment':
-// Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>>
+    for InheritsFromBaseWithCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,)>
+    for InheritsFromBaseWithCustomAlignment
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<
+            ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
+        >>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=14
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
 // Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct InheritsFromBaseWithCustomAlignment &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 unsafe impl oops::Inherits<crate::HasCustomAlignment> for InheritsFromBaseWithCustomAlignment {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::HasCustomAlignment {
@@ -123,27 +302,145 @@ forward_declare::unsafe_define!(
     crate::HasCustomAlignmentWithGnuAttr
 );
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
-// Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl ctor::CtorNew<()> for HasCustomAlignmentWithGnuAttr {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
-// Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+impl<'b> ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr> for HasCustomAlignmentWithGnuAttr {
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::HasCustomAlignmentWithGnuAttr) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(&'b crate::HasCustomAlignmentWithGnuAttr,)>
+    for HasCustomAlignmentWithGnuAttr
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::HasCustomAlignmentWithGnuAttr,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
-// Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::HasCustomAlignmentWithGnuAttr':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported type: && without lifetime
+impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>>
+    for HasCustomAlignmentWithGnuAttr
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        ctor::FnCtor::new(
+            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
+                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,)>
+    for HasCustomAlignmentWithGnuAttr
+{
+    type CtorType = impl ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ctor::CtorNew<ctor::RvalueReference<'b,crate::HasCustomAlignmentWithGnuAttr>>>::ctor_new(arg)
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
 // Bindings for this kind of operator are not supported
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
+// rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
 // Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct HasCustomAlignmentWithGnuAttr &&': Unsupported type: && without lifetime
+// Bindings for this kind of operator are not supported
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignment>,
+        );
+        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignment>,
+            __param_0: &'b crate::HasCustomAlignment,
+        );
+        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignment>,
+            __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignment>,
+        );
+        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
+        );
+        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
+            __param_0: &'b crate::HasFieldWithCustomAlignment,
+        );
+        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
+            __param_0: ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
+        );
+        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::InheritsFromBaseWithCustomAlignment,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::InheritsFromBaseWithCustomAlignment,
+            >,
+            __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
+        );
+        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::InheritsFromBaseWithCustomAlignment,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
+        );
+        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
+        );
+        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
+            __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
+        );
+        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
+            __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
+        );
+    }
+}
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
 

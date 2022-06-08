@@ -6,6 +6,8 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 #include <stdint.h>
 
+#pragma clang lifetime_elision
+
 // Using classes to force these to be non-POD.
 // In the Itanium ABI, the tail padding of POD types cannot be reused by other
 // objects, even if the POD type is potentially-overlapping.

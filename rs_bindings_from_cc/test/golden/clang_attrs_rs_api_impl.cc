@@ -21,6 +21,11 @@ extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1EOS_(
+    class HasCustomAlignment* __this, class HasCustomAlignment&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN18HasCustomAlignmentD1Ev(
     class HasCustomAlignment* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
@@ -31,6 +36,11 @@ __rust_thunk___ZN18HasCustomAlignmentaSERKS_(
     const class HasCustomAlignment& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" class HasCustomAlignment&
+__rust_thunk___ZN18HasCustomAlignmentaSEOS_(
+    class HasCustomAlignment* __this, class HasCustomAlignment&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
     class HasFieldWithCustomAlignment* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
@@ -38,6 +48,12 @@ extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_(
     class HasFieldWithCustomAlignment* __this,
     const class HasFieldWithCustomAlignment& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
+    class HasFieldWithCustomAlignment* __this,
+    class HasFieldWithCustomAlignment&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
@@ -51,6 +67,12 @@ __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(
     const class HasFieldWithCustomAlignment& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" class HasFieldWithCustomAlignment&
+__rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_(
+    class HasFieldWithCustomAlignment* __this,
+    class HasFieldWithCustomAlignment&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
     class InheritsFromBaseWithCustomAlignment* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
@@ -58,6 +80,12 @@ extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
 extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_(
     class InheritsFromBaseWithCustomAlignment* __this,
     const class InheritsFromBaseWithCustomAlignment& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
+    class InheritsFromBaseWithCustomAlignment* __this,
+    class InheritsFromBaseWithCustomAlignment&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
@@ -71,6 +99,12 @@ __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
     const class InheritsFromBaseWithCustomAlignment& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" class InheritsFromBaseWithCustomAlignment&
+__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_(
+    class InheritsFromBaseWithCustomAlignment* __this,
+    class InheritsFromBaseWithCustomAlignment&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
     class HasCustomAlignmentWithGnuAttr* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
@@ -78,6 +112,12 @@ extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_(
     class HasCustomAlignmentWithGnuAttr* __this,
     const class HasCustomAlignmentWithGnuAttr& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
+    class HasCustomAlignmentWithGnuAttr* __this,
+    class HasCustomAlignmentWithGnuAttr&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
@@ -89,6 +129,12 @@ extern "C" class HasCustomAlignmentWithGnuAttr&
 __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(
     class HasCustomAlignmentWithGnuAttr* __this,
     const class HasCustomAlignmentWithGnuAttr& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class HasCustomAlignmentWithGnuAttr&
+__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_(
+    class HasCustomAlignmentWithGnuAttr* __this,
+    class HasCustomAlignmentWithGnuAttr&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
