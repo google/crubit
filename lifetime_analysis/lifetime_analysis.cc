@@ -417,11 +417,18 @@ std::optional<std::string> TransferStmtVisitor::VisitBinaryOperator(
       if (!op->getLHS()->getType()->isPointerType()) break;
       ObjectSet rhs_points_to = points_to_map_.GetExprObjectSet(op->getRHS());
       for (Object pointer : lhs_points_to) {
-        if (object_repository_.GetObjectValueType(pointer) ==
-            ObjectRepository::ObjectValueType::kMultiValued) {
-          points_to_map_.ExtendPointerPointsToSet(pointer, rhs_points_to);
-        } else {
+        // We can overwrite (instead of extend) the destination points-to-set
+        // only in very specific circumstances:
+        // - We need to know unambiguously what the LHS refers to, so that we
+        //   know we're definitely writing to a particular object, and
+        // - That destination object needs to be "single-valued" (it can't be
+        //   an array, for example).
+        if (lhs_points_to.size() == 1 &&
+            object_repository_.GetObjectValueType(pointer) ==
+                ObjectRepository::ObjectValueType::kSingleValued) {
           points_to_map_.SetPointerPointsToSet(pointer, rhs_points_to);
+        } else {
+          points_to_map_.ExtendPointerPointsToSet(pointer, rhs_points_to);
         }
       }
       break;

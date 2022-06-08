@@ -456,6 +456,54 @@ TEST_F(LifetimeAnalysisTest, ForwardDeclaration) {
               LifetimesAre({{"f", "a -> a"}, {"target", "a -> a"}}));
 }
 
+TEST_F(LifetimeAnalysisTest, Overwrite_SingleDestination) {
+  EXPECT_THAT(GetLifetimes(R"(
+    int* target(int* a, int* b) {
+      int** pp = &b;
+      // There is only one thing that `pp` can be pointing at, so the analysis
+      // should conclude that `b` is being overwritten with `a`.
+      *pp = a;
+      return b;
+    }
+  )"),
+              LifetimesAre({{"target", "a, b -> a"}}));
+}
+
+TEST_F(LifetimeAnalysisTest, Overwrite_SingleDestinationVariant) {
+  EXPECT_THAT(GetLifetimes(R"(
+    // Similar to above, but potentially leave `pp` uninitialized.
+    int* target(int* a, int* b) {
+      int** pp;
+      if (*a > 0) {
+        pp = &b;
+      }
+      // If `pp` is uninitialized, the following is UB, so the analysis can
+      // assume that `pp` was initialized to point to `b`.
+      // This particular test function is pretty terrible style, but it seems
+      // plausible that similar situations can come up in more reasonable code.
+      *pp = a;
+      return b;
+    }
+  )"),
+              LifetimesAre({{"target", "a, b -> a"}}));
+}
+
+TEST_F(LifetimeAnalysisTest, Overwrite_MultipleDestinations) {
+  EXPECT_THAT(GetLifetimes(R"(
+    // This is a regression test. The analysis used to conclude falsely that `b`
+    // was unconditionally being overwritten with `a` in the assignment and was
+    // therefore producing the wrong lifetimes "a, b -> a".
+    int* target(int* a, int* b) {
+      int** pp = *a > 0? &a : &b;
+      // The analysis should understand that the following assignment _might_
+      // overwrite `b` with `a` but does not necessarily do so.
+      *pp = a;
+      return b;
+    }
+  )"),
+              LifetimesAre({{"target", "a, a -> a"}}));
+}
+
 }  // namespace
 }  // namespace lifetimes
 }  // namespace tidy
