@@ -667,9 +667,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         if impl_kind.format_first_param_as_self() {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            let self_decl = first_api_param.format_as_self_param().with_context(|| {
-                format!("Failed to format as `self` param: {:?}", first_api_param)
-            })?;
+            let self_decl = first_api_param.format_as_self_param()?;
             // Presence of element #0 is verified by `ok_or_else` on
             // `maybe_first_api_param` above.
             api_params[0] = self_decl;
@@ -1398,8 +1396,7 @@ fn should_derive_clone(record: &Record) -> bool {
         // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
         should_derive_copy(record)
     } else {
-        record.is_unpin()
-            && record.copy_constructor == SpecialMemberFunc::Trivial
+        record.is_unpin() && record.copy_constructor == SpecialMemberFunc::Trivial
     }
 }
 
@@ -2020,7 +2017,11 @@ impl<'ir> RsTypeKind<'ir> {
         let lifetime;
         match self {
             RsTypeKind::Pointer { .. } => {
-                bail!("`self` cannot be an unsafe pointer: {:?}", self)
+                // TODO(jeanpierreda): provide end-user-facing docs, and insert a link to e.g.
+                // something like <internal link>
+                bail!(
+                    "`self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function."
+                )
             }
             RsTypeKind::Reference {
                 referent: reference_pointee,
