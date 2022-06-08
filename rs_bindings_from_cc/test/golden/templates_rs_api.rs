@@ -53,7 +53,7 @@ impl ctor::CtorNew<()> for __CcTemplateInst10MyTemplateIiE {
         let () = args;
         ctor::FnCtor::new(
             move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
@@ -68,7 +68,7 @@ impl<'b> ctor::CtorNew<&'b crate::__CcTemplateInst10MyTemplateIiE>
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1ERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
@@ -95,7 +95,7 @@ impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemp
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
@@ -125,7 +125,7 @@ impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     pub fn Create(value: i32) -> crate::__CcTemplateInst10MyTemplateIiE {
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(value)
+            crate::detail::__rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(value)
         }
     }
 }
@@ -134,7 +134,7 @@ impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     pub fn value<'a>(&'a self) -> &'a i32 {
         unsafe {
-            crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(self)
+            crate::detail::__rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self)
         }
     }
 }
@@ -157,7 +157,7 @@ impl ctor::CtorNew<()> for __CcTemplateInst21TemplateWithTwoParamsIifE {
         let () = args;
         ctor::FnCtor::new(
             move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
@@ -172,7 +172,7 @@ impl<'b> ctor::CtorNew<&'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE>
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1ERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
@@ -202,7 +202,7 @@ impl<'b>
         let __param_0 = args;
         ctor::FnCtor::new(
             move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
@@ -235,14 +235,14 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<
                 crate::__CcTemplateInst10MyTemplateIiE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1ERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
@@ -251,7 +251,7 @@ mod detail {
             >,
             __param_0: &'b crate::__CcTemplateInst10MyTemplateIiE,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
@@ -260,22 +260,22 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiE6CreateEi___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc(
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: i32,
         ) -> crate::__CcTemplateInst10MyTemplateIiE;
-        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE5valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
         ) -> &'a i32;
-        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<
                 crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1ERKS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1ERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
@@ -284,7 +284,7 @@ mod detail {
             >,
             __param_0: &'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
         );
-        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_templates_cc<
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(

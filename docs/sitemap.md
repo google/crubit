@@ -2,4 +2,5 @@
 *   [Lifetime Annotations for C++](lifetime_annotations_cpp.md)
 *   [Static Analysis for C++ Lifetimes](lifetimes_static_analysis.md)
 *   [Struct Layout](struct_layout.md)
+*   [Thunks for class template member functions](thunks_for_class_template_member_functions.md)
 *   [`Unpin` for C++ Types](unpin.md)

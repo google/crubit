@@ -124,8 +124,18 @@ cc_library(
     srcs = ["bazel_types.cc"],
     hdrs = ["bazel_types.h"],
     deps = [
+        "//common:check",
         "//common:string_type",
         "@absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "bazel_types_test",
+    srcs = ["bazel_types_test.cc"],
+    deps = [
+        ":bazel_types",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

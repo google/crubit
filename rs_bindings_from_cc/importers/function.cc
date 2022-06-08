@@ -219,11 +219,9 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   std::string mangled_name = ictx_.GetMangledName(function_decl);
   if (is_member_or_descendant_of_class_template) {
-    // TODO(b/222001243): Avoid calling `ConvertToCcIdentifier(target)` to
-    // distinguish multiple definitions of a template instantiation.  Instead
-    // help the linker merge all the definitions into one, by defining the
-    // thunk via a function template - see "Handling thunks" section in
-    // <internal link>
+    // `thunks_for_class_template_member_functions.md` explains in more detail
+    // why the `mangled_name` has to include the target name when working with
+    // members or descendants of a class template.
     mangled_name += '_';
     mangled_name += ConvertToCcIdentifier(ictx_.GetOwningTarget(function_decl));
   }

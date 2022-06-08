@@ -2823,7 +2823,7 @@ mod tests {
                 impl __CcTemplateInst10MyTemplateIiE {
                     #[inline(always)]
                     pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> i32 { unsafe {
-                        crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv___test_testing_target(
+                        crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
                             self)
                     }}
                 }
@@ -2838,23 +2838,21 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                mod detail {
+                mod detail { ...  extern "C" {
                     ...
-                    extern "C" {
-                        ...
-                        pub(crate) fn
-                        __rust_thunk___ZN10MyTemplateIiE8GetValueEv___test_testing_target<'a>(
-                            __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
-                        ) -> i32;
-                        ...
-                    }
-                }
+                    pub(crate) fn
+                    __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget<'a>(
+                        __this: ... Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>
+                    ) -> i32;
+                    ...
+                } }
             }
         );
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" int __rust_thunk___ZN10MyTemplateIiE8GetValueEv___test_testing_target(
+                extern "C"
+                int __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
                         class MyTemplate<int>* __this) {
                     return __this->GetValue();
                 }
@@ -2901,7 +2899,8 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" class MyTemplate<int>
-                __rust_thunk___ZN10MyTemplateIiE6CreateEi___test_testing_target(int value) {
+                __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2ftest_3atesting_5ftarget(
+                        int value) {
                     return MyTemplate<int>::Create(std::forward<decltype(value)>(value));
                 }
             }
@@ -2910,7 +2909,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" int const&
-                __rust_thunk___ZNK10MyTemplateIiE5valueEv___test_testing_target(
+                __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2ftest_3atesting_5ftarget(
                         const class MyTemplate<int>*__this) {
                     return __this->value();
                 }

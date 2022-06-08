@@ -4,27 +4,36 @@
 
 #include "rs_bindings_from_cc/bazel_types.h"
 
+#include <limits>
+
 #include "absl/strings/ascii.h"
+#include "absl/strings/str_cat.h"
+#include "common/check.h"
 
 namespace crubit {
 
 std::string ConvertToCcIdentifier(const BazelLabel& target) {
-  std::string result = target.value();
+  std::string result;
+  {
+    size_t predicted_length = target.value().size();
+    if (predicted_length < (std::numeric_limits<size_t>::max() / 2))
+      predicted_length *= 2;
+    result.reserve(predicted_length);
+  }
 
-  // TODO(b/222001243): The escaping below can arrive at the same result for 2
-  // distinct targets like //foo/bar:baz and //foo_bar:baz.  In the long-term
-  // this should be fixed, or alternatively ConvertToCcIdentifier should be
-  // removed (the latter is the current plan of record - see also "Handling
-  // thunks" section in <internal link>).
-  for (char& c : result) {
-    if (!absl::ascii_isalnum(c)) {
-      c = '_';
+  // This is yet another escaping scheme... :-/  Compare this with
+  // https://github.com/bazelbuild/rules_rust/blob/1f2e6231de29d8fad8d21486f0d16403632700bf/rust/private/utils.bzl#L459-L586
+  for (char c : target.value()) {
+    if (absl::ascii_isalnum(c)) {
+      result += c;
+    } else {
+      absl::StrAppend(&result, "_", absl::Hex(c, absl::kZeroPad2));
     }
   }
-  if (!result.empty() && !absl::ascii_isalpha(result[0])) {
-    result[0] = '_';
-  }
+  result.shrink_to_fit();
 
+  CRUBIT_CHECK(!result.empty());
+  CRUBIT_CHECK(absl::ascii_isalpha(result[0]) || result[0] == '_');
   return result;
 }
 

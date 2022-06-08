@@ -305,7 +305,7 @@ impl Default for __CcTemplateInst10MyTemplateIfE {
     fn default() -> Self {
         let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp);
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -318,7 +318,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>>
     fn from(__param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>) -> Self {
         let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp,__param_0);
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp,__param_0);
             tmp.assume_init()
         }
     }
@@ -337,7 +337,7 @@ impl __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> &'a f32 {
         unsafe {
-            crate::detail::__rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(self)
+            crate::detail::__rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self)
         }
     }
 }
@@ -375,7 +375,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
     fn default() -> Self {
         let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp);
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp);
             tmp.assume_init()
         }
     }
@@ -388,7 +388,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>>
     fn from(__param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>) -> Self {
         let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
-            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(&mut tmp,__param_0);
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp,__param_0);
             tmp.assume_init()
         }
     }
@@ -409,7 +409,7 @@ impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> &'a i32 {
         unsafe {
-            crate::detail::__rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc(self)
+            crate::detail::__rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self)
         }
     }
 }
@@ -471,14 +471,14 @@ mod detail {
             __param_0: ctor::RvalueReference<'b, crate::MultilineOneStar>,
         );
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<
                 crate::__CcTemplateInst10MyTemplateIfE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
@@ -487,19 +487,19 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
         );
-        pub(crate) fn __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+        pub(crate) fn __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIfE,
         ) -> &'a f32;
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<
                 crate::__CcTemplateInst10MyTemplateIiE,
             >,
         );
-        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0____third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
             'b,
         >(
@@ -508,7 +508,7 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
         );
-        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv___third_party_crubit_rs_bindings_from_cc_test_golden_doc_comment_cc<
+        pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
             __this: &'a crate::__CcTemplateInst10MyTemplateIiE,
