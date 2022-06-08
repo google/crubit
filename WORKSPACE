@@ -16,10 +16,21 @@ http_archive(
     ],
 )
 
+# Register the Rust compiler/toolchain.
 load("@rules_rust//rust:repositories.bzl", "rules_rust_dependencies", "rust_register_toolchains")
-
 rules_rust_dependencies()
-
+# Bazel will prefer the toolchain registered first:
+load("//bazel:rust.bzl", "custom_rust_toolchain_repository")
+custom_rust_toolchain_repository(name = "custom_rust_toolchain_repo")
+# DO NOT SUBMIT / FIXME
+#
+# The `register_toolchains` call below is based on https://docs.bazel.build/versions/0.19.1/toolchains.html#creating-a-toolchain-definitio://docs.bazel.build/versions/0.19.1/toolchains.html#registering-a-toolchain 
+#
+# But... apparently this doesn't work how rust.bzl creates a BUILD file:
+#
+# ERROR: /usr/local/google/home/lukasza/src/chromium4/src/third_party/crubit/rs_bindings_from_cc/BUILD:62:10: While resolving toolchains for target //rs_bindings_from_cc:rs_bindings_from_cc_impl: invalid registered toolchain '@custom_rust_toolchain_repo//:custom_rust_toolchain': no such target '@custom_rust_toolchain_repo//:custom_rust_toolchain': target 'custom_rust_toolchain' not declared in package '' defined by /usr/local/google/home/lukasza/.cache/bazel/_bazel_lukasza/0aa27f9c6fcd7410d84c2f4a4fdcb7bc/external/custom_rust_toolchain_repo/BUILD
+register_toolchains("@custom_rust_toolchain_repo//:custom_rust_toolchain")
+# And the default Rust toolchain will be used as a fallback:
 rust_register_toolchains(edition = "2021")
 
 load("@rules_rust//crate_universe:repositories.bzl", "crate_universe_dependencies")
