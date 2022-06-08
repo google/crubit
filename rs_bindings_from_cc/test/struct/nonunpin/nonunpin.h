@@ -15,7 +15,16 @@ class Nonunpin {
   Nonunpin() {}
   explicit Nonunpin(int value) : value_(value) {}
   Nonunpin(const Nonunpin& other) : Nonunpin(other.value_) {}
+  Nonunpin& operator=(const Nonunpin& other) {
+    value_ = other.value_;
+    return *this;
+  }
   Nonunpin(Nonunpin&& other) : Nonunpin(other.value_) { other.value_ = 0; }
+  Nonunpin& operator=(Nonunpin&& other) {
+    value_ = other.value_;
+    other.value_ = 0;
+    return *this;
+  }
   ~Nonunpin() {}
   size_t addr() const { return addr_; }
   int value() const { return value_; }

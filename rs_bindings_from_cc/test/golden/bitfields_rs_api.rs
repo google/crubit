@@ -104,13 +104,29 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::WithBitfields>,)> for W
     }
 }
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=10
-// Error while generating bindings for item 'WithBitfields::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::WithBitfields> for WithBitfields {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::WithBitfields,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13WithBitfieldsaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/bitfields.h;l=10
-// Error while generating bindings for item 'WithBitfields::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::WithBitfields>> for WithBitfields {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::WithBitfields>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13WithBitfieldsaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_BITFIELDS_H_
 
@@ -129,6 +145,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::WithBitfields>,
             __param_0: ctor::RvalueReference<'b, crate::WithBitfields>,
         );
+        pub(crate) fn __rust_thunk___ZN13WithBitfieldsaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::WithBitfields>,
+            __param_0: &'b crate::WithBitfields,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::WithBitfields>;
+        pub(crate) fn __rust_thunk___ZN13WithBitfieldsaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::WithBitfields>,
+            __param_0: ctor::RvalueReference<'b, crate::WithBitfields>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::WithBitfields>;
     }
 }
 

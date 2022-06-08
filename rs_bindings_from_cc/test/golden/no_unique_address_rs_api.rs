@@ -64,11 +64,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::Struct>> for Struct {
 
 // rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 // Error while generating bindings for item 'Struct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 // Error while generating bindings for item 'Struct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 impl Struct {
     #[inline(always)]
@@ -125,11 +125,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::PaddingBetweenFields>> for Paddin
 
 // rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 // Error while generating bindings for item 'PaddingBetweenFields::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 // Error while generating bindings for item 'PaddingBetweenFields::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 impl PaddingBetweenFields {
     #[inline(always)]
@@ -199,9 +199,21 @@ impl<'b> ctor::CtorNew<(&'b crate::FieldInTailPadding_InnerStruct,)>
     }
 }
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
-// Error while generating bindings for item 'FieldInTailPadding_InnerStruct::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::FieldInTailPadding_InnerStruct>
+    for FieldInTailPadding_InnerStruct
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::FieldInTailPadding_InnerStruct,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
 /// User-defined destructor to make this struct non-POD for the purposes of
 /// layout.
@@ -299,13 +311,31 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
     }
 }
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
-// Error while generating bindings for item 'FieldInTailPadding::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::FieldInTailPadding> for FieldInTailPadding {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::FieldInTailPadding,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18FieldInTailPaddingaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
-// Error while generating bindings for item 'FieldInTailPadding::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::FieldInTailPadding>>
+    for FieldInTailPadding
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::FieldInTailPadding>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18FieldInTailPaddingaSEOS_(self, __param_0);
+        }
+    }
+}
 
 impl ctor::CtorNew<(i32, u8, u8)> for FieldInTailPadding {
     type CtorType = impl ctor::Ctor<Output = Self>;
@@ -361,6 +391,10 @@ mod detail {
             >,
             __param_0: &'b crate::FieldInTailPadding_InnerStruct,
         );
+        pub(crate) fn __rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>,
+            __param_0: &'b crate::FieldInTailPadding_InnerStruct,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>;
         pub(crate) fn __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding_InnerStruct>,
         );
@@ -375,6 +409,14 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN18FieldInTailPaddingD1Ev<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding>,
         );
+        pub(crate) fn __rust_thunk___ZN18FieldInTailPaddingaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding>,
+            __param_0: &'b crate::FieldInTailPadding,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding>;
+        pub(crate) fn __rust_thunk___ZN18FieldInTailPaddingaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding>,
+            __param_0: ctor::RvalueReference<'b, crate::FieldInTailPadding>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::FieldInTailPadding>;
         pub(crate) fn __rust_thunk___ZN18FieldInTailPaddingC1Eicc<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::FieldInTailPadding>,
             inner_int: i32,

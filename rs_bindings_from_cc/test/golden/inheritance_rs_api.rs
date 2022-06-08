@@ -90,13 +90,26 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Base0>,)> for Base0 {
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
-// Error while generating bindings for item 'Base0::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::Base0> for Base0 {
+    #[inline(always)]
+    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Base0) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base0aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=15
-// Error while generating bindings for item 'Base0::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::Base0>> for Base0 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::Base0>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base0aSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[ctor::recursively_pinned]
 #[repr(C, align(8))]
@@ -174,13 +187,26 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Base1>,)> for Base1 {
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=16
-// Error while generating bindings for item 'Base1::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::Base1> for Base1 {
+    #[inline(always)]
+    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Base1) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base1aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=16
-// Error while generating bindings for item 'Base1::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::Base1>> for Base1 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::Base1>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base1aSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[ctor::recursively_pinned]
 #[repr(C, align(2))]
@@ -255,13 +281,26 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Base2>,)> for Base2 {
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=21
-// Error while generating bindings for item 'Base2::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::Base2> for Base2 {
+    #[inline(always)]
+    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Base2) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base2aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=21
-// Error while generating bindings for item 'Base2::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::Base2>> for Base2 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::Base2>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN5Base2aSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
@@ -295,11 +334,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::Derived>> for Derived {
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=25
 // Error while generating bindings for item 'Derived::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/inheritance.h;l=25
 // Error while generating bindings for item 'Derived::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 unsafe impl oops::Inherits<crate::Base0> for Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base0 {
@@ -387,13 +426,29 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::VirtualBase1>,)> for Vi
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
-// Error while generating bindings for item 'VirtualBase1::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::VirtualBase1> for VirtualBase1 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::VirtualBase1,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase1aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=29
-// Error while generating bindings for item 'VirtualBase1::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::VirtualBase1>> for VirtualBase1 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::VirtualBase1>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase1aSEOS_(self, __param_0);
+        }
+    }
+}
 
 unsafe impl oops::Inherits<crate::Base1> for VirtualBase1 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
@@ -471,13 +526,29 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::VirtualBase2>,)> for Vi
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=30
-// Error while generating bindings for item 'VirtualBase2::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::VirtualBase2> for VirtualBase2 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::VirtualBase2,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase2aSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=30
-// Error while generating bindings for item 'VirtualBase2::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::VirtualBase2>> for VirtualBase2 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::VirtualBase2>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12VirtualBase2aSEOS_(self, __param_0);
+        }
+    }
+}
 
 unsafe impl oops::Inherits<crate::Base1> for VirtualBase2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
@@ -555,13 +626,29 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::VirtualDerived>,)> for 
     }
 }
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=31
-// Error while generating bindings for item 'VirtualDerived::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::VirtualDerived> for VirtualDerived {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::VirtualDerived,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14VirtualDerivedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/inheritance.h;l=31
-// Error while generating bindings for item 'VirtualDerived::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::VirtualDerived>> for VirtualDerived {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::VirtualDerived>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14VirtualDerivedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 unsafe impl oops::Inherits<crate::VirtualBase1> for VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase1 {
@@ -600,6 +687,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base0>,
             __param_0: ctor::RvalueReference<'b, crate::Base0>,
         );
+        pub(crate) fn __rust_thunk___ZN5Base0aSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Base0>,
+            __param_0: &'b crate::Base0,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::Base0>;
+        pub(crate) fn __rust_thunk___ZN5Base0aSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Base0>,
+            __param_0: ctor::RvalueReference<'b, crate::Base0>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::Base0>;
         pub(crate) fn __rust_thunk___ZN5Base1C1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base1>,
         );
@@ -611,6 +706,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base1>,
             __param_0: ctor::RvalueReference<'b, crate::Base1>,
         );
+        pub(crate) fn __rust_thunk___ZN5Base1aSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Base1>,
+            __param_0: &'b crate::Base1,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::Base1>;
+        pub(crate) fn __rust_thunk___ZN5Base1aSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Base1>,
+            __param_0: ctor::RvalueReference<'b, crate::Base1>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::Base1>;
         pub(crate) fn __rust_thunk___ZN5Base2C1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base2>,
         );
@@ -622,6 +725,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Base2>,
             __param_0: ctor::RvalueReference<'b, crate::Base2>,
         );
+        pub(crate) fn __rust_thunk___ZN5Base2aSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Base2>,
+            __param_0: &'b crate::Base2,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::Base2>;
+        pub(crate) fn __rust_thunk___ZN5Base2aSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::Base2>,
+            __param_0: ctor::RvalueReference<'b, crate::Base2>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::Base2>;
         pub(crate) fn __rust_thunk___ZN7DerivedC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Derived>,
         );
@@ -640,6 +751,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase1>,
             __param_0: ctor::RvalueReference<'b, crate::VirtualBase1>,
         );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase1aSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::VirtualBase1>,
+            __param_0: &'b crate::VirtualBase1,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::VirtualBase1>;
+        pub(crate) fn __rust_thunk___ZN12VirtualBase1aSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::VirtualBase1>,
+            __param_0: ctor::RvalueReference<'b, crate::VirtualBase1>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::VirtualBase1>;
         pub fn __crubit_dynamic_upcast__VirtualBase1__to__Base1(
             from: *const VirtualBase1,
         ) -> *const crate::Base1;
@@ -654,6 +773,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualBase2>,
             __param_0: ctor::RvalueReference<'b, crate::VirtualBase2>,
         );
+        pub(crate) fn __rust_thunk___ZN12VirtualBase2aSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::VirtualBase2>,
+            __param_0: &'b crate::VirtualBase2,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::VirtualBase2>;
+        pub(crate) fn __rust_thunk___ZN12VirtualBase2aSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::VirtualBase2>,
+            __param_0: ctor::RvalueReference<'b, crate::VirtualBase2>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::VirtualBase2>;
         pub fn __crubit_dynamic_upcast__VirtualBase2__to__Base1(
             from: *const VirtualBase2,
         ) -> *const crate::Base1;
@@ -668,6 +795,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::VirtualDerived>,
             __param_0: ctor::RvalueReference<'b, crate::VirtualDerived>,
         );
+        pub(crate) fn __rust_thunk___ZN14VirtualDerivedaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::VirtualDerived>,
+            __param_0: &'b crate::VirtualDerived,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::VirtualDerived>;
+        pub(crate) fn __rust_thunk___ZN14VirtualDerivedaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::VirtualDerived>,
+            __param_0: ctor::RvalueReference<'b, crate::VirtualDerived>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::VirtualDerived>;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(
             from: *const VirtualDerived,
         ) -> *const crate::VirtualBase1;

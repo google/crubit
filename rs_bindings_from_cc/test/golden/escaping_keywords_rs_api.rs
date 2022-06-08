@@ -48,11 +48,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::r#type>> for r#type {
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 // Error while generating bindings for item 'type::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 // Error while generating bindings for item 'type::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 #[inline(always)]
 pub fn r#impl(r#match: i32) {

@@ -94,13 +94,31 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::HasCustomAlignment>,)>
     }
 }
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
-// Error while generating bindings for item 'HasCustomAlignment::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::HasCustomAlignment> for HasCustomAlignment {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::HasCustomAlignment,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18HasCustomAlignmentaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=10
-// Error while generating bindings for item 'HasCustomAlignment::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::HasCustomAlignment>>
+    for HasCustomAlignment
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignment>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18HasCustomAlignmentaSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[ctor::recursively_pinned]
 #[repr(C)]
@@ -183,13 +201,31 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::HasFieldWithCustomAlign
     }
 }
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
-// Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::HasFieldWithCustomAlignment> for HasFieldWithCustomAlignment {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::HasFieldWithCustomAlignment,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=12
-// Error while generating bindings for item 'HasFieldWithCustomAlignment::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>>
+    for HasFieldWithCustomAlignment
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_(self, __param_0);
+        }
+    }
+}
 
 #[ctor::recursively_pinned]
 #[repr(C, align(64))]
@@ -278,13 +314,37 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::InheritsFromBaseWithCus
     }
 }
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
-// Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::InheritsFromBaseWithCustomAlignment>
+    for InheritsFromBaseWithCustomAlignment
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=16
-// Error while generating bindings for item 'InheritsFromBaseWithCustomAlignment::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>>
+    for InheritsFromBaseWithCustomAlignment
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
 unsafe impl oops::Inherits<crate::HasCustomAlignment> for InheritsFromBaseWithCustomAlignment {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::HasCustomAlignment {
@@ -375,13 +435,33 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::HasCustomAlignmentWithG
     }
 }
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
-// Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::HasCustomAlignmentWithGnuAttr>
+    for HasCustomAlignmentWithGnuAttr
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/clang_attrs.h;l=18
-// Error while generating bindings for item 'HasCustomAlignmentWithGnuAttr::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>>
+    for HasCustomAlignmentWithGnuAttr
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_(self, __param_0);
+        }
+    }
+}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
 
@@ -400,6 +480,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignment>,
             __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignment>,
         );
+        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignment>,
+            __param_0: &'b crate::HasCustomAlignment,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignment>;
+        pub(crate) fn __rust_thunk___ZN18HasCustomAlignmentaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignment>,
+            __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignment>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
         );
@@ -411,6 +499,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasFieldWithCustomAlignment>,
             __param_0: ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
         );
+        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>,
+            __param_0: &'b crate::HasFieldWithCustomAlignment,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>;
+        pub(crate) fn __rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>,
+            __param_0: ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::HasFieldWithCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<
                 crate::InheritsFromBaseWithCustomAlignment,
@@ -428,6 +524,14 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
         );
+        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>,
+            __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>;
+        pub(crate) fn __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>,
+            __param_0: ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::InheritsFromBaseWithCustomAlignment>;
         pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
         );
@@ -439,6 +543,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
         );
+        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
+            __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
+        pub(crate) fn __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
+            __param_0: ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
     }
 }
 

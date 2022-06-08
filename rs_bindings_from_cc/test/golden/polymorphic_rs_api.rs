@@ -66,9 +66,17 @@ impl<'b> ctor::CtorNew<(&'b crate::PolymorphicBase,)> for PolymorphicBase {
     }
 }
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=10
-// Error while generating bindings for item 'PolymorphicBase::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::PolymorphicBase> for PolymorphicBase {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::PolymorphicBase,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15PolymorphicBaseaSERKS_(self, __param_0);
+        }
+    }
+}
 
 impl ::ctor::PinnedDrop for PolymorphicBase {
     #[inline(always)]
@@ -126,9 +134,17 @@ impl<'b> ctor::CtorNew<(&'b crate::PolymorphicBase2,)> for PolymorphicBase2 {
     }
 }
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=14
-// Error while generating bindings for item 'PolymorphicBase2::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::PolymorphicBase2,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16PolymorphicBase2aSERKS_(self, __param_0);
+        }
+    }
+}
 
 impl PolymorphicBase2 {
     #[inline(always)]
@@ -228,13 +244,31 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
     }
 }
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=20
-// Error while generating bindings for item 'PolymorphicDerived::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::PolymorphicDerived> for PolymorphicDerived {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::PolymorphicDerived,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/polymorphic.h;l=20
-// Error while generating bindings for item 'PolymorphicDerived::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::PolymorphicDerived>>
+    for PolymorphicDerived
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::PolymorphicDerived>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_POLYMORPHIC_H_
 
@@ -249,6 +283,10 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::PolymorphicBase>,
             __param_0: &'b crate::PolymorphicBase,
         );
+        pub(crate) fn __rust_thunk___ZN15PolymorphicBaseaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase>,
+            __param_0: &'b crate::PolymorphicBase,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase>;
         pub(crate) fn __rust_thunk___ZN15PolymorphicBaseD1Ev<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase>,
         );
@@ -259,6 +297,10 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::PolymorphicBase2>,
             __param_0: &'b crate::PolymorphicBase2,
         );
+        pub(crate) fn __rust_thunk___ZN16PolymorphicBase2aSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase2>,
+            __param_0: &'b crate::PolymorphicBase2,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase2>;
         pub(crate) fn __rust_thunk___ZN16PolymorphicBase23FooEv<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicBase2>,
         );
@@ -279,6 +321,14 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedD1Ev<'a>(
             __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicDerived>,
         );
+        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicDerived>,
+            __param_0: &'b crate::PolymorphicDerived,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::PolymorphicDerived>;
+        pub(crate) fn __rust_thunk___ZN18PolymorphicDerivedaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::PolymorphicDerived>,
+            __param_0: ctor::RvalueReference<'b, crate::PolymorphicDerived>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::PolymorphicDerived>;
     }
 }
 

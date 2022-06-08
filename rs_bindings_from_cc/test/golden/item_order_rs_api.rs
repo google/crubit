@@ -48,11 +48,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::FirstStruct>> for FirstStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 #[inline(always)]
 pub fn first_func() -> i32 {
@@ -90,11 +90,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::SecondStruct>> for SecondStruct {
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 #[inline(always)]
 pub fn second_func() -> i32 {

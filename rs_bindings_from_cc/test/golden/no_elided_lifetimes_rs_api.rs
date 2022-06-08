@@ -43,7 +43,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
@@ -75,7 +75,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=15
 // Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::operator=':
-// Bindings for this kind of operator are not supported
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=16
 // Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':

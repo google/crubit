@@ -48,11 +48,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
 
 // rs_bindings_from_cc/test/golden/unions.h;l=10
 // Error while generating bindings for item 'EmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/unions.h;l=10
 // Error while generating bindings for item 'EmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 #[ctor::recursively_pinned]
 #[repr(C)]
@@ -111,9 +111,21 @@ forward_declare::unsafe_define!(
     crate::TriviallyCopyableButNontriviallyDestructible
 );
 
-// rs_bindings_from_cc/test/golden/unions.h;l=19
-// Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::TriviallyCopyableButNontriviallyDestructible>
+    for TriviallyCopyableButNontriviallyDestructible
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
 impl<'b> ctor::CtorNew<&'b crate::TriviallyCopyableButNontriviallyDestructible>
     for TriviallyCopyableButNontriviallyDestructible
@@ -185,11 +197,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion
 
 // rs_bindings_from_cc/test/golden/unions.h;l=25
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/unions.h;l=25
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 #[ctor::recursively_pinned]
 #[repr(C)]
@@ -231,11 +243,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::NonCopyUnion2>> for NonCopyUnion2
 
 // rs_bindings_from_cc/test/golden/unions.h;l=37
 // Error while generating bindings for item 'NonCopyUnion2::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/unions.h;l=37
 // Error while generating bindings for item 'NonCopyUnion2::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -273,11 +285,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::UnionWithOpaqueField>> for UnionW
 
 // rs_bindings_from_cc/test/golden/unions.h;l=42
 // Error while generating bindings for item 'UnionWithOpaqueField::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/unions.h;l=42
 // Error while generating bindings for item 'UnionWithOpaqueField::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
 
@@ -301,6 +313,15 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Nontrivial>,
             __param_0: ctor::RvalueReference<'b, crate::Nontrivial>,
         );
+        pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
+            >,
+            __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>;
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_<
             'a,
             'b,

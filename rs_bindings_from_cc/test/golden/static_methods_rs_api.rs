@@ -51,11 +51,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::SomeClass>> for SomeClass {
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=10
 // Error while generating bindings for item 'SomeClass::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/static_methods.h;l=10
 // Error while generating bindings for item 'SomeClass::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 impl SomeClass {
     /// Example of a factory method.

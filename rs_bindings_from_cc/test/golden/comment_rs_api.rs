@@ -58,11 +58,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::Foo>> for Foo {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/comment.h;l=17
 // Error while generating bindings for item 'Foo::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // TODO(rosica): This comment appears near fields of a struct, and
 // is currently generated below the struct definiton on the Rust side.
@@ -117,11 +117,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::Bar>> for Bar {
 
 // rs_bindings_from_cc/test/golden/comment.h;l=46
 // Error while generating bindings for item 'Bar::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/comment.h;l=46
 // Error while generating bindings for item 'Bar::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 /// d
 #[derive(Clone, Copy)]
@@ -155,11 +155,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::HasNoComments>> for HasNoComments
 
 // rs_bindings_from_cc/test/golden/comment.h;l=52
 // Error while generating bindings for item 'HasNoComments::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/comment.h;l=52
 // Error while generating bindings for item 'HasNoComments::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // e
 

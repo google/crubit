@@ -17,6 +17,9 @@ struct Nontrivial final {
   explicit Nontrivial(int field);
   explicit Nontrivial(int field, int unused);
   Nontrivial(Nontrivial&&);
+  Nontrivial& operator=(const Nontrivial&);
+  Nontrivial& operator=(Nontrivial&&);
+  Nontrivial& operator=(int);
   ~Nontrivial();
 
   void MemberFunction();
@@ -33,6 +36,9 @@ struct NontrivialInline final {
   explicit NontrivialInline(int field) : field(field) {}
   explicit NontrivialInline(int field, int unused) : NontrivialInline(field) {}
   NontrivialInline(NontrivialInline&&) {}
+  NontrivialInline& operator=(const NontrivialInline&) { return *this; }
+  NontrivialInline& operator=(NontrivialInline&&) { return *this; }
+  NontrivialInline& operator=(int) { return *this; }
   ~NontrivialInline() {}
 
   void MemberFunction() {}
@@ -55,6 +61,9 @@ struct [[clang::trivial_abi]] NontrivialUnpin final {
   explicit NontrivialUnpin(int field);
   explicit NontrivialUnpin(int field, int unused);
   NontrivialUnpin(Nontrivial&&);
+  NontrivialUnpin& operator=(const NontrivialUnpin&);
+  NontrivialUnpin& operator=(NontrivialUnpin&&);
+  NontrivialUnpin& operator=(int);
   ~NontrivialUnpin();
 
   void MemberFunction();
@@ -75,5 +84,12 @@ Nontrivial& TakesByReference(Nontrivial& nontrivial);
 const NontrivialUnpin& TakesByConstReferenceUnpin(
     const NontrivialUnpin& nontrivial);
 NontrivialUnpin& TakesByReferenceUnpin(NontrivialUnpin& nontrivial);
+
+// Finally, testing for strange by-value APIs.
+struct NontrivialByValue {
+  // NOLINTNEXTLINE(misc-unconventional-assign-operator)
+  NontrivialByValue operator=(NontrivialByValue other);
+  NontrivialByValue operator==(NontrivialByValue other);
+};
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_

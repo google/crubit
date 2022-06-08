@@ -45,11 +45,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::DocCommentSlashes>> for DocCommen
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
@@ -138,11 +138,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::DocCommentBang>> for DocCommentBa
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'DocCommentBang::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'DocCommentBang::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 /// Multiline comment
 ///
@@ -184,11 +184,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>>
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 /// Line comment
 ///
@@ -225,11 +225,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::LineComment>> for LineComment {
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 // Error while generating bindings for item 'LineComment::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 // Error while generating bindings for item 'LineComment::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 /// Multiline comment
 ///
@@ -269,11 +269,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::MultilineOneStar>> for MultilineO
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 // Error while generating bindings for item 'MultilineOneStar::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 // Error while generating bindings for item 'MultilineOneStar::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 /// A function
 #[inline(always)]
@@ -326,11 +326,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>>
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 impl __CcTemplateInst10MyTemplateIfE {
     /// A non-static member function in a specialization.
@@ -396,11 +396,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>>
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // A non-static member function.
 

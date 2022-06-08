@@ -7,6 +7,8 @@
 
 #include "rs_bindings_from_cc/test/golden/inheritance.h"
 
+#pragma clang lifetime_elision
+
 // The same as Derived from inheritance.h, but in a different build target.
 //
 // This tests inheritance across library boundaries.

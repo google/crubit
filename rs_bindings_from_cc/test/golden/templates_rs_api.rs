@@ -113,13 +113,33 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTem
     }
 }
 
-// rs_bindings_from_cc/test/golden/templates.h;l=11
-// Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::__CcTemplateInst10MyTemplateIiE>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::__CcTemplateInst10MyTemplateIiE,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=11
-// Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
@@ -223,13 +243,34 @@ impl<'b>
     }
 }
 
-// rs_bindings_from_cc/test/golden/templates.h;l=29
-// Error while generating bindings for item 'TemplateWithTwoParams<int, float>::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE>
+    for __CcTemplateInst21TemplateWithTwoParamsIifE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/templates.h;l=29
-// Error while generating bindings for item 'TemplateWithTwoParams<int, float>::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b>
+    ::ctor::Assign<ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>>
+    for __CcTemplateInst21TemplateWithTwoParamsIifE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst21TemplateWithTwoParamsIifE>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN21TemplateWithTwoParamsIifEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -260,6 +301,20 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
         );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>,
+            __param_0: &'b crate::__CcTemplateInst10MyTemplateIiE,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>;
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>,
+            __param_0: ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst10MyTemplateIiE>;
         pub(crate) fn __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: i32,
         ) -> crate::__CcTemplateInst10MyTemplateIiE;
@@ -296,6 +351,27 @@ mod detail {
                 crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
             >,
         );
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+            __param_0: &'b crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst21TemplateWithTwoParamsIifE>;
+        pub(crate) fn __rust_thunk___ZN21TemplateWithTwoParamsIifEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+            __param_0: ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInst21TemplateWithTwoParamsIifE,
+            >,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst21TemplateWithTwoParamsIifE>;
     }
 }
 

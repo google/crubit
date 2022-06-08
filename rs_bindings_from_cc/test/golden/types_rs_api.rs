@@ -48,11 +48,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
 
 // rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 

@@ -87,13 +87,26 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::SomeStruct>,)> for Some
     }
 }
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=10
-// Error while generating bindings for item 'SomeStruct::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+    #[inline(always)]
+    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, __param_0: &'b crate::SomeStruct) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=10
-// Error while generating bindings for item 'SomeStruct::operator=':
-// Bindings for this kind of operator are not supported
+impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
+    #[inline(always)]
+    fn assign<'a>(
+        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=11
 // Error while generating bindings for item 'SomeStruct':
@@ -134,11 +147,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::SomeUnion>> for SomeUnion {
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=16
 // Error while generating bindings for item 'SomeUnion::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=16
 // Error while generating bindings for item 'SomeUnion::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=17
 // Error while generating bindings for item 'SomeUnion':
@@ -165,6 +178,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::SomeStruct>,
+            __param_0: &'b crate::SomeStruct,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::SomeStruct>;
+        pub(crate) fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::SomeStruct>,
+            __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::SomeStruct>;
         pub(crate) fn __rust_thunk___ZN9SomeUnionC1Ev<'a>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeUnion>,
         );

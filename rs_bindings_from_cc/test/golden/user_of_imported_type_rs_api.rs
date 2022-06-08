@@ -60,11 +60,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfIm
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=15
 // Error while generating bindings for item 'UserOfImportedType::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=15
 // Error while generating bindings for item 'UserOfImportedType::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
 

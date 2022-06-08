@@ -425,6 +425,29 @@ fn api_func_shape<'ir>(
                 }
             };
         }
+        UnqualifiedIdentifier::Operator(op) if op.name == "=" => {
+            assert_eq!(
+                param_types.len(),
+                2,
+                "Unexpected number of parameters in operator=: {func:?}"
+            );
+            let record =
+                maybe_record.ok_or_else(|| anyhow!("operator= must be a member function."))?;
+            if record.is_unpin() {
+                bail!("operator= for Unpin types is not yet supported.");
+            }
+            let rhs = &param_types[1];
+            impl_kind = ImplKind::new_trait(
+                TraitName::Other {
+                    name: quote! {::ctor::Assign},
+                    params: vec![rhs.clone()],
+                    is_unsafe_fn: false,
+                },
+                make_rs_ident(&record.rs_name),
+                /* format_first_param_as_self= */ true,
+            );
+            func_name = make_rs_ident("assign");
+        }
         UnqualifiedIdentifier::Operator(_) => {
             bail!("Bindings for this kind of operator are not supported");
         }
@@ -711,6 +734,13 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
             }
             _ => {
                 let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
+                // Somewhat hacky: discard the return value for operator=.
+                if let UnqualifiedIdentifier::Operator(op) = &func.name {
+                    if op.name == "=" {
+                        body = quote! { #body; };
+                        return_type_fragment = quote! {};
+                    }
+                }
                 // Only need to wrap everything in an `unsafe { ... }` block if
                 // the *whole* api function is safe.
                 if !impl_kind.is_unsafe() {
@@ -4995,6 +5025,84 @@ mod tests {
                     #[inline(always)]
                     fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeStruct) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_assign() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct SomeStruct {
+                SomeStruct& operator=(const SomeStruct& other);
+            };"#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, other: &'b crate::SomeStruct) {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
+                        }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_assign_nonreference_other() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct SomeStruct {
+                SomeStruct& operator=(int other);
+            };"#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, __param_0: &'b crate::SomeStruct) {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
+                        }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_assign_nonreference_return() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct SomeStruct {
+                int operator=(const SomeStruct& other);
+            };"#,
+        )?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn assign<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>, other: &'b crate::SomeStruct) {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
+                        }
                     }
                 }
             }

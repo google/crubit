@@ -19,11 +19,20 @@ extern "C" void __rust_thunk___ZN8Derived2C1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN8Derived2C1EOS_(class Derived2* __this,
+                                                 class Derived2&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN8Derived2D1Ev(class Derived2* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class Derived2& __rust_thunk___ZN8Derived2aSERKS_(
     class Derived2* __this, const class Derived2& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class Derived2& __rust_thunk___ZN8Derived2aSEOS_(
+    class Derived2* __this, class Derived2&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN15VirtualDerived2C1Ev(
@@ -35,12 +44,21 @@ extern "C" void __rust_thunk___ZN15VirtualDerived2C1ERKS_(
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___ZN15VirtualDerived2C1EOS_(
+    class VirtualDerived2* __this, class VirtualDerived2&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN15VirtualDerived2D1Ev(
     class VirtualDerived2* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" class VirtualDerived2& __rust_thunk___ZN15VirtualDerived2aSERKS_(
     class VirtualDerived2* __this, const class VirtualDerived2& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class VirtualDerived2& __rust_thunk___ZN15VirtualDerived2aSEOS_(
+    class VirtualDerived2* __this, class VirtualDerived2&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 

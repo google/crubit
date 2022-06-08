@@ -4,8 +4,8 @@
 
 #[cfg(test)]
 mod tests {
-    use ctor::CtorNew as _;
     use ctor::{ctor, ConstRvalueReference, RvalueReference};
+    use ctor::{Assign as _, CtorNew as _};
     use nonunpin::{Nonunpin, NonunpinStruct};
     use std::pin::Pin;
 
@@ -30,7 +30,7 @@ mod tests {
     }
 
     #[test]
-    fn test_move() {
+    fn test_move_construct() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
             let mut y = ctor::mov(x.as_mut());
@@ -44,11 +44,42 @@ mod tests {
     }
 
     #[test]
-    fn test_copy() {
+    fn test_move_assign() {
+        ctor::emplace! {
+            let mut x = Nonunpin::ctor_new(42);
+            let mut y = Nonunpin::ctor_new(8);
+        }
+
+        y.as_mut().assign(ctor::mov(x.as_mut()));
+
+        assert_eq!(x.value(), 0); // moved-from
+        assert_eq!(y.value(), 42); // moved-to
+
+        assert_eq!(x.addr(), &*x as *const _ as usize);
+        assert_eq!(y.addr(), &*y as *const _ as usize);
+    }
+
+    #[test]
+    fn test_copy_construct() {
         ctor::emplace! {
             let x = Nonunpin::ctor_new(42);
             let y = ctor::copy(&*x);
         }
+
+        assert_eq!(x.value(), 42);
+        assert_eq!(y.value(), 42);
+
+        assert_eq!(x.addr(), &*x as *const _ as usize);
+        assert_eq!(y.addr(), &*y as *const _ as usize);
+    }
+
+    #[test]
+    fn test_copy_assign() {
+        ctor::emplace! {
+            let x = Nonunpin::ctor_new(42);
+            let mut y = Nonunpin::ctor_new(8);
+        }
+        y.as_mut().assign(&*x);
 
         assert_eq!(x.value(), 42);
         assert_eq!(y.value(), 42);

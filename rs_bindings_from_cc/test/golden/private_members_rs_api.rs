@@ -60,11 +60,11 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/private_members.h;l=11
     // Error while generating bindings for item 'SomeClass::operator=':
-    // Bindings for this kind of operator are not supported
+    // operator= for Unpin types is not yet supported.
 
     // rs_bindings_from_cc/test/golden/private_members.h;l=11
     // Error while generating bindings for item 'SomeClass::operator=':
-    // Bindings for this kind of operator are not supported
+    // operator= for Unpin types is not yet supported.
 
     impl SomeClass {
         #[inline(always)]

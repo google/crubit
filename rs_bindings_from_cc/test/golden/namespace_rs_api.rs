@@ -92,13 +92,31 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=11
-    // Error while generating bindings for item 'S::operator=':
-    // Bindings for this kind of operator are not supported
+    impl<'b> ::ctor::Assign<&'b crate::test_namespace_bindings::S> for S {
+        #[inline(always)]
+        fn assign<'a>(
+            self: crate::rust_std::pin::Pin<&'a mut Self>,
+            __param_0: &'b crate::test_namespace_bindings::S,
+        ) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings1SaSERKS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=11
-    // Error while generating bindings for item 'S::operator=':
-    // Bindings for this kind of operator are not supported
+    impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::test_namespace_bindings::S>> for S {
+        #[inline(always)]
+        fn assign<'a>(
+            self: crate::rust_std::pin::Pin<&'a mut Self>,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
+        ) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings1SaSEOS0_(self, __param_0);
+            }
+        }
+    }
 
     /// Free comment inside namespace
     #[inline(always)]
@@ -219,13 +237,36 @@ pub mod test_namespace_bindings_reopened_0 {
             }
         }
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=31
-        // Error while generating bindings for item 'S::operator=':
-        // Bindings for this kind of operator are not supported
+        impl<'b> ::ctor::Assign<&'b crate::test_namespace_bindings_reopened::inner::S> for S {
+            #[inline(always)]
+            fn assign<'a>(
+                self: crate::rust_std::pin::Pin<&'a mut Self>,
+                __param_0: &'b crate::test_namespace_bindings_reopened::inner::S,
+            ) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_(self,__param_0);
+                }
+            }
+        }
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=31
-        // Error while generating bindings for item 'S::operator=':
-        // Bindings for this kind of operator are not supported
+        impl<'b>
+            ::ctor::Assign<
+                ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+            > for S
+        {
+            #[inline(always)]
+            fn assign<'a>(
+                self: crate::rust_std::pin::Pin<&'a mut Self>,
+                __param_0: ctor::RvalueReference<
+                    'b,
+                    crate::test_namespace_bindings_reopened::inner::S,
+                >,
+            ) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSEOS1_(self,__param_0);
+                }
+            }
+        }
     }
 
     // namespace inner
@@ -273,6 +314,14 @@ mod detail {
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
             __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::S>,
+            __param_0: &'b crate::test_namespace_bindings::S,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::S>;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SaSEOS0_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::S>,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::S>;
         #[link_name = "_ZN23test_namespace_bindings1fENS_1SE"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1fENS_1SE(
             s: crate::test_namespace_bindings::S,
@@ -298,6 +347,18 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
         );
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings_reopened::inner::S,
+            >,
+            __param_0: &'b crate::test_namespace_bindings_reopened::inner::S,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings_reopened::inner::S>;
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSEOS1_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings_reopened::inner::S,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings_reopened::inner::S>;
         #[link_name = "_ZN32test_namespace_bindings_reopened1yEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1yEv();
         #[link_name = "_ZN32test_namespace_bindings_reopened5inner1zENS0_1SE"]

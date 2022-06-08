@@ -118,11 +118,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::ContainingStruct>> for Containing
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'ContainingStruct::operator=':
-// Bindings for this kind of operator are not supported
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=31
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':

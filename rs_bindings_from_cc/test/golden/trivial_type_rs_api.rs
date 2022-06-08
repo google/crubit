@@ -58,11 +58,11 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     // Error while generating bindings for item 'Trivial::operator=':
-    // Bindings for this kind of operator are not supported
+    // operator= for Unpin types is not yet supported.
 
     // rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     // Error while generating bindings for item 'Trivial::operator=':
-    // Bindings for this kind of operator are not supported
+    // operator= for Unpin types is not yet supported.
 
     /// Defaulted special member functions are trivial on a struct with only trivial
     /// members.
@@ -91,7 +91,7 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/trivial_type.h;l=23
     // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-    // Bindings for this kind of operator are not supported
+    // operator= for Unpin types is not yet supported.
 
     impl<'b> From<ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialWithDefaulted>>
         for TrivialWithDefaulted
@@ -113,7 +113,7 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/trivial_type.h;l=25
     // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-    // Bindings for this kind of operator are not supported
+    // operator= for Unpin types is not yet supported.
 
     /// This struct is trivial, and therefore trivially relocatable etc., but still
     /// not safe to pass by reference as it is not final.
@@ -210,13 +210,36 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // rs_bindings_from_cc/test/golden/trivial_type.h;l=34
-    // Error while generating bindings for item 'TrivialNonfinal::operator=':
-    // Bindings for this kind of operator are not supported
+    impl<'b> ::ctor::Assign<&'b crate::test_namespace_bindings::TrivialNonfinal> for TrivialNonfinal {
+        #[inline(always)]
+        fn assign<'a>(
+            self: crate::rust_std::pin::Pin<&'a mut Self>,
+            __param_0: &'b crate::test_namespace_bindings::TrivialNonfinal,
+        ) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSERKS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
-    // rs_bindings_from_cc/test/golden/trivial_type.h;l=34
-    // Error while generating bindings for item 'TrivialNonfinal::operator=':
-    // Bindings for this kind of operator are not supported
+    impl<'b>
+        ::ctor::Assign<ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>>
+        for TrivialNonfinal
+    {
+        #[inline(always)]
+        fn assign<'a>(
+            self: crate::rust_std::pin::Pin<&'a mut Self>,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
+        ) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSEOS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
     #[inline(always)]
     pub fn TakesByValue(trivial: crate::test_namespace_bindings::Trivial) {
@@ -322,6 +345,18 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSERKS0_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings::TrivialNonfinal,
+            >,
+            __param_0: &'b crate::test_namespace_bindings::TrivialNonfinal,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::TrivialNonfinal>;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSEOS0_<'a, 'b>(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings::TrivialNonfinal,
+            >,
+            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
+        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::TrivialNonfinal>;
         #[link_name = "_ZN23test_namespace_bindings12TakesByValueENS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings12TakesByValueENS_7TrivialE(
             trivial: crate::test_namespace_bindings::Trivial,
