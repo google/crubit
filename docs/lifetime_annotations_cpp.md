@@ -25,10 +25,8 @@ goals:
 The annotation scheme is inspired by Rust lifetimes, but it is adapted to C++ so
 that it can be incrementally rolled out to existing C++ codebases. Furthermore,
 the annotations can be automatically added to an existing codebase by a tool
-that infers the annotations based on the current behavior of each function’s
-implementation.
-
-TODO: Add a link to the document describing the static analysis.
+that [infers the annotations](lifetimes_static_analysis.md) based on the current
+behavior of each function’s implementation.
 
 While the annotation scheme can express a large subset of Rust’s lifetime
 semantics, we have omitted some constructs that we do not expect to be necessary

@@ -16,10 +16,7 @@ appears reasonably stable, we plan to update this document to describe it.
 Lifetime analysis has two goals:
 
 *   Infer lifetime annotations to put in C++ function signatures, using the
-    attributes described in this doc.
-
-    TODO: Add a link once we have uploaded a Markdown version of the lifetime
-    annotation specification.
+    attributes described in [this doc](lifetime_annotations_cpp.md).
 *   Verify lifetime-correctness of function bodies.
 
 To infer and verify lifetimes, we perform a
@@ -229,8 +226,8 @@ Inferring lifetimes for virtual member functions is complicated by two factors:
     pure virtual) are typically contained in different translation units, and we
     plan to analyze each translation unit individually.
 
-TODO: Add links to the lifetime annotation specification, which has additional
-discussion of both of the points above.
+For more details, see [this section](lifetime_annotations_cpp.md#functions) in
+the lifetime annotation specification.
 
 We will describe an approach that can infer and update lifetimes for virtual
 member functions progressively, as each translation unit is processed.
@@ -297,11 +294,10 @@ Templates pose a specific challenge to lifetime analysis:
         arguments and dependent types do not contain any reference-like types.
         We show an example of this below.
 
-The lifetime annotation specification defines what the semantics of lifetimes on
-templates should be but does not say how they should be implemented. That is the
-purpose of this section.
-
-TODO: Add a link to the lifetime annotation specification.
+The lifetime annotation specification
+[defines](lifetime_annotations_cpp.md#templates) what the semantics of lifetimes
+on templates should be but does not say how they should be implemented. That is
+the purpose of this section.
 
 #### Example scenarios
 
@@ -331,11 +327,10 @@ template itself. These member functions operate only on pointers to `T`, and the
 lifetime behavior of a pointer to `T` is independent of the type `T` itself[^3].
 
 On the other hand, we cannot infer the lifetimes of the copy constructor. It
-calls the copy constructor of `T`, and as explained in the lifetime annotation
-specification, copy and move operations can have two
+calls the copy constructor of `T`, and as
+[explained](lifetime_annotations_cpp.md#special-member-functions) in the
+lifetime annotation specification, copy and move operations can have two
 different lifetime signatures.
-
-TODO: Add a link to relevant section of the lifetime annotation specification.
 
 Here is another example of how lifetimes can depend on a template argument:
 
@@ -403,8 +398,6 @@ As discussed in the lifetime annotation specification, any lifetimes in a
 template argument should be propagated to all uses of the argument. Clang does
 not provide a built-in mechanism for this, so this needs to be done in the
 lifetime analysis code.
-
-TODO: Add a link to relevant section of the lifetime annotation specification.
 
 ### Verifying lifetime correctness
 
