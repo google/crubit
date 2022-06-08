@@ -107,26 +107,30 @@ Pros:
 
 Cons:
 
--   **Depends on implementation details of Clang**:
-    -   It is unclear if the function template specialization is guaranteed to
-        use the C calling convention
-    -   Requires calculating the mangled name of the function template
-        specialization.
-        -   Crubit doesn’t have a `clang::FunctionDecl` corresponding to the
-            function-template-based thunk, and therefore Crubit can’t use
-            `clang::MangleContext::mangleName` to calculate the linkable/mangled
-            name of the thunk.
-        -   Reimplementing `clang::MangleContext::mangleName` in Crubit seems
-            fragile. One risk is bugs in Crubit's code that would make it behave
-            differently from Clang (e.g. code review of the initial prototype
-            identified that
-            [mangling compression](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression)
-            was missing). Another risk is having to implement not just
-            `ItaniumMangleContext`, but also `MicrosoftMangleContext`.
-        -   One idea to avoid reimpliementing mangling is to explicitly specify
-            the name for the function template instantiation using
-            `__asm__("abc")` (sadly this doesn't seem to work - it may be a
-            Clang bug).
+-   **Assumes a particular ABI** - a function template specialization uses the
+    calling convention prescribed by the platform C++ ABI.  We know that
+    [the Itanium ABI maps C++ sigatures to the C
+    ABI](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#functions) and
+    therefore will be compatible with the calling convention expected by the
+    generated `..._rs_api.rs`.  Further research is needed to investigate the
+    guarantees offered by other platforms (e.g., the MSVC ABI).
+-   **Requires extra complexity** to calculate the mangled name of the function
+    template specialization.
+    -   Crubit doesn’t have a `clang::FunctionDecl` corresponding to the
+        function-template-based thunk, and therefore Crubit can’t use
+        `clang::MangleContext::mangleName` to calculate the linkable/mangled
+        name of the thunk.
+    -   Reimplementing `clang::MangleContext::mangleName` in Crubit seems
+        fragile. One risk is bugs in Crubit's code that would make it behave
+        differently from Clang (e.g. code review of the initial prototype
+        identified that
+        [mangling compression](https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression)
+        was missing). Another risk is having to implement not just
+        `ItaniumMangleContext`, but also `MicrosoftMangleContext`.
+    -   One idea to avoid reimpliementing mangling is to explicitly specify
+        the name for the function template instantiation using
+        `__asm__("abc")` (sadly this doesn't seem to work - it may be a
+        Clang bug).
 
 An abandoned prototype of this approach can be found in a (Google-internal)
 cl/450495903.
