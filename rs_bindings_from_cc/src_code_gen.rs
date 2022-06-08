@@ -448,8 +448,11 @@ fn api_func_shape<'ir>(
             );
             func_name = make_rs_ident("assign");
         }
-        UnqualifiedIdentifier::Operator(_) => {
-            bail!("Bindings for this kind of operator are not supported");
+        UnqualifiedIdentifier::Operator(op) => {
+            bail!(
+                "Bindings for this kind of operator (operator {op}) are not supported",
+                op = &op.name
+            );
         }
         UnqualifiedIdentifier::Identifier(id) => {
             func_name = make_rs_ident(&id.identifier);

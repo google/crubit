@@ -7,8 +7,19 @@
 
 #pragma clang lifetime_elision
 
+struct TrivialCustomType final {
+  // Replace this with some other unsupported operator, if support is later
+  // added.
+  bool operator||(const TrivialCustomType&) const;
+
+  int i;
+};
+
 struct NontrivialCustomType final {
   NontrivialCustomType(NontrivialCustomType&&);
+  // Replace this with some other unsupported operator, if support is later
+  // added.
+  bool operator||(const NontrivialCustomType&) const;
 
   int i;
 };

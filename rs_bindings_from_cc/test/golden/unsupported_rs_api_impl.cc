@@ -11,6 +11,32 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1Ev(
+    class TrivialCustomType* __this) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1ERKS_(
+    class TrivialCustomType* __this, const class TrivialCustomType& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1EOS_(
+    class TrivialCustomType* __this, class TrivialCustomType&& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" void __rust_thunk___ZN17TrivialCustomTypeD1Ev(
+    class TrivialCustomType* __this) {
+  std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" class TrivialCustomType& __rust_thunk___ZN17TrivialCustomTypeaSERKS_(
+    class TrivialCustomType* __this, const class TrivialCustomType& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
+extern "C" class TrivialCustomType& __rust_thunk___ZN17TrivialCustomTypeaSEOS_(
+    class TrivialCustomType* __this, class TrivialCustomType&& __param_0) {
+  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
     class NontrivialCustomType* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
@@ -41,6 +67,10 @@ extern "C" class ContainingStruct& __rust_thunk___ZN16ContainingStructaSEOS_(
     class ContainingStruct* __this, class ContainingStruct&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+
+static_assert(sizeof(class TrivialCustomType) == 4);
+static_assert(alignof(class TrivialCustomType) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, class TrivialCustomType) == 0);
 
 static_assert(sizeof(class NontrivialCustomType) == 4);
 static_assert(alignof(class NontrivialCustomType) == 4);

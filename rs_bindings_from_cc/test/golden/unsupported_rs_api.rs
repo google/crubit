@@ -17,6 +17,50 @@ use ::std as rust_std;
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct TrivialCustomType {
+    pub i: i32,
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TrivialCustomType"),
+    crate::TrivialCustomType
+);
+
+impl Default for TrivialCustomType {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<ctor::RvalueReference<'b, crate::TrivialCustomType>> for TrivialCustomType {
+    #[inline(always)]
+    fn from(__param_0: ctor::RvalueReference<'b, crate::TrivialCustomType>) -> Self {
+        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=10
+// Error while generating bindings for item 'TrivialCustomType::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=10
+// Error while generating bindings for item 'TrivialCustomType::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=13
+// Error while generating bindings for item 'TrivialCustomType::operator||':
+// Bindings for this kind of operator (operator ||) are not supported
+
 #[ctor::recursively_pinned]
 #[repr(C)]
 pub struct NontrivialCustomType {
@@ -58,15 +102,19 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialCustomType>,)
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=16
+// rs_bindings_from_cc/test/golden/unsupported.h;l=22
+// Error while generating bindings for item 'NontrivialCustomType::operator||':
+// Bindings for this kind of operator (operator ||) are not supported
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=27
 // Error while generating bindings for item 'UnsupportedParamType':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=17
+// rs_bindings_from_cc/test/golden/unsupported.h;l=28
 // Error while generating bindings for item 'UnsupportedReturnType':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=19
+// rs_bindings_from_cc/test/golden/unsupported.h;l=30
 // Error while generating bindings for item 'MultipleReasons':
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
 //
@@ -74,7 +122,7 @@ impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::NontrivialCustomType>,)
 //
 // Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #2
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=22
+// rs_bindings_from_cc/test/golden/unsupported.h;l=33
 // Error while generating bindings for item 'ns':
 // Namespaces are not supported yet
 
@@ -116,15 +164,15 @@ impl<'b> From<ctor::RvalueReference<'b, crate::ContainingStruct>> for Containing
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=30
+// rs_bindings_from_cc/test/golden/unsupported.h;l=41
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=30
+// rs_bindings_from_cc/test/golden/unsupported.h;l=41
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=31
+// rs_bindings_from_cc/test/golden/unsupported.h;l=42
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 
@@ -134,6 +182,13 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeC1Ev<'a>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialCustomType>,
+        );
+        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeC1EOS_<'a, 'b>(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::TrivialCustomType>,
+            __param_0: ctor::RvalueReference<'b, crate::TrivialCustomType>,
+        );
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
         pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
             __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NontrivialCustomType>,
@@ -150,6 +205,19 @@ mod detail {
 }
 
 const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+
+const _: () = assert!(rust_std::mem::size_of::<crate::TrivialCustomType>() == 4);
+const _: () = assert!(rust_std::mem::align_of::<crate::TrivialCustomType>() == 4);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::TrivialCustomType: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::TrivialCustomType: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(crate::TrivialCustomType: Drop);
+};
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::TrivialCustomType, i) == 0);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialCustomType>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialCustomType>() == 4);
