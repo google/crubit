@@ -595,6 +595,9 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
         type_string));
   }
 
+  if (HasBeenAlreadySuccessfullyImported(specialization_decl))
+    return ConvertTypeDecl(specialization_decl);
+
   if (IsFromCurrentTarget(specialization_decl) &&
       !specialization_decl->isExplicitSpecialization()) {
     // Store implicit `specialization_decl`s so that they will get included in
