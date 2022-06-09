@@ -14,8 +14,8 @@ cc_library(
     srcs = ["pointer_nullability_matchers.cc"],
     hdrs = ["pointer_nullability_matchers.h"],
     deps = [
+        "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
-        "@llvm-project//llvm:Support",
     ],
 )
 

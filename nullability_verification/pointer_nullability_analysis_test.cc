@@ -37,7 +37,7 @@ class PointerNullabilityTest : public Test {
     ASSERT_THAT_ERROR(
         checkDataflow<PointerNullabilityAnalysis>(
             Code, "target",
-            [](ASTContext& ASTCtx, Environment&) {
+            [](ASTContext &ASTCtx, Environment &) {
               return PointerNullabilityAnalysis(ASTCtx);
             },
             [&Expectations](
@@ -45,104 +45,424 @@ class PointerNullabilityTest : public Test {
                     std::pair<std::string,
                               DataflowAnalysisState<PointerNullabilityLattice>>>
                     Results,
-                ASTContext&) { EXPECT_THAT(Results, Expectations); },
-            {"-fsyntax-only", "-std=c++17"}),
+                ASTContext &) { EXPECT_THAT(Results, Expectations); },
+            {"-fsyntax-only", "-std=c++17", "-Wno-unused-value"}),
         llvm::Succeeded());
   }
 };
 
-TEST_F(PointerNullabilityTest, SafeNoOp) {
+TEST_F(PointerNullabilityTest, NoPointerOperations) {
   std::string Code = R"(
-    void target(int* maybeNull) {
+    void target() {
       1 + 2;
-      /*[[check]]*/
+      /*[[safe]]*/
     }
   )";
-  expectDataflow(Code, UnorderedElementsAre(Pair("check", IsSafe())));
+  expectDataflow(Code, UnorderedElementsAre(Pair("safe", IsSafe())));
 }
 
-TEST_F(PointerNullabilityTest, UnsafeUnchecked) {
+TEST_F(PointerNullabilityTest, DereferenceWithoutACheck) {
   std::string Code = R"(
     void target(int* maybeNull) {
       *maybeNull;
-      /*[[check]]*/
+      /*[[unsafe]]*/
     }
   )";
-  expectDataflow(Code, UnorderedElementsAre(Pair("check", IsUnsafe())));
+  expectDataflow(Code, UnorderedElementsAre(Pair("unsafe", IsUnsafe())));
 }
 
-TEST_F(PointerNullabilityTest, SafeCheckNEQNull) {
-  std::string NullLiteralOnRight = R"(
-    void target(int* maybeNull) {
+TEST_F(PointerNullabilityTest, InitializedWithNullPtrLiteral) {
+  std::string NullPtr = R"(
+    void target() {
+      int *null = nullptr;
+      *null;
+      /*[[unsafe]]*/
+    }
+  )";
+  expectDataflow(NullPtr, UnorderedElementsAre(Pair("unsafe", IsUnsafe())));
+
+  std::string ZeroAsNull = R"(
+    void target() {
+      int *null = 0;
+      *null;
+      /*[[unsafe]]*/
+    }
+  )";
+  expectDataflow(ZeroAsNull, UnorderedElementsAre(Pair("unsafe", IsUnsafe())));
+}
+
+TEST_F(PointerNullabilityTest, InitializedWithAddressOf) {
+  std::string Code = R"(
+    void target(int x) {
+      int *nonNull = &x;
+      *nonNull;
+      /*[[safe]]*/
+    }
+  )";
+  expectDataflow(Code, UnorderedElementsAre(Pair("safe", IsSafe())));
+}
+
+TEST_F(PointerNullabilityTest, InitializedWithOtherPointer) {
+  std::string DerefCopyOfNonNull = R"(
+    void target(int x) {
+      int *nonNull = &x;
+      int *nonNullCopy = nonNull;
+      *nonNullCopy;
+      /*[[safe]]*/
+    }
+  )";
+  expectDataflow(DerefCopyOfNonNull,
+                 UnorderedElementsAre(Pair("safe", IsSafe())));
+
+  std::string DerefCopyOfNullable = R"(
+    void target(int* nullable) {
+      int *nullableCopy = nullable;
+      *nullableCopy;
+      /*[[unsafe]]*/
+    }
+  )";
+  expectDataflow(DerefCopyOfNullable,
+                 UnorderedElementsAre(Pair("unsafe", IsUnsafe())));
+
+  std::string DerefCopyOfNullableCheckOriginal = R"(
+    void target(int* nullable) {
+      int *nullableCopy = nullable;
+      if (nullable) {
+        *nullableCopy;
+        /*[[safe]]*/
+      } else {
+        *nullableCopy;
+        /*[[unsafe-1]]*/
+      }
+      *nullableCopy;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      DerefCopyOfNullableCheckOriginal,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string DerefNullableCheckCopy = R"(
+    void target(int* nullable) {
+      int *nullableCopy = nullable;
+      if (nullableCopy) {
+        *nullable;
+        /*[[safe]]*/
+      } else {
+        *nullable;
+        /*[[unsafe-1]]*/
+      }
+      *nullable;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      DerefNullableCheckCopy,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+}
+
+TEST_F(PointerNullabilityTest, CheckByComparisonToNullPtr) {
+  std::string NENullRight = R"(
+    void target(int *maybeNull) {
       if (maybeNull != nullptr) {
         *maybeNull;
-        /*[[check-safe]]*/
+        /*[[safe]]*/
       } else {
         *maybeNull;
-        /*[[check-unsafe1]]*/
+        /*[[unsafe-1]]*/
       }
       *maybeNull;
-      /*[[check-unsafe2]]*/
+      /*[[unsafe-2]]*/
     }
   )";
-  expectDataflow(NullLiteralOnRight,
-                 UnorderedElementsAre(Pair("check-safe", IsSafe()),
-                                      Pair("check-unsafe1", IsUnsafe()),
-                                      Pair("check-unsafe2", IsUnsafe())));
+  expectDataflow(
+      NENullRight,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
 
-  std::string NullLiteralOnLeft = R"(
-    void target(int* maybeNull) {
+  std::string NENullLeft = R"(
+    void target(int *maybeNull) {
       if (nullptr != maybeNull) {
         *maybeNull;
-        /*[[check-safe]]*/
+        /*[[safe]]*/
       } else {
         *maybeNull;
-        /*[[check-unsafe1]]*/
+        /*[[unsafe-1]]*/
       }
       *maybeNull;
-      /*[[check-unsafe2]]*/
+      /*[[unsafe-2]]*/
     }
   )";
-  expectDataflow(NullLiteralOnLeft,
-                 UnorderedElementsAre(Pair("check-safe", IsSafe()),
-                                      Pair("check-unsafe1", IsUnsafe()),
-                                      Pair("check-unsafe2", IsUnsafe())));
+  expectDataflow(
+      NENullLeft,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string EQNullRight = R"(
+    void target(int* maybeNull) {
+      if (maybeNull == nullptr) {
+        *maybeNull;
+        /*[[unsafe-1]]*/
+      } else {
+        *maybeNull;
+        /*[[safe]]*/
+      }
+      *maybeNull;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      EQNullRight,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string EQNullLeft = R"(
+    void target(int* maybeNull) {
+      if (nullptr == maybeNull) {
+        *maybeNull;
+        /*[[unsafe-1]]*/
+      } else {
+        *maybeNull;
+        /*[[safe]]*/
+      }
+      *maybeNull;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      EQNullLeft,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
 }
 
-TEST_F(PointerNullabilityTest, SafeCheckImplicitCastToBool) {
-  std::string Code = R"(
+TEST_F(PointerNullabilityTest, CheckByImplicitCastToBool) {
+  std::string PointerAsBool = R"(
     void target(int* maybeNull) {
       if (maybeNull) {
         *maybeNull;
-        /*[[check-safe]]*/
+        /*[[safe]]*/
       } else {
         *maybeNull;
-        /*[[check-unsafe1]]*/
+        /*[[unsafe-1]]*/
       }
       *maybeNull;
-      /*[[check-unsafe2]]*/
+      /*[[unsafe-2]]*/
     }
   )";
-  expectDataflow(Code, UnorderedElementsAre(Pair("check-safe", IsSafe()),
-                                            Pair("check-unsafe1", IsUnsafe()),
-                                            Pair("check-unsafe2", IsUnsafe())));
-  std::string NegatedCondition = R"(
+  expectDataflow(
+      PointerAsBool,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string PointerAsBoolNegated = R"(
     void target(int* maybeNull) {
       if (!maybeNull) {
         *maybeNull;
-        /*[[check-unsafe1]]*/
+        /*[[unsafe-1]]*/
       } else {
         *maybeNull;
-        /*[[check-safe]]*/
+        /*[[safe]]*/
       }
       *maybeNull;
-      /*[[check-unsafe2]]*/
+      /*[[unsafe-2]]*/
     }
   )";
-  expectDataflow(NegatedCondition,
-                 UnorderedElementsAre(Pair("check-safe", IsSafe()),
-                                      Pair("check-unsafe1", IsUnsafe()),
-                                      Pair("check-unsafe2", IsUnsafe())));
+  expectDataflow(
+      PointerAsBoolNegated,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+}
+
+TEST_F(PointerNullabilityTest, CheckByComparisonToOtherNullPtr) {
+  std::string NEOtherNullPtr = R"(
+    void target(int* maybeNull) {
+      int *null = nullptr;
+      if (maybeNull != null) {
+        *maybeNull;
+        /*[[safe]]*/
+      } else {
+        *maybeNull;
+        /*[[unsafe-1]]*/
+      }
+      *maybeNull;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      NEOtherNullPtr,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string EQOtherNullPtr = R"(
+    void target(int* maybeNull) {
+      int *null = nullptr;
+      if (maybeNull == null) {
+        *maybeNull;
+        /*[[unsafe-1]]*/
+      } else {
+        *maybeNull;
+        /*[[safe]]*/
+      }
+      *maybeNull;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      EQOtherNullPtr,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+}
+
+TEST_F(PointerNullabilityTest, CheckByComparisonToOtherNonNullPtr) {
+  std::string NEOtherNonNullPtr = R"(
+    void target(int* maybeNull, int x) {
+      int* nonNull = &x;
+      if (maybeNull != nonNull) {
+        *maybeNull;
+        /*[[unsafe-1]]*/
+      } else {
+        *maybeNull;
+        /*[[safe]]*/
+      }
+      *maybeNull;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(NEOtherNonNullPtr,
+                 UnorderedElementsAre(Pair("unsafe-1", IsUnsafe()),
+                                      Pair("unsafe-2", IsUnsafe()),
+                                      Pair("safe", IsSafe())));
+
+  std::string EQOtherNonNullPtr = R"(
+    void target(int* maybeNull, int x) {
+      int* nonNull = &x;
+      if (maybeNull == nonNull) {
+        *maybeNull;
+        /*[[safe]]*/
+      } else {
+        *maybeNull;
+        /*[[unsafe-1]]*/
+      }
+      *maybeNull;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      EQOtherNonNullPtr,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+}
+
+TEST_F(PointerNullabilityTest, CheckByComparisonToOtherUnknownPtr) {
+  std::string NEOtherUnknownPtr = R"(
+    void target(int* x, int* y) {
+      if (x != y) {
+        *x;
+        /*[[unsafe-1]]*/
+      } else {
+        *x;
+        /*[[unsafe-2]]*/
+      }
+      *x;
+      /*[[unsafe-3]]*/
+    }
+  )";
+  expectDataflow(NEOtherUnknownPtr,
+                 UnorderedElementsAre(Pair("unsafe-1", IsUnsafe()),
+                                      Pair("unsafe-2", IsUnsafe()),
+                                      Pair("unsafe-3", IsUnsafe())));
+
+  std::string EQOtherUnknownPtr = R"(
+    void target(int* x, int* y) {
+      if (x == y) {
+        *x;
+        /*[[unsafe-1]]*/
+      } else {
+        *x;
+        /*[[unsafe-2]]*/
+      }
+      *x;
+      /*[[unsafe-3]]*/
+    }
+  )";
+  expectDataflow(EQOtherUnknownPtr,
+                 UnorderedElementsAre(Pair("unsafe-1", IsUnsafe()),
+                                      Pair("unsafe-2", IsUnsafe()),
+                                      Pair("unsafe-3", IsUnsafe())));
+}
+
+TEST_F(PointerNullabilityTest, BinaryExpressions) {
+  std::string And = R"(
+    void target(int* x, int* y) {
+      if (x && y) {
+        *x;
+        /*[[safe]]*/
+      } else {
+        *x;
+        /*[[unsafe-1]]*/
+      }
+      *x;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(And, UnorderedElementsAre(Pair("safe", IsSafe()),
+                                           Pair("unsafe-1", IsUnsafe()),
+                                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string Or = R"(
+    void target(int* x, int* y) {
+      if (x || y) {
+        *x;
+        /*[[unsafe-1]]*/
+      } else {
+        *x;
+        /*[[unsafe-2]]*/
+      }
+      *x;
+      /*[[unsafe-3]]*/
+    }
+  )";
+  expectDataflow(Or, UnorderedElementsAre(Pair("unsafe-1", IsUnsafe()),
+                                          Pair("unsafe-2", IsUnsafe()),
+                                          Pair("unsafe-3", IsUnsafe())));
+
+  std::string AndNegatedBoth = R"(
+    void target(int* x, int* y) {
+      if (!x && !y) {
+        *x;
+        /*[[unsafe-1]]*/
+      } else {
+        *x;
+        /*[[unsafe-2]]*/
+      }
+      *x;
+      /*[[unsafe-3]]*/
+    }
+  )";
+  expectDataflow(AndNegatedBoth,
+                 UnorderedElementsAre(Pair("unsafe-1", IsUnsafe()),
+                                      Pair("unsafe-2", IsUnsafe()),
+                                      Pair("unsafe-3", IsUnsafe())));
+
+  std::string OrNegatedBoth = R"(
+    void target(int* x, int* y) {
+      if (!x || !y) {
+        *x;
+        /*[[unsafe-1]]*/
+      } else {
+        *x;
+        /*[[safe]]*/
+      }
+      *x;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      OrNegatedBoth,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
 }
 
 }  // namespace

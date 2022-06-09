@@ -11,11 +11,12 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
-ast_matchers::internal::Matcher<Stmt> isPointerExpr();
+ast_matchers::internal::Matcher<Stmt> isPointerVariableReference();
+ast_matchers::internal::Matcher<Stmt> isNullPointerLiteral();
+ast_matchers::internal::Matcher<Stmt> isAddrOf();
 ast_matchers::internal::Matcher<Stmt> isPointerDereference();
-ast_matchers::internal::Matcher<Stmt> isNEQNullBinOp(llvm::StringRef BindID);
-ast_matchers::internal::Matcher<Stmt> isImplicitCastPtrToBool();
-
+ast_matchers::internal::Matcher<Stmt> isPointerCheckBinOp();
+ast_matchers::internal::Matcher<Stmt> isImplicitCastPointerToBool();
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

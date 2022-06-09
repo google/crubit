@@ -4,20 +4,19 @@
 
 #include "nullability_verification/pointer_nullability_matchers.h"
 
+#include "clang/AST/OperationKinds.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
-#include "llvm/ADT/StringRef.h"
 
 namespace clang {
 namespace tidy {
 namespace nullability {
 
 using ast_matchers::binaryOperator;
-using ast_matchers::booleanType;
+using ast_matchers::declRefExpr;
 using ast_matchers::expr;
-using ast_matchers::hasImplicitDestinationType;
+using ast_matchers::hasAnyOperatorName;
 using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
-using ast_matchers::hasSourceExpression;
 using ast_matchers::hasType;
 using ast_matchers::hasUnaryOperand;
 using ast_matchers::ignoringImplicit;
@@ -28,22 +27,24 @@ using ast_matchers::unaryOperator;
 using ast_matchers::internal::Matcher;
 
 Matcher<Stmt> isPointerExpr() { return expr(hasType(isAnyPointer())); }
-
+Matcher<Stmt> isPointerVariableReference() {
+  return declRefExpr(hasType(isAnyPointer()));
+}
+Matcher<Stmt> isNullPointerLiteral() {
+  return expr(ignoringImplicit(nullPointerConstant()));
+}
+Matcher<Stmt> isAddrOf() { return unaryOperator(hasOperatorName("&")); }
 Matcher<Stmt> isPointerDereference() {
   return unaryOperator(hasOperatorName("*"), hasUnaryOperand(isPointerExpr()));
 }
-
-Matcher<Stmt> isNEQNullBinOp(llvm::StringRef BindID) {
-  return binaryOperator(
-      hasOperatorName("!="),
-      hasOperands(ignoringImplicit(nullPointerConstant()),
-                  expr(hasType(isAnyPointer())).bind(BindID)));
+Matcher<Stmt> isPointerCheckBinOp() {
+  return binaryOperator(hasAnyOperatorName("!=", "=="),
+                        hasOperands(isPointerExpr(), isPointerExpr()));
+}
+Matcher<Stmt> isImplicitCastPointerToBool() {
+  return implicitCastExpr(ast_matchers::hasCastKind(CK_PointerToBoolean));
 }
 
-Matcher<Stmt> isImplicitCastPtrToBool() {
-  return implicitCastExpr(hasSourceExpression(isPointerExpr()),
-                          hasImplicitDestinationType(booleanType()));
-}
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

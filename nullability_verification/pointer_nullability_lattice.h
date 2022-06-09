@@ -52,7 +52,8 @@ class PointerNullabilityLattice {
 
 inline std::ostream& operator<<(std::ostream& OS,
                                 const PointerNullabilityLattice& L) {
-  return OS << "Pointer Nullability Lattice";
+  return OS << "Pointer Nullability Lattice Safety: " << L.isSafe()
+            << std::endl;
 }
 }  // namespace nullability
 }  // namespace tidy
