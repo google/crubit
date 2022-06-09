@@ -143,6 +143,22 @@ fn test_recursively_pinned_enum_tuple() {
 }
 
 #[test]
+fn test_recursively_pinned_generic() {
+    #[::ctor::recursively_pinned]
+    struct S<'proj, 'proj_2: 'proj, 'proj_4, T>
+    where
+        'proj_4: 'proj_2,
+    {
+        x: T,
+        /// 'proj* are not really used, but exist to try to throw a wrench in
+        /// the works.
+        _phantom: ::std::marker::PhantomData<&'proj &'proj_2 &'proj_4 T>,
+    }
+    let _: ::std::pin::Pin<&mut i32> =
+        Box::pin(S::<i32> { x: 42, _phantom: ::std::marker::PhantomData }).as_mut().project_pin().x;
+}
+
+#[test]
 fn test_recursively_pinned_struct_derive_default() {
     #[::ctor::recursively_pinned]
     #[derive(::ctor::CtorFrom_Default)]

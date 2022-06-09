@@ -5,6 +5,8 @@
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, quote_spanned, ToTokens as _};
+use std::borrow::Cow;
+use std::collections::HashSet;
 use syn::parse::Parse;
 use syn::spanned::Spanned as _;
 use syn::Token;
@@ -110,8 +112,8 @@ fn project_pin_ident(ident: &Ident) -> Ident {
 ///
 /// If the input is a union, this returns nothing, and pin-projection is not
 /// implemented.
-fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
-    let is_fieldless = match &s.data {
+fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+    let is_fieldless = match &input.data {
         syn::Data::Struct(data) => data.fields.is_empty(),
         syn::Data::Enum(e) => e.variants.iter().all(|variant| variant.fields.is_empty()),
         syn::Data::Union(_) => {
@@ -119,29 +121,16 @@ fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         }
     };
 
-    let mut projected = s.clone();
+    let mut projected = input.clone();
     // TODO(jeanpierreda): check attributes for repr(packed)
     projected.attrs.clear();
     projected.ident = project_pin_ident(&projected.ident);
 
-    if projected.generics.params.len() != 0 {
-        return Err(syn::Error::new(
-            projected.generics.span(),
-            "projection is currently not implemented for generic structs",
-        ));
-    }
-
-    let lifetime;
-    if is_fieldless {
-        lifetime = quote! {};
+    let lifetime = if is_fieldless {
+        quote! {}
     } else {
-        let syn_lifetime = syn::Lifetime::new("'proj", Span::call_site());
-        projected
-            .generics
-            .params
-            .push(syn::GenericParam::Lifetime(syn::LifetimeDef::new(syn_lifetime.clone())));
-        lifetime = quote! {#syn_lifetime};
-    }
+        add_lifetime(&mut projected.generics, "'proj")
+    };
 
     let project_field = |field: &mut syn::Field| {
         field.attrs.clear();
@@ -173,7 +162,7 @@ fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         (quote! {{#pat}}, quote! {{#project}})
     };
     let project_body;
-    let original_ident = &s.ident;
+    let input_ident = &input.ident;
     let projected_ident = &projected.ident;
     match &mut projected.data {
         syn::Data::Struct(data) => {
@@ -182,7 +171,7 @@ fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStrea
             }
             let (pat, project) = pat_project(&mut data.fields);
             project_body = quote! {
-                let #original_ident #pat = from;
+                let #input_ident #pat = from;
                 #projected_ident #project
             };
         }
@@ -195,7 +184,7 @@ fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 let (pat, project) = pat_project(&mut variant.fields);
                 let variant_ident = &variant.ident;
                 match_body.extend(quote! {
-                    #original_ident::#variant_ident #pat => #projected_ident::#variant_ident #project,
+                    #input_ident::#variant_ident #pat => #projected_ident::#variant_ident #project,
                 });
             }
             project_body = quote! {
@@ -204,15 +193,21 @@ fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 }
             };
         }
-        syn::Data::Union(_) => unreachable!("project_pin_impl should early return when it finds a union"),
+        syn::Data::Union(_) => {
+            unreachable!("project_pin_impl should early return when it finds a union")
+        }
     }
+
+    let (input_impl_generics, input_ty_generics, input_where_clause) =
+        input.generics.split_for_impl();
+    let (_, projected_generics, _) = projected.generics.split_for_impl();
 
     Ok(quote! {
         #projected
 
-        impl #original_ident {
+        impl #input_impl_generics #input_ident #input_ty_generics #input_where_clause {
             #[must_use]
-            pub fn project_pin(self: ::std::pin::Pin<&mut Self>) -> #projected_ident {
+            pub fn project_pin<#lifetime>(self: ::std::pin::Pin<& #lifetime mut Self>) -> #projected_ident #projected_generics {
                 unsafe {
                     let from = ::std::pin::Pin::into_inner_unchecked(self);
                     #project_body
@@ -220,6 +215,26 @@ fn project_pin_impl(s: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenStrea
             }
         }
     })
+}
+
+/// Adds a new lifetime to `generics`, returning the quoted lifetime name.
+fn add_lifetime(generics: &mut syn::Generics, prefix: &str) -> proc_macro2::TokenStream {
+    let taken_lifetimes: HashSet<&syn::Lifetime> =
+        generics.lifetimes().map(|def| &def.lifetime).collect();
+    let mut name = Cow::Borrowed(prefix);
+    let mut i = 1;
+    let lifetime = loop {
+        let lifetime = syn::Lifetime::new(&name, Span::call_site());
+        if !taken_lifetimes.contains(&lifetime) {
+            break lifetime;
+        }
+
+        i += 1;
+        name = Cow::Owned(format!("{prefix}_{i}"));
+    };
+    let quoted_lifetime = quote! {#lifetime};
+    generics.params.push(syn::GenericParam::Lifetime(syn::LifetimeDef::new(lifetime)));
+    quoted_lifetime
 }
 
 #[derive(Default)]
@@ -316,9 +331,12 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let name = input.ident.clone();
 
+    let (input_impl_generics, input_ty_generics, input_where_clause) =
+        input.generics.split_for_impl();
+
     let drop_impl = if args.is_pinned_drop {
         quote! {
-            impl Drop for #name {
+            impl #input_impl_generics Drop for #name #input_ty_generics #input_where_clause {
                 fn drop(&mut self) {
                     unsafe {::ctor::PinnedDrop::pinned_drop(::std::pin::Pin::new_unchecked(self))}
                 }
@@ -326,10 +344,10 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
         }
     } else {
         quote! {
-            impl ::ctor::macro_internal::DoNotImplDrop for #name {}
+            impl #input_impl_generics ::ctor::macro_internal::DoNotImplDrop for #name #input_ty_generics #input_where_clause {}
             /// A no-op PinnedDrop that will cause an error if the user also defines PinnedDrop,
             /// due to forgetting to pass `PinnedDrop` to #[recursively_pinned(PinnedDrop)]`.
-            impl ::ctor::PinnedDrop for #name {
+            impl #input_impl_generics ::ctor::PinnedDrop for #name #input_ty_generics #input_where_clause {
                 unsafe fn pinned_drop(self: ::std::pin::Pin<&mut Self>) {}
             }
         }
@@ -341,8 +359,8 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
 
         #drop_impl
 
-        unsafe impl ::ctor::RecursivelyPinned for #name {}
-        impl !Unpin for #name {}
+        unsafe impl #input_impl_generics ::ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {}
+        impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
     };
 
     TokenStream::from(expanded)
