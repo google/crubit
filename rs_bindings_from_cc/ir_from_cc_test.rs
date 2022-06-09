@@ -3239,3 +3239,29 @@ fn test_abstract_classes_not_supported() {
     let ir = ir_from_cc("struct MyStruct { virtual void run() = 0; };").unwrap();
     assert_ir_matches!(ir, quote! { UnsupportedItem { name: "MyStruct" ... } });
 }
+
+#[test]
+fn test_inline_namespace() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+          inline namespace inner {
+            struct MyStruct {};
+          }
+        }"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Namespace(Namespace {
+                name: "test_namespace_bindings" ...
+            }) ...
+            Namespace(Namespace {
+                name: "inner" ...
+            }) ...
+        }
+    );
+}

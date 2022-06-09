@@ -19,6 +19,7 @@ DEPS = {
 [cc_library(
     name = name + "_cc",
     hdrs = [name + ".h"],
+    copts = ["-Wno-google3-inline-namespace"],
     deps = [d + "_cc" for d in (DEPS[name] if name in DEPS else [])],
 ) for name in TESTS]
 

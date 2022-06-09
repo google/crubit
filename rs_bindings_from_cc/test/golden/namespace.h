@@ -39,4 +39,15 @@ void z(S s);
 }  // namespace inner
 }  // namespace test_namespace_bindings_reopened
 
+namespace test_namespace_bindings_inline {
+inline namespace inner {
+struct StructInInlineNamespace {};
+}  // namespace inner
+}  // namespace test_namespace_bindings_inline
+
+void useStructInInlineNamespaceWithFullQualifier(
+    test_namespace_bindings_inline::inner::StructInInlineNamespace s);
+void useStructInInlineNamespaceSkipInlineQualifier(
+    test_namespace_bindings_inline::StructInInlineNamespace s);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_

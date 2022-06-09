@@ -5965,4 +5965,44 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn test_inline_namespace() -> Result<()> {
+        let rs_api = generate_bindings_tokens(&ir_from_cc(
+            r#"
+            namespace test_namespace_bindings {
+                inline namespace inner {
+                    struct MyStruct {};
+                }
+                void processMyStruct(MyStruct s);
+            }
+            void processMyStructOutsideNamespace(test_namespace_bindings::inner::MyStruct s);
+            void processMyStructSkipInlineNamespaceQualifier(test_namespace_bindings::MyStruct s);
+            "#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                ...
+                pub mod test_namespace_bindings {
+                    ...
+                    pub mod inner {
+                        ...
+                        pub struct MyStruct {...} ...
+                    }
+                    ...
+                    pub fn processMyStruct(s: crate::test_namespace_bindings::inner::MyStruct)
+                    ...
+                }
+                ...
+                pub fn processMyStructOutsideNamespace(s: crate::test_namespace_bindings::inner::MyStruct)
+                ...
+                pub fn processMyStructSkipInlineNamespaceQualifier(s: crate::test_namespace_bindings::inner::MyStruct)
+                ...
+            }
+        );
+        Ok(())
+    }
 }

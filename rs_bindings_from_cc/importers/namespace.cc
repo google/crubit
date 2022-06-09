@@ -19,10 +19,6 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
                                        "Namespaces are not supported yet");
   }
 
-  if (namespace_decl->isInline()) {
-    return ictx_.ImportUnsupportedItem(
-        namespace_decl, "Inline namespaces are not supported yet");
-  }
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
         namespace_decl, "Anonymous namespaces are not supported yet");

@@ -300,6 +300,191 @@ pub mod test_namespace_bindings_reopened {
 
 // namespace test_namespace_bindings_reopened
 
+pub mod test_namespace_bindings_inline {
+    pub mod inner {
+        #[ctor::recursively_pinned]
+        #[repr(C)]
+        pub struct StructInInlineNamespace {
+            __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+        }
+        forward_declare::unsafe_define!(
+            forward_declare::symbol!("StructInInlineNamespace"),
+            crate::test_namespace_bindings_inline::inner::StructInInlineNamespace
+        );
+
+        impl ctor::CtorNew<()> for StructInInlineNamespace {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(args: ()) -> Self::CtorType {
+                let () = args;
+                ctor::FnCtor::new(
+                    move |dest: crate::rust_std::pin::Pin<
+                        &mut crate::rust_std::mem::MaybeUninit<Self>,
+                    >| {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+                        }
+                    },
+                )
+            }
+        }
+
+        impl<'b>
+            ctor::CtorNew<&'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>
+            for StructInInlineNamespace
+        {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            ) -> Self::CtorType {
+                let __param_0 = args;
+                ctor::FnCtor::new(
+                    move |dest: crate::rust_std::pin::Pin<
+                        &mut crate::rust_std::mem::MaybeUninit<Self>,
+                    >| {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1ERKS1_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                        }
+                    },
+                )
+            }
+        }
+        impl<'b>
+            ctor::CtorNew<(
+                &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            )> for StructInInlineNamespace
+        {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: (&'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,),
+            ) -> Self::CtorType {
+                let (arg,) = args;
+                <Self as ctor::CtorNew<
+                    &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                >>::ctor_new(arg)
+            }
+        }
+
+        impl<'b>
+            ctor::CtorNew<
+                ctor::RvalueReference<
+                    'b,
+                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                >,
+            > for StructInInlineNamespace
+        {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: ctor::RvalueReference<
+                    'b,
+                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                >,
+            ) -> Self::CtorType {
+                let __param_0 = args;
+                ctor::FnCtor::new(
+                    move |dest: crate::rust_std::pin::Pin<
+                        &mut crate::rust_std::mem::MaybeUninit<Self>,
+                    >| {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                        }
+                    },
+                )
+            }
+        }
+        impl<'b>
+            ctor::CtorNew<(
+                ctor::RvalueReference<
+                    'b,
+                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                >,
+            )> for StructInInlineNamespace
+        {
+            type CtorType = impl ctor::Ctor<Output = Self>;
+            #[inline(always)]
+            fn ctor_new(
+                args: (
+                    ctor::RvalueReference<
+                        'b,
+                        crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                    >,
+                ),
+            ) -> Self::CtorType {
+                let (arg,) = args;
+                <Self as ctor::CtorNew<
+                    ctor::RvalueReference<
+                        'b,
+                        crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                    >,
+                >>::ctor_new(arg)
+            }
+        }
+
+        impl<'b>
+            ::ctor::Assign<
+                &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            > for StructInInlineNamespace
+        {
+            #[inline(always)]
+            fn assign<'a>(
+                self: crate::rust_std::pin::Pin<&'a mut Self>,
+                __param_0:&'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            ) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSERKS1_(self,__param_0);
+                }
+            }
+        }
+
+        impl<'b>
+            ::ctor::Assign<
+                ctor::RvalueReference<
+                    'b,
+                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                >,
+            > for StructInInlineNamespace
+        {
+            #[inline(always)]
+            fn assign<'a>(
+                self: crate::rust_std::pin::Pin<&'a mut Self>,
+                __param_0: ctor::RvalueReference<
+                    'b,
+                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+                >,
+            ) {
+                unsafe {
+                    crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSEOS1_(self,__param_0);
+                }
+            }
+        }
+    }
+
+    // namespace inner
+}
+
+// namespace test_namespace_bindings_inline
+
+#[inline(always)]
+pub fn useStructInInlineNamespaceWithFullQualifier(
+    s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(s)
+    }
+}
+
+#[inline(always)]
+pub fn useStructInInlineNamespaceSkipInlineQualifier(
+    s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(s)
+    }
+}
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
 
 mod detail {
@@ -365,6 +550,67 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1zENS0_1SE(
             s: crate::test_namespace_bindings_reopened::inner::S,
         );
+        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev<
+            'a,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1ERKS1_<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+            __param_0: &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        );
+        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+            __param_0: ctor::RvalueReference<
+                'b,
+                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSERKS1_<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+            __param_0: &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        ) -> crate::rust_std::pin::Pin<
+            &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        >;
+        pub(crate) fn __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSEOS1_<
+            'a,
+            'b,
+        >(
+            __this: crate::rust_std::pin::Pin<
+                &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+            __param_0: ctor::RvalueReference<
+                'b,
+                crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+            >,
+        ) -> crate::rust_std::pin::Pin<
+            &'a mut crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        >;
+        #[link_name = "_Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE"]
+        pub(crate) fn __rust_thunk___Z43useStructInInlineNamespaceWithFullQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
+            s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        );
+        #[link_name = "_Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE"]
+        pub(crate) fn __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
+            s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
+        );
     }
 }
 
@@ -393,5 +639,24 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_all!(
         crate::test_namespace_bindings_reopened::inner::S: Drop
+    );
+};
+
+const _: () = assert!(
+    rust_std::mem::size_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>(
+    ) == 1
+);
+const _: () = assert!(
+    rust_std::mem::align_of::<crate::test_namespace_bindings_inline::inner::StructInInlineNamespace>(
+    ) == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_all!(
+        crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_all!(
+        crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Drop
     );
 };
