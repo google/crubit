@@ -35,22 +35,22 @@ using dataflow::Value;
 
 namespace {
 
-BoolValue& getPointerNullability(
+BoolValue& getPointerNotNullProperty(
     const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State) {
   auto* PointerVal =
       cast<PointerValue>(State.Env.getValue(*PointerExpr, SkipPast::Reference));
-  CHECK(State.Lattice.hasPointerNullability(PointerVal));
-  return *State.Lattice.getPointerNullability(PointerVal);
+  CHECK(State.Lattice.hasPointerNotNullProperty(PointerVal));
+  return *State.Lattice.getPointerNotNullProperty(PointerVal);
 }
 
-void initialisePointerNullability(
+void initialisePointerNotNullProperty(
     const Expr* Expr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = cast_or_null<PointerValue>(
           State.Env.getValue(*Expr, SkipPast::Reference))) {
-    if (!State.Lattice.hasPointerNullability(PointerVal)) {
-      State.Lattice.setPointerNullability(PointerVal,
-                                          &State.Env.makeAtomicBoolValue());
+    if (!State.Lattice.hasPointerNotNullProperty(PointerVal)) {
+      State.Lattice.setPointerNotNullProperty(PointerVal,
+                                              &State.Env.makeAtomicBoolValue());
     }
   }
 }
@@ -68,10 +68,10 @@ void transferNullPointerLiteral(
     State.Env.setStorageLocation(*NullPointer, NullPointerLoc);
     State.Env.setValue(NullPointerLoc, *NullPointerVal);
   }
-  if (!State.Lattice.hasPointerNullability(NullPointerVal)) {
+  if (!State.Lattice.hasPointerNotNullProperty(NullPointerVal)) {
     // Set null pointer to be known null if not already set
-    State.Lattice.setPointerNullability(NullPointerVal,
-                                        &State.Env.getBoolLiteralValue(false));
+    State.Lattice.setPointerNotNullProperty(
+        NullPointerVal, &State.Env.getBoolLiteralValue(false));
   }
 }
 
@@ -80,16 +80,16 @@ void transferAddrOf(const UnaryOperator* UnaryOp,
                     TransferState<PointerNullabilityLattice>& State) {
   auto* PointerVal =
       cast<PointerValue>(State.Env.getValue(*UnaryOp, SkipPast::None));
-  State.Lattice.setPointerNullability(PointerVal,
-                                      &State.Env.getBoolLiteralValue(true));
+  State.Lattice.setPointerNotNullProperty(PointerVal,
+                                          &State.Env.getBoolLiteralValue(true));
 }
 
 void transferDereference(const UnaryOperator* UnaryOp,
                          const MatchFinder::MatchResult&,
                          TransferState<PointerNullabilityLattice>& State) {
   auto* PointerExpr = UnaryOp->getSubExpr();
-  auto& PointerNullability = getPointerNullability(PointerExpr, State);
-  if (!State.Env.flowConditionImplies(PointerNullability)) {
+  auto& PointerNotNull = getPointerNotNullProperty(PointerExpr, State);
+  if (!State.Env.flowConditionImplies(PointerNotNull)) {
     State.Lattice.addViolation(PointerExpr);
   }
 }
@@ -110,22 +110,20 @@ void transferNullCheckComparison(
                         ? State.Env.makeNot(PointerComparison)
                         : PointerComparison;
 
-  auto& LHSNullability = getPointerNullability(BinaryOp->getLHS(), State);
-  auto& RHSNullability = getPointerNullability(BinaryOp->getRHS(), State);
+  auto& LHSNotNull = getPointerNotNullProperty(BinaryOp->getLHS(), State);
+  auto& RHSNotNull = getPointerNotNullProperty(BinaryOp->getRHS(), State);
 
   // !LHS && !RHS => LHS == RHS
   State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(State.Env.makeNot(LHSNullability),
-                        State.Env.makeNot(RHSNullability)),
+      State.Env.makeAnd(State.Env.makeNot(LHSNotNull),
+                        State.Env.makeNot(RHSNotNull)),
       PointerEQ));
   // !LHS && RHS => LHS != RHS
   State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(State.Env.makeNot(LHSNullability), RHSNullability),
-      PointerNE));
+      State.Env.makeAnd(State.Env.makeNot(LHSNotNull), RHSNotNull), PointerNE));
   // LHS && !RHS => LHS != RHS
   State.Env.addToFlowCondition(State.Env.makeImplication(
-      State.Env.makeAnd(LHSNullability, State.Env.makeNot(RHSNullability)),
-      PointerNE));
+      State.Env.makeAnd(LHSNotNull, State.Env.makeNot(RHSNotNull)), PointerNE));
 }
 
 void transferNullCheckImplicitCastPtrToBool(
@@ -133,11 +131,11 @@ void transferNullCheckImplicitCastPtrToBool(
     TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = cast_or_null<PointerValue>(State.Env.getValue(
           *CastExpr->IgnoreImplicit(), SkipPast::Reference))) {
-    auto* PointerNullability = State.Lattice.getPointerNullability(PointerVal);
-    CHECK(PointerNullability != nullptr);
+    auto* PointerNotNull = State.Lattice.getPointerNotNullProperty(PointerVal);
+    CHECK(PointerNotNull != nullptr);
 
     auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
-    State.Env.setValue(CastExprLoc, *PointerNullability);
+    State.Env.setValue(CastExprLoc, *PointerNotNull);
     State.Env.setStorageLocation(*CastExpr, CastExprLoc);
   }
 }
@@ -145,7 +143,8 @@ void transferNullCheckImplicitCastPtrToBool(
 auto buildTransferer() {
   return MatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers
-      .CaseOf<Expr>(isPointerVariableReference(), initialisePointerNullability)
+      .CaseOf<Expr>(isPointerVariableReference(),
+                    initialisePointerNotNullProperty)
       // Handles nullptr
       .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointerLiteral)
       // Handles address of operator (&var)

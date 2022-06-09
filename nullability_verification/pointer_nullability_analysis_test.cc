@@ -11,7 +11,6 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Testing/Support/Error.h"
-#include "third_party/llvm/llvm-project/llvm/utils/unittest/googlemock/include/gmock/gmock.h"
 #include "third_party/llvm/llvm-project/llvm/utils/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang {

@@ -43,7 +43,6 @@ cc_test(
         "@llvm-project//clang/unittests:dataflow_testing_support",
         "@llvm-project//llvm:Support",
         "@llvm-project//llvm:TestingSupport",
-        "@llvm-project//llvm:gmock",
         "@llvm-project//llvm:gtest",
         "@llvm-project//llvm:gtest_main",
     ],

@@ -25,20 +25,19 @@ class PointerNullabilityLattice {
     return dataflow::LatticeJoinEffect::Unchanged;
   }
 
-  bool hasPointerNullability(clang::dataflow::PointerValue* PointerVal) {
-    return pointer_nullabilities_.find(PointerVal) !=
-           pointer_nullabilities_.end();
+  bool hasPointerNotNullProperty(clang::dataflow::PointerValue* PointerVal) {
+    return pointer_notnull_.find(PointerVal) != pointer_notnull_.end();
   }
 
-  dataflow::BoolValue* getPointerNullability(
+  dataflow::BoolValue* getPointerNotNullProperty(
       dataflow::PointerValue* PointerVal) {
-    auto search = pointer_nullabilities_.find(PointerVal);
-    return search == pointer_nullabilities_.end() ? nullptr : search->second;
+    auto search = pointer_notnull_.find(PointerVal);
+    return search == pointer_notnull_.end() ? nullptr : search->second;
   }
 
-  void setPointerNullability(dataflow::PointerValue* PointerVal,
-                             dataflow::BoolValue* BoolVal) {
-    pointer_nullabilities_[PointerVal] = BoolVal;
+  void setPointerNotNullProperty(dataflow::PointerValue* PointerVal,
+                                 dataflow::BoolValue* NotNullProperty) {
+    pointer_notnull_[PointerVal] = NotNullProperty;
   }
 
   bool isSafe() const { return violations_.empty(); }
@@ -47,7 +46,7 @@ class PointerNullabilityLattice {
  private:
   llvm::DenseSet<const Expr*> violations_;
   llvm::DenseMap<dataflow::PointerValue*, dataflow::BoolValue*>
-      pointer_nullabilities_;
+      pointer_notnull_;
 };
 
 inline std::ostream& operator<<(std::ostream& OS,
