@@ -15,6 +15,7 @@ using ast_matchers::binaryOperator;
 using ast_matchers::declRefExpr;
 using ast_matchers::expr;
 using ast_matchers::hasAnyOperatorName;
+using ast_matchers::hasCastKind;
 using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
 using ast_matchers::hasType;
@@ -42,7 +43,7 @@ Matcher<Stmt> isPointerCheckBinOp() {
                         hasOperands(isPointerExpr(), isPointerExpr()));
 }
 Matcher<Stmt> isImplicitCastPointerToBool() {
-  return implicitCastExpr(ast_matchers::hasCastKind(CK_PointerToBoolean));
+  return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
 }
 
 }  // namespace nullability
