@@ -486,6 +486,27 @@ TEST_F(PointerNullabilityTest, MemberPointers) {
       UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
                            Pair("unsafe-2", IsUnsafe())));
 
+  std::string DerefStructMemberInsideMemberFunction = R"(
+    struct Foo {
+      Foo* ptr;
+      void target() {
+        if (ptr) {
+          *ptr;
+          /*[[safe]]*/
+        } else {
+          *ptr;
+          /*[[unsafe-1]]*/
+        }
+        *ptr;
+        /*[[unsafe-2]]*/
+      }
+    };
+  )";
+  expectDataflow(
+      DerefStructMemberInsideMemberFunction,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
   std::string DerefClassMember = R"(
     class Foo {
      public:
@@ -530,6 +551,43 @@ TEST_F(PointerNullabilityTest, MemberAccessOnPointer) {
       MemberAccess,
       UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
                            Pair("unsafe-2", IsUnsafe())));
+
+  std::string MemberAccessOnImplicitThis = R"(
+    struct Foo {
+      void foo();
+      void target() {
+        foo();
+        /*[[safe]]*/
+      }
+    };
+  )";
+  expectDataflow(MemberAccessOnImplicitThis,
+                 UnorderedElementsAre(Pair("safe", IsSafe())));
+
+  std::string MemberAccessOnExplicitThis = R"(
+    struct Foo {
+      void foo();
+      void target() {
+        this->foo();
+        /*[[safe]]*/
+      }
+    };
+  )";
+  expectDataflow(MemberAccessOnExplicitThis,
+                 UnorderedElementsAre(Pair("safe", IsSafe())));
+
+  std::string MemberAccessOnCopyOfThis = R"(
+    struct Foo {
+      void foo();
+      void target() {
+        Foo *thisCopy = this;
+        thisCopy->foo();
+        /*[[safe]]*/
+      }
+    };
+  )";
+  expectDataflow(MemberAccessOnCopyOfThis,
+                 UnorderedElementsAre(Pair("safe", IsSafe())));
 
   std::string AccessChainOnlyCheckOnFirst = R"(
     struct Foo {

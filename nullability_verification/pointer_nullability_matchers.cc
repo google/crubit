@@ -13,6 +13,7 @@ namespace nullability {
 
 using ast_matchers::anyOf;
 using ast_matchers::binaryOperator;
+using ast_matchers::cxxThisExpr;
 using ast_matchers::declRefExpr;
 using ast_matchers::expr;
 using ast_matchers::hasAnyOperatorName;
@@ -51,6 +52,7 @@ Matcher<Stmt> isImplicitCastPointerToBool() {
 Matcher<Stmt> isMemberExprInvolvingPointers() {
   return memberExpr(anyOf(isArrow(), hasType(isAnyPointer())));
 }
+Matcher<Stmt> isCXXThisExpr() { return cxxThisExpr(); }
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

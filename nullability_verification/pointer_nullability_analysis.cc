@@ -44,20 +44,29 @@ BoolValue& getPointerNotNullProperty(
 }
 
 void initialisePointerNotNullProperty(
-    const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State) {
+    const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State,
+    BoolValue* NotNullProperty = nullptr) {
   if (auto* PointerVal = cast_or_null<PointerValue>(
           State.Env.getValue(*PointerExpr, SkipPast::Reference))) {
     if (!State.Lattice.hasPointerNotNullProperty(PointerVal)) {
-      State.Lattice.setPointerNotNullProperty(PointerVal,
-                                              &State.Env.makeAtomicBoolValue());
+      State.Lattice.setPointerNotNullProperty(
+          PointerVal,
+          NotNullProperty ? NotNullProperty : &State.Env.makeAtomicBoolValue());
     }
   }
 }
 
 void transferInitPointerVariableReference(
-    const Expr* Expr, const MatchFinder::MatchResult&,
+    const Expr* PointerExpr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
-  initialisePointerNotNullProperty(Expr, State);
+  initialisePointerNotNullProperty(PointerExpr, State);
+}
+
+void transferInitCXXThisExpr(const Expr* ThisExpr,
+                             const MatchFinder::MatchResult&,
+                             TransferState<PointerNullabilityLattice>& State) {
+  initialisePointerNotNullProperty(ThisExpr, State,
+                                   &State.Env.getBoolLiteralValue(true));
 }
 
 void transferNullPointerLiteral(
@@ -167,6 +176,7 @@ auto buildTransferer() {
       // Handles initialization of the null states of pointers
       .CaseOf<Expr>(isPointerVariableReference(),
                     transferInitPointerVariableReference)
+      .CaseOf<Expr>(isCXXThisExpr(), transferInitCXXThisExpr)
       // Handles initialization of null states of member pointers and safety of
       // member access (->) on pointers
       .CaseOf<MemberExpr>(isMemberExprInvolvingPointers(),
