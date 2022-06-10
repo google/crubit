@@ -359,7 +359,11 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
 
         #drop_impl
 
-        unsafe impl #input_impl_generics ::ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {}
+        unsafe impl #input_impl_generics ::ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {
+            // TODO(b/200067242): Generate a new type here, which omits a special field for
+            // marking types as not to be constructed by value.
+            type CtorInitializedFields = Self;
+        }
         impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
     };
 

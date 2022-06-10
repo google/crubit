@@ -24,7 +24,9 @@ mod pin_project {}
 fn test_derive_default_unit_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     struct Struct;
-    unsafe impl ::ctor::RecursivelyPinned for Struct {}
+    unsafe impl ::ctor::RecursivelyPinned for Struct {
+        type CtorInitializedFields = Self;
+    }
     impl !Unpin for Struct {}
 
     ::ctor::emplace! {let _p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
@@ -37,7 +39,9 @@ fn test_derive_default_struct() {
         x: i32,
         y: f32,
     }
-    unsafe impl ::ctor::RecursivelyPinned for Struct {}
+    unsafe impl ::ctor::RecursivelyPinned for Struct {
+        type CtorInitializedFields = Self;
+    }
     impl !Unpin for Struct {}
 
     ::ctor::emplace! {let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }
@@ -49,7 +53,9 @@ fn test_derive_default_struct() {
 fn test_derive_default_tuple_struct() {
     #[derive(::ctor::CtorFrom_Default)]
     struct Struct(i32, f32);
-    unsafe impl ::ctor::RecursivelyPinned for Struct {}
+    unsafe impl ::ctor::RecursivelyPinned for Struct {
+        type CtorInitializedFields = Self;
+    }
     impl !Unpin for Struct {}
 
     ::ctor::emplace! {let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(()); }

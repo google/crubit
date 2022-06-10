@@ -89,6 +89,17 @@
 //!
 //! `ctor` adds a `ctor!` macro to make it easy to initialize a struct
 //! that contains non-trivially-relocatable fields.
+//!
+//! ## Features
+//!
+//! This library requires the following unstable features enabled in users:
+//!
+//! **negative_impls:**
+//! This is used to allow trait coherence checking for `!Unpin` types. A
+//! "blanket impl for all `Unpin` types is used to make them constructible with
+//! `ctor`, and Rust believes this may conflict with types that use
+//! `PhantomPinned`. It knows no conflict exists if, instead, types impl
+//! `!Unpin`.
 
 use std::marker::PhantomData;
 use std::mem::{ManuallyDrop, MaybeUninit};
@@ -601,6 +612,15 @@ pub mod macro_internal {
     pub use std::mem::MaybeUninit;
     pub use std::pin::Pin;
 
+    /// Workaround for more_qualified_paths.
+    /// Instead of `<Foo as Bar>::Assoc { ... }`, which requires that feature,
+    /// we can use `Identity<<Foo as Bar>::Assoc> { ... }`.
+    ///
+    /// See https://github.com/rust-lang/rust/issues/86935#issuecomment-1146670057
+    ///
+    /// TODO(jeanpierreda): Delete this when the feature is stabilized.
+    pub type Identity<T> = T;
+
     /// Trait which causes compilation error if a `#[recursively_pinned]` struct
     /// impls `Drop`.
     ///
@@ -649,12 +669,62 @@ pub mod macro_internal {
 /// The `RecursivelyPinned` trait asserts that when the struct is pinned, every
 /// field is also pinned.
 ///
-/// Safety: Only use if you never directly access fields of a pinned object. For
-/// example, with the pin-project crate, all fields should be marked `#[pin]`.
-///
 /// This trait is automatically implemented for any `#[recursively_pinned]`
 /// struct.
-pub unsafe trait RecursivelyPinned {}
+///
+/// ## Safety
+///
+/// Only use if you never directly access fields of a pinned object. For
+/// example, with the pin-project crate, all fields should be marked `#[pin]`.
+pub unsafe trait RecursivelyPinned {
+    /// An associated type with the same fields, minus any which are not
+    /// initialized by the `ctor!()` macro.
+    ///
+    /// For example, the following struct `CtorOnly` can be constructed by value
+    /// using `ctor!()`, but not using normal Rust initialization.
+    /// Effectively, the struct is forced into only ever existing in a
+    /// pinned state.
+    ///
+    /// ```
+    /// // (Alternatively, `#[non_exhaustive]` may be used instead of the private field.)
+    /// pub struct CtorOnly {
+    ///   pub field: i32,
+    ///   _must_construct_using_ctor: [(); 0],
+    /// }
+    ///
+    /// // The same struct, but without the private field.
+    /// // (Alternatively, without `#[non_exhaustive]`.)
+    /// pub struct CtorOnlyFields {
+    ///   pub field: i32,
+    /// }
+    ///
+    /// unsafe impl RecursivelyPinned for CtorOnly {
+    ///   type CtorInitializedFields = CtorOnlyFields;
+    /// }
+    /// ```
+    ///
+    /// By using `CtorInitializedFields` paired with a private field (or
+    /// `#[non_exhaustive]`), the following code is now invalid:
+    ///
+    /// ```ignore
+    /// # // TODO(jeanpierreda): make this tested, somehow.
+    /// // Fails to compile: did not specify _must_construct_using_ctor, and cannot,
+    /// // because it is private
+    /// let x = CtorOnly {field: 3};
+    /// ```
+    ///
+    /// While construction using `ctor!()` works fine:
+    ///
+    /// ```ignore
+    /// emplace!{let x = ctor!(CtorOnly {field: 3})}
+    /// ```
+    ///
+    /// The size and layout of `CtorInitializedFields` is ignored; it only
+    /// affects which field names are required for complete `ctor!()`
+    /// initialization. Any fields left out of the `CtorInitializedFields` type
+    /// will not be initialized, so they should generally be zero-sized.
+    type CtorInitializedFields;
+}
 
 /// The drop trait for `#[recursively_pinned(PinnedDrop)]` types.
 ///
@@ -731,14 +801,15 @@ macro_rules! ctor {
                     // If this fails to compile, not every field was specified in the ctor! invocation.
                     // The `panic!(...)` allows us to avoid moving out of x, while still pretending to
                     // fill in each field.
-                    #[allow(unreachable_code, unused_unsafe)] Type {
-                        // unsafe {} block is in case this is a *union* literal, rather than
-                        // a struct literal.
-                        $($name: panic!("{}", unsafe {&x.$name} as *const _ as usize),)*
-                    };
+                    #[allow(unreachable_code, unused_unsafe)] $crate::macro_internal::Identity::<
+                        <Type as $crate::RecursivelyPinned>::CtorInitializedFields> {
+                            // unsafe {} block is in case this is a *union* literal, rather than
+                            // a struct literal.
+                            $($name: panic!("{}", unsafe {&x.$name} as *const _ as usize),)*
+                        };
                 };
 
-                // Enforce that the type is RecursivelyUnpinned.
+                // Enforce that the type is RecursivelyPinned.
                 $crate::macro_internal::require_recursively_pinned::<Type>();
 
                 $(
@@ -1197,7 +1268,9 @@ mod test {
             x: u32,
             y: u32,
         }
-        unsafe impl RecursivelyPinned for MyStruct {}
+        unsafe impl RecursivelyPinned for MyStruct {
+            type CtorInitializedFields = Self;
+        }
         emplace! { let my_struct = ctor!(MyStruct {
             x: 4,
             y: copy(&2)
@@ -1216,7 +1289,9 @@ mod test {
     #[test]
     fn test_ctor_macro_unit_struct() {
         struct MyStruct;
-        unsafe impl RecursivelyPinned for MyStruct {}
+        unsafe impl RecursivelyPinned for MyStruct {
+            type CtorInitializedFields = Self;
+        }
         emplace! { let _my_struct = ctor!(MyStruct);}
         emplace! { let _my_struct = ctor!(MyStruct {});}
     }
@@ -1224,7 +1299,9 @@ mod test {
     #[test]
     fn test_ctor_macro_named_tuple_struct() {
         struct MyStruct(u32, u32);
-        unsafe impl RecursivelyPinned for MyStruct {}
+        unsafe impl RecursivelyPinned for MyStruct {
+            type CtorInitializedFields = Self;
+        }
         emplace! { let my_struct = ctor!(MyStruct {
             0: 4,
             1: copy(&2)
@@ -1236,7 +1313,9 @@ mod test {
     #[test]
     fn test_ctor_macro_tuple_struct() {
         struct MyStruct(u32, u32);
-        unsafe impl RecursivelyPinned for MyStruct {}
+        unsafe impl RecursivelyPinned for MyStruct {
+            type CtorInitializedFields = Self;
+        }
         emplace! { let my_struct = ctor!(MyStruct (4, copy(&2)));}
         assert_eq!(my_struct.0, 4);
         assert_eq!(my_struct.1, 2);
@@ -1248,7 +1327,9 @@ mod test {
             x: ManuallyDrop<Vec<u32>>,
             y: u64,
         }
-        unsafe impl RecursivelyPinned for MyStruct {}
+        unsafe impl RecursivelyPinned for MyStruct {
+            type CtorInitializedFields = Self;
+        }
         emplace! {let my_struct = ctor!(MyStruct {x: unsafe {ManuallyDropCtor::new(vec![42])}, y: 0 }); }
         assert_eq!(&*my_struct.x, &vec![42]);
         assert_eq!(my_struct.y, 0);
@@ -1260,7 +1341,9 @@ mod test {
             x: ManuallyDrop<Vec<u32>>,
             y: u64,
         }
-        unsafe impl RecursivelyPinned for MyUnion {}
+        unsafe impl RecursivelyPinned for MyUnion {
+            type CtorInitializedFields = Self;
+        }
         emplace! {let mut my_union = ctor!(MyUnion {x: unsafe { ManuallyDropCtor::new(vec![42])} }); }
         assert_eq!(unsafe { &*my_union.x }, &vec![42]);
 
@@ -1280,7 +1363,9 @@ mod test {
                 pub x: u32,
                 pub y: u32,
             }
-            unsafe impl crate::RecursivelyPinned for MyStruct {}
+            unsafe impl crate::RecursivelyPinned for MyStruct {
+                type CtorInitializedFields = Self;
+            }
         }
         emplace! { let my_struct = ctor!(nested::MyStruct {
             x: 4,
@@ -1294,7 +1379,9 @@ mod test {
     fn test_ctor_macro_nested_tuple_struct() {
         mod nested {
             pub struct MyStruct(pub u32, pub u32);
-            unsafe impl crate::RecursivelyPinned for MyStruct {}
+            unsafe impl crate::RecursivelyPinned for MyStruct {
+                type CtorInitializedFields = Self;
+            }
         }
         emplace! { let my_struct = ctor!(nested::MyStruct (4, copy(&2)));}
         assert_eq!(my_struct.0, 4);
@@ -1308,7 +1395,9 @@ mod test {
         struct MyStruct {
             x: String,
         }
-        unsafe impl RecursivelyPinned for MyStruct {}
+        unsafe impl RecursivelyPinned for MyStruct {
+            type CtorInitializedFields = Self;
+        }
         impl Drop for MyStruct {
             fn drop(&mut self) {}
         }
@@ -1382,7 +1471,9 @@ mod test {
             x: DropNotify<'a>,
             y: DropNotify<'a>,
         }
-        unsafe impl RecursivelyPinned for MyStruct<'_> {}
+        unsafe impl RecursivelyPinned for MyStruct<'_> {
+            type CtorInitializedFields = Self;
+        }
 
         let x_dropped = Mutex::new(false);
         let y_dropped = Mutex::new(false);
@@ -1395,6 +1486,46 @@ mod test {
         assert!(panic_result.is_err());
         assert!(*x_dropped.lock().unwrap());
         assert!(!*y_dropped.lock().unwrap());
+    }
+
+    #[test]
+    fn test_ctor_initialized_fields_struct() {
+        pub struct CtorOnly {
+            pub field: i32,
+            _must_construct_using_ctor: [(); 0],
+        }
+
+        pub struct CtorOnlyPubFields {
+            pub field: i32,
+        }
+
+        unsafe impl RecursivelyPinned for CtorOnly {
+            type CtorInitializedFields = CtorOnlyPubFields;
+        }
+
+        // Fails to compile: did not specify _must_construct_using_ctor, and cannot
+        // (outside this crate) because it is private
+        // let x = CtorOnly {field: 3};
+
+        emplace! {let x = ctor!(CtorOnly {field: 3});}
+        assert_eq!(x.field, 3);
+    }
+
+    #[test]
+    fn ctor_initialized_fields_tuple_struct() {
+        pub struct CtorOnly(pub i32, [(); 0]);
+        pub struct CtorOnlyPubFields(i32);
+
+        unsafe impl RecursivelyPinned for CtorOnly {
+            type CtorInitializedFields = CtorOnlyPubFields;
+        }
+
+        // Fails to compile: did not specify field 1, and cannot (outside this crate)
+        // because it is private
+        // let x = CtorOnly(3);
+
+        emplace! {let x = ctor!(CtorOnly(3));}
+        assert_eq!(x.0, 3);
     }
 
     /// logs calls to the constructors, drop.
