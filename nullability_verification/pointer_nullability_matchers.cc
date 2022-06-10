@@ -11,6 +11,7 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
+using ast_matchers::anyOf;
 using ast_matchers::binaryOperator;
 using ast_matchers::declRefExpr;
 using ast_matchers::expr;
@@ -23,6 +24,7 @@ using ast_matchers::hasUnaryOperand;
 using ast_matchers::ignoringImplicit;
 using ast_matchers::implicitCastExpr;
 using ast_matchers::isAnyPointer;
+using ast_matchers::isArrow;
 using ast_matchers::memberExpr;
 using ast_matchers::nullPointerConstant;
 using ast_matchers::unaryOperator;
@@ -46,8 +48,8 @@ Matcher<Stmt> isPointerCheckBinOp() {
 Matcher<Stmt> isImplicitCastPointerToBool() {
   return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
 }
-Matcher<Stmt> isPointerMemberExpr() {
-  return memberExpr(hasType(isAnyPointer()));
+Matcher<Stmt> isMemberExprInvolvingPointers() {
+  return memberExpr(anyOf(isArrow(), hasType(isAnyPointer())));
 }
 }  // namespace nullability
 }  // namespace tidy

@@ -44,15 +44,20 @@ BoolValue& getPointerNotNullProperty(
 }
 
 void initialisePointerNotNullProperty(
-    const Expr* Expr, const MatchFinder::MatchResult&,
-    TransferState<PointerNullabilityLattice>& State) {
+    const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = cast_or_null<PointerValue>(
-          State.Env.getValue(*Expr, SkipPast::Reference))) {
+          State.Env.getValue(*PointerExpr, SkipPast::Reference))) {
     if (!State.Lattice.hasPointerNotNullProperty(PointerVal)) {
       State.Lattice.setPointerNotNullProperty(PointerVal,
                                               &State.Env.makeAtomicBoolValue());
     }
   }
+}
+
+void transferInitPointerVariableReference(
+    const Expr* Expr, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
+  initialisePointerNotNullProperty(Expr, State);
 }
 
 void transferNullPointerLiteral(
@@ -84,13 +89,30 @@ void transferAddrOf(const UnaryOperator* UnaryOp,
                                           &State.Env.getBoolLiteralValue(true));
 }
 
-void transferDereference(const UnaryOperator* UnaryOp,
-                         const MatchFinder::MatchResult&,
-                         TransferState<PointerNullabilityLattice>& State) {
-  auto* PointerExpr = UnaryOp->getSubExpr();
+void transferPointerAccess(const Expr* PointerExpr,
+                           TransferState<PointerNullabilityLattice>& State) {
   auto& PointerNotNull = getPointerNotNullProperty(PointerExpr, State);
   if (!State.Env.flowConditionImplies(PointerNotNull)) {
     State.Lattice.addViolation(PointerExpr);
+  }
+}
+
+void transferDereference(const UnaryOperator* UnaryOp,
+                         const MatchFinder::MatchResult&,
+                         TransferState<PointerNullabilityLattice>& State) {
+  transferPointerAccess(UnaryOp->getSubExpr(), State);
+}
+
+void transferMemberExprInvolvingPointers(
+    const MemberExpr* MemberExpr, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
+  if (MemberExpr->isArrow()) {
+    // Base expr is a pointer, check that (->) access is safe
+    transferPointerAccess(MemberExpr->getBase(), State);
+  }
+  if (MemberExpr->getType()->isAnyPointerType()) {
+    // Accessed member is a pointer, initialise its nullability
+    initialisePointerNotNullProperty(MemberExpr, State);
   }
 }
 
@@ -144,8 +166,11 @@ auto buildTransferer() {
   return MatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers
       .CaseOf<Expr>(isPointerVariableReference(),
-                    initialisePointerNotNullProperty)
-      .CaseOf<Expr>(isPointerMemberExpr(), initialisePointerNotNullProperty)
+                    transferInitPointerVariableReference)
+      // Handles initialization of null states of member pointers and safety of
+      // member access (->) on pointers
+      .CaseOf<MemberExpr>(isMemberExprInvolvingPointers(),
+                          transferMemberExprInvolvingPointers)
       // Handles nullptr
       .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointerLiteral)
       // Handles address of operator (&var)

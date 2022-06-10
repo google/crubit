@@ -509,6 +509,71 @@ TEST_F(PointerNullabilityTest, MemberPointers) {
                            Pair("unsafe-2", IsUnsafe())));
 }
 
+TEST_F(PointerNullabilityTest, MemberAccessOnPointer) {
+  std::string MemberAccess = R"(
+    struct Foo {
+      void foo();
+    };
+    void target(Foo* foo) {
+      if (foo) {
+        foo->foo();
+        /*[[safe]]*/
+      } else {
+        foo->foo();
+        /*[[unsafe-1]]*/
+      }
+      foo->foo();
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      MemberAccess,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string AccessChainOnlyCheckOnFirst = R"(
+    struct Foo {
+      Foo* foo;
+    };
+    void target(Foo* foo) {
+      if (foo) {
+        foo->foo->foo;
+        /*[[unsafe-1]]*/
+      } else {
+        foo->foo->foo;
+        /*[[unsafe-2]]*/
+      }
+      foo->foo->foo;
+      /*[[unsafe-3]]*/
+    }
+  )";
+  expectDataflow(AccessChainOnlyCheckOnFirst,
+                 UnorderedElementsAre(Pair("unsafe-1", IsUnsafe()),
+                                      Pair("unsafe-2", IsUnsafe()),
+                                      Pair("unsafe-3", IsUnsafe())));
+
+  std::string AccessChainCheckOnAll = R"(
+    struct Foo {
+      Foo* foo;
+    };
+    void target(Foo* foo) {
+      if (foo && foo->foo) {
+        foo->foo->foo;
+        /*[[safe]]*/
+      } else {
+        foo->foo;
+        /*[[unsafe-1]]*/
+      }
+      foo->foo;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      AccessChainCheckOnAll,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy
