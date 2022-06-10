@@ -464,6 +464,51 @@ TEST_F(PointerNullabilityTest, BinaryExpressions) {
                            Pair("unsafe-2", IsUnsafe())));
 }
 
+TEST_F(PointerNullabilityTest, MemberPointers) {
+  std::string DerefStructMember = R"(
+    struct Foo {
+      Foo* ptr;
+    };
+    void target(Foo foo) {
+      if (foo.ptr) {
+        *foo.ptr;
+        /*[[safe]]*/
+      } else {
+        *foo.ptr;
+        /*[[unsafe-1]]*/
+      }
+      *foo.ptr;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      DerefStructMember,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+
+  std::string DerefClassMember = R"(
+    class Foo {
+     public:
+      Foo* ptr;
+    };
+    void target(Foo foo) {
+      if (foo.ptr) {
+        *foo.ptr;
+        /*[[safe]]*/
+      } else {
+        *foo.ptr;
+        /*[[unsafe-1]]*/
+      }
+      *foo.ptr;
+      /*[[unsafe-2]]*/
+    }
+  )";
+  expectDataflow(
+      DerefClassMember,
+      UnorderedElementsAre(Pair("safe", IsSafe()), Pair("unsafe-1", IsUnsafe()),
+                           Pair("unsafe-2", IsUnsafe())));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

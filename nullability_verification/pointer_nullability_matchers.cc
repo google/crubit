@@ -23,6 +23,7 @@ using ast_matchers::hasUnaryOperand;
 using ast_matchers::ignoringImplicit;
 using ast_matchers::implicitCastExpr;
 using ast_matchers::isAnyPointer;
+using ast_matchers::memberExpr;
 using ast_matchers::nullPointerConstant;
 using ast_matchers::unaryOperator;
 using ast_matchers::internal::Matcher;
@@ -45,7 +46,9 @@ Matcher<Stmt> isPointerCheckBinOp() {
 Matcher<Stmt> isImplicitCastPointerToBool() {
   return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
 }
-
+Matcher<Stmt> isPointerMemberExpr() {
+  return memberExpr(hasType(isAnyPointer()));
+}
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

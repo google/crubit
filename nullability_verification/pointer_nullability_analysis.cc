@@ -145,6 +145,7 @@ auto buildTransferer() {
       // Handles initialization of the null states of pointers
       .CaseOf<Expr>(isPointerVariableReference(),
                     initialisePointerNotNullProperty)
+      .CaseOf<Expr>(isPointerMemberExpr(), initialisePointerNotNullProperty)
       // Handles nullptr
       .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointerLiteral)
       // Handles address of operator (&var)

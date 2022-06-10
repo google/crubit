@@ -12,6 +12,7 @@ namespace tidy {
 namespace nullability {
 
 ast_matchers::internal::Matcher<Stmt> isPointerVariableReference();
+ast_matchers::internal::Matcher<Stmt> isPointerMemberExpr();
 ast_matchers::internal::Matcher<Stmt> isNullPointerLiteral();
 ast_matchers::internal::Matcher<Stmt> isAddrOf();
 ast_matchers::internal::Matcher<Stmt> isPointerDereference();
