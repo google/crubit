@@ -8,9 +8,5 @@ build:generic_clang --copt=-Wno-deprecated --host_copt=-Wno-deprecated
 # enable linking against prebuilt LLVM with no RTTI
 build:generic_clang --copt=-fno-rtti --host_copt=-fno-rtti
 
-# new warning in LLVM 15, fires when building LLVM 14.0.0
-# ref: https://github.com/llvm/llvm-project/commit/48285c20
-build:generic_clang --copt=-Wno-unused-but-set-variable --host_copt=-Wno-unused-but-set-variable
-
 build --config=generic_clang
 build --sandbox_base=/dev/shm

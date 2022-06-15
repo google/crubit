@@ -54,12 +54,14 @@ def _llvm_loader_repository(repository_ctx):
         )
 
 def llvm_loader_repository_dependencies():
-    # This *declares* the dependency, but it won't actually be *downloaded*
-    # unless it's used.
+    # This *declares* the dependency, but it won't actually be *downloaded* unless it's used.
+    #
+    # To make things easier for the Chromium folks, we track the LLVM version they build against:
+    #   https://source.chromium.org/search?q=CLANG_REVISION+file:^tools/clang/scripts/update.py$
     new_git_repository(
         name = "llvm-raw",
         build_file_content = "# empty",
-        commit = "8091f7120c6be15266ddd060c56d1997850ffbd0",
+        commit = "llvmorg-15-init-11722-g3f3a235a",
         shallow_since = "2022-05-18",
         remote = "https://github.com/llvm/llvm-project.git",
     )
