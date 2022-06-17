@@ -478,6 +478,7 @@ filegroup(
     }) + [
         "//third_party/grte/v5_x86/release/usr/grte/v5:compile",
     ],
+    visibility = ["//visibility:private"],
 )
 
 filegroup(
