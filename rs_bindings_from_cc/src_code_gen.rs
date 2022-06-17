@@ -231,12 +231,7 @@ struct FunctionId {
 
 /// Returns the name of `func` in C++ syntax.
 fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
-    let record: Option<&str> = func
-        .member_func_metadata
-        .as_ref()
-        .map(|meta| meta.find_record(ir))
-        .transpose()?
-        .map(|r| &*r.cc_name);
+    let record: Option<&str> = ir.record_for_member_func(func)?.map(|r| &*r.cc_name);
 
     let func_name = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => id.identifier.clone(),
@@ -386,8 +381,7 @@ fn api_func_shape<'ir>(
     ir: &IR,
     param_types: &[RsTypeKind<'ir>],
 ) -> Result<Option<(Ident, ImplKind<'ir>)>> {
-    let maybe_record: Option<&Record> =
-        func.member_func_metadata.as_ref().map(|meta| meta.find_record(ir)).transpose()?;
+    let maybe_record: Option<&Record> = ir.record_for_member_func(func)?;
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
@@ -2547,7 +2541,7 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
                         if let Some(_) = meta.instance_method_metadata {
                             quote! { #fn_ident }
                         } else {
-                            let record = meta.find_record(ir)?;
+                            let record = ir.find_decl::<Record>(meta.record_id)?;
                             let record_ident = format_cc_ident(&record.cc_name);
                             let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
                             quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }

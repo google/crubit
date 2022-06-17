@@ -302,12 +302,6 @@ pub struct MemberFuncMetadata {
     pub instance_method_metadata: Option<InstanceMethodMetadata>,
 }
 
-impl MemberFuncMetadata {
-    pub fn find_record<'a>(&self, ir: &'a IR) -> Result<&'a Record> {
-        ir.find_decl(self.record_id).context("Failed to retrieve Record for MemberFuncMetadata")
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct FuncParam {
     #[serde(rename(deserialize = "type"))]
@@ -776,6 +770,22 @@ impl IR {
             )
         })? - 1;
         Ok(idx == last_item_idx)
+    }
+
+    /// Returns the `Record` defining `func`, or `None` if `func` is not a
+    /// member function.
+    ///
+    /// If `Func` is a member function, but its `Record` is somehow not in
+    /// `self`, returns an error.
+    pub fn record_for_member_func<'a>(&self, func: &'a Func) -> Result<Option<&Record>> {
+        if let Some(meta) = func.member_func_metadata.as_ref() {
+            Ok(Some(
+                self.find_decl(meta.record_id)
+                    .context("Failed to retrieve Record for MemberFuncMetadata")?,
+            ))
+        } else {
+            Ok(None)
+        }
     }
 }
 

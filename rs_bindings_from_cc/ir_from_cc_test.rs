@@ -2648,9 +2648,7 @@ fn test_operator_names() {
         .functions()
         .filter(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            f.member_func_metadata
-                .as_ref()
-                .map(|m| m.find_record(&ir).unwrap().rs_name == "SomeStruct")
+            ir.record_for_member_func(f).unwrap().map(|r| r.rs_name == "SomeStruct")
                 .unwrap_or_default()
         })
         .flat_map(|f| match &f.name {
