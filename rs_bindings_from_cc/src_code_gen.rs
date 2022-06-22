@@ -6072,4 +6072,38 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
+        let rs_api = generate_bindings_tokens(&ir_from_cc(
+            r#" #pragma clang lifetime_elision
+                namespace test_namespace_bindings {
+                    template <typename T>
+                    struct MyTemplate final {
+                        T value_;
+                    };
+
+                    using MyTypeAlias = MyTemplate<int>;
+                }"#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                ...
+                pub mod test_namespace_bindings {
+                    ...
+                    pub type MyTypeAlias = crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
+                    ...
+                }
+                ...
+                pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
+                    pub value_: i32,
+                }
+                ...
+            }
+        );
+        Ok(())
+    }
 }

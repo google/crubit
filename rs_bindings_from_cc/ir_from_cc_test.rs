@@ -871,27 +871,28 @@ fn test_typedef_duplicate() -> Result<()> {
 fn test_typedef_of_fully_instantiated_template() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision
+            namespace test_namespace_bindings {
+                // Doc comment of MyStruct template.
+                template <typename T>
+                struct MyStruct {
+                  // Doc comment of GetValue method.
+                  const T& GetValue() const { return value; }
 
-            // Doc comment of MyStruct template.
-            template <typename T>
-            struct MyStruct {
-              // Doc comment of GetValue method.
-              const T& GetValue() const { return value; }
+                  // Doc comment of `value` field.
+                  T value;
+                };
 
-              // Doc comment of `value` field.
-              T value;
-            };
-
-            // Doc comment of MyTypeAlias.
-            using MyTypeAlias = MyStruct<int>; "#,
+                // Doc comment of MyTypeAlias.
+                using MyTypeAlias = MyStruct<int>;
+            }"#,
     )?;
     // Instantiation of the struct template:
     assert_ir_matches!(
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInst8MyStructIiE", ...
-            cc_name: "MyStruct<int>", ...
+            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE", ...
+            cc_name: "test_namespace_bindings::MyStruct<int>", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment of MyStruct template."), ...
             fields: [Field {
@@ -904,10 +905,11 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
+            enclosing_namespace_id: None, ...
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
     // Make sure the instantiation of the class template appears exactly once in the
     // `top_level_item_ids`.
     assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
@@ -943,7 +945,7 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
           Func {
             name: "GetValue",
             owning_target: BazelLabel("//test:testing_target"),
-            mangled_name: "_ZNK8MyStructIiE8GetValueEv__2f_2ftest_3atesting_5ftarget", ...
+            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv__2f_2ftest_3atesting_5ftarget", ...
             doc_comment: Some("Doc comment of GetValue method."), ...
             is_inline: true, ...
             member_func_metadata: Some(MemberFuncMetadata {
@@ -963,7 +965,7 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
           Func {
               name: "operator=",
               owning_target: BazelLabel("//test:testing_target"),
-              mangled_name: "_ZN8MyStructIiEaSERKS0___2f_2ftest_3atesting_5ftarget", ...
+              mangled_name: "_ZN23test_namespace_bindings8MyStructIiEaSERKS1___2f_2ftest_3atesting_5ftarget", ...
               doc_comment: None, ...
           }
         }
@@ -975,30 +977,31 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
 fn test_typedef_for_explicit_template_specialization() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision
+            namespace test_namespace_bindings {
+                template <typename T>
+                struct MyStruct final {};
 
-            template <typename T>
-            struct MyStruct final {};
+                // Doc comment for template specialization for T=int.
+                template<>
+                struct MyStruct<int> final {
+                  // Doc comment of the GetValue method specialization for T=int.
+                  const int& GetValue() const { return value * 42; }
 
-            // Doc comment for template specialization for T=int.
-            template<>
-            struct MyStruct<int> final {
-              // Doc comment of the GetValue method specialization for T=int.
-              const int& GetValue() const { return value * 42; }
+                  // Doc comment of the `value` field specialization for T=int.
+                  int value;
+                };
 
-              // Doc comment of the `value` field specialization for T=int.
-              int value;
-            };
-
-            // Doc comment of MyTypeAlias.
-            using MyTypeAlias = MyStruct<int>; "#,
+                // Doc comment of MyTypeAlias.
+                using MyTypeAlias = MyStruct<int>;
+              }"#,
     )?;
     // Instantiation of the struct template based on the specialization for T=int:
     assert_ir_matches!(
         ir,
         quote! {
           Record {
-            rs_name: "__CcTemplateInst8MyStructIiE", ...
-            cc_name: "MyStruct<int>", ...
+            rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE", ...
+            cc_name: "test_namespace_bindings::MyStruct<int>", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment for template specialization for T=int."), ...
             fields: [Field {
@@ -1011,13 +1014,18 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
+            enclosing_namespace_id: Some(...), ...
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
+
+    // TODO(b/200067826) This assertion worked because the template specialization was top level
+    // already.
     // Make sure the explicit specialization of the struct template appears exactly
     // once in the `top_level_item_ids`.
-    assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
+    // assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
+
     // Instance method inside the struct template:
     assert_ir_matches!(
         ir,
@@ -1025,7 +1033,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           Func {
             name: "GetValue",
             owning_target: BazelLabel("//test:testing_target"),
-            mangled_name: "_ZNK8MyStructIiE8GetValueEv__2f_2ftest_3atesting_5ftarget", ...
+            mangled_name: "_ZNK23test_namespace_bindings8MyStructIiE8GetValueEv__2f_2ftest_3atesting_5ftarget", ...
             doc_comment: Some("Doc comment of the GetValue method specialization for T=int."), ...
             is_inline: true, ...
             member_func_metadata: Some(MemberFuncMetadata {

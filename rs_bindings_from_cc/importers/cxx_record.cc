@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
+#include "absl/strings/match.h"
 #include "absl/strings/substitute.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "clang/AST/ASTContext.h"
@@ -80,9 +81,12 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   std::string rs_name, cc_name;
   llvm::Optional<std::string> doc_comment;
+  bool is_implicit_class_template_specialization_decl = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
+    is_implicit_class_template_specialization_decl =
+        !specialization_decl->isExplicitSpecialization();
     rs_name = ictx_.GetMangledName(specialization_decl);
     cc_name =
         GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl);
@@ -110,7 +114,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         .cc_name = std::move(cc_name),
         .id = GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
-        .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
+        // We generate top level bindings for implicit class template
+        // specializations.
+        .enclosing_namespace_id = is_implicit_class_template_specialization_decl
+                                      ? llvm::None
+                                      : GetEnclosingNamespaceId(record_decl)};
   }
 
   // At this point we know that the import of `record_decl` will succeed /
@@ -156,7 +164,11 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_union = record_decl->isUnion(),
       .is_aggregate = record_decl->isAggregate(),
       .child_item_ids = std::move(item_ids),
-      .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl),
+      // We generate top level bindings for implicit class template
+      // specializations.
+      .enclosing_namespace_id = is_implicit_class_template_specialization_decl
+                                    ? llvm::None
+                                    : GetEnclosingNamespaceId(record_decl),
   };
 }
 
