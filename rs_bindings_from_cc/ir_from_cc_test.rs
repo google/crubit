@@ -1070,6 +1070,69 @@ fn test_multiple_typedefs_to_same_template() -> Result<()> {
 }
 
 #[test]
+fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<()> {
+    let ir = ir_from_cc(
+        r#" #pragma clang lifetime_elision
+            template <typename T>
+            struct MyStruct {
+              void MyMethod();
+            };
+            struct Str {};
+            using Alias1 = MyStruct<int>;
+            using Alias2 = MyStruct<long long>;
+            using Alias3 = MyStruct<Str>;
+            namespace test_namespace_bindings {
+              using Alias4 = MyStruct<MyStruct<int>>;
+              using Alias5 = MyStruct<bool>;
+            }
+            "#,
+    )?;
+
+    // Implicit class template specializations and their methods all have the same
+    // source location. Test that they are sorted deterministically. (Implementation
+    // detail: the ordering is by mangled name).
+    let class_template_specialization_names = ir
+        .top_level_item_ids()
+        .filter_map(|id| match ir.find_decl(*id).unwrap() {
+            ir::Item::Record(r) if r.rs_name.contains("__CcTemplateInst") => Some(&r.rs_name),
+            _ => None,
+        })
+        .collect_vec();
+    assert_eq!(
+        vec![
+            "__CcTemplateInst8MyStructI3StrE",
+            "__CcTemplateInst8MyStructIS_IiEE",
+            "__CcTemplateInst8MyStructIbE",
+            "__CcTemplateInst8MyStructIiE",
+            "__CcTemplateInst8MyStructIxE"
+        ],
+        class_template_specialization_names
+    );
+
+    let method_mangled_names = ir
+        .functions()
+        .filter_map(|f| match &f.name {
+            UnqualifiedIdentifier::Identifier(id) if id.identifier.as_str() == "MyMethod" => {
+                Some(&f.mangled_name)
+            }
+            _ => None,
+        })
+        .collect_vec();
+    assert_eq!(
+        vec![
+            "_ZN8MyStructI3StrE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
+            "_ZN8MyStructIS_IiEE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
+            "_ZN8MyStructIbE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
+            "_ZN8MyStructIiE8MyMethodEv__2f_2ftest_3atesting_5ftarget",
+            "_ZN8MyStructIxE8MyMethodEv__2f_2ftest_3atesting_5ftarget"
+        ],
+        method_mangled_names
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_templates_inheritance() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision

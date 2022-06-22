@@ -33,6 +33,7 @@
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
@@ -227,7 +228,57 @@ static int GetDeclOrder(const clang::Decl* decl) {
   return 999;
 }
 
-class SourceLocationComparator {
+class Importer::SourceOrderKey {
+ public:
+  SourceOrderKey(clang::SourceRange source_range, int decl_order = 0,
+                 std::string name = "")
+      : source_range_(source_range), decl_order_(decl_order), name_(name) {}
+
+  SourceOrderKey(const SourceOrderKey&) = default;
+  SourceOrderKey& operator=(const SourceOrderKey&) = default;
+
+  bool isBefore(const SourceOrderKey& other,
+                const clang::SourceManager& sm) const {
+    if (!source_range_.isValid() || !other.source_range_.isValid()) {
+      if (source_range_.isValid() != other.source_range_.isValid())
+        return !source_range_.isValid() && other.source_range_.isValid();
+    } else {
+      if (source_range_.getBegin() != other.source_range_.getBegin()) {
+        return sm.isBeforeInTranslationUnit(source_range_.getBegin(),
+                                            other.source_range_.getBegin());
+      }
+      if (source_range_.getEnd() != other.source_range_.getEnd()) {
+        return sm.isBeforeInTranslationUnit(source_range_.getEnd(),
+                                            other.source_range_.getEnd());
+      }
+    }
+
+    if (decl_order_ < other.decl_order_) {
+      return true;
+    } else if (decl_order_ > other.decl_order_) {
+      return false;
+    }
+    return name_ < other.name_;
+  }
+
+ private:
+  clang::SourceRange source_range_;
+  int decl_order_;
+  std::string name_;
+};
+
+Importer::SourceOrderKey Importer::GetSourceOrderKey(
+    const clang::Decl* decl) const {
+  return SourceOrderKey(decl->getSourceRange(), GetDeclOrder(decl),
+                        GetNameForSourceOrder(decl));
+}
+
+Importer::SourceOrderKey Importer::GetSourceOrderKey(
+    const clang::RawComment* comment) const {
+  return SourceOrderKey(comment->getSourceRange());
+}
+
+class Importer::SourceLocationComparator {
  public:
   const bool operator()(const clang::SourceLocation& a,
                         const clang::SourceLocation& b) const {
@@ -246,34 +297,19 @@ class SourceLocationComparator {
     return this->operator()(a->getBeginLoc(), b->getBeginLoc());
   }
 
-  using OrderedItemId = std::tuple<clang::SourceRange, int, ItemId>;
-  using OrderedItem = std::tuple<clang::SourceRange, int, IR::Item>;
+  using OrderedItemId = std::pair<SourceOrderKey, ItemId>;
+  using OrderedItem = std::pair<SourceOrderKey, IR::Item>;
 
   template <typename OrderedItemOrId>
   bool operator()(const OrderedItemOrId& a, const OrderedItemOrId& b) const {
-    auto a_range = std::get<0>(a);
-    auto b_range = std::get<0>(b);
-    if (!a_range.isValid() || !b_range.isValid()) {
-      if (a_range.isValid() != b_range.isValid())
-        return !a_range.isValid() && b_range.isValid();
-    } else {
-      if (a_range.getBegin() != b_range.getBegin()) {
-        return sm.isBeforeInTranslationUnit(a_range.getBegin(),
-                                            b_range.getBegin());
-      }
-      if (a_range.getEnd() != b_range.getEnd()) {
-        return sm.isBeforeInTranslationUnit(a_range.getEnd(), b_range.getEnd());
-      }
-    }
-    auto a_decl_order = std::get<1>(a);
-    auto b_decl_order = std::get<1>(b);
-    return a_decl_order < b_decl_order;
+    auto a_source_order = a.first;
+    auto b_source_order = b.first;
+    return a_source_order.isBefore(b_source_order, sm);
   }
-
-  SourceLocationComparator(clang::SourceManager& sm) : sm(sm) {}
+  SourceLocationComparator(const clang::SourceManager& sm) : sm(sm) {}
 
  private:
-  clang::SourceManager& sm;
+  const clang::SourceManager& sm;
 };
 
 std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
@@ -331,7 +367,7 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
       // redecls, not just the canonical
       if (visited_item_ids.find(item_id) == visited_item_ids.end()) {
         visited_item_ids.insert(item_id);
-        items.push_back({decl->getSourceRange(), GetDeclOrder(decl), item_id});
+        items.push_back({GetSourceOrderKey(decl), item_id});
       }
     }
 
@@ -345,14 +381,14 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   }
 
   for (auto& [_, comment] : ordered_comments) {
-    items.push_back({comment->getSourceRange(), 0, GenerateItemId(comment)});
+    items.push_back({GetSourceOrderKey(comment), GenerateItemId(comment)});
   }
   llvm::sort(items, compare_locations);
 
   std::vector<ItemId> ordered_item_ids;
   ordered_item_ids.reserve(items.size());
   for (auto& ordered_item : items) {
-    ordered_item_ids.push_back(std::get<2>(ordered_item));
+    ordered_item_ids.push_back(ordered_item.second);
   }
   return ordered_item_ids;
 }
@@ -362,8 +398,7 @@ std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
   std::vector<SourceLocationComparator::OrderedItemId> items;
   items.reserve(class_template_instantiations_for_current_target_.size());
   for (const auto* decl : class_template_instantiations_for_current_target_) {
-    items.push_back(
-        {decl->getSourceRange(), GetDeclOrder(decl), GenerateItemId(decl)});
+    items.push_back({GetSourceOrderKey(decl), GenerateItemId(decl)});
   }
 
   clang::SourceManager& sm = ctx_.getSourceManager();
@@ -373,7 +408,7 @@ std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
   std::vector<ItemId> ordered_item_ids;
   ordered_item_ids.reserve(items.size());
   for (const auto& ordered_item : items) {
-    ordered_item_ids.push_back(std::get<2>(ordered_item));
+    ordered_item_ids.push_back(ordered_item.second);
   }
   return ordered_item_ids;
 }
@@ -400,7 +435,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 
   for (auto& comment : comments_) {
     ordered_items.push_back(
-        {comment->getSourceRange(), 0,
+        {GetSourceOrderKey(comment),
          Comment{.text = comment->getFormattedText(sm, sm.getDiagnostics()),
                  .id = GenerateItemId(comment)}});
   }
@@ -412,8 +447,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
           !IsFromCurrentTarget(decl)) {
         continue;
       }
-      ordered_items.push_back(
-          {decl->getSourceRange(), GetDeclOrder(decl), *item});
+      ordered_items.push_back({GetSourceOrderKey(decl), *item});
     }
   }
 
@@ -421,7 +455,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 
   invocation_.ir_.items.reserve(ordered_items.size());
   for (auto& ordered_item : ordered_items) {
-    invocation_.ir_.items.push_back(std::get<2>(ordered_item));
+    invocation_.ir_.items.push_back(ordered_item.second);
   }
   invocation_.ir_.top_level_item_ids =
       GetItemIdsInSourceOrder(translation_unit_decl);
@@ -845,6 +879,21 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
   mangler_->mangleName(decl, stream);
   stream.flush();
   return name;
+}
+
+std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
+  // Implicit class template specializations and their methods all have the
+  // same source location. In order to provide deterministic order of the
+  // respective items in generated source code, we additionally use the
+  // mangled names when sorting the items.
+  if (auto* class_template_specialization_decl =
+          clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+    return GetMangledName(class_template_specialization_decl);
+  } else if (auto* func_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
+    return GetMangledName(func_decl);
+  } else {
+    return "";
+  }
 }
 
 std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(

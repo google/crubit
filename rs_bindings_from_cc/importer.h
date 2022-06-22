@@ -22,6 +22,7 @@
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Mangle.h"
+#include "clang/AST/RawCommentList.h"
 
 namespace crubit {
 
@@ -82,6 +83,19 @@ class Importer : public ImportContext {
       const clang::TypeDecl* decl) const override;
 
  private:
+  class SourceOrderKey;
+  class SourceLocationComparator;
+
+  // Returns a SourceOrderKey for the given `decl` that should be used for
+  // ordering Items.
+  SourceOrderKey GetSourceOrderKey(const clang::Decl* decl) const;
+  // Returns a SourceOrderKey for the given `comment` that should be used for
+  // ordering Items.
+  SourceOrderKey GetSourceOrderKey(const clang::RawComment* comment) const;
+
+  // Returns a name for `decl` that should be used for ordering declarations.
+  std::string GetNameForSourceOrder(const clang::Decl* decl) const;
+
   // Returns the item ids of template instantiations that have been triggered
   // from the current target.  The returned items are in an arbitrary,
   // deterministic/reproducible order.

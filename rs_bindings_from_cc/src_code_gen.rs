@@ -5999,4 +5999,77 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result<()> {
+        let bindings = generate_bindings_tokens(&ir_from_cc(
+            r#"
+                template <typename T>
+                struct MyStruct {
+                    T getT();
+                };
+
+                using Alias1 = MyStruct<int>;
+                using Alias2 = MyStruct<double>;
+
+                namespace test_namespace_bindings {
+                    using Alias3 = MyStruct<bool>;
+                }
+                "#,
+        )?)?;
+
+        // Mangled name order: bool < double < int
+        let my_struct_bool = make_rs_ident("__CcTemplateInst8MyStructIbE");
+        let my_struct_double = make_rs_ident("__CcTemplateInst8MyStructIdE");
+        let my_struct_int = make_rs_ident("__CcTemplateInst8MyStructIiE");
+
+        assert_rs_matches!(
+            &bindings.rs_api,
+            quote! {
+                ...
+                pub struct #my_struct_bool {...}
+                ...
+                pub struct #my_struct_double {...}
+                ...
+                pub struct #my_struct_int {...}
+                ...
+                const _: () = assert!(rust_std::mem::size_of::<crate::#my_struct_bool>() == 1);
+                ...
+                const _: () = assert!(rust_std::mem::size_of::<crate::#my_struct_double>() == 1);
+                ...
+                const _: () = assert!(rust_std::mem::size_of::<crate::#my_struct_int>() == 1);
+                ...
+            }
+        );
+
+        // Constructors in mangled name order
+        let my_struct_bool_constructor =
+            make_rs_ident("__rust_thunk___ZN8MyStructIbEC1Ev__2f_2ftest_3atesting_5ftarget");
+        let my_struct_double_constructor =
+            make_rs_ident("__rust_thunk___ZN8MyStructIdEC1Ev__2f_2ftest_3atesting_5ftarget");
+        let my_struct_int_constructor =
+            make_rs_ident("__rust_thunk___ZN8MyStructIiEC1Ev__2f_2ftest_3atesting_5ftarget");
+
+        // User defined methods in mangled name order
+        let my_struct_bool_method =
+            make_rs_ident("__rust_thunk___ZN8MyStructIbE4getTEv__2f_2ftest_3atesting_5ftarget");
+        let my_struct_double_method =
+            make_rs_ident("__rust_thunk___ZN8MyStructIdE4getTEv__2f_2ftest_3atesting_5ftarget");
+        let my_struct_int_method =
+            make_rs_ident("__rust_thunk___ZN8MyStructIiE4getTEv__2f_2ftest_3atesting_5ftarget");
+
+        assert_cc_matches!(
+            &bindings.rs_api_impl,
+            quote! {
+                ...
+                extern "C" void #my_struct_bool_constructor(class MyStruct<bool>*__this) {...} ...
+                extern "C" void #my_struct_double_constructor(class MyStruct<double>*__this) {...} ...
+                extern "C" void #my_struct_int_constructor(class MyStruct<int>*__this) {...} ...
+                extern "C" bool #my_struct_bool_method(class MyStruct<bool>*__this) {...} ...
+                extern "C" double #my_struct_double_method(class MyStruct<double>*__this) {...} ...
+                extern "C" int #my_struct_int_method(class MyStruct<int>*__this) {...} ...
+            }
+        );
+        Ok(())
+    }
 }
