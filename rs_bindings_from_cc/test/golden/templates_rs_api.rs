@@ -268,6 +268,17 @@ pub mod test_namespace_bindings {
 pub type TopLevelTemplateWithNonTopLevelParam =
     crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE;
 
+forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("__CcTemplateInst18MyTopLevelTemplateIiE"));
+
+#[inline(always)]
+pub fn processForwardDeclaredSpecialization<'a>(
+    i: Option<crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(i)
+    }
+}
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
 #[ctor::recursively_pinned]
@@ -1266,6 +1277,14 @@ mod detail {
             >,
             __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>;
+        #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
+        pub(crate) fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE<
+            'a,
+        >(
+            i: Option<
+                crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>,
+            >,
+        );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(

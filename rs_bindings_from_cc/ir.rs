@@ -373,6 +373,7 @@ pub struct BaseClass {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IncompleteRecord {
     pub cc_name: String,
+    pub rs_name: String,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub enclosing_namespace_id: Option<ItemId>,

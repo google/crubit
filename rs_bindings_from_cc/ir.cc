@@ -362,6 +362,7 @@ llvm::json::Value BaseClass::ToJson() const {
 llvm::json::Value IncompleteRecord::ToJson() const {
   llvm::json::Object record{
       {"cc_name", cc_name},
+      {"rs_name", rs_name},
       {"id", id},
       {"owning_target", owning_target},
   };

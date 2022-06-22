@@ -5,7 +5,6 @@
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
 #include "absl/strings/match.h"
-#include "absl/strings/substitute.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
@@ -112,6 +111,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     ictx_.MarkAsSuccessfullyImported(record_decl);
     return IncompleteRecord{
         .cc_name = std::move(cc_name),
+        .rs_name = std::move(rs_name),
         .id = GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
         // We generate top level bindings for implicit class template

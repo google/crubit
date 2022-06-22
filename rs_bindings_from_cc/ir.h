@@ -613,6 +613,7 @@ struct Record {
 struct IncompleteRecord {
   llvm::json::Value ToJson() const;
   std::string cc_name;
+  std::string rs_name;
   ItemId id;
   BazelLabel owning_target;
   llvm::Optional<ItemId> enclosing_namespace_id;

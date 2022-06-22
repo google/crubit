@@ -992,8 +992,8 @@ fn generate_namespace_qualifier(item_id: ItemId, ir: &IR) -> Result<impl Iterato
 
 /// Generates Rust source code for a given incomplete record declaration.
 fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<TokenStream> {
-    let ident = make_rs_ident(&incomplete_record.cc_name);
-    let name = &incomplete_record.cc_name;
+    let ident = make_rs_ident(&incomplete_record.rs_name);
+    let name = &incomplete_record.rs_name;
     Ok(quote! {
         forward_declare::forward_declare!(
             pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#name)
@@ -2181,7 +2181,7 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
                 namespace_qualifier,
                 crate_ident,
             } => {
-                let record_ident = make_rs_ident(&incomplete_record.cc_name);
+                let record_ident = make_rs_ident(&incomplete_record.rs_name);
                 let namespace_idents = namespace_qualifier.iter();
                 match crate_ident {
                     Some(ci) => {
@@ -6100,6 +6100,38 @@ mod tests {
                 ...
                 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
                     pub value_: i32,
+                }
+                ...
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_forward_declared_class_template_specialization_symbol() -> Result<()> {
+        let rs_api = generate_bindings_tokens(&ir_from_cc(
+            r#"
+            namespace test_namespace_bindings {
+              template <typename T>
+              struct MyTemplate {
+                void processT(T t);
+              };
+
+              struct Param {};
+
+              template<> struct MyTemplate<Param>;
+            }"#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                ...
+                pub mod test_namespace_bindings {
+                    ...
+                    forward_declare::forward_declare!(pub __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE = forward_declare::symbol!("__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE"));
+                    ...
                 }
                 ...
             }

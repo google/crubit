@@ -54,4 +54,9 @@ struct MyTopLevelTemplate {
 using TopLevelTemplateWithNonTopLevelParam =
     MyTopLevelTemplate<test_namespace_bindings::TemplateParam>;
 
+template <>
+struct MyTopLevelTemplate<int>;
+
+void processForwardDeclaredSpecialization(MyTopLevelTemplate<int>* i);
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_

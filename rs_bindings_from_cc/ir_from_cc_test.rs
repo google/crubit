@@ -3334,3 +3334,33 @@ fn test_inline_namespace() {
         }
     );
 }
+
+#[test]
+fn test_incomplete_record_has_rs_name() {
+    let ir = ir_from_cc(
+        r#"
+        namespace test_namespace_bindings {
+          template <typename T>
+          struct MyTemplate {
+            void processT(T t);
+          };
+
+          struct Param {};
+
+          template<> struct MyTemplate<Param>;
+        }"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            IncompleteRecord {
+              cc_name: "test_namespace_bindings::MyTemplate<test_namespace_bindings::Param>",
+              rs_name: "__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE",
+              ...
+            } ...
+        }
+    );
+}
