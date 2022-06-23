@@ -112,10 +112,9 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
 
   if (!this_type.isNull()) {
     ValueLifetimes tmp;
-    // TODO(mboehme): We don't have a `TypeLoc` for this because the `this` is
-    // never spelled out.
+    // TODO(mboehme): Pass in correct lifetime name.
     if (llvm::Error err =
-            lifetime_factory.CreateParamLifetimes(this_type, clang::TypeLoc())
+            lifetime_factory.CreateThisLifetimes(this_type, nullptr)
                 .moveInto(tmp)) {
       return std::move(err);
     }

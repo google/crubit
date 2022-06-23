@@ -152,6 +152,14 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
           symbol_table(symbol_table) {}
 
    private:
+    llvm::Expected<ValueLifetimes> CreateThisLifetimes(
+        clang::QualType type, const clang::Expr*) const override {
+      // TODO(mboehme): For the time being, we're just calling through to
+      // `CreateParamLifetimes`, but eventually, we want to do something
+      // sensible with `lifetime_name`.
+      return CreateParamLifetimes(type, clang::TypeLoc());
+    }
+
     llvm::Expected<ValueLifetimes> CreateParamLifetimes(
         clang::QualType param_type, clang::TypeLoc) const override {
       // TODO(mboehme): parse lifetime annotations from `type` if present.

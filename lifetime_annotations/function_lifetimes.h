@@ -30,6 +30,9 @@ class FunctionLifetimeFactory {
  public:
   virtual ~FunctionLifetimeFactory() {}
 
+  virtual llvm::Expected<ValueLifetimes> CreateThisLifetimes(
+      clang::QualType type, const clang::Expr* lifetime_name) const = 0;
+
   // Note: The `type_loc` parameter passed into `CreateParamLifetimes` and
   // `CreateReturnLifetimes` may be null if no type location is available.
 
@@ -46,6 +49,14 @@ class FunctionLifetimeFactorySingleCallback : public FunctionLifetimeFactory {
  public:
   FunctionLifetimeFactorySingleCallback(LifetimeFactory factory)
       : factory_(std::move(factory)) {}
+  llvm::Expected<ValueLifetimes> CreateThisLifetimes(
+      clang::QualType type,
+      const clang::Expr* /*lifetime_name*/) const override {
+    // TODO(mboehme): There's currently no way for us to pass `lifetime_name` on
+    // into `ValueLifetimes::Create()`. We may need to add another overload of
+    // `ValueLifetimes::Create()` if we ever need this.
+    return ValueLifetimes::Create(type, TypeLoc(), factory_);
+  }
   llvm::Expected<ValueLifetimes> CreateParamLifetimes(
       clang::QualType type, clang::TypeLoc type_loc) const override {
     return ValueLifetimes::Create(type, type_loc, factory_);

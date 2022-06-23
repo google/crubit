@@ -25,6 +25,10 @@ namespace lifetimes {
 namespace {
 
 class ForwardAndMoveFactory : public FunctionLifetimeFactory {
+  llvm::Expected<ValueLifetimes> CreateThisLifetimes(
+      clang::QualType type, const clang::Expr*) const override {
+    return CreateParamLifetimes(type, clang::TypeLoc());
+  }
   llvm::Expected<ValueLifetimes> CreateParamLifetimes(
       clang::QualType type, clang::TypeLoc) const override {
     return ValueLifetimes::Create(
