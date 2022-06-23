@@ -465,16 +465,41 @@ GetTemplateArgs(clang::QualType type) {
   return result;
 }
 
-llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
-    clang::TypeLoc type_loc) {
+std::optional<llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>>>
+GetTemplateArgs(clang::TypeLoc type_loc) {
+  assert(type_loc);
+
+  type_loc = type_loc.getUnqualifiedLoc();
+
+  // We can't get template arguments from a `SubstTemplateTypeParmTypeLoc`
+  // because there is no `TypeLoc` for the type that replaces the template
+  // parameter. Similarly, there is no `TypeLoc` for the type that a
+  // `TypedefTypeLoc` resolves to.
+  if (type_loc.getAs<clang::SubstTemplateTypeParmTypeLoc>() ||
+      type_loc.getAs<clang::TypedefTypeLoc>()) {
+    assert(!type_loc.getNextTypeLoc());
+    return std::nullopt;
+  }
+
   llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> args;
 
   if (auto elaborated_type_loc = type_loc.getAs<clang::ElaboratedTypeLoc>()) {
     if (clang::NestedNameSpecifierLoc qualifier =
             elaborated_type_loc.getQualifierLoc()) {
-      args = GetTemplateArgs(qualifier.getTypeLoc());
+      if (qualifier.getTypeLoc()) {
+        if (auto qualifier_args = GetTemplateArgs(qualifier.getTypeLoc())) {
+          args = *qualifier_args;
+        } else {
+          return std::nullopt;
+        }
+      }
     }
-    args.append(GetTemplateArgs(elaborated_type_loc.getNamedTypeLoc()));
+    if (auto elaborated_args =
+            GetTemplateArgs(elaborated_type_loc.getNamedTypeLoc())) {
+      args.append(*elaborated_args);
+    } else {
+      return std::nullopt;
+    }
   } else if (auto template_specialization_type_loc =
                  type_loc.getAs<clang::TemplateSpecializationTypeLoc>()) {
     args.push_back({});
@@ -483,6 +508,16 @@ llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
       args.back().push_back(template_specialization_type_loc.getArgLoc(i)
                                 .getTypeSourceInfo()
                                 ->getTypeLoc());
+    }
+  } else if (auto record_type_loc = type_loc.getAs<clang::RecordTypeLoc>()) {
+    if (auto specialization_decl =
+            clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
+                record_type_loc.getDecl())) {
+      if (specialization_decl->getTypeAsWritten()) {
+        return GetTemplateArgs(
+            specialization_decl->getTypeAsWritten()->getTypeLoc());
+      }
+      return std::nullopt;
     }
   } else if (auto dependent_template_specialization_type_loc =
                  type_loc

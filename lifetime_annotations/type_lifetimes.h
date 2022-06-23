@@ -279,16 +279,16 @@ class ObjectLifetimes {
 const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
 GetTemplateArgs(clang::QualType type);
 
-// Returns any template arguments present on `type_loc`. If `type_loc` does not
-// have template arguments, returns an empty vector.
-// Return type: The outer vector is indexed by the "depth" of the template
-// argument within a chain of nested templates; the inner vector contains the
-// template arguments at a given depth.
-// For example, for a type `Outer<int *, double *>::Inner<long *>`, this returns
-// (in pseudo-code) { { int *, double * }, { long * } };
+// Returns any template arguments present on `type_loc`.
+// - If `type_loc` does not have template arguments, returns an empty vector.
+// - If the type has template arguments but it is not possible to retrieve
+//   `TypeLocs` for them, returns std::nullopt. For example, this can happen if
+//   `type_loc` is a `TypedefTypeLoc`: There is no source location for those
+//   template arguments at the location of the `type_loc`.
+// Return type: See description for `GetTemplateArgs()`.
 // This helper function is placed here to be able to share it with clang-tidy.
-llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
-    clang::TypeLoc type_loc);
+std::optional<llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>>>
+GetTemplateArgs(clang::TypeLoc type_loc);
 
 // Evaluate the given expression as a string literal. Returns an error if the
 // expression is not a string literal.
