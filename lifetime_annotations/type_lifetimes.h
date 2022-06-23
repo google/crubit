@@ -68,8 +68,21 @@ class ValueLifetimes {
   // Creates a ValueLifetimes for a *value* of a given type.
   // Only fails if lifetime_factory fails.
   // Lifetimes will be created in post-order in the tree of lifetimes.
+  // If a non-null `type_loc` is passed in, passes any lifetime names
+  // found in `annotate_type` attributes on to `lifetime_factory`.
+  // Note: It's necessary to pass in both `type` and `type_loc` because we may
+  // not be able to traverse as deeply into `type_loc` as we can into `type`.
+  // For example, if the type is a typedef for a pointer type, we can traverse
+  // into that pointer type through `type`, but not through `type_loc`. This is
+  // because the pointer type is not spelled out in the place where the
+  // `type_loc` appears in the source code.
   static llvm::Expected<ValueLifetimes> Create(
-      clang::QualType type, LifetimeFactory lifetime_factory);
+      clang::QualType type, clang::TypeLoc type_loc,
+      LifetimeFactory lifetime_factory);
+  static llvm::Expected<ValueLifetimes> Create(
+      clang::QualType type, LifetimeFactory lifetime_factory) {
+    return Create(type, clang::TypeLoc(), lifetime_factory);
+  }
 
   // Returns a ValueLifetimes for a lifetime-less type.
   // `type` must not be a pointer-like type or a record type.

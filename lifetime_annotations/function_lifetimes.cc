@@ -28,14 +28,24 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForDecl(
       method && !method->isStatic()) {
     this_type = method->getThisType();
   }
-  return Create(func->getType()->getAs<clang::FunctionProtoType>(), this_type,
-                lifetime_factory);
+  clang::TypeLoc type_loc;
+  if (func->getTypeSourceInfo()) {
+    type_loc = func->getTypeSourceInfo()->getTypeLoc();
+  }
+  return Create(func->getType()->getAs<clang::FunctionProtoType>(), type_loc,
+                this_type, lifetime_factory);
+}
+
+llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForFunctionType(
+    const clang::FunctionProtoType* func, clang::TypeLoc func_type_loc,
+    const FunctionLifetimeFactory& lifetime_factory) {
+  return Create(func, func_type_loc, clang::QualType(), lifetime_factory);
 }
 
 llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateForFunctionType(
     const clang::FunctionProtoType* func,
     const FunctionLifetimeFactory& lifetime_factory) {
-  return Create(func, clang::QualType(), lifetime_factory);
+  return CreateForFunctionType(func, clang::TypeLoc(), lifetime_factory);
 }
 
 llvm::Expected<FunctionLifetimes> FunctionLifetimes::CreateCopy(
@@ -95,33 +105,53 @@ bool FunctionLifetimes::IsValidForDecl(const clang::FunctionDecl* function) {
 }
 
 llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
-    const clang::FunctionProtoType* type, const clang::QualType this_type,
+    const clang::FunctionProtoType* type, clang::TypeLoc type_loc,
+    const clang::QualType this_type,
     const FunctionLifetimeFactory& lifetime_factory) {
   FunctionLifetimes ret;
 
   if (!this_type.isNull()) {
     ValueLifetimes tmp;
+    // TODO(mboehme): We don't have a `TypeLoc` for this because the `this` is
+    // never spelled out.
     if (llvm::Error err =
-            lifetime_factory.CreateParamLifetimes(this_type).moveInto(tmp)) {
+            lifetime_factory.CreateParamLifetimes(this_type, clang::TypeLoc())
+                .moveInto(tmp)) {
       return std::move(err);
     }
     ret.this_lifetimes_ = std::move(tmp);
   }
 
+  clang::FunctionTypeLoc func_type_loc;
+  if (type_loc) {
+    func_type_loc = type_loc.getAsAdjusted<clang::FunctionTypeLoc>();
+  }
   ret.param_lifetimes_.reserve(type->getNumParams());
   for (size_t i = 0; i < type->getNumParams(); i++) {
+    clang::TypeLoc param_type_loc;
+    if (type_loc) {
+      const clang::ParmVarDecl* param = func_type_loc.getParam(i);
+      if (param && param->getTypeSourceInfo()) {
+        param_type_loc = param->getTypeSourceInfo()->getTypeLoc();
+      }
+    }
     ValueLifetimes tmp;
     if (llvm::Error err =
-            lifetime_factory.CreateParamLifetimes(type->getParamType(i))
+            lifetime_factory
+                .CreateParamLifetimes(type->getParamType(i), param_type_loc)
                 .moveInto(tmp)) {
       return std::move(err);
     }
     ret.param_lifetimes_.push_back(std::move(tmp));
   }
 
+  clang::TypeLoc return_type_loc;
+  if (func_type_loc) {
+    return_type_loc = func_type_loc.getReturnLoc();
+  }
   if (llvm::Error err =
           lifetime_factory
-              .CreateReturnLifetimes(type->getReturnType(),
+              .CreateReturnLifetimes(type->getReturnType(), return_type_loc,
                                      ret.param_lifetimes_, ret.this_lifetimes_)
               .moveInto(ret.return_lifetimes_)) {
     return std::move(err);

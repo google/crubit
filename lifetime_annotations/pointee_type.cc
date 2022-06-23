@@ -18,6 +18,19 @@ clang::QualType PointeeType(clang::QualType type) {
   return clang::QualType();
 }
 
+clang::TypeLoc PointeeTypeLoc(clang::TypeLoc type_loc) {
+  type_loc = type_loc.getUnqualifiedLoc();
+
+  if (auto pointer_type_loc = type_loc.getAs<clang::PointerTypeLoc>()) {
+    return pointer_type_loc.getPointeeLoc();
+  } else if (auto reference_type_loc =
+                 type_loc.getAs<clang::ReferenceTypeLoc>()) {
+    return reference_type_loc.getPointeeLoc();
+  }
+
+  return clang::TypeLoc();
+}
+
 }  // namespace lifetimes
 }  // namespace tidy
 }  // namespace clang

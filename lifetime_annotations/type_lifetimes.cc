@@ -126,27 +126,54 @@ ValueLifetimes::~ValueLifetimes() = default;
 namespace {
 
 llvm::Error ForEachTemplateArgument(
-    clang::QualType type,
-    const std::function<llvm::Error(int, clang::QualType)>& callback) {
+    clang::QualType type, clang::TypeLoc type_loc,
+    const std::function<llvm::Error(int, clang::QualType, clang::TypeLoc)>&
+        callback) {
   llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>> template_args =
       GetTemplateArgs(type);
-  for (size_t depth = 0; depth < template_args.size(); depth++) {
+  std::optional<llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>>>
+      maybe_template_arg_locs;
+  if (type_loc) {
+    maybe_template_arg_locs = GetTemplateArgs(type_loc);
+  }
+  llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> template_arg_locs;
+  if (maybe_template_arg_locs) {
+    template_arg_locs = *std::move(maybe_template_arg_locs);
+  } else {
+    // Fill all of `template_arg_locs` with empty `TypeLoc`s so we don't need to
+    // make any case distinctions below.
+    template_arg_locs.resize(template_args.size());
+    for (size_t depth = 0; depth < template_args.size(); depth++) {
+      template_arg_locs[depth].resize(template_args[depth].size());
+    }
+  }
+  assert(template_arg_locs.size() == template_args.size());
+  for (int depth = 0; depth < template_args.size(); depth++) {
     const auto& args_at_depth = template_args[depth];
-    for (const clang::TemplateArgument& arg : args_at_depth) {
+    const auto& arg_locs_at_depth = template_arg_locs[depth];
+    assert(args_at_depth.size() == arg_locs_at_depth.size());
+    for (size_t i = 0; i < args_at_depth.size(); ++i) {
+      const clang::TemplateArgument& arg = args_at_depth[i];
       if (arg.getKind() == clang::TemplateArgument::Type) {
-        if (llvm::Error err = callback(depth, arg.getAsType())) {
+        if (llvm::Error err =
+                callback(depth, arg.getAsType(), arg_locs_at_depth[i])) {
           return err;
         }
       } else if (arg.getKind() == clang::TemplateArgument::Pack) {
         for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
           if (inner_arg.getKind() == clang::TemplateArgument::Type) {
-            if (llvm::Error err = callback(depth, inner_arg.getAsType())) {
+            // TODO(mboehme): Pass on the correct TypeLoc() in this case (if
+            // that's even possible -- I have to admit I'm not sure about how
+            // this case would get triggered)
+            if (llvm::Error err =
+                    callback(depth, inner_arg.getAsType(), clang::TypeLoc())) {
               return err;
             }
           }
         }
       } else {
-        if (llvm::Error err = callback(depth, clang::QualType())) {
+        if (llvm::Error err =
+                callback(depth, clang::QualType(), clang::TypeLoc())) {
           return err;
         }
       }
@@ -155,11 +182,35 @@ llvm::Error ForEachTemplateArgument(
   return llvm::Error::success();
 }
 
+QualType Undecay(clang::QualType type) {
+  if (auto decayed = type->getAs<clang::DecayedType>()) {
+    return decayed->getOriginalType();
+  }
+  return type;
+}
+
+bool SameType(clang::QualType type1, clang::QualType type2) {
+  // If both types are an AutoType, ignore the actual type and assume they're
+  // the same.
+  // An `AutoType` that came from a TypeLoc will have type `auto` (i.e. as
+  // written), whereas an `AutoType` that didn't come from a `TypeLoc` will be
+  // the actual deduced type. We still want these to compare equal though.
+  if (type1->getAs<clang::AutoType>() && type2->getAs<clang::AutoType>()) {
+    return true;
+  }
+  return Undecay(type1) == Undecay(type2);
+}
+
 }  // namespace
 
 llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
-    clang::QualType type, LifetimeFactory lifetime_factory) {
+    clang::QualType type, clang::TypeLoc type_loc,
+    LifetimeFactory lifetime_factory) {
   assert(!type.isNull());
+  if (type_loc) {
+    assert(SameType(type_loc.getType(), type));
+  }
+
   type = type.IgnoreParens();
   ValueLifetimes ret(type);
 
@@ -168,8 +219,9 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     // parameter and return lifetimes.
     FunctionLifetimeFactorySingleCallback factory(lifetime_factory);
     FunctionLifetimes fn_lftm;
-    if (llvm::Error err = FunctionLifetimes::CreateForFunctionType(fn, factory)
-                              .moveInto(fn_lftm)) {
+    if (llvm::Error err =
+            FunctionLifetimes::CreateForFunctionType(fn, type_loc, factory)
+                .moveInto(fn_lftm)) {
       return std::move(err);
     }
     ret.function_lifetimes_ =
@@ -188,14 +240,16 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
 
   // Add implicit lifetime parameters for type template parameters.
   if (llvm::Error err = ForEachTemplateArgument(
-          type,
-          [&ret, &lifetime_factory](int depth,
-                                    clang::QualType arg_type) -> llvm::Error {
+          type, type_loc,
+          [&ret, &lifetime_factory](
+              int depth, clang::QualType arg_type,
+              clang::TypeLoc arg_type_loc) -> llvm::Error {
             std::optional<ValueLifetimes> maybe_template_arg_lifetime;
             if (!arg_type.isNull()) {
               maybe_template_arg_lifetime.emplace();
               if (llvm::Error err =
-                      ValueLifetimes::Create(arg_type, lifetime_factory)
+                      ValueLifetimes::Create(arg_type, arg_type_loc,
+                                             lifetime_factory)
                           .moveInto(*maybe_template_arg_lifetime)) {
                 return err;
               }
@@ -212,29 +266,33 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
 
   clang::QualType pointee = PointeeType(type);
   if (pointee.isNull()) return ret;
-  ObjectLifetimes obj_lftm;
-  if (llvm::Error err = ObjectLifetimes::Create(pointee, lifetime_factory)
-                            .moveInto(obj_lftm)) {
+
+  clang::TypeLoc pointee_type_loc;
+  if (type_loc) {
+    pointee_type_loc = PointeeTypeLoc(type_loc);
+    // Note: We can't assert that `pointee_type_loc` is non-null here. If
+    // `type_loc` is a `TypedefTypeLoc`, then there will be no `TypeLoc` for
+    // the pointee type because the pointee type never got spelled out at the
+    // location of the original `TypeLoc`.
+  }
+
+  ValueLifetimes value_lifetimes;
+  if (llvm::Error err =
+          ValueLifetimes::Create(pointee, pointee_type_loc, lifetime_factory)
+              .moveInto(value_lifetimes)) {
+    return std::move(err);
+  }
+
+  Lifetime object_lifetime;
+  // TODO(mboehme): Pass the correct lifetime name.
+  const clang::Expr* lifetime_name = nullptr;
+  if (llvm::Error err =
+          lifetime_factory(lifetime_name).moveInto(object_lifetime)) {
     return std::move(err);
   }
   ret.pointee_lifetimes_ =
-      std::make_unique<ObjectLifetimes>(std::move(obj_lftm));
+      std::make_unique<ObjectLifetimes>(object_lifetime, value_lifetimes);
   return ret;
-}
-
-llvm::Expected<ObjectLifetimes> ObjectLifetimes::Create(
-    clang::QualType type, LifetimeFactory lifetime_factory) {
-  ValueLifetimes v;
-  if (llvm::Error err =
-          ValueLifetimes::Create(type, lifetime_factory).moveInto(v)) {
-    return std::move(err);
-  }
-  Lifetime l;
-  // TODO(mboehme): Pass lifetime name.
-  if (llvm::Error err = lifetime_factory(nullptr).moveInto(l)) {
-    return std::move(err);
-  }
-  return ObjectLifetimes(l, v);
 }
 
 ValueLifetimes ValueLifetimes::ForLifetimeLessType(clang::QualType type) {

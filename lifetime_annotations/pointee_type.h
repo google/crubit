@@ -6,6 +6,7 @@
 #define CRUBIT_LIFETIME_ANNOTATIONS_POINTEE_TYPE_H_
 
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 
 namespace clang {
 namespace tidy {
@@ -19,6 +20,9 @@ namespace lifetimes {
 // succinctly answer the question "does `type` have pointee type and do we infer
 // lifetimes for it".
 clang::QualType PointeeType(clang::QualType type);
+
+// Analogous to `PointeeType` but operates on a `TypeLoc`.
+clang::TypeLoc PointeeTypeLoc(clang::TypeLoc type_loc);
 
 }  // namespace lifetimes
 }  // namespace tidy

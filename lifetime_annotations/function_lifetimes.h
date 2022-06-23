@@ -29,10 +29,14 @@ namespace lifetimes {
 class FunctionLifetimeFactory {
  public:
   virtual ~FunctionLifetimeFactory() {}
+
+  // Note: The `type_loc` parameter passed into `CreateParamLifetimes` and
+  // `CreateReturnLifetimes` may be null if no type location is available.
+
   virtual llvm::Expected<ValueLifetimes> CreateParamLifetimes(
-      clang::QualType type) const = 0;
+      clang::QualType type, clang::TypeLoc type_loc) const = 0;
   virtual llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
-      clang::QualType type,
+      clang::QualType type, clang::TypeLoc type_loc,
       const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
       const std::optional<ValueLifetimes>& this_lifetimes) const = 0;
 };
@@ -43,14 +47,14 @@ class FunctionLifetimeFactorySingleCallback : public FunctionLifetimeFactory {
   FunctionLifetimeFactorySingleCallback(LifetimeFactory factory)
       : factory_(std::move(factory)) {}
   llvm::Expected<ValueLifetimes> CreateParamLifetimes(
-      clang::QualType type) const override {
-    return ValueLifetimes::Create(type, factory_);
+      clang::QualType type, clang::TypeLoc type_loc) const override {
+    return ValueLifetimes::Create(type, type_loc, factory_);
   }
   llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
-      clang::QualType type,
+      clang::QualType type, clang::TypeLoc type_loc,
       const llvm::SmallVector<ValueLifetimes>& /*param_lifetimes*/,
       const std::optional<ValueLifetimes>& /*this_lifetimes*/) const override {
-    return ValueLifetimes::Create(type, factory_);
+    return ValueLifetimes::Create(type, type_loc, factory_);
   }
 
  private:
@@ -89,6 +93,9 @@ class FunctionLifetimes {
       const clang::FunctionDecl* function,
       const FunctionLifetimeFactory& lifetime_factory);
 
+  static llvm::Expected<FunctionLifetimes> CreateForFunctionType(
+      const clang::FunctionProtoType* function, clang::TypeLoc func_type_loc,
+      const FunctionLifetimeFactory& lifetime_factory);
   static llvm::Expected<FunctionLifetimes> CreateForFunctionType(
       const clang::FunctionProtoType* function,
       const FunctionLifetimeFactory& lifetime_factory);
@@ -148,7 +155,8 @@ class FunctionLifetimes {
   std::optional<ValueLifetimes> this_lifetimes_;
 
   static llvm::Expected<FunctionLifetimes> Create(
-      const clang::FunctionProtoType* type, const clang::QualType this_type,
+      const clang::FunctionProtoType* type, clang::TypeLoc type_loc,
+      const clang::QualType this_type,
       const FunctionLifetimeFactory& lifetime_factory);
 };
 

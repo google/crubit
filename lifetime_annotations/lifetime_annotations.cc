@@ -153,7 +153,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
 
    private:
     llvm::Expected<ValueLifetimes> CreateParamLifetimes(
-        clang::QualType param_type) const override {
+        clang::QualType param_type, clang::TypeLoc) const override {
       // TODO(mboehme): parse lifetime annotations from `type` if present.
       return ValueLifetimes::Create(
           param_type, [this](const clang::Expr*) -> llvm::Expected<Lifetime> {
@@ -204,7 +204,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
     }
 
     llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
-        clang::QualType return_type,
+        clang::QualType return_type, clang::TypeLoc,
         const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
         const std::optional<ValueLifetimes>& this_lifetimes) const override {
       // TODO(mboehme): parse lifetime annotations from `type` if present.

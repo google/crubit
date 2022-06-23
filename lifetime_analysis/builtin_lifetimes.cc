@@ -26,13 +26,13 @@ namespace {
 
 class ForwardAndMoveFactory : public FunctionLifetimeFactory {
   llvm::Expected<ValueLifetimes> CreateParamLifetimes(
-      clang::QualType type) const override {
+      clang::QualType type, clang::TypeLoc) const override {
     return ValueLifetimes::Create(
         type, [](const clang::Expr*) { return Lifetime::CreateVariable(); });
   }
 
   llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
-      clang::QualType type,
+      clang::QualType type, clang::TypeLoc,
       const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
       const std::optional<ValueLifetimes>& /*this_lifetimes*/) const override {
     assert(param_lifetimes.size() == 1);
