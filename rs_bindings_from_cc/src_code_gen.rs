@@ -2665,6 +2665,7 @@ mod tests {
     use anyhow::anyhow;
     use ir_testing::{
         ir_from_cc, ir_from_cc_dependency, ir_record, make_ir_from_items, retrieve_func,
+        with_lifetime_macros,
     };
     use static_assertions::{assert_impl_all, assert_not_impl_all};
     use token_stream_matchers::{
@@ -3418,11 +3419,10 @@ mod tests {
 
     #[test]
     fn test_func_ptr_with_non_static_lifetime() -> Result<()> {
-        let ir = ir_from_cc(
+        let ir = ir_from_cc(&with_lifetime_macros(
             r#"
-            [[clang::annotate("lifetimes", "-> a")]]
-            int (*get_ptr_to_func())(float, double); "#,
-        )?;
+            int (* $a get_ptr_to_func())(float, double); "#,
+        ))?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
@@ -4838,13 +4838,12 @@ mod tests {
         // same lifetime as the constructor's parameter. (This might require
         // annotating the whole C++ struct with a lifetime, so maybe the
         // example below is not fully realistic/accurate...).
-        let mut ir = ir_from_cc(
+        let mut ir = ir_from_cc(&with_lifetime_macros(
             r#"#pragma clang lifetime_elision
             struct Foo final {
-                [[clang::annotate("lifetimes", "a: a")]]
-                Foo(const int& i);
+                Foo(const int& $a i) $a;
             };"#,
-        )?;
+        ))?;
         let ctor: &mut Func = ir
             .items_mut()
             .filter_map(|item| match item {
@@ -5201,11 +5200,11 @@ mod tests {
 
     #[test]
     fn test_annotated_lifetimes() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"[[clang::annotate("lifetimes", "a, a -> a")]]
-          int& f(int& i1, int& i2);
+        let ir = ir_from_cc(&with_lifetime_macros(
+            r#"
+          int& $a f(int& $a i1, int& $a i2);
           "#,
-        )?;
+        ))?;
         let rs_api = generate_bindings_tokens(&ir)?.rs_api;
         assert_rs_matches!(
             rs_api,

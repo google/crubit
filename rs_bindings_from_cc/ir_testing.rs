@@ -13,6 +13,21 @@ pub fn ir_from_cc(header_source: &str) -> Result<IR> {
     ir_from_cc_dependency(header_source, "// empty header")
 }
 
+/// Prepends definitions for lifetime annotation macros to the code.
+pub fn with_lifetime_macros(source: &str) -> String {
+    let mut result = String::from(
+        r#"
+    #define $(l) [[clang::annotate_type("lifetime", #l)]]
+    "#,
+    );
+    for l in 'a'..='z' {
+        result.push_str(&format!("#define ${} $({})\n", l, l));
+    }
+    result.push_str("#define $static $(static)\n");
+    result.push_str(source);
+    result
+}
+
 /// Name of the current target used by `ir_from_cc` and `ir_from_cc_dependency`.
 pub const TESTING_TARGET: &str = "//test:testing_target";
 
