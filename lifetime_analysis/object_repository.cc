@@ -174,7 +174,8 @@ class ObjectRepository::VarDeclVisitor
   Object CreateLocalObject(clang::QualType type) {
     Object object = Object::Create(Lifetime::CreateLocal(), type);
     object_repository_.CreateObjects(
-        object, type, []() { return Lifetime::CreateVariable(); },
+        object, type,
+        [](const clang::Expr*) { return Lifetime::CreateVariable(); },
         /*transitive=*/false);
     return object;
   }
@@ -219,11 +220,15 @@ class ObjectRepository::VarDeclVisitor
       case clang::SC_Static:
       case clang::SC_PrivateExtern:
         lifetime = Lifetime::Static();
-        lifetime_factory = []() { return Lifetime::Static(); };
+        lifetime_factory = [](const clang::Expr*) {
+          return Lifetime::Static();
+        };
         break;
       default:
         lifetime = Lifetime::CreateLocal();
-        lifetime_factory = []() { return Lifetime::CreateVariable(); };
+        lifetime_factory = [](const clang::Expr*) {
+          return Lifetime::CreateVariable();
+        };
         break;
     }
 
@@ -264,7 +269,8 @@ class ObjectRepository::VarDeclVisitor
     Object object = Object::Create(Lifetime::CreateLocal(), type);
 
     object_repository_.CreateObjects(
-        object, type, []() { return Lifetime::CreateVariable(); },
+        object, type,
+        [](const clang::Expr*) { return Lifetime::CreateVariable(); },
         /*transitive=*/false);
 
     if (type->isRecordType()) {
@@ -452,7 +458,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
       Object::Create(Lifetime::CreateLocal(), func->getReturnType());
   CreateObjects(
       return_object_, func->getReturnType(),
-      []() { return Lifetime::CreateLocal(); },
+      [](const clang::Expr*) { return Lifetime::CreateLocal(); },
       /*transitive=*/false);
 
   if (method_decl) {
@@ -461,7 +467,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
                                     method_decl->getThisObjectType());
       CreateObjects(
           *this_object_, method_decl->getThisObjectType(),
-          []() { return Lifetime::CreateVariable(); },
+          [](const clang::Expr*) { return Lifetime::CreateVariable(); },
           /*transitive=*/true);
     }
   }
@@ -676,7 +682,8 @@ Object ObjectRepository::CreateStaticObject(clang::QualType type) {
   static_objects_[type] = object;
 
   CreateObjects(
-      object, type, []() { return Lifetime::Static(); }, true);
+      object, type, [](const clang::Expr*) { return Lifetime::Static(); },
+      true);
 
   return object;
 }

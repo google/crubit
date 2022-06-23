@@ -70,7 +70,8 @@ llvm::Expected<FunctionLifetimes> ParseLifetimeAnnotations(
   };
 
   FunctionLifetimeFactorySingleCallback factory(
-      [&symbol_table, &next_lifetime]() -> llvm::Expected<Lifetime> {
+      [&symbol_table,
+       &next_lifetime](const clang::Expr*) -> llvm::Expected<Lifetime> {
         llvm::StringRef next = next_lifetime();
         if (next.empty()) {
           return llvm::createStringError(
@@ -155,7 +156,7 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
         clang::QualType param_type) const override {
       // TODO(mboehme): parse lifetime annotations from `type` if present.
       return ValueLifetimes::Create(
-          param_type, [this]() -> llvm::Expected<Lifetime> {
+          param_type, [this](const clang::Expr*) -> llvm::Expected<Lifetime> {
             // As a special-case, lifetime is always inferred for the `this`
             // parameter for destructors. The obvious lifetime is definitionally
             // correct in this case: the object must be valid for the duration
@@ -214,7 +215,9 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
           GetSingleInputLifetime(param_lifetimes, this_lifetimes);
 
       return ValueLifetimes::Create(
-          return_type, [&input_lifetime, this]() -> llvm::Expected<Lifetime> {
+          return_type,
+          [&input_lifetime,
+           this](const clang::Expr*) -> llvm::Expected<Lifetime> {
             if (!elision_enabled) {
               return llvm::createStringError(
                   llvm::inconvertibleErrorCode(),

@@ -27,8 +27,8 @@ namespace {
 class ForwardAndMoveFactory : public FunctionLifetimeFactory {
   llvm::Expected<ValueLifetimes> CreateParamLifetimes(
       clang::QualType type) const override {
-    return ValueLifetimes::Create(type,
-                                  []() { return Lifetime::CreateVariable(); });
+    return ValueLifetimes::Create(
+        type, [](const clang::Expr*) { return Lifetime::CreateVariable(); });
   }
 
   llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
@@ -53,7 +53,8 @@ FunctionLifetimesOrError GetBuiltinLifetimes(const clang::FunctionDecl* decl) {
   if (!builtin_info.hasPtrArgsOrResult(builtin_id) &&
       !builtin_info.hasReferenceArgsOrResult(builtin_id)) {
     return FunctionLifetimes::CreateForDecl(
-               decl, FunctionLifetimeFactorySingleCallback([]() {
+               decl,
+               FunctionLifetimeFactorySingleCallback([](const clang::Expr*) {
                  assert(false);
                  return Lifetime();
                }))
