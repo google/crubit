@@ -628,12 +628,10 @@ void CollectLifetimeMapping(const FunctionLifetimes& target,
 // set to true if the lifetimes are, in fact, more constrained.
 std::pair<FunctionLifetimes, bool> ConstrainLifetimes(
     const FunctionLifetimes& base, const FunctionLifetimes& constraining) {
-  FunctionLifetimes copy =
-      base.CreateCopy(
-              [](clang::QualType, llvm::StringRef) -> llvm::Expected<Lifetime> {
-                return Lifetime::CreateVariable();
-              })
-          .get();
+  FunctionLifetimes copy = base.CreateCopy([]() -> llvm::Expected<Lifetime> {
+                                 return Lifetime::CreateVariable();
+                               })
+                               .get();
   LifetimeSubstitutions subst;
   bool is_more_constraining = false;
   CollectLifetimeMapping(copy, base, constraining, subst, is_more_constraining);
@@ -848,9 +846,7 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
   // out which input-to-the-function-call lifetime to use as a replacement using
   // UnifyLifetimes.
   FunctionLifetimeFactorySingleCallback factory(
-      [](clang::QualType, llvm::StringRef) {
-        return Lifetime::CreateVariable();
-      });
+      []() { return Lifetime::CreateVariable(); });
   FunctionLifetimes result =
       FunctionLifetimes::CreateForDecl(func, factory).get();
 

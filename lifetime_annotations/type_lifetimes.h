@@ -38,10 +38,7 @@ enum Variance {
 // Extracts the lifetime parameters of the given type.
 llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type);
 
-// Takes as input the type of the object that the lifetime is being created for
-// and the name of the lifetime parameter, if any.
-using LifetimeFactory =
-    std::function<llvm::Expected<Lifetime>(clang::QualType, llvm::StringRef)>;
+using LifetimeFactory = std::function<llvm::Expected<Lifetime>()>;
 
 class ObjectLifetimes;
 class FunctionLifetimes;

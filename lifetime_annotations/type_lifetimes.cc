@@ -179,7 +179,7 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
 
   for (const auto& lftm_param : GetLifetimeParameters(type)) {
     Lifetime l;
-    if (llvm::Error err = lifetime_factory(type, lftm_param).moveInto(l)) {
+    if (llvm::Error err = lifetime_factory().moveInto(l)) {
       return std::move(err);
     }
     ret.lifetime_parameters_by_name_.Add(lftm_param, l);
@@ -229,7 +229,7 @@ llvm::Expected<ObjectLifetimes> ObjectLifetimes::Create(
     return std::move(err);
   }
   Lifetime l;
-  if (llvm::Error err = lifetime_factory(type, "").moveInto(l)) {
+  if (llvm::Error err = lifetime_factory().moveInto(l)) {
     return std::move(err);
   }
   return ObjectLifetimes(l, v);
@@ -542,9 +542,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
             // parameter, with lifetime `lifetime_`.
             // TODO(veluca): we need to propagate lifetime parameters here.
             template_argument_lifetimes.back().push_back(
-                ValueLifetimes::Create(arg.getAsType(), [this](
-                                                            clang::QualType,
-                                                            llvm::StringRef) {
+                ValueLifetimes::Create(arg.getAsType(), [this]() {
                   return this->lifetime_;
                 }).get());
           }
