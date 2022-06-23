@@ -15,6 +15,7 @@
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/lifetime_symbol_table.h"
 #include "clang/AST/Type.h"
+#include "clang/AST/TypeLoc.h"
 #include "clang/AST/TypeOrdering.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMapInfo.h"
@@ -277,6 +278,17 @@ class ObjectLifetimes {
 // (in pseudo-code) { { int*, double* }, { long* } };
 const llvm::SmallVector<llvm::ArrayRef<clang::TemplateArgument>>
 GetTemplateArgs(clang::QualType type);
+
+// Returns any template arguments present on `type_loc`. If `type_loc` does not
+// have template arguments, returns an empty vector.
+// Return type: The outer vector is indexed by the "depth" of the template
+// argument within a chain of nested templates; the inner vector contains the
+// template arguments at a given depth.
+// For example, for a type `Outer<int *, double *>::Inner<long *>`, this returns
+// (in pseudo-code) { { int *, double * }, { long * } };
+// This helper function is placed here to be able to share it with clang-tidy.
+llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
+    clang::TypeLoc type_loc);
 
 // Evaluate the given expression as a string literal. Returns an error if the
 // expression is not a string literal.

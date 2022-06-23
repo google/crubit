@@ -52,17 +52,6 @@ void AddLifetimeAnnotationHandlers(
     clang::Preprocessor& preprocessor,
     std::shared_ptr<LifetimeAnnotationContext> context);
 
-// Returns any template arguments present on `type_loc`. If `type_loc` does not
-// have template arguments, returns an empty vector.
-// Return type: The outer vector is indexed by the "depth" of the template
-// argument within a chain of nested templates; the inner vector contains the
-// template arguments at a given depth.
-// For example, for a type `Outer<int *, double *>::Inner<long *>`, this returns
-// (in pseudo-code) { { int *, double * }, { long * } };
-// This helper function is placed here to be able to share it with clang-tidy.
-llvm::SmallVector<llvm::SmallVector<clang::TypeLoc>> GetTemplateArgs(
-    clang::TypeLoc type_loc);
-
 }  // namespace lifetimes
 }  // namespace tidy
 }  // namespace clang
