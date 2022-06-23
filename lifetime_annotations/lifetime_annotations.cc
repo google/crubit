@@ -152,37 +152,74 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
           symbol_table(symbol_table) {}
 
    private:
+    llvm::Expected<Lifetime> LifetimeFromName(const clang::Expr* name) const {
+      llvm::StringRef name_str;
+      if (llvm::Error err = EvaluateAsStringLiteral(name, func->getASTContext())
+                                .moveInto(name_str)) {
+        return std::move(err);
+      }
+      return symbol_table.LookupNameAndMaybeDeclare(name_str);
+    }
+
+    LifetimeFactory ParamLifetimeFactory() const {
+      return [this](const clang::Expr* name) -> llvm::Expected<Lifetime> {
+        if (name) {
+          Lifetime lifetime;
+          if (llvm::Error err = LifetimeFromName(name).moveInto(lifetime)) {
+            return std::move(err);
+          }
+          return lifetime;
+        }
+
+        // As a special-case, lifetime is always inferred for the `this`
+        // parameter for destructors. The obvious lifetime is definitionally
+        // correct in this case: the object must be valid for the duration
+        // of the call, or else the behavior is undefined. So we can infer
+        // safely even if elision is disabled.
+        if (!elision_enabled && func->getDeclName().getNameKind() !=
+                                    clang::DeclarationName::CXXDestructorName) {
+          return llvm::createStringError(
+              llvm::inconvertibleErrorCode(),
+              absl::StrCat("Lifetime elision not enabled for '",
+                           func->getNameAsString(), "'"));
+        }
+
+        Lifetime lifetime = Lifetime::CreateVariable();
+        symbol_table.LookupLifetimeAndMaybeDeclare(lifetime);
+        return lifetime;
+      };
+    }
+
     llvm::Expected<ValueLifetimes> CreateThisLifetimes(
-        clang::QualType type, const clang::Expr*) const override {
-      // TODO(mboehme): For the time being, we're just calling through to
-      // `CreateParamLifetimes`, but eventually, we want to do something
-      // sensible with `lifetime_name`.
-      return CreateParamLifetimes(type, clang::TypeLoc());
+        clang::QualType type, const clang::Expr* lifetime_name) const override {
+      LifetimeFactory lifetime_factory = ParamLifetimeFactory();
+
+      clang::QualType pointee_type = PointeeType(type);
+      assert(!pointee_type.isNull());
+
+      ValueLifetimes value_lifetimes;
+      if (llvm::Error err =
+              ValueLifetimes::Create(pointee_type, clang::TypeLoc(),
+                                     lifetime_factory)
+                  .moveInto(value_lifetimes)) {
+        return std::move(err);
+      }
+
+      Lifetime object_lifetime;
+      if (llvm::Error err =
+              lifetime_factory(lifetime_name).moveInto(object_lifetime)) {
+        return std::move(err);
+      }
+
+      return ValueLifetimes::ForPointerLikeType(
+          type, ObjectLifetimes(object_lifetime, value_lifetimes));
     }
 
     llvm::Expected<ValueLifetimes> CreateParamLifetimes(
-        clang::QualType param_type, clang::TypeLoc) const override {
-      // TODO(mboehme): parse lifetime annotations from `type` if present.
-      return ValueLifetimes::Create(
-          param_type, [this](const clang::Expr*) -> llvm::Expected<Lifetime> {
-            // As a special-case, lifetime is always inferred for the `this`
-            // parameter for destructors. The obvious lifetime is definitionally
-            // correct in this case: the object must be valid for the duration
-            // of the call, or else the behavior is undefined. So we can infer
-            // safely even if elision is disabled.
-            if (!elision_enabled &&
-                func->getDeclName().getNameKind() !=
-                    clang::DeclarationName::CXXDestructorName) {
-              return llvm::createStringError(
-                  llvm::inconvertibleErrorCode(),
-                  absl::StrCat("Lifetime elision not enabled for '",
-                               func->getNameAsString(), "'"));
-            }
-
-            Lifetime lifetime = Lifetime::CreateVariable();
-            symbol_table.LookupLifetimeAndMaybeDeclare(lifetime);
-            return lifetime;
-          });
+        clang::QualType param_type,
+        clang::TypeLoc param_type_loc) const override {
+      return ValueLifetimes::Create(param_type, param_type_loc,
+                                    ParamLifetimeFactory());
     }
 
     static std::optional<Lifetime> GetSingleInputLifetime(
@@ -212,20 +249,26 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotationsInternal(
     }
 
     llvm::Expected<ValueLifetimes> CreateReturnLifetimes(
-        clang::QualType return_type, clang::TypeLoc,
+        clang::QualType return_type, clang::TypeLoc return_type_loc,
         const llvm::SmallVector<ValueLifetimes>& param_lifetimes,
         const std::optional<ValueLifetimes>& this_lifetimes) const override {
-      // TODO(mboehme): parse lifetime annotations from `type` if present.
-
       // TODO(veluca): adapt to lifetime elision for function pointers.
 
       std::optional<Lifetime> input_lifetime =
           GetSingleInputLifetime(param_lifetimes, this_lifetimes);
 
       return ValueLifetimes::Create(
-          return_type,
+          return_type, return_type_loc,
           [&input_lifetime,
-           this](const clang::Expr*) -> llvm::Expected<Lifetime> {
+           this](const clang::Expr* name) -> llvm::Expected<Lifetime> {
+            if (name) {
+              Lifetime lifetime;
+              if (llvm::Error err = LifetimeFromName(name).moveInto(lifetime)) {
+                return std::move(err);
+              }
+              return lifetime;
+            }
+
             if (!elision_enabled) {
               return llvm::createStringError(
                   llvm::inconvertibleErrorCode(),

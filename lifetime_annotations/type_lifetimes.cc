@@ -37,6 +37,65 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
+clang::QualType StripAttributes(clang::QualType type) {
+  while (true) {
+    if (auto macro_qualified_type = type->getAs<clang::MacroQualifiedType>()) {
+      type = macro_qualified_type->getUnderlyingType();
+    } else if (auto attr_type = type->getAs<clang::AttributedType>()) {
+      type = attr_type->getModifiedType();
+    } else {
+      return type;
+    }
+  }
+}
+
+clang::TypeLoc StripAttributes(clang::TypeLoc type_loc,
+                               llvm::SmallVector<const clang::Attr*>& attrs) {
+  while (true) {
+    if (auto macro_qualified_type_loc =
+            type_loc.getAs<clang::MacroQualifiedTypeLoc>()) {
+      type_loc = macro_qualified_type_loc.getInnerLoc();
+    } else if (auto attr_type_loc =
+                   type_loc.getAs<clang::AttributedTypeLoc>()) {
+      attrs.push_back(attr_type_loc.getAttr());
+      type_loc = attr_type_loc.getModifiedLoc();
+    } else {
+      // The last attribute in a chain of attributes will appear as the
+      // outermost AttributedType, e.g. `int $a $b` will be represented as
+      // follows (in pseudocode):
+      //
+      // AttributedType(annotate_type("lifetime", "b"),
+      //   AttributedType(annotate_type("lifetime", "a"),
+      //     BuiltinType("int")
+      //   )
+      // )
+      //
+      // We reverse the attributes so that we obtain the more intuitive ordering
+      // "a, b".
+      std::reverse(attrs.begin(), attrs.end());
+      return type_loc;
+    }
+  }
+}
+
+llvm::SmallVector<const clang::Expr*> GetAttributeLifetimes(
+    llvm::ArrayRef<const clang::Attr*> attrs) {
+  llvm::SmallVector<const clang::Expr*> result;
+
+  for (const clang::Attr* attr : attrs) {
+    auto annotate_type_attr = clang::dyn_cast<clang::AnnotateTypeAttr>(attr);
+    if (!annotate_type_attr ||
+        annotate_type_attr->getAnnotation() != "lifetime")
+      continue;
+
+    for (const clang::Expr* arg : annotate_type_attr->args()) {
+      result.push_back(arg);
+    }
+  }
+
+  return result;
+}
+
 llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type) {
   // TODO(mboehme):
   // - Add support for type aliases with lifetime parameters
@@ -212,6 +271,15 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   type = type.IgnoreParens();
+
+  type = StripAttributes(type);
+  llvm::SmallVector<const clang::Attr*> attrs;
+  if (!type_loc.isNull()) {
+    type_loc = StripAttributes(type_loc, attrs);
+  }
+  llvm::SmallVector<const clang::Expr*> lifetime_names =
+      GetAttributeLifetimes(attrs);
+
   ValueLifetimes ret(type);
 
   if (const auto* fn = clang::dyn_cast<clang::FunctionProtoType>(type)) {
@@ -229,13 +297,25 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     return ret;
   }
 
-  for (const auto& lftm_param : GetLifetimeParameters(type)) {
+  llvm::SmallVector<std::string> lifetime_params = GetLifetimeParameters(type);
+  if (!lifetime_params.empty() && !lifetime_names.empty() &&
+      lifetime_names.size() != lifetime_params.size()) {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        absl::StrCat("Type has ", lifetime_params.size(),
+                     " lifetime parameters but ", lifetime_names.size(),
+                     " lifetime arguments were given"));
+  }
+  for (size_t i = 0; i < lifetime_params.size(); ++i) {
     Lifetime l;
-    // TODO(mboehme): Pass lifetime name.
-    if (llvm::Error err = lifetime_factory(nullptr).moveInto(l)) {
+    const clang::Expr* lifetime_name = nullptr;
+    if (i < lifetime_names.size()) {
+      lifetime_name = lifetime_names[i];
+    }
+    if (llvm::Error err = lifetime_factory(lifetime_name).moveInto(l)) {
       return std::move(err);
     }
-    ret.lifetime_parameters_by_name_.Add(lftm_param, l);
+    ret.lifetime_parameters_by_name_.Add(lifetime_params[i], l);
   }
 
   // Add implicit lifetime parameters for type template parameters.
@@ -284,8 +364,16 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   }
 
   Lifetime object_lifetime;
-  // TODO(mboehme): Pass the correct lifetime name.
   const clang::Expr* lifetime_name = nullptr;
+  if (!lifetime_names.empty()) {
+    if (lifetime_names.size() != 1) {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          absl::StrCat("Expected a single lifetime but ", lifetime_names.size(),
+                       " were given"));
+    }
+    lifetime_name = lifetime_names.front();
+  }
   if (llvm::Error err =
           lifetime_factory(lifetime_name).moveInto(object_lifetime)) {
     return std::move(err);
@@ -752,7 +840,8 @@ void ObjectLifetimes::Traverse(std::function<void(Lifetime&, Variance)> visitor,
                                Variance variance,
                                clang::QualType indirection_type) {
   assert(indirection_type.isNull() ||
-         indirection_type->getPointeeType().IgnoreParens() == Type());
+         StripAttributes(indirection_type->getPointeeType().IgnoreParens()) ==
+             Type());
   value_lifetimes_.Traverse(
       visitor, indirection_type.isNull() || indirection_type.isConstQualified()
                    ? kCovariant

@@ -36,6 +36,21 @@ enum Variance {
   kInvariant,
 };
 
+// Strips any attributes off `type` and returns the result.
+clang::QualType StripAttributes(clang::QualType type);
+
+// Strips any attributes off `type_loc` and returns the result. The stripped
+// attributes are added to `attrs`.
+clang::TypeLoc StripAttributes(clang::TypeLoc type_loc,
+                               llvm::SmallVector<const clang::Attr*>& attrs);
+
+// Extracts and returns the arguments of any `annotate_type("lifetime", ...)`
+// attributes in `attrs`.
+// If `attrs` contains multiple such attributes, the arguments from all of
+// these attributes are concatenated.
+llvm::SmallVector<const clang::Expr*> GetAttributeLifetimes(
+    llvm::ArrayRef<const clang::Attr*> attrs);
+
 // Extracts the lifetime parameters of the given type.
 llvm::SmallVector<std::string> GetLifetimeParameters(clang::QualType type);
 
@@ -217,12 +232,6 @@ class ObjectLifetimes {
 
   ObjectLifetimes(Lifetime lifetime, ValueLifetimes value_lifetimes)
       : lifetime_(lifetime), value_lifetimes_(value_lifetimes) {}
-
-  // Creates lifetimes for an *object* of a given type.
-  // Only fails if lifetime_factory fails.
-  // Lifetimes will be created in post-order in the tree of lifetimes.
-  static llvm::Expected<ObjectLifetimes> Create(
-      clang::QualType type, LifetimeFactory lifetime_factory);
 
   // Returns the lifetime of the object itself.
   Lifetime GetLifetime() const { return lifetime_; }

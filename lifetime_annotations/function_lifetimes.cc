@@ -110,11 +110,34 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
     const FunctionLifetimeFactory& lifetime_factory) {
   FunctionLifetimes ret;
 
+  llvm::SmallVector<const clang::Attr*> attrs;
+  if (type_loc) {
+    StripAttributes(type_loc, attrs);
+  }
+  llvm::SmallVector<const clang::Expr*> lifetime_names =
+      GetAttributeLifetimes(attrs);
+
+  if (this_type.isNull() && !lifetime_names.empty()) {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        absl::StrCat("Encountered a `this` lifetime on a function with no "
+                     "`this` parameter"));
+  }
+
   if (!this_type.isNull()) {
     ValueLifetimes tmp;
-    // TODO(mboehme): Pass in correct lifetime name.
+    const clang::Expr* lifetime_name = nullptr;
+    if (!lifetime_names.empty()) {
+      if (lifetime_names.size() != 1) {
+        return llvm::createStringError(
+            llvm::inconvertibleErrorCode(),
+            absl::StrCat("Expected a single lifetime but ",
+                         lifetime_names.size(), " were given"));
+      }
+      lifetime_name = lifetime_names.front();
+    }
     if (llvm::Error err =
-            lifetime_factory.CreateThisLifetimes(this_type, nullptr)
+            lifetime_factory.CreateThisLifetimes(this_type, lifetime_name)
                 .moveInto(tmp)) {
       return std::move(err);
     }

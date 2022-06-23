@@ -17,6 +17,15 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "llvm/Support/FormatVariadic.h"
 
+// This file contains tests both for the "legacy" lifetime annotations
+// (`[[clang::annotate("lifetimes", ...)]]` placed on a function declaration)
+// and the newer annotations (`[[clang::annotate_type("lifetime", ...")]]`
+// placed on a type). This is because we expect we may continue to use the
+// "legacy" style of annotations in sidecar files.
+//
+// Some tests only test one style of annotation where testing the other style
+// does not make sense for the particular test.
+
 namespace clang {
 namespace tidy {
 namespace lifetimes {
@@ -39,6 +48,19 @@ std::string QualifiedName(const clang::FunctionDecl* func) {
   }
   ostream.flush();
   return str;
+}
+
+// Prepends definitions for lifetime annotation macros to the code.
+std::string WithLifetimeMacros(absl::string_view code) {
+  std::string result = R"(
+    #define $(l) [[clang::annotate_type("lifetime", #l)]]
+  )";
+  for (char l = 'a'; l <= 'z'; ++l) {
+    absl::StrAppendFormat(&result, "#define $%c $(%c)\n", l, l);
+  }
+  absl::StrAppend(&result, "#define $static $(static)");
+  absl::StrAppend(&result, code);
+  return result;
 }
 
 class LifetimeAnnotationsTest : public testing::Test {
@@ -333,94 +355,233 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimes) {
               IsOkAndHolds(LifetimesAre({{"f", "()"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_BadAttributeArgument) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        void f(int* [[clang::annotate_type("lifetime", 1)]]);
+  )")),
+      StatusIs(absl::StatusCode::kUnknown,
+               StartsWith("cannot evaluate argument as a string literal")));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Simple) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a -> a")]]
-        int* f(int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a -> a"}})));
+        int* f1(int*);
+        int* $a f2(int* $a);
+  )")),
+              IsOkAndHolds(LifetimesAre({{"f1", "a -> a"}, {"f2", "a -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_SimpleRef) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        [[clang::annotate("lifetimes", "a -> a")]]
+        int& f1(int&);
+        int& $a f2(int& $a);
+  )")),
+              IsOkAndHolds(LifetimesAre({{"f1", "a -> a"}, {"f2", "a -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_Invalid_MultipleLifetimesOnPointer) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        void f(int* $a $b);
+  )")),
+      StatusIs(absl::StatusCode::kUnknown,
+               StartsWith("Expected a single lifetime but 2 were given")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Static) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        [[clang::annotate("lifetimes", "static -> static")]]
+        int* f1(int*);
+        int* $static f2(int* $static);
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "static -> static"}, {"f2", "static -> static"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_PartialElision) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        #pragma clang lifetime_elision
+        int* $a f(int* $a, int*, int* $a);
+  )")),
+              IsOkAndHolds(LifetimesAre({{"f", "a, b, a -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultiplePtr) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "(a, b) -> a")]]
-        int* f(int**);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "(a, b) -> a"}})));
+        int* f1(int**);
+        int* $a f2(int* $a * $b);
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "(a, b) -> a"}, {"f2", "(a, b) -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultipleArguments) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a, b -> a")]]
-        int* f(int*, int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, b -> a"}})));
+        int* f1(int*, int*);
+        int* $a f2(int* $a, int* $b);
+  )")),
+      IsOkAndHolds(LifetimesAre({{"f1", "a, b -> a"}, {"f2", "a, b -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoReturn) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a, b")]]
-        void f(int*, int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, b"}})));
+        void f1(int*, int*);
+        void f2(int* $a, int* $b);
+  )")),
+              IsOkAndHolds(LifetimesAre({{"f1", "a, b"}, {"f2", "a, b"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimeParam) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_ParamWithoutLifetime) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a, (), a -> a")]]
-        int* f(int*, int, int*);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, (), a -> a"}})));
+        int* f1(int*, int, int*);
+        int* $a f2(int* $a, int, int* $a);
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "a, (), a -> a"}, {"f2", "a, (), a -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_LifetimeParameterizedType) {
+  // Use a custom delimiter so that the `")` in the `clang::annotate` attribute
+  // below doesn't prematurely terminate the string.
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"code(
+    struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
+
+    [[clang::annotate("lifetimes", "([a, b]) -> ([a, b])")]]
+    S_param f1(S_param s);
+
+    // TODO(mboehme): I'm not sure the `$a $b` syntax is ideal. I think what
+    // we'd really want instead is to be able to say `$(a, b)`, and disallow
+    // putting multiple `annotate_type("lifetime", ...)` annotations on a type.
+    // However, this would require `$(...)` to be a variadic macro that
+    // stringizes each of its macro arguments individually. This is possible but
+    // requires some contortions:
+    // https://stackoverflow.com/a/5958315
+    S_param $a $b f2(S_param $a $b s);
+  )code")),
+              IsOkAndHolds(LifetimesAre({{"f1", "([a, b]) -> ([a, b])"},
+                                         {"f2", "([a, b]) -> ([a, b])"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest,
+       LifetimeAnnotation_LifetimeParameterizedType_WrongNumberOfLifetimes) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+    struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
+
+    void f(S_param $a $b $c s);
+  )")),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Type has 2 lifetime parameters but 3 "
+                                  "lifetime arguments were given")));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Template) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+    template <class T> class vector {};
+
+    [[clang::annotate("lifetimes", "(a, b) -> a")]]
+    int* f1(const vector<int *> &);
+    int* $a f2(const vector<int * $a> & $b);
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "(a, b) -> a"}, {"f2", "(a, b) -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplate) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"code(
+    template <class... T> class variadic{};
+
+    [[clang::annotate("lifetimes", "(<a, b>, c)")]]
+    void f1(const variadic<int *, int *> &);
+    void f2(const variadic<int * $a, int * $b> & $c);
+  )code")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"f1", "(<a, b>, c)"}, {"f2", "(<a, b>, c)"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Method) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct S {
           [[clang::annotate("lifetimes", "a: -> a")]]
-          int* f();
+          int* f1();
+          int* $a f2() $a;
         };
-  )"),
-              IsOkAndHolds(LifetimesAre({{"S::f", "a: -> a"}})));
+  )")),
+      IsOkAndHolds(LifetimesAre({{"S::f1", "a: -> a"}, {"S::f2", "a: -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithParam) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct S {
           [[clang::annotate("lifetimes", "a: b -> a")]]
-          int* f(int*);
+          int* f1(int*);
+          int* $a f2(int* $b) $a;
         };
-  )"),
-              IsOkAndHolds(LifetimesAre({{"S::f", "a: b -> a"}})));
+  )")),
+              IsOkAndHolds(LifetimesAre(
+                  {{"S::f1", "a: b -> a"}, {"S::f2", "a: b -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithLifetimeParams) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct [[clang::annotate("lifetime_params", "x", "y")]] S {
           [[clang::annotate("lifetimes", "([x, y], a): -> x")]]
-          int* f();
+          int* f1();
+          // It's implied that the lifetime parameters of `this` are $x and $y
+          // because this is a member function on struct with those lifetime
+          // parameters.
+          // TODO(mboehme): This doesn't work yet. We need some special handling
+          // to know that in this context, the type `S` doesn't need lifetimes
+          // put on it.
+          // TODO(mboehme): How do we resolve this difference relative to the
+          // "legacy" lifetime annotations? Does this mean that they should also
+          // not include the lifetimes x and y?
+          // int* $x f2() $a;
         };
-  )"),
-              IsOkAndHolds(LifetimesAre({{"S::f", "([x, y], a): -> x"}})));
+  )")),
+              IsOkAndHolds(LifetimesAre({{"S::f1", "([x, y], a): -> x"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_MissingThis) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct S {
           [[clang::annotate("lifetimes", "-> a")]]
           int* f();
         };
-  )"),
+  )")),
               StatusIs(absl::StatusCode::kUnknown,
                        StartsWith("Invalid lifetime annotation")));
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        struct S {
+          int* $a f();
+        };
+  )")),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Lifetime elision not enabled for 'f'")));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_ThisOnFreeFunction) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a: a -> a")]]
         int* f(int*);
-  )"),
+  )")),
               StatusIs(absl::StatusCode::kUnknown,
                        StartsWith("Invalid lifetime annotation")));
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+        int* $a f(int* $a) $a;
+  )")),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Encountered a `this` lifetime on a function "
+                                  "with no `this` parameter")));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
@@ -434,47 +595,57 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Callback) {
   EXPECT_THAT(
-      GetNamedLifetimeAnnotations(R"(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "b, ((a -> a), static) -> b")]]
-        int* f(int*, int* (*)(int*));
-  )"),
-      IsOkAndHolds(LifetimesAre({{"f", "b, ((a -> a), static) -> b"}})));
+        int* f1(int*, int* (*)(int*));
+        int* $b f2(int* $b, int* $a (* $static)(int* $a));
+  )")),
+      IsOkAndHolds(LifetimesAre({{"f1", "b, ((a -> a), static) -> b"},
+                                 {"f2", "b, ((a -> a), static) -> b"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackMultipleParams) {
   EXPECT_THAT(
-      GetNamedLifetimeAnnotations(R"(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "c, ((a, b -> a), static) -> c")]]
-        int* f(int*, int* (*)(int*, int*));
-  )"),
-      IsOkAndHolds(LifetimesAre({{"f", "c, ((a, b -> a), static) -> c"}})));
+        int* f1(int*, int* (*)(int*, int*));
+        int* $c f2(int* $c, int* $a (* $static)(int* $a, int* $b));
+  )")),
+      IsOkAndHolds(LifetimesAre({{"f1", "c, ((a, b -> a), static) -> c"},
+                                 {"f2", "c, ((a, b -> a), static) -> c"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_CallbackTmplFunc) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         template <typename Func>
         struct function;
         [[clang::annotate("lifetimes", "a, ((b -> b)) -> a")]]
-        int* f(int*, function<int*(int*)>);
-  )"),
-              IsOkAndHolds(LifetimesAre({{"f", "a, ((b -> b)) -> a"}})));
+        int* f1(int*, function<int*(int*)>);
+        int* $a f2(int* $a, function<int* $b(int* $b)>);
+  )")),
+              IsOkAndHolds(LifetimesAre({{"f1", "a, ((b -> b)) -> a"},
+                                         {"f2", "a, ((b -> b)) -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MultipleCallbacks) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a, ((b -> b), static), ((c -> c), static) -> a")]]
-        int* f(int*, int* (*)(int*), int* (*)(int*));
-  )"),
+        int* f1(int*, int* (*)(int*), int* (*)(int*));
+        int* $a f2(int* $a, int* $b (* $static)(int* $b), int* $c (* $static)(int* $c));
+  )")),
               IsOkAndHolds(LifetimesAre(
-                  {{"f", "a, ((b -> b), static), ((c -> c), static) -> a"}})));
+                  {{"f1", "a, ((b -> b), static), ((c -> c), static) -> a"},
+                   {"f2", "a, ((b -> b), static), ((c -> c), static) -> a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_ReturnFunctionPtr) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"_(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"_(
         typedef int* (*FP)(int*);
         [[clang::annotate("lifetimes", "a -> ((b -> b), static)")]]
         FP f(int*);
-  )_"),
+        // TODO(mboehme): Need to support lifetime parameters on type aliases to
+        // be able to express this in the new syntax.
+  )_")),
               IsOkAndHolds(LifetimesAre({{"f", "a -> ((b -> b), static)"}})));
 }
 
