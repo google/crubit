@@ -114,8 +114,10 @@ llvm::Expected<FunctionLifetimes> FunctionLifetimes::Create(
   if (type_loc) {
     StripAttributes(type_loc, attrs);
   }
-  llvm::SmallVector<const clang::Expr*> lifetime_names =
-      GetAttributeLifetimes(attrs);
+  llvm::SmallVector<const clang::Expr*> lifetime_names;
+  if (llvm::Error err = GetAttributeLifetimes(attrs).moveInto(lifetime_names)) {
+    return std::move(err);
+  }
 
   if (this_type.isNull() && !lifetime_names.empty()) {
     return llvm::createStringError(

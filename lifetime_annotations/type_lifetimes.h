@@ -48,7 +48,7 @@ clang::TypeLoc StripAttributes(clang::TypeLoc type_loc,
 // attributes in `attrs`.
 // If `attrs` contains multiple such attributes, the arguments from all of
 // these attributes are concatenated.
-llvm::SmallVector<const clang::Expr*> GetAttributeLifetimes(
+llvm::Expected<llvm::SmallVector<const clang::Expr*>> GetAttributeLifetimes(
     llvm::ArrayRef<const clang::Attr*> attrs);
 
 // Extracts the lifetime parameters of the given type.

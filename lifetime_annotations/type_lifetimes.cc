@@ -78,15 +78,25 @@ clang::TypeLoc StripAttributes(clang::TypeLoc type_loc,
   }
 }
 
-llvm::SmallVector<const clang::Expr*> GetAttributeLifetimes(
+llvm::Expected<llvm::SmallVector<const clang::Expr*>> GetAttributeLifetimes(
     llvm::ArrayRef<const clang::Attr*> attrs) {
   llvm::SmallVector<const clang::Expr*> result;
+
+  bool saw_annotate_type = false;
 
   for (const clang::Attr* attr : attrs) {
     auto annotate_type_attr = clang::dyn_cast<clang::AnnotateTypeAttr>(attr);
     if (!annotate_type_attr ||
         annotate_type_attr->getAnnotation() != "lifetime")
       continue;
+
+    if (saw_annotate_type) {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          "Only one `[[annotate_type(\"lifetime\", ...)]]` attribute may be "
+          "placed on a type");
+    }
+    saw_annotate_type = true;
 
     for (const clang::Expr* arg : annotate_type_attr->args()) {
       result.push_back(arg);
@@ -277,8 +287,10 @@ llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
   if (!type_loc.isNull()) {
     type_loc = StripAttributes(type_loc, attrs);
   }
-  llvm::SmallVector<const clang::Expr*> lifetime_names =
-      GetAttributeLifetimes(attrs);
+  llvm::SmallVector<const clang::Expr*> lifetime_names;
+  if (llvm::Error err = GetAttributeLifetimes(attrs).moveInto(lifetime_names)) {
+    return std::move(err);
+  }
 
   ValueLifetimes ret(type);
 

@@ -53,7 +53,12 @@ std::string QualifiedName(const clang::FunctionDecl* func) {
 // Prepends definitions for lifetime annotation macros to the code.
 std::string WithLifetimeMacros(absl::string_view code) {
   std::string result = R"(
+    // TODO(mboehme): We would prefer `$(...)` to be a variadic macro that
+    // stringizes each of its macro arguments individually. This is possible but
+    // requires some contortions: https://stackoverflow.com/a/5958315
     #define $(l) [[clang::annotate_type("lifetime", #l)]]
+    #define $2(l1, l2) [[clang::annotate_type("lifetime", #l1, #l2)]]
+    #define $3(l1, l2, l3) [[clang::annotate_type("lifetime", #l1, #l2, #l3)]]
   )";
   for (char l = 'a'; l <= 'z'; ++l) {
     absl::StrAppendFormat(&result, "#define $%c $(%c)\n", l, l);
@@ -386,7 +391,7 @@ TEST_F(LifetimeAnnotationsTest,
        LifetimeAnnotation_Invalid_MultipleLifetimesOnPointer) {
   EXPECT_THAT(
       GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
-        void f(int* $a $b);
+        void f(int* $2(a, b));
   )")),
       StatusIs(absl::StatusCode::kUnknown,
                StartsWith("Expected a single lifetime but 2 were given")));
@@ -458,29 +463,37 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_LifetimeParameterizedType) {
     [[clang::annotate("lifetimes", "([a, b]) -> ([a, b])")]]
     S_param f1(S_param s);
 
-    // TODO(mboehme): I'm not sure the `$a $b` syntax is ideal. I think what
-    // we'd really want instead is to be able to say `$(a, b)`, and disallow
-    // putting multiple `annotate_type("lifetime", ...)` annotations on a type.
-    // However, this would require `$(...)` to be a variadic macro that
-    // stringizes each of its macro arguments individually. This is possible but
-    // requires some contortions:
-    // https://stackoverflow.com/a/5958315
-    S_param $a $b f2(S_param $a $b s);
+    S_param $2(a, b) f2(S_param $2(a, b) s);
   )code")),
               IsOkAndHolds(LifetimesAre({{"f1", "([a, b]) -> ([a, b])"},
                                          {"f2", "([a, b]) -> ([a, b])"}})));
 }
 
-TEST_F(LifetimeAnnotationsTest,
-       LifetimeAnnotation_LifetimeParameterizedType_WrongNumberOfLifetimes) {
+TEST_F(
+    LifetimeAnnotationsTest,
+    LifetimeAnnotation_LifetimeParameterizedType_Invalid_WrongNumberOfLifetimes) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
     struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
 
-    void f(S_param $a $b $c s);
+    void f(S_param $3(a, b, c) s);
   )")),
               StatusIs(absl::StatusCode::kUnknown,
                        StartsWith("Type has 2 lifetime parameters but 3 "
                                   "lifetime arguments were given")));
+}
+
+TEST_F(
+    LifetimeAnnotationsTest,
+    LifetimeAnnotation_LifetimeParameterizedType_Invalid_MultipleAnnotateAttributes) {
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+    struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
+
+    void f(S_param $a $b s);
+  )")),
+      StatusIs(absl::StatusCode::kUnknown,
+               StartsWith("Only one `[[annotate_type(\"lifetime\", ...)]]` "
+                          "attribute may be placed on a type")));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Template) {
