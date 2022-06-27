@@ -308,9 +308,6 @@ llvm::Expected<FunctionLifetimes> GetLifetimeAnnotations(
     LifetimeSymbolTable* symbol_table) {
   // TODO(mboehme): if we have multiple declarations of a function, make sure
   // they are all annotated with the same lifetimes.
-  // TODO(veluca): the syntax we are using for lifetime annotations here is just
-  // a placeholder. Adapt this to the actual syntax once the clang-side support
-  // is there.
 
   clang::SourceManager& source_manager =
       func->getASTContext().getSourceManager();
