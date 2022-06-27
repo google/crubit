@@ -13,6 +13,7 @@
 #include "common/status_test_matchers.h"
 #include "lifetime_annotations/test/named_func_lifetimes.h"
 #include "lifetime_annotations/test/run_on_code.h"
+#include "lifetime_annotations/type_lifetimes.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "llvm/Support/FormatVariadic.h"
@@ -44,7 +45,7 @@ std::string QualifiedName(const clang::FunctionDecl* func) {
   llvm::raw_string_ostream ostream(str);
   func->printQualifiedName(ostream);
   if (IsOverloaded(func)) {
-    ostream << "[" << func->getType().getAsString() << "]";
+    ostream << "[" << StripAttributes(func->getType()).getAsString() << "]";
   }
   ostream.flush();
   return str;
@@ -92,14 +93,15 @@ class LifetimeAnnotationsTest : public testing::Test {
               llvm::Expected<FunctionLifetimes> func_lifetimes =
                   GetLifetimeAnnotations(func, lifetime_context, &symbol_table);
 
-              if (!func_lifetimes) {
-                result = absl::UnknownError(
-                    llvm::toString(func_lifetimes.takeError()));
-                return;
+              std::string new_entry;
+              if (func_lifetimes) {
+                new_entry = NameLifetimes(*func_lifetimes, symbol_table);
+              } else {
+                new_entry = absl::StrCat(
+                    "ERROR: ", llvm::toString(func_lifetimes.takeError()));
               }
+
               std::string func_name = QualifiedName(func);
-              std::string new_entry =
-                  NameLifetimes(*func_lifetimes, symbol_table);
               std::optional<llvm::StringRef> old_entry =
                   named_func_lifetimes.Get(func_name);
               if (old_entry.has_value()) {
@@ -152,18 +154,18 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsNoLifetimeElision) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         int** f(int*);
   )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Lifetime elision not enabled")));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Lifetime elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, Failure_NoOutputAnnotationNoLifetimeElision) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         int* f();
   )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       // We specifically want to see this error message rather
-                       // than "Cannot elide output lifetimes".
-                       StartsWith("Lifetime elision not enabled")));
+              // We specifically want to see this error message rather than
+              // "Cannot elide output lifetimes".
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Lifetime elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
@@ -174,8 +176,8 @@ TEST_F(LifetimeAnnotationsTest, Failure_NoAnnotationsElisionPragmaInWrongFile) {
                                           {std::make_pair("header.h", R"(
         int** f(int*);
   )")}),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Lifetime elision not enabled")));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f", "ERROR: Lifetime elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_OneInputLifetime) {
@@ -339,8 +341,11 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooFewInputLifetimes) {
         #pragma clang lifetime_elision
         int* f();
   )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Cannot elide output lifetimes")));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f",
+                    "ERROR: Cannot elide output lifetimes for 'f' because it "
+                    "is a non-member function that does not have exactly one "
+                    "input lifetime"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
@@ -348,8 +353,11 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_FailureTooManyInputLifetimes) {
         #pragma clang lifetime_elision
         int* f(int**);
   )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Cannot elide output lifetimes")));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f",
+                    "ERROR: Cannot elide output lifetimes for 'f' because it "
+                    "is a non-member function that does not have exactly one "
+                    "input lifetime"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_NoLifetimes) {
@@ -365,8 +373,8 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_BadAttributeArgument) {
       GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(int* [[clang::annotate_type("lifetime", 1)]]);
   )")),
-      StatusIs(absl::StatusCode::kUnknown,
-               StartsWith("cannot evaluate argument as a string literal")));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR: cannot evaluate argument as a string literal"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Simple) {
@@ -393,8 +401,8 @@ TEST_F(LifetimeAnnotationsTest,
       GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         void f(int* $2(a, b));
   )")),
-      StatusIs(absl::StatusCode::kUnknown,
-               StartsWith("Expected a single lifetime but 2 were given")));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR: Expected a single lifetime but 2 were given"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Static) {
@@ -472,28 +480,29 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_LifetimeParameterizedType) {
 TEST_F(
     LifetimeAnnotationsTest,
     LifetimeAnnotation_LifetimeParameterizedType_Invalid_WrongNumberOfLifetimes) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
     struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
 
     void f(S_param $3(a, b, c) s);
   )")),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Type has 2 lifetime parameters but 3 "
-                                  "lifetime arguments were given")));
+      IsOkAndHolds(LifetimesAre({{"f",
+                                  "ERROR: Type has 2 lifetime parameters but 3 "
+                                  "lifetime arguments were given"}})));
 }
 
 TEST_F(
     LifetimeAnnotationsTest,
     LifetimeAnnotation_LifetimeParameterizedType_Invalid_MultipleAnnotateAttributes) {
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
     struct [[clang::annotate("lifetime_params", "a", "b")]] S_param {};
 
     void f(S_param $a $b s);
   )")),
-      StatusIs(absl::StatusCode::kUnknown,
-               StartsWith("Only one `[[annotate_type(\"lifetime\", ...)]]` "
-                          "attribute may be placed on a type")));
+              IsOkAndHolds(LifetimesAre(
+                  {{"f",
+                    "ERROR: Only one `[[annotate_type(\"lifetime\", ...)]]` "
+                    "attribute may be placed on a type"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Template) {
@@ -541,8 +550,9 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplateWithCtor) {
       S<int*, int*> s = {a, b};
     }
   )code")),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Lifetime elision not enabled")));
+              IsOkAndHolds(LifetimesContain(
+                  {{"S<int *, int *>::S[void (int *, int *)]",
+                    "ERROR: Lifetime elision not enabled for 'S'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Method) {
@@ -590,45 +600,50 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_MethodWithLifetimeParams) {
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_MissingThis) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct S {
           [[clang::annotate("lifetimes", "-> a")]]
           int* f();
         };
   )")),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Invalid lifetime annotation")));
+      IsOkAndHolds(LifetimesAre(
+          {{"S::f",
+            "ERROR: Invalid lifetime annotation: too few lifetimes"}})));
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         struct S {
           int* $a f();
         };
   )")),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Lifetime elision not enabled for 'f'")));
+              IsOkAndHolds(LifetimesAre(
+                  {{"S::f", "ERROR: Lifetime elision not enabled for 'f'"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_ThisOnFreeFunction) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         [[clang::annotate("lifetimes", "a: a -> a")]]
         int* f(int*);
   )")),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Invalid lifetime annotation")));
-  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR: Invalid lifetime annotation: too many lifetimes"}})));
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
         int* $a f(int* $a) $a;
   )")),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Encountered a `this` lifetime on a function "
-                                  "with no `this` parameter")));
+      IsOkAndHolds(LifetimesAre({{"f",
+                                  "ERROR: Encountered a `this` lifetime on a "
+                                  "function with no `this` parameter"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Invalid_WrongNumber) {
-  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+  EXPECT_THAT(
+      GetNamedLifetimeAnnotations(R"(
         [[clang::annotate("lifetimes", "a -> a")]]
         int* f(int**);
   )"),
-              StatusIs(absl::StatusCode::kUnknown,
-                       StartsWith("Invalid lifetime annotation")));
+      IsOkAndHolds(LifetimesAre(
+          {{"f", "ERROR: Invalid lifetime annotation: too few lifetimes"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Callback) {

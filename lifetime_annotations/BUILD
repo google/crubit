@@ -68,6 +68,7 @@ cc_test(
     srcs = ["lifetime_annotations_test.cc"],
     deps = [
         ":lifetime_annotations",
+        ":type_lifetimes",
         "@com_google_googletest//:gtest_main",
         "@absl//absl/status",
         "//common:status_test_matchers",
