@@ -520,6 +520,31 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplate) {
                   {{"f1", "(<a, b>, c)"}, {"f2", "(<a, b>, c)"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplateWithCtor) {
+  // TODO(mboehme): This test is returning "lifetime elision not enabled"
+  // on `S<int *, int *>::S(int *, int *)`, and it's complaining because the
+  // two `int *` parameters aren't annotated.
+  // We shouldn't try to extract lifetime annotations on template instantiations
+  // like these where the template arguments contain pointers or other
+  // reference-like types. This is really just a case of our test code being
+  // over-eager; in a real-world application, we would run lifetime inference
+  // on template instantiations anyway.
+
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"code(
+    template <typename... Args> struct S { S() $a {} };
+    template <typename T, typename... Args>
+    struct S<T, Args...> {
+      S(T t, Args... args) $a {}
+    };
+
+    void target(int* a, int* b) {
+      S<int*, int*> s = {a, b};
+    }
+  )code")),
+              StatusIs(absl::StatusCode::kUnknown,
+                       StartsWith("Lifetime elision not enabled")));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Method) {
   EXPECT_THAT(
       GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(

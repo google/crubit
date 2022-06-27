@@ -231,9 +231,10 @@ llvm::Error ForEachTemplateArgument(
       } else if (arg.getKind() == clang::TemplateArgument::Pack) {
         for (const clang::TemplateArgument& inner_arg : arg.getPackAsArray()) {
           if (inner_arg.getKind() == clang::TemplateArgument::Type) {
-            // TODO(mboehme): Pass on the correct TypeLoc() in this case (if
-            // that's even possible -- I have to admit I'm not sure about how
-            // this case would get triggered)
+            // We pass `TypeLoc()` here because if the argument is a parameter
+            // pack, the only thing spelled out in the source code is that
+            // parameter pack -- there is no source location for the individual
+            // arguments contained in the pack.
             if (llvm::Error err =
                     callback(depth, inner_arg.getAsType(), clang::TypeLoc())) {
               return err;
