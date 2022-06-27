@@ -63,7 +63,7 @@ std::string WithLifetimeMacros(absl::string_view code) {
   for (char l = 'a'; l <= 'z'; ++l) {
     absl::StrAppendFormat(&result, "#define $%c $(%c)\n", l, l);
   }
-  absl::StrAppend(&result, "#define $static $(static)");
+  absl::StrAppend(&result, "#define $static $(static)\n");
   absl::StrAppend(&result, code);
   return result;
 }
