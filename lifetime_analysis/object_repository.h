@@ -84,7 +84,7 @@ class ObjectRepository {
   std::optional<Object> this_object_;
   Object return_object_;
 
-  llvm::DenseMap<Object, ObjectValueType> lifetime_value_types_;
+  llvm::DenseMap<Object, ObjectValueType> object_value_types_;
 
   class VarDeclVisitor;
 
