@@ -100,6 +100,8 @@ class ObjectRepository {
   llvm::DenseMap<clang::QualType, Object> static_objects_;
 
  public:
+  // Iterator refers to a pair consisting of a variable declaration and the
+  // object representing that variable.
   using const_iterator = MapType::const_iterator;
   using value_type = MapType::value_type;
 
