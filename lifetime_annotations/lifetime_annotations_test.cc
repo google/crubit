@@ -89,6 +89,20 @@ class LifetimeAnnotationsTest : public testing::Test {
                match(findAll(functionDecl().bind("func")), ast_context)) {
             if (const auto* func =
                     node.getNodeAs<clang::FunctionDecl>("func")) {
+              // Skip various categories of function:
+              // - Template instantiation don't contain any annotations that
+              //   aren't present in the template itself, but they may contain
+              //   reference-like types (which will obviously be unannotated),
+              //   which will generate nuisance "lifetime elision not enabled"
+              //   errors.
+              // - Implicitly defaulted functions obviously cannot contain
+              //   lifetime annotations. They will need to be handled through
+              //   `AnalyzeDefaultedFunction()` in analyze.cc.
+              if (func->isTemplateInstantiation() ||
+                  (func->isDefaulted() && !func->isExplicitlyDefaulted())) {
+                continue;
+              }
+
               LifetimeSymbolTable symbol_table;
               llvm::Expected<FunctionLifetimes> func_lifetimes =
                   GetLifetimeAnnotations(func, lifetime_context, &symbol_table);
@@ -258,19 +272,6 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_ExplicitlyDefaultedCtor) {
             S() = default;
           };)"),
               IsOkAndHolds(LifetimesAre({{"S::S", "a:"}})));
-}
-
-TEST_F(LifetimeAnnotationsTest, LifetimeElision_ImplicitlyDefaultedCtor) {
-  // Implicitly-defaulted constructors don't have associated `TypeSourceInfo`.
-  EXPECT_THAT(
-      GetNamedLifetimeAnnotations(R"(
-          #pragma clang lifetime_elision
-          struct S {};
-          // We need to use the implicitly-defaulted constructors to make
-          // them appear in the AST so that we can process them.
-          void foo() { S s; }
-          )"),
-      IsOkAndHolds(LifetimesContain({{"S::S[void (void) noexcept]", "a:"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_ArrayParamLifetimes) {
@@ -530,15 +531,6 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplate) {
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplateWithCtor) {
-  // TODO(mboehme): This test is returning "lifetime elision not enabled"
-  // on `S<int *, int *>::S(int *, int *)`, and it's complaining because the
-  // two `int *` parameters aren't annotated.
-  // We shouldn't try to extract lifetime annotations on template instantiations
-  // like these where the template arguments contain pointers or other
-  // reference-like types. This is really just a case of our test code being
-  // over-eager; in a real-world application, we would run lifetime inference
-  // on template instantiations anyway.
-
   EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"code(
     template <typename... Args> struct S { S() $a {} };
     template <typename T, typename... Args>
@@ -546,13 +538,17 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplateWithCtor) {
       S(T t, Args... args) $a {}
     };
 
-    void target(int* a, int* b) {
+    void target(int* $a a, int* $b b) {
       S<int*, int*> s = {a, b};
     }
   )code")),
-              IsOkAndHolds(LifetimesContain(
-                  {{"S<int *, int *>::S[void (int *, int *)]",
-                    "ERROR: Lifetime elision not enabled for 'S'"}})));
+              IsOkAndHolds(LifetimesAre({{"S::S<Args...>", "a:"},
+                                         {"S<type-parameter-0-0, "
+                                          "type-parameter-0-1...>::"
+                                          "S<type-parameter-0-0, "
+                                          "type-parameter-0-1...>",
+                                          "a: (), ()"},
+                                         {"target", "a, b"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Method) {
