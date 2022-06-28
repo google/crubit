@@ -354,16 +354,6 @@ where
 {
 }
 
-/// `Pin::get_ref()` transmute: transmute a pinned mut reference into a
-/// non-`mut` reference.
-///
-/// Safety: `Pin` does not restrict getting the reference out of the pin, and is
-/// `repr(transparent)`.
-unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for Pin<&'a mut T> where
-    T: IncompleteTransmute<U>
-{
-}
-
 /// `Pin::new()` transmute: transmute a mut reference into a pinned mut
 /// reference.
 ///

@@ -101,11 +101,11 @@ fn test_read_complete_nonunpin() {
 
     // Self-cast: if either the argument, or the parameter, was or will be
     // incomplete.
-    assert_eq!(definition::ReadNonunpinStruct(s.as_mut().incomplete_cast()), 42);
+    assert_eq!(definition::ReadNonunpinStruct(s.as_ref().incomplete_cast()), 42);
 
     // Actual conversion.
-    assert_eq!(declaration_1::ReadNonunpinStruct(s.as_mut().incomplete_cast()), 42);
-    assert_eq!(declaration_2::ReadNonunpinStruct(s.as_mut().incomplete_cast()), 42);
+    assert_eq!(declaration_1::ReadNonunpinStruct(s.as_ref().incomplete_cast()), 42);
+    assert_eq!(declaration_2::ReadNonunpinStruct(s.as_ref().incomplete_cast()), 42);
 }
 
 /// Given a complete NonunpinStruct, all APIs accepting a (possibly incomplete)
@@ -142,15 +142,15 @@ fn test_read_incomplete_nonunpin() {
     let mut decl1_s: Pin<&mut declaration_1::NonunpinStruct> = s.incomplete_cast();
 
     // Cast from incomplete to complete:
-    assert_eq!(definition::ReadNonunpinStruct(decl1_s.as_mut().incomplete_cast()), 42);
+    assert_eq!(definition::ReadNonunpinStruct(decl1_s.as_ref().incomplete_cast()), 42);
 
     // No cast necessary if it's the same forward declaration.
     assert_eq!(declaration_1::ReadNonunpinStruct(&*decl1_s), 42);
     // Buit a self-cast also works:
-    assert_eq!(declaration_1::ReadNonunpinStruct(decl1_s.as_mut().incomplete_cast()), 42);
+    assert_eq!(declaration_1::ReadNonunpinStruct(decl1_s.as_ref().incomplete_cast()), 42);
 
     // Cast from incomplete to different-incomplete:
-    assert_eq!(declaration_2::ReadNonunpinStruct(decl1_s.as_mut().incomplete_cast()), 42);
+    assert_eq!(declaration_2::ReadNonunpinStruct(decl1_s.as_ref().incomplete_cast()), 42);
 }
 
 /// Given an incomplete NonunpinStruct, all APIs accepting a (possibly

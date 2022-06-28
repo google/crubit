@@ -94,7 +94,7 @@ fn test_conversions() {
         }
         // Pin<&mut> -> &
         {
-            let complete_unpinned_ref: &MyType = incomplete_pin_mut.incomplete_cast();
+            let complete_unpinned_ref: &MyType = incomplete_pin_mut.as_ref().incomplete_cast();
             assert_eq!(ptr_location(complete_unpinned_ref), loc);
         }
     }
