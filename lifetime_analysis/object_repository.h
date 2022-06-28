@@ -36,6 +36,11 @@ inline bool IsInitExprInitializingARecordObject(const clang::Expr* expr) {
 
 // A repository for the objects used in the lifetime analysis of a single
 // function.
+// This class establishes a relationship between AST nodes (e.g. variable
+// declarations) and the objects that represent them. It also stores additional
+// information about objects that does not change during the analysis.
+// The `ObjectRepository` only stores state that does not change during the
+// analysis; it is therefore not part of the lattice.
 class ObjectRepository {
  public:
   // An `Object` might represent objects that have either a single value (such
