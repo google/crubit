@@ -176,6 +176,21 @@ TEST_F(LifetimeAnalysisTest, ReturnStaticConstDoublePointerWithConditional) {
               LifetimesAre({{"target", "(static, a), (b, a) -> (b, a)"}}));
 }
 
+TEST_F(LifetimeAnalysisTest, StaticParameterChainedCall) {
+  EXPECT_THAT(GetLifetimes(R"(
+    class S {};
+    void f1(S* s) {
+      static S* s_static = s;
+    }
+    void f2(S* s) {
+      f1(s);
+    }
+  )"),
+              // TODO(b/237517535): The lifetimes deduced for `f2` are incorrect
+              // and should be static.
+              LifetimesAre({{"f1", "static"}, {"f2", "a"}}));
+}
+
 TEST_F(LifetimeAnalysisTest, ConstructorStoresThisPointerInStatic) {
   EXPECT_THAT(GetLifetimes(R"(
     struct S {
