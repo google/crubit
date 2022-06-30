@@ -4,10 +4,10 @@
 
 #[cfg(test)]
 mod tests {
-    // TODO(b/236037915): Rename `IncompleteCast` into something less focused on
-    // forward declarations (maybe `IncompleteCast` => `CcCast` and
+    // TODO(b/236037915): Rename `CcCast` into something less focused on
+    // forward declarations (maybe `CcCast` => `CcCast` and
     // `forward_declare.rs` => `cc_cast.rs`?).
-    use forward_declare::IncompleteCast;
+    use forward_declare::CcCast;
 
     #[test]
     fn test_bridging() {
@@ -17,7 +17,7 @@ mod tests {
         // `class_template_instantiation2` create, but `x` is from the
         // `class_template_instantiation1` crate instead.  Because of that an
         // explicit cast is required.
-        let v = class_template_instantiation2::GetValue((&x).incomplete_cast());
+        let v = class_template_instantiation2::GetValue((&x).cc_cast());
 
         assert_eq!(123, v);
     }
