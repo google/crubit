@@ -918,16 +918,16 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   //   would be the more principled and simpler thing to do.
 
   // Step 1: Create mapping from callee lifetimes to points-to sets.
-  llvm::DenseMap<Lifetime, ObjectSet> lifetime_points_to_set;
+  llvm::DenseMap<Lifetime, ObjectSet> lifetime_to_object_set;
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
     CollectLifetimes({arg_object}, type, param_lifetimes, points_to_map,
-                     object_repository, lifetime_points_to_set);
+                     object_repository, lifetime_to_object_set);
   }
 
   // Force any objects associated with the static lifetime in the callee to have
   // static lifetime (see more detailed explanation above).
-  if (auto iter = lifetime_points_to_set.find(Lifetime::Static());
-      iter != lifetime_points_to_set.end()) {
+  if (auto iter = lifetime_to_object_set.find(Lifetime::Static());
+      iter != lifetime_to_object_set.end()) {
     for (const Object& object : iter->second) {
       Object pointer = object_repository.CreateStaticObject(
           ast_context.getPointerType(object.Type()));
@@ -939,7 +939,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
     PropagateLifetimesToPointees({arg_object}, type, param_lifetimes,
                                  points_to_map, object_repository,
-                                 lifetime_points_to_set, ast_context);
+                                 lifetime_to_object_set, ast_context);
   }
 
   // Step 3: Determine points-to set for the return value.
@@ -948,11 +948,11 @@ std::optional<ObjectSet> TransferLifetimesForCall(
       Object init_object = object_repository.GetInitializedObject(call);
       PropagateLifetimesToPointees(
           {init_object}, call->getType(), return_lifetimes, points_to_map,
-          object_repository, lifetime_points_to_set, ast_context);
+          object_repository, lifetime_to_object_set, ast_context);
     } else {
       ObjectSet rval_points_to;
 
-      rval_points_to = lifetime_points_to_set.lookup(
+      rval_points_to = lifetime_to_object_set.lookup(
           return_lifetimes.GetPointeeLifetimes().GetLifetime());
       // If this return value is a pointer-to-static, assume the callee can
       // return a static object that we don't know about.
