@@ -7,9 +7,10 @@ use anyhow::Result;
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use ir::{self, make_ir_from_parts, Func, Identifier, Item, Record, IR};
 use itertools::Itertools;
+use std::rc::Rc;
 
 /// Generates `IR` from a header containing `header_source`.
-pub fn ir_from_cc(header_source: &str) -> Result<IR> {
+pub fn ir_from_cc(header_source: &str) -> Result<Rc<IR>> {
     ir_from_cc_dependency(header_source, "// empty header")
 }
 
@@ -51,7 +52,10 @@ pub const DEPENDENCY_TARGET: &str = "//test:dependency";
 /// `header_source` of the header will be updated to contain the `#include` line
 /// for the header with `dependency_header_source`. The name of the dependency
 /// target is exposed as `DEPENDENCY_TARGET`.
-pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str) -> Result<IR> {
+pub fn ir_from_cc_dependency(
+    header_source: &str,
+    dependency_header_source: &str,
+) -> Result<Rc<IR>> {
     const DEPENDENCY_HEADER_NAME: &str = "test/dependency_header.h";
 
     extern "C" {
@@ -72,7 +76,7 @@ pub fn ir_from_cc_dependency(header_source: &str, dependency_header_source: &str
         )
         .into_boxed_slice()
     };
-    ir::deserialize_ir(&*json_utf8)
+    Ok(Rc::new(ir::deserialize_ir(&*json_utf8)?))
 }
 
 /// Creates an identifier
@@ -83,10 +87,9 @@ pub fn ir_id(name: &str) -> Identifier {
 /// Creates a simple `Item::Record` with a given name.
 pub fn ir_record(name: &str) -> Record {
     let ir = ir_from_cc("struct REPLACEME final {};").unwrap();
-    for item in ir.take_items() {
+    for item in ir.items() {
         if let Item::Record(record) = item {
-            // TODO(jeanpierreda): use unwrap_or_clone once stable.
-            let mut record = (*record).clone();
+            let mut record = (**record).clone();
             record.rs_name = name.to_string();
             record.cc_name = name.to_string();
             return record;

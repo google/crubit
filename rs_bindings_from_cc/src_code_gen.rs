@@ -96,10 +96,10 @@ fn generate_bindings(
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
 ) -> Result<Bindings> {
-    let ir = deserialize_ir(json)?;
+    let ir = Rc::new(deserialize_ir(json)?);
 
     let BindingsTokens { rs_api, rs_api_impl } =
-        generate_bindings_tokens(&ir, crubit_support_path)?;
+        generate_bindings_tokens(ir.clone(), crubit_support_path)?;
     let rs_api = {
         let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
         rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
@@ -1327,7 +1327,7 @@ fn generate_record(
         .iter()
         .map(|id| {
             let item = ir.find_decl(*id)?;
-            generate_item(item, ir, overloaded_funcs)
+            generate_item(item, &ir, overloaded_funcs)
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -1675,10 +1675,10 @@ fn generate_item(
 
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
 // needed to support it.
-fn generate_bindings_tokens(ir: &IR, crubit_support_path: &str) -> Result<BindingsTokens> {
+fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<BindingsTokens> {
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut thunk_impls = vec![generate_rs_api_impl(ir, crubit_support_path)?];
+    let mut thunk_impls = vec![generate_rs_api_impl(&ir, crubit_support_path)?];
     let mut assertions = vec![];
 
     // We import nullable pointers as an Option<&T> and assume that at the ABI
@@ -1703,7 +1703,7 @@ fn generate_bindings_tokens(ir: &IR, crubit_support_path: &str) -> Result<Bindin
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();
     for func in ir.functions() {
-        if let Ok(Some((.., function_id))) = generate_func(func, ir) {
+        if let Ok(Some((.., function_id))) = generate_func(func, &ir) {
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id);
             }
@@ -1712,7 +1712,7 @@ fn generate_bindings_tokens(ir: &IR, crubit_support_path: &str) -> Result<Bindin
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item = ir.find_decl(*top_level_item_id)?;
-        let generated = generate_item(item, ir, &overloaded_funcs)?;
+        let generated = generate_item(item, &ir, &overloaded_funcs)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -2671,14 +2671,14 @@ mod tests {
     };
     use token_stream_printer::{rs_tokens_to_formatted_string_for_tests, tokens_to_string};
 
-    fn generate_bindings_tokens(ir: &IR) -> Result<BindingsTokens> {
+    fn generate_bindings_tokens(ir: Rc<IR>) -> Result<BindingsTokens> {
         super::generate_bindings_tokens(ir, "crubit/rs_bindings_support")
     }
 
     #[test]
     fn test_disable_thread_safety_warnings() -> Result<()> {
         let ir = ir_from_cc("inline void foo() {}")?;
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -2710,7 +2710,7 @@ mod tests {
     #[test]
     fn test_simple_function() -> Result<()> {
         let ir = ir_from_cc("int Add(int a, int b);")?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -2742,7 +2742,7 @@ mod tests {
     #[test]
     fn test_inline_function() -> Result<()> {
         let ir = ir_from_cc("inline int Add(int a, int b);")?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -2783,7 +2783,7 @@ mod tests {
             "struct ReturnStruct {}; struct ParamStruct {};",
         )?;
 
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -2833,7 +2833,7 @@ mod tests {
             ir_from_cc_dependency(current_target_src, dependency_src)?
         };
 
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -2907,7 +2907,7 @@ mod tests {
                 using MyTypeAlias = MyTemplate<int>; "#,
         )?;
 
-        let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api_impl, .. } = generate_bindings_tokens(ir)?;
 
         // Even though the member functions above are *not* defined inline (e.g.
         // IR::Func::is_inline is false), they still need to have thunks generated for
@@ -2956,7 +2956,7 @@ mod tests {
             };
         })?)?;
 
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3008,7 +3008,7 @@ mod tests {
     #[test]
     fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
         let ir = ir_from_cc("struct S{}; inline void foo(class S& s) {} ")?;
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -3023,7 +3023,7 @@ mod tests {
     #[test]
     fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
         let ir = ir_from_cc("struct S{}; inline void foo(const class S& s) {} ")?;
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -3038,7 +3038,7 @@ mod tests {
     #[test]
     fn test_unsigned_int_in_thunk_impls() -> Result<()> {
         let ir = ir_from_cc("inline void foo(unsigned int i) {} ")?;
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -3059,7 +3059,7 @@ mod tests {
         })?)?;
 
         assert_cc_matches!(
-            generate_bindings_tokens(&ir)?.rs_api_impl,
+            generate_bindings_tokens(ir)?.rs_api_impl,
             quote! {
                 extern "C" int __rust_thunk___ZN10SomeStruct9some_funcEv() {
                     return SomeStruct::some_func();
@@ -3078,7 +3078,7 @@ mod tests {
         })?)?;
 
         assert_cc_matches!(
-            generate_bindings_tokens(&ir)?.rs_api_impl,
+            generate_bindings_tokens(ir)?.rs_api_impl,
             quote! {
                 extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
                         const class SomeStruct* __this, int arg) {
@@ -3105,7 +3105,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3136,7 +3136,7 @@ mod tests {
                 int last_field;
             }; "#,
         )?;
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3181,7 +3181,7 @@ mod tests {
               int last_field;
             }; "#,
         )?;
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         // TODO(b/200067824): Once nested structs anhd unions are supported,
         // `__unnamed_field1` and `__unnamed_field2` should have a real, usable
         // type.
@@ -3214,7 +3214,7 @@ mod tests {
     #[test]
     fn test_struct_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency("// intentionally empty", "struct SomeStruct {};")?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_not_matches!(rs_api, quote! { SomeStruct });
         assert_cc_not_matches!(rs_api_impl, quote! { SomeStruct });
         Ok(())
@@ -3285,7 +3285,7 @@ mod tests {
             inline int* Deref(int*const* p);
         })?)?;
 
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3330,7 +3330,7 @@ mod tests {
             inline void f(const char *str);
         })?)?;
 
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3361,7 +3361,7 @@ mod tests {
     #[test]
     fn test_func_ptr_where_params_are_primitive_types() -> Result<()> {
         let ir = ir_from_cc(r#" int (*get_ptr_to_func())(float, double); "#)?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3401,7 +3401,7 @@ mod tests {
     #[test]
     fn test_func_ref() -> Result<()> {
         let ir = ir_from_cc(r#" int (&get_ref_to_func())(float, double); "#)?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3420,7 +3420,7 @@ mod tests {
             r#"
             int (* $a get_ptr_to_func())(float, double); "#,
         ))?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3434,7 +3434,7 @@ mod tests {
     #[test]
     fn test_func_ptr_where_params_are_raw_ptrs() -> Result<()> {
         let ir = ir_from_cc(r#" const int* (*get_ptr_to_func())(const int*); "#)?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3509,7 +3509,7 @@ mod tests {
             }
         );
 
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         // Check that the custom "vectorcall" ABI gets propagated into the
         // return type (i.e. into `extern "vectorcall" fn`).
         assert_rs_matches!(
@@ -3555,7 +3555,7 @@ mod tests {
             }
         "#,
         )?;
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -3605,7 +3605,7 @@ mod tests {
         // This test is quite similar to `test_func_ptr_thunk` - the main
         // difference is verification of the `__attribute__((vectorcall))` in
         // the expected signature of the generated thunk below.
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
@@ -3628,8 +3628,7 @@ mod tests {
              struct SecondStruct {};",
         )?;
 
-        let rs_api =
-            rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(&ir)?.rs_api)?;
+        let rs_api = rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(ir)?.rs_api)?;
 
         let idx = |s: &str| rs_api.find(s).ok_or_else(|| anyhow!("'{}' missing", s));
 
@@ -3659,7 +3658,7 @@ mod tests {
             struct Derived final : Base {__INT16_TYPE__ z;};
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3684,7 +3683,7 @@ mod tests {
             struct Derived final : Base1, Base2 {__INT16_TYPE__ z;};
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3709,7 +3708,7 @@ mod tests {
             struct Derived final : Base2 {__INT16_TYPE__ z;};
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3733,7 +3732,7 @@ mod tests {
             struct Derived final : Base {};
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3754,7 +3753,7 @@ mod tests {
             struct Derived final : Base {};
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3777,7 +3776,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3807,7 +3806,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3835,7 +3834,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3878,7 +3877,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3904,7 +3903,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3928,7 +3927,7 @@ mod tests {
             };
         "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3944,7 +3943,7 @@ mod tests {
     #[test]
     fn test_generate_enum_basic() -> Result<()> {
         let ir = ir_from_cc("enum Color { kRed = 5, kBlue };")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -3973,7 +3972,7 @@ mod tests {
     #[test]
     fn test_generate_scoped_enum_basic() -> Result<()> {
         let ir = ir_from_cc("enum class Color { kRed = -5, kBlue };")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4004,7 +4003,7 @@ mod tests {
         let ir = ir_from_cc(
             "enum Color : long { kViolet = -9223372036854775807 - 1LL, kRed = -5, kBlue, kGreen = 3, kMagenta = 9223372036854775807 };",
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4038,7 +4037,7 @@ mod tests {
         let ir = ir_from_cc(
             "enum Color: unsigned long { kRed, kBlue, kLimeGreen = 18446744073709551615 };",
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4070,7 +4069,7 @@ mod tests {
         let ir = ir_from_cc(
             "enum Color { kViolet = -2147483647 - 1, kRed = -5, kBlue, kGreen = 3, kMagenta = 2147483647 };",
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4102,7 +4101,7 @@ mod tests {
     #[test]
     fn test_generate_enum_with_32_bit_unsigned_vals() -> Result<()> {
         let ir = ir_from_cc("enum Color: unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4139,7 +4138,7 @@ mod tests {
         )?;
 
         assert_rs_matches!(
-            generate_bindings_tokens(&ir)?.rs_api,
+            generate_bindings_tokens(ir)?.rs_api,
             // leading space is intentional so there is a space between /// and the text of the
             // comment
             quote! {
@@ -4165,7 +4164,7 @@ mod tests {
         )?;
 
         assert_rs_matches!(
-            generate_bindings_tokens(&ir)?.rs_api,
+            generate_bindings_tokens(ir)?.rs_api,
             quote! {
                 #[doc = " Doc Comment\n \n  * with bullet"]
                 #[derive(Clone, Copy)]
@@ -4189,7 +4188,7 @@ mod tests {
             };
             "#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
 
         assert_rs_matches!(
             rs_api,
@@ -4244,7 +4243,7 @@ mod tests {
               };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_matches!(
             rs_api,
@@ -4280,7 +4279,7 @@ mod tests {
             };
             "#,
         )?;
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
 
         assert_rs_not_matches!(rs_api, quote! { offset_of! });
         Ok(())
@@ -4298,7 +4297,7 @@ mod tests {
             };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_matches!(
             rs_api,
@@ -4346,7 +4345,7 @@ mod tests {
             };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
@@ -4368,7 +4367,7 @@ mod tests {
             struct EmptyStruct final {};
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_matches!(
             rs_api,
@@ -4399,7 +4398,7 @@ mod tests {
             union EmptyUnion {};
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_matches!(
             rs_api,
@@ -4434,7 +4433,7 @@ mod tests {
             };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_matches!(
             rs_api,
@@ -4467,7 +4466,7 @@ mod tests {
             };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
 
         assert_rs_matches!(
             rs_api,
@@ -4529,7 +4528,7 @@ mod tests {
         ",
             "",
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4585,7 +4584,7 @@ mod tests {
         ",
             "",
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(
             rs_api,
             quote! { unsafe impl oops::Inherits<crate::Base> for Derived }
@@ -4598,7 +4597,7 @@ mod tests {
         let ir = ir_from_cc("struct Polymorphic { virtual void Foo(); };")?;
 
         assert_cc_matches!(
-            generate_bindings_tokens(&ir)?.rs_api_impl,
+            generate_bindings_tokens(ir)?.rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(class Polymorphic * __this)
             }
@@ -4614,7 +4613,7 @@ mod tests {
             double f_c_calling_convention(double p1, double p2);
         "#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4674,7 +4673,7 @@ mod tests {
     #[test]
     fn test_no_negative_impl_unpin() -> Result<()> {
         let ir = ir_from_cc("struct Trivial final {};")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         Ok(())
     }
@@ -4684,7 +4683,7 @@ mod tests {
     #[test]
     fn test_negative_impl_unpin_nonfinal() -> Result<()> {
         let ir = ir_from_cc("struct Nonfinal {};")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         Ok(())
     }
@@ -4694,7 +4693,7 @@ mod tests {
     #[test]
     fn test_no_impl_drop() -> Result<()> {
         let ir = ir_from_cc("struct Trivial {};")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
         Ok(())
@@ -4712,7 +4711,7 @@ mod tests {
                 NontrivialStruct nts;
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4750,7 +4749,7 @@ mod tests {
                 int x;
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4781,7 +4780,7 @@ mod tests {
                 int x;
             };"#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
         assert_rs_matches!(rs_api, quote! {pub x: i32});
@@ -4799,7 +4798,7 @@ mod tests {
                 DefaultedConstructor() = default;
             };"#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -4867,7 +4866,7 @@ mod tests {
         // like this (note the mismatched 'a and 'b lifetimes):
         //     fn from<'b>(i: &'a i32) -> Self
         // After this CL, this scenario will result in an explicit error.
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl From});
         let rs_api_str = tokens_to_string(rs_api)?;
         assert!(rs_api_str.contains(
@@ -4885,7 +4884,7 @@ mod tests {
                 ~NonTrivialStructWithConstructors();  // Non-trivial
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl Default});
         Ok(())
     }
@@ -4898,7 +4897,7 @@ mod tests {
                 explicit SomeStruct(int i);
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         // As discussed in b/214020567 for now we only generate `From::from` bindings
         // for *implicit* C++ conversion constructors.
         assert_rs_not_matches!(rs_api, quote! {impl From});
@@ -4913,7 +4912,7 @@ mod tests {
                 SomeStruct(int i);  // implicit - no `explicit` keyword
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         // As discussed in b/214020567 we generate `From::from` bindings for
         // *implicit* C++ conversion constructors.
         assert_rs_matches!(
@@ -4943,7 +4942,7 @@ mod tests {
                 StructUnderTest(const SomeOtherStruct& other);  // implicit - no `explicit` keyword
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         // This is a regression test for b/223800038: We want to ensure that the
         // code says `impl<'b>` (instead of incorrectly declaring that lifetime
         // in `fn from<'b>`).
@@ -4974,8 +4973,7 @@ mod tests {
         // not For inherent methods.
         let ir = ir_from_cc("struct SomeStruct{SomeStruct& operator=(const SomeStruct&);};")?;
 
-        let rs_api =
-            rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(&ir)?.rs_api)?;
+        let rs_api = rs_tokens_to_formatted_string_for_tests(generate_bindings_tokens(ir)?.rs_api)?;
         assert!(rs_api.contains(
             "// Error while generating bindings for item 'SomeStruct::operator=':\n\
              // `self` has no lifetime. Use lifetime annotations or \
@@ -4995,7 +4993,7 @@ mod tests {
                 int i;
             };"#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5028,7 +5026,7 @@ mod tests {
                 return lhs.i == rhs.i;
             }"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5052,7 +5050,7 @@ mod tests {
                 SomeStruct& operator=(const SomeStruct& other);
             };"#,
         )?;
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5078,7 +5076,7 @@ mod tests {
                 SomeStruct& operator=(int other);
             };"#,
         )?;
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5104,7 +5102,7 @@ mod tests {
                 int operator=(const SomeStruct& other);
             };"#,
         )?;
-        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, .. } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5129,7 +5127,7 @@ mod tests {
                 bool operator==(const SomeStruct& other) /* no `const` here */;
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl PartialEq});
         Ok(())
     }
@@ -5142,7 +5140,7 @@ mod tests {
                 bool operator==(SomeStruct other) const;
             };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl PartialEq});
         Ok(())
     }
@@ -5178,7 +5176,7 @@ mod tests {
             int& f(int& i);
           };"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5202,7 +5200,7 @@ mod tests {
           int& $a f(int& $a i1, int& $a i2);
           "#,
         ))?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5266,7 +5264,7 @@ mod tests {
                 };
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         let rs_api_str = tokens_to_string(rs_api.clone())?;
 
         // Cannot overload free functions.
@@ -5305,7 +5303,7 @@ mod tests {
                 inline void f(MyTypedefDecl t) {}
             "#,
         )?;
-        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(&ir)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5549,7 +5547,7 @@ mod tests {
     #[test]
     fn test_rust_keywords_are_escaped_in_rs_api_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(rs_api, quote! { struct r#type { ... r#dyn: i32 ... } });
         Ok(())
     }
@@ -5557,7 +5555,7 @@ mod tests {
     #[test]
     fn test_rust_keywords_are_not_escaped_in_rs_api_impl_file() -> Result<()> {
         let ir = ir_from_cc("struct type { int dyn; };")?;
-        let rs_api_impl = generate_bindings_tokens(&ir)?.rs_api_impl;
+        let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! { static_assert(CRUBIT_OFFSET_OF(dyn, class type) ... ) }
@@ -5568,7 +5566,7 @@ mod tests {
     #[test]
     fn test_no_aligned_attr() {
         let ir = ir_from_cc("struct SomeStruct {};").unwrap();
-        let rs_api = generate_bindings_tokens(&ir).unwrap().rs_api;
+        let rs_api = generate_bindings_tokens(ir).unwrap().rs_api;
 
         assert_rs_matches! {rs_api, quote! {
          #[repr(C)]
@@ -5579,7 +5577,7 @@ mod tests {
     #[test]
     fn test_aligned_attr() {
         let ir = ir_from_cc("struct SomeStruct {} __attribute__((aligned(64)));").unwrap();
-        let rs_api = generate_bindings_tokens(&ir).unwrap().rs_api;
+        let rs_api = generate_bindings_tokens(ir).unwrap().rs_api;
 
         assert_rs_matches! {rs_api, quote! {
            #[repr(C, align(64))]
@@ -5591,7 +5589,7 @@ mod tests {
     /// !Unpin references should not be pinned.
     #[test]
     fn test_nonunpin_ref_param() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {~S();};
@@ -5611,7 +5609,7 @@ mod tests {
     /// !Unpin mut references must be pinned.
     #[test]
     fn test_nonunpin_mut_param() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {~S();};
@@ -5631,7 +5629,7 @@ mod tests {
     /// !Unpin &self should not be pinned.
     #[test]
     fn test_nonunpin_ref_self() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {
@@ -5653,7 +5651,7 @@ mod tests {
     /// !Unpin &mut self must be pinned.
     #[test]
     fn test_nonunpin_mut_self() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             #pragma clang lifetime_elision
             struct S {
@@ -5675,7 +5673,7 @@ mod tests {
     /// Drop::drop must not use self : Pin<...>.
     #[test]
     fn test_nonunpin_drop() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             struct S {~S();};
         "#,
@@ -5697,7 +5695,7 @@ mod tests {
             // This type must be `!Unpin`.
             struct HasConstructor {explicit HasConstructor() {}};"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         assert_rs_matches!(
             rs_api,
@@ -5727,7 +5725,7 @@ mod tests {
             // This type must be `!Unpin`.
             struct HasConstructor {explicit HasConstructor(unsigned char input) {}};"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         assert_rs_matches!(
             rs_api,
@@ -5757,7 +5755,7 @@ mod tests {
             // This type must be `!Unpin`.
             struct HasConstructor {explicit HasConstructor(unsigned char input1, signed char input2) {}};"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(rs_api, quote! {#[ctor::recursively_pinned]});
         assert_rs_matches!(
             rs_api,
@@ -5786,7 +5784,7 @@ mod tests {
             r#"#pragma clang lifetime_elision
             struct ForwardDeclared;"#,
         )?;
-        let rs_api = generate_bindings_tokens(&ir)?.rs_api;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_matches!(
             rs_api,
             quote! {
@@ -5799,7 +5797,7 @@ mod tests {
 
     #[test]
     fn test_namespace_module_items() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 int func();
@@ -5837,7 +5835,7 @@ mod tests {
 
     #[test]
     fn test_detail_outside_of_namespace_module() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 int f();
@@ -5868,7 +5866,7 @@ mod tests {
 
     #[test]
     fn test_assertions_outside_of_namespace_module() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 struct S {
@@ -5896,7 +5894,7 @@ mod tests {
 
     #[test]
     fn test_reopened_namespaces() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
         namespace test_namespace_bindings {
         namespace inner {}
@@ -5932,7 +5930,7 @@ mod tests {
 
     #[test]
     fn test_qualified_identifiers_in_impl_file() -> Result<()> {
-        let rs_api_impl = generate_bindings_tokens(&ir_from_cc(
+        let rs_api_impl = generate_bindings_tokens(ir_from_cc(
             r#"
         namespace test_namespace_bindings {
             inline void f() {};
@@ -5962,7 +5960,7 @@ mod tests {
 
     #[test]
     fn test_inline_namespace() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
                 inline namespace inner {
@@ -6002,7 +6000,7 @@ mod tests {
 
     #[test]
     fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result<()> {
-        let bindings = generate_bindings_tokens(&ir_from_cc(
+        let bindings = generate_bindings_tokens(ir_from_cc(
             r#"
                 template <typename T>
                 struct MyStruct {
@@ -6075,7 +6073,7 @@ mod tests {
 
     #[test]
     fn test_implicit_template_specialization_namespace_qualifier() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#" #pragma clang lifetime_elision
                 namespace test_namespace_bindings {
                     template <typename T>
@@ -6109,7 +6107,7 @@ mod tests {
 
     #[test]
     fn test_forward_declared_class_template_specialization_symbol() -> Result<()> {
-        let rs_api = generate_bindings_tokens(&ir_from_cc(
+        let rs_api = generate_bindings_tokens(ir_from_cc(
             r#"
             namespace test_namespace_bindings {
               template <typename T>

@@ -641,10 +641,6 @@ impl IR {
         self.flat_ir.items.iter_mut()
     }
 
-    pub fn take_items(self) -> Vec<Item> {
-        self.flat_ir.items
-    }
-
     pub fn used_headers(&self) -> impl Iterator<Item = &HeaderName> {
         self.flat_ir.used_headers.iter()
     }
