@@ -84,6 +84,8 @@ trait BindingsGenerator {
         &self,
         func: Rc<Func>,
     ) -> SalsaResult<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>>;
+
+    fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 }
 
 #[salsa::database(BindingsGeneratorStorage)]
@@ -1069,11 +1071,7 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-fn generate_record(
-    db: &mut Database,
-    record: &Rc<Record>,
-    overloaded_funcs: &HashSet<Rc<FunctionId>>,
-) -> Result<GeneratedItem> {
+fn generate_record(db: &mut Database, record: &Rc<Record>) -> Result<GeneratedItem> {
     let ir = db.ir();
     let ident = make_rs_ident(&record.rs_name);
     let namespace_qualifier = generate_namespace_qualifier(record.id, &ir)?;
@@ -1364,7 +1362,7 @@ fn generate_record(
         .iter()
         .map(|id| {
             let item = ir.find_decl(*id)?;
-            generate_item(db, item, overloaded_funcs)
+            generate_item(db, item)
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -1544,11 +1542,7 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #text })
 }
 
-fn generate_namespace(
-    db: &mut Database,
-    namespace: &Namespace,
-    overloaded_funcs: &HashSet<Rc<FunctionId>>,
-) -> Result<GeneratedItem> {
+fn generate_namespace(db: &mut Database, namespace: &Namespace) -> Result<GeneratedItem> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
@@ -1558,7 +1552,7 @@ fn generate_namespace(
 
     for item_id in namespace.child_item_ids.iter() {
         let item = ir.find_decl(*item_id)?;
-        let generated = generate_item(db, item, &overloaded_funcs)?;
+        let generated = generate_item(db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -1628,12 +1622,9 @@ struct GeneratedItem {
     has_record: bool,
 }
 
-fn generate_item(
-    db: &mut Database,
-    item: &Item,
-    overloaded_funcs: &HashSet<Rc<FunctionId>>,
-) -> Result<GeneratedItem> {
+fn generate_item(db: &mut Database, item: &Item) -> Result<GeneratedItem> {
     let ir = db.ir();
+    let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
         Item::Func(func) => match db.generate_func(func.clone()) {
             Err(e) => GeneratedItem {
@@ -1682,7 +1673,7 @@ fn generate_item(
             {
                 GeneratedItem::default()
             } else {
-                generate_record(db, record, overloaded_funcs)?
+                generate_record(db, record)?
             }
         }
         Item::Enum(enum_) => {
@@ -1709,10 +1700,27 @@ fn generate_item(
         Item::Comment(comment) => {
             GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
         }
-        Item::Namespace(namespace) => generate_namespace(db, namespace, overloaded_funcs)?,
+        Item::Namespace(namespace) => generate_namespace(db, namespace)?,
     };
 
     Ok(generated_item)
+}
+
+/// Identifies all functions having overloads that we can't import (yet).
+///
+/// TODO(b/213280424): Implement support for overloaded functions.
+fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
+    let mut seen_funcs = HashSet::new();
+    let mut overloaded_funcs = HashSet::new();
+    for func in db.ir().functions() {
+        if let Ok(Some(f)) = db.generate_func(func.clone()) {
+            let (.., function_id) = f.as_ref();
+            if !seen_funcs.insert(function_id.clone()) {
+                overloaded_funcs.insert(function_id.clone());
+            }
+        }
+    }
+    Rc::new(overloaded_funcs)
 }
 
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
@@ -1743,22 +1751,9 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
     // For #![rustfmt::skip].
     features.insert(make_rs_ident("custom_inner_attributes"));
 
-    // Identify all functions having overloads that we can't import (yet).
-    // TODO(b/213280424): Implement support for overloaded functions.
-    let mut seen_funcs = HashSet::new();
-    let mut overloaded_funcs = HashSet::new();
-    for func in ir.functions() {
-        if let Ok(Some(f)) = db.generate_func(func.clone()) {
-            let (.., function_id) = f.as_ref();
-            if !seen_funcs.insert(function_id.clone()) {
-                overloaded_funcs.insert(function_id.clone());
-            }
-        }
-    }
-
     for top_level_item_id in ir.top_level_item_ids() {
         let item = ir.find_decl(*top_level_item_id)?;
-        let generated = generate_item(&mut db, item, &overloaded_funcs)?;
+        let generated = generate_item(&mut db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -2584,7 +2579,7 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
                         if let Some(_) = meta.instance_method_metadata {
                             quote! { #fn_ident }
                         } else {
-                            let record : &Rc<Record> = ir.find_decl(meta.record_id)?;
+                            let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
                             let record_ident = format_cc_ident(&record.cc_name);
                             let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
                             quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }
