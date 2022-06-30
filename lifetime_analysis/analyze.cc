@@ -664,10 +664,11 @@ bool HasRecordTypeFields(const clang::RecordDecl* record) {
   return false;
 }
 
-llvm::Expected<FunctionAnalysis> AnalyzeDefaultedFunction(
+llvm::Error AnalyzeDefaultedFunction(
     const clang::FunctionDecl* func,
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
-    /*callee_lifetimes*/) {
+    /*callee_lifetimes*/,
+    ObjectRepository& /*object_repository*/, PointsToMap& /*points_to_map*/) {
   assert(func->isDefaulted());
 
   // TODO(b/230693710): Add complete support for defaulted functions.
@@ -676,7 +677,7 @@ llvm::Expected<FunctionAnalysis> AnalyzeDefaultedFunction(
     if (ctor->isDefaultConstructor()) {
       const clang::CXXRecordDecl* record = ctor->getParent();
       if (record->getNumBases() == 0 && !HasRecordTypeFields(record)) {
-        return FunctionAnalysis{.object_repository = ObjectRepository(func)};
+        return llvm::Error::success();
       }
     }
   }
@@ -685,33 +686,13 @@ llvm::Expected<FunctionAnalysis> AnalyzeDefaultedFunction(
                                  "unsupported type of defaulted function");
 }
 
-llvm::Expected<FunctionAnalysis> AnalyzeSingleFunctionBody(
+llvm::Error AnalyzeFunctionBody(
     const clang::FunctionDecl* func,
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
         callee_lifetimes,
-    const DiagnosticReporter& diag_reporter, FunctionDebugInfoMap* debug_info) {
-  const auto* cxxmethod = clang::dyn_cast<clang::CXXMethodDecl>(func);
-  if (cxxmethod && cxxmethod->isPure()) {
-    return FunctionAnalysis{.object_repository = ObjectRepository(func)};
-  }
-
-  func = func->getDefinition();
-  assert(func != nullptr);
-
-  if (!func->getBody()) {
-    // TODO(b/230693710): Do this unconditionally for defaulted functions, even
-    // if they happen to have a body (because something caused Sema to create a
-    // body for them). We can't do this yet because we don't have full support
-    // for defaulted functions yet, so we would break tests where we happen to
-    // have a body for the defaulted function today.
-    if (func->isDefaulted()) {
-      return AnalyzeDefaultedFunction(func, callee_lifetimes);
-    }
-
-    return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                   "Declaration-only!");
-  }
-
+    const DiagnosticReporter& diag_reporter,
+    ObjectRepository& object_repository, PointsToMap& points_to_map,
+    std::string* cfg_dot) {
   auto cfctx = clang::dataflow::ControlFlowContext::build(
       func, func->getBody(), &func->getASTContext());
   if (!cfctx) return cfctx.takeError();
@@ -719,8 +700,6 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunctionBody(
   clang::dataflow::DataflowAnalysisContext analysis_context(
       std::make_unique<clang::dataflow::WatchedLiteralsSolver>());
   clang::dataflow::Environment environment(analysis_context);
-
-  ObjectRepository object_repository(func);
 
   LifetimeAnalysis analysis(func, object_repository, callee_lifetimes,
                             diag_reporter);
@@ -750,7 +729,7 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunctionBody(
                                    exit_lattice.Error());
   }
 
-  PointsToMap points_to_map = exit_lattice.PointsTo();
+  points_to_map = exit_lattice.PointsTo();
 
   // Adding initializers to the PointsToMap *before* dataflow analysis is
   // problematic because the expressions do not have a lifetime yet in the map
@@ -765,30 +744,72 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunctionBody(
                                       points_to_map);
   }
 
+  if (cfg_dot) {
+    *cfg_dot = CreateCfgDot(cfctx->getCFG(), func->getASTContext(),
+                            block_to_output_state, object_repository);
+  }
+
+  return llvm::Error::success();
+}
+
+llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
+    const clang::FunctionDecl* func,
+    const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
+        callee_lifetimes,
+    const DiagnosticReporter& diag_reporter, FunctionDebugInfoMap* debug_info) {
+  FunctionAnalysis analysis{.object_repository = ObjectRepository(func)};
+
+  const auto* cxxmethod = clang::dyn_cast<clang::CXXMethodDecl>(func);
+  if (cxxmethod && cxxmethod->isPure()) {
+    return analysis;
+  }
+
+  func = func->getDefinition();
+  assert(func != nullptr);
+
+  if (func->getBody()) {
+    std::string* cfg_dot = debug_info ? &(*debug_info)[func].cfg_dot : nullptr;
+    if (llvm::Error err = AnalyzeFunctionBody(
+            func, callee_lifetimes, diag_reporter, analysis.object_repository,
+            analysis.points_to_map, cfg_dot)) {
+      return std::move(err);
+    }
+  } else {
+    if (!func->isDefaulted()) {
+      return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                     "Declaration-only!");
+    }
+
+    // TODO(b/230693710): Do this unconditionally for defaulted functions, even
+    // if they happen to have a body (because something caused Sema to create a
+    // body for them). We can't do this yet because we don't have full support
+    // for defaulted functions yet, so we would break tests where we happen to
+    // have a body for the defaulted function today.
+    if (llvm::Error err = AnalyzeDefaultedFunction(func, callee_lifetimes,
+                                                   analysis.object_repository,
+                                                   analysis.points_to_map)) {
+      return std::move(err);
+    }
+  }
+
   if (debug_info) {
     std::string ast;
     llvm::raw_string_ostream os(ast);
     func->dump(os);
     os.flush();
     (*debug_info)[func].ast = std::move(ast);
-    (*debug_info)[func].object_repository = object_repository.DebugString();
+    (*debug_info)[func].object_repository =
+        analysis.object_repository.DebugString();
     (*debug_info)[func].points_to_map_dot =
-        PointsToGraphDot(object_repository, points_to_map);
-    (*debug_info)[func].cfg_dot =
-        CreateCfgDot(cfctx->getCFG(), func->getASTContext(),
-                     block_to_output_state, object_repository);
+        PointsToGraphDot(analysis.object_repository, analysis.points_to_map);
   }
 
-  LifetimeSubstitutions subst;
-  if (llvm::Error err = PropagateStaticToPointees(subst, points_to_map)) {
+  if (llvm::Error err =
+          PropagateStaticToPointees(analysis.subst, analysis.points_to_map)) {
     return std::move(err);
   }
 
-  return FunctionAnalysis{
-      .object_repository = std::move(object_repository),
-      .points_to_map = std::move(points_to_map),
-      .subst = std::move(subst),
-  };
+  return analysis;
 }
 
 llvm::Error DiagnoseReturnLocal(const clang::FunctionDecl* func,
@@ -1175,7 +1196,7 @@ llvm::Error AnalyzeRecursiveFunctions(
 
     for (const auto [func, in_cycle, _] : funcs) {
       auto analysis_result =
-          AnalyzeSingleFunctionBody(func, analyzed, diag_reporter, debug_info);
+          AnalyzeSingleFunction(func, analyzed, diag_reporter, debug_info);
       if (!analysis_result) {
         return analysis_result.takeError();
       }
@@ -1380,7 +1401,7 @@ void AnalyzeFunctionRecursive(
       // This function is not where we initiated an overrides traversal from its
       // base methods.
       auto analysis_result =
-          AnalyzeSingleFunctionBody(func, analyzed, diag_reporter, debug_info);
+          AnalyzeSingleFunction(func, analyzed, diag_reporter, debug_info);
       if (!analysis_result) {
         analyzed[func] = FunctionAnalysisError(analysis_result.takeError());
       } else {
