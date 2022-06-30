@@ -2,8 +2,10 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Types and deserialization logic for IR. See docs in
-// `rs_bindings_from_cc/ir.h` for more information.
+//! Types and deserialization logic for IR. See docs in
+//! `rs_bindings_from_cc/ir.h` for more
+//! information.
+
 use anyhow::{anyhow, bail, Context, Result};
 use proc_macro2::{Literal, TokenStream};
 use quote::{ToTokens, TokenStreamExt};
@@ -12,6 +14,7 @@ use std::collections::hash_map::{Entry, HashMap};
 use std::convert::TryFrom;
 use std::fmt;
 use std::io::Read;
+use std::rc::Rc;
 
 /// Deserialize `IR` from JSON given as a reader.
 pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
@@ -47,8 +50,8 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
     let mut lifetimes: HashMap<LifetimeId, LifetimeName> = HashMap::new();
     for item in &flat_ir.items {
         let lifetime_params = match item {
-            Item::Record(Record { lifetime_params, .. }) => lifetime_params,
-            Item::Func(Func { lifetime_params, .. }) => lifetime_params,
+            Item::Record(record) => &record.lifetime_params,
+            Item::Func(func) => &func.lifetime_params,
             _ => continue,
         };
         for lifetime in lifetime_params {
@@ -499,14 +502,14 @@ pub struct Namespace {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
-    Func(Func),
-    IncompleteRecord(IncompleteRecord),
-    Record(Record),
-    Enum(Enum),
-    TypeAlias(TypeAlias),
-    UnsupportedItem(UnsupportedItem),
-    Comment(Comment),
-    Namespace(Namespace),
+    Func(Rc<Func>),
+    IncompleteRecord(Rc<IncompleteRecord>),
+    Record(Rc<Record>),
+    Enum(Rc<Enum>),
+    TypeAlias(Rc<TypeAlias>),
+    UnsupportedItem(Rc<UnsupportedItem>),
+    Comment(Rc<Comment>),
+    Namespace(Rc<Namespace>),
 }
 
 impl Item {
@@ -538,11 +541,11 @@ impl Item {
 
 impl From<Func> for Item {
     fn from(func: Func) -> Item {
-        Item::Func(func)
+        Item::Func(Rc::new(func))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Func {
+impl<'a> TryFrom<&'a Item> for &'a Rc<Func> {
     type Error = anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Func(f) = value { Ok(f) } else { anyhow::bail!("Not a Func: {:#?}", value) }
@@ -551,11 +554,11 @@ impl<'a> TryFrom<&'a Item> for &'a Func {
 
 impl From<Record> for Item {
     fn from(record: Record) -> Item {
-        Item::Record(record)
+        Item::Record(Rc::new(record))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Record {
+impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
     type Error = anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Record(r) = value {
@@ -568,11 +571,11 @@ impl<'a> TryFrom<&'a Item> for &'a Record {
 
 impl From<UnsupportedItem> for Item {
     fn from(unsupported: UnsupportedItem) -> Item {
-        Item::UnsupportedItem(unsupported)
+        Item::UnsupportedItem(Rc::new(unsupported))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a UnsupportedItem {
+impl<'a> TryFrom<&'a Item> for &'a Rc<UnsupportedItem> {
     type Error = anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::UnsupportedItem(u) = value {
@@ -585,11 +588,11 @@ impl<'a> TryFrom<&'a Item> for &'a UnsupportedItem {
 
 impl From<Comment> for Item {
     fn from(comment: Comment) -> Item {
-        Item::Comment(comment)
+        Item::Comment(Rc::new(comment))
     }
 }
 
-impl<'a> TryFrom<&'a Item> for &'a Comment {
+impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
     type Error = anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Comment(c) = value {
@@ -646,35 +649,35 @@ impl IR {
         self.flat_ir.used_headers.iter()
     }
 
-    pub fn functions(&self) -> impl Iterator<Item = &Func> {
+    pub fn functions(&self) -> impl Iterator<Item = &Rc<Func>> {
         self.items().filter_map(|item| match item {
             Item::Func(func) => Some(func),
             _ => None,
         })
     }
 
-    pub fn records(&self) -> impl Iterator<Item = &Record> {
+    pub fn records(&self) -> impl Iterator<Item = &Rc<Record>> {
         self.items().filter_map(|item| match item {
             Item::Record(func) => Some(func),
             _ => None,
         })
     }
 
-    pub fn unsupported_items(&self) -> impl Iterator<Item = &UnsupportedItem> {
+    pub fn unsupported_items(&self) -> impl Iterator<Item = &Rc<UnsupportedItem>> {
         self.items().filter_map(|item| match item {
             Item::UnsupportedItem(unsupported_item) => Some(unsupported_item),
             _ => None,
         })
     }
 
-    pub fn comments(&self) -> impl Iterator<Item = &Comment> {
+    pub fn comments(&self) -> impl Iterator<Item = &Rc<Comment>> {
         self.items().filter_map(|item| match item {
             Item::Comment(comment) => Some(comment),
             _ => None,
         })
     }
 
-    pub fn namespaces(&self) -> impl Iterator<Item = &Namespace> {
+    pub fn namespaces(&self) -> impl Iterator<Item = &Rc<Namespace>> {
         self.items().filter_map(|item| match item {
             Item::Namespace(ns) => Some(ns),
             _ => None,
@@ -778,7 +781,7 @@ impl IR {
     ///
     /// If `Func` is a member function, but its `Record` is somehow not in
     /// `self`, returns an error.
-    pub fn record_for_member_func<'a>(&self, func: &'a Func) -> Result<Option<&Record>> {
+    pub fn record_for_member_func<'a>(&self, func: &'a Func) -> Result<Option<&Rc<Record>>> {
         if let Some(meta) = func.member_func_metadata.as_ref() {
             Ok(Some(
                 self.find_decl(meta.record_id)

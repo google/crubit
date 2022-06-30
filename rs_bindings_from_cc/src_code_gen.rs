@@ -13,6 +13,7 @@ use std::ffi::{OsStr, OsString};
 use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
 use std::process;
+use std::rc::Rc;
 use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string, RustfmtConfig};
 
 /// FFI equivalent of `Bindings`.
@@ -262,20 +263,20 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
 
 /// The name of a one-function trait, with extra entries for
 /// specially-understood traits and families of traits.
-enum TraitName<'ir> {
+enum TraitName {
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
-    CtorNew(Vec<RsTypeKind<'ir>>),
+    CtorNew(Vec<RsTypeKind>),
     /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
     /// types.
-    UnpinConstructor { name: TokenStream, params: Vec<RsTypeKind<'ir>> },
+    UnpinConstructor { name: TokenStream, params: Vec<RsTypeKind> },
     /// Any other trait, e.g. Eq.
-    Other { name: TokenStream, params: Vec<RsTypeKind<'ir>>, is_unsafe_fn: bool },
+    Other { name: TokenStream, params: Vec<RsTypeKind>, is_unsafe_fn: bool },
 }
 
-impl<'ir> TraitName<'ir> {
+impl TraitName {
     /// Returns the generic parameters in this trait name.
-    fn params(&self) -> impl Iterator<Item = &RsTypeKind<'ir>> {
+    fn params(&self) -> impl Iterator<Item = &RsTypeKind> {
         match self {
             Self::CtorNew(params)
             | Self::UnpinConstructor { params, .. }
@@ -289,7 +290,7 @@ impl<'ir> TraitName<'ir> {
     }
 }
 
-impl<'ir> ToTokens for TraitName<'ir> {
+impl ToTokens for TraitName {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
@@ -305,7 +306,7 @@ impl<'ir> ToTokens for TraitName<'ir> {
 }
 
 /// The kind of the `impl` block the function needs to be generated in.
-enum ImplKind<'ir> {
+enum ImplKind {
     /// Used for free functions for which we don't want the `impl` block.
     None { is_unsafe: bool },
     /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
@@ -327,7 +328,7 @@ enum ImplKind<'ir> {
         /// `func.member_func_metadata`.
         record_name: Ident,
         /// For example, `quote!{ From<i32> }`.
-        trait_name: TraitName<'ir>,
+        trait_name: TraitName,
 
         /// The generic params of trait `impl` (e.g. `<'b>`). These start
         /// empty and only later are mutated into the correct value.
@@ -337,9 +338,9 @@ enum ImplKind<'ir> {
         format_first_param_as_self: bool,
     },
 }
-impl<'ir> ImplKind<'ir> {
+impl ImplKind {
     fn new_trait(
-        trait_name: TraitName<'ir>,
+        trait_name: TraitName,
         record_name: Ident,
         format_first_param_as_self: bool,
     ) -> Self {
@@ -376,12 +377,12 @@ impl<'ir> ImplKind<'ir> {
 ///  * `Ok(None)`: the function imported as "nothing". (For example, a defaulted
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
-fn api_func_shape<'ir>(
+fn api_func_shape(
     func: &Func,
     ir: &IR,
-    param_types: &[RsTypeKind<'ir>],
-) -> Result<Option<(Ident, ImplKind<'ir>)>> {
-    let maybe_record: Option<&Record> = ir.record_for_member_func(func)?;
+    param_types: &[RsTypeKind],
+) -> Result<Option<(Ident, ImplKind)>> {
+    let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func)?;
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
@@ -396,7 +397,7 @@ fn api_func_shape<'ir>(
                 (
                     RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
                     RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
-                ) => match **lhs {
+                ) => match &**lhs {
                     RsTypeKind::Record { record: lhs_record, .. } => {
                         let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
                         func_name = make_rs_ident("eq");
@@ -1033,7 +1034,7 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(
-    record: &Record,
+    record: &Rc<Record>,
     ir: &IR,
     overloaded_funcs: &HashSet<FunctionId>,
 ) -> Result<GeneratedItem> {
@@ -1370,7 +1371,7 @@ fn generate_record(
     };
 
     let record_trait_assertions = {
-        let record_type_name = RsTypeKind::new_record(record, ir)?.to_token_stream();
+        let record_type_name = RsTypeKind::new_record(record.clone(), ir)?.to_token_stream();
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -1834,33 +1835,31 @@ impl Mutability {
     }
 }
 
-// TODO(b/213947473): Instead of having a separate RsTypeKind here, consider
-// changing ir::RsType into a similar `enum`, with fields that contain
-// references (e.g. &'ir Record`) instead of ItemIds.
+// TODO(b/213947473): Move this into IR directly, for use instead of ir::RsType.
 #[derive(Clone, Debug)]
-enum RsTypeKind<'ir> {
+enum RsTypeKind {
     Pointer {
-        pointee: Box<RsTypeKind<'ir>>,
+        pointee: Box<RsTypeKind>,
         mutability: Mutability,
     },
     Reference {
-        referent: Box<RsTypeKind<'ir>>,
+        referent: Box<RsTypeKind>,
         mutability: Mutability,
         lifetime: LifetimeName,
     },
     RvalueReference {
-        referent: Box<RsTypeKind<'ir>>,
+        referent: Box<RsTypeKind>,
         mutability: Mutability,
         lifetime: LifetimeName,
     },
     FuncPtr {
-        abi: &'ir str,
-        return_type: Box<RsTypeKind<'ir>>,
-        param_types: Vec<RsTypeKind<'ir>>,
+        abi: Rc<str>,
+        return_type: Box<RsTypeKind>,
+        param_types: Vec<RsTypeKind>,
     },
     /// An incomplete record type.
     IncompleteRecord {
-        incomplete_record: &'ir IncompleteRecord,
+        incomplete_record: Rc<IncompleteRecord>,
 
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
@@ -1869,15 +1868,15 @@ enum RsTypeKind<'ir> {
     },
     /// A complete record type.
     Record {
-        record: &'ir Record,
+        record: Rc<Record>,
         /// The namespace qualifier for this record.
         namespace_qualifier: Vec<Ident>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
     TypeAlias {
-        type_alias: &'ir TypeAlias,
-        underlying_type: Box<RsTypeKind<'ir>>,
+        type_alias: Rc<TypeAlias>,
+        underlying_type: Box<RsTypeKind>,
         /// The namespace qualifier for this alias.
         namespace_qualifier: Vec<Ident>,
         /// The imported crate this comes from, or None if the current crate.
@@ -1885,18 +1884,18 @@ enum RsTypeKind<'ir> {
     },
     Unit,
     Other {
-        name: &'ir str,
-        type_args: Vec<RsTypeKind<'ir>>,
+        name: Rc<str>,
+        type_args: Vec<RsTypeKind>,
     },
 }
 
-impl<'ir> RsTypeKind<'ir> {
-    pub fn new(ty: &'ir ir::RsType, ir: &'ir IR) -> Result<Self> {
+impl RsTypeKind {
+    pub fn new(ty: &ir::RsType, ir: &IR) -> Result<Self> {
         // The lambdas deduplicate code needed by multiple `match` branches.
-        let get_type_args = || -> Result<Vec<RsTypeKind<'ir>>> {
-            ty.type_args.iter().map(|type_arg| RsTypeKind::<'ir>::new(type_arg, ir)).collect()
+        let get_type_args = || -> Result<Vec<RsTypeKind>> {
+            ty.type_args.iter().map(|type_arg| RsTypeKind::new(type_arg, ir)).collect()
         };
-        let get_pointee = || -> Result<Box<RsTypeKind<'ir>>> {
+        let get_pointee = || -> Result<Box<RsTypeKind>> {
             if ty.type_args.len() != 1 {
                 bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
             }
@@ -1921,7 +1920,7 @@ impl<'ir> RsTypeKind<'ir> {
                 );
                 match ir.item_for_type(ty)? {
                     Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
-                        incomplete_record,
+                        incomplete_record: incomplete_record.clone(),
                         namespace_qualifier: generate_namespace_qualifier(
                             incomplete_record.id,
                             ir,
@@ -1929,9 +1928,9 @@ impl<'ir> RsTypeKind<'ir> {
                         .collect_vec(),
                         crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, ir),
                     },
-                    Item::Record(record) => RsTypeKind::new_record(record, ir)?,
+                    Item::Record(record) => RsTypeKind::new_record(record.clone(), ir)?,
                     Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
-                        type_alias,
+                        type_alias: type_alias.clone(),
                         namespace_qualifier: generate_namespace_qualifier(type_alias.id, ir)?
                             .collect_vec(),
                         crate_ident: rs_imported_crate_name(&type_alias.owning_target, ir),
@@ -1979,12 +1978,12 @@ impl<'ir> RsTypeKind<'ir> {
                 name => {
                     let mut type_args = get_type_args()?;
                     match name.strip_prefix("#funcPtr ") {
-                        None => RsTypeKind::Other { name, type_args },
+                        None => RsTypeKind::Other { name: name.into(), type_args },
                         Some(abi) => {
                             // TODO(b/217419782): Consider enforcing `'static` lifetime.
                             ensure!(!type_args.is_empty(), "No return type in fn type: {:?}", ty);
                             RsTypeKind::FuncPtr {
-                                abi,
+                                abi: abi.into(),
                                 return_type: Box::new(type_args.remove(type_args.len() - 1)),
                                 param_types: type_args,
                             }
@@ -1996,12 +1995,10 @@ impl<'ir> RsTypeKind<'ir> {
         Ok(result)
     }
 
-    pub fn new_record(record: &'ir Record, ir: &'ir IR) -> Result<Self> {
-        Ok(RsTypeKind::Record {
-            record,
-            namespace_qualifier: generate_namespace_qualifier(record.id, ir)?.collect_vec(),
-            crate_ident: rs_imported_crate_name(&record.owning_target, ir),
-        })
+    pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
+        let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?.collect_vec();
+        let crate_ident = rs_imported_crate_name(&record.owning_target, ir);
+        Ok(RsTypeKind::Record { record, namespace_qualifier, crate_ident })
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -2124,7 +2121,7 @@ impl<'ir> RsTypeKind<'ir> {
 
     /// Iterates over `self` and all the nested types (e.g. pointees, generic
     /// type args, etc.) in DFS order.
-    pub fn dfs_iter<'ty>(&'ty self) -> impl Iterator<Item = &'ty RsTypeKind<'ir>> + '_ {
+    pub fn dfs_iter<'ty>(&'ty self) -> impl Iterator<Item = &'ty RsTypeKind> + '_ {
         RsTypeKindIter::new(self)
     }
 
@@ -2140,7 +2137,7 @@ impl<'ir> RsTypeKind<'ir> {
     }
 }
 
-impl<'ir> ToTokens for RsTypeKind<'ir> {
+impl ToTokens for RsTypeKind {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.to_token_stream().to_tokens(tokens)
     }
@@ -2226,18 +2223,18 @@ impl<'ir> ToTokens for RsTypeKind<'ir> {
     }
 }
 
-struct RsTypeKindIter<'ty, 'ir> {
-    todo: Vec<&'ty RsTypeKind<'ir>>,
+struct RsTypeKindIter<'ty> {
+    todo: Vec<&'ty RsTypeKind>,
 }
 
-impl<'ty, 'ir> RsTypeKindIter<'ty, 'ir> {
-    pub fn new(ty: &'ty RsTypeKind<'ir>) -> Self {
+impl<'ty> RsTypeKindIter<'ty> {
+    pub fn new(ty: &'ty RsTypeKind) -> Self {
         Self { todo: vec![ty] }
     }
 }
 
-impl<'ty, 'ir> Iterator for RsTypeKindIter<'ty, 'ir> {
-    type Item = &'ty RsTypeKind<'ir>;
+impl<'ty> Iterator for RsTypeKindIter<'ty> {
+    type Item = &'ty RsTypeKind;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.todo.pop() {
@@ -2463,10 +2460,10 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
     let mut thunks = vec![];
     let mut cc_impls = vec![];
     for base in &record.unambiguous_public_bases {
-        let base_record: &Record = ir
+        let base_record: &Rc<Record> = ir
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
-        let base_name = RsTypeKind::new_record(base_record, ir)?.into_token_stream();
+        let base_name = RsTypeKind::new_record(base_record.clone(), ir)?.into_token_stream();
         let derived_name = make_rs_ident(&record.rs_name);
         let body;
         if let Some(offset) = base.offset {
@@ -2541,7 +2538,7 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
                         if let Some(_) = meta.instance_method_metadata {
                             quote! { #fn_ident }
                         } else {
-                            let record = ir.find_decl::<Record>(meta.record_id)?;
+                            let record : &Rc<Record> = ir.find_decl(meta.record_id)?;
                             let record_ident = format_cc_ident(&record.cc_name);
                             let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
                             quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }
@@ -4838,16 +4835,16 @@ mod tests {
         // same lifetime as the constructor's parameter. (This might require
         // annotating the whole C++ struct with a lifetime, so maybe the
         // example below is not fully realistic/accurate...).
-        let mut ir = ir_from_cc(&with_lifetime_macros(
+        let ir = ir_from_cc(&with_lifetime_macros(
             r#"#pragma clang lifetime_elision
             struct Foo final {
                 Foo(const int& $a i) $a;
             };"#,
         ))?;
-        let ctor: &mut Func = ir
-            .items_mut()
+        let ctor: &Func = ir
+            .items()
             .filter_map(|item| match item {
-                Item::Func(func) => Some(func),
+                Item::Func(func) => Some(&**func),
                 _ => None,
             })
             .find(|f| {
@@ -4862,7 +4859,7 @@ mod tests {
             let this_lifetime: LifetimeId =
                 *ctor.params[0].type_.rs_type.lifetime_args.first().unwrap();
             let i_lifetime: LifetimeId =
-                *ctor.params[1].type_.rs_type.lifetime_args.first_mut().unwrap();
+                *ctor.params[1].type_.rs_type.lifetime_args.first().unwrap();
             assert_eq!(i_lifetime, this_lifetime);
         }
 
@@ -5467,19 +5464,19 @@ mod tests {
         // Set up a test input representing: A<B<C>, D<E>>.
         let a = {
             let b = {
-                let c = RsTypeKind::Other { name: "C", type_args: vec![] };
-                RsTypeKind::Other { name: "B", type_args: vec![c] }
+                let c = RsTypeKind::Other { name: "C".into(), type_args: vec![] };
+                RsTypeKind::Other { name: "B".into(), type_args: vec![c] }
             };
             let d = {
-                let e = RsTypeKind::Other { name: "E", type_args: vec![] };
-                RsTypeKind::Other { name: "D", type_args: vec![e] }
+                let e = RsTypeKind::Other { name: "E".into(), type_args: vec![] };
+                RsTypeKind::Other { name: "D".into(), type_args: vec![e] }
             };
-            RsTypeKind::Other { name: "A", type_args: vec![b, d] }
+            RsTypeKind::Other { name: "A".into(), type_args: vec![b, d] }
         };
         let dfs_names = a
             .dfs_iter()
             .map(|t| match t {
-                RsTypeKind::Other { name, .. } => *name,
+                RsTypeKind::Other { name, .. } => &**name,
                 _ => unreachable!("Only 'other' types are used in this test"),
             })
             .collect_vec();
@@ -5490,16 +5487,20 @@ mod tests {
     fn test_rs_type_kind_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = RsTypeKind::Other { name: "A", type_args: vec![] };
-            let b = RsTypeKind::Other { name: "B", type_args: vec![] };
-            let c = RsTypeKind::Other { name: "C", type_args: vec![] };
-            RsTypeKind::FuncPtr { abi: "blah", param_types: vec![a, b], return_type: Box::new(c) }
+            let a = RsTypeKind::Other { name: "A".into(), type_args: vec![] };
+            let b = RsTypeKind::Other { name: "B".into(), type_args: vec![] };
+            let c = RsTypeKind::Other { name: "C".into(), type_args: vec![] };
+            RsTypeKind::FuncPtr {
+                abi: "blah".into(),
+                param_types: vec![a, b],
+                return_type: Box::new(c),
+            }
         };
         let dfs_names = f
             .dfs_iter()
             .map(|t| match t {
                 RsTypeKind::FuncPtr { .. } => "fn",
-                RsTypeKind::Other { name, .. } => *name,
+                RsTypeKind::Other { name, .. } => &**name,
                 _ => unreachable!("Only FuncPtr and Other kinds are used in this test"),
             })
             .collect_vec();

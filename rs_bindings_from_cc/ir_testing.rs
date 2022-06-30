@@ -84,7 +84,9 @@ pub fn ir_id(name: &str) -> Identifier {
 pub fn ir_record(name: &str) -> Record {
     let ir = ir_from_cc("struct REPLACEME final {};").unwrap();
     for item in ir.take_items() {
-        if let Item::Record(mut record) = item {
+        if let Item::Record(record) = item {
+            // TODO(jeanpierreda): use unwrap_or_clone once stable.
+            let mut record = (*record).clone();
             record.rs_name = name.to_string();
             record.cc_name = name.to_string();
             return record;
