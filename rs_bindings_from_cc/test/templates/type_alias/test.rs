@@ -4,6 +4,8 @@
 
 #[cfg(test)]
 mod tests {
+    use forward_declare::IncompleteCast;
+
     #[test]
     fn test_alias_to_template_instantiation() {
         let s = type_alias::MyTypeAlias::Create(123);
@@ -22,7 +24,9 @@ mod tests {
         let s = type_alias_in_different_target::TypeAliasInDifferentTarget::Create(789);
         assert_eq!(789, *s.value());
 
-        // TODO: Test cross-target bridging:
-        // let s2: type_alias::MyTypeAlias = s.bridge_into();
+        // Template instantiation from `type_alias_in_different_target` can be cast
+        // (i.e. transmuted) into identical instantiation from `type_alias` crate.
+        let s2: type_alias::MyTypeAlias = s.incomplete_cast();
+        assert_eq!(789, *s2.value());
     }
 }

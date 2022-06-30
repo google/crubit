@@ -139,7 +139,7 @@ fn test_read_incomplete_nonunpin() {
     ctor::emplace! {
       let mut s = ctor::ctor!(definition::NonunpinStruct {field: 42});
     }
-    let mut decl1_s: Pin<&mut declaration_1::NonunpinStruct> = s.incomplete_cast();
+    let decl1_s: Pin<&mut declaration_1::NonunpinStruct> = s.incomplete_cast();
 
     // Cast from incomplete to complete:
     assert_eq!(definition::ReadNonunpinStruct(decl1_s.as_ref().incomplete_cast()), 42);

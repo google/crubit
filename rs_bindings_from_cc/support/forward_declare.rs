@@ -159,7 +159,6 @@
 //! ```
 
 pub use forward_declare_proc_macros::*;
-use std::ops::Deref;
 use std::pin::Pin;
 
 /// `Symbol` type, equivalent to const &'static str values, but usable in
@@ -234,23 +233,43 @@ pub trait IncompleteCast<T> {
     fn incomplete_cast(self) -> T;
 }
 
-/// Marker trait: `T : IncompleteTransmute<U>` means that pointers/references to
-/// `T` may be safely transmuted to pointers/references to `U`.
+/// Types that implement the `CcType` trait with the same `Name` can be safely
+/// transmuted between each other, because they either provide bindings for the
+/// same C++ type, or point/refer to the same C++ type, or contain the same C++
+/// type.
 ///
-/// In particular, this is implemented by default for any complete type `T` and
-/// its `Incomplete` types. However, it may also be used for compound data types
-/// which can themselves contain complete/incomplete types.
+/// Even though this trait is public, implementations of this trait should only
+/// be provided by Crubit itself.  Crubit implements `CcType` for the following
+/// cases (the first 2 cases require the trait to be public):
 ///
-/// Safety: this allows e.g. `&Self` to be transmuted to `&Target`, and vice versa,
-/// in safe code. The safety requirements for `std::mem::transmute` apply.
+/// - Structs and unions defined in the generated Rust bindings (i.e. in
+///   `..._rs_api.rs` files)
+/// - Structs and unions forward-declared in the generated Rust bindings (i.e.
+///   in `..._rs_api.rs`    files) using the `forward_declare!` macro and
+///   aliased to `Incomplete<Name, Declarer>`.
+/// - Blanket `impl`s are provided for references, pointers, etc - e.g. if `T`
+///   belongs to a `CcType` for a given `Name`, then `&'a T` belongs to a
+///   sibling transmutability equivalence class.
 #[doc(hidden)]
-pub unsafe trait IncompleteTransmute<Target: ?Sized> {}
+pub unsafe trait CcType {
+    /// `Name` helps Rust type system to identify the given trasmutability
+    /// equivalence class.
+    ///
+    /// In the first two scenarios above, the `Name` is formed using the
+    /// `symbol!` macro, based on the fully-qualified name of the imported
+    /// C++ type.
+    ///
+    /// In other scenarios, the `Name` is formed using an arbitrary convention
+    /// that is sufficient to guarantee non-overlapping names (e.g. see the
+    /// private `RefName` type alias below).
+    type Name;
+}
 
-/// Any `Incomplete<Name, ...>` can be converted to any other `Incomplete<Name,
-/// ...>`.
-unsafe impl<Name, Declarer1, Declarer2> IncompleteTransmute<Incomplete<Name, Declarer1>>
-    for Incomplete<Name, Declarer2>
-{
+/// All forward declarations represented by `Incomplete<Name, ...>` form a
+/// transmutability equivalence class (together with the complete definition(s)
+/// - see the `unsafe_define!` macro below).
+unsafe impl<Name, Declarer> CcType for Incomplete<Name, Declarer> {
+    type Name = Name;
 }
 
 // Below, we have ?Sized everywhere -- but we're only dealing with thin pointers
@@ -264,36 +283,39 @@ unsafe fn transmute_checksize<T, U>(x: T) -> U {
     std::mem::transmute_copy(&*x)
 }
 
+type ConstPtrName<Name> = (*const (), Name);
+type MutPtrName<Name> = (*mut (), Name);
+type RefName<'a, Name> = (&'a (), Name);
+type MutRefName<'a, Name> = (&'a mut (), Name);
+
 // Pointers to transmutable things are themselves transmutable.
-unsafe impl<T: ?Sized, U: ?Sized> IncompleteTransmute<*const U> for *const T where
-    T: IncompleteTransmute<U>
-{
-}
-
-unsafe impl<T: ?Sized, U: ?Sized> IncompleteTransmute<*mut U> for *mut T where
-    T: IncompleteTransmute<U>
-{
-}
-
-unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for &'a T where
-    T: IncompleteTransmute<U>
-{
-}
-
-unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a mut U> for &'a mut T where
-    T: IncompleteTransmute<U>
-{
-}
-
-// Pin is repr(transparent) and therefore as safe to transmute as the pointer it
-// contains. Since the pointer it contains is bound by IncompleteTransmute, that
-// makes this OK to transmute.
-unsafe impl<T, U> IncompleteTransmute<Pin<U>> for Pin<T>
+unsafe impl<T: ?Sized> CcType for *const T
 where
-    T: IncompleteTransmute<U>,
-    T: Deref,
-    U: Deref,
+    T: CcType,
 {
+    type Name = ConstPtrName<T::Name>;
+}
+
+unsafe impl<T: ?Sized> CcType for *mut T
+where
+    T: CcType,
+{
+    type Name = MutPtrName<T::Name>;
+}
+
+unsafe impl<'a, T: ?Sized> CcType for &'a T
+where
+    T: CcType,
+{
+    type Name = RefName<'a, T::Name>;
+}
+
+unsafe impl<'a, T: ?Sized> CcType for &'a mut T
+where
+    T: CcType,
+    T: Unpin, // See safety notes for `impl ... for Pin<&'a mut T>`.
+{
+    type Name = MutRefName<'a, T::Name>;
 }
 
 // Also, we allow transmuting to the unpinned variant, when known to be safe.
@@ -315,21 +337,23 @@ where
 /// Safety: `Pin<&'a T>` allows getting the shared reference out of the pin, and
 /// `Pin` is `repr(transparent)`. (For example, you can copy it and call
 /// `get_ref()`, which is equivalent to the transmute.)
-unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for Pin<&'a T> where
-    T: IncompleteTransmute<U>
+unsafe impl<'a, T: ?Sized> CcType for Pin<&'a T>
+where
+    T: CcType,
 {
+    type Name = RefName<'a, T::Name>;
 }
 
 /// `Pin::into_inner()` transmute: transmute a pinned reference into a
 /// `mut` reference.
 ///
-/// If `T` is `IntoIncomplete<U>`, you can transmute from `Pin<&mut T>` to
-/// `Pin<&mut U>`. If `U` is `Unpin`, then you could also transmute from
-/// `Pin<&mut U>` to `&mut U`. This blanket impl generalizes the second
-/// transmute: you can also transmute from `Pin<&mut T>` straight to `&mut U`.
+/// If `T` can be transmuted into `U`, then one can also transmute from
+/// `Pin<&mut T>` to `Pin<&mut U>`. If `T` is `Unpin`, then you could also
+/// transmute from `Pin<&mut U>` to `&mut U`. Based on this, we can use the
+/// blanket `impl` below to put `Pin<&mut T>` and `&mut` into `CcType` with the
+/// same `Name`.  Since this is equivalent to `Pin::into_inner()`, it requires
+/// `Unpin`.
 ///
-/// Since this is equivalent to `Pin::into_inner()`, it requires `Unpin`.
-//
 /// Note: ideally we'd blanket impl the conversion to allow unpinning any smart
 /// pointer type, and not only mut references, but this causes coherence issues,
 /// because `Pin` itself is a smart pointer. I could not think of a workaround
@@ -340,34 +364,20 @@ unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a U> for Pin<&'a T> 
 /// to keep the list of unpinnable types in sync with the list of "pointers to
 /// transmutable things" above.
 ///
-/// For similar coherence reasons, we must only have an `Unpin` constraint on
-/// one of the references, not both. As the pinned type is very unlikely to be
-/// `Unpin` (why would you pin an `Unpin` type?), it is more useful to request
-/// it of the unpinned reference.
-///
 /// Safety: since we require `Unpin`, `Pin` does not restrict getting the mut
 /// reference out of the pin, and is `repr(transparent)`
-unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<&'a mut U> for Pin<&'a mut T>
+unsafe impl<'a, T: ?Sized> CcType for Pin<&'a mut T>
 where
-    T: IncompleteTransmute<U>,
-    U: Unpin,
+    T: CcType,
 {
+    type Name = MutRefName<'a, T::Name>;
 }
 
-/// `Pin::new()` transmute: transmute a mut reference into a pinned mut
-/// reference.
-///
-/// Safety: If `T` is `Unpin`, you could freely call `Pin::new()` to obtain a
-/// `Pin<&mut T>`. This is equivalent to a transmute, which is therefore safe.
-unsafe impl<'a, T: ?Sized, U: ?Sized> IncompleteTransmute<Pin<&'a mut U>> for &'a mut T where
-    T: Unpin + IncompleteTransmute<U>
-{
-}
-
-// IncompleteCast implementations for transmutable types.
+// IncompleteCast implementations for types belonging to the same CcType.
 impl<T, U> IncompleteCast<U> for T
 where
-    T: IncompleteTransmute<U>,
+    T: CcType,
+    U: CcType<Name = T::Name>,
 {
     fn incomplete_cast(self) -> U {
         unsafe { transmute_checksize(self) }
@@ -378,7 +388,8 @@ where
 
 impl<'a, T: ?Sized, U: ?Sized> IncompleteCast<Vec<&'a U>> for Vec<&'a T>
 where
-    T: IncompleteTransmute<U>,
+    T: CcType,
+    U: CcType<Name = T::Name>,
 {
     fn incomplete_cast(self) -> Vec<&'a U> {
         let (p, len, capacity) = self.into_raw_parts();
@@ -393,18 +404,14 @@ where
 /// Safety: if more than one type claim to be the definition, then they may be
 /// transmuted into each other in safe code. The safety requirements for
 /// `std::mem::transmute` apply.
+// Each `rustfmt` invocation would indent the `type Name...` line further and furhter to the right.
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! unsafe_define {
     // TODO(jeanpierreda): support generic complete type (e.g. `symbol!("xyz") <-> Foo<T> where T : Bar`)
     ($Name:ty, $Complete:ty) => {
-        unsafe impl<Declarer> $crate::IncompleteTransmute<$crate::Incomplete<$Name, Declarer>>
-            for $Complete
-        {
+        unsafe impl $crate::CcType for $Complete {
+            type Name = $Name;
         }
-        unsafe impl<Declarer> $crate::IncompleteTransmute<$Complete>
-            for $crate::Incomplete<$Name, Declarer>
-        {
-        }
-        unsafe impl $crate::IncompleteTransmute<$Complete> for $Complete {}
     };
 }

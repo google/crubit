@@ -65,14 +65,6 @@ fn test_conversions() {
         assert_eq!(ptr_location(complete_unpinned_ref), loc);
     }
 
-    // &mut -> &mut
-    {
-        let incomplete_mut: &mut MyTypeIncomplete = (&mut complete).incomplete_cast();
-        assert_eq!(ptr_location(&*incomplete_mut), loc);
-        let complete_mut: &mut MyType = incomplete_mut.incomplete_cast();
-        assert_eq!(ptr_location(complete_mut), loc);
-    }
-
     // Pin<&mut> <-> Pin<&mut>
     {
         let incomplete_pin_mut: ::std::pin::Pin<&mut MyTypeIncomplete> =
@@ -194,7 +186,7 @@ fn test_formerly_incomplete() {
 #[test]
 fn test_vector_alike() {
     use ::forward_declare::{
-        forward_declare, symbol, unsafe_define, Complete, IncompleteCast, IncompleteTransmute,
+        forward_declare, symbol, unsafe_define, CcType, Complete, IncompleteCast,
     };
     struct MyComplete;
     unsafe_define!(symbol!("T"), MyComplete);
@@ -203,9 +195,11 @@ fn test_vector_alike() {
     /// An equivalent to Vector from the function comment, which is a compound
     /// type that supports conversion.
     struct Vector<T: ?Sized>(*mut T, usize);
-    unsafe impl<T: ?Sized, U: ?Sized> IncompleteTransmute<Vector<U>> for Vector<T> where
-        T: IncompleteTransmute<U>
+    unsafe impl<T: ?Sized> CcType for Vector<T>
+    where
+        T: CcType,
     {
+        type Name = (Vector<()>, T::Name);
     }
 
     /// Methods on `Vector` that don't require complete `T`
