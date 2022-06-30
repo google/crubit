@@ -159,7 +159,6 @@
 //! ```
 
 pub use forward_declare_proc_macros::*;
-use std::pin::Pin;
 
 /// `Symbol` type, equivalent to const &'static str values, but usable in
 /// generics in stable Rust.
@@ -188,16 +187,6 @@ extern "C" {
 /// without breaking callers.
 ///
 /// TODO(jeanpierreda): make rust think this is ffi-safe. (PhantomData...)
-//
-// Safety notes: We alias references to arbitrary `T` using references to `Incomplete`. This is OK,
-// because of the design of `Incomplete`.
-//
-// 1. layout: `Incomplete` has no fields of size > 0, so it does not alias `T` incompatibly.
-//
-// 2. provenance: while in general it is not valid to access memory **neighboring** that of a type
-//    (e.g. one can't use &vec[0] to access vec[1]), in this case, we are using
-//    `feature(extern_types)`, which is a DST which must grant access to the following memory or
-//    else it would be useless. (This type of access is the reason the feature exists).
 #[repr(C)]
 pub struct Incomplete<Name, Declarer>(std::marker::PhantomData<(Name, Declarer)>, Unsized);
 
@@ -227,11 +216,6 @@ pub trait Complete {}
 /// which can auto-generate a `Complete` impl, and the rest are unlikely to
 /// matter.
 impl<T: Unpin> Complete for T {}
-
-/// Like `Into<T>`, but for completeness conversions.
-pub trait IncompleteCast<T> {
-    fn incomplete_cast(self) -> T;
-}
 
 /// Types that implement the `CcType` trait with the same `Name` can be safely
 /// transmuted between each other, because they either provide bindings for the
@@ -268,91 +252,100 @@ pub unsafe trait CcType {
 /// All forward declarations represented by `Incomplete<Name, ...>` form a
 /// transmutability equivalence class (together with the complete definition(s)
 /// - see the `unsafe_define!` macro below).
+///
+/// # Safety notes
+///
+/// We alias references to arbitrary `T` using references to `Incomplete`. This
+/// is OK, because of the design of `Incomplete`:
+///
+/// - layout: `Incomplete` has no fields of size > 0, so it does not alias `T`
+///   incompatibly.
+///
+/// - provenance: while in general it is not valid to access memory
+///   **neighboring** that of a type    (e.g. one can't use &vec[0] to access
+///   vec[1]), in this case, we are using    `feature(extern_types)`, which is a
+///   DST which must grant access to the following memory or    else it would be
+///   useless. (This type of access is the reason the feature exists).
 unsafe impl<Name, Declarer> CcType for Incomplete<Name, Declarer> {
     type Name = Name;
+}
+
+/// `unsafe_define!(symbol!("..."), T)` claims that `T` is the unique definition
+/// of the type identified by that symbol, and implements the conversions for
+/// pointers to and from the corresponding `Incomplete` pointers.
+///
+/// Safety: if more than one type claim to be the definition, then they may be
+/// transmuted into each other in safe code. The safety requirements for
+/// `std::mem::transmute` apply.
+// Each `rustfmt` invocation would indent the `type Name...` line further and further to the right.
+#[rustfmt::skip]
+#[macro_export]
+macro_rules! unsafe_define {
+    // TODO(jeanpierreda): support generic complete type (e.g. `symbol!("xyz") <-> Foo<T> where T : Bar`)
+    ($Name:ty, $Complete:ty) => {
+        unsafe impl $crate::CcType for $Complete {
+            type Name = $Name;
+        }
+    };
 }
 
 // Below, we have ?Sized everywhere -- but we're only dealing with thin pointers
 // and pointers to things containing Unsized (also thin, but thin unsized
 // pointers), so it's safe to cast through usize or similar.
 
-/// Like transmute, but without the static size check.
-unsafe fn transmute_checksize<T, U>(x: T) -> U {
-    assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
-    let x = std::mem::ManuallyDrop::new(x);
-    std::mem::transmute_copy(&*x)
-}
-
-type ConstPtrName<Name> = (*const (), Name);
-type MutPtrName<Name> = (*mut (), Name);
-type RefName<'a, Name> = (&'a (), Name);
-type MutRefName<'a, Name> = (&'a mut (), Name);
-
-// Pointers to transmutable things are themselves transmutable.
+/// If `T` can be transmuted into `U`, then one can also transmute between
+/// `*const T`, and `* const U`.
 unsafe impl<T: ?Sized> CcType for *const T
 where
     T: CcType,
 {
-    type Name = ConstPtrName<T::Name>;
+    type Name = (*const (), T::Name);
 }
 
+/// If `T` can be transmuted into `U`, then one can also transmute between `*mut
+/// T`, and `* mut U`.
 unsafe impl<T: ?Sized> CcType for *mut T
 where
     T: CcType,
 {
-    type Name = MutPtrName<T::Name>;
+    type Name = (*mut (), T::Name);
 }
 
-unsafe impl<'a, T: ?Sized> CcType for &'a T
-where
-    T: CcType,
-{
-    type Name = RefName<'a, T::Name>;
-}
-
-unsafe impl<'a, T: ?Sized> CcType for &'a mut T
-where
-    T: CcType,
-    T: Unpin, // See safety notes for `impl ... for Pin<&'a mut T>`.
-{
-    type Name = MutRefName<'a, T::Name>;
-}
-
-// Also, we allow transmuting to the unpinned variant, when known to be safe.
-//
-// Consider what happens if a forward declaration in C++ is removed in favor of
-// the complete type, where the library containing that declaration was wrapped
-// in Rust. If the type is trivially relocatable, and we automatically generate
-// C++ bindings which do not use `Pin` except for non-trivially-relocatable
-// types, this would be a backwards incompatible change. So, we should
-// also support unpinning during the cast.
-
-/// `Pin::get_ref()` transmute.
+/// If `T` can be transmuted into `U`, then one can also transmute between `&'a
+/// T`, `&'a U`, `Pin<&'a T>`, and `Pin<&'a U>`.  The corresponding CcType uses
+/// `RefName` as the `Name` of the transmutability equivalence class.
 ///
-/// If `T` is `IntoIncomplete<U>`, you can transmute from `Pin<&T>` to
-/// `Pin<&U>`. You can also, for any such U, transmute from `Pin<&U>` to `&U`.
-/// This blanket impl generalizes the second transmute: you can also transmute
-/// from `Pin<&T>` straight to `&U`.
+/// # Safety
 ///
-/// Safety: `Pin<&'a T>` allows getting the shared reference out of the pin, and
-/// `Pin` is `repr(transparent)`. (For example, you can copy it and call
-/// `get_ref()`, which is equivalent to the transmute.)
-unsafe impl<'a, T: ?Sized> CcType for Pin<&'a T>
-where
-    T: CcType,
-{
-    type Name = RefName<'a, T::Name>;
-}
-
-/// `Pin::into_inner()` transmute: transmute a pinned reference into a
-/// `mut` reference.
+/// 1. `&T` => `&U`: Pointers to transmutable things are themselves
+/// transmutable.
 ///
-/// If `T` can be transmuted into `U`, then one can also transmute from
-/// `Pin<&mut T>` to `Pin<&mut U>`. If `T` is `Unpin`, then you could also
-/// transmute from `Pin<&mut U>` to `&mut U`. Based on this, we can use the
-/// blanket `impl` below to put `Pin<&mut T>` and `&mut` into `CcType` with the
-/// same `Name`.  Since this is equivalent to `Pin::into_inner()`, it requires
-/// `Unpin`.
+/// 2. `&T` => `Pin<&T>`: `Pin` is `repr(transparent)` and `Pin::new` is
+/// safe.
+///
+/// 3. `Pin<&T>` => `&T`: `Pin` is `repr(transparent)` and `Pin::get_ref` is
+/// safe.
+///
+/// 4. `Pin<&T>` => `Pin<&U>`: This combines transmutes 3, 1, and 2.
+///
+/// 5. `&T` => `Pin<&U>`: This combines transmutes 1 and 2.
+///
+/// 6. `Pin<&T>` => `&U`: This combines transmutes 4 and 3.
+///
+/// # Transmuting to the unpinned variant
+///
+/// We allow transmuting to the unpinned variant, when known to be safe.
+///
+/// ## Motivation
+///
+/// Consider what happens if a forward declaration in C++ is removed in favor of
+/// the complete type, where the library containing that declaration was wrapped
+/// in Rust. If the type is trivially relocatable, and we automatically generate
+/// C++ bindings which do not use `Pin` except for non-trivially-relocatable
+/// types, this would be a backwards incompatible change. So, we should
+/// also support unpinning during the cast.
+///
+/// ## Limited scope of impls
 ///
 /// Note: ideally we'd blanket impl the conversion to allow unpinning any smart
 /// pointer type, and not only mut references, but this causes coherence issues,
@@ -363,24 +356,102 @@ where
 /// Since we're hardcoding a set of pointer types above *anyway*, we just need
 /// to keep the list of unpinnable types in sync with the list of "pointers to
 /// transmutable things" above.
-///
-/// Safety: since we require `Unpin`, `Pin` does not restrict getting the mut
-/// reference out of the pin, and is `repr(transparent)`
-unsafe impl<'a, T: ?Sized> CcType for Pin<&'a mut T>
-where
-    T: CcType,
-{
-    type Name = MutRefName<'a, T::Name>;
+mod ref_transmutability {
+    use super::CcType;
+    use std::pin::Pin;
+
+    type RefName<'a, Name> = (&'a (), Name);
+
+    /// Safety: See the doc comment for the `ref_transmutability` module.
+    unsafe impl<'a, T: ?Sized> CcType for &'a T
+    where
+        T: CcType,
+    {
+        type Name = RefName<'a, T::Name>;
+    }
+
+    /// Safety: See the doc comment for the `ref_transmutability` module.
+    unsafe impl<'a, T: ?Sized> CcType for Pin<&'a T>
+    where
+        T: CcType,
+    {
+        type Name = RefName<'a, T::Name>;
+    }
 }
 
-// IncompleteCast implementations for types belonging to the same CcType.
+/// If `T` can be transmuted into `U`, then one can also transmute
+/// 1) between `&'a mut T` and `&'a mut U`
+/// 2) between `Pin<&'a mut T>` and `Pin<&'a mut U>`
+/// 3) from `&'a mut T` into `Pin<&'a mut T>` or into `Pin<&'a mut U>`
+///
+/// Additionally, if `T` and `U` are `Unpin`, then one can also transmute
+/// 4) from `Pin<&'a mut T>` into `&'a mut T` or into `&'a mut U`
+///
+/// The corresponding CcType uses `MutRefName` as the `Name` of the
+/// transmutability equivalence class.
+///
+/// # Safety
+///
+/// The list below is very similar to the safety notes for `RefName`, except
+/// that the 3rd item below also needs to talk about the `T: Unpin` constraint.
+///
+/// 1. `&mut T` => `&mut U`: Pointers to transmutable things are themselves
+/// transmutable.
+///
+/// 2. `&mut T` => `Pin<&mut T>`: `Pin` is `repr(transparent)` and `Pin::new`
+///    is safe.
+///
+/// 3. `Pin<&mut T>` => `&mut T`: `Pin` is `repr(transparent)` and
+/// `Pin::into_inner` is safe    and allowed for `T: Unpin`.
+///
+/// 4. `Pin<&mut T>` => `Pin<&mut U>`: This combines transmutes 3, 1, and 2.
+///
+/// 5. `&mut T` => `Pin<&mut U>`: This combines transmutes 1 and 2.
+///
+/// 6. `Pin<&mut T>` => `&mut U`: This combines transmutes 4 and 3.
+///
+/// # Transmuting to the unpinned variant
+///
+/// Transmuting to the unpinned variant is described in more details in the doc
+/// comment of `RefName`.
+mod mut_ref_transmutability {
+    use super::CcType;
+    use std::pin::Pin;
+
+    type MutRefName<'a, Name> = (&'a mut (), Name);
+
+    /// Safety: See the doc comment for the `mut_ref_transmutability` module.
+    unsafe impl<'a, T: ?Sized> CcType for &'a mut T
+    where
+        T: CcType,
+        T: Unpin, // See safety notes for MutRefName, item 3
+    {
+        type Name = MutRefName<'a, T::Name>;
+    }
+
+    /// Safety: See the doc comment for the `mut_ref_transmutability` module.
+    unsafe impl<'a, T: ?Sized> CcType for Pin<&'a mut T>
+    where
+        T: CcType,
+    {
+        type Name = MutRefName<'a, T::Name>;
+    }
+}
+
+/// Like `Into<T>`, but for completeness conversions.
+pub trait IncompleteCast<T> {
+    fn incomplete_cast(self) -> T;
+}
+
 impl<T, U> IncompleteCast<U> for T
 where
     T: CcType,
     U: CcType<Name = T::Name>,
 {
     fn incomplete_cast(self) -> U {
-        unsafe { transmute_checksize(self) }
+        assert_eq!(std::mem::size_of::<T>(), std::mem::size_of::<U>());
+        let x = std::mem::ManuallyDrop::new(self);
+        unsafe { std::mem::transmute_copy(&*x) }
     }
 }
 
@@ -395,23 +466,4 @@ where
         let (p, len, capacity) = self.into_raw_parts();
         unsafe { Vec::from_raw_parts(p as *mut &'a U, len, capacity) }
     }
-}
-
-/// `unsafe_define!(symbol!("..."), T)` claims that `T` is the unique definition
-/// of the type identified by that symbol, and implements the conversions for
-/// pointers to and from the corresponding `Incomplete` pointers.
-///
-/// Safety: if more than one type claim to be the definition, then they may be
-/// transmuted into each other in safe code. The safety requirements for
-/// `std::mem::transmute` apply.
-// Each `rustfmt` invocation would indent the `type Name...` line further and furhter to the right.
-#[rustfmt::skip]
-#[macro_export]
-macro_rules! unsafe_define {
-    // TODO(jeanpierreda): support generic complete type (e.g. `symbol!("xyz") <-> Foo<T> where T : Bar`)
-    ($Name:ty, $Complete:ty) => {
-        unsafe impl $crate::CcType for $Complete {
-            type Name = $Name;
-        }
-    };
 }
