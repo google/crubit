@@ -8,6 +8,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
+use salsa_utils::{PtrEq, SalsaResult};
 use std::collections::{BTreeSet, HashSet};
 use std::ffi::{OsStr, OsString};
 use std::iter::{self, Iterator};
@@ -73,6 +74,25 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     })
     .unwrap_or_else(|_| process::abort())
 }
+
+#[salsa::query_group(BindingsGeneratorStorage)]
+trait BindingsGenerator {
+    #[salsa::input]
+    fn ir(&self) -> Rc<IR>;
+
+    fn generate_func(
+        &self,
+        func: Rc<Func>,
+    ) -> SalsaResult<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>>;
+}
+
+#[salsa::database(BindingsGeneratorStorage)]
+#[derive(Default)]
+struct Database {
+    storage: salsa::Storage<Self>,
+}
+
+impl salsa::Database for Database {}
 
 /// Source code for generated bindings.
 struct Bindings {
@@ -597,30 +617,42 @@ fn api_func_shape(
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((rs_api, rs_thunk, function_id))`: The Rust function definition,
 ///    thunk FFI definition, and function ID.
-fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, FunctionId)>> {
+fn generate_func(
+    db: &dyn BindingsGenerator,
+    func: Rc<Func>,
+) -> SalsaResult<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>> {
+    Ok(generate_func_impl(db, &func)?)
+}
+
+fn generate_func_impl(
+    db: &dyn BindingsGenerator,
+    func: &Func,
+) -> Result<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>> {
+    let ir = db.ir();
     let param_types = func
         .params
         .iter()
         .map(|p| {
-            RsTypeKind::new(&p.type_.rs_type, ir).with_context(|| {
+            RsTypeKind::new(&p.type_.rs_type, &ir).with_context(|| {
                 format!("Failed to process type of parameter {:?} on {:?}", p, func)
             })
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(func, ir, &param_types)? {
+    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(&func, &ir, &param_types)?
+    {
         values
     } else {
         return Ok(None);
     };
 
-    let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, ir)
+    let return_type_fragment = RsTypeKind::new(&func.return_type.rs_type, &ir)
         .with_context(|| format!("Failed to format return type for {:?}", func))?
         .format_as_return_type_fragment();
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
 
-    let thunk = generate_func_thunk(func, &param_idents, &param_types, &return_type_fragment)?;
+    let thunk = generate_func_thunk(&func, &param_idents, &param_types, &return_type_fragment)?;
 
     let api_func_def = {
         let mut return_type_fragment = return_type_fragment;
@@ -699,7 +731,7 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         // MaybeUninit<T> in Pin if T is !Unpin. It should understand
         // 'structural pinning', so that we do not need into_inner_unchecked()
         // here.
-        let thunk_ident = thunk_ident(func);
+        let thunk_ident = thunk_ident(&func);
         let func_body = match &impl_kind {
             ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } => {
                 let thunk_vars = format_tuple_except_singleton(&thunk_args);
@@ -842,7 +874,11 @@ fn generate_func(func: &Func, ir: &IR) -> Result<Option<(RsSnippet, RsSnippet, F
         }
     }
 
-    Ok(Some((RsSnippet { features, tokens: api_func }, thunk.into(), function_id)))
+    Ok(Some(PtrEq(Rc::new((
+        RsSnippet { features, tokens: api_func },
+        thunk.into(),
+        Rc::new(function_id),
+    )))))
 }
 
 fn generate_func_thunk(
@@ -873,7 +909,7 @@ fn generate_func_thunk(
         })?);
     }
 
-    let thunk_ident = thunk_ident(func);
+    let thunk_ident = thunk_ident(&func);
     let lifetimes = func.lifetime_params.iter();
     let generic_params = format_generic_params(lifetimes);
     let param_types = self_param.into_iter().chain(param_types.map(|t| quote! {#t}));
@@ -1034,12 +1070,13 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
 fn generate_record(
+    db: &mut Database,
     record: &Rc<Record>,
-    ir: &IR,
-    overloaded_funcs: &HashSet<FunctionId>,
+    overloaded_funcs: &HashSet<Rc<FunctionId>>,
 ) -> Result<GeneratedItem> {
+    let ir = db.ir();
     let ident = make_rs_ident(&record.rs_name);
-    let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
+    let namespace_qualifier = generate_namespace_qualifier(record.id, &ir)?;
     let qualified_ident = {
         quote! { crate:: #(#namespace_qualifier::)* #ident }
     };
@@ -1178,14 +1215,14 @@ fn generate_record(
             let field_type = match get_field_rs_type_for_layout(field) {
                 Err(_) => bit_padding(end - field.offset),
                 Ok(rs_type) => {
-                    let mut formatted = format_rs_type(&rs_type, ir).with_context(|| {
+                    let mut formatted = format_rs_type(&rs_type, &ir).with_context(|| {
                         format!(
                             "Failed to format type for field {:?} on record {:?}",
                             field, record
                         )
                     })?;
                     if should_implement_drop(record) || record.is_union {
-                        if needs_manually_drop(rs_type, ir)? {
+                        if needs_manually_drop(rs_type, &ir)? {
                             // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
                             // if we can ask Rust to preserve field destruction order if the
                             // destructor is the SpecialMemberFunc::NontrivialMembers
@@ -1321,17 +1358,17 @@ fn generate_record(
         forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #qualified_ident);
     };
 
-    let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, ir)?;
+    let no_unique_address_accessors = cc_struct_no_unique_address_impl(record, &ir)?;
     let mut record_generated_items = record
         .child_item_ids
         .iter()
         .map(|id| {
             let item = ir.find_decl(*id)?;
-            generate_item(item, &ir, overloaded_funcs)
+            generate_item(db, item, overloaded_funcs)
         })
         .collect::<Result<Vec<_>>>()?;
 
-    record_generated_items.push(cc_struct_upcast_impl(record, ir)?);
+    record_generated_items.push(cc_struct_upcast_impl(record, &ir)?);
 
     let mut items = vec![];
     let mut thunks_from_record_items = vec![];
@@ -1371,7 +1408,7 @@ fn generate_record(
     };
 
     let record_trait_assertions = {
-        let record_type_name = RsTypeKind::new_record(record.clone(), ir)?.to_token_stream();
+        let record_type_name = RsTypeKind::new_record(record.clone(), &ir)?.to_token_stream();
         let mut assertions: Vec<TokenStream> = vec![];
         let mut add_assertion = |assert_impl_macro: TokenStream, trait_name: TokenStream| {
             assertions.push(quote! {
@@ -1508,10 +1545,11 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
 }
 
 fn generate_namespace(
+    db: &mut Database,
     namespace: &Namespace,
-    ir: &IR,
-    overloaded_funcs: &HashSet<FunctionId>,
+    overloaded_funcs: &HashSet<Rc<FunctionId>>,
 ) -> Result<GeneratedItem> {
+    let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
     let mut assertions = vec![];
@@ -1520,7 +1558,7 @@ fn generate_namespace(
 
     for item_id in namespace.child_item_ids.iter() {
         let item = ir.find_decl(*item_id)?;
-        let generated = generate_item(item, ir, &overloaded_funcs)?;
+        let generated = generate_item(db, item, &overloaded_funcs)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -1591,31 +1629,35 @@ struct GeneratedItem {
 }
 
 fn generate_item(
+    db: &mut Database,
     item: &Item,
-    ir: &IR,
-    overloaded_funcs: &HashSet<FunctionId>,
+    overloaded_funcs: &HashSet<Rc<FunctionId>>,
 ) -> Result<GeneratedItem> {
+    let ir = db.ir();
     let generated_item = match item {
-        Item::Func(func) => match generate_func(func, ir) {
+        Item::Func(func) => match db.generate_func(func.clone()) {
             Err(e) => GeneratedItem {
-                item: generate_unsupported(&make_unsupported_fn(func, ir, format!("{e}"))?)?,
+                item: generate_unsupported(&make_unsupported_fn(func, &ir, format!("{e}"))?)?,
                 ..Default::default()
             },
             Ok(None) => GeneratedItem::default(),
-            Ok(Some((api_func, thunk, function_id))) => {
-                if overloaded_funcs.contains(&function_id) {
+            Ok(Some(f)) => {
+                let (api_func, thunk, function_id) = f.as_ref();
+                if overloaded_funcs.contains(function_id) {
                     GeneratedItem {
                         item: generate_unsupported(&make_unsupported_fn(
                             func,
-                            ir,
+                            &ir,
                             "Cannot generate bindings for overloaded function",
                         )?)?,
                         ..Default::default()
                     }
                 } else {
+                    // TODO(b/236687702): Use Rc for these, or else split this into a non-query
+                    // and only use the query for Function IDs.
                     GeneratedItem {
-                        item: api_func.tokens,
-                        thunks: thunk.tokens,
+                        item: api_func.tokens.clone(),
+                        thunks: thunk.tokens.clone(),
                         features: api_func.features.union(&thunk.features).cloned().collect(),
                         ..Default::default()
                     }
@@ -1640,7 +1682,7 @@ fn generate_item(
             {
                 GeneratedItem::default()
             } else {
-                generate_record(record, ir, overloaded_funcs)?
+                generate_record(db, record, overloaded_funcs)?
             }
         }
         Item::Enum(enum_) => {
@@ -1649,7 +1691,7 @@ fn generate_item(
             {
                 GeneratedItem::default()
             } else {
-                GeneratedItem { item: generate_enum(enum_, ir)?, ..Default::default() }
+                GeneratedItem { item: generate_enum(enum_, &ir)?, ..Default::default() }
             }
         }
         Item::TypeAlias(type_alias) => {
@@ -1658,7 +1700,7 @@ fn generate_item(
             {
                 GeneratedItem::default()
             } else {
-                GeneratedItem { item: generate_type_alias(type_alias, ir)?, ..Default::default() }
+                GeneratedItem { item: generate_type_alias(type_alias, &ir)?, ..Default::default() }
             }
         }
         Item::UnsupportedItem(unsupported) => {
@@ -1667,7 +1709,7 @@ fn generate_item(
         Item::Comment(comment) => {
             GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
         }
-        Item::Namespace(namespace) => generate_namespace(namespace, ir, overloaded_funcs)?,
+        Item::Namespace(namespace) => generate_namespace(db, namespace, overloaded_funcs)?,
     };
 
     Ok(generated_item)
@@ -1676,6 +1718,9 @@ fn generate_item(
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
 // needed to support it.
 fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<BindingsTokens> {
+    let mut db = Database::default();
+    db.set_ir(ir.clone());
+
     let mut items = vec![];
     let mut thunks = vec![];
     let mut thunk_impls = vec![generate_rs_api_impl(&ir, crubit_support_path)?];
@@ -1703,16 +1748,17 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
     let mut seen_funcs = HashSet::new();
     let mut overloaded_funcs = HashSet::new();
     for func in ir.functions() {
-        if let Ok(Some((.., function_id))) = generate_func(func, &ir) {
+        if let Ok(Some(f)) = db.generate_func(func.clone()) {
+            let (.., function_id) = f.as_ref();
             if !seen_funcs.insert(function_id.clone()) {
-                overloaded_funcs.insert(function_id);
+                overloaded_funcs.insert(function_id.clone());
             }
         }
     }
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item = ir.find_decl(*top_level_item_id)?;
-        let generated = generate_item(item, &ir, &overloaded_funcs)?;
+        let generated = generate_item(&mut db, item, &overloaded_funcs)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);

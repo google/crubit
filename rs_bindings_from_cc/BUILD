@@ -355,6 +355,16 @@ rust_test(
     ],
 )
 
+rust_library(
+    name = "salsa_utils",
+    srcs = ["salsa_utils.rs"],
+    deps = [
+        ":ir",
+        "@crate_index//:anyhow",
+        "@crate_index//:salsa",
+    ],
+)
+
 cc_library(
     name = "src_code_gen",
     srcs = ["src_code_gen.cc"],
@@ -376,12 +386,14 @@ rust_library(
     srcs = ["src_code_gen.rs"],
     deps = [
         ":ir",
+        ":salsa_utils",
         "//common:ffi_types",
         "//common:token_stream_printer",
         "@crate_index//:anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
+        "@crate_index//:salsa",
         "@crate_index//:serde_json",
         "@crate_index//:syn",
     ],
