@@ -30,6 +30,17 @@ void TransferInitializer(Object dest, clang::QualType type,
                          const clang::Expr* init_expr,
                          PointsToMap& points_to_map);
 
+struct FunctionParameter {
+  clang::QualType param_type;
+  ValueLifetimes param_lifetimes;
+  Object arg_object;
+};
+
+std::optional<ObjectSet> TransferLifetimesForCall(
+    const clang::Expr* call, const std::vector<FunctionParameter>& fn_params,
+    const ValueLifetimes& return_lifetimes, ObjectRepository& object_repository,
+    PointsToMap& points_to_map, clang::ASTContext& ast_context);
+
 // Function to call to report a diagnostic.
 // This has the same interface as ClangTidyCheck::diag().
 using DiagnosticReporter = std::function<clang::DiagnosticBuilder(
