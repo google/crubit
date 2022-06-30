@@ -170,15 +170,15 @@ void CollectLifetimes(
     Object arg_object, clang::QualType type,
     const ValueLifetimes& value_lifetimes, const PointsToMap& points_to_map,
     const ObjectRepository& object_repository,
-    llvm::DenseMap<Lifetime, ObjectSet>& lifetime_points_to_set) {
+    llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set) {
   class Visitor : public LifetimeVisitor {
    public:
     Visitor(const ObjectRepository& object_repository,
             const PointsToMap& points_to_map,
-            llvm::DenseMap<Lifetime, ObjectSet>& lifetime_points_to_set)
+            llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set)
         : object_repository_(object_repository),
           points_to_map_(points_to_map),
-          lifetime_points_to_set_(lifetime_points_to_set) {}
+          lifetime_to_object_set_(lifetime_to_object_set) {}
 
     Object GetFieldObject(const ObjectSet& objects,
                           const clang::FieldDecl* field) override {
@@ -197,16 +197,16 @@ void CollectLifetimes(
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,
                        const ObjectSet& objects,
                        int /*pointee_depth*/) override {
-      lifetime_points_to_set_[lifetimes.GetLifetime()].Add(objects);
+      lifetime_to_object_set_[lifetimes.GetLifetime()].Add(objects);
       return points_to_map_.GetPointerPointsToSet(objects);
     }
 
    private:
     const ObjectRepository& object_repository_;
     const PointsToMap& points_to_map_;
-    llvm::DenseMap<Lifetime, ObjectSet>& lifetime_points_to_set_;
+    llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set_;
   };
-  Visitor visitor(object_repository, points_to_map, lifetime_points_to_set);
+  Visitor visitor(object_repository, points_to_map, lifetime_to_object_set);
   VisitLifetimes({arg_object}, type,
                  ObjectLifetimes(arg_object.GetLifetime(), value_lifetimes),
                  visitor);
@@ -216,16 +216,16 @@ void PropagateLifetimesToPointees(
     Object arg_object, clang::QualType type,
     const ValueLifetimes& value_lifetimes, PointsToMap& points_to_map,
     ObjectRepository& object_repository,
-    const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_points_to_set,
+    const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
     clang::ASTContext& ast_context) {
   class Visitor : public LifetimeVisitor {
    public:
     Visitor(ObjectRepository& object_repository, PointsToMap& points_to_map,
-            const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_points_to_set,
+            const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
             clang::ASTContext& ast_context)
         : object_repository_(object_repository),
           points_to_map_(points_to_map),
-          lifetime_points_to_set_(lifetime_points_to_set),
+          lifetime_to_object_set_(lifetime_to_object_set),
           ast_context_(ast_context) {}
 
     Object GetFieldObject(const ObjectSet& objects,
@@ -251,7 +251,7 @@ void PropagateLifetimesToPointees(
       if (!type.isConstQualified() && !PointeeType(type).isNull()) {
         Lifetime pointee_lifetime =
             lifetimes.GetValueLifetimes().GetPointeeLifetimes().GetLifetime();
-        ObjectSet points_to = lifetime_points_to_set_.lookup(pointee_lifetime);
+        ObjectSet points_to = lifetime_to_object_set_.lookup(pointee_lifetime);
         // If this is pointer-to-static, assume the callee can modify it to
         // point to a static object that we don't know about.
         if (pointee_lifetime == Lifetime::Static()) {
@@ -274,10 +274,10 @@ void PropagateLifetimesToPointees(
    private:
     ObjectRepository& object_repository_;
     PointsToMap& points_to_map_;
-    const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_points_to_set_;
+    const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set_;
     clang::ASTContext& ast_context_;
   };
-  Visitor visitor(object_repository, points_to_map, lifetime_points_to_set,
+  Visitor visitor(object_repository, points_to_map, lifetime_to_object_set,
                   ast_context);
   VisitLifetimes({arg_object}, type,
                  ObjectLifetimes(arg_object.GetLifetime(), value_lifetimes),
