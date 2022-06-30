@@ -664,21 +664,110 @@ bool HasRecordTypeFields(const clang::RecordDecl* record) {
   return false;
 }
 
+const CXXConstructorDecl* GetDefaultConstructor(const CXXRecordDecl* record) {
+  for (const CXXConstructorDecl* ctor : record->ctors()) {
+    if (ctor->isDefaultConstructor()) {
+      return ctor;
+    }
+  }
+  return nullptr;
+}
+
+llvm::Error TransferDefaultConstructor(
+    const clang::CXXConstructorDecl* default_ctor, Object this_object,
+    ObjectRepository& object_repository, PointsToMap& points_to_map,
+    const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
+        callee_lifetimes) {
+  assert(callee_lifetimes.count(default_ctor->getCanonicalDecl()));
+
+  const FunctionLifetimesOrError& ctor_lifetimes_or_error =
+      callee_lifetimes.lookup(default_ctor->getCanonicalDecl());
+  if (!std::holds_alternative<FunctionLifetimes>(ctor_lifetimes_or_error)) {
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        absl::StrCat("No lifetimes for constructor ",
+                     default_ctor->getNameAsString()));
+  }
+  const FunctionLifetimes& ctor_lifetimes =
+      std::get<FunctionLifetimes>(ctor_lifetimes_or_error);
+
+  std::vector<FunctionParameter> fn_params;
+  Object this_ptr =
+      Object::Create(Lifetime::CreateLocal(), default_ctor->getThisType());
+  points_to_map.SetPointerPointsToSet(this_ptr, {this_object});
+  fn_params.push_back(FunctionParameter{
+      this_ptr.Type(), ctor_lifetimes.GetThisLifetimes(), this_ptr});
+  TransferLifetimesForCall(
+      // Passing `nullptr` for `call` is OK here because it's only required if
+      // the return value contains lifetimes.
+      /*call=*/nullptr, fn_params,
+      ValueLifetimes::ForLifetimeLessType(default_ctor->getReturnType()),
+      object_repository, points_to_map, default_ctor->getASTContext());
+
+  return llvm::Error::success();
+}
+
+llvm::Error AnalyzeDefaultedDefaultConstructor(
+    const clang::CXXConstructorDecl* ctor,
+    const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
+        callee_lifetimes,
+    ObjectRepository& object_repository, PointsToMap& points_to_map) {
+  assert(ctor->isDefaulted() && ctor->isDefaultConstructor());
+
+  std::optional<Object> this_object_maybe = object_repository.GetThisObject();
+  if (!this_object_maybe.has_value()) {
+    llvm::report_fatal_error("didn't find `this` object for constructor");
+  }
+  Object this_object = *this_object_maybe;
+
+  const clang::CXXRecordDecl* record = ctor->getParent();
+  for (const CXXBaseSpecifier& base : record->bases()) {
+    if (const clang::CXXRecordDecl* base_record =
+            base.getType()->getAsCXXRecordDecl()) {
+      if (const clang::CXXConstructorDecl* base_ctor =
+              GetDefaultConstructor(base_record)) {
+        Object base_this_object =
+            object_repository.GetBaseClassObject(this_object, base.getType());
+        if (llvm::Error err = TransferDefaultConstructor(
+                base_ctor, base_this_object, object_repository, points_to_map,
+                callee_lifetimes)) {
+          return err;
+        }
+      }
+    }
+  }
+  for (const clang::FieldDecl* field : record->fields()) {
+    if (const clang::CXXRecordDecl* field_record =
+            field->getType()->getAsCXXRecordDecl()) {
+      if (const clang::CXXConstructorDecl* field_ctor =
+              GetDefaultConstructor(field_record)) {
+        Object field_this_object =
+            object_repository.GetFieldObject(this_object, field);
+        if (llvm::Error err = TransferDefaultConstructor(
+                field_ctor, field_this_object, object_repository, points_to_map,
+                callee_lifetimes)) {
+          return err;
+        }
+      }
+    }
+  }
+
+  return llvm::Error::success();
+}
+
 llvm::Error AnalyzeDefaultedFunction(
     const clang::FunctionDecl* func,
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
-    /*callee_lifetimes*/,
-    ObjectRepository& /*object_repository*/, PointsToMap& /*points_to_map*/) {
+        callee_lifetimes,
+    ObjectRepository& object_repository, PointsToMap& points_to_map) {
   assert(func->isDefaulted());
 
   // TODO(b/230693710): Add complete support for defaulted functions.
 
   if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
     if (ctor->isDefaultConstructor()) {
-      const clang::CXXRecordDecl* record = ctor->getParent();
-      if (record->getNumBases() == 0 && !HasRecordTypeFields(record)) {
-        return llvm::Error::success();
-      }
+      return AnalyzeDefaultedDefaultConstructor(
+          ctor, callee_lifetimes, object_repository, points_to_map);
     }
   }
 
@@ -767,7 +856,25 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
   func = func->getDefinition();
   assert(func != nullptr);
 
-  if (func->getBody()) {
+  // Unconditionally use our custom logic to analyze defaulted functions, even
+  // if they happen to have a body (because something caused Sema to create a
+  // body for them). We don't want the code path for defaulted functions to
+  // change based on whether a body happened to be created for them, and we
+  // want to make sure we always exercise our logic for defaulted functions in
+  // tests.
+  // TODO(b/230693710): We currently only support analyzing defaulted default
+  // constructors, so for other defaulted functions, we currently fall back to
+  // AnalyzeFunctionBody() (if they do have a body).
+  const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func);
+  bool can_analyze_defaulted_func =
+      ctor != nullptr && ctor->isDefaultConstructor();
+  if (func->isDefaulted() && can_analyze_defaulted_func) {
+    if (llvm::Error err = AnalyzeDefaultedFunction(func, callee_lifetimes,
+                                                   analysis.object_repository,
+                                                   analysis.points_to_map)) {
+      return std::move(err);
+    }
+  } else if (func->getBody()) {
     std::string* cfg_dot = debug_info ? &(*debug_info)[func].cfg_dot : nullptr;
     if (llvm::Error err = AnalyzeFunctionBody(
             func, callee_lifetimes, diag_reporter, analysis.object_repository,
@@ -775,21 +882,8 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
       return std::move(err);
     }
   } else {
-    if (!func->isDefaulted()) {
-      return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                     "Declaration-only!");
-    }
-
-    // TODO(b/230693710): Do this unconditionally for defaulted functions, even
-    // if they happen to have a body (because something caused Sema to create a
-    // body for them). We can't do this yet because we don't have full support
-    // for defaulted functions yet, so we would break tests where we happen to
-    // have a body for the defaulted function today.
-    if (llvm::Error err = AnalyzeDefaultedFunction(func, callee_lifetimes,
-                                                   analysis.object_repository,
-                                                   analysis.points_to_map)) {
-      return std::move(err);
-    }
+    return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                   "Declaration-only!");
   }
 
   if (debug_info) {
@@ -935,10 +1029,27 @@ GetDefaultedFunctionCallees(const clang::FunctionDecl* func) {
 
   if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
     if (ctor->isDefaultConstructor()) {
+      llvm::DenseSet<const clang::FunctionDecl*> callees;
       const clang::CXXRecordDecl* record = ctor->getParent();
-      if (record->getNumBases() == 0 && !HasRecordTypeFields(record)) {
-        return llvm::DenseSet<const clang::FunctionDecl*>();
+      for (const CXXBaseSpecifier& base : record->bases()) {
+        if (const clang::CXXRecordDecl* base_record =
+                base.getType()->getAsCXXRecordDecl()) {
+          if (const clang::CXXConstructorDecl* base_ctor =
+                  GetDefaultConstructor(base_record)) {
+            callees.insert(base_ctor);
+          }
+        }
       }
+      for (const clang::FieldDecl* field : record->fields()) {
+        if (const clang::CXXRecordDecl* field_record =
+                field->getType()->getAsCXXRecordDecl()) {
+          if (const clang::CXXConstructorDecl* field_ctor =
+                  GetDefaultConstructor(field_record)) {
+            callees.insert(field_ctor);
+          }
+        }
+      }
+      return callees;
     }
   }
 

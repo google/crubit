@@ -50,36 +50,54 @@ TEST_F(DefaultedFunctions, DefaultConstrutor_LifetimeParam) {
 }
 
 TEST_F(DefaultedFunctions, DefaultConstrutor_RecordTypeFields) {
+  // To check that we synthesize defaulted default constructors correctly,
+  // we create a class `T` with a field of a type whose default constructor
+  // takes a `this` pointer with static lifetime. We verify that this causes
+  // the default constructor of `T` to also take a `this` pointer with static
+  // lifetime.
+
+  GetLifetimesOptions options;
+  options.include_implicit_methods = true;
   EXPECT_THAT(
       GetLifetimes(R"(
-    struct S {};
+    struct S {
+      S() {
+        static S* last_constructed = nullptr;
+        last_constructed = this;
+      }
+    };
     struct T {
       S s;
     };
     void f() {
-      T();
+      static T t;
     }
-  )"),
-      // TODO(b/230693710): This documents that defaulted default
-      // constructors on classes with record-type fields are currently
-      // not supported.
-      LifetimesAre({{"T::T", "ERROR: unsupported type of defaulted function"},
-                    {"f", "ERROR: No lifetimes for constructor T"}}));
+  )",
+                   options),
+      LifetimesAre({{"S::S", "static:"}, {"T::T", "static:"}, {"f", ""}}));
 }
 
 TEST_F(DefaultedFunctions, DefaultConstrutor_BaseClass) {
+  // See DefaultConstrutor_RecordTypeField for an exaplanation of hwo this
+  // test works.
+
+  GetLifetimesOptions options;
+  options.include_implicit_methods = true;
   EXPECT_THAT(
       GetLifetimes(R"(
-    struct S {};
+    struct S {
+      S() {
+        static S* last_constructed = nullptr;
+        last_constructed = this;
+      }
+    };
     struct T : public S {};
     void f() {
-      T();
+      static T t;
     }
-  )"),
-      // TODO(b/230693710): This documents that defaulted default
-      // constructors on derived classes are currently not supported.
-      LifetimesAre({{"T::T", "ERROR: unsupported type of defaulted function"},
-                    {"f", "ERROR: No lifetimes for constructor T"}}));
+  )",
+                   options),
+      LifetimesAre({{"S::S", "static:"}, {"T::T", "static:"}, {"f", ""}}));
 }
 
 }  // namespace

@@ -391,6 +391,8 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   //   If this turns out not to have any adverse effect on the analysis, it
   //   would be the more principled and simpler thing to do.
 
+  assert(call || !return_lifetimes.HasLifetimes());
+
   // Step 1: Create mapping from callee lifetimes to points-to sets.
   llvm::DenseMap<Lifetime, ObjectSet> lifetime_to_object_set;
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
