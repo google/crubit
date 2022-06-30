@@ -289,12 +289,9 @@ macro_rules! unsafe_define {
     };
 }
 
-// Below, we have ?Sized everywhere -- but we're only dealing with thin pointers
-// and pointers to things containing Unsized (also thin, but thin unsized
-// pointers), so it's safe to cast through usize or similar.
-
 /// If `T` can be transmuted into `U`, then one can also transmute between
-/// `*const T`, and `* const U`.
+/// `*const T`, and `* const U`.  (This are always "thin" pointers - with the
+/// same size as `usize`.)
 unsafe impl<T: ?Sized> CcType for *const T
 where
     T: CcType,
@@ -303,12 +300,79 @@ where
 }
 
 /// If `T` can be transmuted into `U`, then one can also transmute between `*mut
-/// T`, and `* mut U`.
+/// T`, and `* mut U`. (This are always "thin" pointers - with the same size as
+/// `usize`.)
 unsafe impl<T: ?Sized> CcType for *mut T
 where
     T: CcType,
 {
     type Name = (*mut (), T::Name);
+}
+
+/// If `T` can be transmuted into `U`, then one can also transmute between
+/// arrays `[T; N]` and `[U; N]`.
+///
+/// # Safety notes
+///
+/// If `T` and `U` are transmutable then they should have the same alignment,
+/// size, and stride.  Based on "Unsafe Code Guidelines Reference" [1], this
+/// means that the arrays `[T; N]` and `[U, N]` have the same memory layout.
+///
+/// Note that `T` below has an implicit `T: Sized` constraint.  This means that
+/// it is *not* possible to transmute into or out-of an array of
+/// forward-declared types.  OTOH, it *is* possible to transmute between arrays
+/// of transmutable, completely-defined/sized types (e.g. between arrays of
+/// template instantiations).
+///
+/// [1]
+/// https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html#layout-of-rust-array-types
+unsafe impl<T, const N: usize> CcType for [T; N]
+where
+    T: CcType,
+{
+    type Name = ([(); N], T::Name);
+}
+
+/// If `T` can be transmuted into `U`, then one can also transmute between
+/// slices `[T]` and `[U]`.
+///
+/// # Safety notes
+///
+/// ## Slices
+///
+/// "Unsafe Code Guidelines Reference" [1] points out that "the layout of a
+/// slice [T] of length N is the same as that of a [T; N] array".  Therefore the
+/// safety of slice tranmutability can just depend on the safety of array
+/// transmutability and we can just refer to the safety notes for the
+/// `impl ... for [T; N]`.
+///
+/// [1]
+/// https://rust-lang.github.io/unsafe-code-guidelines/layout/arrays-and-slices.html#layout-of-rust-array-types
+///
+/// ## References to slices
+///
+/// The `impl` below only covers slices `[T]`, but it seems useful to talk here
+/// about the safety of transmuting *references* to slices: `&[T]` (covered by
+/// the `impl`s in the `ref_transmutability` module below).  Transmuting of such
+/// "fat" pointers is safe based on "Unsafe Code Guidelines Reference" [2]
+/// pointing out that the layout of `&[T]` is independent of T - same layout as:
+///
+/// ```rs
+/// #[repr(C)]
+/// struct Slice<T> {
+///   ptr: *const T,
+///   len: usize,
+/// }
+/// ```
+///
+/// [2] https://rust-lang.github.io/unsafe-code-guidelines/layout/pointers.html#notes
+unsafe impl<T> CcType for [T]
+where
+    T: CcType,
+{
+    // Using somewhat icky `usize::MAX` to work around the fact that [()] is
+    // unsized.
+    type Name = ([(); usize::MAX], T::Name);
 }
 
 /// If `T` can be transmuted into `U`, then one can also transmute between `&'a
@@ -318,7 +382,8 @@ where
 /// # Safety
 ///
 /// 1. `&T` => `&U`: Pointers to transmutable things are themselves
-/// transmutable.
+/// transmutable.  This is safe for    "thin" pointers (e.g. `&i32`) as well as
+/// for "fat" pointers (e.g. `&[i32]` also stores the    size of the slice).
 ///
 /// 2. `&T` => `Pin<&T>`: `Pin` is `repr(transparent)` and `Pin::new` is
 /// safe.
@@ -396,7 +461,8 @@ mod ref_transmutability {
 /// that the 3rd item below also needs to talk about the `T: Unpin` constraint.
 ///
 /// 1. `&mut T` => `&mut U`: Pointers to transmutable things are themselves
-/// transmutable.
+/// transmutable.  This is    safe for "thin" pointers (e.g. `&i32`) as well as
+/// for "fat" pointers (e.g. `&[i32]` also    stores the size of the slice).
 ///
 /// 2. `&mut T` => `Pin<&mut T>`: `Pin` is `repr(transparent)` and `Pin::new`
 ///    is safe.
@@ -454,8 +520,6 @@ where
         unsafe { std::mem::transmute_copy(&*x) }
     }
 }
-
-// TODO(jeanpierreda): Slices of references.
 
 impl<'a, T: ?Sized, U: ?Sized> IncompleteCast<Vec<&'a U>> for Vec<&'a T>
 where

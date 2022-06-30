@@ -96,6 +96,7 @@ fn test_conversions() {
         (slice.as_ptr() as usize, slice.len())
     }
 
+    // Vec<&> <-> Vec<&>
     {
         let complete_vec: Vec<&MyType> = vec![&complete];
         let loc = slice_location(&complete_vec);
@@ -104,6 +105,36 @@ fn test_conversions() {
         assert_eq!(slice_location(&incomplete_vec), loc);
         let complete_vec: Vec<&MyType> = incomplete_vec.incomplete_cast();
         assert_eq!(slice_location(&complete_vec), loc);
+    }
+
+    // &[&] <-> &[&]
+    {
+        let complete_vec: Vec<&MyType> = vec![&complete];
+        let complete_slice: &[&MyType] = complete_vec.as_slice();
+        let loc = slice_location(complete_slice);
+
+        let incomplete_slice: &[&MyTypeIncomplete] = complete_slice.incomplete_cast();
+        assert_eq!(slice_location(incomplete_slice), loc);
+        let complete_slice: &[&MyType] = incomplete_slice.incomplete_cast();
+        assert_eq!(slice_location(complete_slice), loc);
+    }
+
+    // [&; N] <-> [&; N]
+    {
+        let complete_array: [&MyType; 2] = [&complete, &complete];
+        let incomplete_array: [&MyTypeIncomplete; 2] = complete_array.incomplete_cast();
+        // TODO(jeanpierreda, lukasza): Avoid copying the array to a different memory location
+        // (maybe by tweaking `incomplete_cast()` to use `std::mem::transmute`
+        // instead of `std::mem::transmute_copy` when the input and output types
+        // are both `Sized`).  Once that is done, we should be able to add
+        // asserts that say:
+        //
+        //      let loc = slice_location(&complete_array);
+        //      ...
+        //      assert_eq!(slice_location(&incomplete_array), loc)
+        //      ...
+        //      assert_eq!(slice_location(&complete_array), loc)
+        let _complete_array: [&MyType; 2] = incomplete_array.incomplete_cast();
     }
 }
 
