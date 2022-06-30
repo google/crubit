@@ -186,9 +186,7 @@ TEST_F(LifetimeAnalysisTest, StaticParameterChainedCall) {
       f1(s);
     }
   )"),
-              // TODO(b/237517535): The lifetimes deduced for `f2` are incorrect
-              // and should be static.
-              LifetimesAre({{"f1", "static"}, {"f2", "a"}}));
+              LifetimesAre({{"f1", "static"}, {"f2", "static"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, ConstructorStoresThisPointerInStatic) {
@@ -220,10 +218,7 @@ TEST_F(LifetimeAnalysisTest, ConstructorStoresThisPointerInStatic_WithField) {
       S s;
     };
   )"),
-              // TODO(b/230725905): The lifetimes for T::T should be "static:"
-              // because T contains a member variable of type S, and all
-              // instances of S need to be static.
-              LifetimesAre({{"S::S", "static:"}, {"T::T", "a:"}}));
+              LifetimesAre({{"S::S", "static:"}, {"T::T", "static:"}}));
 }
 
 TEST_F(LifetimeAnalysisTest,
@@ -240,10 +235,7 @@ TEST_F(LifetimeAnalysisTest,
       T() {}
     };
   )"),
-              // TODO(b/230725905): The lifetimes for T::T should be "static:"
-              // because T derives from S and all instances of S need to be
-              // static.
-              LifetimesAre({{"S::S", "static:"}, {"T::T", "a:"}}));
+              LifetimesAre({{"S::S", "static:"}, {"T::T", "static:"}}));
 }
 
 }  // namespace

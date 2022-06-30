@@ -871,6 +871,20 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   //
   // Some additional considerations apply if the callee signature contains the
   // 'static lifetime, either in the parameters or the return value:
+  // - Any objects that are associated with the static lifetime in the callee
+  //   must be forced to have static lifetime.
+  //   We have no way of doing this directly, as we cannot mutate the lifetime
+  //   of the object (and, in any case, such a mutation would be global and not
+  //   limited to the current point in the program flow).
+  //   Instead, for each such object, we synthesize a pointer with static
+  //   lifetime and make it point at the object. Later, in
+  //   PropagateStaticToPointees(), this will cause us to assign static lifetime
+  //   to the object.
+  //   A cleaner solution to this would be to explicitly express "outlives"
+  //   constraints in the lattice. This might also help more generally to
+  //   simplify the logic associated with static lifetimes, but it would also be
+  //   a more invasive change.
+  //
   // - Any pointer or reference may point to an object of static lifetime. This
   //   has the following implications:
   //   - In step 2, when adding edges to the points-to map, we always add edges
@@ -878,6 +892,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   //     type of the pointer.
   //   - In step 3, an object of static lifetime conforms to any callee lifetime
   //     if that lifetime occurs in covariant position.
+  //
   // - The callee may have access to objects of static lifetime that are not
   //   passed as arguments, in addition to the ones that are accessible from the
   //   arguments.
@@ -907,6 +922,17 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
     CollectLifetimes({arg_object}, type, param_lifetimes, points_to_map,
                      object_repository, lifetime_points_to_set);
+  }
+
+  // Force any objects associated with the static lifetime in the callee to have
+  // static lifetime (see more detailed explanation above).
+  if (auto iter = lifetime_points_to_set.find(Lifetime::Static());
+      iter != lifetime_points_to_set.end()) {
+    for (const Object& object : iter->second) {
+      Object pointer = object_repository.CreateStaticObject(
+          ast_context.getPointerType(object.Type()));
+      points_to_map.ExtendPointerPointsToSet(pointer, {object});
+    }
   }
 
   // Step 2: Propagate points-to sets to output parameters.
