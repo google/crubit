@@ -65,8 +65,8 @@ using BaseToOverrides =
 
 // Enforce the invariant that an object of static lifetime should only point at
 // other objects of static lifetime.
-void PropagateStaticToPointees(LifetimeSubstitutions& subst,
-                               const PointsToMap& points_to_map) {
+llvm::Error PropagateStaticToPointees(LifetimeSubstitutions& subst,
+                                      const PointsToMap& points_to_map) {
   std::vector<Object> pointees =
       points_to_map.GetAllPointersWithLifetime(Lifetime::Static());
 
@@ -76,6 +76,12 @@ void PropagateStaticToPointees(LifetimeSubstitutions& subst,
     Object cur = pointees.back();
     pointees.pop_back();
     visited.insert(cur);
+    if (cur.GetLifetime().IsLocal()) {
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          "attempted to make a pointer of static lifetime point at an object "
+          "of local lifetime");
+    }
     if (cur.GetLifetime() != Lifetime::Static()) {
       subst.Add(cur.GetLifetime(), Lifetime::Static());
     }
@@ -86,6 +92,8 @@ void PropagateStaticToPointees(LifetimeSubstitutions& subst,
       }
     }
   }
+
+  return llvm::Error::success();
 }
 
 // DO NOT use this function on untrusted input.
@@ -772,7 +780,9 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunctionBody(
   }
 
   LifetimeSubstitutions subst;
-  PropagateStaticToPointees(subst, points_to_map);
+  if (llvm::Error err = PropagateStaticToPointees(subst, points_to_map)) {
+    return std::move(err);
+  }
 
   return FunctionAnalysis{
       .object_repository = std::move(object_repository),
