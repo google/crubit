@@ -4,9 +4,6 @@
 
 #[cfg(test)]
 mod tests {
-    // TODO(b/236037915): Rename `CcCast` into something less focused on
-    // forward declarations (maybe `CcCast` => `CcCast` and
-    // `forward_declare.rs` => `cc_cast.rs`?).
     use forward_declare::CcCast;
 
     #[test]
