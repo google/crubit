@@ -175,7 +175,7 @@ class ObjectRepository::VarDeclVisitor
     const Object* object =
         object_repository_.CreateObject(Lifetime::CreateLocal(), type);
     object_repository_.CreateObjects(
-        *object, type,
+        object, type,
         [](const clang::Expr*) { return Lifetime::CreateVariable(); },
         /*transitive=*/false);
     return object;
@@ -237,7 +237,7 @@ class ObjectRepository::VarDeclVisitor
         object_repository_.CreateObject(lifetime, var->getType());
 
     object_repository_.CreateObjects(
-        *object, var->getType(), lifetime_factory,
+        object, var->getType(), lifetime_factory,
         /*transitive=*/clang::isa<clang::ParmVarDecl>(var) ||
             lifetime == Lifetime::Static());
 
@@ -272,7 +272,7 @@ class ObjectRepository::VarDeclVisitor
         object_repository_.CreateObject(Lifetime::CreateLocal(), type);
 
     object_repository_.CreateObjects(
-        *object, type,
+        object, type,
         [](const clang::Expr*) { return Lifetime::CreateVariable(); },
         /*transitive=*/false);
 
@@ -462,7 +462,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
   // For the return value, we only need to create field objects.
   return_object_ = CreateObject(Lifetime::CreateLocal(), func->getReturnType());
   CreateObjects(
-      *return_object_, func->getReturnType(),
+      return_object_, func->getReturnType(),
       [](const clang::Expr*) { return Lifetime::CreateLocal(); },
       /*transitive=*/false);
 
@@ -471,7 +471,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
       this_object_ = CreateObject(Lifetime::CreateVariable(),
                                   method_decl->getThisObjectType());
       CreateObjects(
-          **this_object_, method_decl->getThisObjectType(),
+          *this_object_, method_decl->getThisObjectType(),
           [](const clang::Expr*) { return Lifetime::CreateVariable(); },
           /*transitive=*/true);
     }
@@ -698,13 +698,14 @@ const Object* ObjectRepository::CreateStaticObject(clang::QualType type) {
   static_objects_[type] = object;
 
   CreateObjects(
-      *object, type, [](const clang::Expr*) { return Lifetime::Static(); },
+      object, type, [](const clang::Expr*) { return Lifetime::Static(); },
       true);
 
   return object;
 }
 
-void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
+void ObjectRepository::CreateObjects(const Object* root_object,
+                                     clang::QualType type,
                                      LifetimeFactory lifetime_factory,
                                      bool transitive) {
   class Visitor : public LifetimeVisitor {
@@ -798,7 +799,7 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
   Visitor visitor(*this, transitive);
   VisitLifetimes(
       {root_object}, type,
-      ObjectLifetimes(root_object.GetLifetime(),
+      ObjectLifetimes(root_object->GetLifetime(),
                       ValueLifetimes::Create(type, lifetime_factory).get()),
       visitor);
 }

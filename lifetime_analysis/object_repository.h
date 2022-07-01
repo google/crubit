@@ -200,7 +200,7 @@ class ObjectRepository {
   const Object* CreateStaticObject(clang::QualType type);
 
  private:
-  void CreateObjects(Object root_object, clang::QualType type,
+  void CreateObjects(const Object* root_object, clang::QualType type,
                      LifetimeFactory lifetime_factory, bool transitive);
 
   const Object* CloneObject(const Object* object);
