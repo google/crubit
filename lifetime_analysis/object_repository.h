@@ -250,7 +250,7 @@ class ObjectRepository {
 
   llvm::DenseMap<const clang::Expr*, const Object*> call_expr_this_pointers_;
 
-  llvm::DenseMap<clang::QualType, Object> static_objects_;
+  llvm::DenseMap<clang::QualType, const Object*> static_objects_;
 };
 
 }  // namespace lifetimes

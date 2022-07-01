@@ -687,17 +687,17 @@ ObjectSet ObjectRepository::GetBaseClassObject(const ObjectSet& struct_objects,
 Object ObjectRepository::CreateStaticObject(clang::QualType type) {
   auto iter = static_objects_.find(type);
   if (iter != static_objects_.end()) {
-    return iter->second;
+    return *iter->second;
   }
 
-  Object object = *CreateObject(Lifetime::Static(), type);
+  const Object* object = CreateObject(Lifetime::Static(), type);
   static_objects_[type] = object;
 
   CreateObjects(
-      object, type, [](const clang::Expr*) { return Lifetime::Static(); },
+      *object, type, [](const clang::Expr*) { return Lifetime::Static(); },
       true);
 
-  return object;
+  return *object;
 }
 
 void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
