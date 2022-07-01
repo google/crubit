@@ -493,7 +493,7 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclRefExpr(
     return std::nullopt;
   }
 
-  Object object = object_repository_.GetDeclObject(decl);
+  const Object* object = object_repository_.GetDeclObject(decl);
 
   assert(decl_ref->isGLValue() || decl_ref->getType()->isBuiltinType());
 
@@ -630,14 +630,15 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclStmt(
     const clang::DeclStmt* decl_stmt) {
   for (const clang::Decl* decl : decl_stmt->decls()) {
     if (const auto* var_decl = clang::dyn_cast<clang::VarDecl>(decl)) {
-      Object var_object = object_repository_.GetDeclObject(var_decl);
+      const Object* var_object = object_repository_.GetDeclObject(var_decl);
 
       // Don't need to record initializers because initialization has already
       // happened in VisitCXXConstructExpr(), VisitInitListExpr(), or
       // VisitCallExpr().
       if (var_decl->hasInit() && !var_decl->getType()->isRecordType()) {
-        TransferInitializer(var_object, var_decl->getType(), object_repository_,
-                            var_decl->getInit(), points_to_map_);
+        TransferInitializer(*var_object, var_decl->getType(),
+                            object_repository_, var_decl->getInit(),
+                            points_to_map_);
       }
     }
   }

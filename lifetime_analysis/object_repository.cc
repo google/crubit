@@ -525,7 +525,8 @@ const Object* ObjectRepository::CreateObjectFromFunctionDecl(
   return new (object_allocator_.Allocate()) Object(func);
 }
 
-Object ObjectRepository::GetDeclObject(const clang::ValueDecl* decl) const {
+const Object* ObjectRepository::GetDeclObject(
+    const clang::ValueDecl* decl) const {
   auto iter = object_repository_.find(decl);
   if (iter == object_repository_.end()) {
     llvm::errs() << "Didn't find object for Decl:\n";
@@ -533,7 +534,7 @@ Object ObjectRepository::GetDeclObject(const clang::ValueDecl* decl) const {
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for Decl");
   }
-  return *iter->second;
+  return iter->second;
 }
 
 Object ObjectRepository::GetTemporaryObject(

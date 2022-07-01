@@ -97,7 +97,7 @@ class ObjectRepository {
   const Object* CreateObjectFromFunctionDecl(const clang::FunctionDecl& func);
 
   // Returns the object associated with a variable or function.
-  Object GetDeclObject(const clang::ValueDecl* decl) const;
+  const Object* GetDeclObject(const clang::ValueDecl* decl) const;
 
   // Returns the object associated with a materialize temporary expression.
   Object GetTemporaryObject(const clang::MaterializeTemporaryExpr* expr) const;
