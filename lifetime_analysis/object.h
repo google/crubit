@@ -22,7 +22,9 @@ namespace lifetimes {
 // lifetime, but two equal objects always have the same lifetime.
 class Object {
  public:
+  Object(const Object&) = delete;
   Object(Object&&) = delete;
+  Object& operator=(const Object&) = delete;
   Object& operator=(Object&&) = delete;
 
   // Creates an object with the given lifetime and type.
@@ -34,9 +36,6 @@ class Object {
   // This constructor should only be used in tests. Outside of tests, use
   // one of the ObjectRepository::CreateObject...() functions.
   Object(const clang::FunctionDecl& func);
-
-  Object(const Object&) = default;
-  Object& operator=(const Object&) = default;
 
   // Returns the lifetime of the object.
   Lifetime GetLifetime() const { return lifetime_; }

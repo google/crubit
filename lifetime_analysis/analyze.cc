@@ -130,9 +130,9 @@ std::string EscapeHtmlChars(absl::string_view input) {
   return escaped;
 }
 
-std::string VariableLabel(absl::string_view name, Object object) {
+std::string VariableLabel(absl::string_view name, const Object* object) {
   return absl::StrFormat("<<b>%s</b> (%s)>", EscapeHtmlChars(name),
-                         EscapeHtmlChars(object.DebugString()));
+                         EscapeHtmlChars(object->DebugString()));
 }
 
 std::string PointsToEdgesDot(const ObjectRepository& object_repository,
@@ -172,21 +172,21 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
     lines.push_back(absl::StrFormat(
         "\"%s%s\"[label=%s]", name_prefix,
         (*object_repository.GetThisObject())->DebugString(),
-        VariableLabel("this", **object_repository.GetThisObject())));
+        VariableLabel("this", *object_repository.GetThisObject())));
   }
 
   for (auto [decl, object] : object_repository) {
     var_objects.insert(object);
     lines.push_back(absl::StrFormat(
         "\"%s%s\"[label=%s]", name_prefix, object->DebugString(),
-        VariableLabel(decl->getNameAsString(), *object)));
+        VariableLabel(decl->getNameAsString(), object)));
   }
 
   var_objects.insert(object_repository.GetReturnObject());
   lines.push_back(absl::StrFormat(
       "\"%s%s\"[label=%s]", name_prefix,
       object_repository.GetReturnObject()->DebugString(),
-      VariableLabel("return", *object_repository.GetReturnObject())));
+      VariableLabel("return", object_repository.GetReturnObject())));
 
   for (const Object* object : all_objects) {
     if (!var_objects.contains(object)) {
@@ -206,7 +206,7 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
     if (!var_objects.contains(object)) {
       lines.push_back(absl::StrFormat(R"("%1$s%2$s"[label="%2$s"])",
                                       name_prefix,
-                                      VariableLabel("this", *object)));
+                                      VariableLabel("this", object)));
     }
   }
 
