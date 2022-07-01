@@ -48,7 +48,7 @@ class ObjectRepository::VarDeclVisitor
   bool VisitReturnStmt(clang::ReturnStmt* stmt) {
     const clang::Expr* expr = stmt->getRetValue();
     if (IsInitExprInitializingARecordObject(expr)) {
-      PropagateInitializedObject(expr, *object_repository_.return_object_);
+      PropagateInitializedObject(expr, object_repository_.return_object_);
     }
     return true;
   }
@@ -253,7 +253,7 @@ class ObjectRepository::VarDeclVisitor
     }
 
     if (var->hasInit() && var->getType()->isRecordType()) {
-      PropagateInitializedObject(var->getInit(), *object);
+      PropagateInitializedObject(var->getInit(), object);
     }
   }
 
@@ -277,7 +277,7 @@ class ObjectRepository::VarDeclVisitor
         /*transitive=*/false);
 
     if (type->isRecordType()) {
-      PropagateInitializedObject(expr, *object);
+      PropagateInitializedObject(expr, object);
     }
     return object;
   }
@@ -297,7 +297,8 @@ class ObjectRepository::VarDeclVisitor
   //
   // The mapping from a terminating expression to the object it initializes
   // is stored in `object_repository_.initialized_objects_`.
-  void PropagateInitializedObject(const clang::Expr* expr, Object object) {
+  void PropagateInitializedObject(const clang::Expr* expr,
+                                  const Object* object) {
     // TODO(danakj): Use StmtVisitor to implement this method.
     // copybara:begin_strip
     // Context and hints:
@@ -430,14 +431,14 @@ class ObjectRepository::VarDeclVisitor
 
         const Object* field_object =
             object_repository_.GetFieldObject(*this_object, init->getMember());
-        PropagateInitializedObject(init_expr, *field_object);
+        PropagateInitializedObject(init_expr, field_object);
       } else if (init->getBaseClass()) {
         std::optional<Object> this_object = object_repository_.GetThisObject();
         assert(this_object.has_value());
 
         const Object* base_object = object_repository_.GetBaseClassObject(
             *this_object, init->getBaseClass());
-        PropagateInitializedObject(init_expr, *base_object);
+        PropagateInitializedObject(init_expr, base_object);
       }
 
       // Traverse after finishing with the outer expression, including
@@ -623,7 +624,7 @@ Object ObjectRepository::GetInitializedObject(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for initializer");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 ObjectRepository::ObjectValueType ObjectRepository::GetObjectValueType(

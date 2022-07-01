@@ -232,7 +232,7 @@ class ObjectRepository {
   // An object in this map may occur in other places too: `object_repository_`
   // if it is an lvalue, or `return_object_`. Or it may be a temporary in which
   // case it is only found in this map.
-  llvm::DenseMap<const clang::Expr*, Object> initialized_objects_;
+  llvm::DenseMap<const clang::Expr*, const Object*> initialized_objects_;
 
   std::optional<const Object*> this_object_;
   const Object* return_object_;
