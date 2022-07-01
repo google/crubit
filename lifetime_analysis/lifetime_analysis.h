@@ -33,7 +33,7 @@ void TransferInitializer(Object dest, clang::QualType type,
 struct FunctionParameter {
   clang::QualType param_type;
   ValueLifetimes param_lifetimes;
-  Object arg_object;
+  const Object* arg_object;
 };
 
 std::optional<ObjectSet> TransferLifetimesForCall(

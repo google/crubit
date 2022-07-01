@@ -167,7 +167,7 @@ void SetAllPointersPointsToSetRespectingTypes(const ObjectSet& pointers,
 }
 
 void CollectLifetimes(
-    Object arg_object, clang::QualType type,
+    const Object* arg_object, clang::QualType type,
     const ValueLifetimes& value_lifetimes, const PointsToMap& points_to_map,
     const ObjectRepository& object_repository,
     llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set) {
@@ -208,12 +208,12 @@ void CollectLifetimes(
   };
   Visitor visitor(object_repository, points_to_map, lifetime_to_object_set);
   VisitLifetimes({arg_object}, type,
-                 ObjectLifetimes(arg_object.GetLifetime(), value_lifetimes),
+                 ObjectLifetimes(arg_object->GetLifetime(), value_lifetimes),
                  visitor);
 }
 
 void PropagateLifetimesToPointees(
-    Object arg_object, clang::QualType type,
+    const Object* arg_object, clang::QualType type,
     const ValueLifetimes& value_lifetimes, PointsToMap& points_to_map,
     ObjectRepository& object_repository,
     const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
@@ -280,7 +280,7 @@ void PropagateLifetimesToPointees(
   Visitor visitor(object_repository, points_to_map, lifetime_to_object_set,
                   ast_context);
   VisitLifetimes({arg_object}, type,
-                 ObjectLifetimes(arg_object.GetLifetime(), value_lifetimes),
+                 ObjectLifetimes(arg_object->GetLifetime(), value_lifetimes),
                  visitor);
 }
 
@@ -396,7 +396,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   // Step 1: Create mapping from callee lifetimes to points-to sets.
   llvm::DenseMap<Lifetime, ObjectSet> lifetime_to_object_set;
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
-    CollectLifetimes({arg_object}, type, param_lifetimes, points_to_map,
+    CollectLifetimes(arg_object, type, param_lifetimes, points_to_map,
                      object_repository, lifetime_to_object_set);
   }
 
@@ -413,7 +413,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
 
   // Step 2: Propagate points-to sets to output parameters.
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
-    PropagateLifetimesToPointees({arg_object}, type, param_lifetimes,
+    PropagateLifetimesToPointees(arg_object, type, param_lifetimes,
                                  points_to_map, object_repository,
                                  lifetime_to_object_set, ast_context);
   }
@@ -423,7 +423,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
     if (IsInitExprInitializingARecordObject(call)) {
       const Object* init_object = object_repository.GetInitializedObject(call);
       PropagateLifetimesToPointees(
-          *init_object, call->getType(), return_lifetimes, points_to_map,
+          init_object, call->getType(), return_lifetimes, points_to_map,
           object_repository, lifetime_to_object_set, ast_context);
     } else {
       ObjectSet rval_points_to;
@@ -889,7 +889,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(FunctionParameter{
           clang::dyn_cast<clang::CXXMethodDecl>(callee)->getThisType(),
           callee_lifetimes.GetThisLifetimes(),
-          *object_repository.GetCallExprThisPointer(call)});
+          object_repository.GetCallExprThisPointer(call)});
     }
 
     // Handle all other arguments.
@@ -897,7 +897,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(FunctionParameter{
           callee->getParamDecl(i - 1)->getType().getCanonicalType(),
           callee_lifetimes.GetParamLifetimes(i - 1),
-          *object_repository.GetCallExprArgumentObject(call, i)});
+          object_repository.GetCallExprArgumentObject(call, i)});
     }
   } else {
     // We check <= instead of == because of default arguments.
@@ -907,7 +907,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(FunctionParameter{
           callee->getParamDecl(i)->getType().getCanonicalType(),
           callee_lifetimes.GetParamLifetimes(i),
-          *object_repository.GetCallExprArgumentObject(call, i)});
+          object_repository.GetCallExprArgumentObject(call, i)});
     }
     if (const auto* member_call =
             clang::dyn_cast<clang::CXXMemberCallExpr>(call)) {
@@ -927,7 +927,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(
           FunctionParameter{member_call->getMethodDecl()->getThisType(),
                             callee_lifetimes.GetThisLifetimes(),
-                            *object_repository.GetCallExprThisPointer(call)});
+                            object_repository.GetCallExprThisPointer(call)});
     }
   }
   return fn_params;
@@ -1101,14 +1101,14 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
         constructor->getParamDecl(i)->getType().getCanonicalType();
     fn_params.push_back(
         FunctionParameter{arg_type, callee_lifetimes.GetParamLifetimes(i),
-                          *object_repository_.GetCXXConstructExprArgumentObject(
+                          object_repository_.GetCXXConstructExprArgumentObject(
                               construct_expr, i)});
   }
 
   clang::QualType type = constructor->getThisType();
   fn_params.push_back(FunctionParameter{
       type, callee_lifetimes.GetThisLifetimes(),
-      *object_repository_.GetCXXConstructExprThisPointer(construct_expr)});
+      object_repository_.GetCXXConstructExprThisPointer(construct_expr)});
 
   TransferLifetimesForCall(
       construct_expr, fn_params,

@@ -692,11 +692,11 @@ llvm::Error TransferDefaultConstructor(
       std::get<FunctionLifetimes>(ctor_lifetimes_or_error);
 
   std::vector<FunctionParameter> fn_params;
-  Object this_ptr = *object_repository.CreateObject(
+  const Object* this_ptr = object_repository.CreateObject(
       Lifetime::CreateLocal(), default_ctor->getThisType());
   points_to_map.SetPointerPointsToSet(this_ptr, {this_object});
   fn_params.push_back(FunctionParameter{
-      this_ptr.Type(), ctor_lifetimes.GetThisLifetimes(), this_ptr});
+      this_ptr->Type(), ctor_lifetimes.GetThisLifetimes(), this_ptr});
   TransferLifetimesForCall(
       // Passing `nullptr` for `call` is OK here because it's only required if
       // the return value contains lifetimes.
