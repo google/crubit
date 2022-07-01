@@ -233,15 +233,16 @@ class ObjectRepository::VarDeclVisitor
         break;
     }
 
-    Object object = *object_repository_.CreateObject(lifetime, var->getType());
+    const Object* object =
+        object_repository_.CreateObject(lifetime, var->getType());
 
     object_repository_.CreateObjects(
-        object, var->getType(), lifetime_factory,
+        *object, var->getType(), lifetime_factory,
         /*transitive=*/clang::isa<clang::ParmVarDecl>(var) ||
             lifetime == Lifetime::Static());
 
-    object_repository_.object_repository_[var] = object;
-    object_repository_.object_value_types_[object] =
+    object_repository_.object_repository_[var] = *object;
+    object_repository_.object_value_types_[*object] =
         var->getType()->isArrayType() ? ObjectValueType::kMultiValued
                                       : ObjectValueType::kSingleValued;
 
@@ -252,7 +253,7 @@ class ObjectRepository::VarDeclVisitor
     }
 
     if (var->hasInit() && var->getType()->isRecordType()) {
-      PropagateInitializedObject(var->getInit(), object);
+      PropagateInitializedObject(var->getInit(), *object);
     }
   }
 
@@ -555,7 +556,7 @@ Object ObjectRepository::GetOriginalParameterValue(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find caller object for parameter");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetCallExprArgumentObject(const clang::CallExpr* expr,
@@ -799,22 +800,22 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
 }
 
 // Clones an object and its base classes and fields, if any.
-Object ObjectRepository::CloneObject(Object object) {
+const Object* ObjectRepository::CloneObject(const Object* object) {
   struct ObjectPair {
     Object orig_object;
-    Object new_object;
+    const Object* new_object;
   };
   auto clone = [this](Object obj) {
-    auto new_obj = *CreateObject(obj.GetLifetime(), obj.Type());
+    auto new_obj = CreateObject(obj.GetLifetime(), obj.Type());
     initial_points_to_map_.SetPointerPointsToSet(
-        new_obj, initial_points_to_map_.GetPointerPointsToSet(obj));
+        *new_obj, initial_points_to_map_.GetPointerPointsToSet(obj));
     return new_obj;
   };
-  Object new_root = clone(object);
-  std::vector<ObjectPair> object_stack{{object, new_root}};
+  const Object* new_root = clone(*object);
+  std::vector<ObjectPair> object_stack{{*object, new_root}};
   while (!object_stack.empty()) {
     auto [orig_object, new_object] = object_stack.back();
-    assert(orig_object.Type() == new_object.Type());
+    assert(orig_object.Type() == new_object->Type());
     object_stack.pop_back();
     auto record_type = orig_object.Type()->getAs<clang::RecordType>();
     if (!record_type) {
@@ -826,10 +827,10 @@ Object ObjectRepository::CloneObject(Object object) {
             clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
       for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
         auto base_obj = GetBaseClassObject(orig_object, base.getType());
-        Object new_base_obj = clone(base_obj);
+        const Object* new_base_obj = clone(base_obj);
         base_object_map_[std::make_pair(
-            new_object, base.getType().getCanonicalType().getTypePtr())] =
-            new_base_obj;
+            *new_object, base.getType().getCanonicalType().getTypePtr())] =
+            *new_base_obj;
         object_stack.push_back(ObjectPair{base_obj, new_base_obj});
       }
     }
@@ -837,8 +838,8 @@ Object ObjectRepository::CloneObject(Object object) {
     // Fields.
     for (auto f : record_type->getDecl()->fields()) {
       auto field_obj = GetFieldObject(orig_object, f);
-      Object new_field_obj = clone(field_obj);
-      field_object_map_[std::make_pair(new_object, f)] = new_field_obj;
+      const Object* new_field_obj = clone(field_obj);
+      field_object_map_[std::make_pair(*new_object, f)] = *new_field_obj;
       object_stack.push_back(ObjectPair{field_obj, new_field_obj});
     }
   }

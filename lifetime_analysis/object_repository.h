@@ -207,7 +207,7 @@ class ObjectRepository {
   void CreateObjects(Object root_object, clang::QualType type,
                      LifetimeFactory lifetime_factory, bool transitive);
 
-  Object CloneObject(Object object);
+  const Object* CloneObject(const Object* object);
 
   std::optional<Object> GetFieldObjectInternal(
       Object struct_object, const clang::FieldDecl* field) const;
@@ -223,7 +223,8 @@ class ObjectRepository {
 
   // Map from each function parameter to an object representing its initial
   // value at function entry.
-  llvm::DenseMap<const clang::ParmVarDecl*, Object> initial_parameter_object_;
+  llvm::DenseMap<const clang::ParmVarDecl*, const Object*>
+      initial_parameter_object_;
 
   // Map from each initializer (constructors or initializer lists) to the object
   // which it initializes.
