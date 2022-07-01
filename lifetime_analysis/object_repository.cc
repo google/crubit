@@ -807,22 +807,22 @@ void ObjectRepository::CreateObjects(const Object* root_object,
 // Clones an object and its base classes and fields, if any.
 const Object* ObjectRepository::CloneObject(const Object* object) {
   struct ObjectPair {
-    Object orig_object;
+    const Object* orig_object;
     const Object* new_object;
   };
-  auto clone = [this](Object obj) {
-    auto new_obj = CreateObject(obj.GetLifetime(), obj.Type());
+  auto clone = [this](const Object* obj) {
+    auto new_obj = CreateObject(obj->GetLifetime(), obj->Type());
     initial_points_to_map_.SetPointerPointsToSet(
-        *new_obj, initial_points_to_map_.GetPointerPointsToSet(obj));
+        new_obj, initial_points_to_map_.GetPointerPointsToSet(obj));
     return new_obj;
   };
-  const Object* new_root = clone(*object);
-  std::vector<ObjectPair> object_stack{{*object, new_root}};
+  const Object* new_root = clone(object);
+  std::vector<ObjectPair> object_stack{{object, new_root}};
   while (!object_stack.empty()) {
     auto [orig_object, new_object] = object_stack.back();
-    assert(orig_object.Type() == new_object->Type());
+    assert(orig_object->Type() == new_object->Type());
     object_stack.pop_back();
-    auto record_type = orig_object.Type()->getAs<clang::RecordType>();
+    auto record_type = orig_object->Type()->getAs<clang::RecordType>();
     if (!record_type) {
       continue;
     }
@@ -833,20 +833,20 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
       for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
         const Object* base_obj =
             GetBaseClassObject(orig_object, base.getType());
-        const Object* new_base_obj = clone(*base_obj);
+        const Object* new_base_obj = clone(base_obj);
         base_object_map_[std::make_pair(
             *new_object, base.getType().getCanonicalType().getTypePtr())] =
             new_base_obj;
-        object_stack.push_back(ObjectPair{*base_obj, new_base_obj});
+        object_stack.push_back(ObjectPair{base_obj, new_base_obj});
       }
     }
 
     // Fields.
     for (auto f : record_type->getDecl()->fields()) {
       const Object* field_obj = GetFieldObject(orig_object, f);
-      const Object* new_field_obj = clone(*field_obj);
+      const Object* new_field_obj = clone(field_obj);
       field_object_map_[std::make_pair(*new_object, f)] = new_field_obj;
-      object_stack.push_back(ObjectPair{*field_obj, new_field_obj});
+      object_stack.push_back(ObjectPair{field_obj, new_field_obj});
     }
   }
   return new_root;

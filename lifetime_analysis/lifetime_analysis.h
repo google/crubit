@@ -25,7 +25,7 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
-void TransferInitializer(Object dest, clang::QualType type,
+void TransferInitializer(const Object* dest, clang::QualType type,
                          const ObjectRepository& object_repository,
                          const clang::Expr* init_expr,
                          PointsToMap& points_to_map);

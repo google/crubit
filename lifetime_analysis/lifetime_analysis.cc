@@ -99,7 +99,7 @@ class TransferStmtVisitor
 
 }  // namespace
 
-void TransferInitializer(Object dest, clang::QualType type,
+void TransferInitializer(const Object* dest, clang::QualType type,
                          const ObjectRepository& object_repository,
                          const clang::Expr* init_expr,
                          PointsToMap& points_to_map) {
@@ -119,7 +119,7 @@ void TransferInitializer(Object dest, clang::QualType type,
         assert(init < init_list_expr->getNumInits());
         auto field_init = init_list_expr->getInit(init);
         ++init;
-        TransferInitializer(*object_repository.GetFieldObject(dest, f),
+        TransferInitializer(object_repository.GetFieldObject(dest, f),
                             f->getType(), object_repository, field_init,
                             points_to_map);
       }
@@ -637,9 +637,8 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclStmt(
       // happened in VisitCXXConstructExpr(), VisitInitListExpr(), or
       // VisitCallExpr().
       if (var_decl->hasInit() && !var_decl->getType()->isRecordType()) {
-        TransferInitializer(*var_object, var_decl->getType(),
-                            object_repository_, var_decl->getInit(),
-                            points_to_map_);
+        TransferInitializer(var_object, var_decl->getType(), object_repository_,
+                            var_decl->getInit(), points_to_map_);
       }
     }
   }
@@ -800,7 +799,7 @@ std::optional<std::string> TransferStmtVisitor::VisitInitListExpr(
     // The object set for each field should be pointing to the initializers.
     const Object* init_object =
         object_repository_.GetInitializedObject(init_list);
-    TransferInitializer(*init_object, init_list->getType(), object_repository_,
+    TransferInitializer(init_object, init_list->getType(), object_repository_,
                         init_list, points_to_map_);
   } else {
     // If the InitListExpr is not initializing a record object, we assume it's
@@ -1024,7 +1023,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
       // PointsToSet more than needed, as dataflow analysis relies on points-to
       // sets never shrinking.
       TransferInitializer(
-          *object_repository_.GetCallExprArgumentObject(call, i),
+          object_repository_.GetCallExprArgumentObject(call, i),
           callee->getParamDecl(is_member_operator ? i - 1 : i)->getType(),
           object_repository_, call->getArg(i), points_to_map_);
     }
@@ -1081,11 +1080,10 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
   assert(construct_expr->getNumArgs() <= constructor->getNumParams());
 
   for (size_t i = 0; i < construct_expr->getNumArgs(); i++) {
-    TransferInitializer(*object_repository_.GetCXXConstructExprArgumentObject(
-                            construct_expr, i),
-                        construct_expr->getArg(i)->getType(),
-                        object_repository_, construct_expr->getArg(i),
-                        points_to_map_);
+    TransferInitializer(
+        object_repository_.GetCXXConstructExprArgumentObject(construct_expr, i),
+        construct_expr->getArg(i)->getType(), object_repository_,
+        construct_expr->getArg(i), points_to_map_);
   }
 
   // Handle the `this` parameter, which should point to the object getting

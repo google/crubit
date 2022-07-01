@@ -486,7 +486,7 @@ void ExtendPointsToMapWithInitializers(
     }
     if (!IsInitExprInitializingARecordObject(init_expr)) {
       TransferInitializer(
-          *object_repository.GetFieldObject(*this_object.value(), field),
+          object_repository.GetFieldObject(*this_object.value(), field),
           field->getType(), object_repository, init_expr, points_to_map);
     }
   }
