@@ -39,8 +39,8 @@ TEST(PointsToMapTest, Equality) {
 
         {
           PointsToMap map1, map2;
-          map1.SetPointerPointsToSet(p1, {p2});
-          map2.SetPointerPointsToSet(p1, {p3});
+          map1.SetPointerPointsToSet(&p1, {&p2});
+          map2.SetPointerPointsToSet(&p1, {&p3});
           EXPECT_EQ(map1, PointsToMap(map1));
           EXPECT_NE(map1, PointsToMap());
           EXPECT_NE(map1, map2);
@@ -48,8 +48,8 @@ TEST(PointsToMapTest, Equality) {
 
         {
           PointsToMap map1, map2;
-          map1.SetExprObjectSet(expr, {p1});
-          map2.SetExprObjectSet(expr, {p2});
+          map1.SetExprObjectSet(expr, {&p1});
+          map2.SetExprObjectSet(expr, {&p2});
           EXPECT_EQ(map1, PointsToMap(map1));
           EXPECT_NE(map1, PointsToMap());
           EXPECT_NE(map1, map2);
@@ -70,16 +70,16 @@ TEST(PointsToMapTest, Union) {
         const clang::CallExpr* expr = getFirstCallExpr(ast_context);
 
         PointsToMap map1, map2;
-        map1.SetPointerPointsToSet(p1, {p2});
-        map2.SetPointerPointsToSet(p1, {p3});
+        map1.SetPointerPointsToSet(&p1, {&p2});
+        map2.SetPointerPointsToSet(&p1, {&p3});
 
-        map1.SetExprObjectSet(expr, {p2});
-        map2.SetExprObjectSet(expr, {p3});
+        map1.SetExprObjectSet(expr, {&p2});
+        map2.SetExprObjectSet(expr, {&p3});
 
         PointsToMap union_map = map1.Union(map2);
 
-        EXPECT_EQ(union_map.GetPointerPointsToSet(p1), ObjectSet({p2, p3}));
-        EXPECT_EQ(union_map.GetExprObjectSet(expr), ObjectSet({p2, p3}));
+        EXPECT_EQ(union_map.GetPointerPointsToSet(&p1), ObjectSet({&p2, &p3}));
+        EXPECT_EQ(union_map.GetExprObjectSet(expr), ObjectSet({&p2, &p3}));
       },
       {});
 }
@@ -96,13 +96,13 @@ TEST(PointsToMapTest, GetPointerPointsToSet) {
 
         PointsToMap map;
 
-        EXPECT_EQ(map.GetPointerPointsToSet(p1), ObjectSet());
+        EXPECT_EQ(map.GetPointerPointsToSet(&p1), ObjectSet());
 
-        map.SetPointerPointsToSet(p1, {p3});
-        map.SetPointerPointsToSet(p2, {p4});
+        map.SetPointerPointsToSet(&p1, {&p3});
+        map.SetPointerPointsToSet(&p2, {&p4});
 
-        EXPECT_EQ(map.GetPointerPointsToSet(p1), ObjectSet({p3}));
-        EXPECT_EQ(map.GetPointerPointsToSet({p1, p2}), ObjectSet({p3, p4}));
+        EXPECT_EQ(map.GetPointerPointsToSet(&p1), ObjectSet({&p3}));
+        EXPECT_EQ(map.GetPointerPointsToSet({&p1, &p2}), ObjectSet({&p3, &p4}));
       },
       {});
 }
@@ -118,15 +118,15 @@ TEST(PointsToMapTest, ExtendPointerPointsToSet) {
 
         PointsToMap map;
 
-        EXPECT_EQ(map.GetPointerPointsToSet(p1), ObjectSet());
+        EXPECT_EQ(map.GetPointerPointsToSet(&p1), ObjectSet());
 
-        map.ExtendPointerPointsToSet(p1, {p2});
+        map.ExtendPointerPointsToSet(&p1, {&p2});
 
-        EXPECT_EQ(map.GetPointerPointsToSet(p1), ObjectSet({p2}));
+        EXPECT_EQ(map.GetPointerPointsToSet(&p1), ObjectSet({&p2}));
 
-        map.ExtendPointerPointsToSet(p1, {p3});
+        map.ExtendPointerPointsToSet(&p1, {&p3});
 
-        EXPECT_EQ(map.GetPointerPointsToSet(p1), ObjectSet({p2, p3}));
+        EXPECT_EQ(map.GetPointerPointsToSet(&p1), ObjectSet({&p2, &p3}));
       },
       {});
 }
@@ -142,8 +142,8 @@ TEST(PointsToMapTest, GetExprObjectSet) {
 
         PointsToMap map;
 
-        map.SetExprObjectSet(expr, {p1});
-        EXPECT_EQ(map.GetExprObjectSet(expr), ObjectSet({p1}));
+        map.SetExprObjectSet(expr, {&p1});
+        EXPECT_EQ(map.GetExprObjectSet(expr), ObjectSet({&p1}));
       },
       {});
 }
