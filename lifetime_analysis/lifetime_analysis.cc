@@ -405,7 +405,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   if (auto iter = lifetime_to_object_set.find(Lifetime::Static());
       iter != lifetime_to_object_set.end()) {
     for (const Object& object : iter->second) {
-      Object pointer = object_repository.CreateStaticObject(
+      const Object* pointer = object_repository.CreateStaticObject(
           ast_context.getPointerType(object.Type()));
       points_to_map.ExtendPointerPointsToSet(pointer, {object});
     }
@@ -421,9 +421,9 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   // Step 3: Determine points-to set for the return value.
   if (return_lifetimes.HasLifetimes()) {
     if (IsInitExprInitializingARecordObject(call)) {
-      Object init_object = object_repository.GetInitializedObject(call);
+      const Object* init_object = object_repository.GetInitializedObject(call);
       PropagateLifetimesToPointees(
-          {init_object}, call->getType(), return_lifetimes, points_to_map,
+          *init_object, call->getType(), return_lifetimes, points_to_map,
           object_repository, lifetime_to_object_set, ast_context);
     } else {
       ObjectSet rval_points_to;
@@ -511,7 +511,7 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclRefExpr(
 
 std::optional<std::string> TransferStmtVisitor::VisitStringLiteral(
     const clang::StringLiteral* strlit) {
-  Object obj = object_repository_.CreateStaticObject(strlit->getType());
+  const Object* obj = object_repository_.CreateStaticObject(strlit->getType());
   points_to_map_.SetExprObjectSet(strlit, {obj});
   return std::nullopt;
 }
@@ -797,8 +797,9 @@ std::optional<std::string> TransferStmtVisitor::VisitInitListExpr(
       return std::nullopt;
     }
     // The object set for each field should be pointing to the initializers.
-    Object init_object = object_repository_.GetInitializedObject(init_list);
-    TransferInitializer(init_object, init_list->getType(), object_repository_,
+    const Object* init_object =
+        object_repository_.GetInitializedObject(init_list);
+    TransferInitializer(*init_object, init_list->getType(), object_repository_,
                         init_list, points_to_map_);
   } else {
     // If the InitListExpr is not initializing a record object, we assume it's
@@ -822,7 +823,8 @@ std::optional<std::string> TransferStmtVisitor::VisitInitListExpr(
 
 std::optional<std::string> TransferStmtVisitor::VisitMaterializeTemporaryExpr(
     const clang::MaterializeTemporaryExpr* temporary_expr) {
-  Object temp_object = object_repository_.GetTemporaryObject(temporary_expr);
+  const Object* temp_object =
+      object_repository_.GetTemporaryObject(temporary_expr);
   points_to_map_.SetExprObjectSet(temporary_expr, {temp_object});
   return std::nullopt;
 }
@@ -862,7 +864,7 @@ std::optional<std::string> TransferStmtVisitor::VisitMemberExpr(
 
 std::optional<std::string> TransferStmtVisitor::VisitCXXThisExpr(
     const clang::CXXThisExpr* this_expr) {
-  std::optional<Object> this_object = object_repository_.GetThisObject();
+  std::optional<const Object*> this_object = object_repository_.GetThisObject();
   assert(this_object.has_value());
   points_to_map_.SetExprObjectSet(this_expr, ObjectSet{this_object.value()});
   return std::nullopt;
@@ -887,7 +889,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(FunctionParameter{
           clang::dyn_cast<clang::CXXMethodDecl>(callee)->getThisType(),
           callee_lifetimes.GetThisLifetimes(),
-          object_repository.GetCallExprThisPointer(call)});
+          *object_repository.GetCallExprThisPointer(call)});
     }
 
     // Handle all other arguments.
@@ -895,7 +897,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(FunctionParameter{
           callee->getParamDecl(i - 1)->getType().getCanonicalType(),
           callee_lifetimes.GetParamLifetimes(i - 1),
-          object_repository.GetCallExprArgumentObject(call, i)});
+          *object_repository.GetCallExprArgumentObject(call, i)});
     }
   } else {
     // We check <= instead of == because of default arguments.
@@ -905,7 +907,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(FunctionParameter{
           callee->getParamDecl(i)->getType().getCanonicalType(),
           callee_lifetimes.GetParamLifetimes(i),
-          object_repository.GetCallExprArgumentObject(call, i)});
+          *object_repository.GetCallExprArgumentObject(call, i)});
     }
     if (const auto* member_call =
             clang::dyn_cast<clang::CXXMemberCallExpr>(call)) {
@@ -925,7 +927,7 @@ std::vector<FunctionParameter> CollectFunctionParameters(
       fn_params.push_back(
           FunctionParameter{member_call->getMethodDecl()->getThisType(),
                             callee_lifetimes.GetThisLifetimes(),
-                            object_repository.GetCallExprThisPointer(call)});
+                            *object_repository.GetCallExprThisPointer(call)});
     }
   }
   return fn_params;
@@ -1021,7 +1023,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
       // PointsToSet more than needed, as dataflow analysis relies on points-to
       // sets never shrinking.
       TransferInitializer(
-          object_repository_.GetCallExprArgumentObject(call, i),
+          *object_repository_.GetCallExprArgumentObject(call, i),
           callee->getParamDecl(is_member_operator ? i - 1 : i)->getType(),
           object_repository_, call->getArg(i), points_to_map_);
     }
@@ -1078,10 +1080,11 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
   assert(construct_expr->getNumArgs() <= constructor->getNumParams());
 
   for (size_t i = 0; i < construct_expr->getNumArgs(); i++) {
-    TransferInitializer(
-        object_repository_.GetCXXConstructExprArgumentObject(construct_expr, i),
-        construct_expr->getArg(i)->getType(), object_repository_,
-        construct_expr->getArg(i), points_to_map_);
+    TransferInitializer(*object_repository_.GetCXXConstructExprArgumentObject(
+                            construct_expr, i),
+                        construct_expr->getArg(i)->getType(),
+                        object_repository_, construct_expr->getArg(i),
+                        points_to_map_);
   }
 
   // Handle the `this` parameter, which should point to the object getting
@@ -1098,14 +1101,14 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
         constructor->getParamDecl(i)->getType().getCanonicalType();
     fn_params.push_back(
         FunctionParameter{arg_type, callee_lifetimes.GetParamLifetimes(i),
-                          object_repository_.GetCXXConstructExprArgumentObject(
+                          *object_repository_.GetCXXConstructExprArgumentObject(
                               construct_expr, i)});
   }
 
   clang::QualType type = constructor->getThisType();
   fn_params.push_back(FunctionParameter{
       type, callee_lifetimes.GetThisLifetimes(),
-      object_repository_.GetCXXConstructExprThisPointer(construct_expr)});
+      *object_repository_.GetCXXConstructExprThisPointer(construct_expr)});
 
   TransferLifetimesForCall(
       construct_expr, fn_params,

@@ -426,18 +426,20 @@ class ObjectRepository::VarDeclVisitor
       }
 
       if (init->getMember() && init->getMember()->getType()->isRecordType()) {
-        std::optional<Object> this_object = object_repository_.GetThisObject();
+        std::optional<const Object*> this_object =
+            object_repository_.GetThisObject();
         assert(this_object.has_value());
 
         const Object* field_object =
-            object_repository_.GetFieldObject(*this_object, init->getMember());
+            object_repository_.GetFieldObject(**this_object, init->getMember());
         PropagateInitializedObject(init_expr, field_object);
       } else if (init->getBaseClass()) {
-        std::optional<Object> this_object = object_repository_.GetThisObject();
+        std::optional<const Object*> this_object =
+            object_repository_.GetThisObject();
         assert(this_object.has_value());
 
         const Object* base_object = object_repository_.GetBaseClassObject(
-            *this_object, init->getBaseClass());
+            **this_object, init->getBaseClass());
         PropagateInitializedObject(init_expr, base_object);
       }
 
@@ -537,7 +539,7 @@ const Object* ObjectRepository::GetDeclObject(
   return iter->second;
 }
 
-Object ObjectRepository::GetTemporaryObject(
+const Object* ObjectRepository::GetTemporaryObject(
     const clang::MaterializeTemporaryExpr* expr) const {
   auto iter = temporary_objects_.find(expr);
   if (iter == temporary_objects_.end()) {
@@ -546,10 +548,10 @@ Object ObjectRepository::GetTemporaryObject(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for temporary expression");
   }
-  return *iter->second;
+  return iter->second;
 }
 
-Object ObjectRepository::GetOriginalParameterValue(
+const Object* ObjectRepository::GetOriginalParameterValue(
     const clang::ParmVarDecl* var_decl) const {
   auto iter = initial_parameter_object_.find(var_decl);
   if (iter == initial_parameter_object_.end()) {
@@ -558,11 +560,11 @@ Object ObjectRepository::GetOriginalParameterValue(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find caller object for parameter");
   }
-  return *iter->second;
+  return iter->second;
 }
 
-Object ObjectRepository::GetCallExprArgumentObject(const clang::CallExpr* expr,
-                                                   size_t arg_index) const {
+const Object* ObjectRepository::GetCallExprArgumentObject(
+    const clang::CallExpr* expr, size_t arg_index) const {
   auto iter = call_expr_args_objects_.find(std::make_pair(expr, arg_index));
   if (iter == call_expr_args_objects_.end()) {
     llvm::errs() << "Didn't find object for argument " << arg_index
@@ -571,10 +573,10 @@ Object ObjectRepository::GetCallExprArgumentObject(const clang::CallExpr* expr,
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for argument");
   }
-  return *iter->second;
+  return iter->second;
 }
 
-Object ObjectRepository::GetCallExprThisPointer(
+const Object* ObjectRepository::GetCallExprThisPointer(
     const clang::CallExpr* expr) const {
   auto iter = call_expr_this_pointers_.find(expr);
   if (iter == call_expr_this_pointers_.end()) {
@@ -583,10 +585,10 @@ Object ObjectRepository::GetCallExprThisPointer(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find `this` object for call");
   }
-  return *iter->second;
+  return iter->second;
 }
 
-Object ObjectRepository::GetCXXConstructExprArgumentObject(
+const Object* ObjectRepository::GetCXXConstructExprArgumentObject(
     const clang::CXXConstructExpr* expr, size_t arg_index) const {
   auto iter = call_expr_args_objects_.find(std::make_pair(expr, arg_index));
   if (iter == call_expr_args_objects_.end()) {
@@ -597,10 +599,10 @@ Object ObjectRepository::GetCXXConstructExprArgumentObject(
     llvm::report_fatal_error(
         "Didn't find object for argument of constructor call");
   }
-  return *iter->second;
+  return iter->second;
 }
 
-Object ObjectRepository::GetCXXConstructExprThisPointer(
+const Object* ObjectRepository::GetCXXConstructExprThisPointer(
     const clang::CXXConstructExpr* expr) const {
   auto iter = call_expr_this_pointers_.find(expr);
   if (iter == call_expr_this_pointers_.end()) {
@@ -609,10 +611,10 @@ Object ObjectRepository::GetCXXConstructExprThisPointer(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find `this` object for constructor");
   }
-  return *iter->second;
+  return iter->second;
 }
 
-Object ObjectRepository::GetInitializedObject(
+const Object* ObjectRepository::GetInitializedObject(
     const clang::Expr* initializer_expr) const {
   assert(clang::isa<clang::CXXConstructExpr>(initializer_expr) ||
          clang::isa<clang::InitListExpr>(initializer_expr) ||
@@ -625,7 +627,7 @@ Object ObjectRepository::GetInitializedObject(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for initializer");
   }
-  return *iter->second;
+  return iter->second;
 }
 
 ObjectRepository::ObjectValueType ObjectRepository::GetObjectValueType(
@@ -686,10 +688,10 @@ ObjectSet ObjectRepository::GetBaseClassObject(const ObjectSet& struct_objects,
   return ret;
 }
 
-Object ObjectRepository::CreateStaticObject(clang::QualType type) {
+const Object* ObjectRepository::CreateStaticObject(clang::QualType type) {
   auto iter = static_objects_.find(type);
   if (iter != static_objects_.end()) {
-    return *iter->second;
+    return iter->second;
   }
 
   const Object* object = CreateObject(Lifetime::Static(), type);
@@ -699,7 +701,7 @@ Object ObjectRepository::CreateStaticObject(clang::QualType type) {
       *object, type, [](const clang::Expr*) { return Lifetime::Static(); },
       true);
 
-  return *object;
+  return object;
 }
 
 void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,

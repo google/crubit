@@ -100,7 +100,8 @@ class ObjectRepository {
   const Object* GetDeclObject(const clang::ValueDecl* decl) const;
 
   // Returns the object associated with a materialize temporary expression.
-  Object GetTemporaryObject(const clang::MaterializeTemporaryExpr* expr) const;
+  const Object* GetTemporaryObject(
+      const clang::MaterializeTemporaryExpr* expr) const;
 
   // Returns the object representing the value of a function parameter at
   // function entry.
@@ -110,26 +111,27 @@ class ObjectRepository {
   // use this object's identity in any way; i.e. no other `Object` in the
   // points-to map should ever point to the object returned by this
   // function.
-  Object GetOriginalParameterValue(const clang::ParmVarDecl* var_decl) const;
+  const Object* GetOriginalParameterValue(
+      const clang::ParmVarDecl* var_decl) const;
 
   // Returns the object associated with an argument to a CallExpr.
-  Object GetCallExprArgumentObject(const clang::CallExpr* expr,
-                                   size_t arg_index) const;
+  const Object* GetCallExprArgumentObject(const clang::CallExpr* expr,
+                                          size_t arg_index) const;
 
   // Returns the object associated with the `this` argument to a CallExpr that
   // represents a method call. Note that this object represents the `this`
   // pointer, not the object that the method is being called on.
-  Object GetCallExprThisPointer(const clang::CallExpr* expr) const;
+  const Object* GetCallExprThisPointer(const clang::CallExpr* expr) const;
 
   // Returns the object associated with an argument to a CXXConstructExpr.
-  Object GetCXXConstructExprArgumentObject(const clang::CXXConstructExpr* expr,
-                                           size_t arg_index) const;
+  const Object* GetCXXConstructExprArgumentObject(
+      const clang::CXXConstructExpr* expr, size_t arg_index) const;
 
   // Returns the object associated with the `this` argument to a
   // CXXConstructExpr. Note that this object represents the `this` pointer, not
   // the object that the method is being called on (which is represnted by the
   // object from GetInitializedObject()).
-  Object GetCXXConstructExprThisPointer(
+  const Object* GetCXXConstructExprThisPointer(
       const clang::CXXConstructExpr* expr) const;
 
   // Returns the object associated with, and initialized by, a constructor call
@@ -137,19 +139,13 @@ class ObjectRepository {
   // represents the actual class object being initialized, not the `this`
   // pointer to it that is passed to methods of the class, and which is
   // represented by the object from GetCXXConstructExprThisPointer().
-  Object GetInitializedObject(const clang::Expr* initializer_expr) const;
+  const Object* GetInitializedObject(const clang::Expr* initializer_expr) const;
 
   // Returns what kind of values the given object represents.
   ObjectValueType GetObjectValueType(Object object) const;
 
   // Returns the object that represents `*this`, if in a member function.
-  std::optional<Object> GetThisObject() const {
-    if (this_object_) {
-      return **this_object_;
-    } else {
-      return std::nullopt;
-    }
-  }
+  std::optional<const Object*> GetThisObject() const { return this_object_; }
 
   // Returns the `Object` associated with the return value of the function.
   // Unlike the `Object`s for variables, the "return value object" is a fiction
@@ -157,7 +153,7 @@ class ObjectRepository {
   // the return value, and it will not, in general, be possible to take the
   // address of the return value object. It's still a useful fiction, however,
   // because it allows us to treat return values the same way as other values.
-  Object GetReturnObject() const { return *return_object_; }
+  const Object* GetReturnObject() const { return return_object_; }
 
   // Returns the object associated with a given field in the struct
   // represented by `struct_object`.
@@ -201,7 +197,7 @@ class ObjectRepository {
   // returns the same object. This is to guarantee that the number of objects
   // used in the analysis is bounded and that therefore the lattice is finite
   // and the analysis terminates.
-  Object CreateStaticObject(clang::QualType type);
+  const Object* CreateStaticObject(clang::QualType type);
 
  private:
   void CreateObjects(Object root_object, clang::QualType type,

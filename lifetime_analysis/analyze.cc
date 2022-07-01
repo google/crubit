@@ -168,11 +168,11 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   }
 
   if (object_repository.GetThisObject().has_value()) {
-    var_objects.insert(*object_repository.GetThisObject());
+    var_objects.insert(**object_repository.GetThisObject());
     lines.push_back(absl::StrFormat(
         "\"%s%s\"[label=%s]", name_prefix,
-        object_repository.GetThisObject()->DebugString(),
-        VariableLabel("this", *object_repository.GetThisObject())));
+        (*object_repository.GetThisObject())->DebugString(),
+        VariableLabel("this", **object_repository.GetThisObject())));
   }
 
   for (auto [decl, object] : object_repository) {
@@ -182,11 +182,11 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
         VariableLabel(decl->getNameAsString(), *object)));
   }
 
-  var_objects.insert(object_repository.GetReturnObject());
+  var_objects.insert(*object_repository.GetReturnObject());
   lines.push_back(absl::StrFormat(
       "\"%s%s\"[label=%s]", name_prefix,
-      object_repository.GetReturnObject().DebugString(),
-      VariableLabel("return", object_repository.GetReturnObject())));
+      object_repository.GetReturnObject()->DebugString(),
+      VariableLabel("return", *object_repository.GetReturnObject())));
 
   for (Object object : all_objects) {
     if (!var_objects.contains(object)) {
@@ -486,7 +486,7 @@ void ExtendPointsToMapWithInitializers(
     }
     if (!IsInitExprInitializingARecordObject(init_expr)) {
       TransferInitializer(
-          *object_repository.GetFieldObject(this_object.value(), field),
+          *object_repository.GetFieldObject(*this_object.value(), field),
           field->getType(), object_repository, init_expr, points_to_map);
     }
   }
@@ -714,11 +714,12 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
     ObjectRepository& object_repository, PointsToMap& points_to_map) {
   assert(ctor->isDefaulted() && ctor->isDefaultConstructor());
 
-  std::optional<Object> this_object_maybe = object_repository.GetThisObject();
+  std::optional<const Object*> this_object_maybe =
+      object_repository.GetThisObject();
   if (!this_object_maybe.has_value()) {
     llvm::report_fatal_error("didn't find `this` object for constructor");
   }
-  Object this_object = *this_object_maybe;
+  const Object* this_object = *this_object_maybe;
 
   const clang::CXXRecordDecl* record = ctor->getParent();
   for (const CXXBaseSpecifier& base : record->bases()) {
@@ -727,7 +728,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
       if (const clang::CXXConstructorDecl* base_ctor =
               GetDefaultConstructor(base_record)) {
         const Object* base_this_object =
-            object_repository.GetBaseClassObject(this_object, base.getType());
+            object_repository.GetBaseClassObject(*this_object, base.getType());
         if (llvm::Error err = TransferDefaultConstructor(
                 base_ctor, *base_this_object, object_repository, points_to_map,
                 callee_lifetimes)) {
@@ -742,7 +743,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
       if (const clang::CXXConstructorDecl* field_ctor =
               GetDefaultConstructor(field_record)) {
         const Object* field_this_object =
-            object_repository.GetFieldObject(this_object, field);
+            object_repository.GetFieldObject(*this_object, field);
         if (llvm::Error err = TransferDefaultConstructor(
                 field_ctor, *field_this_object, object_repository,
                 points_to_map, callee_lifetimes)) {
@@ -983,7 +984,7 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
   for (unsigned i = 0; i < func->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = func->getParamDecl(i);
     FindLifetimeSubstitutions(
-        object_repository.GetOriginalParameterValue(param), param->getType(),
+        *object_repository.GetOriginalParameterValue(param), param->getType(),
         points_to_map, object_repository, result.GetParamLifetimes(i), subst);
   }
 
@@ -1009,8 +1010,8 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
   }
 
   FindLifetimeSubstitutions(
-      object_repository.GetReturnObject(), func->getReturnType(), points_to_map,
-      object_repository, result.GetReturnLifetimes(), subst);
+      *object_repository.GetReturnObject(), func->getReturnType(),
+      points_to_map, object_repository, result.GetReturnLifetimes(), subst);
 
   result.SubstituteLifetimes(subst);
 
