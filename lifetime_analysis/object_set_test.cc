@@ -25,7 +25,7 @@ TEST(ObjectSet, AccessObjects) {
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
         Object object_static(Lifetime::Static(), ast_context.IntTy);
-        ObjectSet object_set = {object_static};
+        ObjectSet object_set = {&object_static};
 
         EXPECT_THAT(object_set, UnorderedElementsAre(object_static));
       },
@@ -40,16 +40,16 @@ TEST(ObjectSet, Contains) {
         Object o1(Lifetime::CreateLocal(), ast_context.IntTy);
         Object o2(Lifetime::CreateLocal(), ast_context.IntTy);
 
-        EXPECT_TRUE(ObjectSet({o1, o2}).Contains(o1));
-        EXPECT_TRUE(ObjectSet({o1, o2}).Contains(o2));
-        EXPECT_FALSE(ObjectSet({o1}).Contains(o2));
+        EXPECT_TRUE(ObjectSet({&o1, &o2}).Contains(&o1));
+        EXPECT_TRUE(ObjectSet({&o1, &o2}).Contains(&o2));
+        EXPECT_FALSE(ObjectSet({&o1}).Contains(&o2));
 
-        EXPECT_TRUE(ObjectSet({o1, o2}).Contains(ObjectSet()));
-        EXPECT_TRUE(ObjectSet({o1, o2}).Contains({o1}));
-        EXPECT_TRUE(ObjectSet({o1, o2}).Contains({o2}));
-        EXPECT_TRUE(ObjectSet({o1, o2}).Contains({o1, o2}));
-        EXPECT_TRUE(ObjectSet({o1}).Contains({o1}));
-        EXPECT_FALSE(ObjectSet({o1}).Contains({o2}));
+        EXPECT_TRUE(ObjectSet({&o1, &o2}).Contains(ObjectSet()));
+        EXPECT_TRUE(ObjectSet({&o1, &o2}).Contains(ObjectSet{&o1}));
+        EXPECT_TRUE(ObjectSet({&o1, &o2}).Contains(ObjectSet{&o2}));
+        EXPECT_TRUE(ObjectSet({&o1, &o2}).Contains({&o1, &o2}));
+        EXPECT_TRUE(ObjectSet({&o1}).Contains(ObjectSet{&o1}));
+        EXPECT_FALSE(ObjectSet({&o1}).Contains(ObjectSet{&o2}));
         EXPECT_TRUE(ObjectSet().Contains(ObjectSet()));
       },
       {});
@@ -61,9 +61,9 @@ TEST(ObjectSet, Union) {
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
         Object object_static(Lifetime::Static(), ast_context.IntTy);
-        ObjectSet set_1 = {object_static};
+        ObjectSet set_1 = {&object_static};
         Object object_local(Lifetime::CreateLocal(), ast_context.IntTy);
-        ObjectSet set_2 = {object_local};
+        ObjectSet set_2 = {&object_local};
 
         ObjectSet set_union = set_1.Union(set_2);
 
@@ -83,23 +83,23 @@ TEST(ObjectSet, Add) {
         Object o3(Lifetime::CreateLocal(), ast_context.IntTy);
 
         {
-          ObjectSet object_set = {o1};
-          object_set.Add(o2);
+          ObjectSet object_set = {&o1};
+          object_set.Add(&o2);
           EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2));
         }
         {
-          ObjectSet object_set = {o1, o2};
-          object_set.Add(o2);
+          ObjectSet object_set = {&o1, &o2};
+          object_set.Add(&o2);
           EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2));
         }
         {
-          ObjectSet object_set = {o1};
-          object_set.Add({o2, o3});
+          ObjectSet object_set = {&o1};
+          object_set.Add({&o2, &o3});
           EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2, o3));
         }
         {
-          ObjectSet object_set = {o1, o2};
-          object_set.Add({o2, o3});
+          ObjectSet object_set = {&o1, &o2};
+          object_set.Add({&o2, &o3});
           EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2, o3));
         }
       },
@@ -113,9 +113,9 @@ TEST(ObjectSet, Equality) {
          const LifetimeAnnotationContext&) {
         Object object_static(Lifetime::Static(), ast_context.IntTy);
         Object object_local(Lifetime::CreateLocal(), ast_context.IntTy);
-        ObjectSet set_1 = {object_static};
-        ObjectSet set_2 = {object_static};
-        ObjectSet set_3 = {object_static, object_local};
+        ObjectSet set_1 = {&object_static};
+        ObjectSet set_2 = {&object_static};
+        ObjectSet set_3 = {&object_static, &object_local};
 
         EXPECT_EQ(set_1, set_2);
         EXPECT_NE(set_1, set_3);
