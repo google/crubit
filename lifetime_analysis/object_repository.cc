@@ -48,7 +48,7 @@ class ObjectRepository::VarDeclVisitor
   bool VisitReturnStmt(clang::ReturnStmt* stmt) {
     const clang::Expr* expr = stmt->getRetValue();
     if (IsInitExprInitializingARecordObject(expr)) {
-      PropagateInitializedObject(expr, object_repository_.return_object_);
+      PropagateInitializedObject(expr, *object_repository_.return_object_);
     }
     return true;
   }
@@ -456,19 +456,18 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
   if (definition) func = definition;
 
   // For the return value, we only need to create field objects.
-  return_object_ =
-      *CreateObject(Lifetime::CreateLocal(), func->getReturnType());
+  return_object_ = CreateObject(Lifetime::CreateLocal(), func->getReturnType());
   CreateObjects(
-      return_object_, func->getReturnType(),
+      *return_object_, func->getReturnType(),
       [](const clang::Expr*) { return Lifetime::CreateLocal(); },
       /*transitive=*/false);
 
   if (method_decl) {
     if (!method_decl->isStatic()) {
-      this_object_ = *CreateObject(Lifetime::CreateVariable(),
-                                   method_decl->getThisObjectType());
+      this_object_ = CreateObject(Lifetime::CreateVariable(),
+                                  method_decl->getThisObjectType());
       CreateObjects(
-          *this_object_, method_decl->getThisObjectType(),
+          **this_object_, method_decl->getThisObjectType(),
           [](const clang::Expr*) { return Lifetime::CreateVariable(); },
           /*transitive=*/true);
     }
@@ -486,7 +485,7 @@ std::string ObjectRepository::DebugString() const {
   llvm::raw_string_ostream os(result);
 
   if (this_object_) {
-    os << "This " << this_object_->DebugString() << "\n";
+    os << "This " << (*this_object_)->DebugString() << "\n";
   }
   for (const auto& [decl, object] : object_repository_) {
     os << decl->getDeclKindName() << " " << decl << " (";
@@ -509,7 +508,7 @@ std::string ObjectRepository::DebugString() const {
     os << "' on " << field.first.Type().getAsString()
        << " object: " << object.DebugString() << "\n";
   }
-  os << "Return " << return_object_.DebugString() << "\n";
+  os << "Return " << return_object_->DebugString() << "\n";
   os.flush();
   return result;
 }

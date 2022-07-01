@@ -143,7 +143,13 @@ class ObjectRepository {
   ObjectValueType GetObjectValueType(Object object) const;
 
   // Returns the object that represents `*this`, if in a member function.
-  std::optional<Object> GetThisObject() const { return this_object_; }
+  std::optional<Object> GetThisObject() const {
+    if (this_object_) {
+      return **this_object_;
+    } else {
+      return std::nullopt;
+    }
+  }
 
   // Returns the `Object` associated with the return value of the function.
   // Unlike the `Object`s for variables, the "return value object" is a fiction
@@ -151,7 +157,7 @@ class ObjectRepository {
   // the return value, and it will not, in general, be possible to take the
   // address of the return value object. It's still a useful fiction, however,
   // because it allows us to treat return values the same way as other values.
-  Object GetReturnObject() const { return return_object_; }
+  Object GetReturnObject() const { return *return_object_; }
 
   // Returns the object associated with a given field in the struct
   // represented by `struct_object`.
@@ -227,8 +233,8 @@ class ObjectRepository {
   // case it is only found in this map.
   llvm::DenseMap<const clang::Expr*, Object> initialized_objects_;
 
-  std::optional<Object> this_object_;
-  Object return_object_;
+  std::optional<const Object*> this_object_;
+  const Object* return_object_;
 
   llvm::DenseMap<Object, ObjectValueType> object_value_types_;
 
