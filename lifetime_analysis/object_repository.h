@@ -18,6 +18,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/Support/Allocator.h"
 
 namespace clang {
 namespace tidy {
@@ -86,6 +87,14 @@ class ObjectRepository {
 
   const_iterator begin() const { return object_repository_.begin(); }
   const_iterator end() const { return object_repository_.end(); }
+
+  // Creates an object with the given lifetime and type.
+  // The returned object will live as long as this `ObjectRepository`.
+  const Object* CreateObject(Lifetime lifetime, clang::QualType type);
+
+  // Creates an object representing a declared function.
+  // The returned object will live as long as this `ObjectRepository`.
+  const Object* CreateObjectFromFunctionDecl(const clang::FunctionDecl& func);
 
   // Returns the object associated with a variable or function.
   Object GetDeclObject(const clang::ValueDecl* decl) const;
@@ -196,6 +205,8 @@ class ObjectRepository {
 
   std::optional<Object> GetFieldObjectInternal(
       Object struct_object, const clang::FieldDecl* field) const;
+
+  llvm::SpecificBumpPtrAllocator<Object> object_allocator_;
 
   // Map from each variable declaration to the object which it declares.
   MapType object_repository_;

@@ -172,7 +172,8 @@ class ObjectRepository::VarDeclVisitor
   }
 
   Object CreateLocalObject(clang::QualType type) {
-    Object object = Object::Create(Lifetime::CreateLocal(), type);
+    Object object =
+        *object_repository_.CreateObject(Lifetime::CreateLocal(), type);
     object_repository_.CreateObjects(
         object, type,
         [](const clang::Expr*) { return Lifetime::CreateVariable(); },
@@ -232,7 +233,7 @@ class ObjectRepository::VarDeclVisitor
         break;
     }
 
-    Object object = Object::Create(lifetime, var->getType());
+    Object object = *object_repository_.CreateObject(lifetime, var->getType());
 
     object_repository_.CreateObjects(
         object, var->getType(), lifetime_factory,
@@ -261,12 +262,13 @@ class ObjectRepository::VarDeclVisitor
     }
 
     object_repository_.object_repository_[func] =
-        Object::CreateFromFunctionDecl(*func);
+        *object_repository_.CreateObjectFromFunctionDecl(*func);
   }
 
   Object AddTemporaryObjectForExpression(clang::Expr* expr) {
     clang::QualType type = expr->getType().getCanonicalType();
-    Object object = Object::Create(Lifetime::CreateLocal(), type);
+    Object object =
+        *object_repository_.CreateObject(Lifetime::CreateLocal(), type);
 
     object_repository_.CreateObjects(
         object, type,
@@ -455,7 +457,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
 
   // For the return value, we only need to create field objects.
   return_object_ =
-      Object::Create(Lifetime::CreateLocal(), func->getReturnType());
+      *CreateObject(Lifetime::CreateLocal(), func->getReturnType());
   CreateObjects(
       return_object_, func->getReturnType(),
       [](const clang::Expr*) { return Lifetime::CreateLocal(); },
@@ -463,8 +465,8 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
 
   if (method_decl) {
     if (!method_decl->isStatic()) {
-      this_object_ = Object::Create(Lifetime::CreateVariable(),
-                                    method_decl->getThisObjectType());
+      this_object_ = *CreateObject(Lifetime::CreateVariable(),
+                                   method_decl->getThisObjectType());
       CreateObjects(
           *this_object_, method_decl->getThisObjectType(),
           [](const clang::Expr*) { return Lifetime::CreateVariable(); },
@@ -510,6 +512,16 @@ std::string ObjectRepository::DebugString() const {
   os << "Return " << return_object_.DebugString() << "\n";
   os.flush();
   return result;
+}
+
+const Object* ObjectRepository::CreateObject(Lifetime lifetime,
+                                             clang::QualType type) {
+  return new (object_allocator_.Allocate()) Object(lifetime, type);
+}
+
+const Object* ObjectRepository::CreateObjectFromFunctionDecl(
+    const clang::FunctionDecl& func) {
+  return new (object_allocator_.Allocate()) Object(func);
 }
 
 Object ObjectRepository::GetDeclObject(const clang::ValueDecl* decl) const {
@@ -678,7 +690,7 @@ Object ObjectRepository::CreateStaticObject(clang::QualType type) {
     return iter->second;
   }
 
-  Object object = Object::Create(Lifetime::Static(), type);
+  Object object = *CreateObject(Lifetime::Static(), type);
   static_objects_[type] = object;
 
   CreateObjects(
@@ -693,12 +705,8 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
                                      bool transitive) {
   class Visitor : public LifetimeVisitor {
    public:
-    Visitor(ObjectRepository::FieldObjects& field_object_map,
-            ObjectRepository::BaseObjects& base_object_map,
-            PointsToMap& initial_points_to_map, bool create_transitive_objects)
-        : field_object_map_(field_object_map),
-          base_object_map_(base_object_map),
-          initial_points_to_map_(initial_points_to_map),
+    Visitor(ObjectRepository& object_repository, bool create_transitive_objects)
+        : object_repository_(object_repository),
           create_transitive_objects_(create_transitive_objects) {}
 
     Object GetFieldObject(const ObjectSet& objects,
@@ -707,17 +715,19 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
       std::optional<Object> field_object = std::nullopt;
 
       for (Object object : objects) {
-        if (auto iter = field_object_map_.find(std::make_pair(object, field));
-            iter != field_object_map_.end()) {
+        if (auto iter = object_repository_.field_object_map_.find(
+                std::make_pair(object, field));
+            iter != object_repository_.field_object_map_.end()) {
           field_object = iter->second;
         }
       }
       if (!field_object.has_value()) {
-        field_object =
-            Object::Create((*objects.begin()).GetLifetime(), field->getType());
+        field_object = *object_repository_.CreateObject(
+            (*objects.begin()).GetLifetime(), field->getType());
       }
       for (Object object : objects) {
-        field_object_map_[std::make_pair(object, field)] = *field_object;
+        object_repository_.field_object_map_[std::make_pair(object, field)] =
+            *field_object;
       }
       return *field_object;
     }
@@ -729,16 +739,19 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
       std::optional<Object> base_object = std::nullopt;
 
       for (Object object : objects) {
-        if (auto iter = base_object_map_.find(std::make_pair(object, &*base));
-            iter != base_object_map_.end()) {
+        if (auto iter = object_repository_.base_object_map_.find(
+                std::make_pair(object, &*base));
+            iter != object_repository_.base_object_map_.end()) {
           base_object = iter->second;
         }
       }
       if (!base_object.has_value()) {
-        base_object = Object::Create((*objects.begin()).GetLifetime(), base);
+        base_object = *object_repository_.CreateObject(
+            (*objects.begin()).GetLifetime(), base);
       }
       for (Object object : objects) {
-        base_object_map_[std::make_pair(object, &*base)] = *base_object;
+        object_repository_.base_object_map_[std::make_pair(object, &*base)] =
+            *base_object;
       }
       return *base_object;
     }
@@ -757,7 +770,7 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
       Object child_pointee;
       if (auto iter = object_cache_.find(cache_key);
           iter == object_cache_.end()) {
-        child_pointee = Object::Create(
+        child_pointee = *object_repository_.CreateObject(
             lifetimes.GetValueLifetimes().GetPointeeLifetimes().GetLifetime(),
             PointeeType(lifetimes.GetValueLifetimes().Type()));
         object_cache_[cache_key] = child_pointee;
@@ -765,22 +778,20 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
         child_pointee = iter->second;
       }
 
-      initial_points_to_map_.SetPointerPointsToSet(objects, {child_pointee});
+      object_repository_.initial_points_to_map_.SetPointerPointsToSet(
+          objects, {child_pointee});
       return ObjectSet{child_pointee};
     }
 
    private:
-    ObjectRepository::FieldObjects& field_object_map_;
-    ObjectRepository::BaseObjects& base_object_map_;
-    PointsToMap& initial_points_to_map_;
+    ObjectRepository& object_repository_;
     bool create_transitive_objects_;
     // Inside of a given VarDecl, we re-use the same Object for all the
     // sub-objects with the same type and lifetimes. This avoids infinite loops
     // in the case of structs like lists.
     llvm::DenseMap<ObjectLifetimes, Object> object_cache_;
   };
-  Visitor visitor(field_object_map_, base_object_map_, initial_points_to_map_,
-                  transitive);
+  Visitor visitor(*this, transitive);
   VisitLifetimes(
       {root_object}, type,
       ObjectLifetimes(root_object.GetLifetime(),
@@ -795,7 +806,7 @@ Object ObjectRepository::CloneObject(Object object) {
     Object new_object;
   };
   auto clone = [this](Object obj) {
-    auto new_obj = Object::Create(obj.GetLifetime(), obj.Type());
+    auto new_obj = *CreateObject(obj.GetLifetime(), obj.Type());
     initial_points_to_map_.SetPointerPointsToSet(
         new_obj, initial_points_to_map_.GetPointerPointsToSet(obj));
     return new_obj;

@@ -28,17 +28,22 @@ class Object {
   // legal to perform any operations on an invalid object except to copy or
   // delete it.
   //
-  // Use one of the static member functions below to create a valid object.
+  // Use one of the ObjectRepository::CreateObject...() functions to create a
+  // valid object (or, in tests, use one of the constructors below).
   Object();
+
+  // Creates an object with the given lifetime and type.
+  // This constructor should only be used in tests. Outside of tests, use
+  // one of the ObjectRepository::CreateObject...() functions.
+  Object(Lifetime lifetime, clang::QualType type);
+
+  // Creates an object representing a declared function.
+  // This constructor should only be used in tests. Outside of tests, use
+  // one of the ObjectRepository::CreateObject...() functions.
+  Object(const clang::FunctionDecl& func);
 
   Object(const Object&) = default;
   Object& operator=(const Object&) = default;
-
-  // Creates a new object with the given lifetime and type.
-  static Object Create(Lifetime lifetime, clang::QualType type);
-
-  // Creates a new object representing a declared function.
-  static Object CreateFromFunctionDecl(const clang::FunctionDecl& func);
 
   // Returns the lifetime of the object.
   Lifetime GetLifetime() const { return lifetime_; }

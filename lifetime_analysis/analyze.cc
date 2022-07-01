@@ -692,8 +692,8 @@ llvm::Error TransferDefaultConstructor(
       std::get<FunctionLifetimes>(ctor_lifetimes_or_error);
 
   std::vector<FunctionParameter> fn_params;
-  Object this_ptr =
-      Object::Create(Lifetime::CreateLocal(), default_ctor->getThisType());
+  Object this_ptr = *object_repository.CreateObject(
+      Lifetime::CreateLocal(), default_ctor->getThisType());
   points_to_map.SetPointerPointsToSet(this_ptr, {this_object});
   fn_params.push_back(FunctionParameter{
       this_ptr.Type(), ctor_lifetimes.GetThisLifetimes(), this_ptr});
@@ -998,8 +998,8 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
       }
       // `this` does not have a local variable. We magick a pointer that points
       // to `this` anyway for consistency with the other calls.
-      Object points_to_this =
-          Object::Create(Lifetime::CreateLocal(), method_decl->getThisType());
+      Object points_to_this = *object_repository.CreateObject(
+          Lifetime::CreateLocal(), method_decl->getThisType());
       points_to_map.SetPointerPointsToSet(points_to_this,
                                           {this_object.value()});
       FindLifetimeSubstitutions(points_to_this, method_decl->getThisType(),

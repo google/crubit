@@ -22,15 +22,14 @@ std::atomic<int> Object::next_id_{FIRST_OBJECT_ID};
 
 Object::Object() : id_(INVALID_OBJECT_ID_EMPTY) {}
 
-Object Object::Create(Lifetime lifetime, clang::QualType type) {
+Object::Object(Lifetime lifetime, clang::QualType type)
+    : Object(next_id_++, lifetime, type) {
   assert(!type.isNull());
-  return Object(next_id_++, lifetime, type);
 }
 
-Object Object::CreateFromFunctionDecl(const clang::FunctionDecl& func) {
-  Object ret = Create(Lifetime::Static(), func.getType());
-  ret.func_ = &func;
-  return ret;
+Object::Object(const clang::FunctionDecl& func)
+    : Object(Lifetime::Static(), func.getType()) {
+  func_ = &func;
 }
 
 std::string Object::DebugString() const {

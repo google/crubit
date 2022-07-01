@@ -24,8 +24,7 @@ TEST(ObjectSet, AccessObjects) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object object_static =
-            Object::Create(Lifetime::Static(), ast_context.IntTy);
+        Object object_static(Lifetime::Static(), ast_context.IntTy);
         ObjectSet object_set = {object_static};
 
         EXPECT_THAT(object_set, UnorderedElementsAre(object_static));
@@ -38,8 +37,8 @@ TEST(ObjectSet, Contains) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object o1 = Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object o2 = Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object o1(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object o2(Lifetime::CreateLocal(), ast_context.IntTy);
 
         EXPECT_TRUE(ObjectSet({o1, o2}).Contains(o1));
         EXPECT_TRUE(ObjectSet({o1, o2}).Contains(o2));
@@ -61,11 +60,9 @@ TEST(ObjectSet, Union) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object object_static =
-            Object::Create(Lifetime::Static(), ast_context.IntTy);
+        Object object_static(Lifetime::Static(), ast_context.IntTy);
         ObjectSet set_1 = {object_static};
-        Object object_local =
-            Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object object_local(Lifetime::CreateLocal(), ast_context.IntTy);
         ObjectSet set_2 = {object_local};
 
         ObjectSet set_union = set_1.Union(set_2);
@@ -81,9 +78,9 @@ TEST(ObjectSet, Add) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object o1 = Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object o2 = Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object o3 = Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object o1(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object o2(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object o3(Lifetime::CreateLocal(), ast_context.IntTy);
 
         {
           ObjectSet object_set = {o1};
@@ -114,10 +111,8 @@ TEST(ObjectSet, Equality) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object object_static =
-            Object::Create(Lifetime::Static(), ast_context.IntTy);
-        Object object_local =
-            Object::Create(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object object_static(Lifetime::Static(), ast_context.IntTy);
+        Object object_local(Lifetime::CreateLocal(), ast_context.IntTy);
         ObjectSet set_1 = {object_static};
         ObjectSet set_2 = {object_static};
         ObjectSet set_3 = {object_static, object_local};
