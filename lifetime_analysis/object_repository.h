@@ -245,10 +245,10 @@ class ObjectRepository {
   FieldObjects field_object_map_;
   BaseObjects base_object_map_;
 
-  llvm::DenseMap<std::pair<const clang::Expr*, size_t>, Object>
+  llvm::DenseMap<std::pair<const clang::Expr*, size_t>, const Object*>
       call_expr_args_objects_;
 
-  llvm::DenseMap<const clang::Expr*, Object> call_expr_this_pointers_;
+  llvm::DenseMap<const clang::Expr*, const Object*> call_expr_this_pointers_;
 
   llvm::DenseMap<clang::QualType, Object> static_objects_;
 };

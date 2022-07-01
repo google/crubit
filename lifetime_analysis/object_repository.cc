@@ -171,11 +171,11 @@ class ObjectRepository::VarDeclVisitor
     return true;
   }
 
-  Object CreateLocalObject(clang::QualType type) {
-    Object object =
-        *object_repository_.CreateObject(Lifetime::CreateLocal(), type);
+  const Object* CreateLocalObject(clang::QualType type) {
+    const Object* object =
+        object_repository_.CreateObject(Lifetime::CreateLocal(), type);
     object_repository_.CreateObjects(
-        object, type,
+        *object, type,
         [](const clang::Expr*) { return Lifetime::CreateVariable(); },
         /*transitive=*/false);
     return object;
@@ -496,10 +496,10 @@ std::string ObjectRepository::DebugString() const {
   for (const auto& [expr_i, object] : call_expr_args_objects_) {
     const auto& [expr, i] = expr_i;
     os << "Call " << expr << " (arg " << i
-       << ") object: " << object.DebugString() << "\n";
+       << ") object: " << object->DebugString() << "\n";
   }
   for (const auto& [expr, object] : call_expr_this_pointers_) {
-    os << "Call " << expr << " (this) pointer: " << object.DebugString()
+    os << "Call " << expr << " (this) pointer: " << object->DebugString()
        << "\n";
   }
   os << "InitialPointsToMap:\n" << initial_points_to_map_.DebugString() << "\n";
@@ -569,7 +569,7 @@ Object ObjectRepository::GetCallExprArgumentObject(const clang::CallExpr* expr,
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for argument");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetCallExprThisPointer(
@@ -581,7 +581,7 @@ Object ObjectRepository::GetCallExprThisPointer(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find `this` object for call");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetCXXConstructExprArgumentObject(
@@ -595,7 +595,7 @@ Object ObjectRepository::GetCXXConstructExprArgumentObject(
     llvm::report_fatal_error(
         "Didn't find object for argument of constructor call");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetCXXConstructExprThisPointer(
@@ -607,7 +607,7 @@ Object ObjectRepository::GetCXXConstructExprThisPointer(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find `this` object for constructor");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetInitializedObject(
