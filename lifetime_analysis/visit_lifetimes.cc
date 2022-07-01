@@ -81,17 +81,16 @@ void ForEachField(ObjectSet objects, clang::QualType record_type,
 
 void VisitLifetimesImpl(const ObjectSet& points_to_set,
                         const ObjectLifetimes& object_lifetimes,
-                        llvm::DenseSet<Object>& visited_objects,
+                        llvm::DenseSet<const Object*>& visited_objects,
                         LifetimeVisitor& visitor, int pointee_depth);
 
 // Traverse fields while walking up base classes. This can be a bit wasteful
 // for cases like diamond inheritance (which is hopefully not common).
-void TraverseObjectFieldsWithBases(const ObjectSet& object_set,
-                                   clang::QualType record_type,
-                                   const ObjectLifetimes& object_lifetimes,
-                                   llvm::DenseSet<Object>& visited_object,
-                                   LifetimeVisitor& visitor,
-                                   int pointee_depth) {
+void TraverseObjectFieldsWithBases(
+    const ObjectSet& object_set, clang::QualType record_type,
+    const ObjectLifetimes& object_lifetimes,
+    llvm::DenseSet<const Object*>& visited_object, LifetimeVisitor& visitor,
+    int pointee_depth) {
   assert(record_type->isRecordType());
   if (record_type->isIncompleteType()) {
     return;
@@ -125,11 +124,11 @@ void TraverseObjectFieldsWithBases(const ObjectSet& object_set,
 
 void VisitLifetimesImpl(const ObjectSet& points_to_set,
                         const ObjectLifetimes& object_lifetimes,
-                        llvm::DenseSet<Object>& visited_objects,
+                        llvm::DenseSet<const Object*>& visited_objects,
                         LifetimeVisitor& visitor, int pointee_depth) {
   size_t num_visited_before = visited_objects.size();
   for (const Object* object : points_to_set) {
-    visited_objects.insert(*object);
+    visited_objects.insert(object);
   }
   if (num_visited_before == visited_objects.size()) {
     // No new object -> nothing to do. This avoids infinite loops.
@@ -164,7 +163,7 @@ void VisitLifetimesImpl(const ObjectSet& points_to_set,
 void VisitLifetimes(const ObjectSet& points_to_set, clang::QualType type,
                     const ObjectLifetimes& object_lifetimes,
                     LifetimeVisitor& visitor) {
-  llvm::DenseSet<Object> visited_objects;
+  llvm::DenseSet<const Object*> visited_objects;
   VisitLifetimesImpl(points_to_set, object_lifetimes, visited_objects, visitor,
                      /*pointee_depth=*/0);
 }
