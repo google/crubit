@@ -218,7 +218,7 @@ class ObjectRepository {
   MapType object_repository_;
 
   // Map from each materialized temporary to the object which it declares.
-  llvm::DenseMap<const clang::MaterializeTemporaryExpr*, Object>
+  llvm::DenseMap<const clang::MaterializeTemporaryExpr*, const Object*>
       temporary_objects_;
 
   // Map from each function parameter to an object representing its initial

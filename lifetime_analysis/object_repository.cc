@@ -265,18 +265,18 @@ class ObjectRepository::VarDeclVisitor
         *object_repository_.CreateObjectFromFunctionDecl(*func);
   }
 
-  Object AddTemporaryObjectForExpression(clang::Expr* expr) {
+  const Object* AddTemporaryObjectForExpression(clang::Expr* expr) {
     clang::QualType type = expr->getType().getCanonicalType();
-    Object object =
-        *object_repository_.CreateObject(Lifetime::CreateLocal(), type);
+    const Object* object =
+        object_repository_.CreateObject(Lifetime::CreateLocal(), type);
 
     object_repository_.CreateObjects(
-        object, type,
+        *object, type,
         [](const clang::Expr*) { return Lifetime::CreateVariable(); },
         /*transitive=*/false);
 
     if (type->isRecordType()) {
-      PropagateInitializedObject(expr, object);
+      PropagateInitializedObject(expr, *object);
     }
     return object;
   }
@@ -543,7 +543,7 @@ Object ObjectRepository::GetTemporaryObject(
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for temporary expression");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetOriginalParameterValue(
