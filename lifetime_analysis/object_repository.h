@@ -63,11 +63,13 @@ class ObjectRepository {
   // TODO(veluca): this approach does not produce correct results when
   // diamond-problem-style multiple inheritance happens.
   using FieldObjects =
-      llvm::DenseMap<std::pair<Object, const clang::FieldDecl*>, const Object*>;
+      llvm::DenseMap<std::pair<const Object*, const clang::FieldDecl*>,
+                     const Object*>;
 
   // Maps a given struct-Object to the Object for each of its bases.
   using BaseObjects =
-      llvm::DenseMap<std::pair<Object, const clang::Type*>, const Object*>;
+      llvm::DenseMap<std::pair<const Object*, const clang::Type*>,
+                     const Object*>;
 
   // Iterator refers to a pair consisting of a variable declaration and the
   // object representing that variable.
@@ -142,10 +144,7 @@ class ObjectRepository {
   const Object* GetInitializedObject(const clang::Expr* initializer_expr) const;
 
   // Returns what kind of values the given object represents.
-  ObjectValueType GetObjectValueType(Object object) const;
-  ObjectValueType GetObjectValueType(const Object* object) const {
-    return GetObjectValueType(*object);
-  }
+  ObjectValueType GetObjectValueType(const Object* object) const;
 
   // Returns the object that represents `*this`, if in a member function.
   std::optional<const Object*> GetThisObject() const { return this_object_; }
@@ -160,12 +159,8 @@ class ObjectRepository {
 
   // Returns the object associated with a given field in the struct
   // represented by `struct_object`.
-  const Object* GetFieldObject(Object struct_object,
-                               const clang::FieldDecl* field) const;
   const Object* GetFieldObject(const Object* struct_object,
-                               const clang::FieldDecl* field) const {
-    return GetFieldObject(*struct_object, field);
-  }
+                               const clang::FieldDecl* field) const;
 
   // Returns the objects associated with a given field in the structs
   // represented by `struct_objects`.
@@ -177,19 +172,11 @@ class ObjectRepository {
 
   // Returns the object associated with a given base of the struct
   // represented by `struct_object`.
-  const Object* GetBaseClassObject(Object struct_object,
+  const Object* GetBaseClassObject(const Object* struct_object,
                                    const clang::Type* base) const;
   const Object* GetBaseClassObject(const Object* struct_object,
-                                   const clang::Type* base) const {
-    return GetBaseClassObject(*struct_object, base);
-  }
-  const Object* GetBaseClassObject(Object struct_object,
                                    const clang::QualType base) const {
     return GetBaseClassObject(struct_object, base.getTypePtr());
-  }
-  const Object* GetBaseClassObject(const Object* struct_object,
-                                   const clang::QualType base) const {
-    return GetBaseClassObject(*struct_object, base);
   }
 
   // Returns the objects associated with a given base of the structs
@@ -221,7 +208,7 @@ class ObjectRepository {
   const Object* CloneObject(const Object* object);
 
   std::optional<const Object*> GetFieldObjectInternal(
-      Object struct_object, const clang::FieldDecl* field) const;
+      const Object* struct_object, const clang::FieldDecl* field) const;
 
   llvm::SpecificBumpPtrAllocator<Object> object_allocator_;
 
@@ -248,7 +235,7 @@ class ObjectRepository {
   std::optional<const Object*> this_object_;
   const Object* return_object_;
 
-  llvm::DenseMap<Object, ObjectValueType> object_value_types_;
+  llvm::DenseMap<const Object*, ObjectValueType> object_value_types_;
 
   class VarDeclVisitor;
 

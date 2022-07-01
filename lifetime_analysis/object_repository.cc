@@ -242,7 +242,7 @@ class ObjectRepository::VarDeclVisitor
             lifetime == Lifetime::Static());
 
     object_repository_.object_repository_[var] = object;
-    object_repository_.object_value_types_[*object] =
+    object_repository_.object_value_types_[object] =
         var->getType()->isArrayType() ? ObjectValueType::kMultiValued
                                       : ObjectValueType::kSingleValued;
 
@@ -431,7 +431,7 @@ class ObjectRepository::VarDeclVisitor
         assert(this_object.has_value());
 
         const Object* field_object =
-            object_repository_.GetFieldObject(**this_object, init->getMember());
+            object_repository_.GetFieldObject(*this_object, init->getMember());
         PropagateInitializedObject(init_expr, field_object);
       } else if (init->getBaseClass()) {
         std::optional<const Object*> this_object =
@@ -439,7 +439,7 @@ class ObjectRepository::VarDeclVisitor
         assert(this_object.has_value());
 
         const Object* base_object = object_repository_.GetBaseClassObject(
-            **this_object, init->getBaseClass());
+            *this_object, init->getBaseClass());
         PropagateInitializedObject(init_expr, base_object);
       }
 
@@ -509,7 +509,7 @@ std::string ObjectRepository::DebugString() const {
   for (const auto& [field, object] : field_object_map_) {
     os << "Field '";
     field.second->printName(os);
-    os << "' on " << field.first.Type().getAsString()
+    os << "' on " << field.first->Type().getAsString()
        << " object: " << object->DebugString() << "\n";
   }
   os << "Return " << return_object_->DebugString() << "\n";
@@ -631,7 +631,7 @@ const Object* ObjectRepository::GetInitializedObject(
 }
 
 ObjectRepository::ObjectValueType ObjectRepository::GetObjectValueType(
-    Object object) const {
+    const Object* object) const {
   auto iter = object_value_types_.find(object);
   // If we don't know this lifetime, we conservatively assume it to be
   // multi-valued.
@@ -642,12 +642,12 @@ ObjectRepository::ObjectValueType ObjectRepository::GetObjectValueType(
 }
 
 const Object* ObjectRepository::GetFieldObject(
-    Object struct_object, const clang::FieldDecl* field) const {
+    const Object* struct_object, const clang::FieldDecl* field) const {
   std::optional<const Object*> field_object =
       GetFieldObjectInternal(struct_object, field);
   if (!field_object.has_value()) {
     llvm::errs() << "On an object of type "
-                 << struct_object.Type().getAsString()
+                 << struct_object->Type().getAsString()
                  << ", trying to get field:\n";
     field->dump();
     llvm::errs() << "\n" << DebugString();
@@ -666,11 +666,11 @@ ObjectSet ObjectRepository::GetFieldObject(
 }
 
 const Object* ObjectRepository::GetBaseClassObject(
-    Object struct_object, const clang::Type* base) const {
+    const Object* struct_object, const clang::Type* base) const {
   base = base->getCanonicalTypeInternal().getTypePtr();
   auto iter = base_object_map_.find(std::make_pair(struct_object, base));
   if (iter == base_object_map_.end()) {
-    llvm::errs() << "On object " << struct_object.DebugString()
+    llvm::errs() << "On object " << struct_object->DebugString()
                  << ", trying to get base:\n";
     base->dump();
     llvm::errs() << "\n" << DebugString();
@@ -721,7 +721,7 @@ void ObjectRepository::CreateObjects(const Object* root_object,
 
       for (const Object* object : objects) {
         if (auto iter = object_repository_.field_object_map_.find(
-                std::make_pair(*object, field));
+                std::make_pair(object, field));
             iter != object_repository_.field_object_map_.end()) {
           field_object = iter->second;
         }
@@ -731,7 +731,7 @@ void ObjectRepository::CreateObjects(const Object* root_object,
             (*objects.begin())->GetLifetime(), field->getType());
       }
       for (const Object* object : objects) {
-        object_repository_.field_object_map_[std::make_pair(*object, field)] =
+        object_repository_.field_object_map_[std::make_pair(object, field)] =
             *field_object;
       }
       return *field_object;
@@ -745,7 +745,7 @@ void ObjectRepository::CreateObjects(const Object* root_object,
 
       for (const Object* object : objects) {
         if (auto iter = object_repository_.base_object_map_.find(
-                std::make_pair(*object, &*base));
+                std::make_pair(object, &*base));
             iter != object_repository_.base_object_map_.end()) {
           base_object = iter->second;
         }
@@ -755,7 +755,7 @@ void ObjectRepository::CreateObjects(const Object* root_object,
             (*objects.begin())->GetLifetime(), base);
       }
       for (const Object* object : objects) {
-        object_repository_.base_object_map_[std::make_pair(*object, &*base)] =
+        object_repository_.base_object_map_[std::make_pair(object, &*base)] =
             *base_object;
       }
       return *base_object;
@@ -835,7 +835,7 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
             GetBaseClassObject(orig_object, base.getType());
         const Object* new_base_obj = clone(base_obj);
         base_object_map_[std::make_pair(
-            *new_object, base.getType().getCanonicalType().getTypePtr())] =
+            new_object, base.getType().getCanonicalType().getTypePtr())] =
             new_base_obj;
         object_stack.push_back(ObjectPair{base_obj, new_base_obj});
       }
@@ -845,7 +845,7 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     for (auto f : record_type->getDecl()->fields()) {
       const Object* field_obj = GetFieldObject(orig_object, f);
       const Object* new_field_obj = clone(field_obj);
-      field_object_map_[std::make_pair(*new_object, f)] = new_field_obj;
+      field_object_map_[std::make_pair(new_object, f)] = new_field_obj;
       object_stack.push_back(ObjectPair{field_obj, new_field_obj});
     }
   }
@@ -853,16 +853,16 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
 }
 
 std::optional<const Object*> ObjectRepository::GetFieldObjectInternal(
-    Object struct_object, const clang::FieldDecl* field) const {
+    const Object* struct_object, const clang::FieldDecl* field) const {
   auto iter = field_object_map_.find(std::make_pair(struct_object, field));
   if (iter != field_object_map_.end()) {
     return iter->second;
   }
   if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
-          struct_object.Type()->getAs<clang::RecordType>()->getDecl())) {
+          struct_object->Type()->getAs<clang::RecordType>()->getDecl())) {
     for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
       std::optional<const Object*> field_object = GetFieldObjectInternal(
-          *GetBaseClassObject(struct_object, base.getType()), field);
+          GetBaseClassObject(struct_object, base.getType()), field);
       if (field_object.has_value()) {
         return field_object;
       }

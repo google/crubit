@@ -155,7 +155,7 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
     auto [struct_object, field] = key;
     lines.push_back(absl::StrFormat(
         R"("%1$s%2$s" -> "%1$s%3$s" [style=dashed label="%4$s"])", name_prefix,
-        struct_object.DebugString(), field_object->DebugString(),
+        struct_object->DebugString(), field_object->DebugString(),
         field->getNameAsString()));
   }
 
@@ -163,7 +163,7 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
     auto [struct_object, base] = key;
     lines.push_back(absl::StrFormat(
         R"("%1$s%2$s" -> "%1$s%3$s" [style=dashed label="%4$s"])", name_prefix,
-        struct_object.DebugString(), base_object->DebugString(),
+        struct_object->DebugString(), base_object->DebugString(),
         clang::QualType(base, 0).getAsString()));
   }
 
@@ -486,7 +486,7 @@ void ExtendPointsToMapWithInitializers(
     }
     if (!IsInitExprInitializingARecordObject(init_expr)) {
       TransferInitializer(
-          object_repository.GetFieldObject(*this_object.value(), field),
+          object_repository.GetFieldObject(this_object.value(), field),
           field->getType(), object_repository, init_expr, points_to_map);
     }
   }
@@ -728,7 +728,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
       if (const clang::CXXConstructorDecl* base_ctor =
               GetDefaultConstructor(base_record)) {
         const Object* base_this_object =
-            object_repository.GetBaseClassObject(*this_object, base.getType());
+            object_repository.GetBaseClassObject(this_object, base.getType());
         if (llvm::Error err = TransferDefaultConstructor(
                 base_ctor, base_this_object, object_repository, points_to_map,
                 callee_lifetimes)) {
@@ -743,7 +743,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
       if (const clang::CXXConstructorDecl* field_ctor =
               GetDefaultConstructor(field_record)) {
         const Object* field_this_object =
-            object_repository.GetFieldObject(*this_object, field);
+            object_repository.GetFieldObject(this_object, field);
         if (llvm::Error err = TransferDefaultConstructor(
                 field_ctor, field_this_object, object_repository, points_to_map,
                 callee_lifetimes)) {
