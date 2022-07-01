@@ -44,7 +44,7 @@ inline bool IsInitExprInitializingARecordObject(const clang::Expr* expr) {
 // analysis; it is therefore not part of the lattice.
 class ObjectRepository {
  private:
-  using MapType = llvm::DenseMap<const clang::ValueDecl*, Object>;
+  using MapType = llvm::DenseMap<const clang::ValueDecl*, const Object*>;
 
  public:
   // An `Object` might represent objects that have either a single value (such

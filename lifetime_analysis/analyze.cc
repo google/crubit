@@ -176,10 +176,10 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   }
 
   for (auto [decl, object] : object_repository) {
-    var_objects.insert(object);
-    lines.push_back(
-        absl::StrFormat("\"%s%s\"[label=%s]", name_prefix, object.DebugString(),
-                        VariableLabel(decl->getNameAsString(), object)));
+    var_objects.insert(*object);
+    lines.push_back(absl::StrFormat(
+        "\"%s%s\"[label=%s]", name_prefix, object->DebugString(),
+        VariableLabel(decl->getNameAsString(), *object)));
   }
 
   var_objects.insert(object_repository.GetReturnObject());

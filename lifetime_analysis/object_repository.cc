@@ -241,7 +241,7 @@ class ObjectRepository::VarDeclVisitor
         /*transitive=*/clang::isa<clang::ParmVarDecl>(var) ||
             lifetime == Lifetime::Static());
 
-    object_repository_.object_repository_[var] = *object;
+    object_repository_.object_repository_[var] = object;
     object_repository_.object_value_types_[*object] =
         var->getType()->isArrayType() ? ObjectValueType::kMultiValued
                                       : ObjectValueType::kSingleValued;
@@ -263,7 +263,7 @@ class ObjectRepository::VarDeclVisitor
     }
 
     object_repository_.object_repository_[func] =
-        *object_repository_.CreateObjectFromFunctionDecl(*func);
+        object_repository_.CreateObjectFromFunctionDecl(*func);
   }
 
   const Object* AddTemporaryObjectForExpression(clang::Expr* expr) {
@@ -492,7 +492,7 @@ std::string ObjectRepository::DebugString() const {
   for (const auto& [decl, object] : object_repository_) {
     os << decl->getDeclKindName() << " " << decl << " (";
     decl->printName(os);
-    os << ") object: " << object.DebugString() << "\n";
+    os << ") object: " << object->DebugString() << "\n";
   }
   for (const auto& [expr_i, object] : call_expr_args_objects_) {
     const auto& [expr, i] = expr_i;
@@ -533,7 +533,7 @@ Object ObjectRepository::GetDeclObject(const clang::ValueDecl* decl) const {
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for Decl");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 Object ObjectRepository::GetTemporaryObject(
