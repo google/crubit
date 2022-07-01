@@ -24,7 +24,7 @@ bool PointsToMap::operator==(const PointsToMap& other) const {
 std::string PointsToMap::DebugString() const {
   std::vector<std::string> parts;
   for (const auto& [pointer, points_to] : pointer_points_tos_) {
-    parts.push_back(absl::StrFormat("%s -> %s", pointer.DebugString(),
+    parts.push_back(absl::StrFormat("%s -> %s", pointer->DebugString(),
                                     points_to.DebugString()));
   }
   for (const auto& [expr, objects] : expr_objects_) {
@@ -51,7 +51,7 @@ PointsToMap PointsToMap::Union(const PointsToMap& other) const {
   return result;
 }
 
-ObjectSet PointsToMap::GetPointerPointsToSet(Object pointer) const {
+ObjectSet PointsToMap::GetPointerPointsToSet(const Object* pointer) const {
   auto iter = pointer_points_tos_.find(pointer);
   if (iter == pointer_points_tos_.end()) {
     return ObjectSet();
@@ -59,7 +59,8 @@ ObjectSet PointsToMap::GetPointerPointsToSet(Object pointer) const {
   return iter->second;
 }
 
-void PointsToMap::SetPointerPointsToSet(Object pointer, ObjectSet points_to) {
+void PointsToMap::SetPointerPointsToSet(const Object* pointer,
+                                        ObjectSet points_to) {
   pointer_points_tos_[pointer] = std::move(points_to);
 }
 
@@ -70,7 +71,7 @@ void PointsToMap::SetPointerPointsToSet(const ObjectSet& pointers,
   }
 }
 
-void PointsToMap::ExtendPointerPointsToSet(Object pointer,
+void PointsToMap::ExtendPointerPointsToSet(const Object* pointer,
                                            const ObjectSet& points_to) {
   ObjectSet& set = pointer_points_tos_[pointer];
   set.Add(points_to);
@@ -79,7 +80,7 @@ void PointsToMap::ExtendPointerPointsToSet(Object pointer,
 ObjectSet PointsToMap::GetPointerPointsToSet(const ObjectSet& pointers) const {
   ObjectSet result;
   for (const Object* pointer : pointers) {
-    auto iter = pointer_points_tos_.find(*pointer);
+    auto iter = pointer_points_tos_.find(pointer);
     if (iter != pointer_points_tos_.end()) {
       result.Add(iter->second);
     }
@@ -114,11 +115,11 @@ void PointsToMap::SetExprObjectSet(const clang::Expr* expr, ObjectSet objects) {
   expr_objects_[expr] = std::move(objects);
 }
 
-std::vector<Object> PointsToMap::GetAllPointersWithLifetime(
+std::vector<const Object*> PointsToMap::GetAllPointersWithLifetime(
     Lifetime lifetime) const {
-  std::vector<Object> result;
+  std::vector<const Object*> result;
   for (const auto& [pointer, _] : pointer_points_tos_) {
-    if (pointer.GetLifetime() == lifetime) {
+    if (pointer->GetLifetime() == lifetime) {
       result.push_back(pointer);
     }
   }

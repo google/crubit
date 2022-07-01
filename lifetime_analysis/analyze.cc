@@ -67,28 +67,28 @@ using BaseToOverrides =
 // other objects of static lifetime.
 llvm::Error PropagateStaticToPointees(LifetimeSubstitutions& subst,
                                       const PointsToMap& points_to_map) {
-  std::vector<Object> pointees =
+  std::vector<const Object*> pointees =
       points_to_map.GetAllPointersWithLifetime(Lifetime::Static());
 
-  llvm::DenseSet<Object> visited;
+  llvm::DenseSet<const Object*> visited;
 
   while (!pointees.empty()) {
-    Object cur = pointees.back();
+    const Object* cur = pointees.back();
     pointees.pop_back();
     visited.insert(cur);
-    if (cur.GetLifetime().IsLocal()) {
+    if (cur->GetLifetime().IsLocal()) {
       return llvm::createStringError(
           llvm::inconvertibleErrorCode(),
           "attempted to make a pointer of static lifetime point at an object "
           "of local lifetime");
     }
-    if (cur.GetLifetime() != Lifetime::Static()) {
-      subst.Add(cur.GetLifetime(), Lifetime::Static());
+    if (cur->GetLifetime() != Lifetime::Static()) {
+      subst.Add(cur->GetLifetime(), Lifetime::Static());
     }
 
     for (const Object* pointee : points_to_map.GetPointerPointsToSet(cur)) {
-      if (!visited.count(*pointee)) {
-        pointees.push_back(*pointee);
+      if (!visited.count(pointee)) {
+        pointees.push_back(pointee);
       }
     }
   }
@@ -139,14 +139,14 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
                              const PointsToMap& points_to_map,
                              absl::string_view name_prefix) {
   std::vector<std::string> lines;
-  llvm::DenseSet<Object> all_objects, var_objects;
+  llvm::DenseSet<const Object*> all_objects, var_objects;
 
   for (auto [pointer, points_to_set] : points_to_map.PointerPointsTos()) {
     all_objects.insert(pointer);
     for (auto points_to : points_to_set) {
-      all_objects.insert(*points_to);
+      all_objects.insert(points_to);
       lines.push_back(absl::StrFormat(R"("%1$s%2$s" -> "%1$s%3$s")",
-                                      name_prefix, pointer.DebugString(),
+                                      name_prefix, pointer->DebugString(),
                                       points_to->DebugString()));
     }
   }
@@ -168,7 +168,7 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   }
 
   if (object_repository.GetThisObject().has_value()) {
-    var_objects.insert(**object_repository.GetThisObject());
+    var_objects.insert(*object_repository.GetThisObject());
     lines.push_back(absl::StrFormat(
         "\"%s%s\"[label=%s]", name_prefix,
         (*object_repository.GetThisObject())->DebugString(),
@@ -176,34 +176,34 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   }
 
   for (auto [decl, object] : object_repository) {
-    var_objects.insert(*object);
+    var_objects.insert(object);
     lines.push_back(absl::StrFormat(
         "\"%s%s\"[label=%s]", name_prefix, object->DebugString(),
         VariableLabel(decl->getNameAsString(), *object)));
   }
 
-  var_objects.insert(*object_repository.GetReturnObject());
+  var_objects.insert(object_repository.GetReturnObject());
   lines.push_back(absl::StrFormat(
       "\"%s%s\"[label=%s]", name_prefix,
       object_repository.GetReturnObject()->DebugString(),
       VariableLabel("return", *object_repository.GetReturnObject())));
 
-  for (Object object : all_objects) {
+  for (const Object* object : all_objects) {
     if (!var_objects.contains(object)) {
       lines.push_back(absl::StrFormat(R"("%1$s%2$s"[label="%2$s"])",
-                                      name_prefix, object.DebugString()));
+                                      name_prefix, object->DebugString()));
     }
   }
 
   for (auto [_, object] : object_repository.GetFieldObjects()) {
-    if (!var_objects.contains(*object)) {
+    if (!var_objects.contains(object)) {
       lines.push_back(absl::StrFormat(R"("%1$s%2$s"[label="%2$s"])",
                                       name_prefix, object->DebugString()));
     }
   }
 
   for (auto [_, object] : object_repository.GetBaseObjects()) {
-    if (!var_objects.contains(*object)) {
+    if (!var_objects.contains(object)) {
       lines.push_back(absl::StrFormat(R"("%1$s%2$s"[label="%2$s"])",
                                       name_prefix,
                                       VariableLabel("this", *object)));
