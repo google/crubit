@@ -772,10 +772,10 @@ void ObjectRepository::CreateObjects(const Object* root_object,
       const auto& cache_key =
           lifetimes.GetValueLifetimes().GetPointeeLifetimes();
 
-      Object child_pointee;
+      const Object* child_pointee;
       if (auto iter = object_cache_.find(cache_key);
           iter == object_cache_.end()) {
-        child_pointee = *object_repository_.CreateObject(
+        child_pointee = object_repository_.CreateObject(
             lifetimes.GetValueLifetimes().GetPointeeLifetimes().GetLifetime(),
             PointeeType(lifetimes.GetValueLifetimes().Type()));
         object_cache_[cache_key] = child_pointee;
@@ -794,7 +794,7 @@ void ObjectRepository::CreateObjects(const Object* root_object,
     // Inside of a given VarDecl, we re-use the same Object for all the
     // sub-objects with the same type and lifetimes. This avoids infinite loops
     // in the case of structs like lists.
-    llvm::DenseMap<ObjectLifetimes, Object> object_cache_;
+    llvm::DenseMap<ObjectLifetimes, const Object*> object_cache_;
   };
   Visitor visitor(*this, transitive);
   VisitLifetimes(
