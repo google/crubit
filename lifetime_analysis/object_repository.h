@@ -42,6 +42,9 @@ inline bool IsInitExprInitializingARecordObject(const clang::Expr* expr) {
 // The `ObjectRepository` only stores state that does not change during the
 // analysis; it is therefore not part of the lattice.
 class ObjectRepository {
+ private:
+  using MapType = llvm::DenseMap<const clang::ValueDecl*, Object>;
+
  public:
   // An `Object` might represent objects that have either a single value (such
   // as plain variables) or multiple ones (such as arrays, or structs).
@@ -65,46 +68,6 @@ class ObjectRepository {
   using BaseObjects =
       llvm::DenseMap<std::pair<Object, const clang::Type*>, Object>;
 
- private:
-  using MapType = llvm::DenseMap<const clang::ValueDecl*, Object>;
-  // Map from each variable declaration to the object which it declares.
-  MapType object_repository_;
-
-  // Map from each materialized temporary to the object which it declares.
-  llvm::DenseMap<const clang::MaterializeTemporaryExpr*, Object>
-      temporary_objects_;
-
-  // Map from each function parameter to an object representing its initial
-  // value at function entry.
-  llvm::DenseMap<const clang::ParmVarDecl*, Object> initial_parameter_object_;
-
-  // Map from each initializer (constructors or initializer lists) to the object
-  // which it initializes.
-  //
-  // An object in this map may occur in other places too: `object_repository_`
-  // if it is an lvalue, or `return_object_`. Or it may be a temporary in which
-  // case it is only found in this map.
-  llvm::DenseMap<const clang::Expr*, Object> initialized_objects_;
-
-  std::optional<Object> this_object_;
-  Object return_object_;
-
-  llvm::DenseMap<Object, ObjectValueType> object_value_types_;
-
-  class VarDeclVisitor;
-
-  PointsToMap initial_points_to_map_;
-  FieldObjects field_object_map_;
-  BaseObjects base_object_map_;
-
-  llvm::DenseMap<std::pair<const clang::Expr*, size_t>, Object>
-      call_expr_args_objects_;
-
-  llvm::DenseMap<const clang::Expr*, Object> call_expr_this_pointers_;
-
-  llvm::DenseMap<clang::QualType, Object> static_objects_;
-
- public:
   // Iterator refers to a pair consisting of a variable declaration and the
   // object representing that variable.
   using const_iterator = MapType::const_iterator;
@@ -233,6 +196,43 @@ class ObjectRepository {
 
   std::optional<Object> GetFieldObjectInternal(
       Object struct_object, const clang::FieldDecl* field) const;
+
+  // Map from each variable declaration to the object which it declares.
+  MapType object_repository_;
+
+  // Map from each materialized temporary to the object which it declares.
+  llvm::DenseMap<const clang::MaterializeTemporaryExpr*, Object>
+      temporary_objects_;
+
+  // Map from each function parameter to an object representing its initial
+  // value at function entry.
+  llvm::DenseMap<const clang::ParmVarDecl*, Object> initial_parameter_object_;
+
+  // Map from each initializer (constructors or initializer lists) to the object
+  // which it initializes.
+  //
+  // An object in this map may occur in other places too: `object_repository_`
+  // if it is an lvalue, or `return_object_`. Or it may be a temporary in which
+  // case it is only found in this map.
+  llvm::DenseMap<const clang::Expr*, Object> initialized_objects_;
+
+  std::optional<Object> this_object_;
+  Object return_object_;
+
+  llvm::DenseMap<Object, ObjectValueType> object_value_types_;
+
+  class VarDeclVisitor;
+
+  PointsToMap initial_points_to_map_;
+  FieldObjects field_object_map_;
+  BaseObjects base_object_map_;
+
+  llvm::DenseMap<std::pair<const clang::Expr*, size_t>, Object>
+      call_expr_args_objects_;
+
+  llvm::DenseMap<const clang::Expr*, Object> call_expr_this_pointers_;
+
+  llvm::DenseMap<clang::QualType, Object> static_objects_;
 };
 
 }  // namespace lifetimes
