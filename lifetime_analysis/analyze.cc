@@ -392,7 +392,7 @@ Lifetime UnifyLifetimes(llvm::SmallSet<Lifetime, 2> lifetimes,
   return result;
 }
 
-void FindLifetimeSubstitutions(Object root_object, clang::QualType type,
+void FindLifetimeSubstitutions(const Object* root_object, clang::QualType type,
                                const PointsToMap& points_to_map,
                                const ObjectRepository& object_repository,
                                const ValueLifetimes& value_lifetimes,
@@ -462,7 +462,7 @@ void FindLifetimeSubstitutions(Object root_object, clang::QualType type,
   // Since we run our visit starting from the object representing the local
   // variable, we create the corresponding ObjectLifetimes.
   VisitLifetimes({root_object}, type,
-                 ObjectLifetimes(root_object.GetLifetime(), value_lifetimes),
+                 ObjectLifetimes(root_object->GetLifetime(), value_lifetimes),
                  visitor);
 }
 
@@ -674,7 +674,7 @@ const CXXConstructorDecl* GetDefaultConstructor(const CXXRecordDecl* record) {
 }
 
 llvm::Error TransferDefaultConstructor(
-    const clang::CXXConstructorDecl* default_ctor, Object this_object,
+    const clang::CXXConstructorDecl* default_ctor, const Object* this_object,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
         callee_lifetimes) {
@@ -730,7 +730,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
         const Object* base_this_object =
             object_repository.GetBaseClassObject(*this_object, base.getType());
         if (llvm::Error err = TransferDefaultConstructor(
-                base_ctor, *base_this_object, object_repository, points_to_map,
+                base_ctor, base_this_object, object_repository, points_to_map,
                 callee_lifetimes)) {
           return err;
         }
@@ -745,8 +745,8 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
         const Object* field_this_object =
             object_repository.GetFieldObject(*this_object, field);
         if (llvm::Error err = TransferDefaultConstructor(
-                field_ctor, *field_this_object, object_repository,
-                points_to_map, callee_lifetimes)) {
+                field_ctor, field_this_object, object_repository, points_to_map,
+                callee_lifetimes)) {
           return err;
         }
       }
@@ -984,7 +984,7 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
   for (unsigned i = 0; i < func->getNumParams(); ++i) {
     const clang::ParmVarDecl* param = func->getParamDecl(i);
     FindLifetimeSubstitutions(
-        *object_repository.GetOriginalParameterValue(param), param->getType(),
+        object_repository.GetOriginalParameterValue(param), param->getType(),
         points_to_map, object_repository, result.GetParamLifetimes(i), subst);
   }
 
@@ -999,7 +999,7 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
       }
       // `this` does not have a local variable. We magick a pointer that points
       // to `this` anyway for consistency with the other calls.
-      Object points_to_this = *object_repository.CreateObject(
+      const Object* points_to_this = object_repository.CreateObject(
           Lifetime::CreateLocal(), method_decl->getThisType());
       points_to_map.SetPointerPointsToSet(points_to_this,
                                           {this_object.value()});
@@ -1010,8 +1010,8 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
   }
 
   FindLifetimeSubstitutions(
-      *object_repository.GetReturnObject(), func->getReturnType(),
-      points_to_map, object_repository, result.GetReturnLifetimes(), subst);
+      object_repository.GetReturnObject(), func->getReturnType(), points_to_map,
+      object_repository, result.GetReturnLifetimes(), subst);
 
   result.SubstituteLifetimes(subst);
 
