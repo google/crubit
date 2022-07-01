@@ -143,6 +143,9 @@ class ObjectRepository {
 
   // Returns what kind of values the given object represents.
   ObjectValueType GetObjectValueType(Object object) const;
+  ObjectValueType GetObjectValueType(const Object* object) const {
+    return GetObjectValueType(*object);
+  }
 
   // Returns the object that represents `*this`, if in a member function.
   std::optional<const Object*> GetThisObject() const { return this_object_; }
@@ -159,6 +162,10 @@ class ObjectRepository {
   // represented by `struct_object`.
   const Object* GetFieldObject(Object struct_object,
                                const clang::FieldDecl* field) const;
+  const Object* GetFieldObject(const Object* struct_object,
+                               const clang::FieldDecl* field) const {
+    return GetFieldObject(*struct_object, field);
+  }
 
   // Returns the objects associated with a given field in the structs
   // represented by `struct_objects`.
@@ -172,9 +179,17 @@ class ObjectRepository {
   // represented by `struct_object`.
   const Object* GetBaseClassObject(Object struct_object,
                                    const clang::Type* base) const;
+  const Object* GetBaseClassObject(const Object* struct_object,
+                                   const clang::Type* base) const {
+    return GetBaseClassObject(*struct_object, base);
+  }
   const Object* GetBaseClassObject(Object struct_object,
                                    const clang::QualType base) const {
     return GetBaseClassObject(struct_object, base.getTypePtr());
+  }
+  const Object* GetBaseClassObject(const Object* struct_object,
+                                   const clang::QualType base) const {
+    return GetBaseClassObject(*struct_object, base);
   }
 
   // Returns the objects associated with a given base of the structs
