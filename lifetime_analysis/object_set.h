@@ -35,6 +35,11 @@ class ObjectSet {
       objects_.insert(object);
     }
   }
+  ObjectSet(std::initializer_list<const Object*> objects) {
+    for (const Object* object : objects) {
+      objects_.insert(*object);
+    }
+  }
 
   // Returns a human-readable string representation of the object set.
   std::string DebugString() const;
@@ -49,6 +54,7 @@ class ObjectSet {
 
   // Returns whether this set contains `object`.
   bool Contains(Object object) const { return objects_.contains(object); }
+  bool Contains(const Object* object) const { return Contains(*object); }
 
   // Returns whether this set contains all objects in `other`, i.e. whether
   // this set is a superset of `other`.
@@ -71,6 +77,7 @@ class ObjectSet {
 
   // Adds `object` to this object set.
   void Add(Object object) { objects_.insert(object); }
+  void Add(const Object* object) { Add(*object); }
 
   // Adds the `other` objects to this object set.
   void Add(const ObjectSet& other) {

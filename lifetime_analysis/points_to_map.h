@@ -63,9 +63,15 @@ class PointsToMap {
   // Returns the points-to set associated with `pointer`, or an empty set if
   // `pointer` is not associated with a points-to set.
   ObjectSet GetPointerPointsToSet(Object pointer) const;
+  ObjectSet GetPointerPointsToSet(const Object* pointer) const {
+    return GetPointerPointsToSet(*pointer);
+  }
 
   // Associates `pointer` with the given points-to set.
   void SetPointerPointsToSet(Object pointer, ObjectSet points_to);
+  void SetPointerPointsToSet(const Object* pointer, ObjectSet points_to) {
+    SetPointerPointsToSet(*pointer, points_to);
+  }
 
   // Associates all `pointers` with the given points-to set.
   void SetPointerPointsToSet(const ObjectSet& pointers,
@@ -73,6 +79,10 @@ class PointsToMap {
 
   // Extends a single `pointer`'s points-to set with the given points-to set.
   void ExtendPointerPointsToSet(Object pointer, const ObjectSet& points_to);
+  void ExtendPointerPointsToSet(const Object* pointer,
+                                const ObjectSet& points_to) {
+    ExtendPointerPointsToSet(*pointer, points_to);
+  }
 
   // Returns the union of the points-to sets associated with the given pointers,
   // or an empty set if none of the pointers is associated with a points-to set.
