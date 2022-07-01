@@ -435,9 +435,9 @@ class ObjectRepository::VarDeclVisitor
         std::optional<Object> this_object = object_repository_.GetThisObject();
         assert(this_object.has_value());
 
-        Object base_object = object_repository_.GetBaseClassObject(
+        const Object* base_object = object_repository_.GetBaseClassObject(
             *this_object, init->getBaseClass());
-        PropagateInitializedObject(init_expr, base_object);
+        PropagateInitializedObject(init_expr, *base_object);
       }
 
       // Traverse after finishing with the outer expression, including
@@ -661,8 +661,8 @@ ObjectSet ObjectRepository::GetFieldObject(
   return ret;
 }
 
-Object ObjectRepository::GetBaseClassObject(Object struct_object,
-                                            const clang::Type* base) const {
+const Object* ObjectRepository::GetBaseClassObject(
+    Object struct_object, const clang::Type* base) const {
   base = base->getCanonicalTypeInternal().getTypePtr();
   auto iter = base_object_map_.find(std::make_pair(struct_object, base));
   if (iter == base_object_map_.end()) {
@@ -672,14 +672,14 @@ Object ObjectRepository::GetBaseClassObject(Object struct_object,
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find base object");
   }
-  return *iter->second;
+  return iter->second;
 }
 
 ObjectSet ObjectRepository::GetBaseClassObject(const ObjectSet& struct_objects,
                                                const clang::Type* base) const {
   ObjectSet ret;
   for (Object object : struct_objects) {
-    ret.Add(GetBaseClassObject(object, base));
+    ret.Add(*GetBaseClassObject(object, base));
   }
   return ret;
 }
@@ -826,12 +826,13 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     if (auto* cxxrecord =
             clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
       for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
-        auto base_obj = GetBaseClassObject(orig_object, base.getType());
-        const Object* new_base_obj = clone(base_obj);
+        const Object* base_obj =
+            GetBaseClassObject(orig_object, base.getType());
+        const Object* new_base_obj = clone(*base_obj);
         base_object_map_[std::make_pair(
             *new_object, base.getType().getCanonicalType().getTypePtr())] =
             new_base_obj;
-        object_stack.push_back(ObjectPair{base_obj, new_base_obj});
+        object_stack.push_back(ObjectPair{*base_obj, new_base_obj});
       }
     }
 
@@ -856,7 +857,7 @@ std::optional<const Object*> ObjectRepository::GetFieldObjectInternal(
           struct_object.Type()->getAs<clang::RecordType>()->getDecl())) {
     for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
       std::optional<const Object*> field_object = GetFieldObjectInternal(
-          GetBaseClassObject(struct_object, base.getType()), field);
+          *GetBaseClassObject(struct_object, base.getType()), field);
       if (field_object.has_value()) {
         return field_object;
       }

@@ -191,7 +191,7 @@ void CollectLifetimes(
                               clang::QualType base) override {
       // All the objects have the same base.
       assert(!objects.empty());
-      return object_repository_.GetBaseClassObject(*objects.begin(), base);
+      return *object_repository_.GetBaseClassObject(*objects.begin(), base);
     }
 
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,
@@ -239,7 +239,7 @@ void PropagateLifetimesToPointees(
                               clang::QualType base) override {
       // All the objects have the same base.
       assert(!objects.empty());
-      return object_repository_.GetBaseClassObject(*objects.begin(), base);
+      return *object_repository_.GetBaseClassObject(*objects.begin(), base);
     }
 
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,

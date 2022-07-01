@@ -416,7 +416,7 @@ void FindLifetimeSubstitutions(Object root_object, clang::QualType type,
                               clang::QualType base) override {
       // All the objects have the same base.
       assert(!objects.empty());
-      return object_repository_.GetBaseClassObject(*objects.begin(), base);
+      return *object_repository_.GetBaseClassObject(*objects.begin(), base);
     }
 
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,
@@ -726,10 +726,10 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
             base.getType()->getAsCXXRecordDecl()) {
       if (const clang::CXXConstructorDecl* base_ctor =
               GetDefaultConstructor(base_record)) {
-        Object base_this_object =
+        const Object* base_this_object =
             object_repository.GetBaseClassObject(this_object, base.getType());
         if (llvm::Error err = TransferDefaultConstructor(
-                base_ctor, base_this_object, object_repository, points_to_map,
+                base_ctor, *base_this_object, object_repository, points_to_map,
                 callee_lifetimes)) {
           return err;
         }

@@ -174,10 +174,10 @@ class ObjectRepository {
 
   // Returns the object associated with a given base of the struct
   // represented by `struct_object`.
-  Object GetBaseClassObject(Object struct_object,
-                            const clang::Type* base) const;
-  Object GetBaseClassObject(Object struct_object,
-                            const clang::QualType base) const {
+  const Object* GetBaseClassObject(Object struct_object,
+                                   const clang::Type* base) const;
+  const Object* GetBaseClassObject(Object struct_object,
+                                   const clang::QualType base) const {
     return GetBaseClassObject(struct_object, base.getTypePtr());
   }
 
