@@ -672,7 +672,7 @@ Object ObjectRepository::GetBaseClassObject(Object struct_object,
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find base object");
   }
-  return iter->second;
+  return *iter->second;
 }
 
 ObjectSet ObjectRepository::GetBaseClassObject(const ObjectSet& struct_objects,
@@ -736,7 +736,7 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
                               clang::QualType base) override {
       assert(!objects.empty());
       base = base.getCanonicalType();
-      std::optional<Object> base_object = std::nullopt;
+      std::optional<const Object*> base_object = std::nullopt;
 
       for (Object object : objects) {
         if (auto iter = object_repository_.base_object_map_.find(
@@ -746,14 +746,14 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
         }
       }
       if (!base_object.has_value()) {
-        base_object = *object_repository_.CreateObject(
+        base_object = object_repository_.CreateObject(
             (*objects.begin()).GetLifetime(), base);
       }
       for (Object object : objects) {
         object_repository_.base_object_map_[std::make_pair(object, &*base)] =
             *base_object;
       }
-      return *base_object;
+      return **base_object;
     }
 
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,
@@ -830,7 +830,7 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
         const Object* new_base_obj = clone(base_obj);
         base_object_map_[std::make_pair(
             *new_object, base.getType().getCanonicalType().getTypePtr())] =
-            *new_base_obj;
+            new_base_obj;
         object_stack.push_back(ObjectPair{base_obj, new_base_obj});
       }
     }

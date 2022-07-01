@@ -163,7 +163,7 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
     auto [struct_object, base] = key;
     lines.push_back(absl::StrFormat(
         R"("%1$s%2$s" -> "%1$s%3$s" [style=dashed label="%4$s"])", name_prefix,
-        struct_object.DebugString(), base_object.DebugString(),
+        struct_object.DebugString(), base_object->DebugString(),
         clang::QualType(base, 0).getAsString()));
   }
 
@@ -203,10 +203,10 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   }
 
   for (auto [_, object] : object_repository.GetBaseObjects()) {
-    if (!var_objects.contains(object)) {
+    if (!var_objects.contains(*object)) {
       lines.push_back(absl::StrFormat(R"("%1$s%2$s"[label="%2$s"])",
                                       name_prefix,
-                                      VariableLabel("this", object)));
+                                      VariableLabel("this", *object)));
     }
   }
 

@@ -67,7 +67,7 @@ class ObjectRepository {
 
   // Maps a given struct-Object to the Object for each of its bases.
   using BaseObjects =
-      llvm::DenseMap<std::pair<Object, const clang::Type*>, Object>;
+      llvm::DenseMap<std::pair<Object, const clang::Type*>, const Object*>;
 
   // Iterator refers to a pair consisting of a variable declaration and the
   // object representing that variable.
