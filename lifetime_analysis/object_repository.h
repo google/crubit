@@ -161,8 +161,8 @@ class ObjectRepository {
 
   // Returns the object associated with a given field in the struct
   // represented by `struct_object`.
-  Object GetFieldObject(Object struct_object,
-                        const clang::FieldDecl* field) const;
+  const Object* GetFieldObject(Object struct_object,
+                               const clang::FieldDecl* field) const;
 
   // Returns the objects associated with a given field in the structs
   // represented by `struct_objects`.
@@ -209,7 +209,7 @@ class ObjectRepository {
 
   const Object* CloneObject(const Object* object);
 
-  std::optional<Object> GetFieldObjectInternal(
+  std::optional<const Object*> GetFieldObjectInternal(
       Object struct_object, const clang::FieldDecl* field) const;
 
   llvm::SpecificBumpPtrAllocator<Object> object_allocator_;

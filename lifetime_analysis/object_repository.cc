@@ -428,9 +428,9 @@ class ObjectRepository::VarDeclVisitor
         std::optional<Object> this_object = object_repository_.GetThisObject();
         assert(this_object.has_value());
 
-        Object field_object =
+        const Object* field_object =
             object_repository_.GetFieldObject(*this_object, init->getMember());
-        PropagateInitializedObject(init_expr, field_object);
+        PropagateInitializedObject(init_expr, *field_object);
       } else if (init->getBaseClass()) {
         std::optional<Object> this_object = object_repository_.GetThisObject();
         assert(this_object.has_value());
@@ -637,9 +637,9 @@ ObjectRepository::ObjectValueType ObjectRepository::GetObjectValueType(
   return iter->second;
 }
 
-Object ObjectRepository::GetFieldObject(Object struct_object,
-                                        const clang::FieldDecl* field) const {
-  std::optional<Object> field_object =
+const Object* ObjectRepository::GetFieldObject(
+    Object struct_object, const clang::FieldDecl* field) const {
+  std::optional<const Object*> field_object =
       GetFieldObjectInternal(struct_object, field);
   if (!field_object.has_value()) {
     llvm::errs() << "On an object of type "
@@ -656,7 +656,7 @@ ObjectSet ObjectRepository::GetFieldObject(
     const ObjectSet& struct_objects, const clang::FieldDecl* field) const {
   ObjectSet ret;
   for (Object object : struct_objects) {
-    ret.Add(GetFieldObject(object, field));
+    ret.Add(*GetFieldObject(object, field));
   }
   return ret;
 }
@@ -837,25 +837,25 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
 
     // Fields.
     for (auto f : record_type->getDecl()->fields()) {
-      auto field_obj = GetFieldObject(orig_object, f);
-      const Object* new_field_obj = clone(field_obj);
+      const Object* field_obj = GetFieldObject(orig_object, f);
+      const Object* new_field_obj = clone(*field_obj);
       field_object_map_[std::make_pair(*new_object, f)] = new_field_obj;
-      object_stack.push_back(ObjectPair{field_obj, new_field_obj});
+      object_stack.push_back(ObjectPair{*field_obj, new_field_obj});
     }
   }
   return new_root;
 }
 
-std::optional<Object> ObjectRepository::GetFieldObjectInternal(
+std::optional<const Object*> ObjectRepository::GetFieldObjectInternal(
     Object struct_object, const clang::FieldDecl* field) const {
   auto iter = field_object_map_.find(std::make_pair(struct_object, field));
   if (iter != field_object_map_.end()) {
-    return *iter->second;
+    return iter->second;
   }
   if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
           struct_object.Type()->getAs<clang::RecordType>()->getDecl())) {
     for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
-      std::optional<Object> field_object = GetFieldObjectInternal(
+      std::optional<const Object*> field_object = GetFieldObjectInternal(
           GetBaseClassObject(struct_object, base.getType()), field);
       if (field_object.has_value()) {
         return field_object;

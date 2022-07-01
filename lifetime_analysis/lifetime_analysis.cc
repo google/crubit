@@ -119,7 +119,7 @@ void TransferInitializer(Object dest, clang::QualType type,
         assert(init < init_list_expr->getNumInits());
         auto field_init = init_list_expr->getInit(init);
         ++init;
-        TransferInitializer(object_repository.GetFieldObject(dest, f),
+        TransferInitializer(*object_repository.GetFieldObject(dest, f),
                             f->getType(), object_repository, field_init,
                             points_to_map);
       }
@@ -184,7 +184,7 @@ void CollectLifetimes(
                           const clang::FieldDecl* field) override {
       // All the objects have the same field.
       assert(!objects.empty());
-      return object_repository_.GetFieldObject(*objects.begin(), field);
+      return *object_repository_.GetFieldObject(*objects.begin(), field);
     }
 
     Object GetBaseClassObject(const ObjectSet& objects,
@@ -232,7 +232,7 @@ void PropagateLifetimesToPointees(
                           const clang::FieldDecl* field) override {
       // All the objects have the same field.
       assert(!objects.empty());
-      return object_repository_.GetFieldObject(*objects.begin(), field);
+      return *object_repository_.GetFieldObject(*objects.begin(), field);
     }
 
     Object GetBaseClassObject(const ObjectSet& objects,

@@ -409,7 +409,7 @@ void FindLifetimeSubstitutions(Object root_object, clang::QualType type,
                           const clang::FieldDecl* field) override {
       // All the objects have the same field.
       assert(!objects.empty());
-      return object_repository_.GetFieldObject(*objects.begin(), field);
+      return *object_repository_.GetFieldObject(*objects.begin(), field);
     }
 
     Object GetBaseClassObject(const ObjectSet& objects,
@@ -486,7 +486,7 @@ void ExtendPointsToMapWithInitializers(
     }
     if (!IsInitExprInitializingARecordObject(init_expr)) {
       TransferInitializer(
-          object_repository.GetFieldObject(this_object.value(), field),
+          *object_repository.GetFieldObject(this_object.value(), field),
           field->getType(), object_repository, init_expr, points_to_map);
     }
   }
@@ -741,11 +741,11 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
             field->getType()->getAsCXXRecordDecl()) {
       if (const clang::CXXConstructorDecl* field_ctor =
               GetDefaultConstructor(field_record)) {
-        Object field_this_object =
+        const Object* field_this_object =
             object_repository.GetFieldObject(this_object, field);
         if (llvm::Error err = TransferDefaultConstructor(
-                field_ctor, field_this_object, object_repository, points_to_map,
-                callee_lifetimes)) {
+                field_ctor, *field_this_object, object_repository,
+                points_to_map, callee_lifetimes)) {
           return err;
         }
       }
