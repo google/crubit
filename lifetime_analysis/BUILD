@@ -99,6 +99,7 @@ cc_library(
     hdrs = ["object.h"],
     deps = [
         "@absl//absl/strings",
+        "@absl//absl/strings:str_format",
         "//lifetime_annotations:lifetime",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",

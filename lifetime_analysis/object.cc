@@ -7,6 +7,7 @@
 #include <string>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "lifetime_annotations/lifetime.h"
 #include "clang/AST/Decl.h"
 
@@ -14,16 +15,8 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
-constexpr int INVALID_OBJECT_ID_EMPTY = 0;
-constexpr int INVALID_OBJECT_ID_TOMBSTONE = 1;
-constexpr int FIRST_OBJECT_ID = 2;
-
-std::atomic<int> Object::next_id_{FIRST_OBJECT_ID};
-
-Object::Object() : id_(INVALID_OBJECT_ID_EMPTY) {}
-
 Object::Object(Lifetime lifetime, clang::QualType type)
-    : Object(next_id_++, lifetime, type) {
+    : lifetime_(lifetime), type_(type), func_(nullptr) {
   assert(!type.isNull());
 }
 
@@ -33,36 +26,11 @@ Object::Object(const clang::FunctionDecl& func)
 }
 
 std::string Object::DebugString() const {
-  assert(IsValid());
-
-  switch (id_) {
-    case INVALID_OBJECT_ID_EMPTY:
-      return "INVALID_EMPTY";
-    case INVALID_OBJECT_ID_TOMBSTONE:
-      return "INVALID_TOMBSTONE";
-    default: {
-      std::string result = absl::StrCat("p", id_, " ", lifetime_.DebugString());
-      if (!type_.isNull()) {
-        absl::StrAppend(&result, " (", type_.getAsString(), ")");
-      }
-      return result;
-    }
+  std::string result = absl::StrFormat("p%p %s", this, lifetime_.DebugString());
+  if (!type_.isNull()) {
+    absl::StrAppend(&result, " (", type_.getAsString(), ")");
   }
-}
-
-Object::Object(int id, Lifetime lifetime, clang::QualType type)
-    : id_(id), lifetime_(lifetime), type_(type), func_(nullptr) {}
-
-Object Object::InvalidEmpty() {
-  return Object(INVALID_OBJECT_ID_EMPTY, Lifetime(), clang::QualType());
-}
-
-Object Object::InvalidTombstone() {
-  return Object(INVALID_OBJECT_ID_TOMBSTONE, Lifetime(), clang::QualType());
-}
-
-bool Object::IsValid() const {
-  return id_ != INVALID_OBJECT_ID_EMPTY && id_ != INVALID_OBJECT_ID_TOMBSTONE;
+  return result;
 }
 
 std::ostream& operator<<(std::ostream& os, Object object) {
