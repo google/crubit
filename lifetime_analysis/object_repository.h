@@ -63,7 +63,7 @@ class ObjectRepository {
   // TODO(veluca): this approach does not produce correct results when
   // diamond-problem-style multiple inheritance happens.
   using FieldObjects =
-      llvm::DenseMap<std::pair<Object, const clang::FieldDecl*>, Object>;
+      llvm::DenseMap<std::pair<Object, const clang::FieldDecl*>, const Object*>;
 
   // Maps a given struct-Object to the Object for each of its bases.
   using BaseObjects =

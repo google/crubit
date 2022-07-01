@@ -507,7 +507,7 @@ std::string ObjectRepository::DebugString() const {
     os << "Field '";
     field.second->printName(os);
     os << "' on " << field.first.Type().getAsString()
-       << " object: " << object.DebugString() << "\n";
+       << " object: " << object->DebugString() << "\n";
   }
   os << "Return " << return_object_->DebugString() << "\n";
   os.flush();
@@ -712,7 +712,7 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
     Object GetFieldObject(const ObjectSet& objects,
                           const clang::FieldDecl* field) override {
       assert(!objects.empty());
-      std::optional<Object> field_object = std::nullopt;
+      std::optional<const Object*> field_object = std::nullopt;
 
       for (Object object : objects) {
         if (auto iter = object_repository_.field_object_map_.find(
@@ -722,14 +722,14 @@ void ObjectRepository::CreateObjects(Object root_object, clang::QualType type,
         }
       }
       if (!field_object.has_value()) {
-        field_object = *object_repository_.CreateObject(
+        field_object = object_repository_.CreateObject(
             (*objects.begin()).GetLifetime(), field->getType());
       }
       for (Object object : objects) {
         object_repository_.field_object_map_[std::make_pair(object, field)] =
             *field_object;
       }
-      return *field_object;
+      return **field_object;
     }
 
     Object GetBaseClassObject(const ObjectSet& objects,
@@ -839,7 +839,7 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     for (auto f : record_type->getDecl()->fields()) {
       auto field_obj = GetFieldObject(orig_object, f);
       const Object* new_field_obj = clone(field_obj);
-      field_object_map_[std::make_pair(*new_object, f)] = *new_field_obj;
+      field_object_map_[std::make_pair(*new_object, f)] = new_field_obj;
       object_stack.push_back(ObjectPair{field_obj, new_field_obj});
     }
   }
@@ -850,7 +850,7 @@ std::optional<Object> ObjectRepository::GetFieldObjectInternal(
     Object struct_object, const clang::FieldDecl* field) const {
   auto iter = field_object_map_.find(std::make_pair(struct_object, field));
   if (iter != field_object_map_.end()) {
-    return iter->second;
+    return *iter->second;
   }
   if (auto* cxxrecord = clang::dyn_cast<clang::CXXRecordDecl>(
           struct_object.Type()->getAs<clang::RecordType>()->getDecl())) {

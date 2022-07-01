@@ -155,7 +155,7 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
     auto [struct_object, field] = key;
     lines.push_back(absl::StrFormat(
         R"("%1$s%2$s" -> "%1$s%3$s" [style=dashed label="%4$s"])", name_prefix,
-        struct_object.DebugString(), field_object.DebugString(),
+        struct_object.DebugString(), field_object->DebugString(),
         field->getNameAsString()));
   }
 
@@ -196,9 +196,9 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   }
 
   for (auto [_, object] : object_repository.GetFieldObjects()) {
-    if (!var_objects.contains(object)) {
+    if (!var_objects.contains(*object)) {
       lines.push_back(absl::StrFormat(R"("%1$s%2$s"[label="%2$s"])",
-                                      name_prefix, object.DebugString()));
+                                      name_prefix, object->DebugString()));
     }
   }
 
