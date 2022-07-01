@@ -33,14 +33,14 @@ class LifetimeVisitor {
   // by `objects`. As all the objects in `objects` represent a single class
   // hierarchy, down to the class that defines the field, they must all have the
   // same field object.
-  virtual Object GetFieldObject(const ObjectSet& objects,
-                                const clang::FieldDecl* field) = 0;
+  virtual const Object* GetFieldObject(const ObjectSet& objects,
+                                       const clang::FieldDecl* field) = 0;
   // Returns the object representing the given `base` of the struct represented
   // by `objects`. As all the objects in `objects` represent a single class
   // hierarchy, down to the class that defines the base class, they must all
   // have the same base object.
-  virtual Object GetBaseClassObject(const ObjectSet& objects,
-                                    clang::QualType base) = 0;
+  virtual const Object* GetBaseClassObject(const ObjectSet& objects,
+                                           clang::QualType base) = 0;
   // Returns the ObjectSet pointed to by the objects in the input
   // ObjectSet, which are assumed to have lifetimes
   // `lifetimes`. Returning an empty set will stop the visit.

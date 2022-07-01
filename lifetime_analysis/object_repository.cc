@@ -714,8 +714,8 @@ void ObjectRepository::CreateObjects(const Object* root_object,
         : object_repository_(object_repository),
           create_transitive_objects_(create_transitive_objects) {}
 
-    Object GetFieldObject(const ObjectSet& objects,
-                          const clang::FieldDecl* field) override {
+    const Object* GetFieldObject(const ObjectSet& objects,
+                                 const clang::FieldDecl* field) override {
       assert(!objects.empty());
       std::optional<const Object*> field_object = std::nullopt;
 
@@ -734,11 +734,11 @@ void ObjectRepository::CreateObjects(const Object* root_object,
         object_repository_.field_object_map_[std::make_pair(object, field)] =
             *field_object;
       }
-      return **field_object;
+      return *field_object;
     }
 
-    Object GetBaseClassObject(const ObjectSet& objects,
-                              clang::QualType base) override {
+    const Object* GetBaseClassObject(const ObjectSet& objects,
+                                     clang::QualType base) override {
       assert(!objects.empty());
       base = base.getCanonicalType();
       std::optional<const Object*> base_object = std::nullopt;
@@ -758,7 +758,7 @@ void ObjectRepository::CreateObjects(const Object* root_object,
         object_repository_.base_object_map_[std::make_pair(object, &*base)] =
             *base_object;
       }
-      return **base_object;
+      return *base_object;
     }
 
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,

@@ -405,18 +405,18 @@ void FindLifetimeSubstitutions(Object root_object, clang::QualType type,
           points_to_map_(points_to_map),
           subst_(subst) {}
 
-    Object GetFieldObject(const ObjectSet& objects,
-                          const clang::FieldDecl* field) override {
+    const Object* GetFieldObject(const ObjectSet& objects,
+                                 const clang::FieldDecl* field) override {
       // All the objects have the same field.
       assert(!objects.empty());
-      return *object_repository_.GetFieldObject(*objects.begin(), field);
+      return object_repository_.GetFieldObject(*objects.begin(), field);
     }
 
-    Object GetBaseClassObject(const ObjectSet& objects,
-                              clang::QualType base) override {
+    const Object* GetBaseClassObject(const ObjectSet& objects,
+                                     clang::QualType base) override {
       // All the objects have the same base.
       assert(!objects.empty());
-      return *object_repository_.GetBaseClassObject(*objects.begin(), base);
+      return object_repository_.GetBaseClassObject(*objects.begin(), base);
     }
 
     ObjectSet Traverse(const ObjectLifetimes& lifetimes,

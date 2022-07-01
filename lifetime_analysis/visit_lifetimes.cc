@@ -113,7 +113,7 @@ void TraverseObjectFieldsWithBases(const ObjectSet& object_set,
             fields_to_visit.emplace_back(ObjectSet(),
                                          std::move(field_lifetimes));
           }
-          Object field_object = visitor.GetFieldObject(bases, f);
+          const Object* field_object = visitor.GetFieldObject(bases, f);
           fields_to_visit[field].first.Add(field_object);
         });
   }
