@@ -19,8 +19,8 @@ namespace lifetimes {
 // A set of `Object`s.
 class ObjectSet {
  public:
-  using const_iterator = llvm::SmallSet<Object, 2>::const_iterator;
-  using value_type = Object;
+  using const_iterator = llvm::SmallSet<const Object*, 2>::const_iterator;
+  using value_type = const Object*;
 
   ObjectSet() = default;
 
@@ -30,14 +30,9 @@ class ObjectSet {
   ObjectSet& operator=(ObjectSet&&) = default;
 
   // Initializes the object set with `objects`.
-  ObjectSet(std::initializer_list<Object> objects) {
-    for (Object object : objects) {
-      objects_.insert(object);
-    }
-  }
   ObjectSet(std::initializer_list<const Object*> objects) {
     for (const Object* object : objects) {
-      objects_.insert(*object);
+      objects_.insert(object);
     }
   }
 
@@ -53,13 +48,14 @@ class ObjectSet {
   size_t size() const { return objects_.size(); }
 
   // Returns whether this set contains `object`.
-  bool Contains(Object object) const { return objects_.contains(object); }
-  bool Contains(const Object* object) const { return Contains(*object); }
+  bool Contains(const Object* object) const {
+    return objects_.contains(object);
+  }
 
   // Returns whether this set contains all objects in `other`, i.e. whether
   // this set is a superset of `other`.
   bool Contains(const ObjectSet& other) const {
-    for (Object object : other) {
+    for (const Object* object : other) {
       if (!Contains(object)) {
         return false;
       }
@@ -76,8 +72,7 @@ class ObjectSet {
   }
 
   // Adds `object` to this object set.
-  void Add(Object object) { objects_.insert(object); }
-  void Add(const Object* object) { Add(*object); }
+  void Add(const Object* object) { objects_.insert(object); }
 
   // Adds the `other` objects to this object set.
   void Add(const ObjectSet& other) {
@@ -95,7 +90,7 @@ class ObjectSet {
     return os << object_set.DebugString();
   }
 
-  llvm::SmallSet<Object, 2> objects_;
+  llvm::SmallSet<const Object*, 2> objects_;
 };
 
 }  // namespace lifetimes

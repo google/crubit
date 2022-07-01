@@ -100,7 +100,7 @@ void TraverseObjectFieldsWithBases(const ObjectSet& object_set,
   // the same call, thus we need to "merge" together the `Object`s that come
   // from the same field but different `object`s in the object_set.
   llvm::SmallVector<std::pair<ObjectSet, ObjectLifetimes>> fields_to_visit;
-  for (Object object : object_set) {
+  for (const Object* object : object_set) {
     // This code relies on the vist order of ForEachField being independent
     // of `object`.
     size_t next_field = 0;
@@ -128,7 +128,9 @@ void VisitLifetimesImpl(const ObjectSet& points_to_set,
                         llvm::DenseSet<Object>& visited_objects,
                         LifetimeVisitor& visitor, int pointee_depth) {
   size_t num_visited_before = visited_objects.size();
-  visited_objects.insert(points_to_set.begin(), points_to_set.end());
+  for (const Object* object : points_to_set) {
+    visited_objects.insert(*object);
+  }
   if (num_visited_before == visited_objects.size()) {
     // No new object -> nothing to do. This avoids infinite loops.
     return;

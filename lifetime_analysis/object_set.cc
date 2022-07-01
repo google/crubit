@@ -16,8 +16,8 @@ namespace lifetimes {
 
 std::string ObjectSet::DebugString() const {
   std::vector<std::string> parts;
-  for (Object object : objects_) {
-    parts.push_back(object.DebugString());
+  for (const Object* object : objects_) {
+    parts.push_back(object->DebugString());
   }
   return absl::StrJoin(parts, ", ");
 }

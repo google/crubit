@@ -659,8 +659,8 @@ const Object* ObjectRepository::GetFieldObject(
 ObjectSet ObjectRepository::GetFieldObject(
     const ObjectSet& struct_objects, const clang::FieldDecl* field) const {
   ObjectSet ret;
-  for (Object object : struct_objects) {
-    ret.Add(*GetFieldObject(object, field));
+  for (const Object* object : struct_objects) {
+    ret.Add(GetFieldObject(object, field));
   }
   return ret;
 }
@@ -682,8 +682,8 @@ const Object* ObjectRepository::GetBaseClassObject(
 ObjectSet ObjectRepository::GetBaseClassObject(const ObjectSet& struct_objects,
                                                const clang::Type* base) const {
   ObjectSet ret;
-  for (Object object : struct_objects) {
-    ret.Add(*GetBaseClassObject(object, base));
+  for (const Object* object : struct_objects) {
+    ret.Add(GetBaseClassObject(object, base));
   }
   return ret;
 }
@@ -719,19 +719,19 @@ void ObjectRepository::CreateObjects(const Object* root_object,
       assert(!objects.empty());
       std::optional<const Object*> field_object = std::nullopt;
 
-      for (Object object : objects) {
+      for (const Object* object : objects) {
         if (auto iter = object_repository_.field_object_map_.find(
-                std::make_pair(object, field));
+                std::make_pair(*object, field));
             iter != object_repository_.field_object_map_.end()) {
           field_object = iter->second;
         }
       }
       if (!field_object.has_value()) {
         field_object = object_repository_.CreateObject(
-            (*objects.begin()).GetLifetime(), field->getType());
+            (*objects.begin())->GetLifetime(), field->getType());
       }
-      for (Object object : objects) {
-        object_repository_.field_object_map_[std::make_pair(object, field)] =
+      for (const Object* object : objects) {
+        object_repository_.field_object_map_[std::make_pair(*object, field)] =
             *field_object;
       }
       return *field_object;
@@ -743,19 +743,19 @@ void ObjectRepository::CreateObjects(const Object* root_object,
       base = base.getCanonicalType();
       std::optional<const Object*> base_object = std::nullopt;
 
-      for (Object object : objects) {
+      for (const Object* object : objects) {
         if (auto iter = object_repository_.base_object_map_.find(
-                std::make_pair(object, &*base));
+                std::make_pair(*object, &*base));
             iter != object_repository_.base_object_map_.end()) {
           base_object = iter->second;
         }
       }
       if (!base_object.has_value()) {
         base_object = object_repository_.CreateObject(
-            (*objects.begin()).GetLifetime(), base);
+            (*objects.begin())->GetLifetime(), base);
       }
-      for (Object object : objects) {
-        object_repository_.base_object_map_[std::make_pair(object, &*base)] =
+      for (const Object* object : objects) {
+        object_repository_.base_object_map_[std::make_pair(*object, &*base)] =
             *base_object;
       }
       return *base_object;

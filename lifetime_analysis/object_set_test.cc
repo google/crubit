@@ -27,7 +27,7 @@ TEST(ObjectSet, AccessObjects) {
         Object object_static(Lifetime::Static(), ast_context.IntTy);
         ObjectSet object_set = {&object_static};
 
-        EXPECT_THAT(object_set, UnorderedElementsAre(object_static));
+        EXPECT_THAT(object_set, UnorderedElementsAre(&object_static));
       },
       {});
 }
@@ -68,7 +68,7 @@ TEST(ObjectSet, Union) {
         ObjectSet set_union = set_1.Union(set_2);
 
         EXPECT_THAT(set_union,
-                    UnorderedElementsAre(object_static, object_local));
+                    UnorderedElementsAre(&object_static, &object_local));
       },
       {});
 }
@@ -85,22 +85,22 @@ TEST(ObjectSet, Add) {
         {
           ObjectSet object_set = {&o1};
           object_set.Add(&o2);
-          EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2));
+          EXPECT_THAT(object_set, UnorderedElementsAre(&o1, &o2));
         }
         {
           ObjectSet object_set = {&o1, &o2};
           object_set.Add(&o2);
-          EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2));
+          EXPECT_THAT(object_set, UnorderedElementsAre(&o1, &o2));
         }
         {
           ObjectSet object_set = {&o1};
           object_set.Add({&o2, &o3});
-          EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2, o3));
+          EXPECT_THAT(object_set, UnorderedElementsAre(&o1, &o2, &o3));
         }
         {
           ObjectSet object_set = {&o1, &o2};
           object_set.Add({&o2, &o3});
-          EXPECT_THAT(object_set, UnorderedElementsAre(o1, o2, o3));
+          EXPECT_THAT(object_set, UnorderedElementsAre(&o1, &o2, &o3));
         }
       },
       {});

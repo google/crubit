@@ -65,7 +65,7 @@ void PointsToMap::SetPointerPointsToSet(Object pointer, ObjectSet points_to) {
 
 void PointsToMap::SetPointerPointsToSet(const ObjectSet& pointers,
                                         const ObjectSet& points_to) {
-  for (Object pointer : pointers) {
+  for (const Object* pointer : pointers) {
     SetPointerPointsToSet(pointer, points_to);
   }
 }
@@ -78,8 +78,8 @@ void PointsToMap::ExtendPointerPointsToSet(Object pointer,
 
 ObjectSet PointsToMap::GetPointerPointsToSet(const ObjectSet& pointers) const {
   ObjectSet result;
-  for (Object pointer : pointers) {
-    auto iter = pointer_points_tos_.find(pointer);
+  for (const Object* pointer : pointers) {
+    auto iter = pointer_points_tos_.find(*pointer);
     if (iter != pointer_points_tos_.end()) {
       result.Add(iter->second);
     }

@@ -86,9 +86,9 @@ llvm::Error PropagateStaticToPointees(LifetimeSubstitutions& subst,
       subst.Add(cur.GetLifetime(), Lifetime::Static());
     }
 
-    for (Object pointee : points_to_map.GetPointerPointsToSet(cur)) {
-      if (!visited.count(pointee)) {
-        pointees.push_back(pointee);
+    for (const Object* pointee : points_to_map.GetPointerPointsToSet(cur)) {
+      if (!visited.count(*pointee)) {
+        pointees.push_back(*pointee);
       }
     }
   }
@@ -144,10 +144,10 @@ std::string PointsToEdgesDot(const ObjectRepository& object_repository,
   for (auto [pointer, points_to_set] : points_to_map.PointerPointsTos()) {
     all_objects.insert(pointer);
     for (auto points_to : points_to_set) {
-      all_objects.insert(points_to);
+      all_objects.insert(*points_to);
       lines.push_back(absl::StrFormat(R"("%1$s%2$s" -> "%1$s%3$s")",
                                       name_prefix, pointer.DebugString(),
-                                      points_to.DebugString()));
+                                      points_to->DebugString()));
     }
   }
 
@@ -437,8 +437,8 @@ void FindLifetimeSubstitutions(const Object* root_object, clang::QualType type,
         variance = kInvariant;
       }
       llvm::SmallSet<Lifetime, 2> pointee_lifetimes;
-      for (Object pointee : child_pointees) {
-        pointee_lifetimes.insert(subst_.Substitute(pointee.GetLifetime()));
+      for (const Object* pointee : child_pointees) {
+        pointee_lifetimes.insert(subst_.Substitute(pointee->GetLifetime()));
       }
       assert(!pointee_lifetimes.empty());
       if (!lifetimes.GetValueLifetimes()

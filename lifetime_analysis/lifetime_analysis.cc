@@ -139,16 +139,17 @@ void TransferInitializer(Object dest, clang::QualType type,
 
 namespace {
 
-void SetPointerPointsToSetRespectingTypes(Object pointer,
+void SetPointerPointsToSetRespectingTypes(const Object* pointer,
                                           const ObjectSet& points_to,
                                           PointsToMap& points_to_map,
                                           clang::ASTContext& ast_context) {
-  assert(pointer.Type()->isPointerType() || pointer.Type()->isReferenceType());
+  assert(pointer->Type()->isPointerType() ||
+         pointer->Type()->isReferenceType());
 
   ObjectSet points_to_filtered;
 
   for (auto object : points_to) {
-    if (MayPointTo(pointer.Type(), object.Type(), ast_context)) {
+    if (MayPointTo(pointer->Type(), object->Type(), ast_context)) {
       points_to_filtered.Add(object);
     }
   }
@@ -404,9 +405,9 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   // static lifetime (see more detailed explanation above).
   if (auto iter = lifetime_to_object_set.find(Lifetime::Static());
       iter != lifetime_to_object_set.end()) {
-    for (const Object& object : iter->second) {
+    for (const Object* object : iter->second) {
       const Object* pointer = object_repository.CreateStaticObject(
-          ast_context.getPointerType(object.Type()));
+          ast_context.getPointerType(object->Type()));
       points_to_map.ExtendPointerPointsToSet(pointer, {object});
     }
   }
@@ -726,7 +727,7 @@ std::optional<std::string> TransferStmtVisitor::VisitBinaryOperator(
       // don't want to change points-to sets in those cases.
       if (!op->getLHS()->getType()->isPointerType()) break;
       ObjectSet rhs_points_to = points_to_map_.GetExprObjectSet(op->getRHS());
-      for (Object pointer : lhs_points_to) {
+      for (const Object* pointer : lhs_points_to) {
         // We can overwrite (instead of extend) the destination points-to-set
         // only in very specific circumstances:
         // - We need to know unambiguously what the LHS refers to, so that we
@@ -941,7 +942,7 @@ void SetExprObjectSetRespectingType(const clang::Expr* expr,
 
   for (auto object : points_to) {
     if (expr->isGLValue()) {
-      if (PointeesCompatible(expr->getType(), object.Type(), ast_context)) {
+      if (PointeesCompatible(expr->getType(), object->Type(), ast_context)) {
         points_to_filtered.Add(object);
       }
     } else {
@@ -964,7 +965,7 @@ void SetExprObjectSetRespectingType(const clang::Expr* expr,
         expr_type = ast_context.getPointerType(expr_type);
       }
 
-      if (MayPointTo(expr_type, object.Type(), ast_context)) {
+      if (MayPointTo(expr_type, object->Type(), ast_context)) {
         points_to_filtered.Add(object);
       }
     }
@@ -985,7 +986,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
   } else {
     const clang::Expr* callee = call->getCallee();
     for (const auto& object : points_to_map_.GetExprObjectSet(callee)) {
-      const clang::FunctionDecl* func = object.GetFunc();
+      const clang::FunctionDecl* func = object->GetFunc();
       assert(func);
       callees.push_back(func);
     }
