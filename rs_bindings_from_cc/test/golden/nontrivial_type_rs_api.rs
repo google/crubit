@@ -813,7 +813,7 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::Nontrivial>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::Nontrivial>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::Nontrivial: Copy);
+    static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::Nontrivial: Drop);
@@ -826,7 +826,7 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialInline>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialInline>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialInline: Copy);
+    static_assertions::assert_not_impl_any!(crate::NontrivialInline: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialInline: Drop);
@@ -839,7 +839,7 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialMembers>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialMembers>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialMembers: Copy);
+    static_assertions::assert_not_impl_any!(crate::NontrivialMembers: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialMembers: Drop);
@@ -850,7 +850,7 @@ const _: () =
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialUnpin>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialUnpin>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialUnpin: Copy);
+    static_assertions::assert_not_impl_any!(crate::NontrivialUnpin: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::NontrivialUnpin: Drop);
@@ -863,8 +863,8 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialByValue>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialByValue>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialByValue: Copy);
+    static_assertions::assert_not_impl_any!(crate::NontrivialByValue: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialByValue: Drop);
+    static_assertions::assert_not_impl_any!(crate::NontrivialByValue: Drop);
 };

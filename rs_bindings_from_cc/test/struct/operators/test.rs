@@ -5,7 +5,7 @@
 #[cfg(test)]
 mod tests {
     use operators::*;
-    use static_assertions::{assert_impl_all, assert_not_impl_all};
+    use static_assertions::{assert_impl_all, assert_not_impl_any};
 
     #[test]
     fn test_eq_member_func_same_operands() {
@@ -26,7 +26,7 @@ mod tests {
 
         // The relation is not necessarily symmetrical:
         assert_impl_all!(TestStruct2: PartialEq<TestStruct1>);
-        assert_not_impl_all!(TestStruct1: PartialEq<TestStruct2>);
+        assert_not_impl_any!(TestStruct1: PartialEq<TestStruct2>);
     }
 
     #[test]
@@ -57,6 +57,6 @@ mod tests {
         // only generate bindings for PartialEq if `operator==` free function is
         // defined in the same namespace as the lhs. See also
         // https://en.cppreference.com/w/cpp/language/adl
-        assert_not_impl_all!(OperandForFreeFuncInDifferentNamespace: PartialEq);
+        assert_not_impl_any!(OperandForFreeFuncInDifferentNamespace: PartialEq);
     }
 }

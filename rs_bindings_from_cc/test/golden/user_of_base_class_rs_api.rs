@@ -307,18 +307,18 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::Derived2>() == 24);
 const _: () = assert!(rust_std::mem::align_of::<crate::Derived2>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::Derived2: Copy);
+    static_assertions::assert_not_impl_any!(crate::Derived2: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::Derived2: Drop);
+    static_assertions::assert_not_impl_any!(crate::Derived2: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Derived2, derived_1) == 20);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::VirtualDerived2>() == 32);
 const _: () = assert!(rust_std::mem::align_of::<crate::VirtualDerived2>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::VirtualDerived2: Copy);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::VirtualDerived2: Drop);
+    static_assertions::assert_not_impl_any!(crate::VirtualDerived2: Drop);
 };

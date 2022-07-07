@@ -527,7 +527,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::DocCommentSlashes: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::DocCommentSlashes: Drop);
+    static_assertions::assert_not_impl_any!(crate::DocCommentSlashes: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::DocCommentSlashes, i) == 0);
 
@@ -540,7 +540,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::DocCommentBang: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::DocCommentBang: Drop);
+    static_assertions::assert_not_impl_any!(crate::DocCommentBang: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::DocCommentBang, i) == 0);
 
@@ -553,7 +553,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::MultilineCommentTwoStars: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::MultilineCommentTwoStars: Drop);
+    static_assertions::assert_not_impl_any!(crate::MultilineCommentTwoStars: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::MultilineCommentTwoStars, i) == 0);
@@ -567,7 +567,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::LineComment: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::LineComment: Drop);
+    static_assertions::assert_not_impl_any!(crate::LineComment: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::LineComment, i) == 0);
 
@@ -580,7 +580,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::MultilineOneStar: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::MultilineOneStar: Drop);
+    static_assertions::assert_not_impl_any!(crate::MultilineOneStar: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::MultilineOneStar, i) == 0);
 
@@ -593,7 +593,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
 };
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, value) == 0
@@ -608,7 +608,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
 };
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, value) == 0

@@ -1521,10 +1521,10 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::DifferentScope>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::DifferentScope>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::DifferentScope: Copy);
+    static_assertions::assert_not_impl_any!(crate::DifferentScope: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::DifferentScope: Drop);
+    static_assertions::assert_not_impl_any!(crate::DifferentScope: Drop);
 };
 
 const _: () =
@@ -1532,10 +1532,10 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::TemplateParam: Copy);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TemplateParam: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::TemplateParam: Drop);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TemplateParam: Drop);
 };
 
 const _: () = assert!(
@@ -1549,12 +1549,12 @@ const _: () = assert!(
     >() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE: Drop
     );
 };
@@ -1576,12 +1576,12 @@ const _: () = assert!(
     >() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE: Drop
     );
 };
@@ -1601,12 +1601,12 @@ const _: () = assert!(
         == 4
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE: Drop
     );
 };
@@ -1628,12 +1628,12 @@ const _: () = assert!(
     >() == 4
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE: Drop
     );
 };
@@ -1661,12 +1661,12 @@ const _: () = assert!(
     >() == 4
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE: Drop
     );
 };
@@ -1694,13 +1694,13 @@ const _: () = assert!(
     >() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE:
             Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE:
             Drop
     );

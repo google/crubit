@@ -372,16 +372,16 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::EmptyUnion: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::EmptyUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::EmptyUnion: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<crate::Nontrivial>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::Nontrivial>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::Nontrivial: Copy);
+    static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::Nontrivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::Nontrivial: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Nontrivial, field) == 0);
 
@@ -390,7 +390,7 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::TriviallyCopyableButNontriviallyDestructible: Copy
     );
 };
@@ -407,7 +407,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::NonEmptyUnion: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NonEmptyUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonEmptyUnion: Drop);
 };
 const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
@@ -425,10 +425,10 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::NonCopyUnion>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::NonCopyUnion>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NonCopyUnion: Copy);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NonCopyUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Drop);
 };
 const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
@@ -437,10 +437,10 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::NonCopyUnion2>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::NonCopyUnion2>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NonCopyUnion2: Copy);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NonCopyUnion2: Drop);
+    static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Drop);
 };
 const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
@@ -455,5 +455,5 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::UnionWithOpaqueField: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::UnionWithOpaqueField: Drop);
+    static_assertions::assert_not_impl_any!(crate::UnionWithOpaqueField: Drop);
 };

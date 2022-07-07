@@ -403,7 +403,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::Trivial: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::Trivial: Drop);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Trivial: Drop);
 };
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::Trivial, trivial_field)
@@ -422,7 +422,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::TrivialWithDefaulted: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::test_namespace_bindings::TrivialWithDefaulted: Drop
     );
 };
@@ -437,10 +437,10 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::TrivialNonfinal>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::TrivialNonfinal: Copy);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TrivialNonfinal: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::TrivialNonfinal: Drop);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TrivialNonfinal: Drop);
 };
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(

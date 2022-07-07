@@ -522,19 +522,19 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::TopLevel>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::TopLevel>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::TopLevel: Copy);
+    static_assertions::assert_not_impl_any!(crate::TopLevel: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::TopLevel: Drop);
+    static_assertions::assert_not_impl_any!(crate::TopLevel: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::Inner: Copy);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::Inner: Drop);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Drop);
 };
 
 const _: () =
@@ -542,10 +542,10 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Drop);
 };
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateI8TopLevelE, t) == 0
@@ -560,12 +560,12 @@ const _: () = assert!(
     ) == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Drop
     );
 };
@@ -581,12 +581,12 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Drop
     );
 };
@@ -606,12 +606,12 @@ const _: () = assert!(
     >() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Drop
     );
 };
@@ -625,10 +625,10 @@ const _: () = assert!(
 const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIbE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIbE: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIbE, t) == 0);
@@ -636,10 +636,10 @@ const _: () =
 const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIcE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIcE: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIcE, t) == 0);
@@ -647,10 +647,10 @@ const _: () =
 const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
 const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIdE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIdE: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIdE, t) == 0);
@@ -658,10 +658,10 @@ const _: () =
 const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIfE, t) == 0);
@@ -669,10 +669,10 @@ const _: () =
 const _: () = assert!(rust_std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::__CcTemplateInst10MyTemplateIiE, t) == 0);

@@ -187,7 +187,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::SomeStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<crate::FieldTypeTestStruct>() == 288);
@@ -199,7 +199,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::FieldTypeTestStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::FieldTypeTestStruct: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, bool_field) == 0);

@@ -126,7 +126,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::test_namespace_bindings::SomeClass: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::SomeClass: Drop);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::SomeClass: Drop);
 };
 const _: () = assert!(
     memoffset_unstable_const::offset_of!(

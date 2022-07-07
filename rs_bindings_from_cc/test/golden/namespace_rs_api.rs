@@ -619,10 +619,10 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Copy);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::S: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::test_namespace_bindings::S: Drop);
+    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::S: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) == 0);
@@ -632,12 +632,12 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::test_namespace_bindings_reopened::inner::S: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::test_namespace_bindings_reopened::inner::S: Drop
     );
 };
@@ -651,12 +651,12 @@ const _: () = assert!(
     ) == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Copy
     );
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::test_namespace_bindings_inline::inner::StructInInlineNamespace: Drop
     );
 };

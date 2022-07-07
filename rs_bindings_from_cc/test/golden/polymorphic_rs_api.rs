@@ -337,7 +337,7 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::PolymorphicBase>() == 8);
 const _: () = assert!(rust_std::mem::align_of::<crate::PolymorphicBase>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::PolymorphicBase: Copy);
+    static_assertions::assert_not_impl_any!(crate::PolymorphicBase: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::PolymorphicBase: Drop);
@@ -346,7 +346,7 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::PolymorphicBase2>() == 8);
 const _: () = assert!(rust_std::mem::align_of::<crate::PolymorphicBase2>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::PolymorphicBase2: Copy);
+    static_assertions::assert_not_impl_any!(crate::PolymorphicBase2: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::PolymorphicBase2: Drop);
@@ -355,7 +355,7 @@ const _: () = {
 const _: () = assert!(rust_std::mem::size_of::<crate::PolymorphicDerived>() == 16);
 const _: () = assert!(rust_std::mem::align_of::<crate::PolymorphicDerived>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::PolymorphicDerived: Copy);
+    static_assertions::assert_not_impl_any!(crate::PolymorphicDerived: Copy);
 };
 const _: () = {
     static_assertions::assert_impl_all!(crate::PolymorphicDerived: Drop);

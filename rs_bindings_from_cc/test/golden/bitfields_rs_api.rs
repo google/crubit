@@ -161,10 +161,10 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::WithBitfields>() == 32);
 const _: () = assert!(rust_std::mem::align_of::<crate::WithBitfields>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::WithBitfields: Copy);
+    static_assertions::assert_not_impl_any!(crate::WithBitfields: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::WithBitfields: Drop);
+    static_assertions::assert_not_impl_any!(crate::WithBitfields: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f2) == 4);
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WithBitfields, f5) == 20);

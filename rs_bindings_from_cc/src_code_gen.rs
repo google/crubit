@@ -1277,7 +1277,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             })
             .collect_vec()
     };
-    // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_all!`
+    // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_any!`
     // assertions about the `Copy` trait - this trait should be implemented
     // iff `should_implement_drop(record)` is false.
     let mut record_features = BTreeSet::new();
@@ -1420,14 +1420,14 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         if should_derive_clone(record) {
             add_assertion(quote! { assert_impl_all! }, quote! { Clone });
         } else {
-            // Can't `assert_not_impl_all!` here, because `Clone` may be
+            // Can't `assert_not_impl_any!` here, because `Clone` may be
             // implemented rather than derived.
         }
         let mut add_conditional_assertion = |should_impl_trait: bool, trait_name: TokenStream| {
             let assert_impl_macro = if should_impl_trait {
                 quote! { assert_impl_all! }
             } else {
-                quote! { assert_not_impl_all! }
+                quote! { assert_not_impl_any! }
             };
             add_assertion(assert_impl_macro, trait_name);
         };
@@ -2711,7 +2711,7 @@ mod tests {
         ir_from_cc, ir_from_cc_dependency, ir_record, make_ir_from_items, retrieve_func,
         with_lifetime_macros,
     };
-    use static_assertions::{assert_impl_all, assert_not_impl_all};
+    use static_assertions::{assert_impl_all, assert_not_impl_any};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_ir_matches, assert_rs_matches,
         assert_rs_not_matches,
@@ -3033,7 +3033,7 @@ mod tests {
                 const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 4);
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Clone); };
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Copy); };
-                const _: () = { static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop); };
+                const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop); };
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) == 0);
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) == 4);
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) == 8);
@@ -4377,7 +4377,7 @@ mod tests {
                   static_assertions::assert_impl_all!(crate::SomeUnionWithPrivateFields: Copy);
                 };
                 const _: () = {
-                  static_assertions::assert_not_impl_all!(crate::SomeUnionWithPrivateFields: Drop);
+                  static_assertions::assert_not_impl_any!(crate::SomeUnionWithPrivateFields: Drop);
                 };
             }
         );
@@ -5395,9 +5395,9 @@ mod tests {
         "#;
         assert_impl_all!(i32: Copy);
         assert_impl_all!(&i32: Copy);
-        assert_not_impl_all!(&mut i32: Copy);
+        assert_not_impl_any!(&mut i32: Copy);
         assert_impl_all!(Option<&i32>: Copy);
-        assert_not_impl_all!(Option<&mut i32>: Copy);
+        assert_not_impl_any!(Option<&mut i32>: Copy);
         assert_impl_all!(*const i32: Copy);
         assert_impl_all!(*mut i32: Copy);
         struct Test {

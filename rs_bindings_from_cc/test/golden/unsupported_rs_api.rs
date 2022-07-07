@@ -215,17 +215,17 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TrivialCustomType: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::TrivialCustomType: Drop);
+    static_assertions::assert_not_impl_any!(crate::TrivialCustomType: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::TrivialCustomType, i) == 0);
 
 const _: () = assert!(rust_std::mem::size_of::<crate::NontrivialCustomType>() == 4);
 const _: () = assert!(rust_std::mem::align_of::<crate::NontrivialCustomType>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialCustomType: Copy);
+    static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::NontrivialCustomType: Drop);
+    static_assertions::assert_not_impl_any!(crate::NontrivialCustomType: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::NontrivialCustomType, i) == 0);
 
@@ -238,7 +238,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::ContainingStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::ContainingStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::ContainingStruct: Drop);
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::ContainingStruct, nested_struct) == 0);

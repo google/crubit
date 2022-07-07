@@ -135,7 +135,7 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::S: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::S: Drop);
+    static_assertions::assert_not_impl_any!(crate::S: Drop);
 };
 
 const _: () =
@@ -143,7 +143,7 @@ const _: () =
 const _: () =
     assert!(rust_std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(
+    static_assertions::assert_not_impl_any!(
         crate::TriviallyCopyableButNontriviallyDestructible: Copy
     );
 };

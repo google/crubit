@@ -201,10 +201,10 @@ const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem:
 const _: () = assert!(rust_std::mem::size_of::<crate::SomeStruct>() == 1);
 const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::SomeStruct: Copy);
+    static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::SomeStruct: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 };
 
 const _: () = assert!(rust_std::mem::size_of::<crate::SomeUnion>() == 1);
@@ -216,5 +216,5 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::SomeUnion: Copy);
 };
 const _: () = {
-    static_assertions::assert_not_impl_all!(crate::SomeUnion: Drop);
+    static_assertions::assert_not_impl_any!(crate::SomeUnion: Drop);
 };
