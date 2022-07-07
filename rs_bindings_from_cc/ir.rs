@@ -124,8 +124,8 @@ impl ToTokens for LifetimeName {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
     pub name: Option<String>,
-    pub lifetime_args: Vec<LifetimeId>,
-    pub type_args: Vec<RsType>,
+    pub lifetime_args: Rc<[LifetimeId]>,
+    pub type_args: Rc<[RsType]>,
     pub decl_id: Option<ItemId>,
 }
 

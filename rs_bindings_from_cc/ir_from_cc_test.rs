@@ -2669,15 +2669,15 @@ fn test_elided_lifetimes() {
     assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
     let a_id = lifetime_params[0].id;
     let b_id = lifetime_params[1].id;
-    assert_eq!(func.return_type.rs_type.lifetime_args, vec![a_id]);
+    assert_eq!(&*func.return_type.rs_type.lifetime_args, &[a_id]);
 
     assert_eq!(func.params[0].identifier, ir_id("__this"));
     assert_eq!(func.params[0].type_.rs_type.name, Some("&mut".to_string()));
-    assert_eq!(func.params[0].type_.rs_type.lifetime_args, vec![a_id]);
+    assert_eq!(&*func.params[0].type_.rs_type.lifetime_args, &[a_id]);
 
     assert_eq!(func.params[1].identifier, ir_id("i"));
     assert_eq!(func.params[1].type_.rs_type.name, Some("&mut".to_string()));
-    assert_eq!(func.params[1].type_.rs_type.lifetime_args, vec![b_id]);
+    assert_eq!(&*func.params[1].type_.rs_type.lifetime_args, &[b_id]);
 }
 
 fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
