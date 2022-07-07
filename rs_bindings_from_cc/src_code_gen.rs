@@ -1007,7 +1007,7 @@ fn should_implement_drop(record: &Record) -> bool {
 ///
 /// For non-Copy union fields, failing to use `ManuallyDrop<T>` would
 /// additionally cause a compile-time error until https://github.com/rust-lang/rust/issues/55149 is stabilized.
-fn needs_manually_drop(db: &mut Database, ty: ir::RsType) -> Result<bool> {
+fn needs_manually_drop(db: &Database, ty: ir::RsType) -> Result<bool> {
     let ty_implements_copy = db.rs_type_kind(ty)?.implements_copy();
     Ok(!ty_implements_copy)
 }
@@ -1074,7 +1074,7 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-fn generate_record(db: &mut Database, record: &Rc<Record>) -> Result<GeneratedItem> {
+fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
     let ir = db.ir();
     let ident = make_rs_ident(&record.rs_name);
     let namespace_qualifier = generate_namespace_qualifier(record.id, &ir)?;
@@ -1485,7 +1485,7 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
     derives
 }
 
-fn generate_enum(db: &mut Database, enum_: &Enum) -> Result<TokenStream> {
+fn generate_enum(db: &Database, enum_: &Enum) -> Result<TokenStream> {
     let name = make_rs_ident(&enum_.identifier.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
     let enumerator_names =
@@ -1511,7 +1511,7 @@ fn generate_enum(db: &mut Database, enum_: &Enum) -> Result<TokenStream> {
     })
 }
 
-fn generate_type_alias(db: &mut Database, type_alias: &TypeAlias) -> Result<TokenStream> {
+fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<TokenStream> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
     let doc_comment = generate_doc_comment(&type_alias.doc_comment);
     let underlying_type = db
@@ -1547,7 +1547,7 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #text })
 }
 
-fn generate_namespace(db: &mut Database, namespace: &Namespace) -> Result<GeneratedItem> {
+fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedItem> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
@@ -1627,7 +1627,7 @@ struct GeneratedItem {
     has_record: bool,
 }
 
-fn generate_item(db: &mut Database, item: &Item) -> Result<GeneratedItem> {
+fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
     let ir = db.ir();
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
@@ -1758,7 +1758,7 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item = ir.find_decl(*top_level_item_id)?;
-        let generated = generate_item(&mut db, item)?;
+        let generated = generate_item(&db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -2461,7 +2461,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
 }
 
 // Returns the accessor functions for no_unique_address member variables.
-fn cc_struct_no_unique_address_impl(db: &mut Database, record: &Record) -> Result<TokenStream> {
+fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<TokenStream> {
     let mut fields = vec![];
     let mut types = vec![];
     for field in &record.fields {
