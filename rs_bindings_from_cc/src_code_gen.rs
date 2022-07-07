@@ -1876,27 +1876,26 @@ impl Mutability {
     }
 }
 
-// TODO(b/213947473): Move this into IR directly, for use instead of ir::RsType.
 #[derive(Clone, Debug)]
 enum RsTypeKind {
     Pointer {
-        pointee: Box<RsTypeKind>,
+        pointee: Rc<RsTypeKind>,
         mutability: Mutability,
     },
     Reference {
-        referent: Box<RsTypeKind>,
+        referent: Rc<RsTypeKind>,
         mutability: Mutability,
         lifetime: LifetimeName,
     },
     RvalueReference {
-        referent: Box<RsTypeKind>,
+        referent: Rc<RsTypeKind>,
         mutability: Mutability,
         lifetime: LifetimeName,
     },
     FuncPtr {
         abi: Rc<str>,
-        return_type: Box<RsTypeKind>,
-        param_types: Vec<RsTypeKind>,
+        return_type: Rc<RsTypeKind>,
+        param_types: Rc<[RsTypeKind]>,
     },
     /// An incomplete record type.
     IncompleteRecord {
@@ -1905,28 +1904,28 @@ enum RsTypeKind {
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
         /// The namespace qualifier for this record.
-        namespace_qualifier: Vec<Ident>,
+        namespace_qualifier: Rc<[Ident]>,
     },
     /// A complete record type.
     Record {
         record: Rc<Record>,
         /// The namespace qualifier for this record.
-        namespace_qualifier: Vec<Ident>,
+        namespace_qualifier: Rc<[Ident]>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
     TypeAlias {
         type_alias: Rc<TypeAlias>,
-        underlying_type: Box<RsTypeKind>,
+        underlying_type: Rc<RsTypeKind>,
         /// The namespace qualifier for this alias.
-        namespace_qualifier: Vec<Ident>,
+        namespace_qualifier: Rc<[Ident]>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
     Unit,
     Other {
         name: Rc<str>,
-        type_args: Vec<RsTypeKind>,
+        type_args: Rc<[RsTypeKind]>,
     },
 }
 
@@ -1936,11 +1935,11 @@ impl RsTypeKind {
         let get_type_args = || -> Result<Vec<RsTypeKind>> {
             ty.type_args.iter().map(|type_arg| RsTypeKind::new(type_arg, ir)).collect()
         };
-        let get_pointee = || -> Result<Box<RsTypeKind>> {
+        let get_pointee = || -> Result<Rc<RsTypeKind>> {
             if ty.type_args.len() != 1 {
                 bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
             }
-            Ok(Box::new(get_type_args()?.remove(0)))
+            Ok(Rc::new(get_type_args()?.remove(0)))
         };
         let get_lifetime = || -> Result<LifetimeName> {
             if ty.lifetime_args.len() != 1 {
@@ -1966,16 +1965,16 @@ impl RsTypeKind {
                             incomplete_record.id,
                             ir,
                         )?
-                        .collect_vec(),
+                        .collect(),
                         crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, ir),
                     },
                     Item::Record(record) => RsTypeKind::new_record(record.clone(), ir)?,
                     Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
                         type_alias: type_alias.clone(),
                         namespace_qualifier: generate_namespace_qualifier(type_alias.id, ir)?
-                            .collect_vec(),
+                            .collect(),
                         crate_ident: rs_imported_crate_name(&type_alias.owning_target, ir),
-                        underlying_type: Box::new(RsTypeKind::new(
+                        underlying_type: Rc::new(RsTypeKind::new(
                             &type_alias.underlying_type.rs_type,
                             ir,
                         )?),
@@ -2019,14 +2018,16 @@ impl RsTypeKind {
                 name => {
                     let mut type_args = get_type_args()?;
                     match name.strip_prefix("#funcPtr ") {
-                        None => RsTypeKind::Other { name: name.into(), type_args },
+                        None => {
+                            RsTypeKind::Other { name: name.into(), type_args: Rc::from(type_args) }
+                        }
                         Some(abi) => {
                             // TODO(b/217419782): Consider enforcing `'static` lifetime.
                             ensure!(!type_args.is_empty(), "No return type in fn type: {:?}", ty);
                             RsTypeKind::FuncPtr {
                                 abi: abi.into(),
-                                return_type: Box::new(type_args.remove(type_args.len() - 1)),
-                                param_types: type_args,
+                                return_type: Rc::new(type_args.remove(type_args.len() - 1)),
+                                param_types: Rc::from(type_args),
                             }
                         }
                     }
@@ -2037,7 +2038,7 @@ impl RsTypeKind {
     }
 
     pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
-        let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?.collect_vec();
+        let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?.collect();
         let crate_ident = rs_imported_crate_name(&record.owning_target, ir);
         Ok(RsTypeKind::Record { record, namespace_qualifier, crate_ident })
     }
@@ -2257,7 +2258,7 @@ impl ToTokens for RsTypeKind {
             RsTypeKind::Unit => quote! {()},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
-                let generic_params = format_generic_params(type_args);
+                let generic_params = format_generic_params(type_args.iter());
                 quote! {#ident #generic_params}
             }
         }
@@ -5503,14 +5504,14 @@ mod tests {
         // Set up a test input representing: A<B<C>, D<E>>.
         let a = {
             let b = {
-                let c = RsTypeKind::Other { name: "C".into(), type_args: vec![] };
-                RsTypeKind::Other { name: "B".into(), type_args: vec![c] }
+                let c = RsTypeKind::Other { name: "C".into(), type_args: Rc::from([]) };
+                RsTypeKind::Other { name: "B".into(), type_args: Rc::from([c]) }
             };
             let d = {
-                let e = RsTypeKind::Other { name: "E".into(), type_args: vec![] };
-                RsTypeKind::Other { name: "D".into(), type_args: vec![e] }
+                let e = RsTypeKind::Other { name: "E".into(), type_args: Rc::from([]) };
+                RsTypeKind::Other { name: "D".into(), type_args: Rc::from([e]) }
             };
-            RsTypeKind::Other { name: "A".into(), type_args: vec![b, d] }
+            RsTypeKind::Other { name: "A".into(), type_args: Rc::from([b, d]) }
         };
         let dfs_names = a
             .dfs_iter()
@@ -5526,13 +5527,13 @@ mod tests {
     fn test_rs_type_kind_dfs_iter_ordering_for_func_ptr() {
         // Set up a test input representing: fn(A, B) -> C
         let f = {
-            let a = RsTypeKind::Other { name: "A".into(), type_args: vec![] };
-            let b = RsTypeKind::Other { name: "B".into(), type_args: vec![] };
-            let c = RsTypeKind::Other { name: "C".into(), type_args: vec![] };
+            let a = RsTypeKind::Other { name: "A".into(), type_args: Rc::from(&[][..]) };
+            let b = RsTypeKind::Other { name: "B".into(), type_args: Rc::from(&[][..]) };
+            let c = RsTypeKind::Other { name: "C".into(), type_args: Rc::from(&[][..]) };
             RsTypeKind::FuncPtr {
                 abi: "blah".into(),
-                param_types: vec![a, b],
-                return_type: Box::new(c),
+                param_types: Rc::from([a, b]),
+                return_type: Rc::new(c),
             }
         };
         let dfs_names = f

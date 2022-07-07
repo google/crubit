@@ -109,7 +109,7 @@ pub struct LifetimeId(pub i32);
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct LifetimeName {
-    pub name: String,
+    pub name: Rc<str>,
     pub id: LifetimeId,
 }
 
@@ -833,7 +833,7 @@ mod tests {
 
     #[test]
     fn test_lifetime_name_to_tokens() {
-        let lifetime = LifetimeName { name: "name".to_string(), id: LifetimeId(42) };
+        let lifetime = LifetimeName { name: Rc::from("name"), id: LifetimeId(42) };
         assert_rs_matches!(quote! { #lifetime }, quote! { 'name });
     }
 }

@@ -2666,7 +2666,7 @@ fn test_elided_lifetimes() {
     .unwrap();
     let func = retrieve_func(&ir, "f");
     let lifetime_params = &func.lifetime_params;
-    assert_eq!(lifetime_params.iter().map(|p| &p.name).collect_vec(), vec!["a", "b"]);
+    assert_eq!(lifetime_params.iter().map(|p| p.name.as_ref()).collect_vec(), vec!["a", "b"]);
     let a_id = lifetime_params[0].id;
     let b_id = lifetime_params[1].id;
     assert_eq!(func.return_type.rs_type.lifetime_args, vec![a_id]);
