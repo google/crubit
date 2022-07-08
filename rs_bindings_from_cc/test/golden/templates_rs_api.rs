@@ -11,99 +11,94 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct DifferentScope {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("DifferentScope"), crate::DifferentScope);
 
-impl ctor::CtorNew<()> for DifferentScope {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl ::ctor::CtorNew<()> for DifferentScope {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN14DifferentScopeC1Ev(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
         )
     }
 }
 
-impl<'b> ctor::CtorNew<&'b crate::DifferentScope> for DifferentScope {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl<'b> ::ctor::CtorNew<&'b crate::DifferentScope> for DifferentScope {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::DifferentScope) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN14DifferentScopeC1ERKS_(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
             },
         )
     }
 }
-impl<'b> ctor::CtorNew<(&'b crate::DifferentScope,)> for DifferentScope {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl<'b> ::ctor::CtorNew<(&'b crate::DifferentScope,)> for DifferentScope {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::DifferentScope,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b crate::DifferentScope>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b crate::DifferentScope>>::ctor_new(arg)
     }
 }
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::DifferentScope>> for DifferentScope {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::DifferentScope>> for DifferentScope {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, crate::DifferentScope>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::DifferentScope>) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN14DifferentScopeC1EOS_(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
             },
         )
     }
 }
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::DifferentScope>,)> for DifferentScope {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::DifferentScope>,)> for DifferentScope {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, crate::DifferentScope>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::DifferentScope>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::DifferentScope>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::DifferentScope>>>::ctor_new(arg)
     }
 }
 
 impl<'b> ::ctor::Assign<&'b crate::DifferentScope> for DifferentScope {
     #[inline(always)]
-    fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::DifferentScope,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::DifferentScope) {
         unsafe {
             crate::detail::__rust_thunk___ZN14DifferentScopeaSERKS_(self, __param_0);
         }
     }
 }
 
-impl<'b> ::ctor::Assign<ctor::RvalueReference<'b, crate::DifferentScope>> for DifferentScope {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::DifferentScope>> for DifferentScope {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<'b, crate::DifferentScope>,
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<'b, crate::DifferentScope>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN14DifferentScopeaSEOS_(self, __param_0);
@@ -121,92 +116,87 @@ pub mod test_namespace_bindings {
     pub type OtherTypeAliasInSameTarget =
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
 
-    #[ctor::recursively_pinned]
+    #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct TemplateParam {
-        __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+        __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
     }
     forward_declare::unsafe_define!(
         forward_declare::symbol!("TemplateParam"),
         crate::test_namespace_bindings::TemplateParam
     );
 
-    impl ctor::CtorNew<()> for TemplateParam {
-        type CtorType = impl ctor::Ctor<Output = Self>;
+    impl ::ctor::CtorNew<()> for TemplateParam {
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
         fn ctor_new(args: ()) -> Self::CtorType {
             let () = args;
-            ctor::FnCtor::new(
-                move |dest: crate::rust_std::pin::Pin<
-                    &mut crate::rust_std::mem::MaybeUninit<Self>,
-                >| {
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
-                    }
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                    crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
                 },
             )
         }
     }
 
-    impl<'b> ctor::CtorNew<&'b crate::test_namespace_bindings::TemplateParam> for TemplateParam {
-        type CtorType = impl ctor::Ctor<Output = Self>;
+    impl<'b> ::ctor::CtorNew<&'b crate::test_namespace_bindings::TemplateParam> for TemplateParam {
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
         fn ctor_new(args: &'b crate::test_namespace_bindings::TemplateParam) -> Self::CtorType {
             let __param_0 = args;
-            ctor::FnCtor::new(
-                move |dest: crate::rust_std::pin::Pin<
-                    &mut crate::rust_std::mem::MaybeUninit<Self>,
-                >| {
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1ERKS0_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
-                    }
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                    crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1ERKS0_(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
                 },
             )
         }
     }
-    impl<'b> ctor::CtorNew<(&'b crate::test_namespace_bindings::TemplateParam,)> for TemplateParam {
-        type CtorType = impl ctor::Ctor<Output = Self>;
+    impl<'b> ::ctor::CtorNew<(&'b crate::test_namespace_bindings::TemplateParam,)> for TemplateParam {
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
         fn ctor_new(args: (&'b crate::test_namespace_bindings::TemplateParam,)) -> Self::CtorType {
             let (arg,) = args;
-            <Self as ctor::CtorNew<&'b crate::test_namespace_bindings::TemplateParam>>::ctor_new(
+            <Self as ::ctor::CtorNew<&'b crate::test_namespace_bindings::TemplateParam>>::ctor_new(
                 arg,
             )
         }
     }
 
-    impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>>
+    impl<'b>
+        ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>>
         for TemplateParam
     {
-        type CtorType = impl ctor::Ctor<Output = Self>;
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
         fn ctor_new(
-            args: ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+            args: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         ) -> Self::CtorType {
             let __param_0 = args;
-            ctor::FnCtor::new(
-                move |dest: crate::rust_std::pin::Pin<
-                    &mut crate::rust_std::mem::MaybeUninit<Self>,
-                >| {
-                    unsafe {
-                        crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1EOS0_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
-                    }
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                    crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1EOS0_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
                 },
             )
         }
     }
     impl<'b>
-        ctor::CtorNew<(ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,)>
-        for TemplateParam
+        ::ctor::CtorNew<(
+            ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+        )> for TemplateParam
     {
-        type CtorType = impl ctor::Ctor<Output = Self>;
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
         fn ctor_new(
-            args: (ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,),
+            args: (::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,),
         ) -> Self::CtorType {
             let (arg,) = args;
-            <Self as ctor::CtorNew<
-                ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+            <Self as ::ctor::CtorNew<
+                ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
             >>::ctor_new(arg)
         }
     }
@@ -214,7 +204,7 @@ pub mod test_namespace_bindings {
     impl<'b> ::ctor::Assign<&'b crate::test_namespace_bindings::TemplateParam> for TemplateParam {
         #[inline(always)]
         fn assign<'a>(
-            self: crate::rust_std::pin::Pin<&'a mut Self>,
+            self: ::std::pin::Pin<&'a mut Self>,
             __param_0: &'b crate::test_namespace_bindings::TemplateParam,
         ) {
             unsafe {
@@ -226,13 +216,13 @@ pub mod test_namespace_bindings {
     }
 
     impl<'b>
-        ::ctor::Assign<ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>>
+        ::ctor::Assign<::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>>
         for TemplateParam
     {
         #[inline(always)]
         fn assign<'a>(
-            self: crate::rust_std::pin::Pin<&'a mut Self>,
-            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+            self: ::std::pin::Pin<&'a mut Self>,
+            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         ) {
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamaSEOS0_(
@@ -272,7 +262,7 @@ forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = 
 
 #[inline(always)]
 pub fn processForwardDeclaredSpecialization<'a>(
-    i: Option<crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
+    i: Option<::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
 ) {
     unsafe {
         crate::detail::__rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE(i)
@@ -281,58 +271,58 @@ pub fn processForwardDeclaredSpecialization<'a>(
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    pub(crate) value_: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings::MyTemplate<DifferentScope>"),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 );
 
-impl ctor::CtorNew<()>
+impl ::ctor::CtorNew<()>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
+    ::ctor::CtorNew<
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
+    ::ctor::CtorNew<(
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -340,57 +330,57 @@ impl<'b>
         ),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
+        <Self as ::ctor::CtorNew<
             &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         >>::ctor_new(arg)
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
-        ctor::RvalueReference<
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         >,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args: ctor::RvalueReference<
+        args: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         >,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
-        ctor::RvalueReference<
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         >,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (
-            ctor::RvalueReference<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
         ),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
-            ctor::RvalueReference<
+        <Self as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
@@ -405,7 +395,7 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     ) {
         unsafe {
@@ -416,7 +406,7 @@ impl<'b>
 
 impl<'b>
     ::ctor::Assign<
-        ctor::RvalueReference<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         >,
@@ -424,8 +414,8 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         >,
@@ -456,13 +446,13 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
     }
 }
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    pub(crate) value_: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!(
@@ -471,45 +461,45 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 );
 
-impl ctor::CtorNew<()>
+impl ::ctor::CtorNew<()>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
+    ::ctor::CtorNew<
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
+    ::ctor::CtorNew<(
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -517,57 +507,57 @@ impl<'b>
         ),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
+        <Self as ::ctor::CtorNew<
             &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         >>::ctor_new(arg)
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
-        ctor::RvalueReference<
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         >,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args: ctor::RvalueReference<
+        args: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         >,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
-        ctor::RvalueReference<
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         >,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (
-            ctor::RvalueReference<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
         ),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
-            ctor::RvalueReference<
+        <Self as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
@@ -582,7 +572,7 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     ) {
         unsafe {
@@ -593,7 +583,7 @@ impl<'b>
 
 impl<'b>
     ::ctor::Assign<
-        ctor::RvalueReference<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         >,
@@ -601,8 +591,8 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         >,
@@ -633,108 +623,108 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE
     }
 }
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 pub struct __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
     /// Reason for representing this field as a blob of bytes:
     /// Types of non-public C++ fields can be elided away
-    pub(crate) value_: [crate::rust_std::mem::MaybeUninit<u8>; 4],
+    pub(crate) value_: [::std::mem::MaybeUninit<u8>; 4],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("test_namespace_bindings::MyTemplate<int>"),
     crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 );
 
-impl ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
 }
 
-impl<'b> ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>
+impl<'b> ::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
-impl<'b> ctor::CtorNew<(&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,)>
+impl<'b> ::ctor::CtorNew<(&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,)>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
+        <Self as ::ctor::CtorNew<
             &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >>::ctor_new(arg)
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
-        ctor::RvalueReference<
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args: ctor::RvalueReference<
+        args: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
-        ctor::RvalueReference<
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (
-            ctor::RvalueReference<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
         ),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
-            ctor::RvalueReference<
+        <Self as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
@@ -747,7 +737,7 @@ impl<'b> ::ctor::Assign<&'b crate::__CcTemplateInstN23test_namespace_bindings10M
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
     ) {
         unsafe {
@@ -758,7 +748,7 @@ impl<'b> ::ctor::Assign<&'b crate::__CcTemplateInstN23test_namespace_bindings10M
 
 impl<'b>
     ::ctor::Assign<
-        ctor::RvalueReference<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >,
@@ -766,8 +756,8 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >,
@@ -796,12 +786,12 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     }
 }
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'struct test_namespace_bindings::TemplateWithTwoParams<int, int>': Unsupported type 'struct test_namespace_bindings::TemplateWithTwoParams<int, int>': No generated bindings found for 'TemplateWithTwoParams'
-    pub(crate) value1: [crate::rust_std::mem::MaybeUninit<u8>; 8],
+    pub(crate) value1: [::std::mem::MaybeUninit<u8>; 8],
     pub value2: i32,
 }
 forward_declare::unsafe_define!(
@@ -811,93 +801,93 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 );
 
-impl ctor::CtorNew<()>
+impl ::ctor::CtorNew<()>
     for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
+    ::ctor::CtorNew<
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
+    ::ctor::CtorNew<(
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args:(&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>>::ctor_new(arg)
+        <Self as::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>>::ctor_new(arg)
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
-        ctor::RvalueReference<
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         >,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args: ctor::RvalueReference<
+        args: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         >,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
-        ctor::RvalueReference<
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         >,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args:(ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,),
+        args:(::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>>>::ctor_new(arg)
+        <Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>>>::ctor_new(arg)
     }
 }
 
@@ -908,7 +898,7 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     ) {
         unsafe {
@@ -919,7 +909,7 @@ impl<'b>
 
 impl<'b>
     ::ctor::Assign<
-        ctor::RvalueReference<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         >,
@@ -927,8 +917,8 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         >,
@@ -939,7 +929,7 @@ impl<'b>
     }
 }
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
     pub value1: i32,
@@ -950,98 +940,101 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 );
 
-impl ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl ::ctor::CtorNew<()>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
 }
 
 impl<'b>
-    ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE>
-    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
+    ::ctor::CtorNew<
+        &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+    > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
+    ::ctor::CtorNew<(
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
+        <Self as ::ctor::CtorNew<
             &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >>::ctor_new(arg)
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
-        ctor::RvalueReference<
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args: ctor::RvalueReference<
+        args: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
-        ctor::RvalueReference<
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (
-            ctor::RvalueReference<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
         ),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<
-            ctor::RvalueReference<
+        <Self as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
@@ -1056,7 +1049,7 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     ) {
         unsafe {
@@ -1067,7 +1060,7 @@ impl<'b>
 
 impl<'b>
     ::ctor::Assign<
-        ctor::RvalueReference<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >,
@@ -1075,8 +1068,8 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >,
@@ -1087,7 +1080,7 @@ impl<'b>
     }
 }
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE {
     pub value: crate::test_namespace_bindings::TemplateParam,
@@ -1097,93 +1090,93 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 );
 
-impl ctor::CtorNew<()>
+impl ::ctor::CtorNew<()>
     for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest));
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
             },
         )
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
+    ::ctor::CtorNew<
         &'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     > for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
+    ::ctor::CtorNew<(
         &'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     )> for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args:(&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>>::ctor_new(arg)
+        <Self as::ctor::CtorNew<&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>>::ctor_new(arg)
     }
 }
 
 impl<'b>
-    ctor::CtorNew<
-        ctor::RvalueReference<
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         >,
     > for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args: ctor::RvalueReference<
+        args: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         >,
     ) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
 impl<'b>
-    ctor::CtorNew<(
-        ctor::RvalueReference<
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         >,
     )> for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
-        args:(ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,),
+        args:(::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>>>::ctor_new(arg)
+        <Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>>>::ctor_new(arg)
     }
 }
 
@@ -1194,7 +1187,7 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     ) {
         unsafe {
@@ -1205,7 +1198,7 @@ impl<'b>
 
 impl<'b>
     ::ctor::Assign<
-        ctor::RvalueReference<
+        ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         >,
@@ -1213,8 +1206,8 @@ impl<'b>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
-        __param_0: ctor::RvalueReference<
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
             'b,
             crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         >,
@@ -1230,65 +1223,53 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN14DifferentScopeC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DifferentScope>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::DifferentScope>,
         );
         pub(crate) fn __rust_thunk___ZN14DifferentScopeC1ERKS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DifferentScope>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::DifferentScope>,
             __param_0: &'b crate::DifferentScope,
         );
         pub(crate) fn __rust_thunk___ZN14DifferentScopeC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::DifferentScope>,
-            __param_0: ctor::RvalueReference<'b, crate::DifferentScope>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::DifferentScope>,
+            __param_0: ::ctor::RvalueReference<'b, crate::DifferentScope>,
         );
         pub(crate) fn __rust_thunk___ZN14DifferentScopeaSERKS_<'a, 'b>(
-            __this: crate::rust_std::pin::Pin<&'a mut crate::DifferentScope>,
+            __this: ::std::pin::Pin<&'a mut crate::DifferentScope>,
             __param_0: &'b crate::DifferentScope,
-        ) -> crate::rust_std::pin::Pin<&'a mut crate::DifferentScope>;
+        ) -> ::std::pin::Pin<&'a mut crate::DifferentScope>;
         pub(crate) fn __rust_thunk___ZN14DifferentScopeaSEOS_<'a, 'b>(
-            __this: crate::rust_std::pin::Pin<&'a mut crate::DifferentScope>,
-            __param_0: ctor::RvalueReference<'b, crate::DifferentScope>,
-        ) -> crate::rust_std::pin::Pin<&'a mut crate::DifferentScope>;
+            __this: ::std::pin::Pin<&'a mut crate::DifferentScope>,
+            __param_0: ::ctor::RvalueReference<'b, crate::DifferentScope>,
+        ) -> ::std::pin::Pin<&'a mut crate::DifferentScope>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
-                crate::test_namespace_bindings::TemplateParam,
-            >,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::TemplateParam>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1ERKS0_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
-                crate::test_namespace_bindings::TemplateParam,
-            >,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::TemplateParam>,
             __param_0: &'b crate::test_namespace_bindings::TemplateParam,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1EOS0_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
-                crate::test_namespace_bindings::TemplateParam,
-            >,
-            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::TemplateParam>,
+            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamaSERKS0_<'a, 'b>(
-            __this: crate::rust_std::pin::Pin<
-                &'a mut crate::test_namespace_bindings::TemplateParam,
-            >,
+            __this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>,
             __param_0: &'b crate::test_namespace_bindings::TemplateParam,
-        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>;
+        ) -> ::std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamaSEOS0_<'a, 'b>(
-            __this: crate::rust_std::pin::Pin<
-                &'a mut crate::test_namespace_bindings::TemplateParam,
-            >,
-            __param_0: ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
-        ) -> crate::rust_std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>;
+            __this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>,
+            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+        ) -> ::std::pin::Pin<&'a mut crate::test_namespace_bindings::TemplateParam>;
         #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
         pub(crate) fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE<
             'a,
         >(
-            i: Option<
-                crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>,
-            >,
+            i: Option<::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
         );
@@ -1296,7 +1277,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
             __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
@@ -1305,16 +1286,16 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
-            __param_0: ctor::RvalueReference<
+            __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
         );
-        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>;
-        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>,__param_0:ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE)->::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>)->::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: crate::DifferentScope,
         ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
@@ -1326,7 +1307,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
         );
@@ -1334,7 +1315,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
             __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
@@ -1343,16 +1324,16 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
-            __param_0: ctor::RvalueReference<
+            __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
         );
-        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>;
-        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>,__param_0:ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE)->::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>)->::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: crate::test_namespace_bindings::TemplateParam,
         ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
@@ -1364,7 +1345,7 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
         );
@@ -1372,7 +1353,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
             __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
@@ -1381,10 +1362,10 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
-            __param_0: ctor::RvalueReference<
+            __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
@@ -1393,25 +1374,25 @@ mod detail {
             'a,
             'b,
         >(
-            __this: crate::rust_std::pin::Pin<
+            __this: ::std::pin::Pin<
                 &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
             __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-        ) -> crate::rust_std::pin::Pin<
+        ) -> ::std::pin::Pin<
             &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this: crate::rust_std::pin::Pin<
+            __this: ::std::pin::Pin<
                 &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
-            __param_0: ctor::RvalueReference<
+            __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
-        ) -> crate::rust_std::pin::Pin<
+        ) -> ::std::pin::Pin<
             &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         >;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
@@ -1425,28 +1406,28 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
-            __this:&'a mut crate::rust_std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
+            __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this:&'a mut crate::rust_std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
+            __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
             __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this:&'a mut crate::rust_std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
-            __param_0:ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
+            __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
+            __param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
         );
-        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>;
-        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,__param_0:ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE)->::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>)->::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
         );
@@ -1454,7 +1435,7 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
             __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
@@ -1463,10 +1444,10 @@ mod detail {
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
-            __param_0: ctor::RvalueReference<
+            __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
@@ -1475,51 +1456,51 @@ mod detail {
             'a,
             'b,
         >(
-            __this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE>,
+            __this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE>,
             __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        ) -> crate::rust_std::pin::Pin<
+        ) -> ::std::pin::Pin<
             &'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE>,
-            __param_0: ctor::RvalueReference<
+            __this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE>,
+            __param_0: ::ctor::RvalueReference<
                 'b,
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
-        ) -> crate::rust_std::pin::Pin<
+        ) -> ::std::pin::Pin<
             &'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         >;
         pub(crate) fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
-            __this:&'a mut crate::rust_std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
+            __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
         );
         pub(crate) fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this:&'a mut crate::rust_std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
+            __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
             __param_0:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         );
         pub(crate) fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
             'b,
         >(
-            __this:&'a mut crate::rust_std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
-            __param_0:ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
+            __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
+            __param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
         );
-        pub(crate)fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,__param_0:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>;
-        pub(crate)fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,__param_0:ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>)->crate::rust_std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>;
+        pub(crate)fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,__param_0:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE)->::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>;
+        pub(crate)fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>)->::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>;
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::DifferentScope>() == 1);
-const _: () = assert!(rust_std::mem::align_of::<crate::DifferentScope>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::DifferentScope>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::DifferentScope>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::DifferentScope: Copy);
 };
@@ -1527,10 +1508,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::DifferentScope: Drop);
 };
 
-const _: () =
-    assert!(rust_std::mem::size_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
-const _: () =
-    assert!(rust_std::mem::align_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::TemplateParam>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TemplateParam: Copy);
 };
@@ -1539,12 +1518,12 @@ const _: () = {
 };
 
 const _: () = assert!(
-    rust_std::mem::size_of::<
+    ::std::mem::size_of::<
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     >() == 1
 );
 const _: () = assert!(
-    rust_std::mem::align_of::<
+    ::std::mem::align_of::<
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     >() == 1
 );
@@ -1566,12 +1545,12 @@ const _: () = assert!(
 );
 
 const _: () = assert!(
-    rust_std::mem::size_of::<
+    ::std::mem::size_of::<
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     >() == 1
 );
 const _: () = assert!(
-    rust_std::mem::align_of::<
+    ::std::mem::align_of::<
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     >() == 1
 );
@@ -1593,11 +1572,10 @@ const _: () = assert!(
 );
 
 const _: () = assert!(
-    rust_std::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
-        == 4
+    ::std::mem::size_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>() == 4
 );
 const _: () = assert!(
-    rust_std::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
+    ::std::mem::align_of::<crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>()
         == 4
 );
 const _: () = {
@@ -1618,12 +1596,12 @@ const _: () = assert!(
 );
 
 const _: () = assert!(
-    rust_std::mem::size_of::<
+    ::std::mem::size_of::<
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     >() == 12
 );
 const _: () = assert!(
-    rust_std::mem::align_of::<
+    ::std::mem::align_of::<
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     >() == 4
 );
@@ -1651,12 +1629,12 @@ const _: () = assert!(
 );
 
 const _: () = assert!(
-    rust_std::mem::size_of::<
+    ::std::mem::size_of::<
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     >() == 8
 );
 const _: () = assert!(
-    rust_std::mem::align_of::<
+    ::std::mem::align_of::<
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     >() == 4
 );
@@ -1684,12 +1662,12 @@ const _: () = assert!(
 );
 
 const _: () = assert!(
-    rust_std::mem::size_of::<
+    ::std::mem::size_of::<
         crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     >() == 1
 );
 const _: () = assert!(
-    rust_std::mem::align_of::<
+    ::std::mem::align_of::<
         crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     >() == 1
 );

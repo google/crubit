@@ -11,8 +11,6 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -25,7 +23,7 @@ pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct S {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
@@ -63,10 +61,10 @@ impl S {
     }
 }
 
-#[ctor::recursively_pinned(PinnedDrop)]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
@@ -83,7 +81,7 @@ forward_declare::unsafe_define!(
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
     }
 }
@@ -115,19 +113,17 @@ mod detail {
         ) -> *mut i32;
         #[link_name = "_ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev"]
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<'a>(
-            __this: crate::rust_std::pin::Pin<
-                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
-            >,
+            __this: ::std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         #[link_name = "_Z12take_pointerPi"]
         pub(crate) fn __rust_thunk___Z12take_pointerPi(p: *mut i32);
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::S>() == 1);
-const _: () = assert!(rust_std::mem::align_of::<crate::S>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::S>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::S>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::S: Clone);
 };
@@ -139,9 +135,9 @@ const _: () = {
 };
 
 const _: () =
-    assert!(rust_std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(::std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () =
-    assert!(rust_std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(::std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(
         crate::TriviallyCopyableButNontriviallyDestructible: Copy

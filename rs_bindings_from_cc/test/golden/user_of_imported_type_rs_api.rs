@@ -11,8 +11,6 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -39,7 +37,7 @@ forward_declare::unsafe_define!(
 impl Default for UserOfImportedType {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1Ev(&mut tmp);
             tmp.assume_init()
@@ -47,10 +45,10 @@ impl Default for UserOfImportedType {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfImportedType {
+impl<'b> From<::ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfImportedType {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::UserOfImportedType>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -77,19 +75,19 @@ mod detail {
             t: trivial_type_cc::test_namespace_bindings::Trivial,
         ) -> trivial_type_cc::test_namespace_bindings::Trivial;
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::UserOfImportedType>,
         );
         pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UserOfImportedType>,
-            __param_0: ctor::RvalueReference<'b, crate::UserOfImportedType>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::UserOfImportedType>,
+            __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::UserOfImportedType>() == 8);
-const _: () = assert!(rust_std::mem::align_of::<crate::UserOfImportedType>() == 8);
+const _: () = assert!(::std::mem::size_of::<crate::UserOfImportedType>() == 8);
+const _: () = assert!(::std::mem::align_of::<crate::UserOfImportedType>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::UserOfImportedType: Clone);
 };

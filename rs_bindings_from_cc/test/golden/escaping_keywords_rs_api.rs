@@ -11,8 +11,6 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -27,7 +25,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("type"), crate::r#type)
 impl Default for r#type {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN4typeC1Ev(&mut tmp);
             tmp.assume_init()
@@ -35,10 +33,10 @@ impl Default for r#type {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::r#type>> for r#type {
+impl<'b> From<::ctor::RvalueReference<'b, crate::r#type>> for r#type {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::r#type>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::r#type>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN4typeC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -74,21 +72,21 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN4typeC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::r#type>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::r#type>,
         );
         pub(crate) fn __rust_thunk___ZN4typeC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::r#type>,
-            __param_0: ctor::RvalueReference<'b, crate::r#type>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::r#type>,
+            __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
         );
         #[link_name = "_Z4impli"]
         pub(crate) fn __rust_thunk___Z4impli(r#match: i32);
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::r#type>() == 4);
-const _: () = assert!(rust_std::mem::align_of::<crate::r#type>() == 4);
+const _: () = assert!(::std::mem::size_of::<crate::r#type>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::r#type>() == 4);
 const _: () = {
     static_assertions::assert_impl_all!(crate::r#type: Clone);
 };

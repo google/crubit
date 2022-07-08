@@ -11,8 +11,6 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -76,4 +74,4 @@ mod detail {
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());

@@ -11,8 +11,6 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -20,14 +18,14 @@ use ::std as rust_std;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union EmptyUnion {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
 impl Default for EmptyUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10EmptyUnionC1Ev(&mut tmp);
             tmp.assume_init()
@@ -35,10 +33,10 @@ impl Default for EmptyUnion {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
+impl<'b> From<::ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::EmptyUnion>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10EmptyUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -54,57 +52,57 @@ impl<'b> From<ctor::RvalueReference<'b, crate::EmptyUnion>> for EmptyUnion {
 // Error while generating bindings for item 'EmptyUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Nontrivial {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 0],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
     pub field: i32,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
-impl ctor::CtorNew<()> for Nontrivial {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl ::ctor::CtorNew<()> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(dest),
                 );
             },
         )
     }
 }
 
-impl<'b> ctor::CtorNew<ctor::RvalueReference<'b, crate::Nontrivial>> for Nontrivial {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
                 crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
-                    crate::rust_std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(dest),
                     __param_0,
                 );
             },
         )
     }
 }
-impl<'b> ctor::CtorNew<(ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nontrivial {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nontrivial {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
-    fn ctor_new(args: (ctor::RvalueReference<'b, crate::Nontrivial>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Nontrivial>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<ctor::RvalueReference<'b, crate::Nontrivial>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>>>::ctor_new(arg)
     }
 }
 
-#[ctor::recursively_pinned(PinnedDrop)]
+#[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("TriviallyCopyableButNontriviallyDestructible"),
@@ -116,7 +114,7 @@ impl<'b> ::ctor::Assign<&'b crate::TriviallyCopyableButNontriviallyDestructible>
 {
     #[inline(always)]
     fn assign<'a>(
-        self: crate::rust_std::pin::Pin<&'a mut Self>,
+        self: ::std::pin::Pin<&'a mut Self>,
         __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
     ) {
         unsafe {
@@ -127,30 +125,30 @@ impl<'b> ::ctor::Assign<&'b crate::TriviallyCopyableButNontriviallyDestructible>
     }
 }
 
-impl<'b> ctor::CtorNew<&'b crate::TriviallyCopyableButNontriviallyDestructible>
+impl<'b> ::ctor::CtorNew<&'b crate::TriviallyCopyableButNontriviallyDestructible>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::TriviallyCopyableButNontriviallyDestructible) -> Self::CtorType {
         let __param_0 = args;
-        ctor::FnCtor::new(
-            move |dest: crate::rust_std::pin::Pin<&mut crate::rust_std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(crate::rust_std::pin::Pin::into_inner_unchecked(dest),__param_0);
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
             },
         )
     }
 }
-impl<'b> ctor::CtorNew<(&'b crate::TriviallyCopyableButNontriviallyDestructible,)>
+impl<'b> ::ctor::CtorNew<(&'b crate::TriviallyCopyableButNontriviallyDestructible,)>
     for TriviallyCopyableButNontriviallyDestructible
 {
-    type CtorType = impl ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
     fn ctor_new(
         args: (&'b crate::TriviallyCopyableButNontriviallyDestructible,),
     ) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ctor::CtorNew<&'b crate::TriviallyCopyableButNontriviallyDestructible>>::ctor_new(
+        <Self as ::ctor::CtorNew<&'b crate::TriviallyCopyableButNontriviallyDestructible>>::ctor_new(
             arg,
         )
     }
@@ -158,7 +156,7 @@ impl<'b> ctor::CtorNew<(&'b crate::TriviallyCopyableButNontriviallyDestructible,
 
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    unsafe fn pinned_drop<'a>(self: crate::rust_std::pin::Pin<&'a mut Self>) {
+    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(self)
     }
 }
@@ -176,7 +174,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate
 impl Default for NonEmptyUnion {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13NonEmptyUnionC1Ev(&mut tmp);
             tmp.assume_init()
@@ -184,10 +182,10 @@ impl Default for NonEmptyUnion {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion {
+impl<'b> From<::ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13NonEmptyUnionC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -203,11 +201,11 @@ impl<'b> From<ctor::RvalueReference<'b, crate::NonEmptyUnion>> for NonEmptyUnion
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-#[ctor::recursively_pinned]
+#[::ctor::recursively_pinned]
 #[repr(C)]
 pub union NonCopyUnion {
     pub trivial_member: bool,
-    pub nontrivial_member: crate::rust_std::mem::ManuallyDrop<crate::Nontrivial>,
+    pub nontrivial_member: ::std::mem::ManuallyDrop<crate::Nontrivial>,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
@@ -215,14 +213,14 @@ forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate:
 pub union NonCopyUnion2 {
     pub trivial_member: bool,
     pub nontrivial_member:
-        crate::rust_std::mem::ManuallyDrop<crate::TriviallyCopyableButNontriviallyDestructible>,
+        ::std::mem::ManuallyDrop<crate::TriviallyCopyableButNontriviallyDestructible>,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
 impl Clone for NonCopyUnion2 {
     #[inline(always)]
     fn clone<'b>(&'b self) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13NonCopyUnion2C1ERKS_(&mut tmp, self);
             tmp.assume_init()
@@ -230,10 +228,10 @@ impl Clone for NonCopyUnion2 {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::NonCopyUnion2>> for NonCopyUnion2 {
+impl<'b> From<::ctor::RvalueReference<'b, crate::NonCopyUnion2>> for NonCopyUnion2 {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::NonCopyUnion2>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::NonCopyUnion2>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13NonCopyUnion2C1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -254,7 +252,7 @@ impl<'b> From<ctor::RvalueReference<'b, crate::NonCopyUnion2>> for NonCopyUnion2
 pub union UnionWithOpaqueField {
     /// Reason for representing this field as a blob of bytes:
     /// Unsupported type 'char[42]': Unsupported clang::Type class 'ConstantArray'
-    pub(crate) constant_array_field_not_yet_supported: [crate::rust_std::mem::MaybeUninit<u8>; 42],
+    pub(crate) constant_array_field_not_yet_supported: [::std::mem::MaybeUninit<u8>; 42],
 }
 forward_declare::unsafe_define!(
     forward_declare::symbol!("UnionWithOpaqueField"),
@@ -264,7 +262,7 @@ forward_declare::unsafe_define!(
 impl Default for UnionWithOpaqueField {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(&mut tmp);
             tmp.assume_init()
@@ -272,10 +270,10 @@ impl Default for UnionWithOpaqueField {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::UnionWithOpaqueField>> for UnionWithOpaqueField {
+impl<'b> From<::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>> for UnionWithOpaqueField {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::UnionWithOpaqueField>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -298,73 +296,69 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10EmptyUnionC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::EmptyUnion>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::EmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN10EmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::EmptyUnion>,
-            __param_0: ctor::RvalueReference<'b, crate::EmptyUnion>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::EmptyUnion>,
+            __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
         );
         #[link_name = "_ZN10NontrivialC1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Nontrivial>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::Nontrivial>,
         );
         #[link_name = "_ZN10NontrivialC1EOS_"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::Nontrivial>,
-            __param_0: ctor::RvalueReference<'b, crate::Nontrivial>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::Nontrivial>,
+            __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
         );
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_<
             'a,
             'b,
         >(
-            __this: crate::rust_std::pin::Pin<
-                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
-            >,
+            __this: ::std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
             __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
-        ) -> crate::rust_std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>;
+        ) -> ::std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>;
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_<
             'a,
             'b,
         >(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<
+            __this: &'a mut ::std::mem::MaybeUninit<
                 crate::TriviallyCopyableButNontriviallyDestructible,
             >,
             __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
         );
         pub(crate) fn __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev<'a>(
-            __this: crate::rust_std::pin::Pin<
-                &'a mut crate::TriviallyCopyableButNontriviallyDestructible,
-            >,
+            __this: ::std::pin::Pin<&'a mut crate::TriviallyCopyableButNontriviallyDestructible>,
         );
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonEmptyUnion>,
-            __param_0: ctor::RvalueReference<'b, crate::NonEmptyUnion>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::NonEmptyUnion>,
+            __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
         );
         pub(crate) fn __rust_thunk___ZN13NonCopyUnion2C1ERKS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonCopyUnion2>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::NonCopyUnion2>,
             __param_0: &'b crate::NonCopyUnion2,
         );
         pub(crate) fn __rust_thunk___ZN13NonCopyUnion2C1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::NonCopyUnion2>,
-            __param_0: ctor::RvalueReference<'b, crate::NonCopyUnion2>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::NonCopyUnion2>,
+            __param_0: ::ctor::RvalueReference<'b, crate::NonCopyUnion2>,
         );
         pub(crate) fn __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UnionWithOpaqueField>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::UnionWithOpaqueField>,
         );
         pub(crate) fn __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::UnionWithOpaqueField>,
-            __param_0: ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::UnionWithOpaqueField>,
+            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
         );
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::EmptyUnion>() == 1);
-const _: () = assert!(rust_std::mem::align_of::<crate::EmptyUnion>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::EmptyUnion>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::EmptyUnion>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::EmptyUnion: Clone);
 };
@@ -375,8 +369,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::EmptyUnion: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::Nontrivial>() == 4);
-const _: () = assert!(rust_std::mem::align_of::<crate::Nontrivial>() == 4);
+const _: () = assert!(::std::mem::size_of::<crate::Nontrivial>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::Nontrivial>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Copy);
 };
@@ -386,9 +380,9 @@ const _: () = {
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Nontrivial, field) == 0);
 
 const _: () =
-    assert!(rust_std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(::std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () =
-    assert!(rust_std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
+    assert!(::std::mem::align_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(
         crate::TriviallyCopyableButNontriviallyDestructible: Copy
@@ -398,8 +392,8 @@ const _: () = {
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::NonEmptyUnion>() == 8);
-const _: () = assert!(rust_std::mem::align_of::<crate::NonEmptyUnion>() == 8);
+const _: () = assert!(::std::mem::size_of::<crate::NonEmptyUnion>() == 8);
+const _: () = assert!(::std::mem::align_of::<crate::NonEmptyUnion>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::NonEmptyUnion: Clone);
 };
@@ -422,8 +416,8 @@ const _: () = {
     static_assertions::assert_impl_all!(i64: Copy);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::NonCopyUnion>() == 4);
-const _: () = assert!(rust_std::mem::align_of::<crate::NonCopyUnion>() == 4);
+const _: () = assert!(::std::mem::size_of::<crate::NonCopyUnion>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::NonCopyUnion>() == 4);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::NonCopyUnion: Copy);
 };
@@ -434,8 +428,8 @@ const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::NonCopyUnion2>() == 1);
-const _: () = assert!(rust_std::mem::align_of::<crate::NonCopyUnion2>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::NonCopyUnion2>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::NonCopyUnion2>() == 1);
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::NonCopyUnion2: Copy);
 };
@@ -446,8 +440,8 @@ const _: () = {
     static_assertions::assert_impl_all!(bool: Copy);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::UnionWithOpaqueField>() == 42);
-const _: () = assert!(rust_std::mem::align_of::<crate::UnionWithOpaqueField>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::UnionWithOpaqueField>() == 42);
+const _: () = assert!(::std::mem::align_of::<crate::UnionWithOpaqueField>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::UnionWithOpaqueField: Clone);
 };

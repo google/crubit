@@ -11,8 +11,6 @@
 #![allow(non_upper_case_globals)]
 #![deny(warnings)]
 
-use ::std as rust_std;
-
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -20,14 +18,14 @@ use ::std as rust_std;
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
-    __non_field_data: [crate::rust_std::mem::MaybeUninit<u8>; 1],
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1Ev(&mut tmp);
             tmp.assume_init()
@@ -35,10 +33,10 @@ impl Default for SomeStruct {
     }
 }
 
-impl<'b> From<ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
+impl<'b> From<::ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::SomeStruct>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -120,10 +118,10 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-impl<'b> From<ctor::RvalueReference<'b, crate::FieldTypeTestStruct>> for FieldTypeTestStruct {
+impl<'b> From<::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>> for FieldTypeTestStruct {
     #[inline(always)]
-    fn from(__param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>) -> Self {
-        let mut tmp = crate::rust_std::mem::MaybeUninit::<Self>::zeroed();
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);
             tmp.assume_init()
@@ -162,24 +160,24 @@ mod detail {
     use super::*;
     extern "C" {
         pub(crate) fn __rust_thunk___ZN10SomeStructC1Ev<'a>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN10SomeStructC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::SomeStruct>,
-            __param_0: ctor::RvalueReference<'b, crate::SomeStruct>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
-            __this: &'a mut crate::rust_std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
-            __param_0: ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
+            __this: &'a mut ::std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
+            __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
     }
 }
 
-const _: () = assert!(rust_std::mem::size_of::<Option<&i32>>() == rust_std::mem::size_of::<&i32>());
+const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
 
-const _: () = assert!(rust_std::mem::size_of::<crate::SomeStruct>() == 1);
-const _: () = assert!(rust_std::mem::align_of::<crate::SomeStruct>() == 1);
+const _: () = assert!(::std::mem::size_of::<crate::SomeStruct>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 1);
 const _: () = {
     static_assertions::assert_impl_all!(crate::SomeStruct: Clone);
 };
@@ -190,8 +188,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 };
 
-const _: () = assert!(rust_std::mem::size_of::<crate::FieldTypeTestStruct>() == 288);
-const _: () = assert!(rust_std::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
+const _: () = assert!(::std::mem::size_of::<crate::FieldTypeTestStruct>() == 288);
+const _: () = assert!(::std::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Clone);
 };
