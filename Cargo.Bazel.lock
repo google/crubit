@@ -1,5 +1,5 @@
 {
-  "checksum": "d4c7c7958adb838978fb5a76fd7891ae0d75b92beaa4d83a4d4c51a17aed2a2f",
+  "checksum": "c3189cdf8d13571ddfe3a082abec017f022a638755bf60717184cb2a29127fd9",
   "crates": {
     "anyhow 1.0.58": {
       "name": "anyhow",
@@ -1640,6 +1640,7 @@
         "crate_features": [
           "default",
           "derive",
+          "rc",
           "serde_derive",
           "std"
         ],

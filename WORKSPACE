@@ -59,7 +59,7 @@ crates_repository(
             version = ">0.0.0",
         ),
         "serde": crate.spec(
-            features = ["derive"],
+            features = ["derive", "rc",],
             version = ">0.0.0",
         ),
         "serde_json": crate.spec(
