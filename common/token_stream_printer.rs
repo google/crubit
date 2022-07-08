@@ -137,17 +137,37 @@ fn tokens_to_string_impl(result: &mut String, tokens: TokenStream) -> Result<()>
             _ => {
                 write!(result, "{}", tt)?;
 
-                // Insert spaces between tokens only when they are needed to separate
-                // identifiers or literals from each other.
-                if is_ident_or_literal(&tt)
-                    && matches!(it.peek(), Some(tt_next) if is_ident_or_literal(tt_next))
-                {
-                    write!(result, " ")?;
+                // Insert spaces between tokens when they are needed to separate tokens.
+                // In particular, `a b` is different than `ab`, and `: ::` is different from
+                // `:::`.
+                if let Some(tt_next) = it.peek() {
+                    if tokens_require_whitespace(&tt, tt_next) {
+                        write!(result, " ")?;
+                    }
                 }
             }
         }
     }
     Ok(())
+}
+
+/// Returns true if token1 and token2 should have whitespace between them, and
+/// false if they should not.
+///
+/// For example, `a b` is different than `ab`, and `: ::` is different from
+/// `:::`.
+fn tokens_require_whitespace(token1: &TokenTree, token2: &TokenTree) -> bool {
+    if is_ident_or_literal(token1) && is_ident_or_literal(token2) {
+        return true;
+    }
+    match (token1, token2) {
+        (TokenTree::Punct(p1), TokenTree::Punct(p2)) => {
+            p1.spacing() == proc_macro2::Spacing::Alone
+                && p1.as_char() == ':'
+                && p2.as_char() == ':'
+        }
+        _ => false,
+    }
 }
 
 fn is_ident_or_literal(tt: &TokenTree) -> bool {
@@ -217,6 +237,13 @@ mod tests {
         Ok(())
     }
 
+    /// `foo : ::bar` is valid syntax, but `foo:::bar` is not.
+    #[test]
+    fn test_paamayim_nekudotayim() -> Result<()> {
+        assert_eq!(tokens_to_string(quote! { x : ::y })?, "x: ::y");
+        Ok(())
+    }
+
     #[test]
     fn test_newline_token() -> Result<()> {
         let token_stream = quote! { a __NEWLINE__ b };
@@ -275,7 +302,9 @@ mod tests {
             "///hello\nstruct X {}\n"
         );
         assert_eq!(
-            rs_tokens_to_formatted_string_for_tests(quote! { #[doc = "hello\nworld"] struct X {} })?,
+            rs_tokens_to_formatted_string_for_tests(
+                quote! { #[doc = "hello\nworld"] struct X {} }
+            )?,
             "///hello\n///world\nstruct X {}\n"
         );
         Ok(())
@@ -288,7 +317,9 @@ mod tests {
             "/// hello\nstruct X {}\n"
         );
         assert_eq!(
-            rs_tokens_to_formatted_string_for_tests(quote! { #[doc = " hello\n world"] struct X {} })?,
+            rs_tokens_to_formatted_string_for_tests(
+                quote! { #[doc = " hello\n world"] struct X {} }
+            )?,
             "/// hello\n/// world\nstruct X {}\n"
         );
         Ok(())
