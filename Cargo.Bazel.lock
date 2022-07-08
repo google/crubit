@@ -1,5 +1,5 @@
 {
-  "checksum": "c3189cdf8d13571ddfe3a082abec017f022a638755bf60717184cb2a29127fd9",
+  "checksum": "55aa47a95fdb4492626cc37f096c474cb2018a6d5b9797e0eb6e8c4fd4a39eca",
   "crates": {
     "anyhow 1.0.58": {
       "name": "anyhow",
@@ -2245,6 +2245,7 @@
     "cfg(unix)": [
       "aarch64-apple-darwin",
       "aarch64-apple-ios",
+      "aarch64-apple-ios-sim",
       "aarch64-linux-android",
       "aarch64-unknown-linux-gnu",
       "arm-unknown-linux-gnueabi",
