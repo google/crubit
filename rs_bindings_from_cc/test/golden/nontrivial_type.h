@@ -16,6 +16,7 @@ struct Nontrivial final {
   explicit Nontrivial();
   explicit Nontrivial(int field);
   explicit Nontrivial(int field, int unused);
+  Nontrivial(const Nontrivial&);
   Nontrivial(Nontrivial&&);
   Nontrivial& operator=(const Nontrivial&);
   Nontrivial& operator=(Nontrivial&&);
@@ -35,6 +36,7 @@ struct NontrivialInline final {
   explicit NontrivialInline() : NontrivialInline(0) {}
   explicit NontrivialInline(int field) : field(field) {}
   explicit NontrivialInline(int field, int unused) : NontrivialInline(field) {}
+  NontrivialInline(const NontrivialInline&) {}
   NontrivialInline(NontrivialInline&&) {}
   NontrivialInline& operator=(const NontrivialInline&) { return *this; }
   NontrivialInline& operator=(NontrivialInline&&) { return *this; }
@@ -60,6 +62,8 @@ struct [[clang::trivial_abi]] NontrivialUnpin final {
   explicit NontrivialUnpin();
   explicit NontrivialUnpin(int field);
   explicit NontrivialUnpin(int field, int unused);
+  NontrivialUnpin(const NontrivialUnpin&);
+  NontrivialUnpin(NontrivialUnpin&&);
   NontrivialUnpin(Nontrivial&&);
   NontrivialUnpin& operator=(const NontrivialUnpin&);
   NontrivialUnpin& operator=(NontrivialUnpin&&);

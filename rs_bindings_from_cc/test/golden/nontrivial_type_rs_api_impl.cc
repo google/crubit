@@ -26,6 +26,11 @@ extern "C" void __rust_thunk___ZN16NontrivialInlineC1Eii(
                        std::forward<decltype(field)>(field),
                        std::forward<decltype(unused)>(unused));
 }
+extern "C" void __rust_thunk___ZN16NontrivialInlineC1ERKS_(
+    class NontrivialInline* __this, const class NontrivialInline& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
+}
 extern "C" void __rust_thunk___ZN16NontrivialInlineC1EOS_(
     class NontrivialInline* __this, class NontrivialInline&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
@@ -54,6 +59,11 @@ extern "C" void __rust_thunk___ZN16NontrivialInline14MemberFunctionEv(
 extern "C" void __rust_thunk___ZN17NontrivialMembersC1Ev(
     class NontrivialMembers* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN17NontrivialMembersC1ERKS_(
+    class NontrivialMembers* __this, const class NontrivialMembers& __param_0) {
+  crubit::construct_at(std::forward<decltype(__this)>(__this),
+                       std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN17NontrivialMembersC1EOS_(
     class NontrivialMembers* __this, class NontrivialMembers&& __param_0) {
