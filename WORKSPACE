@@ -55,6 +55,9 @@ crates_repository(
         "quote": crate.spec(
             version = ">0.0.0",
         ),
+        "salsa": crate.spec(
+            version = ">0.0.0",
+        ),
         "serde": crate.spec(
             features = ["derive"],
             version = ">0.0.0",
