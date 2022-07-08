@@ -24,11 +24,13 @@ struct NontrivialCustomType final {
   int i;
 };
 
-void UnsupportedParamType(NontrivialCustomType n);
-NontrivialCustomType UnsupportedReturnType();
-
-NontrivialCustomType MultipleReasons(NontrivialCustomType n, int,
-                                     NontrivialCustomType n2);
+// This function can't have bindings because of both its return type and its
+// parameter type.
+//
+// TODO(jeanpierreda): Use a dedicated unsupported type or attribute so that this
+// test is more stable and doesn't depend on which exact types/features are not
+// currently supported.
+volatile int* MultipleReasons(volatile int* n);
 
 namespace ns {
 void FunctionInNamespace();

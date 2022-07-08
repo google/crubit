@@ -104,23 +104,13 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialCustomTyp
 // Error while generating bindings for item 'NontrivialCustomType::operator||':
 // Bindings for this kind of operator (operator ||) are not supported
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=27
-// Error while generating bindings for item 'UnsupportedParamType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=28
-// Error while generating bindings for item 'UnsupportedReturnType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
-
-// rs_bindings_from_cc/test/golden/unsupported.h;l=30
-// Error while generating bindings for item 'MultipleReasons':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as a return type
-//
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
-//
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #2
-
 // rs_bindings_from_cc/test/golden/unsupported.h;l=33
+// Error while generating bindings for item 'MultipleReasons':
+// Parameter #0 is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
+//
+// Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
+
+// rs_bindings_from_cc/test/golden/unsupported.h;l=35
 // Error while generating bindings for item 'ns':
 // Namespaces are not supported yet
 
@@ -162,15 +152,15 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::ContainingStruct>> for Containi
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=41
+// rs_bindings_from_cc/test/golden/unsupported.h;l=43
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=41
+// rs_bindings_from_cc/test/golden/unsupported.h;l=43
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=42
+// rs_bindings_from_cc/test/golden/unsupported.h;l=44
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 
