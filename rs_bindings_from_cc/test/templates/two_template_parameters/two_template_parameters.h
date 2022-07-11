@@ -8,7 +8,7 @@
 #pragma clang lifetime_elision
 
 template <typename T1, typename T2>
-struct TemplateWithTwoParams {
+struct TemplateWithTwoParams final {
   T1 value1;
   T2 value2;
 };

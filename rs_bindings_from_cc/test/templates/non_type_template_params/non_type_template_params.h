@@ -8,7 +8,7 @@
 #pragma clang lifetime_elision
 
 template <int multiplier>
-class MyTemplate {
+class MyTemplate final {
  public:
   static int Multiply(int value) { return value * multiplier; }
 };

@@ -8,7 +8,7 @@
 #pragma clang lifetime_elision
 
 template <typename T>
-class MyTemplate {
+class MyTemplate final {
  public:
   static MyTemplate Create(T value);
   const T& value() const;

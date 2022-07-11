@@ -10,7 +10,7 @@
 // This template is not instantiated anywhere in this header file
 // (this is what the test scenario exercised here cares about).
 template <typename T>
-class MyTemplate {
+class MyTemplate final {
  public:
   static MyTemplate Create(T value) {
     MyTemplate result;
