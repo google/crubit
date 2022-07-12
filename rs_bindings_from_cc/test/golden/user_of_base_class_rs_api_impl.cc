@@ -11,28 +11,28 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
-extern "C" void __rust_thunk___ZN8Derived2C1Ev(class Derived2* __this) {
+extern "C" void __rust_thunk___ZN8Derived2C1Ev(struct Derived2* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN8Derived2C1ERKS_(
-    class Derived2* __this, const class Derived2& __param_0) {
+    struct Derived2* __this, const struct Derived2& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN8Derived2C1EOS_(class Derived2* __this,
-                                                 class Derived2&& __param_0) {
+extern "C" void __rust_thunk___ZN8Derived2C1EOS_(struct Derived2* __this,
+                                                 struct Derived2&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN8Derived2D1Ev(class Derived2* __this) {
+extern "C" void __rust_thunk___ZN8Derived2D1Ev(struct Derived2* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class Derived2& __rust_thunk___ZN8Derived2aSERKS_(
-    class Derived2* __this, const class Derived2& __param_0) {
+extern "C" struct Derived2& __rust_thunk___ZN8Derived2aSERKS_(
+    struct Derived2* __this, const struct Derived2& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class Derived2& __rust_thunk___ZN8Derived2aSEOS_(
-    class Derived2* __this, class Derived2&& __param_0) {
+extern "C" struct Derived2& __rust_thunk___ZN8Derived2aSEOS_(
+    struct Derived2* __this, struct Derived2&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN15VirtualDerived2C1Ev(
@@ -62,9 +62,9 @@ extern "C" class VirtualDerived2& __rust_thunk___ZN15VirtualDerived2aSEOS_(
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
-static_assert(sizeof(class Derived2) == 24);
-static_assert(alignof(class Derived2) == 8);
-static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived2) == 20);
+static_assert(sizeof(struct Derived2) == 24);
+static_assert(alignof(struct Derived2) == 8);
+static_assert(CRUBIT_OFFSET_OF(derived_1, struct Derived2) == 20);
 
 static_assert(sizeof(class VirtualDerived2) == 32);
 static_assert(alignof(class VirtualDerived2) == 8);

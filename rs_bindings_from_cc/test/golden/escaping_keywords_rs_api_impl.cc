@@ -11,33 +11,33 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
-extern "C" void __rust_thunk___ZN4typeC1Ev(class type* __this) {
+extern "C" void __rust_thunk___ZN4typeC1Ev(struct type* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" void __rust_thunk___ZN4typeC1ERKS_(class type* __this,
-                                              const class type& __param_0) {
+extern "C" void __rust_thunk___ZN4typeC1ERKS_(struct type* __this,
+                                              const struct type& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN4typeC1EOS_(class type* __this,
-                                             class type&& __param_0) {
+extern "C" void __rust_thunk___ZN4typeC1EOS_(struct type* __this,
+                                             struct type&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN4typeD1Ev(class type* __this) {
+extern "C" void __rust_thunk___ZN4typeD1Ev(struct type* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class type& __rust_thunk___ZN4typeaSERKS_(
-    class type* __this, const class type& __param_0) {
+extern "C" struct type& __rust_thunk___ZN4typeaSERKS_(
+    struct type* __this, const struct type& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class type& __rust_thunk___ZN4typeaSEOS_(class type* __this,
-                                                    class type&& __param_0) {
+extern "C" struct type& __rust_thunk___ZN4typeaSEOS_(struct type* __this,
+                                                     struct type&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
-static_assert(sizeof(class type) == 4);
-static_assert(alignof(class type) == 4);
-static_assert(CRUBIT_OFFSET_OF(dyn, class type) == 0);
+static_assert(sizeof(struct type) == 4);
+static_assert(alignof(struct type) == 4);
+static_assert(CRUBIT_OFFSET_OF(dyn, struct type) == 0);
 
 #pragma clang diagnostic pop

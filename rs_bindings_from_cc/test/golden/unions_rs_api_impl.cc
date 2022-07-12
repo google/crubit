@@ -35,25 +35,25 @@ extern "C" union EmptyUnion& __rust_thunk___ZN10EmptyUnionaSEOS_(
     union EmptyUnion* __this, union EmptyUnion&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN10NontrivialD1Ev(class Nontrivial* __this) {
+extern "C" void __rust_thunk___ZN10NontrivialD1Ev(struct Nontrivial* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class TriviallyCopyableButNontriviallyDestructible&
+extern "C" struct TriviallyCopyableButNontriviallyDestructible&
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
-    class TriviallyCopyableButNontriviallyDestructible* __this,
-    const class TriviallyCopyableButNontriviallyDestructible& __param_0) {
+    struct TriviallyCopyableButNontriviallyDestructible* __this,
+    const struct TriviallyCopyableButNontriviallyDestructible& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
-    class TriviallyCopyableButNontriviallyDestructible* __this,
-    const class TriviallyCopyableButNontriviallyDestructible& __param_0) {
+    struct TriviallyCopyableButNontriviallyDestructible* __this,
+    const struct TriviallyCopyableButNontriviallyDestructible& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(
-    class TriviallyCopyableButNontriviallyDestructible* __this) {
+    struct TriviallyCopyableButNontriviallyDestructible* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
@@ -140,12 +140,13 @@ __rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(
 static_assert(sizeof(union EmptyUnion) == 1);
 static_assert(alignof(union EmptyUnion) == 1);
 
-static_assert(sizeof(class Nontrivial) == 4);
-static_assert(alignof(class Nontrivial) == 4);
-static_assert(CRUBIT_OFFSET_OF(field, class Nontrivial) == 0);
+static_assert(sizeof(struct Nontrivial) == 4);
+static_assert(alignof(struct Nontrivial) == 4);
+static_assert(CRUBIT_OFFSET_OF(field, struct Nontrivial) == 0);
 
-static_assert(sizeof(class TriviallyCopyableButNontriviallyDestructible) == 1);
-static_assert(alignof(class TriviallyCopyableButNontriviallyDestructible) == 1);
+static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
+static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
+              1);
 
 static_assert(sizeof(union NonEmptyUnion) == 8);
 static_assert(alignof(union NonEmptyUnion) == 8);

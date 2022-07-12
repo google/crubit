@@ -42,6 +42,31 @@ AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
   }
 }
 
+absl::StatusOr<RecordType> TranslateRecordType(
+    const clang::RecordDecl& record_decl) {
+  switch (record_decl.getTagKind()) {
+    case clang::TTK_Struct:
+      return RecordType::kStruct;
+    case clang::TTK_Union:
+      return RecordType::kUnion;
+    case clang::TTK_Class:
+      return RecordType::kClass;
+    case clang::TTK_Enum:
+      CRUBIT_CHECK(false &&
+                   "clang::RecordDecl::getTagKind shouldn't return TTK_Enum");
+      return absl::InternalError(
+          "clang::RecordDecl::getTagKind shouldn't return TTK_Enum");
+    case clang::TTK_Interface:
+      // Some docs about `__interface` can be found here:
+      // https://docs.microsoft.com/en-us/cpp/cpp/interface?view=msvc-170
+      return absl::UnimplementedError(
+          "`__interface` / clang::TTK_Interface is not supported");
+  }
+
+  CRUBIT_CHECK(false && "Unrecognized clang::TagKind");
+  return absl::InternalError("Unrecognized clang::TagKind");
+}
+
 }  // namespace
 
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
@@ -76,6 +101,12 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;
+  }
+
+  absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
+  if (!record_type.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl, std::string(record_type.status().message()));
   }
 
   std::string rs_name, cc_name;
@@ -161,7 +192,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_trivial_abi = record_decl->canPassInRegisters(),
       .is_inheritable =
           !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
-      .is_union = record_decl->isUnion(),
+      .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),
       .child_item_ids = std::move(item_ids),
       // We generate top level bindings for implicit class template

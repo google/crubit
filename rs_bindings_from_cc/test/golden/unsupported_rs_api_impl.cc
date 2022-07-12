@@ -12,72 +12,75 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1Ev(
-    class TrivialCustomType* __this) {
+    struct TrivialCustomType* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1ERKS_(
-    class TrivialCustomType* __this, const class TrivialCustomType& __param_0) {
+    struct TrivialCustomType* __this,
+    const struct TrivialCustomType& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN17TrivialCustomTypeC1EOS_(
-    class TrivialCustomType* __this, class TrivialCustomType&& __param_0) {
+    struct TrivialCustomType* __this, struct TrivialCustomType&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN17TrivialCustomTypeD1Ev(
-    class TrivialCustomType* __this) {
+    struct TrivialCustomType* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class TrivialCustomType& __rust_thunk___ZN17TrivialCustomTypeaSERKS_(
-    class TrivialCustomType* __this, const class TrivialCustomType& __param_0) {
+extern "C" struct TrivialCustomType&
+__rust_thunk___ZN17TrivialCustomTypeaSERKS_(
+    struct TrivialCustomType* __this,
+    const struct TrivialCustomType& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class TrivialCustomType& __rust_thunk___ZN17TrivialCustomTypeaSEOS_(
-    class TrivialCustomType* __this, class TrivialCustomType&& __param_0) {
+extern "C" struct TrivialCustomType& __rust_thunk___ZN17TrivialCustomTypeaSEOS_(
+    struct TrivialCustomType* __this, struct TrivialCustomType&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN20NontrivialCustomTypeD1Ev(
-    class NontrivialCustomType* __this) {
+    struct NontrivialCustomType* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN16ContainingStructC1Ev(
-    class ContainingStruct* __this) {
+    struct ContainingStruct* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN16ContainingStructC1ERKS_(
-    class ContainingStruct* __this, const class ContainingStruct& __param_0) {
+    struct ContainingStruct* __this, const struct ContainingStruct& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN16ContainingStructC1EOS_(
-    class ContainingStruct* __this, class ContainingStruct&& __param_0) {
+    struct ContainingStruct* __this, struct ContainingStruct&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN16ContainingStructD1Ev(
-    class ContainingStruct* __this) {
+    struct ContainingStruct* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class ContainingStruct& __rust_thunk___ZN16ContainingStructaSERKS_(
-    class ContainingStruct* __this, const class ContainingStruct& __param_0) {
+extern "C" struct ContainingStruct& __rust_thunk___ZN16ContainingStructaSERKS_(
+    struct ContainingStruct* __this, const struct ContainingStruct& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class ContainingStruct& __rust_thunk___ZN16ContainingStructaSEOS_(
-    class ContainingStruct* __this, class ContainingStruct&& __param_0) {
+extern "C" struct ContainingStruct& __rust_thunk___ZN16ContainingStructaSEOS_(
+    struct ContainingStruct* __this, struct ContainingStruct&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
-static_assert(sizeof(class TrivialCustomType) == 4);
-static_assert(alignof(class TrivialCustomType) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class TrivialCustomType) == 0);
+static_assert(sizeof(struct TrivialCustomType) == 4);
+static_assert(alignof(struct TrivialCustomType) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct TrivialCustomType) == 0);
 
-static_assert(sizeof(class NontrivialCustomType) == 4);
-static_assert(alignof(class NontrivialCustomType) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class NontrivialCustomType) == 0);
+static_assert(sizeof(struct NontrivialCustomType) == 4);
+static_assert(alignof(struct NontrivialCustomType) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct NontrivialCustomType) == 0);
 
-static_assert(sizeof(class ContainingStruct) == 1);
-static_assert(alignof(class ContainingStruct) == 1);
-static_assert(CRUBIT_OFFSET_OF(nested_struct, class ContainingStruct) == 0);
+static_assert(sizeof(struct ContainingStruct) == 1);
+static_assert(alignof(struct ContainingStruct) == 1);
+static_assert(CRUBIT_OFFSET_OF(nested_struct, struct ContainingStruct) == 0);
 
 #pragma clang diagnostic pop

@@ -539,6 +539,21 @@ struct BaseClass {
   llvm::Optional<int64_t> offset;
 };
 
+enum RecordType {
+  // `struct` in Rust and C++
+  kStruct,
+
+  // `union` in Rust and C++
+  kUnion,
+
+  // `class` in C++.  This is distinct from `kStruct` to avoid generating
+  // `struct SomeClass` in `..._rs_api_impl.cc` and getting `-Wmismatched-tags`
+  // warnings (see also b/238212337).
+  kClass,
+};
+
+std::ostream& operator<<(std::ostream& o, const RecordType& record_type);
+
 // A record (struct, class, union).
 struct Record {
   llvm::json::Value ToJson() const;
@@ -595,8 +610,8 @@ struct Record {
   // * The type is a C++ union, which does not support inheritance
   bool is_inheritable = false;
 
-  // Whether this type is a C++ union (rather than a struct)
-  bool is_union = false;
+  // Whether this `Record` corresponds to a C++ `union`, `struct`, or `class`.
+  RecordType record_type;
 
   // Whether this type can be initialized using aggregate initialization syntax.
   //

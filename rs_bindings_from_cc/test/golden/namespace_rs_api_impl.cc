@@ -12,35 +12,35 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
-    class test_namespace_bindings::S* __this) {
+    struct test_namespace_bindings::S* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1ERKS0_(
-    class test_namespace_bindings::S* __this,
-    const class test_namespace_bindings::S& __param_0) {
+    struct test_namespace_bindings::S* __this,
+    const struct test_namespace_bindings::S& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_(
-    class test_namespace_bindings::S* __this,
-    class test_namespace_bindings::S&& __param_0) {
+    struct test_namespace_bindings::S* __this,
+    struct test_namespace_bindings::S&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN23test_namespace_bindings1SD1Ev(
-    class test_namespace_bindings::S* __this) {
+    struct test_namespace_bindings::S* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class test_namespace_bindings::S&
+extern "C" struct test_namespace_bindings::S&
 __rust_thunk___ZN23test_namespace_bindings1SaSERKS0_(
-    class test_namespace_bindings::S* __this,
-    const class test_namespace_bindings::S& __param_0) {
+    struct test_namespace_bindings::S* __this,
+    const struct test_namespace_bindings::S& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class test_namespace_bindings::S&
+extern "C" struct test_namespace_bindings::S&
 __rust_thunk___ZN23test_namespace_bindings1SaSEOS0_(
-    class test_namespace_bindings::S* __this,
-    class test_namespace_bindings::S&& __param_0) {
+    struct test_namespace_bindings::S* __this,
+    struct test_namespace_bindings::S&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
@@ -48,100 +48,96 @@ __rust_thunk___ZN23test_namespace_bindings15inline_functionEv() {
   test_namespace_bindings::inline_function();
 }
 extern "C" void __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
-    class test_namespace_bindings_reopened::inner::S* __this) {
+    struct test_namespace_bindings_reopened::inner::S* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void
 __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1ERKS1_(
-    class test_namespace_bindings_reopened::inner::S* __this,
-    const class test_namespace_bindings_reopened::inner::S& __param_0) {
+    struct test_namespace_bindings_reopened::inner::S* __this,
+    const struct test_namespace_bindings_reopened::inner::S& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(
-    class test_namespace_bindings_reopened::inner::S* __this,
-    class test_namespace_bindings_reopened::inner::S&& __param_0) {
+    struct test_namespace_bindings_reopened::inner::S* __this,
+    struct test_namespace_bindings_reopened::inner::S&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SD1Ev(
-    class test_namespace_bindings_reopened::inner::S* __this) {
+    struct test_namespace_bindings_reopened::inner::S* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class test_namespace_bindings_reopened::inner::S&
+extern "C" struct test_namespace_bindings_reopened::inner::S&
 __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_(
-    class test_namespace_bindings_reopened::inner::S* __this,
-    const class test_namespace_bindings_reopened::inner::S& __param_0) {
+    struct test_namespace_bindings_reopened::inner::S* __this,
+    const struct test_namespace_bindings_reopened::inner::S& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class test_namespace_bindings_reopened::inner::S&
+extern "C" struct test_namespace_bindings_reopened::inner::S&
 __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSEOS1_(
-    class test_namespace_bindings_reopened::inner::S* __this,
-    class test_namespace_bindings_reopened::inner::S&& __param_0) {
+    struct test_namespace_bindings_reopened::inner::S* __this,
+    struct test_namespace_bindings_reopened::inner::S&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace*
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1ERKS1_(
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace*
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __this,
-    const class test_namespace_bindings_inline::inner::StructInInlineNamespace&
+    const struct test_namespace_bindings_inline::inner::StructInInlineNamespace&
         __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace*
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __this,
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace&&
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace&&
         __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceD1Ev(
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace*
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class test_namespace_bindings_inline::inner::StructInInlineNamespace&
+extern "C" struct test_namespace_bindings_inline::inner::StructInInlineNamespace&
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSERKS1_(
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace*
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __this,
-    const class test_namespace_bindings_inline::inner::StructInInlineNamespace&
+    const struct test_namespace_bindings_inline::inner::StructInInlineNamespace&
         __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class test_namespace_bindings_inline::inner::StructInInlineNamespace&
+extern "C" struct test_namespace_bindings_inline::inner::StructInInlineNamespace&
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSEOS1_(
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace*
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __this,
-    class test_namespace_bindings_inline::inner::StructInInlineNamespace&&
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace&&
         __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
-static_assert(sizeof(class test_namespace_bindings::S) == 4);
-static_assert(alignof(class test_namespace_bindings::S) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class test_namespace_bindings::S) == 0);
+static_assert(sizeof(struct test_namespace_bindings::S) == 4);
+static_assert(alignof(struct test_namespace_bindings::S) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct test_namespace_bindings::S) == 0);
 
-static_assert(sizeof(class test_namespace_bindings_reopened::inner::S) == 1);
-static_assert(alignof(class test_namespace_bindings_reopened::inner::S) == 1);
+static_assert(sizeof(struct test_namespace_bindings_reopened::inner::S) == 1);
+static_assert(alignof(struct test_namespace_bindings_reopened::inner::S) == 1);
 
-static_assert(
-    sizeof(
-        class test_namespace_bindings_inline::inner::StructInInlineNamespace) ==
-    1);
-static_assert(
-    alignof(
-        class test_namespace_bindings_inline::inner::StructInInlineNamespace) ==
-    1);
+static_assert(sizeof(struct test_namespace_bindings_inline::inner::
+                         StructInInlineNamespace) == 1);
+static_assert(alignof(struct test_namespace_bindings_inline::inner::
+                          StructInInlineNamespace) == 1);
 
 #pragma clang diagnostic pop

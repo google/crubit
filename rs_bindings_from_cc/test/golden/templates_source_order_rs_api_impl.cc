@@ -205,13 +205,13 @@ __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbin
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 } extern "C" void
 __rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
-    class MyTemplate<TopLevel>* __this, class TopLevel t) {
+    class MyTemplate<TopLevel>* __this, struct TopLevel t) {
   __this->processT(std::forward<decltype(t)>(t));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(
     class MyTemplate<test_namespace_bindings::Inner>* __this,
-    class test_namespace_bindings::Inner t) {
+    struct test_namespace_bindings::Inner t) {
   __this->processT(std::forward<decltype(t)>(t));
 }
 extern "C" void
@@ -251,39 +251,39 @@ __rust_thunk___ZN10MyTemplateIiE8processTEi__2f_2fthird_5fparty_2fcrubit_2frs_5f
     class MyTemplate<int>* __this, int t) {
   __this->processT(std::forward<decltype(t)>(t));
 }
-extern "C" void __rust_thunk___ZN8TopLevelC1Ev(class TopLevel* __this) {
+extern "C" void __rust_thunk___ZN8TopLevelC1Ev(struct TopLevel* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN8TopLevelC1ERKS_(
-    class TopLevel* __this, const class TopLevel& __param_0) {
+    struct TopLevel* __this, const struct TopLevel& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN8TopLevelD1Ev(class TopLevel* __this) {
+extern "C" void __rust_thunk___ZN8TopLevelD1Ev(struct TopLevel* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class TopLevel& __rust_thunk___ZN8TopLevelaSERKS_(
-    class TopLevel* __this, const class TopLevel& __param_0) {
+extern "C" struct TopLevel& __rust_thunk___ZN8TopLevelaSERKS_(
+    struct TopLevel* __this, const struct TopLevel& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN23test_namespace_bindings5InnerC1Ev(
-    class test_namespace_bindings::Inner* __this) {
+    struct test_namespace_bindings::Inner* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN23test_namespace_bindings5InnerC1ERKS0_(
-    class test_namespace_bindings::Inner* __this,
-    const class test_namespace_bindings::Inner& __param_0) {
+    struct test_namespace_bindings::Inner* __this,
+    const struct test_namespace_bindings::Inner& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN23test_namespace_bindings5InnerD1Ev(
-    class test_namespace_bindings::Inner* __this) {
+    struct test_namespace_bindings::Inner* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class test_namespace_bindings::Inner&
+extern "C" struct test_namespace_bindings::Inner&
 __rust_thunk___ZN23test_namespace_bindings5InneraSERKS0_(
-    class test_namespace_bindings::Inner* __this,
-    const class test_namespace_bindings::Inner& __param_0) {
+    struct test_namespace_bindings::Inner* __this,
+    const struct test_namespace_bindings::Inner& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
@@ -316,10 +316,10 @@ static_assert(alignof(class MyTemplate<float>) == 4);
 static_assert(sizeof(class MyTemplate<int>) == 4);
 static_assert(alignof(class MyTemplate<int>) == 4);
 
-static_assert(sizeof(class TopLevel) == 1);
-static_assert(alignof(class TopLevel) == 1);
+static_assert(sizeof(struct TopLevel) == 1);
+static_assert(alignof(struct TopLevel) == 1);
 
-static_assert(sizeof(class test_namespace_bindings::Inner) == 1);
-static_assert(alignof(class test_namespace_bindings::Inner) == 1);
+static_assert(sizeof(struct test_namespace_bindings::Inner) == 1);
+static_assert(alignof(struct test_namespace_bindings::Inner) == 1);
 
 #pragma clang diagnostic pop

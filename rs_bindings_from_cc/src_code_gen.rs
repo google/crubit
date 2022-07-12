@@ -1100,13 +1100,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),
                     // Opaque field
-                    Err(_error) => {
-                        if record.is_union {
-                            Some(field.size)
-                        } else {
-                            None
-                        }
-                    }
+                    Err(_error) => if record.is_union() { Some(field.size) } else { None },
                 },
                 vec![format!(
                     "{} : {} bits",
@@ -1142,7 +1136,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
 
             if let Some((Some(prev_field), _, Some(prev_end), _)) = prev {
                 assert!(
-                    record.is_union || prev_end <= offset,
+                    record.is_union() || prev_end <= offset,
                     "Unexpected offset+size for field {:?} in record {}",
                     prev_field,
                     record.cc_name
@@ -1163,7 +1157,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             // its original type).
             //
             // We also don't need padding if we're in a union.
-            let padding_size_in_bits = if record.is_union
+            let padding_size_in_bits = if record.is_union()
                 || (field.is_some() && get_field_rs_type_for_layout(field.unwrap()).is_ok())
             {
                 0
@@ -1223,7 +1217,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                         )
                     })?;
                     let mut formatted = quote! {#type_kind};
-                    if should_implement_drop(record) || record.is_union {
+                    if should_implement_drop(record) || record.is_union() {
                         if needs_manually_drop(db, rs_type.clone())? {
                             // TODO(b/212690698): Avoid (somewhat unergonomic) ManuallyDrop
                             // if we can ask Rust to preserve field destruction order if the
@@ -1248,7 +1242,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
 
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
-    let field_offset_assertions = if record.is_union {
+    let field_offset_assertions = if record.is_union() {
         // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
         // offsetof supports them.
         vec![]
@@ -1296,7 +1290,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     } else {
         quote! {#[derive( #(#derives),* )]}
     };
-    let record_kind = if record.is_union {
+    let record_kind = if record.is_union() {
         quote! { union }
     } else {
         quote! { struct }
@@ -1343,7 +1337,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     // type must be an *aggregate* type.
     //
     // TODO(b/232969667): Protect unions from direct initialization, too.
-    let allow_direct_init = record.is_aggregate || record.is_union;
+    let allow_direct_init = record.is_aggregate || record.is_union();
     let head_padding = if head_padding > 0 || !allow_direct_init {
         let n = proc_macro2::Literal::usize_unsuffixed(head_padding);
         quote! {
@@ -1459,7 +1453,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
 }
 
 fn should_derive_clone(record: &Record) -> bool {
-    if record.is_union {
+    if record.is_union() {
         // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
         should_derive_copy(record)
     } else {
@@ -2304,7 +2298,7 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
         Item::Record(record) => {
             let ident = format_cc_ident(&record.cc_name);
             let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
-            let tag_kind = tag_kind(record);
+            let tag_kind = cc_tag_kind(record);
             quote! { #tag_kind #(#namespace_qualifier::)*  #ident }
         }
         Item::TypeAlias(type_alias) => {
@@ -2316,11 +2310,11 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     })
 }
 
-fn tag_kind(record: &ir::Record) -> TokenStream {
-    if record.is_union {
-        quote! { union }
-    } else {
-        quote! { class }
+fn cc_tag_kind(record: &ir::Record) -> TokenStream {
+    match record.record_type {
+        RecordType::Struct => quote! { struct },
+        RecordType::Union => quote! { union },
+        RecordType::Class => quote! { class },
     }
 }
 
@@ -2415,7 +2409,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     let namespace_qualifier = quote! { #(#namespace_qualifier::)* };
     let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
-    let tag_kind = tag_kind(record);
+    let tag_kind = cc_tag_kind(record);
     let field_assertions = record
         .fields
         .iter()
@@ -2849,7 +2843,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" class ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(class ParamStruct param) {
+                extern "C" struct ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(struct ParamStruct param) {
                     return DoSomething(std::forward<decltype(param)>(param));
                 }
             }
@@ -2918,7 +2912,7 @@ mod tests {
             quote! {
                 extern "C"
                 int __rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
-                        class MyTemplate<int>* __this) {
+                        struct MyTemplate<int>* __this) {
                     return __this->GetValue();
                 }
             }
@@ -3028,7 +3022,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___ZN10SomeStructD1Ev(class SomeStruct * __this) {
+                extern "C" void __rust_thunk___ZN10SomeStructD1Ev(struct SomeStruct * __this) {
                     std :: destroy_at (std::forward<decltype(__this)>(__this)) ;
                 }
             }
@@ -3036,22 +3030,43 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                static_assert(sizeof(class SomeStruct) == 12);
-                static_assert(alignof(class SomeStruct) == 4);
-                static_assert(CRUBIT_OFFSET_OF(public_int, class SomeStruct) == 0);
+                static_assert(sizeof(struct SomeStruct) == 12);
+                static_assert(alignof(struct SomeStruct) == 4);
+                static_assert(CRUBIT_OFFSET_OF(public_int, struct SomeStruct) == 0);
             }
         );
         Ok(())
     }
 
     #[test]
+    fn test_struct_vs_class() -> Result<()> {
+        let ir = ir_from_cc(&tokens_to_string(quote! {
+            struct SomeStruct final { int field; };
+            class SomeClass final { int field; };
+        })?)?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+
+        // A Rust `struct` is generated for both `SomeStruct` and `SomeClass`.
+        assert_rs_matches!(rs_api, quote! { pub struct SomeStruct },);
+        assert_rs_matches!(rs_api, quote! { pub struct SomeClass },);
+
+        // But in C++ we still should refer to `struct SomeStruct` and `class
+        // SomeClass`. See also b/238212337.
+        assert_cc_matches!(rs_api_impl, quote! { struct SomeStruct * __this });
+        assert_cc_matches!(rs_api_impl, quote! { class SomeClass * __this });
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(struct SomeStruct) == 4); });
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(class SomeClass) == 4); });
+        Ok(())
+    }
+
+    #[test]
     fn test_ref_to_struct_in_thunk_impls() -> Result<()> {
-        let ir = ir_from_cc("struct S{}; inline void foo(class S& s) {} ")?;
+        let ir = ir_from_cc("struct S{}; inline void foo(S& s) {} ")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z3fooR1S(class S& s) {
+                extern "C" void __rust_thunk___Z3fooR1S(struct S& s) {
                     foo(std::forward<decltype(s)>(s));
                 }
             }
@@ -3061,12 +3076,12 @@ mod tests {
 
     #[test]
     fn test_const_ref_to_struct_in_thunk_impls() -> Result<()> {
-        let ir = ir_from_cc("struct S{}; inline void foo(const class S& s) {} ")?;
+        let ir = ir_from_cc("struct S{}; inline void foo(const S& s) {} ")?;
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z3fooRK1S(const class S& s) {
+                extern "C" void __rust_thunk___Z3fooRK1S(const struct S& s) {
                     foo(std::forward<decltype(s)>(s));
                 }
             }
@@ -3120,7 +3135,7 @@ mod tests {
             generate_bindings_tokens(ir)?.rs_api_impl,
             quote! {
                 extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
-                        const class SomeStruct* __this, int arg) {
+                        const struct SomeStruct* __this, int arg) {
                     return __this->some_func(std::forward<decltype(arg)>(arg));
                 }
             }
@@ -4638,7 +4653,7 @@ mod tests {
         assert_cc_matches!(
             generate_bindings_tokens(ir)?.rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(class Polymorphic * __this)
+                extern "C" void __rust_thunk___ZN11Polymorphic3FooEv(struct Polymorphic * __this)
             }
         );
         Ok(())
@@ -4857,7 +4872,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
-                        class DefaultedConstructor* __this) {
+                        struct DefaultedConstructor* __this) {
                     crubit::construct_at (std::forward<decltype(__this)>(__this)) ;
                 }
             }
@@ -5048,7 +5063,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
-                        const class SomeStruct* __this, const class SomeStruct& other) {
+                        const struct SomeStruct* __this, const struct SomeStruct& other) {
                     return __this->operator==(std::forward<decltype(other)>(other));
                 }
             }
@@ -5603,7 +5618,7 @@ mod tests {
         let rs_api_impl = generate_bindings_tokens(ir)?.rs_api_impl;
         assert_cc_matches!(
             rs_api_impl,
-            quote! { static_assert(CRUBIT_OFFSET_OF(dyn, class type) ... ) }
+            quote! { static_assert(CRUBIT_OFFSET_OF(dyn, struct type) ... ) }
         );
         Ok(())
     }
@@ -5993,10 +6008,10 @@ mod tests {
                 }
                 ...
                 extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
-                    class test_namespace_bindings::S* __this) {...}
+                    struct test_namespace_bindings::S* __this) {...}
                 ...
                 extern "C" void __rust_thunk___Z4useSN23test_namespace_bindings1SE(
-                    class test_namespace_bindings::S s) { useS(std::forward<decltype(s)>(s)); }
+                    struct test_namespace_bindings::S s) { useS(std::forward<decltype(s)>(s)); }
                 ...
             }
         );
@@ -6105,12 +6120,12 @@ mod tests {
             &bindings.rs_api_impl,
             quote! {
                 ...
-                extern "C" void #my_struct_bool_constructor(class MyStruct<bool>*__this) {...} ...
-                extern "C" void #my_struct_double_constructor(class MyStruct<double>*__this) {...} ...
-                extern "C" void #my_struct_int_constructor(class MyStruct<int>*__this) {...} ...
-                extern "C" bool #my_struct_bool_method(class MyStruct<bool>*__this) {...} ...
-                extern "C" double #my_struct_double_method(class MyStruct<double>*__this) {...} ...
-                extern "C" int #my_struct_int_method(class MyStruct<int>*__this) {...} ...
+                extern "C" void #my_struct_bool_constructor(struct MyStruct<bool>*__this) {...} ...
+                extern "C" void #my_struct_double_constructor(struct MyStruct<double>*__this) {...} ...
+                extern "C" void #my_struct_int_constructor(struct MyStruct<int>*__this) {...} ...
+                extern "C" bool #my_struct_bool_method(struct MyStruct<bool>*__this) {...} ...
+                extern "C" double #my_struct_double_method(struct MyStruct<double>*__this) {...} ...
+                extern "C" int #my_struct_int_method(struct MyStruct<int>*__this) {...} ...
             }
         );
         Ok(())

@@ -83,28 +83,28 @@ extern "C" class Base2& __rust_thunk___ZN5Base2aSEOS_(class Base2* __this,
                                                       class Base2&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN7DerivedC1Ev(class Derived* __this) {
+extern "C" void __rust_thunk___ZN7DerivedC1Ev(struct Derived* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN7DerivedC1ERKS_(
-    class Derived* __this, const class Derived& __param_0) {
+    struct Derived* __this, const struct Derived& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN7DerivedC1EOS_(class Derived* __this,
-                                                class Derived&& __param_0) {
+extern "C" void __rust_thunk___ZN7DerivedC1EOS_(struct Derived* __this,
+                                                struct Derived&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN7DerivedD1Ev(class Derived* __this) {
+extern "C" void __rust_thunk___ZN7DerivedD1Ev(struct Derived* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class Derived& __rust_thunk___ZN7DerivedaSERKS_(
-    class Derived* __this, const class Derived& __param_0) {
+extern "C" struct Derived& __rust_thunk___ZN7DerivedaSERKS_(
+    struct Derived* __this, const struct Derived& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class Derived& __rust_thunk___ZN7DerivedaSEOS_(
-    class Derived* __this, class Derived&& __param_0) {
+extern "C" struct Derived& __rust_thunk___ZN7DerivedaSEOS_(
+    struct Derived* __this, struct Derived&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN12VirtualBase1C1Ev(
@@ -195,9 +195,9 @@ static_assert(alignof(class Base1) == 8);
 static_assert(sizeof(class Base2) == 2);
 static_assert(alignof(class Base2) == 2);
 
-static_assert(sizeof(class Derived) == 16);
-static_assert(alignof(class Derived) == 8);
-static_assert(CRUBIT_OFFSET_OF(derived_1, class Derived) == 12);
+static_assert(sizeof(struct Derived) == 16);
+static_assert(alignof(struct Derived) == 8);
+static_assert(CRUBIT_OFFSET_OF(derived_1, struct Derived) == 12);
 
 static_assert(sizeof(class VirtualBase1) == 24);
 static_assert(alignof(class VirtualBase1) == 8);

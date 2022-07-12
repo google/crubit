@@ -12,233 +12,238 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN17DocCommentSlashesC1ERKS_(
-    class DocCommentSlashes* __this, const class DocCommentSlashes& __param_0) {
+    struct DocCommentSlashes* __this,
+    const struct DocCommentSlashes& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN17DocCommentSlashesC1EOS_(
-    class DocCommentSlashes* __this, class DocCommentSlashes&& __param_0) {
+    struct DocCommentSlashes* __this, struct DocCommentSlashes&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN17DocCommentSlashesD1Ev(
-    class DocCommentSlashes* __this) {
+    struct DocCommentSlashes* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class DocCommentSlashes& __rust_thunk___ZN17DocCommentSlashesaSERKS_(
-    class DocCommentSlashes* __this, const class DocCommentSlashes& __param_0) {
+extern "C" struct DocCommentSlashes&
+__rust_thunk___ZN17DocCommentSlashesaSERKS_(
+    struct DocCommentSlashes* __this,
+    const struct DocCommentSlashes& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class DocCommentSlashes& __rust_thunk___ZN17DocCommentSlashesaSEOS_(
-    class DocCommentSlashes* __this, class DocCommentSlashes&& __param_0) {
+extern "C" struct DocCommentSlashes& __rust_thunk___ZN17DocCommentSlashesaSEOS_(
+    struct DocCommentSlashes* __this, struct DocCommentSlashes&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangC1Ev(
-    class DocCommentBang* __this) {
+    struct DocCommentBang* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangC1ERKS_(
-    class DocCommentBang* __this, const class DocCommentBang& __param_0) {
+    struct DocCommentBang* __this, const struct DocCommentBang& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangC1EOS_(
-    class DocCommentBang* __this, class DocCommentBang&& __param_0) {
+    struct DocCommentBang* __this, struct DocCommentBang&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN14DocCommentBangD1Ev(
-    class DocCommentBang* __this) {
+    struct DocCommentBang* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class DocCommentBang& __rust_thunk___ZN14DocCommentBangaSERKS_(
-    class DocCommentBang* __this, const class DocCommentBang& __param_0) {
+extern "C" struct DocCommentBang& __rust_thunk___ZN14DocCommentBangaSERKS_(
+    struct DocCommentBang* __this, const struct DocCommentBang& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class DocCommentBang& __rust_thunk___ZN14DocCommentBangaSEOS_(
-    class DocCommentBang* __this, class DocCommentBang&& __param_0) {
+extern "C" struct DocCommentBang& __rust_thunk___ZN14DocCommentBangaSEOS_(
+    struct DocCommentBang* __this, struct DocCommentBang&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev(
-    class MultilineCommentTwoStars* __this) {
+    struct MultilineCommentTwoStars* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1ERKS_(
-    class MultilineCommentTwoStars* __this,
-    const class MultilineCommentTwoStars& __param_0) {
+    struct MultilineCommentTwoStars* __this,
+    const struct MultilineCommentTwoStars& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_(
-    class MultilineCommentTwoStars* __this,
-    class MultilineCommentTwoStars&& __param_0) {
+    struct MultilineCommentTwoStars* __this,
+    struct MultilineCommentTwoStars&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN24MultilineCommentTwoStarsD1Ev(
-    class MultilineCommentTwoStars* __this) {
+    struct MultilineCommentTwoStars* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class MultilineCommentTwoStars&
+extern "C" struct MultilineCommentTwoStars&
 __rust_thunk___ZN24MultilineCommentTwoStarsaSERKS_(
-    class MultilineCommentTwoStars* __this,
-    const class MultilineCommentTwoStars& __param_0) {
+    struct MultilineCommentTwoStars* __this,
+    const struct MultilineCommentTwoStars& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class MultilineCommentTwoStars&
+extern "C" struct MultilineCommentTwoStars&
 __rust_thunk___ZN24MultilineCommentTwoStarsaSEOS_(
-    class MultilineCommentTwoStars* __this,
-    class MultilineCommentTwoStars&& __param_0) {
+    struct MultilineCommentTwoStars* __this,
+    struct MultilineCommentTwoStars&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN11LineCommentC1Ev(class LineComment* __this) {
+extern "C" void __rust_thunk___ZN11LineCommentC1Ev(struct LineComment* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN11LineCommentC1ERKS_(
-    class LineComment* __this, const class LineComment& __param_0) {
+    struct LineComment* __this, const struct LineComment& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN11LineCommentC1EOS_(
-    class LineComment* __this, class LineComment&& __param_0) {
+    struct LineComment* __this, struct LineComment&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" void __rust_thunk___ZN11LineCommentD1Ev(class LineComment* __this) {
+extern "C" void __rust_thunk___ZN11LineCommentD1Ev(struct LineComment* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class LineComment& __rust_thunk___ZN11LineCommentaSERKS_(
-    class LineComment* __this, const class LineComment& __param_0) {
+extern "C" struct LineComment& __rust_thunk___ZN11LineCommentaSERKS_(
+    struct LineComment* __this, const struct LineComment& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class LineComment& __rust_thunk___ZN11LineCommentaSEOS_(
-    class LineComment* __this, class LineComment&& __param_0) {
+extern "C" struct LineComment& __rust_thunk___ZN11LineCommentaSEOS_(
+    struct LineComment* __this, struct LineComment&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarC1Ev(
-    class MultilineOneStar* __this) {
+    struct MultilineOneStar* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarC1ERKS_(
-    class MultilineOneStar* __this, const class MultilineOneStar& __param_0) {
+    struct MultilineOneStar* __this, const struct MultilineOneStar& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarC1EOS_(
-    class MultilineOneStar* __this, class MultilineOneStar&& __param_0) {
+    struct MultilineOneStar* __this, struct MultilineOneStar&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN16MultilineOneStarD1Ev(
-    class MultilineOneStar* __this) {
+    struct MultilineOneStar* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class MultilineOneStar& __rust_thunk___ZN16MultilineOneStaraSERKS_(
-    class MultilineOneStar* __this, const class MultilineOneStar& __param_0) {
+extern "C" struct MultilineOneStar& __rust_thunk___ZN16MultilineOneStaraSERKS_(
+    struct MultilineOneStar* __this, const struct MultilineOneStar& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class MultilineOneStar& __rust_thunk___ZN16MultilineOneStaraSEOS_(
-    class MultilineOneStar* __this, class MultilineOneStar&& __param_0) {
+extern "C" struct MultilineOneStar& __rust_thunk___ZN16MultilineOneStaraSEOS_(
+    struct MultilineOneStar* __this, struct MultilineOneStar&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" int __rust_thunk___Z3foov() { return foo(); }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<int>* __this) {
+    struct MyTemplate<int>* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIiEC1ERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<int>* __this, const class MyTemplate<int>& __param_0) {
+    struct MyTemplate<int>* __this, const struct MyTemplate<int>& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<int>* __this, class MyTemplate<int>&& __param_0) {
+    struct MyTemplate<int>* __this, struct MyTemplate<int>&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIiED1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<int>* __this) {
+    struct MyTemplate<int>* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class MyTemplate<int>&
+extern "C" struct MyTemplate<int>&
 __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<int>* __this, const class MyTemplate<int>& __param_0) {
+    struct MyTemplate<int>* __this, const struct MyTemplate<int>& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
-} extern "C" class MyTemplate<int>&
+} extern "C" struct MyTemplate<int>&
 __rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<int>* __this, class MyTemplate<int>&& __param_0) {
+    struct MyTemplate<int>* __this, struct MyTemplate<int>&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 } extern "C" int const&
 __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    const class MyTemplate<int>* __this) {
+    const struct MyTemplate<int>* __this) {
   return __this->get_field_value();
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<float>* __this) {
+    struct MyTemplate<float>* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIfEC1ERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<float>* __this, const class MyTemplate<float>& __param_0) {
+    struct MyTemplate<float>* __this,
+    const struct MyTemplate<float>& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<float>* __this, class MyTemplate<float>&& __param_0) {
+    struct MyTemplate<float>* __this, struct MyTemplate<float>&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void
 __rust_thunk___ZN10MyTemplateIfED1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<float>* __this) {
+    struct MyTemplate<float>* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class MyTemplate<float>&
+extern "C" struct MyTemplate<float>&
 __rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<float>* __this, const class MyTemplate<float>& __param_0) {
+    struct MyTemplate<float>* __this,
+    const struct MyTemplate<float>& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
-} extern "C" class MyTemplate<float>&
+} extern "C" struct MyTemplate<float>&
 __rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    class MyTemplate<float>* __this, class MyTemplate<float>&& __param_0) {
+    struct MyTemplate<float>* __this, struct MyTemplate<float>&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 } extern "C" float const&
 __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(
-    const class MyTemplate<float>* __this) {
+    const struct MyTemplate<float>* __this) {
   return __this->get_field_value();
 }
 
-static_assert(sizeof(class DocCommentSlashes) == 4);
-static_assert(alignof(class DocCommentSlashes) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class DocCommentSlashes) == 0);
+static_assert(sizeof(struct DocCommentSlashes) == 4);
+static_assert(alignof(struct DocCommentSlashes) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentSlashes) == 0);
 
-static_assert(sizeof(class DocCommentBang) == 4);
-static_assert(alignof(class DocCommentBang) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class DocCommentBang) == 0);
+static_assert(sizeof(struct DocCommentBang) == 4);
+static_assert(alignof(struct DocCommentBang) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct DocCommentBang) == 0);
 
-static_assert(sizeof(class MultilineCommentTwoStars) == 4);
-static_assert(alignof(class MultilineCommentTwoStars) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class MultilineCommentTwoStars) == 0);
+static_assert(sizeof(struct MultilineCommentTwoStars) == 4);
+static_assert(alignof(struct MultilineCommentTwoStars) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct MultilineCommentTwoStars) == 0);
 
-static_assert(sizeof(class LineComment) == 4);
-static_assert(alignof(class LineComment) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class LineComment) == 0);
+static_assert(sizeof(struct LineComment) == 4);
+static_assert(alignof(struct LineComment) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct LineComment) == 0);
 
-static_assert(sizeof(class MultilineOneStar) == 4);
-static_assert(alignof(class MultilineOneStar) == 4);
-static_assert(CRUBIT_OFFSET_OF(i, class MultilineOneStar) == 0);
+static_assert(sizeof(struct MultilineOneStar) == 4);
+static_assert(alignof(struct MultilineOneStar) == 4);
+static_assert(CRUBIT_OFFSET_OF(i, struct MultilineOneStar) == 0);
 
-static_assert(sizeof(class MyTemplate<int>) == 4);
-static_assert(alignof(class MyTemplate<int>) == 4);
-static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<int>) == 0);
+static_assert(sizeof(struct MyTemplate<int>) == 4);
+static_assert(alignof(struct MyTemplate<int>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<int>) == 0);
 
-static_assert(sizeof(class MyTemplate<float>) == 4);
-static_assert(alignof(class MyTemplate<float>) == 4);
-static_assert(CRUBIT_OFFSET_OF(value, class MyTemplate<float>) == 0);
+static_assert(sizeof(struct MyTemplate<float>) == 4);
+static_assert(alignof(struct MyTemplate<float>) == 4);
+static_assert(CRUBIT_OFFSET_OF(value, struct MyTemplate<float>) == 0);
 
 #pragma clang diagnostic pop

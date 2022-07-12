@@ -12,38 +12,38 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
-    class UserOfImportedType* __this) {
+    struct UserOfImportedType* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
-    class UserOfImportedType* __this,
-    const class UserOfImportedType& __param_0) {
+    struct UserOfImportedType* __this,
+    const struct UserOfImportedType& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1EOS_(
-    class UserOfImportedType* __this, class UserOfImportedType&& __param_0) {
+    struct UserOfImportedType* __this, struct UserOfImportedType&& __param_0) {
   crubit::construct_at(std::forward<decltype(__this)>(__this),
                        std::forward<decltype(__param_0)>(__param_0));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
-    class UserOfImportedType* __this) {
+    struct UserOfImportedType* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
 }
-extern "C" class UserOfImportedType&
+extern "C" struct UserOfImportedType&
 __rust_thunk___ZN18UserOfImportedTypeaSERKS_(
-    class UserOfImportedType* __this,
-    const class UserOfImportedType& __param_0) {
+    struct UserOfImportedType* __this,
+    const struct UserOfImportedType& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
-extern "C" class UserOfImportedType&
+extern "C" struct UserOfImportedType&
 __rust_thunk___ZN18UserOfImportedTypeaSEOS_(
-    class UserOfImportedType* __this, class UserOfImportedType&& __param_0) {
+    struct UserOfImportedType* __this, struct UserOfImportedType&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
 
-static_assert(sizeof(class UserOfImportedType) == 8);
-static_assert(alignof(class UserOfImportedType) == 8);
-static_assert(CRUBIT_OFFSET_OF(trivial, class UserOfImportedType) == 0);
+static_assert(sizeof(struct UserOfImportedType) == 8);
+static_assert(alignof(struct UserOfImportedType) == 8);
+static_assert(CRUBIT_OFFSET_OF(trivial, struct UserOfImportedType) == 0);
 
 #pragma clang diagnostic pop

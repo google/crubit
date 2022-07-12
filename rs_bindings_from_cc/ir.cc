@@ -359,6 +359,21 @@ llvm::json::Value BaseClass::ToJson() const {
   };
 }
 
+static std::string RecordTypeToString(RecordType record_type) {
+  switch (record_type) {
+    case kStruct:
+      return "Struct";
+    case kUnion:
+      return "Union";
+    case kClass:
+      return "Class";
+  }
+}
+
+std::ostream& operator<<(std::ostream& o, const RecordType& record_type) {
+  return o << RecordTypeToString(record_type);
+}
+
 llvm::json::Value IncompleteRecord::ToJson() const {
   llvm::json::Object record{
       {"cc_name", cc_name},
@@ -397,7 +412,7 @@ llvm::json::Value Record::ToJson() const {
       {"destructor", destructor},
       {"is_trivial_abi", is_trivial_abi},
       {"is_inheritable", is_inheritable},
-      {"is_union", is_union},
+      {"record_type", RecordTypeToString(record_type)},
       {"is_aggregate", is_aggregate},
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_namespace_id", enclosing_namespace_id},

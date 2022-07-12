@@ -382,6 +382,13 @@ pub struct IncompleteRecord {
     pub enclosing_namespace_id: Option<ItemId>,
 }
 
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize)]
+pub enum RecordType {
+    Struct,
+    Union,
+    Class,
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
     pub rs_name: String,
@@ -401,7 +408,7 @@ pub struct Record {
     pub destructor: SpecialMemberFunc,
     pub is_trivial_abi: bool,
     pub is_inheritable: bool,
-    pub is_union: bool,
+    pub record_type: RecordType,
     pub is_aggregate: bool,
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
@@ -439,6 +446,13 @@ impl Record {
     /// Pin<&mut T>.
     pub fn is_unpin(&self) -> bool {
         self.is_trivial_abi && !self.is_inheritable
+    }
+
+    pub fn is_union(&self) -> bool {
+        match self.record_type {
+            RecordType::Union => true,
+            RecordType::Struct | RecordType::Class => false,
+        }
     }
 }
 
