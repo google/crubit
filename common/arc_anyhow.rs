@@ -38,7 +38,7 @@ use std::sync::Arc;
 /// Two errors are equal if they are identical (i.e. they both have a common
 /// cloned-from ancestor.)
 #[derive(Clone)]
-pub struct Error(Arc<dyn std::error::Error + Send + Sync + 'static>);
+pub struct Error(Arc<anyhow::Error>);
 
 impl Error {
     /// Convert this into an `anyhow::Error`.
@@ -60,7 +60,7 @@ impl Error {
 
 impl PartialEq for Error {
     fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(&*self.0, &*other.0)
+        std::ptr::eq(&*self, &*other)
     }
 }
 
@@ -68,13 +68,13 @@ impl Eq for Error {}
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        Display::fmt(&self.clone().into_anyhow(), f)
+        Display::fmt(&**self, f)
     }
 }
 
 impl Debug for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        Debug::fmt(&self.clone().into_anyhow(), f)
+        Debug::fmt(&**self, f)
     }
 }
 
@@ -89,14 +89,12 @@ where
     T: Into<anyhow::Error>,
 {
     fn from(e: T) -> Self {
-        let e: Box<dyn std::error::Error + Send + Sync + 'static> = e.into().into();
-        Error(e.into())
+        Error(Arc::new(e.into()))
     }
 }
 
 impl std::ops::Deref for Error {
-    type Target = dyn std::error::Error + Send + Sync + 'static;
-
+    type Target = anyhow::Error;
     fn deref(&self) -> &Self::Target {
         &*self.0
     }
@@ -109,7 +107,7 @@ impl std::ops::Deref for Error {
 /// reason that `anyhow::Error` cannot -- at various places it produces blanket
 /// impl conflicts and other metaprogramming difficulties.
 #[derive(Clone)]
-struct StdError(Arc<dyn std::error::Error + Send + Sync + 'static>);
+struct StdError(Arc<anyhow::Error>);
 
 impl Display for StdError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
