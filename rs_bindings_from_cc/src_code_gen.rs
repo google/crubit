@@ -2,13 +2,13 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use arc_anyhow::{anyhow, bail, ensure, Context, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use salsa_utils::{PtrEq, SalsaResult};
+use salsa_utils::PtrEq;
 use std::collections::{BTreeSet, HashSet};
 use std::ffi::{OsStr, OsString};
 use std::iter::{self, Iterator};
@@ -80,12 +80,12 @@ trait BindingsGenerator {
     #[salsa::input]
     fn ir(&self) -> Rc<IR>;
 
-    fn rs_type_kind(&self, rs_type: RsType) -> SalsaResult<RsTypeKind>;
+    fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
     fn generate_func(
         &self,
         func: Rc<Func>,
-    ) -> SalsaResult<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>>;
+    ) -> Result<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 }
@@ -624,13 +624,6 @@ fn api_func_shape(
 fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
-) -> SalsaResult<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>> {
-    Ok(generate_func_impl(db, &func)?)
-}
-
-fn generate_func_impl(
-    db: &dyn BindingsGenerator,
-    func: &Func,
 ) -> Result<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>> {
     let ir = db.ir();
     let param_types = func
@@ -652,7 +645,7 @@ fn generate_func_impl(
 
     let return_type_fragment = db
         .rs_type_kind(func.return_type.rs_type.clone())
-        .with_context(|| format!("Failed to format return type for {:?}", func))?
+        .with_context(|| format!("Failed to format return type for {:?}", &func))?
         .format_as_return_type_fragment();
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
@@ -1915,115 +1908,6 @@ enum RsTypeKind {
 }
 
 impl RsTypeKind {
-    /// The implementation for the rs_type_kind query. Use that instead, as it
-    /// caches results.
-    fn query_impl(db: &dyn BindingsGenerator, ty: &ir::RsType) -> Result<Self> {
-        let ir = db.ir();
-        // The lambdas deduplicate code needed by multiple `match` branches.
-        let get_type_args = || -> SalsaResult<Vec<RsTypeKind>> {
-            ty.type_args.iter().map(|type_arg| db.rs_type_kind(type_arg.clone())).collect()
-        };
-        let get_pointee = || -> Result<Rc<RsTypeKind>> {
-            if ty.type_args.len() != 1 {
-                bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
-            }
-            Ok(Rc::new(get_type_args()?.remove(0)))
-        };
-        let get_lifetime = || -> Result<LifetimeName> {
-            if ty.lifetime_args.len() != 1 {
-                bail!("Missing reference lifetime (need exactly 1 lifetime argument): {:?}", ty);
-            }
-            let lifetime_id = ty.lifetime_args[0];
-            ir.get_lifetime(lifetime_id)
-                .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))
-                .cloned()
-        };
-
-        let result = match ty.name.as_deref() {
-            None => {
-                ensure!(
-                    ty.type_args.is_empty(),
-                    "Type arguments on records nor type aliases are not yet supported: {:?}",
-                    ty
-                );
-                match ir.item_for_type(ty)? {
-                    Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
-                        incomplete_record: incomplete_record.clone(),
-                        namespace_qualifier: generate_namespace_qualifier(
-                            incomplete_record.id,
-                            &ir,
-                        )?
-                        .collect(),
-                        crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, &ir),
-                    },
-                    Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
-                    Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
-                        type_alias: type_alias.clone(),
-                        namespace_qualifier: generate_namespace_qualifier(type_alias.id, &ir)?
-                            .collect(),
-                        crate_ident: rs_imported_crate_name(&type_alias.owning_target, &ir),
-                        underlying_type: Rc::new(
-                            db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
-                        ),
-                    },
-                    other_item => bail!("Item does not define a type: {:?}", other_item),
-                }
-            }
-            Some(name) => match name {
-                "()" => {
-                    if !ty.type_args.is_empty() {
-                        bail!("Unit type must not have type arguments: {:?}", ty);
-                    }
-                    RsTypeKind::Unit
-                }
-                "*mut" => {
-                    RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Mut }
-                }
-                "*const" => {
-                    RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Const }
-                }
-                "&mut" => RsTypeKind::Reference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Mut,
-                    lifetime: get_lifetime()?,
-                },
-                "&" => RsTypeKind::Reference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Const,
-                    lifetime: get_lifetime()?,
-                },
-                "#RvalueReference mut" => RsTypeKind::RvalueReference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Mut,
-                    lifetime: get_lifetime()?,
-                },
-                "#RvalueReference const" => RsTypeKind::RvalueReference {
-                    referent: get_pointee()?,
-                    mutability: Mutability::Const,
-                    lifetime: get_lifetime()?,
-                },
-                name => {
-                    let mut type_args = get_type_args()?;
-                    match name.strip_prefix("#funcPtr ") {
-                        None => {
-                            RsTypeKind::Other { name: name.into(), type_args: Rc::from(type_args) }
-                        }
-                        Some(abi) => {
-                            // TODO(b/217419782): Consider enforcing `'static` lifetime.
-                            ensure!(!type_args.is_empty(), "No return type in fn type: {:?}", ty);
-                            RsTypeKind::FuncPtr {
-                                abi: abi.into(),
-                                return_type: Rc::new(type_args.remove(type_args.len() - 1)),
-                                param_types: Rc::from(type_args),
-                            }
-                        }
-                    }
-                }
-            },
-        };
-        Ok(result)
-    }
-
     pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
         let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?.collect();
         let crate_ident = rs_imported_crate_name(&record.owning_target, ir);
@@ -2289,8 +2173,104 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
     }
 }
 
-fn rs_type_kind(db: &dyn BindingsGenerator, rs_type: ir::RsType) -> SalsaResult<RsTypeKind> {
-    Ok(RsTypeKind::query_impl(db, &rs_type)?)
+fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind> {
+    let ir = db.ir();
+    // The lambdas deduplicate code needed by multiple `match` branches.
+    let get_type_args = || -> Result<Vec<RsTypeKind>> {
+        ty.type_args.iter().map(|type_arg| db.rs_type_kind(type_arg.clone())).collect()
+    };
+    let get_pointee = || -> Result<Rc<RsTypeKind>> {
+        if ty.type_args.len() != 1 {
+            bail!("Missing pointee/referent type (need exactly 1 type argument): {:?}", ty);
+        }
+        Ok(Rc::new(get_type_args()?.remove(0)))
+    };
+    let get_lifetime = || -> Result<LifetimeName> {
+        if ty.lifetime_args.len() != 1 {
+            bail!("Missing reference lifetime (need exactly 1 lifetime argument): {:?}", ty);
+        }
+        let lifetime_id = ty.lifetime_args[0];
+        ir.get_lifetime(lifetime_id)
+            .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))
+            .cloned()
+    };
+
+    let result = match ty.name.as_deref() {
+        None => {
+            ensure!(
+                ty.type_args.is_empty(),
+                "Type arguments on records nor type aliases are not yet supported: {:?}",
+                ty
+            );
+            match ir.item_for_type(&ty)? {
+                Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
+                    incomplete_record: incomplete_record.clone(),
+                    namespace_qualifier: generate_namespace_qualifier(incomplete_record.id, &ir)?
+                        .collect(),
+                    crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, &ir),
+                },
+                Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
+                Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
+                    type_alias: type_alias.clone(),
+                    namespace_qualifier: generate_namespace_qualifier(type_alias.id, &ir)?
+                        .collect(),
+                    crate_ident: rs_imported_crate_name(&type_alias.owning_target, &ir),
+                    underlying_type: Rc::new(
+                        db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
+                    ),
+                },
+                other_item => bail!("Item does not define a type: {:?}", other_item),
+            }
+        }
+        Some(name) => match name {
+            "()" => {
+                if !ty.type_args.is_empty() {
+                    bail!("Unit type must not have type arguments: {:?}", ty);
+                }
+                RsTypeKind::Unit
+            }
+            "*mut" => RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Mut },
+            "*const" => {
+                RsTypeKind::Pointer { pointee: get_pointee()?, mutability: Mutability::Const }
+            }
+            "&mut" => RsTypeKind::Reference {
+                referent: get_pointee()?,
+                mutability: Mutability::Mut,
+                lifetime: get_lifetime()?,
+            },
+            "&" => RsTypeKind::Reference {
+                referent: get_pointee()?,
+                mutability: Mutability::Const,
+                lifetime: get_lifetime()?,
+            },
+            "#RvalueReference mut" => RsTypeKind::RvalueReference {
+                referent: get_pointee()?,
+                mutability: Mutability::Mut,
+                lifetime: get_lifetime()?,
+            },
+            "#RvalueReference const" => RsTypeKind::RvalueReference {
+                referent: get_pointee()?,
+                mutability: Mutability::Const,
+                lifetime: get_lifetime()?,
+            },
+            name => {
+                let mut type_args = get_type_args()?;
+                match name.strip_prefix("#funcPtr ") {
+                    None => RsTypeKind::Other { name: name.into(), type_args: Rc::from(type_args) },
+                    Some(abi) => {
+                        // TODO(b/217419782): Consider enforcing `'static` lifetime.
+                        ensure!(!type_args.is_empty(), "No return type in fn type: {:?}", ty);
+                        RsTypeKind::FuncPtr {
+                            abi: abi.into(),
+                            return_type: Rc::new(type_args.remove(type_args.len() - 1)),
+                            param_types: Rc::from(type_args),
+                        }
+                    }
+                }
+            }
+        },
+    };
+    Ok(result)
 }
 
 fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
@@ -2686,7 +2666,6 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::anyhow;
     use ir_testing::{
         ir_from_cc, ir_from_cc_dependency, ir_record, make_ir_from_items, retrieve_func,
         with_lifetime_macros,

@@ -10,6 +10,19 @@ licenses(["notice"])
 
 package(default_visibility = ["//:__subpackages__"])
 
+rust_library(
+    name = "arc_anyhow",
+    srcs = ["arc_anyhow.rs"],
+    deps = [
+        "@crate_index//:anyhow",
+    ],
+)
+
+rust_test(
+    name = "arc_anyhow_test",
+    crate = ":arc_anyhow",
+)
+
 cc_library(
     name = "file_io",
     srcs = ["file_io.cc"],
@@ -87,7 +100,7 @@ rust_library(
     data = [
     ],
     deps = [
-        "@crate_index//:anyhow",
+        ":arc_anyhow",
         "@crate_index//:proc-macro2",
     ],
 )

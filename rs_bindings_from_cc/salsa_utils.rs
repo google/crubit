@@ -6,10 +6,7 @@
 //!
 //! TODO(jeanpierreda): give this module a better name.
 
-#![feature(backtrace)]
-
 use std::ops::Deref;
-use std::sync::Arc;
 
 /// A wrapper for a smart pointer, which implements `Eq` as pointer equality.
 ///
@@ -38,52 +35,3 @@ impl<T: Deref> PtrEq<T> {
     }
 }
 
-/// A clonable, equality-comparable error which is interconvertible with
-/// `anyhow::Error`.
-///
-/// Two errors are equal if they are identical (i.e. they both have a common
-/// cloned-from ancestor.)
-///
-/// Salsa queries should return `Result<Rc<T>, SalsaError>`, and not
-/// `Rc<Result<T, anyhow::Error>>`. Because `anyhow::Error` cannot be cloned,
-/// `Rc<Result<T, anyhow::Error>>` is very nearly useless, as one cannot create
-/// a new `Rc<Result<U, anyhow::Error>>` containing the same error.
-/// Error propagation with cached errors requires that the underlying error type
-/// be copyable.
-///
-/// (Implementation note: SalsaError itself uses `Arc`, not `Rc`, because
-/// `anyhow::Error` requires `Send`+`Sync`.)
-#[derive(Clone, Debug)]
-pub struct SalsaError(Arc<dyn std::error::Error + Send + Sync + 'static>);
-
-impl PartialEq for SalsaError {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(&*self.0, &*other.0)
-    }
-}
-
-impl Eq for SalsaError {}
-
-impl std::fmt::Display for SalsaError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        std::fmt::Display::fmt(&*self.0, f)
-    }
-}
-
-impl std::error::Error for SalsaError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.0.source()
-    }
-    fn backtrace(&self) -> Option<&std::backtrace::Backtrace> {
-        self.0.backtrace()
-    }
-}
-
-impl From<anyhow::Error> for SalsaError {
-    fn from(e: anyhow::Error) -> Self {
-        let e: Box<dyn std::error::Error + Send + Sync + 'static> = e.into();
-        SalsaError(e.into())
-    }
-}
-
-pub type SalsaResult<T> = Result<T, SalsaError>;

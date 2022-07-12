@@ -2,8 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::Context;
-use anyhow::Result;
+use arc_anyhow::{Context, Result};
 use ffi_types::FfiU8Slice;
 use ffi_types::FfiU8SliceBox;
 use proc_macro2::TokenStream;

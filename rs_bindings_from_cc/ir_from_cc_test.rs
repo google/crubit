@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #![cfg(test)]
 
-use anyhow::Result;
+use arc_anyhow::Result;
 use ir::*;
 use ir_testing::*;
 use itertools::Itertools;

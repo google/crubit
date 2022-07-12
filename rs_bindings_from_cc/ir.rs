@@ -6,7 +6,7 @@
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
 
-use anyhow::{anyhow, bail, Context, Result};
+use arc_anyhow::{anyhow, bail, Context, Result};
 use proc_macro2::{Literal, TokenStream};
 use quote::{ToTokens, TokenStreamExt};
 use serde::Deserialize;
@@ -560,9 +560,9 @@ impl From<Func> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<Func> {
-    type Error = anyhow::Error;
+    type Error = arc_anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Func(f) = value { Ok(f) } else { anyhow::bail!("Not a Func: {:#?}", value) }
+        if let Item::Func(f) = value { Ok(f) } else { bail!("Not a Func: {:#?}", value) }
     }
 }
 
@@ -573,12 +573,12 @@ impl From<Record> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
-    type Error = anyhow::Error;
+    type Error = arc_anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Record(r) = value {
             Ok(r)
         } else {
-            anyhow::bail!("Not a Record: {:#?}", value)
+            bail!("Not a Record: {:#?}", value)
         }
     }
 }
@@ -590,12 +590,12 @@ impl From<UnsupportedItem> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<UnsupportedItem> {
-    type Error = anyhow::Error;
+    type Error = arc_anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::UnsupportedItem(u) = value {
             Ok(u)
         } else {
-            anyhow::bail!("Not an UnsupportedItem: {:#?}", value)
+            bail!("Not an UnsupportedItem: {:#?}", value)
         }
     }
 }
@@ -607,12 +607,12 @@ impl From<Comment> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
-    type Error = anyhow::Error;
+    type Error = arc_anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Comment(c) = value {
             Ok(c)
         } else {
-            anyhow::bail!("Not a Comment: {:#?}", value)
+            bail!("Not a Comment: {:#?}", value)
         }
     }
 }

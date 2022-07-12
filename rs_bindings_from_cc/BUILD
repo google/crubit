@@ -275,7 +275,7 @@ rust_library(
     name = "ir",
     srcs = ["ir.rs"],
     deps = [
-        "@crate_index//:anyhow",
+        "//common:arc_anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -300,8 +300,8 @@ rust_library(
     deps = [
         ":ir",
         ":json_from_cc",
+        "//common:arc_anyhow",
         "//common:ffi_types",
-        "@crate_index//:anyhow",
         "@crate_index//:itertools",
     ],
 )
@@ -347,8 +347,8 @@ rust_test(
         ":ir",
         ":ir_testing",
         ":token_stream_matchers",
+        "//common:arc_anyhow",
         "//common:rust_allocator_shims",
-        "@crate_index//:anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -358,11 +358,6 @@ rust_test(
 rust_library(
     name = "salsa_utils",
     srcs = ["salsa_utils.rs"],
-    deps = [
-        ":ir",
-        "@crate_index//:anyhow",
-        "@crate_index//:salsa",
-    ],
 )
 
 cc_library(
@@ -387,9 +382,9 @@ rust_library(
     deps = [
         ":ir",
         ":salsa_utils",
+        "//common:arc_anyhow",
         "//common:ffi_types",
         "//common:token_stream_printer",
-        "@crate_index//:anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -431,8 +426,8 @@ rust_library(
     srcs = ["token_stream_matchers.rs"],
     deps = [
         ":ir",
+        "//common:arc_anyhow",
         "//common:token_stream_printer",
-        "@crate_index//:anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
@@ -541,9 +536,9 @@ rust_library(
     name = "collect_instantiations",
     srcs = ["collect_instantiations.rs"],
     deps = [
+        "//common:arc_anyhow",
         "//common:ffi_types",
         "//common:token_stream_printer",
-        "@crate_index//:anyhow",
         "@crate_index//:proc-macro2",
         "@crate_index//:serde_json",
         "@crate_index//:syn",
