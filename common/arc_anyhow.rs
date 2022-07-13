@@ -68,13 +68,13 @@ impl Eq for Error {}
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        Display::fmt(&**self, f)
+        Display::fmt(&*self.0, f)
     }
 }
 
 impl Debug for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        Debug::fmt(&**self, f)
+        Debug::fmt(&*self.0, f)
     }
 }
 
@@ -90,13 +90,6 @@ where
 {
     fn from(e: T) -> Self {
         Error(Arc::new(e.into()))
-    }
-}
-
-impl std::ops::Deref for Error {
-    type Target = anyhow::Error;
-    fn deref(&self) -> &Self::Target {
-        &*self.0
     }
 }
 
