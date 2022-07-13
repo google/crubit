@@ -47,6 +47,11 @@ extern "C" void
 __rust_thunk___ZN23test_namespace_bindings15inline_functionEv() {
   test_namespace_bindings::inline_function();
 }
+extern "C" void __rust_thunk___Z8identityN23test_namespace_bindings1SE(
+    struct test_namespace_bindings::S* __return,
+    struct test_namespace_bindings::S s) {
+  crubit::construct_at(__return, identity(std::forward<decltype(s)>(s)));
+}
 extern "C" void __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
     struct test_namespace_bindings_reopened::inner::S* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));

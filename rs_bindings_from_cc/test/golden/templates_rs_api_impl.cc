@@ -153,24 +153,32 @@ __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSEOS1___2f_2fthird_5fp
     class test_namespace_bindings::MyTemplate<int>* __this,
     class test_namespace_bindings::MyTemplate<int>&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
-} extern "C" class test_namespace_bindings::MyTemplate<DifferentScope>
+} extern "C" void
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class test_namespace_bindings::MyTemplate<DifferentScope>* __return,
     struct DifferentScope value) {
-  return test_namespace_bindings::MyTemplate<DifferentScope>::Create(
-      std::forward<decltype(value)>(value));
-} extern "C" class test_namespace_bindings::MyTemplate<
-    test_namespace_bindings::TemplateParam>
+  crubit::construct_at(
+      __return, test_namespace_bindings::MyTemplate<DifferentScope>::Create(
+                    std::forward<decltype(value)>(value)));
+}
+extern "C" void
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class test_namespace_bindings::MyTemplate<
+        test_namespace_bindings::TemplateParam>* __return,
     struct test_namespace_bindings::TemplateParam value) {
-  return test_namespace_bindings::
-      MyTemplate<test_namespace_bindings::TemplateParam>::Create(
-          std::forward<decltype(value)>(value));
-} extern "C" class test_namespace_bindings::MyTemplate<int>
+  crubit::construct_at(
+      __return, test_namespace_bindings::
+                    MyTemplate<test_namespace_bindings::TemplateParam>::Create(
+                        std::forward<decltype(value)>(value)));
+}
+extern "C" void
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    int value) {
-  return test_namespace_bindings::MyTemplate<int>::Create(
-      std::forward<decltype(value)>(value));
-} extern "C" const struct DifferentScope&
+    class test_namespace_bindings::MyTemplate<int>* __return, int value) {
+  crubit::construct_at(__return,
+                       test_namespace_bindings::MyTemplate<int>::Create(
+                           std::forward<decltype(value)>(value)));
+}
+extern "C" const struct DifferentScope&
 __rust_thunk___ZNK23test_namespace_bindings10MyTemplateI14DifferentScopeE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
     const class test_namespace_bindings::MyTemplate<DifferentScope>* __this) {
   return __this->value();

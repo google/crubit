@@ -102,22 +102,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
   }
 
-  if (const clang::RecordType* record_return_type =
-          clang::dyn_cast<clang::RecordType>(function_decl->getReturnType())) {
-    if (clang::RecordDecl* record_decl =
-            clang::dyn_cast<clang::RecordDecl>(record_return_type->getDecl())) {
-      // TODO(b/200067242): non-trivial_abi structs, when passed by value,
-      // have a different representation which needs special support. We
-      // currently do not support it.
-      if (!record_decl->canPassInRegisters()) {
-        add_error(
-            absl::Substitute("Non-trivial_abi type '$0' is not supported "
-                             "by value as a return type",
-                             function_decl->getReturnType().getAsString()));
-      }
-    }
-  }
-
   std::optional<clang::tidy::lifetimes::ValueLifetimes> return_lifetimes;
   if (lifetimes) {
     return_lifetimes = lifetimes->GetReturnLifetimes();

@@ -134,8 +134,21 @@ pub mod test_namespace_bindings {
 // namespace test_namespace_bindings
 
 #[inline(always)]
-pub fn identity(s: crate::test_namespace_bindings::S) -> crate::test_namespace_bindings::S {
-    unsafe { crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(s) }
+pub fn identity(
+    s: crate::test_namespace_bindings::S,
+) -> impl ::ctor::Ctor<Output = crate::test_namespace_bindings::S> {
+    unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<
+                &mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+            >| {
+                crate::detail::__rust_thunk___Z8identityN23test_namespace_bindings1SE(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    s,
+                );
+            },
+        )
+    }
 }
 
 pub mod test_namespace_bindings_reopened_0 {
@@ -490,10 +503,10 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings15inline_functionEv();
         #[link_name = "_ZN23test_namespace_bindings5inner1iEv"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings5inner1iEv();
-        #[link_name = "_Z8identityN23test_namespace_bindings1SE"]
         pub(crate) fn __rust_thunk___Z8identityN23test_namespace_bindings1SE(
+            __return: &mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
             s: crate::test_namespace_bindings::S,
-        ) -> crate::test_namespace_bindings::S;
+        );
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1ERKS1_<'a, 'b>(

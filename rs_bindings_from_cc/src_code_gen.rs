@@ -183,7 +183,7 @@ impl From<TokenStream> for RsSnippet {
 /// If we know the original C++ function is codegenned and already compatible
 /// with `extern "C"` calling convention we skip creating/calling the C++ thunk
 /// since we can call the original C++ directly.
-fn can_skip_cc_thunk(func: &Func) -> bool {
+fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
     // ## Inline functions
     //
     // Inline functions may not be codegenned in the C++ library since Clang doesn't
@@ -237,6 +237,23 @@ fn can_skip_cc_thunk(func: &Func) -> bool {
     // clang::FunctionType::getNameForCallConv)
     if !func.has_c_calling_convention {
         return false;
+    }
+
+    // ## Nontrivial return types.
+    //
+    // If the function returns a value which is nontrivial for the purpose of calls,
+    // then in the underlying ABI, it is actually returned via a hidden pointer
+    // parameter not exposed anywhere in the Clang AST or the Crubit IR. For
+    // now, this is worked around via an _explicit_ output parameter, used in
+    // the thunk, which cannot be skipped anymore.
+    //
+    // Note: if the RsTypeKind cannot be parsed / rs_type_kind returns Err, then
+    // bindings generation will fail for this function, so it doesn't really matter
+    // what we do here.
+    if let Ok(return_type) = db.rs_type_kind(func.return_type.rs_type.clone()) {
+        if !return_type.is_unpin() {
+            return false;
+        }
     }
 
     true
@@ -705,24 +722,22 @@ fn generate_func(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(db, &func, &ir, &param_types)?
-    {
-        values
-    } else {
-        return Ok(None);
-    };
+    let (func_name, mut impl_kind) =
+        if let Some(values) = api_func_shape(db, &func, &ir, &param_types)? {
+            values
+        } else {
+            return Ok(None);
+        };
 
-    let return_type_fragment = db
+    let return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
-        .with_context(|| format!("Failed to format return type for {:?}", &func))?
-        .format_as_return_type_fragment();
+        .with_context(|| format!("Failed to format return type for {:?}", &func))?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
 
-    let thunk = generate_func_thunk(&func, &param_idents, &param_types, &return_type_fragment)?;
+    let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
 
     let api_func_def = {
-        let mut return_type_fragment = return_type_fragment;
         let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
         let mut api_params = param_idents
             .iter()
@@ -731,6 +746,14 @@ fn generate_func(
             .collect_vec();
         let mut lifetimes = func.lifetime_params.iter().collect_vec();
         let mut maybe_first_api_param = param_types.get(0);
+
+        let mut return_type_fragment = if return_type.is_unpin() {
+            return_type.format_as_return_type_fragment()
+        } else {
+            // The returned lazy FnCtor depends on all inputs.
+            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ #a});
+            quote! {-> impl ::ctor::Ctor<Output=#return_type> #(#extra_lifetimes)* }
+        };
 
         if let ImplKind::Trait {
             trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
@@ -845,11 +868,32 @@ fn generate_func(
                 }
             }
             _ => {
-                let mut body = quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) };
+                // Note: for the time being, all !Unpin values are treated as if they were not
+                // trivially relocatable. We could, in the special case of trivial !Unpin types,
+                // not generate the thunk at all, but this would be a bit of extra work.
+                //
+                // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
+                let mut body = if return_type.is_unpin() {
+                    quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) }
+                } else {
+                    quote! {
+                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<#return_type>>| {
+                            crate::detail::#thunk_ident(::std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
+                        })
+                    }
+                };
                 // Somewhat hacky: discard the return value for operator=.
                 if let UnqualifiedIdentifier::Operator(op) = &func.name {
                     if op.name == "=" {
-                        body = quote! { #body; };
+                        if return_type.is_unpin() {
+                            // If it's unpin, just discard it:
+                            body = quote! { #body; };
+                        } else {
+                            // Otherwise, in order to discard the return value and return void, we
+                            // need to run the constructor.
+                            body = quote! {let _ = ::ctor::emplace!(#body);};
+                        }
+
                         return_type_fragment = quote! {};
                     }
                 }
@@ -875,8 +919,8 @@ fn generate_func(
         let fn_generic_params: TokenStream;
         if let ImplKind::Trait { trait_name, trait_generic_params, impl_for, .. } = &mut impl_kind {
             // When the impl block is for some kind of reference to T, consider the lifetime
-            // parameters on the self parameter to be trait lifetimes so they can be introduced
-            // before they are used.
+            // parameters on the self parameter to be trait lifetimes so they can be
+            // introduced before they are used.
             let first_param_lifetimes = match (impl_for, param_types.first()) {
                 (ImplFor::RefT, Some(first_param)) => Some(first_param.lifetimes()),
                 _ => None,
@@ -992,37 +1036,52 @@ fn generate_func(
 }
 
 fn generate_func_thunk(
+    db: &dyn BindingsGenerator,
     func: &Func,
     param_idents: &[Ident],
     param_types: &[RsTypeKind],
-    return_type_fragment: &TokenStream,
+    return_type: &RsTypeKind,
 ) -> Result<TokenStream> {
-    let thunk_attr = if can_skip_cc_thunk(func) {
+    let thunk_attr = if can_skip_cc_thunk(db, func) {
         let mangled_name = &func.mangled_name;
         quote! {#[link_name = #mangled_name]}
     } else {
         quote! {}
     };
 
-    // For constructors, inject MaybeUninit into the type of `__this_` parameter.
+    // The first parameter is the output parameter, if any.
     let mut param_types = param_types.into_iter();
-    let mut self_param = None;
+    let mut param_idents = param_idents.into_iter();
+    let mut out_param = None;
+    let mut out_param_ident = None;
+    let mut return_type_fragment = return_type.format_as_return_type_fragment();
     if func.name == UnqualifiedIdentifier::Constructor {
+        // For constructors, inject MaybeUninit into the type of `__this_` parameter.
         let first_param = param_types
             .next()
             .ok_or_else(|| anyhow!("Constructors should have at least one parameter (__this)"))?;
-        self_param = Some(first_param.format_mut_ref_as_uninitialized().with_context(|| {
+        out_param = Some(first_param.format_mut_ref_as_uninitialized().with_context(|| {
             format!(
                 "Failed to format `__this` param for a constructor thunk: {:?}",
                 func.params.get(0)
             )
         })?);
+        out_param_ident = Some(param_idents.next().unwrap().clone());
+    } else if !return_type.is_unpin() {
+        // For nontrivial return types, create a new out parameter.
+        // The lifetime doesn't matter, so we can insert a new anonymous lifetime here.
+        out_param = Some(quote! {
+            &mut ::std::mem::MaybeUninit< #return_type >
+        });
+        out_param_ident = Some(make_rs_ident("__return"));
+        return_type_fragment = quote! {};
     }
 
     let thunk_ident = thunk_ident(&func);
     let lifetimes = func.lifetime_params.iter();
     let generic_params = format_generic_params(lifetimes);
-    let param_types = self_param.into_iter().chain(param_types.map(|t| quote! {#t}));
+    let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
+    let param_types = out_param.into_iter().chain(param_types.map(|t| quote! {#t}));
 
     Ok(quote! {
         #thunk_attr
@@ -1841,7 +1900,7 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
 
     let mut items = vec![];
     let mut thunks = vec![];
-    let mut thunk_impls = vec![generate_rs_api_impl(&ir, crubit_support_path)?];
+    let mut thunk_impls = vec![generate_rs_api_impl(&mut db, crubit_support_path)?];
     let mut assertions = vec![];
 
     // We import nullable pointers as an Option<&T> and assume that at the ABI
@@ -2636,7 +2695,7 @@ fn thunk_ident(func: &Func) -> Ident {
     format_ident!("__rust_thunk__{}", func.mangled_name)
 }
 
-fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStream> {
+fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<TokenStream> {
     // This function uses quote! to generate C++ source code out of convenience.
     // This is a bold idea so we have to continously evaluate if it still makes
     // sense or the cost of working around differences in Rust and C++ tokens is
@@ -2645,8 +2704,9 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
     // See rs_bindings_from_cc/
     // token_stream_printer.rs for a list of supported placeholders.
     let mut thunks = vec![];
+    let ir = db.ir();
     for func in ir.functions() {
-        if can_skip_cc_thunk(func) {
+        if can_skip_cc_thunk(db, func) {
             continue;
         }
 
@@ -2665,12 +2725,12 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
                         } else {
                             let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
                             let record_ident = format_cc_ident(&record.cc_name);
-                            let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
+                            let namespace_qualifier = generate_namespace_qualifier(record.id, &ir)?;
                             quote! { #(#namespace_qualifier::)* #record_ident :: #fn_ident }
                         }
                     }
                     None => {
-                        let namespace_qualifier = generate_namespace_qualifier(func.id, ir)?;
+                        let namespace_qualifier = generate_namespace_qualifier(func.id, &ir)?;
                         quote! { #(#namespace_qualifier::)* #fn_ident }
                     }
                 }
@@ -2686,21 +2746,38 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
             }
             UnqualifiedIdentifier::Destructor => quote! {std::destroy_at},
         };
-        let return_type_name = format_cc_type(&func.return_type.cc_type, ir)?;
-        let return_stmt = if func.return_type.cc_type.is_void() {
-            quote! {}
-        } else {
-            quote! { return }
-        };
 
-        let param_idents =
+        let mut param_idents =
             func.params.iter().map(|p| format_cc_ident(&p.identifier.identifier)).collect_vec();
 
-        let param_types = func
+        let mut param_types = func
             .params
             .iter()
-            .map(|p| format_cc_type(&p.type_.cc_type, ir))
+            .map(|p| format_cc_type(&p.type_.cc_type, &ir))
             .collect::<Result<Vec<_>>>()?;
+
+        let arg_expressions: Vec<_> = param_idents
+            .iter()
+            .map(
+                // Forward references along. (If the parameter is a value, not a reference, this
+                // will create an lvalue reference, and still do the right thing.)
+                |ident| quote! {std::forward<decltype(#ident)>(#ident)},
+            )
+            .collect();
+
+        // Here, we add a __return parameter if the return type is not trivially
+        // relocatable. (We do this after the arg_expressions computation, so
+        // that it's only in the parameter list, not the argument list.)
+        //
+        // RsTypeKind is where, as much as anywhere, where the information about trivial
+        // relocatability is stored.
+        let is_trivial_return = db.rs_type_kind(func.return_type.rs_type.clone())?.is_unpin();
+        let mut return_type_name = format_cc_type(&func.return_type.cc_type, &ir)?;
+        if !is_trivial_return {
+            param_idents.insert(0, format_cc_ident("__return"));
+            param_types.insert(0, quote! {#return_type_name *});
+            return_type_name = quote! {void};
+        }
 
         let needs_this_deref = match &func.member_func_metadata {
             None => false,
@@ -2711,15 +2788,6 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
                 }
             },
         };
-
-        let arg_expressions: Vec<_> = param_idents
-            .iter()
-            .map(
-                // Forward references along. (If the parameter is a value, not a reference, this
-                // will create an lvalue reference, and still do the right thing.)
-                |ident| quote! {std::forward<decltype(#ident)>(#ident)},
-            )
-            .collect();
         let (implementation_function, arg_expressions) = if !needs_this_deref {
             (implementation_function, arg_expressions.clone())
         } else {
@@ -2734,16 +2802,26 @@ fn generate_rs_api_impl(ir: &IR, crubit_support_path: &str) -> Result<TokenStrea
             )
         };
 
+        let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
+        let return_stmt = if !is_trivial_return {
+            let out_param = &param_idents[0];
+            quote! {crubit::construct_at(#out_param, #return_expr)}
+        } else if func.return_type.cc_type.is_void() {
+            return_expr
+        } else {
+            quote! { return #return_expr }
+        };
+
         thunks.push(quote! {
             extern "C" #return_type_name #thunk_ident( #( #param_types #param_idents ),* ) {
-                #return_stmt #implementation_function( #( #arg_expressions ),* );
+                #return_stmt;
             }
         });
     }
 
     let layout_assertions = ir
         .records()
-        .map(|record| cc_struct_layout_assertion(record, ir))
+        .map(|record| cc_struct_layout_assertion(record, &ir))
         .collect::<Result<Vec<_>>>()?;
 
     let mut standard_headers = <BTreeSet<Ident>>::new();
@@ -2910,7 +2988,7 @@ mod tests {
     fn test_simple_function_with_types_from_other_target() -> Result<()> {
         let ir = ir_from_cc_dependency(
             "inline ReturnStruct DoSomething(ParamStruct param);",
-            "struct ReturnStruct {}; struct ParamStruct {};",
+            "struct ReturnStruct final {}; struct ParamStruct final {};",
         )?;
 
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
@@ -5929,6 +6007,97 @@ mod tests {
                             }
                         })
                     }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_return() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct Nontrivial {~Nontrivial();};
+            
+            Nontrivial ReturnsByValue(const int& x, const int& y);
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn ReturnsByValue<'a, 'b>(x: &'a i32, y: &'b i32)
+                -> impl ::ctor::Ctor<Output=crate::Nontrivial> + 'a + 'b {
+                    unsafe {
+                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                            crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::std::pin::Pin::into_inner_unchecked(dest), x, y);
+                        })
+                    }
+
+                }
+            }
+        );
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(struct Nontrivial* __return, int const& x, int const& y) {
+                    crubit::construct_at(__return, ReturnsByValue(
+                        std::forward<decltype(x)>(x),
+                        std::forward<decltype(y)>(y)));
+                }
+            }
+        );
+        Ok(())
+    }
+
+    /// Assignment is special in that it discards the return type.
+    /// So if the return type is !Unpin, it needs to emplace!() it.
+    #[test]
+    fn test_nonunpin_assign() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct Nontrivial {
+                ~Nontrivial();
+                Nontrivial operator=(const Nontrivial& other);
+            };
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl<'b> ::ctor::Assign<&'b crate::Nontrivial> for Nontrivial {
+                    #[inline(always)]
+                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b crate::Nontrivial) {
+                        unsafe {
+                            let _ = ::ctor::emplace!(::ctor::FnCtor::new(
+                                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                                    crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
+                                        ::std::pin::Pin::into_inner_unchecked(dest),
+                                        self,
+                                        other
+                                    );
+                                }
+                            ));
+                        }
+                    }
+                }
+            }
+        );
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___ZN10NontrivialaSERKS_(
+                    struct Nontrivial* __return, struct Nontrivial* __this,
+                    const struct Nontrivial& other
+                ) {
+                    crubit::construct_at(
+                        __return,
+                        __this->operator=(std::forward<decltype(other)>(other)));
                 }
             }
         );

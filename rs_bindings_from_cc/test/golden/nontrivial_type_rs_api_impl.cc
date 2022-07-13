@@ -11,6 +11,13 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
+extern "C" void __rust_thunk___ZN10NontrivialaSEf(struct Nontrivial* __return,
+                                                  struct Nontrivial* __this,
+                                                  float __param_0) {
+  crubit::construct_at(
+      __return,
+      __this->operator=(std::forward<decltype(__param_0)>(__param_0)));
+}
 extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ev(
     struct NontrivialInline* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
@@ -85,6 +92,9 @@ extern "C" struct NontrivialMembers& __rust_thunk___ZN17NontrivialMembersaSEOS_(
     struct NontrivialMembers* __this, struct NontrivialMembers&& __param_0) {
   return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
 }
+extern "C" void __rust_thunk___Z14ReturnsByValuev(struct Nontrivial* __return) {
+  crubit::construct_at(__return, ReturnsByValue());
+}
 extern "C" void __rust_thunk___ZN17NontrivialByValueC1Ev(
     struct NontrivialByValue* __this) {
   crubit::construct_at(std::forward<decltype(__this)>(__this));
@@ -98,6 +108,18 @@ extern "C" void __rust_thunk___ZN17NontrivialByValueC1ERKS_(
 extern "C" void __rust_thunk___ZN17NontrivialByValueD1Ev(
     struct NontrivialByValue* __this) {
   std::destroy_at(std::forward<decltype(__this)>(__this));
+}
+extern "C" void __rust_thunk___ZN17NontrivialByValueaSES_(
+    struct NontrivialByValue* __return, struct NontrivialByValue* __this,
+    struct NontrivialByValue other) {
+  crubit::construct_at(__return,
+                       __this->operator=(std::forward<decltype(other)>(other)));
+}
+extern "C" void __rust_thunk___ZN17NontrivialByValueeqES_(
+    struct NontrivialByValue* __return, struct NontrivialByValue* __this,
+    struct NontrivialByValue other) {
+  crubit::construct_at(
+      __return, __this->operator==(std::forward<decltype(other)>(other)));
 }
 
 static_assert(sizeof(struct Nontrivial) == 4);

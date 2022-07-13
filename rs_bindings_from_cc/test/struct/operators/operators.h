@@ -7,11 +7,11 @@
 
 #pragma clang lifetime_elision
 
-struct TestStruct1 {
+struct TestStruct1 final {
   int i;
 };
 
-struct TestStruct2 {
+struct TestStruct2 final {
   // Comparison with the same struct.  Should generate:
   // impl PartialEq for TestStruct2.  // `PartialEq<TestStruct2>` also ok.
   inline bool operator==(const TestStruct2& other) const {
@@ -34,7 +34,7 @@ struct TestStruct2 {
 
 //////////////////////////////////////////////////////////////////////
 
-struct OperandForOutOfLineDefinition {
+struct OperandForOutOfLineDefinition final {
   // Non-`inline` definition.  Should generate:
   // impl PartialEq for TestStructForOutOfLineDefinition
   bool operator==(const OperandForOutOfLineDefinition& other) const;
@@ -43,7 +43,7 @@ struct OperandForOutOfLineDefinition {
 
 //////////////////////////////////////////////////////////////////////
 
-struct OperandForFreeFunc {
+struct OperandForFreeFunc final {
   int i;
 };
 
@@ -53,7 +53,7 @@ bool operator==(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs);
 
 //////////////////////////////////////////////////////////////////////
 
-struct OperandForFreeFuncInDifferentNamespace {
+struct OperandForFreeFuncInDifferentNamespace final {
   int i;
 };
 
@@ -67,14 +67,14 @@ bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
 
 //////////////////////////////////////////////////////////////////////
 
-struct AddableConstMemberInt {
+struct AddableConstMemberInt final {
   // impl Add<i32> for &AddableConstMemberInt { type Output = i32; .. }
   int operator+(int rhs) const { return i + rhs; }
 
   int i;
 };
 
-struct AddableConstMemberByRef {
+struct AddableConstMemberByRef final {
   // impl Add<&AddableConstMemberByRef> for &AddableConstMemberByRef {
   //     type Output = AddableConstMemberByRef;
   //     ..
@@ -98,7 +98,7 @@ struct AddableNonConstMemberByRef final {
   int i;
 };
 
-struct AddableConstMemberByValue {
+struct AddableConstMemberByValue final {
   // impl Add<AddableConstMemberByValue> for &AddableConstMemberByValue {
   //     type Output = AddableConstMemberByValue;
   //     ..

@@ -15,7 +15,11 @@ class Nonunpin {
   Nonunpin() {}
   explicit Nonunpin(int value) : value_(value) {}
   Nonunpin(const Nonunpin& other) : Nonunpin(other.value_) {}
-  Nonunpin& operator=(const Nonunpin& other) {
+  // We have a nonconventional assignment operator which returns a
+  // non-trivially-relocatable value, by value.
+  //
+  // NOLINTNEXTLINE(misc-unconventional-assign-operator)
+  Nonunpin operator=(const Nonunpin& other) {
     value_ = other.value_;
     return *this;
   }
@@ -26,6 +30,7 @@ class Nonunpin {
     return *this;
   }
   ~Nonunpin() {}
+
   size_t addr() const { return addr_; }
   int value() const { return value_; }
   void set_value(int new_value) { value_ = new_value; }
@@ -35,6 +40,8 @@ class Nonunpin {
 
   const Nonunpin& AsConstRef() const { return *this; }
   const Nonunpin&& AsConstRvalueRef() const { return std::move(*this); }
+
+  Nonunpin AsValue() const { return *this; }
 
  private:
   int value_ = 0;

@@ -21,6 +21,8 @@ struct Nontrivial final {
   Nontrivial& operator=(const Nontrivial&);
   Nontrivial& operator=(Nontrivial&&);
   Nontrivial& operator=(int);
+  // NOLINTNEXTLINE(misc-unconventional-assign-operator)
+  Nontrivial operator=(float);
   ~Nontrivial();
 
   void MemberFunction();

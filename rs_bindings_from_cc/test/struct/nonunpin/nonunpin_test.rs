@@ -121,6 +121,7 @@ mod tests {
             assert_eq!(nonunpin::GetValueFromConstRvalueRef(x), 42);
         }
     }
+
     #[test]
     fn test_aggregate() {
         ctor::emplace! {
@@ -135,5 +136,19 @@ mod tests {
             assert_eq!(*x.value, 0);
         }
         assert_eq!(x.value, 0);
+    }
+
+    #[test]
+    fn test_return_by_value() {
+        ctor::emplace! {
+            let x = Nonunpin::ctor_new(42);
+            let y = x.AsValue();
+        }
+
+        assert_eq!(x.value(), 42);
+        assert_eq!(y.value(), 42);
+
+        assert_eq!(x.addr(), &*x as *const _ as usize);
+        assert_eq!(y.addr(), &*y as *const _ as usize);
     }
 }
