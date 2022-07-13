@@ -15,12 +15,14 @@ mod tests {
         assert_eq!(1 + 2, s1.AddOneOtherItem(&s2));
     }
 
+    #[test]
     fn test_repeating_parameter_type() {
-        // Among other things, this test provides coverage for the (not currently
-        // implemented, but still considered for the future) mangling algorithm
-        // that is required as part of the "Function template" approach from
-        // `thunks_for_class_template_member_functions.md`. In particular,
-        // repeated parameter type should be subject to https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression
+        // Among other things, this test provides coverage for the (not
+        // currently implemented, but still considered for the future) mangling
+        // algorithm that is required as part of the "Function template"
+        // approach from `thunks_for_class_template_member_functions.md`. In
+        // particular, repeated parameter type should be subject to
+        // https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-compression
         // (which was missed in the initial prototype of this approach).
         let s1 = method_params::MyTypeAlias::Create(1);
         let s2 = method_params::MyTypeAlias::Create(2);
