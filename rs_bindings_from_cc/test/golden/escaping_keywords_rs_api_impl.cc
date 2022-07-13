@@ -12,28 +12,26 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN4typeC1Ev(struct type* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN4typeC1ERKS_(struct type* __this,
-                                              const struct type& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+                                              const struct type* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN4typeC1EOS_(struct type* __this,
-                                             struct type&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+                                             struct type* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN4typeD1Ev(struct type* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct type& __rust_thunk___ZN4typeaSERKS_(
-    struct type* __this, const struct type& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" struct type* __rust_thunk___ZN4typeaSERKS_(
+    struct type* __this, const struct type* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct type& __rust_thunk___ZN4typeaSEOS_(struct type* __this,
-                                                     struct type&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" struct type* __rust_thunk___ZN4typeaSEOS_(struct type* __this,
+                                                     struct type* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(struct type) == 4);

@@ -13,129 +13,121 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1Ev(
     struct HasCustomAlignment* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1ERKS_(
     struct HasCustomAlignment* __this,
-    const struct HasCustomAlignment& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct HasCustomAlignment* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1EOS_(
-    struct HasCustomAlignment* __this, struct HasCustomAlignment&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct HasCustomAlignment* __this, struct HasCustomAlignment* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN18HasCustomAlignmentD1Ev(
     struct HasCustomAlignment* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct HasCustomAlignment&
+extern "C" struct HasCustomAlignment*
 __rust_thunk___ZN18HasCustomAlignmentaSERKS_(
     struct HasCustomAlignment* __this,
-    const struct HasCustomAlignment& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct HasCustomAlignment* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct HasCustomAlignment&
+extern "C" struct HasCustomAlignment*
 __rust_thunk___ZN18HasCustomAlignmentaSEOS_(
-    struct HasCustomAlignment* __this, struct HasCustomAlignment&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct HasCustomAlignment* __this, struct HasCustomAlignment* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1Ev(
     struct HasFieldWithCustomAlignment* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1ERKS_(
     struct HasFieldWithCustomAlignment* __this,
-    const struct HasFieldWithCustomAlignment& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct HasFieldWithCustomAlignment* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
     struct HasFieldWithCustomAlignment* __this,
-    struct HasFieldWithCustomAlignment&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct HasFieldWithCustomAlignment* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentD1Ev(
     struct HasFieldWithCustomAlignment* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct HasFieldWithCustomAlignment&
+extern "C" struct HasFieldWithCustomAlignment*
 __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(
     struct HasFieldWithCustomAlignment* __this,
-    const struct HasFieldWithCustomAlignment& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct HasFieldWithCustomAlignment* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct HasFieldWithCustomAlignment&
+extern "C" struct HasFieldWithCustomAlignment*
 __rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_(
     struct HasFieldWithCustomAlignment* __this,
-    struct HasFieldWithCustomAlignment&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct HasFieldWithCustomAlignment* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1Ev(
     struct InheritsFromBaseWithCustomAlignment* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1ERKS_(
     struct InheritsFromBaseWithCustomAlignment* __this,
-    const struct InheritsFromBaseWithCustomAlignment& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct InheritsFromBaseWithCustomAlignment* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
     struct InheritsFromBaseWithCustomAlignment* __this,
-    struct InheritsFromBaseWithCustomAlignment&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct InheritsFromBaseWithCustomAlignment* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentD1Ev(
     struct InheritsFromBaseWithCustomAlignment* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct InheritsFromBaseWithCustomAlignment&
+extern "C" struct InheritsFromBaseWithCustomAlignment*
 __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
     struct InheritsFromBaseWithCustomAlignment* __this,
-    const struct InheritsFromBaseWithCustomAlignment& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct InheritsFromBaseWithCustomAlignment* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct InheritsFromBaseWithCustomAlignment&
+extern "C" struct InheritsFromBaseWithCustomAlignment*
 __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_(
     struct InheritsFromBaseWithCustomAlignment* __this,
-    struct InheritsFromBaseWithCustomAlignment&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct InheritsFromBaseWithCustomAlignment* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1Ev(
     struct HasCustomAlignmentWithGnuAttr* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1ERKS_(
     struct HasCustomAlignmentWithGnuAttr* __this,
-    const struct HasCustomAlignmentWithGnuAttr& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct HasCustomAlignmentWithGnuAttr* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
     struct HasCustomAlignmentWithGnuAttr* __this,
-    struct HasCustomAlignmentWithGnuAttr&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct HasCustomAlignmentWithGnuAttr* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrD1Ev(
     struct HasCustomAlignmentWithGnuAttr* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct HasCustomAlignmentWithGnuAttr&
+extern "C" struct HasCustomAlignmentWithGnuAttr*
 __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(
     struct HasCustomAlignmentWithGnuAttr* __this,
-    const struct HasCustomAlignmentWithGnuAttr& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct HasCustomAlignmentWithGnuAttr* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct HasCustomAlignmentWithGnuAttr&
+extern "C" struct HasCustomAlignmentWithGnuAttr*
 __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_(
     struct HasCustomAlignmentWithGnuAttr* __this,
-    struct HasCustomAlignmentWithGnuAttr&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct HasCustomAlignmentWithGnuAttr* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(struct HasCustomAlignment) == 64);

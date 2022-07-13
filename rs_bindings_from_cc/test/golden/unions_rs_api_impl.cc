@@ -12,129 +12,118 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN10EmptyUnionC1Ev(union EmptyUnion* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1ERKS_(
-    union EmptyUnion* __this, const union EmptyUnion& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union EmptyUnion* __this, const union EmptyUnion* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionC1EOS_(
-    union EmptyUnion* __this, union EmptyUnion&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union EmptyUnion* __this, union EmptyUnion* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN10EmptyUnionD1Ev(union EmptyUnion* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" union EmptyUnion& __rust_thunk___ZN10EmptyUnionaSERKS_(
-    union EmptyUnion* __this, const union EmptyUnion& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSERKS_(
+    union EmptyUnion* __this, const union EmptyUnion* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" union EmptyUnion& __rust_thunk___ZN10EmptyUnionaSEOS_(
-    union EmptyUnion* __this, union EmptyUnion&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSEOS_(
+    union EmptyUnion* __this, union EmptyUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN10NontrivialD1Ev(struct Nontrivial* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct TriviallyCopyableButNontriviallyDestructible&
+extern "C" struct TriviallyCopyableButNontriviallyDestructible*
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
-    const struct TriviallyCopyableButNontriviallyDestructible& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct TriviallyCopyableButNontriviallyDestructible* __param_0) {
+  return &__this->operator=(*__param_0);
 }
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleC1ERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
-    const struct TriviallyCopyableButNontriviallyDestructible& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct TriviallyCopyableButNontriviallyDestructible* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleD1Ev(
     struct TriviallyCopyableButNontriviallyDestructible* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1Ev(
     union NonEmptyUnion* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1ERKS_(
-    union NonEmptyUnion* __this, const union NonEmptyUnion& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union NonEmptyUnion* __this, const union NonEmptyUnion* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
-    union NonEmptyUnion* __this, union NonEmptyUnion&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN13NonEmptyUnionD1Ev(
     union NonEmptyUnion* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" union NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSERKS_(
-    union NonEmptyUnion* __this, const union NonEmptyUnion& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSERKS_(
+    union NonEmptyUnion* __this, const union NonEmptyUnion* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" union NonEmptyUnion& __rust_thunk___ZN13NonEmptyUnionaSEOS_(
-    union NonEmptyUnion* __this, union NonEmptyUnion&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSEOS_(
+    union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN12NonCopyUnionD1Ev(
     union NonCopyUnion* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN13NonCopyUnion2C1ERKS_(
-    union NonCopyUnion2* __this, const union NonCopyUnion2& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union NonCopyUnion2* __this, const union NonCopyUnion2* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN13NonCopyUnion2C1EOS_(
-    union NonCopyUnion2* __this, union NonCopyUnion2&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union NonCopyUnion2* __this, union NonCopyUnion2* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" union NonCopyUnion2& __rust_thunk___ZN13NonCopyUnion2aSERKS_(
-    union NonCopyUnion2* __this, const union NonCopyUnion2& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSERKS_(
+    union NonCopyUnion2* __this, const union NonCopyUnion2* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" union NonCopyUnion2& __rust_thunk___ZN13NonCopyUnion2aSEOS_(
-    union NonCopyUnion2* __this, union NonCopyUnion2&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSEOS_(
+    union NonCopyUnion2* __this, union NonCopyUnion2* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
     union UnionWithOpaqueField* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1ERKS_(
     union UnionWithOpaqueField* __this,
-    const union UnionWithOpaqueField& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const union UnionWithOpaqueField* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(
-    union UnionWithOpaqueField* __this,
-    union UnionWithOpaqueField&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    union UnionWithOpaqueField* __this, union UnionWithOpaqueField* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldD1Ev(
     union UnionWithOpaqueField* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" union UnionWithOpaqueField&
+extern "C" union UnionWithOpaqueField*
 __rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_(
     union UnionWithOpaqueField* __this,
-    const union UnionWithOpaqueField& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const union UnionWithOpaqueField* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" union UnionWithOpaqueField&
+extern "C" union UnionWithOpaqueField*
 __rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(
-    union UnionWithOpaqueField* __this,
-    union UnionWithOpaqueField&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    union UnionWithOpaqueField* __this, union UnionWithOpaqueField* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(union EmptyUnion) == 1);

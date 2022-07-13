@@ -2498,27 +2498,16 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     };
     if let Some(ref name) = ty.name {
         match name.as_str() {
-            "*" => {
+            // Formatting *both* pointers *and* references as pointers, because:
+            // - Pointers and references have the same representation in the ABI.
+            // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++ function
+            //   thunks declared as `extern "C"` (see b/238681766).
+            "*" | "&" | "&&" => {
                 if ty.type_args.len() != 1 {
                     bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
                 }
-                assert_eq!(ty.type_args.len(), 1);
                 let nested_type = format_cc_type(&ty.type_args[0], ir)?;
                 Ok(quote! {#nested_type * #const_fragment})
-            }
-            "&" => {
-                if ty.type_args.len() != 1 {
-                    bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
-                }
-                let nested_type = format_cc_type(&ty.type_args[0], ir)?;
-                Ok(quote! {#nested_type &})
-            }
-            "&&" => {
-                if ty.type_args.len() != 1 {
-                    bail!("Invalid rvalue reference type (need exactly 1 type argument): {:?}", ty);
-                }
-                let nested_type = format_cc_type(&ty.type_args[0], ir)?;
-                Ok(quote! {#nested_type &&})
             }
             cc_type_name => match cc_type_name.strip_prefix("#funcValue ") {
                 None => {
@@ -2756,13 +2745,16 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
             .map(|p| format_cc_type(&p.type_.cc_type, &ir))
             .collect::<Result<Vec<_>>>()?;
 
-        let arg_expressions: Vec<_> = param_idents
+        let arg_expressions: Vec<_> = func.params
             .iter()
-            .map(
-                // Forward references along. (If the parameter is a value, not a reference, this
-                // will create an lvalue reference, and still do the right thing.)
-                |ident| quote! {std::forward<decltype(#ident)>(#ident)},
-            )
+            .map(|p| {
+                let ident = format_cc_ident(&p.identifier.identifier);
+                match p.type_.cc_type.name.as_deref() {
+                    Some("&") => quote!{ * #ident },
+                    Some("&&") => quote!{ std::move(* #ident) },
+                    _ => quote! { #ident },
+                }
+            })
             .collect();
 
         // Here, we add a __return parameter if the return type is not trivially
@@ -2806,10 +2798,27 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
         let return_stmt = if !is_trivial_return {
             let out_param = &param_idents[0];
             quote! {crubit::construct_at(#out_param, #return_expr)}
-        } else if func.return_type.cc_type.is_void() {
-            return_expr
         } else {
-            quote! { return #return_expr }
+            match func.return_type.cc_type.name.as_deref() {
+                Some("void") => return_expr,
+                Some("&") => quote! { return & #return_expr },
+                Some("&&") => {
+                    // The code below replicates bits of `format_cc_type`, but formats an rvalue
+                    // reference (which `format_cc_type` would format as a pointer).
+                    // `const_fragment` from `format_cc_type` is ignored - it is not applicable for
+                    // references.
+                    let ty = &func.return_type.cc_type;
+                    if ty.type_args.len() != 1 {
+                        bail!("Invalid reference type (need exactly 1 type argument): {:?}", ty);
+                    }
+                    let nested_type = format_cc_type(&ty.type_args[0], &ir)?;
+                    quote! {
+                        #nested_type && lvalue = #return_expr;
+                        return &lvalue
+                    }
+                },
+                _ => quote! { return #return_expr },
+            }
         };
 
         thunks.push(quote! {
@@ -2977,7 +2986,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" int __rust_thunk___Z3Addii(int a, int b) {
-                    return Add(std::forward<decltype(a)>(a), std::forward<decltype(b)>(b));
+                    return Add(a, b);
                 }
             }
         );
@@ -3009,8 +3018,8 @@ mod tests {
                 #[allow(unused_imports)]
                 use super::*;
                 extern "C" {
-                    pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(param: dependency::ParamStruct)
-                        -> dependency::ReturnStruct;
+                    pub(crate) fn __rust_thunk___Z11DoSomething11ParamStruct(
+                        param: dependency::ParamStruct) -> dependency::ReturnStruct;
                 }
             }}
         );
@@ -3018,8 +3027,9 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" struct ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(struct ParamStruct param) {
-                    return DoSomething(std::forward<decltype(param)>(param));
+                extern "C" struct ReturnStruct __rust_thunk___Z11DoSomething11ParamStruct(
+                        struct ParamStruct param) {
+                    return DoSomething(param);
                 }
             }
         );
@@ -3135,17 +3145,17 @@ mod tests {
                 extern "C" class MyTemplate<int>
                 __rust_thunk___ZN10MyTemplateIiE6CreateEi__2f_2ftest_3atesting_5ftarget(
                         int value) {
-                    return MyTemplate<int>::Create(std::forward<decltype(value)>(value));
+                    return MyTemplate<int>::Create(value);
                 }
             }
         );
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" int const&
+                extern "C" int const*
                 __rust_thunk___ZNK10MyTemplateIiE5valueEv__2f_2ftest_3atesting_5ftarget(
                         const class MyTemplate<int>*__this) {
-                    return __this->value();
+                    return &__this->value();
                 }
             }
         );
@@ -3198,7 +3208,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(struct SomeStruct * __this) {
-                    std :: destroy_at (std::forward<decltype(__this)>(__this)) ;
+                    std::destroy_at(__this);
                 }
             }
         );
@@ -3241,8 +3251,8 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z3fooR1S(struct S& s) {
-                    foo(std::forward<decltype(s)>(s));
+                extern "C" void __rust_thunk___Z3fooR1S(struct S* s) {
+                    foo(*s);
                 }
             }
         );
@@ -3256,8 +3266,8 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z3fooRK1S(const struct S& s) {
-                    foo(std::forward<decltype(s)>(s));
+                extern "C" void __rust_thunk___Z3fooRK1S(const struct S* s) {
+                    foo(*s);
                 }
             }
         );
@@ -3272,7 +3282,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___Z3fooj(unsigned int i) {
-                    foo(std::forward<decltype(i)>(i));
+                    foo(i);
                 }
             }
         );
@@ -3311,7 +3321,7 @@ mod tests {
             quote! {
                 extern "C" int __rust_thunk___ZNK10SomeStruct9some_funcEi(
                         const struct SomeStruct* __this, int arg) {
-                    return __this->some_func(std::forward<decltype(arg)>(arg));
+                    return __this->some_func(arg);
                 }
             }
         );
@@ -3541,7 +3551,7 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" int* __rust_thunk___Z5DerefPKPi(int* const * p) {
-                    return Deref(std::forward<decltype(p)>(p));
+                    return Deref(p);
                 }
             }
         );
@@ -3581,7 +3591,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z1fPKc(char const * str){ f(std::forward<decltype(str)>(str)) ; }
+                extern "C" void __rust_thunk___Z1fPKc(char const * str){ f(str); }
             }
         );
         Ok(())
@@ -4445,8 +4455,8 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-            extern "C" union SomeUnion&__rust_thunk___ZN9SomeUnionaSERKS_(
-                union SomeUnion*__this, const union SomeUnion&__param_0) { ... }
+                extern "C" union SomeUnion* __rust_thunk___ZN9SomeUnionaSERKS_(
+                    union SomeUnion*__this, const union SomeUnion* __param_0) { ... }
             }
         );
         assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(union SomeUnion)==8) });
@@ -4888,7 +4898,7 @@ mod tests {
             quote! {
                 extern "C" float __rust_thunk___Z31f_vectorcall_calling_conventionff(
                     float p1, float p2) {
-                        return f_vectorcall_calling_convention (std::forward<decltype(p1)>(p1), std::forward<decltype(p2)>(p2));
+                        return f_vectorcall_calling_convention(p1, p2);
                 }
             }
         );
@@ -5048,7 +5058,7 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___ZN20DefaultedConstructorC1Ev(
                         struct DefaultedConstructor* __this) {
-                    crubit::construct_at (std::forward<decltype(__this)>(__this)) ;
+                    crubit::construct_at(__this);
                 }
             }
         );
@@ -5238,8 +5248,8 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" bool __rust_thunk___ZNK10SomeStructeqERKS_(
-                        const struct SomeStruct* __this, const struct SomeStruct& other) {
-                    return __this->operator==(std::forward<decltype(other)>(other));
+                        const struct SomeStruct* __this, const struct SomeStruct* other) {
+                    return __this->operator==(*other);
                 }
             }
         );
@@ -5551,7 +5561,7 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t){ f (std::forward<decltype(t)>(t)) ; }
+                extern "C" void __rust_thunk___Z1fi(MyTypedefDecl t) { f(t); }
             }
         );
         Ok(())
@@ -6019,7 +6029,7 @@ mod tests {
             r#"#pragma clang lifetime_elision
             // This type must be `!Unpin`.
             struct Nontrivial {~Nontrivial();};
-            
+
             Nontrivial ReturnsByValue(const int& x, const int& y);
             "#,
         )?;
@@ -6042,10 +6052,9 @@ mod tests {
         assert_cc_matches!(
             rs_api_impl,
             quote! {
-                extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(struct Nontrivial* __return, int const& x, int const& y) {
-                    crubit::construct_at(__return, ReturnsByValue(
-                        std::forward<decltype(x)>(x),
-                        std::forward<decltype(y)>(y)));
+                extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(
+                        struct Nontrivial* __return, int const* x, int const* y) {
+                    crubit::construct_at(__return, ReturnsByValue(*x, *y));
                 }
             }
         );
@@ -6093,14 +6102,80 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___ZN10NontrivialaSERKS_(
                     struct Nontrivial* __return, struct Nontrivial* __this,
-                    const struct Nontrivial& other
+                    const struct Nontrivial* other
                 ) {
                     crubit::construct_at(
                         __return,
-                        __this->operator=(std::forward<decltype(other)>(other)));
+                        __this->operator=(*other));
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_function_returning_rvalue_reference() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                // Inline to force generation (and test coverage) of C++ thunks.
+                inline SomeStruct&& GetRValueReference() {
+                  return static_cast<SomeStruct&&>(*this);
+                }
+                int field;
+            };
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl SomeStruct {
+                    ...
+                    #[inline(always)]
+                    pub fn GetRValueReference<'a>(&'a mut self)
+                            -> ::ctor::RvalueReference<'a, crate::SomeStruct> {
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN10SomeStruct18GetRValueReferenceEv(self)
+                        }
+                    }
+                }
+            }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                extern "C" {
+                    ...
+                    pub(crate) fn __rust_thunk___ZN10SomeStruct18GetRValueReferenceEv<'a>(
+                            __this: &'a mut crate::SomeStruct
+                       ) -> ::ctor::RvalueReference<'a, crate::SomeStruct>;
+                    ...
+                }
+            }
+        );
+
+        // Note that you can't just convert directly from xvalue to lvalue:
+        //
+        //     return &static_cast<SomeStruct&>(__this->GetRValueReference());
+        //
+        // For the above, Clang will emit an error that "non-const lvalue reference to
+        // type 'struct SomeStruct' cannot bind to a temporary of type
+        // 'SomeStruct'" (This is somewhat misleading, because there are no
+        // temporaries here).  We must first bind the return value to a name
+        // (`lvalue` below), so that it becomes an lvalue. Only then can it be
+        // converted to a pointer.
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" struct SomeStruct*
+                __rust_thunk___ZN10SomeStruct18GetRValueReferenceEv(struct SomeStruct* __this) {
+                    struct SomeStruct&& lvalue = __this->GetRValueReference();
+                    return &lvalue;
+                }
+            }
+        );
+
         Ok(())
     }
 
@@ -6277,7 +6352,7 @@ mod tests {
                     struct test_namespace_bindings::S* __this) {...}
                 ...
                 extern "C" void __rust_thunk___Z4useSN23test_namespace_bindings1SE(
-                    struct test_namespace_bindings::S s) { useS(std::forward<decltype(s)>(s)); }
+                    struct test_namespace_bindings::S s) { useS(s); }
                 ...
             }
         );

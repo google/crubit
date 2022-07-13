@@ -12,44 +12,39 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN10SomeStructC1Ev(struct SomeStruct* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN10SomeStructC1ERKS_(
-    struct SomeStruct* __this, const struct SomeStruct& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct SomeStruct* __this, const struct SomeStruct* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
-    struct SomeStruct* __this, struct SomeStruct&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct SomeStruct* __this, struct SomeStruct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN10SomeStructD1Ev(struct SomeStruct* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct SomeStruct& __rust_thunk___ZN10SomeStructaSERKS_(
-    struct SomeStruct* __this, const struct SomeStruct& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSERKS_(
+    struct SomeStruct* __this, const struct SomeStruct* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct SomeStruct& __rust_thunk___ZN10SomeStructaSEOS_(
-    struct SomeStruct* __this, struct SomeStruct&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSEOS_(
+    struct SomeStruct* __this, struct SomeStruct* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1ERKS_(
     struct FieldTypeTestStruct* __this,
-    const struct FieldTypeTestStruct& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct FieldTypeTestStruct* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
-    struct FieldTypeTestStruct* __this,
-    struct FieldTypeTestStruct&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct FieldTypeTestStruct* __this, struct FieldTypeTestStruct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructD1Ev(
     struct FieldTypeTestStruct* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();

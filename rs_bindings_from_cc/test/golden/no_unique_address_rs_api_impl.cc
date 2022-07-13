@@ -12,123 +12,111 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN6StructC1Ev(struct Struct* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN6StructC1ERKS_(
-    struct Struct* __this, const struct Struct& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct Struct* __this, const struct Struct* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN6StructC1EOS_(struct Struct* __this,
-                                               struct Struct&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+                                               struct Struct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN6StructD1Ev(struct Struct* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct Struct& __rust_thunk___ZN6StructaSERKS_(
-    struct Struct* __this, const struct Struct& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" struct Struct* __rust_thunk___ZN6StructaSERKS_(
+    struct Struct* __this, const struct Struct* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct Struct& __rust_thunk___ZN6StructaSEOS_(
-    struct Struct* __this, struct Struct&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+extern "C" struct Struct* __rust_thunk___ZN6StructaSEOS_(
+    struct Struct* __this, struct Struct* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" struct Struct __rust_thunk___ZN6Struct4MakeEic(int f1, char f2) {
-  return Struct::Make(std::forward<decltype(f1)>(f1),
-                      std::forward<decltype(f2)>(f2));
+  return Struct::Make(f1, f2);
 }
 extern "C" void __rust_thunk___ZN20PaddingBetweenFieldsC1Ev(
     struct PaddingBetweenFields* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN20PaddingBetweenFieldsC1ERKS_(
     struct PaddingBetweenFields* __this,
-    const struct PaddingBetweenFields& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct PaddingBetweenFields* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN20PaddingBetweenFieldsC1EOS_(
     struct PaddingBetweenFields* __this,
-    struct PaddingBetweenFields&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct PaddingBetweenFields* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN20PaddingBetweenFieldsD1Ev(
     struct PaddingBetweenFields* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct PaddingBetweenFields&
+extern "C" struct PaddingBetweenFields*
 __rust_thunk___ZN20PaddingBetweenFieldsaSERKS_(
     struct PaddingBetweenFields* __this,
-    const struct PaddingBetweenFields& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct PaddingBetweenFields* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct PaddingBetweenFields&
+extern "C" struct PaddingBetweenFields*
 __rust_thunk___ZN20PaddingBetweenFieldsaSEOS_(
     struct PaddingBetweenFields* __this,
-    struct PaddingBetweenFields&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct PaddingBetweenFields* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" struct PaddingBetweenFields
 __rust_thunk___ZN20PaddingBetweenFields4MakeEci(char f1, int f2) {
-  return PaddingBetweenFields::Make(std::forward<decltype(f1)>(f1),
-                                    std::forward<decltype(f2)>(f2));
+  return PaddingBetweenFields::Make(f1, f2);
 }
 extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
     struct FieldInTailPadding_InnerStruct* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
     struct FieldInTailPadding_InnerStruct* __this,
-    const struct FieldInTailPadding_InnerStruct& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct FieldInTailPadding_InnerStruct* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
-extern "C" struct FieldInTailPadding_InnerStruct&
+extern "C" struct FieldInTailPadding_InnerStruct*
 __rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_(
     struct FieldInTailPadding_InnerStruct* __this,
-    const struct FieldInTailPadding_InnerStruct& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct FieldInTailPadding_InnerStruct* __param_0) {
+  return &__this->operator=(*__param_0);
 }
 extern "C" void __rust_thunk___ZN30FieldInTailPadding_InnerStructD1Ev(
     struct FieldInTailPadding_InnerStruct* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
     struct FieldInTailPadding* __this,
-    const struct FieldInTailPadding& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct FieldInTailPadding* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1EOS_(
-    struct FieldInTailPadding* __this, struct FieldInTailPadding&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct FieldInTailPadding* __this, struct FieldInTailPadding* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingD1Ev(
     struct FieldInTailPadding* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct FieldInTailPadding&
+extern "C" struct FieldInTailPadding*
 __rust_thunk___ZN18FieldInTailPaddingaSERKS_(
     struct FieldInTailPadding* __this,
-    const struct FieldInTailPadding& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct FieldInTailPadding* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct FieldInTailPadding&
+extern "C" struct FieldInTailPadding*
 __rust_thunk___ZN18FieldInTailPaddingaSEOS_(
-    struct FieldInTailPadding* __this, struct FieldInTailPadding&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct FieldInTailPadding* __this, struct FieldInTailPadding* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN18FieldInTailPaddingC1Eicc(
     struct FieldInTailPadding* __this, int inner_int, char inner_char,
     char outer_char) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(inner_int)>(inner_int),
-                       std::forward<decltype(inner_char)>(inner_char),
-                       std::forward<decltype(outer_char)>(outer_char));
+  crubit::construct_at(__this, inner_int, inner_char, outer_char);
 }
 
 static_assert(sizeof(struct Struct) == 8);

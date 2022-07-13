@@ -13,33 +13,31 @@
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1Ev(
     struct UserOfImportedType* __this) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this));
+  crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1ERKS_(
     struct UserOfImportedType* __this,
-    const struct UserOfImportedType& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    const struct UserOfImportedType* __param_0) {
+  crubit::construct_at(__this, *__param_0);
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeC1EOS_(
-    struct UserOfImportedType* __this, struct UserOfImportedType&& __param_0) {
-  crubit::construct_at(std::forward<decltype(__this)>(__this),
-                       std::forward<decltype(__param_0)>(__param_0));
+    struct UserOfImportedType* __this, struct UserOfImportedType* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN18UserOfImportedTypeD1Ev(
     struct UserOfImportedType* __this) {
-  std::destroy_at(std::forward<decltype(__this)>(__this));
+  std::destroy_at(__this);
 }
-extern "C" struct UserOfImportedType&
+extern "C" struct UserOfImportedType*
 __rust_thunk___ZN18UserOfImportedTypeaSERKS_(
     struct UserOfImportedType* __this,
-    const struct UserOfImportedType& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    const struct UserOfImportedType* __param_0) {
+  return &__this->operator=(*__param_0);
 }
-extern "C" struct UserOfImportedType&
+extern "C" struct UserOfImportedType*
 __rust_thunk___ZN18UserOfImportedTypeaSEOS_(
-    struct UserOfImportedType* __this, struct UserOfImportedType&& __param_0) {
-  return __this->operator=(std::forward<decltype(__param_0)>(__param_0));
+    struct UserOfImportedType* __this, struct UserOfImportedType* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(struct UserOfImportedType) == 8);
