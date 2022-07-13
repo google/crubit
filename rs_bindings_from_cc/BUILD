@@ -335,7 +335,9 @@ cc_library(
         ":cc_ir",
         ":ir_from_cc",
         "//common:cc_ffi_types",
+        "//common:check",
         "@absl//absl/status:statusor",
+        "@absl//absl/strings",
         "@llvm-project//llvm:Support",
     ],
 )
