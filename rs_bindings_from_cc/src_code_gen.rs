@@ -353,6 +353,8 @@ enum ImplKind {
         record_name: Ident,
         /// For example, `quote!{ From<i32> }`.
         trait_name: TraitName,
+        /// Reference style for the `impl` block and self parameters.
+        impl_for: ImplFor,
 
         /// The generic params of trait `impl` (e.g. `<'b>`). These start
         /// empty and only later are mutated into the correct value.
@@ -360,6 +362,10 @@ enum ImplKind {
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
         format_first_param_as_self: bool,
+
+        /// Associated types defined in the `impl` block (e.g. `type Output =
+        /// i32;`).
+        associated_types: Vec<ImplAssociatedType>,
     },
 }
 impl ImplKind {
@@ -371,8 +377,10 @@ impl ImplKind {
         ImplKind::Trait {
             trait_name,
             record_name,
+            impl_for: ImplFor::T,
             trait_generic_params: quote! {},
             format_first_param_as_self,
+            associated_types: vec![],
         }
     }
     fn format_first_param_as_self(&self) -> bool {
@@ -393,6 +401,43 @@ impl ImplKind {
     }
 }
 
+/// Whether the impl block is for T, and the receivers take self by reference,
+/// or the impl block is for a reference to T, and the method receivers take
+/// self by value.
+enum ImplFor {
+    /// Implement the trait for `T` directly.
+    ///
+    /// ```
+    /// impl Trait for T {
+    ///     fn const_method<'a>(&'a self);
+    ///     fn mut_method<'a>(&'a mut self);
+    ///     fn pin_method<'a>(Pin<&'a mut self>);
+    /// }
+    /// ```
+    T,
+    /// Implement the trait for `&T`, `&mut T`, or `Pin<&mut T>`, depending on
+    /// the Rust type of the self parameter.
+    ///
+    /// ```
+    /// impl<'a> Trait for &'a T {
+    ///     fn const_method(self);
+    /// }
+    /// impl<'a> Trait for &'a mut UnpinT {
+    ///     fn mut_method(self);
+    /// }
+    /// impl<'a> Trait for Pin<&'a mut NonUnpinT> {
+    ///     fn pin_method(self);
+    /// }
+    /// ```
+    RefT,
+}
+
+/// An associated type in a trait `impl` block.
+struct ImplAssociatedType {
+    name: Ident,
+    value: RsTypeKind,
+}
+
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// Returns:
@@ -402,6 +447,7 @@ impl ImplKind {
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
 fn api_func_shape(
+    db: &dyn BindingsGenerator,
     func: &Func,
     ir: &IR,
     param_types: &[RsTypeKind],
@@ -466,6 +512,29 @@ fn api_func_shape(
                 /* format_first_param_as_self= */ true,
             );
             func_name = make_rs_ident("assign");
+        }
+        UnqualifiedIdentifier::Operator(op) if op.name == "+" && param_types.len() == 2 => {
+            // TODO(b/219826128): implement for non-member functions
+            let record = maybe_record
+                .ok_or_else(|| anyhow!("operator+ must be a member function (b/219826128)."))?;
+            impl_kind = ImplKind::Trait {
+                record_name: make_rs_ident(&record.rs_name),
+                trait_name: TraitName::Other {
+                    name: quote! {::std::ops::Add},
+                    params: vec![param_types[1].clone()],
+                    is_unsafe_fn: false,
+                },
+                impl_for: ImplFor::RefT,
+                trait_generic_params: quote! {},
+                format_first_param_as_self: true,
+                associated_types: vec![ImplAssociatedType {
+                    name: make_rs_ident("Output"),
+                    value: db
+                        .rs_type_kind(func.return_type.rs_type.clone())
+                        .with_context(|| format!("Failed to process return type on {:?}", func))?,
+                }],
+            };
+            func_name = make_rs_ident("add");
         }
         UnqualifiedIdentifier::Operator(op) => {
             bail!(
@@ -636,7 +705,7 @@ fn generate_func(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(&func, &ir, &param_types)?
+    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(db, &func, &ir, &param_types)?
     {
         values
     } else {
@@ -718,11 +787,26 @@ fn generate_func(
         if impl_kind.format_first_param_as_self() {
             let first_api_param = maybe_first_api_param
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            let self_decl = first_api_param.format_as_self_param()?;
             // Presence of element #0 is verified by `ok_or_else` on
             // `maybe_first_api_param` above.
-            api_params[0] = self_decl;
-            thunk_args[0] = quote! { self };
+            match impl_kind {
+                ImplKind::None { .. } => unreachable!(),
+                ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. } => {
+                    // In the ImplFor::T reference style (which is implied for ImplKind::Struct) the
+                    // impl block is for `T`. The `self` parameter has a type determined by the
+                    // first parameter (typically a reference of some kind) and can be passed to a
+                    // thunk via the expression `self`.
+                    api_params[0] = first_api_param.format_as_self_param()?;
+                    thunk_args[0] = quote! { self };
+                }
+                ImplKind::Trait { impl_for: ImplFor::RefT, .. } => {
+                    // In the ImplFor::RefT reference style the impl block is for a reference type
+                    // referring to T (`&T`, `&mut T`, or `Pin<&mut T>` so a bare `self` parameter
+                    // has that type and can be passed to a thunk via the expression `self`.
+                    api_params[0] = quote! { self };
+                    thunk_args[0] = quote! { self };
+                }
+            }
         }
 
         // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
@@ -789,8 +873,17 @@ fn generate_func(
         };
 
         let fn_generic_params: TokenStream;
-        if let ImplKind::Trait { trait_name, trait_generic_params, .. } = &mut impl_kind {
-            let trait_lifetimes: HashSet<LifetimeId> = trait_name.lifetimes().collect();
+        if let ImplKind::Trait { trait_name, trait_generic_params, impl_for, .. } = &mut impl_kind {
+            // When the impl block is for some kind of reference to T, consider the lifetime
+            // parameters on the self parameter to be trait lifetimes so they can be introduced
+            // before they are used.
+            let first_param_lifetimes = match (impl_for, param_types.first()) {
+                (ImplFor::RefT, Some(first_param)) => Some(first_param.lifetimes()),
+                _ => None,
+            };
+
+            let trait_lifetimes: HashSet<LifetimeId> =
+                trait_name.lifetimes().chain(first_param_lifetimes.into_iter().flatten()).collect();
             fn_generic_params = format_generic_params(
                 lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(&lifetime.id)),
             );
@@ -826,8 +919,15 @@ fn generate_func(
                 function_path: syn::parse2(quote! { #record_name :: #func_name })?,
             };
         }
-        ImplKind::Trait { trait_name, record_name, trait_generic_params, .. } => {
-            let extra_body;
+        ImplKind::Trait {
+            trait_name,
+            record_name,
+            impl_for,
+            trait_generic_params,
+            associated_types,
+            ..
+        } => {
+            let mut extra_body;
             let extra_items;
             match &trait_name {
                 TraitName::CtorNew(params) => {
@@ -857,9 +957,21 @@ fn generate_func(
                     extra_items = quote! {};
                 }
             };
+            let impl_for = match impl_for {
+                ImplFor::T => quote! { #record_name },
+                ImplFor::RefT => {
+                    let param = &param_types[0];
+                    quote! { #param }
+                }
+            };
+            for ImplAssociatedType { name, value } in associated_types {
+                extra_body.extend(quote! {
+                    type #name = #value;
+                });
+            }
             api_func = quote! {
                 #doc_comment
-                impl #trait_generic_params #trait_name for #record_name {
+                impl #trait_generic_params #trait_name for #impl_for {
                     #extra_body
                     #api_func_def
                 }
@@ -1093,7 +1205,13 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                     // Regular field
                     Ok(_rs_type) => Some(field.offset + field.size),
                     // Opaque field
-                    Err(_error) => if record.is_union() { Some(field.size) } else { None },
+                    Err(_error) => {
+                        if record.is_union() {
+                            Some(field.size)
+                        } else {
+                            None
+                        }
+                    }
                 },
                 vec![format!(
                     "{} : {} bits",

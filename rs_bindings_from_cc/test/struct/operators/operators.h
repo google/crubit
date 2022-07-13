@@ -65,4 +65,61 @@ bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
 
 }  // namespace some_other_namespace
 
+//////////////////////////////////////////////////////////////////////
+
+struct AddableConstMemberInt {
+  // impl Add<i32> for &AddableConstMemberInt { type Output = i32; .. }
+  int operator+(int rhs) const { return i + rhs; }
+
+  int i;
+};
+
+struct AddableConstMemberByRef {
+  // impl Add<&AddableConstMemberByRef> for &AddableConstMemberByRef {
+  //     type Output = AddableConstMemberByRef;
+  //     ..
+  // }
+  AddableConstMemberByRef operator+(const AddableConstMemberByRef& rhs) const {
+    return AddableConstMemberByRef{i + rhs.i};
+  }
+
+  int i;
+};
+
+struct AddableNonConstMemberByRef final {
+  // impl Add<&AddableNonConstMemberByRef> for &mut AddableNonConstMemberByRef {
+  //     type Output = AddableNonConstMemberByRef;
+  //     ..
+  // }
+  AddableNonConstMemberByRef operator+(const AddableNonConstMemberByRef& rhs) {
+    return AddableNonConstMemberByRef{i + rhs.i};
+  }
+
+  int i;
+};
+
+struct AddableConstMemberByValue {
+  // impl Add<AddableConstMemberByValue> for &AddableConstMemberByValue {
+  //     type Output = AddableConstMemberByValue;
+  //     ..
+  // }
+  AddableConstMemberByValue operator+(AddableConstMemberByValue rhs) const {
+    return AddableConstMemberByValue{i + rhs.i};
+  }
+
+  int i;
+};
+
+struct AddableNonConstMemberByValue final {
+  // impl Add<AddableNonConstMemberByValue> for &AddableNonConstMemberByValue {
+  //     type Output = AddableNonConstMemberByValue;
+  //     ..
+  // }
+  AddableNonConstMemberByValue operator+(AddableNonConstMemberByValue rhs) {
+    return AddableNonConstMemberByValue{i + rhs.i};
+  }
+
+  int i;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_
