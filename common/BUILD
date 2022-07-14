@@ -60,8 +60,6 @@ cc_library(
     hdrs = ["check.h"],
     deps = [
         "@absl//absl/base:core_headers",
-        "@absl//absl/strings",
-        "@absl//absl/types:source_location",
         "@llvm-project//llvm:Support",
     ],
 )
