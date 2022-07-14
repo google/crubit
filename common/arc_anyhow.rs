@@ -119,7 +119,9 @@ impl std::error::Error for StdError {
         self.0.source()
     }
     fn backtrace(&self) -> Option<&std::backtrace::Backtrace> {
-        self.0.backtrace()
+        // dereference past the inherent backtrace impl added to anyhow::Error in some
+        // compilation modes.
+        (**self.0).backtrace()
     }
 }
 
