@@ -15,6 +15,7 @@ rust_test(
     srcs = ["test.rs"],
     cc_deps = [":operators"],
     deps = [
+        "//rs_bindings_from_cc/support:ctor",
         "@crate_index//:static_assertions",
     ],
 )

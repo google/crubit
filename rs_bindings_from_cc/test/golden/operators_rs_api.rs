@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:operators_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls, type_alias_impl_trait)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -251,6 +251,101 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::Addab
     }
 }
 
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[repr(C, align(4))]
+pub struct AddableConstMemberNonunpin {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddableConstMemberNonunpin"),
+    crate::AddableConstMemberNonunpin
+);
+
+impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
+
+impl<'b> ::ctor::CtorNew<&'b crate::AddableConstMemberNonunpin> for AddableConstMemberNonunpin {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::AddableConstMemberNonunpin) -> Self::CtorType {
+        let __param_0 = args;
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            },
+        )
+    }
+}
+impl<'b> ::ctor::CtorNew<(&'b crate::AddableConstMemberNonunpin,)> for AddableConstMemberNonunpin {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::AddableConstMemberNonunpin,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'b crate::AddableConstMemberNonunpin>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::Assign<&'b crate::AddableConstMemberNonunpin> for AddableConstMemberNonunpin {
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::AddableConstMemberNonunpin,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMemberNonunpin>
+    for &'a crate::AddableConstMemberNonunpin
+{
+    type Output = impl ::ctor::Ctor<Output = crate::AddableConstMemberNonunpin>
+        + ::ctor::Captures<'a>
+        + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn add(self, rhs: &'b crate::AddableConstMemberNonunpin) -> Self::Output {
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+                >| {
+                    crate::detail::__rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        self,
+                        rhs,
+                    );
+                },
+            )
+        }
+    }
+}
+
+impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(self)
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
 
 mod detail {
@@ -306,6 +401,25 @@ mod detail {
         pub(crate) fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
             __this: &'a crate::AddableReturnsVoid,
             rhs: &'b crate::AddableReturnsVoid,
+        );
+        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+        );
+        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+            __param_0: &'b crate::AddableConstMemberNonunpin,
+        );
+        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
+            __param_0: &'b crate::AddableConstMemberNonunpin,
+        ) -> ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>;
+        pub(crate) fn __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_<'a, 'b>(
+            __return: &mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+            __this: &'a crate::AddableConstMemberNonunpin,
+            rhs: &'b crate::AddableConstMemberNonunpin,
+        );
+        pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
         );
     }
 }
@@ -376,3 +490,14 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableReturnsVoid: Drop);
 };
 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::AddableReturnsVoid, field_) == 0);
+
+const _: () = assert!(::std::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddableConstMemberNonunpin: Copy);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableConstMemberNonunpin: Drop);
+};
+const _: () =
+    assert!(memoffset_unstable_const::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);

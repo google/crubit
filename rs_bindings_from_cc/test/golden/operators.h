@@ -44,4 +44,14 @@ class AddableReturnsVoid final {
   int field_;
 };
 
+class AddableConstMemberNonunpin final {
+ public:
+  AddableConstMemberNonunpin operator+(
+      const AddableConstMemberNonunpin& rhs) const;
+  ~AddableConstMemberNonunpin() {}
+
+ private:
+  int field_;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_

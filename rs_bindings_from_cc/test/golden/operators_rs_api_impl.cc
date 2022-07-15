@@ -143,6 +143,31 @@ __rust_thunk___ZN18AddableReturnsVoidaSEOS_(
     class AddableReturnsVoid* __this, class AddableReturnsVoid* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
+    class AddableConstMemberNonunpin* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
+    class AddableConstMemberNonunpin* __this,
+    const class AddableConstMemberNonunpin* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" class AddableConstMemberNonunpin*
+__rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_(
+    class AddableConstMemberNonunpin* __this,
+    const class AddableConstMemberNonunpin* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" void __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
+    class AddableConstMemberNonunpin* __return,
+    const class AddableConstMemberNonunpin* __this,
+    const class AddableConstMemberNonunpin* rhs) {
+  crubit::construct_at(__return, __this->operator+(*rhs));
+}
+extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(
+    class AddableConstMemberNonunpin* __this) {
+  std::destroy_at(__this);
+}
 
 static_assert(sizeof(class AddableConstMember) == 4);
 static_assert(alignof(class AddableConstMember) == 4);
@@ -158,5 +183,8 @@ static_assert(alignof(class AddableFree) == 1);
 
 static_assert(sizeof(class AddableReturnsVoid) == 4);
 static_assert(alignof(class AddableReturnsVoid) == 4);
+
+static_assert(sizeof(class AddableConstMemberNonunpin) == 4);
+static_assert(alignof(class AddableConstMemberNonunpin) == 4);
 
 #pragma clang diagnostic pop

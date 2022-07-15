@@ -101,4 +101,13 @@ mod tests {
         &mut s1 + &s2;
         assert_eq!(s1.i, 33);
     }
+
+    #[test]
+    fn test_add_returns_nontrivial() {
+        ctor::emplace! {
+            let s1 = ctor::ctor!(AddableReturnsNontrivial {i: 11});
+            let s2 = ctor::ctor!(AddableReturnsNontrivial {i: 22});
+        }
+        assert_eq!(ctor::emplace!(&*s1 + &*s2).i, 33);
+    }
 }
