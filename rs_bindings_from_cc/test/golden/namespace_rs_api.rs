@@ -31,7 +31,7 @@ pub mod test_namespace_bindings {
     // Cannot generate bindings for overloaded function
 
     impl<'b> ::ctor::CtorNew<&'b crate::test_namespace_bindings::S> for S {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(args: &'b crate::test_namespace_bindings::S) -> Self::CtorType {
             let __param_0 = args;
@@ -46,7 +46,7 @@ pub mod test_namespace_bindings {
         }
     }
     impl<'b> ::ctor::CtorNew<(&'b crate::test_namespace_bindings::S,)> for S {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(args: (&'b crate::test_namespace_bindings::S,)) -> Self::CtorType {
             let (arg,) = args;
@@ -55,7 +55,7 @@ pub mod test_namespace_bindings {
     }
 
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>> for S {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
@@ -72,7 +72,7 @@ pub mod test_namespace_bindings {
         }
     }
     impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,)> for S {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: (::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,),
@@ -173,7 +173,7 @@ pub mod test_namespace_bindings_reopened_0 {
         // Cannot generate bindings for overloaded function
 
         impl<'b> ::ctor::CtorNew<&'b crate::test_namespace_bindings_reopened::inner::S> for S {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: &'b crate::test_namespace_bindings_reopened::inner::S,
@@ -187,7 +187,7 @@ pub mod test_namespace_bindings_reopened_0 {
             }
         }
         impl<'b> ::ctor::CtorNew<(&'b crate::test_namespace_bindings_reopened::inner::S,)> for S {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: (&'b crate::test_namespace_bindings_reopened::inner::S,),
@@ -202,7 +202,7 @@ pub mod test_namespace_bindings_reopened_0 {
                 ::ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
             > for S
         {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: ::ctor::RvalueReference<
@@ -223,7 +223,7 @@ pub mod test_namespace_bindings_reopened_0 {
                 ::ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>,
             )> for S
         {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: (
@@ -330,7 +330,7 @@ pub mod test_namespace_bindings_inline {
                 &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             > for StructInInlineNamespace
         {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
@@ -348,7 +348,7 @@ pub mod test_namespace_bindings_inline {
                 &'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
             )> for StructInInlineNamespace
         {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: (&'b crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,),
@@ -368,7 +368,7 @@ pub mod test_namespace_bindings_inline {
                 >,
             > for StructInInlineNamespace
         {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: ::ctor::RvalueReference<
@@ -392,7 +392,7 @@ pub mod test_namespace_bindings_inline {
                 >,
             )> for StructInInlineNamespace
         {
-            type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+            type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
             #[inline(always)]
             fn ctor_new(
                 args: (

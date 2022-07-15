@@ -73,7 +73,7 @@ forward_declare::unsafe_define!(
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialCustomType>>
     for NontrivialCustomType
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>) -> Self::CtorType {
         let __param_0 = args;
@@ -90,7 +90,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialCustomType
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialCustomType>,)>
     for NontrivialCustomType
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (::ctor::RvalueReference<'b, crate::NontrivialCustomType>,),

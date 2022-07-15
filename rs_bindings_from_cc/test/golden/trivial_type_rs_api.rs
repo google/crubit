@@ -141,7 +141,7 @@ pub mod test_namespace_bindings {
     }
 
     impl<'b> ::ctor::CtorNew<&'b crate::test_namespace_bindings::TrivialNonfinal> for TrivialNonfinal {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(args: &'b crate::test_namespace_bindings::TrivialNonfinal) -> Self::CtorType {
             let __param_0 = args;
@@ -155,7 +155,7 @@ pub mod test_namespace_bindings {
     impl<'b> ::ctor::CtorNew<(&'b crate::test_namespace_bindings::TrivialNonfinal,)>
         for TrivialNonfinal
     {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: (&'b crate::test_namespace_bindings::TrivialNonfinal,),
@@ -172,7 +172,7 @@ pub mod test_namespace_bindings {
             ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
         > for TrivialNonfinal
     {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
@@ -190,7 +190,7 @@ pub mod test_namespace_bindings {
             ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
         )> for TrivialNonfinal
     {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: (::ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,),

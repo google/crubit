@@ -85,7 +85,7 @@ impl ::ctor::CtorNew<(i32, i32)> for Nontrivial {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::Nontrivial> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::Nontrivial) -> Self::CtorType {
         let __param_0 = args;
@@ -100,7 +100,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::Nontrivial> for Nontrivial {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Nontrivial,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::Nontrivial,)) -> Self::CtorType {
         let (arg,) = args;
@@ -109,7 +109,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::Nontrivial,)> for Nontrivial {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
         let __param_0 = args;
@@ -124,7 +124,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for Non
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nontrivial {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Nontrivial>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -265,7 +265,7 @@ impl ::ctor::CtorNew<(i32, i32)> for NontrivialInline {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::NontrivialInline> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::NontrivialInline) -> Self::CtorType {
         let __param_0 = args;
@@ -280,7 +280,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialInline> for NontrivialInline {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialInline,)> for NontrivialInline {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::NontrivialInline,)) -> Self::CtorType {
         let (arg,) = args;
@@ -291,7 +291,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialInline,)> for NontrivialInline {
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialInline>>
     for NontrivialInline
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialInline>) -> Self::CtorType {
         let __param_0 = args;
@@ -308,7 +308,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialInline>>
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialInline>,)>
     for NontrivialInline
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::NontrivialInline>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -393,7 +393,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::NontrivialMembers> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::NontrivialMembers) -> Self::CtorType {
         let __param_0 = args;
@@ -408,7 +408,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialMembers> for NontrivialMembers {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialMembers,)> for NontrivialMembers {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::NontrivialMembers,)) -> Self::CtorType {
         let (arg,) = args;
@@ -419,7 +419,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialMembers,)> for NontrivialMembers 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialMembers>>
     for NontrivialMembers
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialMembers>) -> Self::CtorType {
         let __param_0 = args;
@@ -436,7 +436,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialMembers>>
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialMembers>,)>
     for NontrivialMembers
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::NontrivialMembers>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -651,7 +651,7 @@ impl ::ctor::CtorNew<()> for NontrivialByValue {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::NontrivialByValue> for NontrivialByValue {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::NontrivialByValue) -> Self::CtorType {
         let __param_0 = args;
@@ -666,7 +666,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialByValue> for NontrivialByValue {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialByValue,)> for NontrivialByValue {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::NontrivialByValue,)) -> Self::CtorType {
         let (arg,) = args;

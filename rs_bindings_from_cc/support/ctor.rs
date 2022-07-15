@@ -1166,6 +1166,32 @@ impl<T: Ctor> Ctor for ManuallyDropCtor<T> {
 
 impl<T: Ctor> !Unpin for ManuallyDropCtor<T> {}
 
+/// A utility trait to add lifetime bounds to an `impl Ctor`.
+///
+/// When returning trait impls, captures don't work as one would expect;
+/// see https://github.com/rust-lang/rust/issues/66551
+///
+/// For example, this function does not compile:
+///
+/// ```compile_fail
+/// fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Fn() -> i32 + 'a + 'b {
+///   move || *a + *b
+/// }
+/// ```
+///
+/// However, using Captures, we can write the following, which _does_ compile:
+///
+/// ```
+/// fn adder<'a, 'b>(x: &'a i32, y: &'b i32) -> impl Fn() -> i32 + Captures<'a> + Captures<'b> {
+///   move || *a + *b
+/// }
+/// ```
+///
+/// Since `Ctor` is a in essence glorified `impl Fn(...)`, and will often need
+/// to retain function inputs, this helper trait is provided for such a use.
+pub trait Captures<'a> {}
+impl<'a, T> Captures<'a> for T {}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -1644,4 +1670,44 @@ mod test {
         foo(slot.as_mut());
         assert_eq!(*slot.as_opt().unwrap(), 42);
     }
+
+    #[test]
+    fn test_ctor_trait_captures() {
+        fn adder<'a, 'b>(
+            x: &'a i32,
+            y: &'b i32,
+        ) -> impl Ctor<Output = i32> + Captures<'a> + Captures<'b> {
+            FnCtor::new(|mut dest: Pin<&mut std::mem::MaybeUninit<i32>>| {
+                dest.write(*x + *y);
+            })
+        }
+
+        emplace! {
+            let sum = adder(&40, &2);
+        }
+        assert_eq!(*sum, 42);
+    }
+
+    // The following test is broken due to https://github.com/rust-lang/rust/issues/66551
+    // If that bug is fixed, this test should be uncommented, and `Captures`
+    // deprecated and removed.
+    //
+    // ```
+    // #[test]
+    // fn test_ctor_native_captures() {
+    //     fn adder<'a, 'b>(
+    //         x: &'a i32,
+    //         y: &'b i32,
+    //     ) -> impl Ctor<Output = i32> + 'a + 'b {
+    //         FnCtor::new(|mut dest: Pin<&mut std::mem::MaybeUninit<i32>>| {
+    //             dest.write(*x + *y);
+    //         })
+    //     }
+
+    //     emplace! {
+    //         let sum = adder(&40, &2);
+    //     }
+    //     assert_eq!(*sum, 42);
+    // }
+    // ```
 }

@@ -794,9 +794,9 @@ fn generate_func(
     }
 
     // quoted_return_type corresponds to `return_type`, except that () is the empty
-    // string, non-Unpin by-value types are `impl Ctor<Output=#return_type> + 'a
-    // + 'b + ...`, and wherever the type is the type of Self, it gets replaced
-    // by literal `Self`.
+    // string, non-Unpin by-value types are `impl Ctor<Output=#return_type> +
+    // ...`, and wherever the type is the type of Self, it gets replaced by
+    // literal `Self`.
     let mut quoted_return_type = if return_type == RsTypeKind::Unit {
         quote! {}
     } else {
@@ -809,7 +809,7 @@ fn generate_func(
             // used as an associated type for a trait.
             features.insert(make_rs_ident("type_alias_impl_trait"));
             // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ #a});
+            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ ::ctor::Captures<#a>});
             quote! {impl ::ctor::Ctor<Output=#ty> #(#extra_lifetimes)* }
         }
     };
@@ -6071,7 +6071,9 @@ mod tests {
             rs_api,
             quote! {
                 pub fn ReturnsByValue<'a, 'b>(x: &'a i32, y: &'b i32)
-                -> impl ::ctor::Ctor<Output=crate::Nontrivial> + 'a + 'b {
+                -> impl ::ctor::Ctor<Output=crate::Nontrivial>
+                 + ::ctor::Captures<'a>
+                 + ::ctor::Captures<'b> {
                     unsafe {
                         ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
                             crate::detail::__rust_thunk___Z14ReturnsByValueRKiS0_(::std::pin::Pin::into_inner_unchecked(dest), x, y);

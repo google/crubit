@@ -172,7 +172,7 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
 impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding_InnerStruct>
     for FieldInTailPadding_InnerStruct
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::FieldInTailPadding_InnerStruct) -> Self::CtorType {
         let __param_0 = args;
@@ -189,7 +189,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding_InnerStruct>
 impl<'b> ::ctor::CtorNew<(&'b crate::FieldInTailPadding_InnerStruct,)>
     for FieldInTailPadding_InnerStruct
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::FieldInTailPadding_InnerStruct,)) -> Self::CtorType {
         let (arg,) = args;
@@ -251,7 +251,7 @@ impl FieldInTailPadding {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::FieldInTailPadding) -> Self::CtorType {
         let __param_0 = args;
@@ -266,7 +266,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding> for FieldInTailPadding {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::FieldInTailPadding,)> for FieldInTailPadding {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::FieldInTailPadding,)) -> Self::CtorType {
         let (arg,) = args;
@@ -277,7 +277,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::FieldInTailPadding,)> for FieldInTailPaddin
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>
     for FieldInTailPadding
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::FieldInTailPadding>) -> Self::CtorType {
         let __param_0 = args;
@@ -294,7 +294,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::FieldInTailPadding>,)>
     for FieldInTailPadding
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::FieldInTailPadding>,)) -> Self::CtorType {
         let (arg,) = args;

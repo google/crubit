@@ -38,7 +38,7 @@ impl ::ctor::CtorNew<()> for DifferentScope {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::DifferentScope> for DifferentScope {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: &'b crate::DifferentScope) -> Self::CtorType {
         let __param_0 = args;
@@ -53,7 +53,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::DifferentScope> for DifferentScope {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::DifferentScope,)> for DifferentScope {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::DifferentScope,)) -> Self::CtorType {
         let (arg,) = args;
@@ -62,7 +62,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::DifferentScope,)> for DifferentScope {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::DifferentScope>> for DifferentScope {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::DifferentScope>) -> Self::CtorType {
         let __param_0 = args;
@@ -77,7 +77,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::DifferentScope>> for
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::DifferentScope>,)> for DifferentScope {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::DifferentScope>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -142,7 +142,7 @@ pub mod test_namespace_bindings {
     }
 
     impl<'b> ::ctor::CtorNew<&'b crate::test_namespace_bindings::TemplateParam> for TemplateParam {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(args: &'b crate::test_namespace_bindings::TemplateParam) -> Self::CtorType {
             let __param_0 = args;
@@ -154,7 +154,7 @@ pub mod test_namespace_bindings {
         }
     }
     impl<'b> ::ctor::CtorNew<(&'b crate::test_namespace_bindings::TemplateParam,)> for TemplateParam {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(args: (&'b crate::test_namespace_bindings::TemplateParam,)) -> Self::CtorType {
             let (arg,) = args;
@@ -168,7 +168,7 @@ pub mod test_namespace_bindings {
         ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>>
         for TemplateParam
     {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
@@ -189,7 +189,7 @@ pub mod test_namespace_bindings {
             ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         )> for TemplateParam
     {
-        type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
         fn ctor_new(
             args: (::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,),
@@ -304,7 +304,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
@@ -322,7 +322,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -344,7 +344,7 @@ impl<'b>
         >,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<
@@ -368,7 +368,7 @@ impl<'b>
         >,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -483,7 +483,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
@@ -501,7 +501,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -523,7 +523,7 @@ impl<'b>
         >,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<
@@ -547,7 +547,7 @@ impl<'b>
         >,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -651,7 +651,7 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings10MyTempl
 impl<'b> ::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
@@ -667,7 +667,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings10
 impl<'b> ::ctor::CtorNew<(&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,)>
     for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,),
@@ -687,7 +687,7 @@ impl<'b>
         >,
     > for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<
@@ -711,7 +711,7 @@ impl<'b>
         >,
     )> for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -831,7 +831,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
@@ -849,7 +849,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:(&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,),
@@ -867,7 +867,7 @@ impl<'b>
         >,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<
@@ -891,7 +891,7 @@ impl<'b>
         >,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:(::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,),
@@ -970,7 +970,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
@@ -988,7 +988,7 @@ impl<'b>
         &'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,),
@@ -1008,7 +1008,7 @@ impl<'b>
         >,
     > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<
@@ -1032,7 +1032,7 @@ impl<'b>
         >,
     )> for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: (
@@ -1120,7 +1120,7 @@ impl<'b>
         &'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     > for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
@@ -1138,7 +1138,7 @@ impl<'b>
         &'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
     )> for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:(&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,),
@@ -1156,7 +1156,7 @@ impl<'b>
         >,
     > for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<
@@ -1180,7 +1180,7 @@ impl<'b>
         >,
     )> for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
     fn ctor_new(
         args:(::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,),
