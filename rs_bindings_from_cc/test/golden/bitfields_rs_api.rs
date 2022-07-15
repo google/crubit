@@ -55,7 +55,7 @@ impl ::ctor::CtorNew<()> for WithBitfields {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::WithBitfields> for WithBitfields {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::WithBitfields) -> Self::CtorType {
         let __param_0 = args;
@@ -70,7 +70,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::WithBitfields> for WithBitfields {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::WithBitfields,)> for WithBitfields {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::WithBitfields,)) -> Self::CtorType {
         let (arg,) = args;
@@ -79,7 +79,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::WithBitfields,)> for WithBitfields {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::WithBitfields>> for WithBitfields {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::WithBitfields>) -> Self::CtorType {
         let __param_0 = args;
@@ -94,7 +94,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::WithBitfields>> for 
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::WithBitfields>,)> for WithBitfields {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::WithBitfields>,)) -> Self::CtorType {
         let (arg,) = args;

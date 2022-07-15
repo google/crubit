@@ -41,7 +41,7 @@ impl ::ctor::CtorNew<()> for HasCustomAlignment {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignment> for HasCustomAlignment {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::HasCustomAlignment) -> Self::CtorType {
         let __param_0 = args;
@@ -56,7 +56,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignment> for HasCustomAlignment {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::HasCustomAlignment,)> for HasCustomAlignment {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::HasCustomAlignment,)) -> Self::CtorType {
         let (arg,) = args;
@@ -67,7 +67,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::HasCustomAlignment,)> for HasCustomAlignmen
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignment>>
     for HasCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>) -> Self::CtorType {
         let __param_0 = args;
@@ -84,7 +84,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignment>>
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasCustomAlignment>,)>
     for HasCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::HasCustomAlignment>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -143,7 +143,7 @@ impl ::ctor::CtorNew<()> for HasFieldWithCustomAlignment {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment> for HasFieldWithCustomAlignment {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::HasFieldWithCustomAlignment) -> Self::CtorType {
         let __param_0 = args;
@@ -160,7 +160,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment> for HasFieldWit
 impl<'b> ::ctor::CtorNew<(&'b crate::HasFieldWithCustomAlignment,)>
     for HasFieldWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::HasFieldWithCustomAlignment,)) -> Self::CtorType {
         let (arg,) = args;
@@ -171,7 +171,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::HasFieldWithCustomAlignment,)>
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>>
     for HasFieldWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
@@ -190,7 +190,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasFieldWithCustomAl
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,)>
     for HasFieldWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(
         args: (::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,),
@@ -254,7 +254,7 @@ impl ::ctor::CtorNew<()> for InheritsFromBaseWithCustomAlignment {
 impl<'b> ::ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>
     for InheritsFromBaseWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::InheritsFromBaseWithCustomAlignment) -> Self::CtorType {
         let __param_0 = args;
@@ -271,7 +271,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>
 impl<'b> ::ctor::CtorNew<(&'b crate::InheritsFromBaseWithCustomAlignment,)>
     for InheritsFromBaseWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::InheritsFromBaseWithCustomAlignment,)) -> Self::CtorType {
         let (arg,) = args;
@@ -282,7 +282,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::InheritsFromBaseWithCustomAlignment,)>
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>>
     for InheritsFromBaseWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
@@ -301,7 +301,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::InheritsFromBaseWith
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,)>
     for InheritsFromBaseWithCustomAlignment
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(
         args: (::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,),
@@ -379,7 +379,7 @@ impl ::ctor::CtorNew<()> for HasCustomAlignmentWithGnuAttr {
 impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr>
     for HasCustomAlignmentWithGnuAttr
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::HasCustomAlignmentWithGnuAttr) -> Self::CtorType {
         let __param_0 = args;
@@ -396,7 +396,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr>
 impl<'b> ::ctor::CtorNew<(&'b crate::HasCustomAlignmentWithGnuAttr,)>
     for HasCustomAlignmentWithGnuAttr
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::HasCustomAlignmentWithGnuAttr,)) -> Self::CtorType {
         let (arg,) = args;
@@ -407,7 +407,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::HasCustomAlignmentWithGnuAttr,)>
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>>
     for HasCustomAlignmentWithGnuAttr
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(
         args: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
@@ -426,7 +426,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignmentWi
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,)>
     for HasCustomAlignmentWithGnuAttr
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(
         args: (::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,),

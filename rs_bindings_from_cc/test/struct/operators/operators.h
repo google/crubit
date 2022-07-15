@@ -122,4 +122,9 @@ struct AddableNonConstMemberByValue final {
   int i;
 };
 
+struct AddableReturnsVoid final {
+  void operator+(const AddableReturnsVoid& rhs) { i += rhs.i; }
+
+  int i;
+};
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_

@@ -38,7 +38,7 @@ impl ::ctor::CtorNew<()> for SomeStruct {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::SomeStruct> for SomeStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::SomeStruct) -> Self::CtorType {
         let __param_0 = args;
@@ -53,7 +53,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::SomeStruct> for SomeStruct {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::SomeStruct,)> for SomeStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::SomeStruct,)) -> Self::CtorType {
         let (arg,) = args;
@@ -62,7 +62,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::SomeStruct,)> for SomeStruct {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::SomeStruct>) -> Self::CtorType {
         let __param_0 = args;
@@ -77,7 +77,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::SomeStruct>> for Som
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::SomeStruct>,)> for SomeStruct {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::SomeStruct>,)) -> Self::CtorType {
         let (arg,) = args;

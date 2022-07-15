@@ -36,4 +36,12 @@ class AddableFree final {};
 
 AddableFree operator+(const AddableFree& lhs, const AddableFree& rhs);
 
+class AddableReturnsVoid final {
+ public:
+  void operator+(const AddableReturnsVoid& rhs) const;
+
+ private:
+  int field_;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_

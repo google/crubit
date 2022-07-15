@@ -41,7 +41,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::PolymorphicBase) -> Self::CtorType {
         let __param_0 = args;
@@ -56,7 +56,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase> for PolymorphicBase {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicBase,)> for PolymorphicBase {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::PolymorphicBase,)) -> Self::CtorType {
         let (arg,) = args;
@@ -106,7 +106,7 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::PolymorphicBase2) -> Self::CtorType {
         let __param_0 = args;
@@ -121,7 +121,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicBase2,)> for PolymorphicBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::PolymorphicBase2,)) -> Self::CtorType {
         let (arg,) = args;
@@ -178,7 +178,7 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicDerived> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::PolymorphicDerived) -> Self::CtorType {
         let __param_0 = args;
@@ -193,7 +193,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicDerived> for PolymorphicDerived {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicDerived,)> for PolymorphicDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::PolymorphicDerived,)) -> Self::CtorType {
         let (arg,) = args;
@@ -204,7 +204,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicDerived,)> for PolymorphicDerive
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>
     for PolymorphicDerived
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>) -> Self::CtorType {
         let __param_0 = args;
@@ -221,7 +221,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::PolymorphicDerived>,)>
     for PolymorphicDerived
 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::PolymorphicDerived>,)) -> Self::CtorType {
         let (arg,) = args;

@@ -380,9 +380,10 @@ enum ImplKind {
         /// &mut T` -> `&mut self`)
         format_first_param_as_self: bool,
 
-        /// Associated types defined in the `impl` block (e.g. `type Output =
-        /// i32;`).
-        associated_types: Vec<ImplAssociatedType>,
+        /// If this trait's method returns an associated type, it has this name.
+        /// For example, this is `Output` on
+        /// [`Add`](https://doc.rust-lang.org/std/ops/trait.Add.html).
+        associated_return_type: Option<Ident>,
     },
 }
 impl ImplKind {
@@ -397,7 +398,7 @@ impl ImplKind {
             impl_for: ImplFor::T,
             trait_generic_params: quote! {},
             format_first_param_as_self,
-            associated_types: vec![],
+            associated_return_type: None,
         }
     }
     fn format_first_param_as_self(&self) -> bool {
@@ -449,12 +450,6 @@ enum ImplFor {
     RefT,
 }
 
-/// An associated type in a trait `impl` block.
-struct ImplAssociatedType {
-    name: Ident,
-    value: RsTypeKind,
-}
-
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// Returns:
@@ -464,7 +459,6 @@ struct ImplAssociatedType {
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
 fn api_func_shape(
-    db: &dyn BindingsGenerator,
     func: &Func,
     ir: &IR,
     param_types: &[RsTypeKind],
@@ -544,12 +538,7 @@ fn api_func_shape(
                 impl_for: ImplFor::RefT,
                 trait_generic_params: quote! {},
                 format_first_param_as_self: true,
-                associated_types: vec![ImplAssociatedType {
-                    name: make_rs_ident("Output"),
-                    value: db
-                        .rs_type_kind(func.return_type.rs_type.clone())
-                        .with_context(|| format!("Failed to process return type on {:?}", func))?,
-                }],
+                associated_return_type: Some(make_rs_ident("Output")),
             };
             func_name = make_rs_ident("add");
         }
@@ -638,11 +627,14 @@ fn api_func_shape(
                 match param_types {
                     [] => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     [_this, params @ ..] => {
-                        impl_kind = ImplKind::new_trait(
-                            TraitName::CtorNew(params.iter().cloned().collect()),
+                        impl_kind = ImplKind::Trait {
                             record_name,
-                            /* format_first_param_as_self= */ false,
-                        );
+                            trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
+                            impl_for: ImplFor::T,
+                            trait_generic_params: quote! {},
+                            format_first_param_as_self: false,
+                            associated_return_type: Some(make_rs_ident("CtorType")),
+                        };
                     }
                 }
             } else {
@@ -712,6 +704,7 @@ fn generate_func(
     func: Rc<Func>,
 ) -> Result<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>> {
     let ir = db.ir();
+    let mut features = BTreeSet::new();
     let param_types = func
         .params
         .iter()
@@ -722,90 +715,106 @@ fn generate_func(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let (func_name, mut impl_kind) =
-        if let Some(values) = api_func_shape(db, &func, &ir, &param_types)? {
-            values
-        } else {
-            return Ok(None);
-        };
+    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(&func, &ir, &param_types)?
+    {
+        values
+    } else {
+        return Ok(None);
+    };
 
-    let return_type = db
+    let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
         .with_context(|| format!("Failed to format return type for {:?}", &func))?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
 
     let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
+    let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
+    let mut api_params = param_idents
+        .iter()
+        .zip(param_types.iter())
+        .map(|(ident, type_)| quote! { #ident : #type_ })
+        .collect_vec();
+    let mut lifetimes = func.lifetime_params.iter().collect_vec();
+    let mut maybe_first_api_param = param_types.get(0);
+    let mut quoted_return_type = None;
 
-    let api_func_def = {
-        let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
-        let mut api_params = param_idents
+    if let ImplKind::Trait {
+        trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
+        ..
+    } = &impl_kind
+    {
+        // Drop `__this` parameter from the public Rust API. Presence of
+        // element #0 is indirectly verified by a `Constructor`-related
+        // `match` branch a little bit above.
+        api_params.remove(0);
+        thunk_args.remove(0);
+
+        return_type = param_types[0]
+            .referent()
+            .ok_or_else(|| anyhow!("Expected pointer/reference for `__this` parameter"))?
+            .clone();
+        quoted_return_type = Some(quote! {Self});
+
+        // Remove the lifetime associated with `__this`.
+        ensure!(
+            func.return_type.rs_type.is_unit_type(),
+            "Unexpectedly non-void return type of a constructor: {:?}",
+            func
+        );
+        let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
+        let no_longer_needed_lifetime_id = maybe_first_lifetime
+            .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
+        lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
+        if let Some(type_still_dependent_on_removed_lifetime) = param_types
             .iter()
-            .zip(param_types.iter())
-            .map(|(ident, type_)| quote! { #ident : #type_ })
-            .collect_vec();
-        let mut lifetimes = func.lifetime_params.iter().collect_vec();
-        let mut maybe_first_api_param = param_types.get(0);
-
-        let mut return_type_fragment = if return_type.is_unpin() {
-            return_type.format_as_return_type_fragment()
-        } else {
-            // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ #a});
-            quote! {-> impl ::ctor::Ctor<Output=#return_type> #(#extra_lifetimes)* }
-        };
-
-        if let ImplKind::Trait {
-            trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
-            ..
-        } = &impl_kind
+            .skip(1) // Skipping `__this`
+            .flat_map(|t| t.lifetimes())
+            .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
         {
-            return_type_fragment = quote! { -> Self };
-
-            // Drop `__this` parameter from the public Rust API. Presence of
-            // element #0 is indirectly verified by a `Constructor`-related
-            // `match` branch a little bit above.
-            api_params.remove(0);
-            thunk_args.remove(0);
-
-            // Remove the lifetime associated with `__this`.
-            ensure!(
-                func.return_type.rs_type.is_unit_type(),
-                "Unexpectedly non-void return type of a constructor: {:?}",
-                func
-            );
-            let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
-            let no_longer_needed_lifetime_id = maybe_first_lifetime
-                .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
-            lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
-            if let Some(type_still_dependent_on_removed_lifetime) = param_types
-                .iter()
-                .skip(1) // Skipping `__this`
-                .flat_map(|t| t.lifetimes())
-                .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
-            {
-                bail!(
-                    "The lifetime of `__this` is unexpectedly also used by another \
+            bail!(
+                "The lifetime of `__this` is unexpectedly also used by another \
                     parameter {:?} in function {:?}",
-                    type_still_dependent_on_removed_lifetime,
-                    func.name
-                );
-            }
-
-            // Rebind `maybe_first_api_param` to the next param after `__this`.
-            maybe_first_api_param = param_types.get(1);
-
-            if let TraitName::CtorNew(args_type) = trait_name {
-                // CtorNew has no self param, so this should never be used -- and we should fail
-                // if it is.
-                maybe_first_api_param = None;
-
-                return_type_fragment = quote! { -> Self::CtorType };
-                let args_type = format_tuple_except_singleton(args_type);
-                api_params = vec![quote! {args: #args_type}];
-            }
+                type_still_dependent_on_removed_lifetime,
+                func.name
+            );
         }
 
+        // Rebind `maybe_first_api_param` to the next param after `__this`.
+        maybe_first_api_param = param_types.get(1);
+
+        if let TraitName::CtorNew(args_type) = trait_name {
+            // CtorNew has no self param, so this should never be used -- and we should fail
+            // if it is.
+            maybe_first_api_param = None;
+
+            let args_type = format_tuple_except_singleton(args_type);
+            api_params = vec![quote! {args: #args_type}];
+        }
+    }
+
+    // quoted_return_type corresponds to `return_type`, except that () is the empty
+    // string, non-Unpin by-value types are `impl Ctor<Output=#return_type> + 'a
+    // + 'b + ...`, and wherever the type is the type of Self, it gets replaced
+    // by literal `Self`.
+    let mut quoted_return_type = if return_type == RsTypeKind::Unit {
+        quote! {}
+    } else {
+        let ty = quoted_return_type.unwrap_or_else(|| quote! {#return_type});
+        if return_type.is_unpin() {
+            quote! {#ty}
+        } else {
+            // This feature seems destined for stabilization, and makes the code
+            // simpler. We don't need it for simple functions, but if the return type is
+            // used as an associated type for a trait.
+            features.insert(make_rs_ident("type_alias_impl_trait"));
+            // The returned lazy FnCtor depends on all inputs.
+            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ #a});
+            quote! {impl ::ctor::Ctor<Output=#ty> #(#extra_lifetimes)* }
+        }
+    };
+
+    let api_func_def = {
         // Change `__this: &'a SomeStruct` into `&'a self` if needed.
         if impl_kind.format_first_param_as_self() {
             let first_api_param = maybe_first_api_param
@@ -894,7 +903,10 @@ fn generate_func(
                             body = quote! {let _ = ::ctor::emplace!(#body);};
                         }
 
-                        return_type_fragment = quote! {};
+                        // We would need to do this, but it's no longer used:
+                        //    return_type = RsTypeKind::Unit;
+                        let _ = return_type;  // proof that we don't need to update it.
+                        quoted_return_type = quote! {};
                     }
                 }
                 // Only need to wrap everything in an `unsafe { ... }` block if
@@ -938,17 +950,26 @@ fn generate_func(
             fn_generic_params = format_generic_params(lifetimes);
         }
 
+        let function_return_type = match &impl_kind {
+            ImplKind::Trait { associated_return_type: Some(ident), .. } => quote! {Self::#ident},
+            _ => quoted_return_type.clone(),
+        };
+        let arrow = if !function_return_type.is_empty() {
+            quote! {->}
+        } else {
+            quote! {}
+        };
+
         quote! {
             #[inline(always)]
             #pub_ #unsafe_ fn #func_name #fn_generic_params(
-                    #( #api_params ),* ) #return_type_fragment {
+                    #( #api_params ),* ) #arrow #function_return_type {
                 #func_body
             }
         }
     };
 
     let doc_comment = generate_doc_comment(&func.doc_comment);
-    let mut features = BTreeSet::new();
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {
@@ -968,18 +989,25 @@ fn generate_func(
             record_name,
             impl_for,
             trait_generic_params,
-            associated_types,
+            associated_return_type,
             ..
         } => {
-            let mut extra_body;
+            let extra_body = if let Some(name) = associated_return_type {
+                let quoted_return_type = if quoted_return_type.is_empty() {
+                    quote! {()}
+                } else {
+                    quoted_return_type
+                };
+                quote! {
+                    type #name = #quoted_return_type;
+                }
+            } else {
+                quote! {}
+            };
+
             let extra_items;
             match &trait_name {
                 TraitName::CtorNew(params) => {
-                    // This feature seems destined for stabilization, and makes the code
-                    // simpler.
-                    features.insert(make_rs_ident("type_alias_impl_trait"));
-                    extra_body = quote! {type CtorType = impl ::ctor::Ctor<Output = Self>;};
-
                     if let [single_param] = params.as_slice() {
                         extra_items = quote! {
                             impl #trait_generic_params ::ctor::CtorNew<(#single_param,)> for #record_name {
@@ -997,7 +1025,6 @@ fn generate_func(
                     }
                 }
                 _ => {
-                    extra_body = quote! {};
                     extra_items = quote! {};
                 }
             };
@@ -1008,11 +1035,6 @@ fn generate_func(
                     quote! { #param }
                 }
             };
-            for ImplAssociatedType { name, value } in associated_types {
-                extra_body.extend(quote! {
-                    type #name = #value;
-                });
-            }
             api_func = quote! {
                 #doc_comment
                 impl #trait_generic_params #trait_name for #impl_for {
@@ -2225,6 +2247,16 @@ impl RsTypeKind {
             _ => None,
         })
     }
+
+    /// Returns the pointer or reference target.
+    pub fn referent(&self) -> Option<&RsTypeKind> {
+        match self {
+            Self::Pointer { pointee: p, .. }
+            | Self::Reference { referent: p, .. }
+            | Self::RvalueReference { referent: p, .. } => Some(&**p),
+            _ => None,
+        }
+    }
 }
 
 impl ToTokens for RsTypeKind {
@@ -2745,13 +2777,14 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
             .map(|p| format_cc_type(&p.type_.cc_type, &ir))
             .collect::<Result<Vec<_>>>()?;
 
-        let arg_expressions: Vec<_> = func.params
+        let arg_expressions: Vec<_> = func
+            .params
             .iter()
             .map(|p| {
                 let ident = format_cc_ident(&p.identifier.identifier);
                 match p.type_.cc_type.name.as_deref() {
-                    Some("&") => quote!{ * #ident },
-                    Some("&&") => quote!{ std::move(* #ident) },
+                    Some("&") => quote! { * #ident },
+                    Some("&&") => quote! { std::move(* #ident) },
                     _ => quote! { #ident },
                 }
             })
@@ -2816,7 +2849,7 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
                         #nested_type && lvalue = #return_expr;
                         return &lvalue
                     }
-                },
+                }
                 _ => quote! { return #return_expr },
             }
         };

@@ -41,7 +41,7 @@ impl ::ctor::CtorNew<()> for Base0 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::Base0> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::Base0) -> Self::CtorType {
         let __param_0 = args;
@@ -56,7 +56,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base0> for Base0 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Base0,)> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::Base0,)) -> Self::CtorType {
         let (arg,) = args;
@@ -65,7 +65,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::Base0,)> for Base0 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base0>> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base0>) -> Self::CtorType {
         let __param_0 = args;
@@ -80,7 +80,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base0>> for Base0 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base0>,)> for Base0 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Base0>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -138,7 +138,7 @@ impl ::ctor::CtorNew<()> for Base1 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::Base1> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::Base1) -> Self::CtorType {
         let __param_0 = args;
@@ -153,7 +153,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base1> for Base1 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Base1,)> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::Base1,)) -> Self::CtorType {
         let (arg,) = args;
@@ -162,7 +162,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::Base1,)> for Base1 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base1>> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base1>) -> Self::CtorType {
         let __param_0 = args;
@@ -177,7 +177,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base1>> for Base1 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base1>,)> for Base1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Base1>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -232,7 +232,7 @@ impl ::ctor::CtorNew<()> for Base2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::Base2> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::Base2) -> Self::CtorType {
         let __param_0 = args;
@@ -247,7 +247,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base2> for Base2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Base2,)> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::Base2,)) -> Self::CtorType {
         let (arg,) = args;
@@ -256,7 +256,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::Base2,)> for Base2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base2>> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base2>) -> Self::CtorType {
         let __param_0 = args;
@@ -271,7 +271,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base2>> for Base2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base2>,)> for Base2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Base2>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -377,7 +377,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase1> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::VirtualBase1) -> Self::CtorType {
         let __param_0 = args;
@@ -392,7 +392,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase1> for VirtualBase1 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase1,)> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::VirtualBase1,)) -> Self::CtorType {
         let (arg,) = args;
@@ -401,7 +401,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase1,)> for VirtualBase1 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase1>> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualBase1>) -> Self::CtorType {
         let __param_0 = args;
@@ -416,7 +416,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase1>> for V
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase1>,)> for VirtualBase1 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualBase1>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -474,7 +474,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase2> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::VirtualBase2) -> Self::CtorType {
         let __param_0 = args;
@@ -489,7 +489,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase2> for VirtualBase2 {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase2,)> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::VirtualBase2,)) -> Self::CtorType {
         let (arg,) = args;
@@ -498,7 +498,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase2,)> for VirtualBase2 {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase2>> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualBase2>) -> Self::CtorType {
         let __param_0 = args;
@@ -513,7 +513,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase2>> for V
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase2>,)> for VirtualBase2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualBase2>,)) -> Self::CtorType {
         let (arg,) = args;
@@ -571,7 +571,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
 }
 
 impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: &'b crate::VirtualDerived) -> Self::CtorType {
         let __param_0 = args;
@@ -586,7 +586,7 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived> for VirtualDerived {
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::VirtualDerived,)> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (&'b crate::VirtualDerived,)) -> Self::CtorType {
         let (arg,) = args;
@@ -595,7 +595,7 @@ impl<'b> ::ctor::CtorNew<(&'b crate::VirtualDerived,)> for VirtualDerived {
 }
 
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived>> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualDerived>) -> Self::CtorType {
         let __param_0 = args;
@@ -610,7 +610,7 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived>> for
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualDerived>,)> for VirtualDerived {
-    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    type CtorType = impl ::ctor::Ctor<Output = Self> + 'b;
     #[inline(always)]
     fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualDerived>,)) -> Self::CtorType {
         let (arg,) = args;

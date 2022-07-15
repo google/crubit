@@ -61,7 +61,7 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddableConstMember>> for Addabl
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
     type Output = crate::AddableConstMember;
     #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableConstMember) -> crate::AddableConstMember {
+    fn add(self, rhs: &'b crate::AddableConstMember) -> Self::Output {
         unsafe { crate::detail::__rust_thunk___ZNK18AddableConstMemberplERKS_(self, rhs) }
     }
 }
@@ -114,7 +114,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableNonConstMember>
 {
     type Output = crate::AddableNonConstMember;
     #[inline(always)]
-    fn add(self, rhs: &'b crate::AddableNonConstMember) -> crate::AddableNonConstMember {
+    fn add(self, rhs: &'b crate::AddableNonConstMember) -> Self::Output {
         unsafe { crate::detail::__rust_thunk___ZN21AddableNonConstMemberplERKS_(self, rhs) }
     }
 }
@@ -200,6 +200,57 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddableFree>> for AddableFree {
 // Error while generating bindings for item 'operator+':
 // operator+ must be a member function (b/219826128).
 
+#[derive(Clone, Copy)]
+#[repr(C, align(4))]
+pub struct AddableReturnsVoid {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) field_: [::std::mem::MaybeUninit<u8>; 4],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddableReturnsVoid"),
+    crate::AddableReturnsVoid
+);
+
+impl Default for AddableReturnsVoid {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddableReturnsVoid>> for AddableReturnsVoid {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=39
+// Error while generating bindings for item 'AddableReturnsVoid::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=39
+// Error while generating bindings for item 'AddableReturnsVoid::operator=':
+// operator= for Unpin types is not yet supported.
+
+impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::AddableReturnsVoid {
+    type Output = ();
+    #[inline(always)]
+    fn add(self, rhs: &'b crate::AddableReturnsVoid) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK18AddableReturnsVoidplERKS_(self, rhs) }
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
 
 mod detail {
@@ -243,6 +294,18 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN11AddableFreeC1EOS_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFree>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFree>,
+        );
+        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableReturnsVoid>,
+        );
+        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddableReturnsVoid>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
+        );
+        #[link_name = "_ZNK18AddableReturnsVoidplERKS_"]
+        pub(crate) fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
+            __this: &'a crate::AddableReturnsVoid,
+            rhs: &'b crate::AddableReturnsVoid,
         );
     }
 }
@@ -300,3 +363,16 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFree: Drop);
 };
+
+const _: () = assert!(::std::mem::size_of::<crate::AddableReturnsVoid>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::AddableReturnsVoid>() == 4);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableReturnsVoid: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddableReturnsVoid: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddableReturnsVoid: Drop);
+};
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::AddableReturnsVoid, field_) == 0);

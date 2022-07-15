@@ -93,4 +93,12 @@ mod tests {
         let s2 = AddableNonConstMemberByValue { i: 22 };
         assert_eq!(33, (&mut s1 + s2).i);
     }
+
+    #[test]
+    fn test_add_returns_void() {
+        let mut s1 = AddableReturnsVoid { i: 11 };
+        let s2 = AddableReturnsVoid { i: 22 };
+        &mut s1 + &s2;
+        assert_eq!(s1.i, 33);
+    }
 }
