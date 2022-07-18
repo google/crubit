@@ -327,22 +327,25 @@
     (let ((fcs (run-DerefAllUnchecked state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-DerefAllUnchecked get-fc-1)
-     :named DerefAllUnchecked-reachable-1)
+     :named DerefAllUnchecked-reachable-1))
 
+(assert
   (! (not (is-unsafe-deref-DerefAllUnchecked get-fc-1 get-ptr_unknown-DerefAllUnchecked))
-     :named DerefAllUnchecked-deref-unknown)
+     :named DerefAllUnchecked-deref-unknown))
 
+(assert
   (! (not (is-unsafe-deref-DerefAllUnchecked get-fc-1 get-ptr_nonnull-DerefAllUnchecked))
-     :named DerefAllUnchecked-deref-nonnull)
+     :named DerefAllUnchecked-deref-nonnull))
 
+(assert
   (! (is-unsafe-deref-DerefAllUnchecked get-fc-1 get-ptr_nullable-DerefAllUnchecked)
-     :named DerefAllUnchecked-deref-nullable)
+     :named DerefAllUnchecked-deref-nullable))
 
+(assert
   (! (is-unsafe-deref-DerefAllUnchecked get-fc-1 get-ptr_nullptr-DerefAllUnchecked)
-     :named DerefAllUnchecked-deref-nullptr)
-))
+     :named DerefAllUnchecked-deref-nullptr))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example MixedNullableAndNonNull
@@ -419,43 +422,53 @@
     (let ((fcs (run-MixedNullableAndNonNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-MixedNullableAndNonNull get-fc-1)
-     :named MixedNullableAndNonNull-reachable-1)
+     :named MixedNullableAndNonNull-reachable-1))
 
+(assert
   (! (is-reachable-MixedNullableAndNonNull get-fc-2)
-     :named MixedNullableAndNonNull-reachable-2)
+     :named MixedNullableAndNonNull-reachable-2))
 
+(assert
   (! (is-reachable-MixedNullableAndNonNull get-fc-3)
-     :named MixedNullableAndNonNull-reachable-3)
+     :named MixedNullableAndNonNull-reachable-3))
 
+(assert
   (! (is-reachable-MixedNullableAndNonNull get-fc-4)
-     :named MixedNullableAndNonNull-reachable-4)
+     :named MixedNullableAndNonNull-reachable-4))
 
+(assert
   (! (is-reachable-MixedNullableAndNonNull get-fc-5)
-     :named MixedNullableAndNonNull-reachable-5)
+     :named MixedNullableAndNonNull-reachable-5))
 
+(assert
   (! (is-reachable-MixedNullableAndNonNull get-fc-6)
-     :named MixedNullableAndNonNull-reachable-6)
+     :named MixedNullableAndNonNull-reachable-6))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndNonNull get-fc-1 get-x-1-MixedNullableAndNonNull)
-     :named MixedNullableAndNonNull-deref-1)
+     :named MixedNullableAndNonNull-deref-1))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndNonNull get-fc-2 get-x-1-MixedNullableAndNonNull)
-     :named MixedNullableAndNonNull-deref-2)
+     :named MixedNullableAndNonNull-deref-2))
 
+(assert
   (! (not (is-unsafe-deref-MixedNullableAndNonNull get-fc-3 get-x-3-MixedNullableAndNonNull))
-     :named MixedNullableAndNonNull-deref-3)
+     :named MixedNullableAndNonNull-deref-3))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndNonNull get-fc-4 get-x-4-MixedNullableAndNonNull)
-     :named MixedNullableAndNonNull-deref-4)
+     :named MixedNullableAndNonNull-deref-4))
 
+(assert
   (! (not (is-unsafe-deref-MixedNullableAndNonNull get-fc-5 get-x-4-MixedNullableAndNonNull))
-     :named MixedNullableAndNonNull-deref-5)
+     :named MixedNullableAndNonNull-deref-5))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndNonNull get-fc-6 get-x-4-MixedNullableAndNonNull)
-     :named MixedNullableAndNonNull-deref-6)
-))
+     :named MixedNullableAndNonNull-deref-6))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example MixedNullableAndUnknown
@@ -531,43 +544,53 @@
     (let ((fcs (run-MixedNullableAndUnknown state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-MixedNullableAndUnknown get-fc-1)
-     :named MixedNullableAndUnknown-reachable-1)
+     :named MixedNullableAndUnknown-reachable-1))
 
+(assert
   (! (is-reachable-MixedNullableAndUnknown get-fc-2)
-     :named MixedNullableAndUnknown-reachable-2)
+     :named MixedNullableAndUnknown-reachable-2))
 
+(assert
   (! (is-reachable-MixedNullableAndUnknown get-fc-3)
-     :named MixedNullableAndUnknown-reachable-3)
+     :named MixedNullableAndUnknown-reachable-3))
 
+(assert
   (! (is-reachable-MixedNullableAndUnknown get-fc-4)
-     :named MixedNullableAndUnknown-reachable-4)
+     :named MixedNullableAndUnknown-reachable-4))
 
+(assert
   (! (is-reachable-MixedNullableAndUnknown get-fc-5)
-     :named MixedNullableAndUnknown-reachable-5)
+     :named MixedNullableAndUnknown-reachable-5))
 
+(assert
   (! (is-reachable-MixedNullableAndUnknown get-fc-6)
-     :named MixedNullableAndUnknown-reachable-6)
+     :named MixedNullableAndUnknown-reachable-6))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndUnknown get-fc-1 get-x-1-MixedNullableAndUnknown)
-     :named MixedNullableAndUnknown-deref-1)
+     :named MixedNullableAndUnknown-deref-1))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndUnknown get-fc-2 get-x-1-MixedNullableAndUnknown)
-     :named MixedNullableAndUnknown-deref-2)
+     :named MixedNullableAndUnknown-deref-2))
 
+(assert
   (! (not (is-unsafe-deref-MixedNullableAndUnknown get-fc-3 get-x-3-MixedNullableAndUnknown))
-     :named MixedNullableAndUnknown-deref-3)
+     :named MixedNullableAndUnknown-deref-3))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndUnknown get-fc-4 get-x-4-MixedNullableAndUnknown)
-     :named MixedNullableAndUnknown-deref-4)
+     :named MixedNullableAndUnknown-deref-4))
 
+(assert
   (! (not (is-unsafe-deref-MixedNullableAndUnknown get-fc-5 get-x-4-MixedNullableAndUnknown))
-     :named MixedNullableAndUnknown-deref-5)
+     :named MixedNullableAndUnknown-deref-5))
 
+(assert
   (! (is-unsafe-deref-MixedNullableAndUnknown get-fc-6 get-x-4-MixedNullableAndUnknown)
-     :named MixedNullableAndUnknown-deref-6)
-))
+     :named MixedNullableAndUnknown-deref-6))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example MixedUnknownAndNull
@@ -643,43 +666,53 @@
     (let ((fcs (run-MixedUnknownAndNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-MixedUnknownAndNull get-fc-1)
-     :named MixedUnknownAndNull-reachable-1)
+     :named MixedUnknownAndNull-reachable-1))
 
+(assert
   (! (is-reachable-MixedUnknownAndNull get-fc-2)
-     :named MixedUnknownAndNull-reachable-2)
+     :named MixedUnknownAndNull-reachable-2))
 
+(assert
   (! (is-reachable-MixedUnknownAndNull get-fc-3)
-     :named MixedUnknownAndNull-reachable-3)
+     :named MixedUnknownAndNull-reachable-3))
 
+(assert
   (! (is-reachable-MixedUnknownAndNull get-fc-4)
-     :named MixedUnknownAndNull-reachable-4)
+     :named MixedUnknownAndNull-reachable-4))
 
+(assert
   (! (is-reachable-MixedUnknownAndNull get-fc-5)
-     :named MixedUnknownAndNull-reachable-5)
+     :named MixedUnknownAndNull-reachable-5))
 
+(assert
   (! (is-reachable-MixedUnknownAndNull get-fc-6)
-     :named MixedUnknownAndNull-reachable-6)
+     :named MixedUnknownAndNull-reachable-6))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNull get-fc-1 get-x-1-MixedUnknownAndNull))
-     :named MixedUnknownAndNull-deref-1)
+     :named MixedUnknownAndNull-deref-1))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNull get-fc-2 get-x-1-MixedUnknownAndNull))
-     :named MixedUnknownAndNull-deref-2)
+     :named MixedUnknownAndNull-deref-2))
 
+(assert
   (! (is-unsafe-deref-MixedUnknownAndNull get-fc-3 get-x-3-MixedUnknownAndNull)
-     :named MixedUnknownAndNull-deref-3)
+     :named MixedUnknownAndNull-deref-3))
 
+(assert
   (! (is-unsafe-deref-MixedUnknownAndNull get-fc-4 get-x-4-MixedUnknownAndNull)
-     :named MixedUnknownAndNull-deref-4)
+     :named MixedUnknownAndNull-deref-4))
 
+(assert
   (! (is-unsafe-deref-MixedUnknownAndNull get-fc-5 get-x-4-MixedUnknownAndNull)
-     :named MixedUnknownAndNull-deref-5)
+     :named MixedUnknownAndNull-deref-5))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNull get-fc-6 get-x-4-MixedUnknownAndNull))
-     :named MixedUnknownAndNull-deref-6)
-))
+     :named MixedUnknownAndNull-deref-6))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example MixedUnknownAndNonNull
@@ -755,43 +788,53 @@
     (let ((fcs (run-MixedUnknownAndNonNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-MixedUnknownAndNonNull get-fc-1)
-     :named MixedUnknownAndNonNull-reachable-1)
+     :named MixedUnknownAndNonNull-reachable-1))
 
+(assert
   (! (is-reachable-MixedUnknownAndNonNull get-fc-2)
-     :named MixedUnknownAndNonNull-reachable-2)
+     :named MixedUnknownAndNonNull-reachable-2))
 
+(assert
   (! (is-reachable-MixedUnknownAndNonNull get-fc-3)
-     :named MixedUnknownAndNonNull-reachable-3)
+     :named MixedUnknownAndNonNull-reachable-3))
 
+(assert
   (! (is-reachable-MixedUnknownAndNonNull get-fc-4)
-     :named MixedUnknownAndNonNull-reachable-4)
+     :named MixedUnknownAndNonNull-reachable-4))
 
+(assert
   (! (is-reachable-MixedUnknownAndNonNull get-fc-5)
-     :named MixedUnknownAndNonNull-reachable-5)
+     :named MixedUnknownAndNonNull-reachable-5))
 
+(assert
   (! (is-reachable-MixedUnknownAndNonNull get-fc-6)
-     :named MixedUnknownAndNonNull-reachable-6)
+     :named MixedUnknownAndNonNull-reachable-6))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNonNull get-fc-1 get-x-1-MixedUnknownAndNonNull))
-     :named MixedUnknownAndNonNull-deref-1)
+     :named MixedUnknownAndNonNull-deref-1))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNonNull get-fc-2 get-x-1-MixedUnknownAndNonNull))
-     :named MixedUnknownAndNonNull-deref-2)
+     :named MixedUnknownAndNonNull-deref-2))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNonNull get-fc-3 get-x-3-MixedUnknownAndNonNull))
-     :named MixedUnknownAndNonNull-deref-3)
+     :named MixedUnknownAndNonNull-deref-3))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNonNull get-fc-4 get-x-4-MixedUnknownAndNonNull))
-     :named MixedUnknownAndNonNull-deref-4)
+     :named MixedUnknownAndNonNull-deref-4))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNonNull get-fc-5 get-x-4-MixedUnknownAndNonNull))
-     :named MixedUnknownAndNonNull-deref-5)
+     :named MixedUnknownAndNonNull-deref-5))
 
+(assert
   (! (not (is-unsafe-deref-MixedUnknownAndNonNull get-fc-6 get-x-4-MixedUnknownAndNonNull))
-     :named MixedUnknownAndNonNull-deref-6)
-))
+     :named MixedUnknownAndNonNull-deref-6))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareNullAndNull
@@ -854,25 +897,29 @@
     (let ((fcs (run-CompareNullAndNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-CompareNullAndNull get-fc-1)
-     :named CompareNullAndNull-reachable-1)
+     :named CompareNullAndNull-reachable-1))
 
+(assert
   (! (is-reachable-CompareNullAndNull get-fc-2)
-     :named CompareNullAndNull-reachable-2)
+     :named CompareNullAndNull-reachable-2))
 
+(assert
   (! (is-reachable-CompareNullAndNull get-fc-3)
-     :named CompareNullAndNull-reachable-3)
+     :named CompareNullAndNull-reachable-3))
 
+(assert
   (! (not (is-reachable-CompareNullAndNull get-fc-4))
-     :named CompareNullAndNull-reachable-4)
+     :named CompareNullAndNull-reachable-4))
 
+(assert
   (! (is-unsafe-deref-CompareNullAndNull get-fc-3 get-x-CompareNullAndNull)
-     :named CompareNullAndNull-deref-3-x)
+     :named CompareNullAndNull-deref-3-x))
 
+(assert
   (! (is-unsafe-deref-CompareNullAndNull get-fc-3 get-y-CompareNullAndNull)
-     :named CompareNullAndNull-deref-3-y)
-))
+     :named CompareNullAndNull-deref-3-y))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareUnknownAndUnknown
@@ -935,31 +982,37 @@
     (let ((fcs (run-CompareUnknownAndUnknown state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-CompareUnknownAndUnknown get-fc-1)
-     :named CompareUnknownAndUnknown-reachable-1)
+     :named CompareUnknownAndUnknown-reachable-1))
 
+(assert
   (! (is-reachable-CompareUnknownAndUnknown get-fc-2)
-     :named CompareUnknownAndUnknown-reachable-2)
+     :named CompareUnknownAndUnknown-reachable-2))
 
+(assert
   (! (is-reachable-CompareUnknownAndUnknown get-fc-3)
-     :named CompareUnknownAndUnknown-reachable-3)
+     :named CompareUnknownAndUnknown-reachable-3))
 
+(assert
   (! (is-reachable-CompareUnknownAndUnknown get-fc-4)
-     :named CompareUnknownAndUnknown-reachable-4)
+     :named CompareUnknownAndUnknown-reachable-4))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndUnknown get-fc-3 get-x-CompareUnknownAndUnknown))
-     :named CompareUnknownAndUnknown-deref-3-x)
+     :named CompareUnknownAndUnknown-deref-3-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndUnknown get-fc-3 get-y-CompareUnknownAndUnknown))
-     :named CompareUnknownAndUnknown-deref-3-y)
+     :named CompareUnknownAndUnknown-deref-3-y))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndUnknown get-fc-4 get-x-CompareUnknownAndUnknown))
-     :named CompareUnknownAndUnknown-deref-4-x)
+     :named CompareUnknownAndUnknown-deref-4-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndUnknown get-fc-4 get-y-CompareUnknownAndUnknown))
-     :named CompareUnknownAndUnknown-deref-4-y)
-))
+     :named CompareUnknownAndUnknown-deref-4-y))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareNonNullAndNonNull
@@ -1022,31 +1075,37 @@
     (let ((fcs (run-CompareNonNullAndNonNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-CompareNonNullAndNonNull get-fc-1)
-     :named CompareNonNullAndNonNull-reachable-1)
+     :named CompareNonNullAndNonNull-reachable-1))
 
+(assert
   (! (is-reachable-CompareNonNullAndNonNull get-fc-2)
-     :named CompareNonNullAndNonNull-reachable-2)
+     :named CompareNonNullAndNonNull-reachable-2))
 
+(assert
   (! (is-reachable-CompareNonNullAndNonNull get-fc-3)
-     :named CompareNonNullAndNonNull-reachable-3)
+     :named CompareNonNullAndNonNull-reachable-3))
 
+(assert
   (! (is-reachable-CompareNonNullAndNonNull get-fc-4)
-     :named CompareNonNullAndNonNull-reachable-4)
+     :named CompareNonNullAndNonNull-reachable-4))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNonNull get-fc-3 get-x-CompareNonNullAndNonNull))
-     :named CompareNonNullAndNonNull-deref-3-x)
+     :named CompareNonNullAndNonNull-deref-3-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNonNull get-fc-3 get-y-CompareNonNullAndNonNull))
-     :named CompareNonNullAndNonNull-deref-3-y)
+     :named CompareNonNullAndNonNull-deref-3-y))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNonNull get-fc-4 get-x-CompareNonNullAndNonNull))
-     :named CompareNonNullAndNonNull-deref-4-x)
+     :named CompareNonNullAndNonNull-deref-4-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNonNull get-fc-4 get-y-CompareNonNullAndNonNull))
-     :named CompareNonNullAndNonNull-deref-4-y)
-))
+     :named CompareNonNullAndNonNull-deref-4-y))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareNonNullAndNull
@@ -1104,28 +1163,33 @@
     (let ((fcs (run-CompareNonNullAndNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-CompareNonNullAndNull get-fc-1)
-     :named CompareNonNullAndNull-reachable-1)
+     :named CompareNonNullAndNull-reachable-1))
 
+(assert
   (! (is-reachable-CompareNonNullAndNull get-fc-2)
-     :named CompareNonNullAndNull-reachable-2)
+     :named CompareNonNullAndNull-reachable-2))
 
+(assert
   (! (not (is-reachable-CompareNonNullAndNull get-fc-3))
-     :named CompareNonNullAndNull-reachable-3)
+     :named CompareNonNullAndNull-reachable-3))
 
+(assert
   (! (is-reachable-CompareNonNullAndNull get-fc-4)
-     :named CompareNonNullAndNull-reachable-4)
+     :named CompareNonNullAndNull-reachable-4))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNull get-fc-1 get-x-CompareNonNullAndNull))
-     :named CompareNonNullAndNull-deref-1)
+     :named CompareNonNullAndNull-deref-1))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNull get-fc-2 get-x-CompareNonNullAndNull))
-     :named CompareNonNullAndNull-deref-2)
+     :named CompareNonNullAndNull-deref-2))
 
+(assert
   (! (not (is-unsafe-deref-CompareNonNullAndNull get-fc-4 get-x-CompareNonNullAndNull))
-     :named CompareNonNullAndNull-deref-4)
-))
+     :named CompareNonNullAndNull-deref-4))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareNullableAndNull
@@ -1184,31 +1248,37 @@
     (let ((fcs (run-CompareNullableAndNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
+(assert
   (! (is-reachable-CompareNullableAndNull get-fc-1)
-     :named CompareNullableAndNull-reachable-1)
+     :named CompareNullableAndNull-reachable-1))
 
+(assert
   (! (is-reachable-CompareNullableAndNull get-fc-2)
-     :named CompareNullableAndNull-reachable-2)
+     :named CompareNullableAndNull-reachable-2))
 
+(assert
   (! (is-reachable-CompareNullableAndNull get-fc-3)
-     :named CompareNullableAndNull-reachable-3)
+     :named CompareNullableAndNull-reachable-3))
 
+(assert
   (! (is-reachable-CompareNullableAndNull get-fc-4)
-     :named CompareNullableAndNull-reachable-4)
+     :named CompareNullableAndNull-reachable-4))
 
+(assert
   (! (is-unsafe-deref-CompareNullableAndNull get-fc-1 get-x-CompareNullableAndNull)
-     :named CompareNullableAndNull-deref-1)
+     :named CompareNullableAndNull-deref-1))
 
+(assert
   (! (is-unsafe-deref-CompareNullableAndNull get-fc-2 get-x-CompareNullableAndNull)
-     :named CompareNullableAndNull-deref-2)
+     :named CompareNullableAndNull-deref-2))
 
+(assert
   (! (is-unsafe-deref-CompareNullableAndNull get-fc-3 get-x-CompareNullableAndNull)
-     :named CompareNullableAndNull-deref-3)
+     :named CompareNullableAndNull-deref-3))
 
+(assert
   (! (not (is-unsafe-deref-CompareNullableAndNull get-fc-4 get-x-CompareNullableAndNull))
-     :named CompareNullableAndNull-deref-4)
-))
+     :named CompareNullableAndNull-deref-4))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareUnknownAndNullSimple
@@ -1267,31 +1337,37 @@
     (let ((fcs (run-CompareUnknownAndNullSimple state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (=> enable-solution-s1 (and
+(assert (=> enable-solution-s1
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-1)
-     :named CompareUnknownAndNullSimple-reachable-1)
+     :named CompareUnknownAndNullSimple-reachable-1)))
 
+(assert (=> enable-solution-s1
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-2)
-     :named CompareUnknownAndNullSimple-reachable-2)
+     :named CompareUnknownAndNullSimple-reachable-2)))
 
+(assert (=> enable-solution-s1
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-3)
-     :named CompareUnknownAndNullSimple-reachable-3)
+     :named CompareUnknownAndNullSimple-reachable-3)))
 
+(assert (=> enable-solution-s1
   (! (is-reachable-CompareUnknownAndNullSimple get-fc-4)
-     :named CompareUnknownAndNullSimple-reachable-4)
+     :named CompareUnknownAndNullSimple-reachable-4)))
 
+(assert (=> enable-solution-s1
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-1 get-x-CompareUnknownAndNullSimple))
-     :named CompareUnknownAndNullSimple-deref-1)
+     :named CompareUnknownAndNullSimple-deref-1)))
 
+(assert (=> enable-solution-s1
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-2 get-x-CompareUnknownAndNullSimple))
-     :named CompareUnknownAndNullSimple-deref-2)
+     :named CompareUnknownAndNullSimple-deref-2)))
 
+(assert (=> enable-solution-s1
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-3 get-x-CompareUnknownAndNullSimple))
-     :named CompareUnknownAndNullSimple-deref-3)
+     :named CompareUnknownAndNullSimple-deref-3)))
 
+(assert (=> enable-solution-s1
   (! (not (is-unsafe-deref-CompareUnknownAndNullSimple get-fc-4 get-x-CompareUnknownAndNullSimple))
-     :named CompareUnknownAndNullSimple-deref-4)
-)))
+     :named CompareUnknownAndNullSimple-deref-4)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareUnknownAndNonNull
@@ -1358,44 +1434,53 @@
     (let ((fcs (run-CompareUnknownAndNonNull state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert (and
-  true
+(assert
   (! (is-reachable-CompareUnknownAndNonNull get-fc-1)
-     :named CompareUnknownAndNonNull-reachable-1)
+     :named CompareUnknownAndNonNull-reachable-1))
 
+(assert
   (! (is-reachable-CompareUnknownAndNonNull get-fc-2)
-     :named CompareUnknownAndNonNull-reachable-2)
+     :named CompareUnknownAndNonNull-reachable-2))
 
+(assert
   (! (is-reachable-CompareUnknownAndNonNull get-fc-3)
-     :named CompareUnknownAndNonNull-reachable-3)
+     :named CompareUnknownAndNonNull-reachable-3))
 
+(assert
   (! (is-reachable-CompareUnknownAndNonNull get-fc-4)
-     :named CompareUnknownAndNonNull-reachable-4)
+     :named CompareUnknownAndNonNull-reachable-4))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-1 get-x-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-1-x)
+     :named CompareUnknownAndNonNull-deref-1-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-1 get-y-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-1-y)
+     :named CompareUnknownAndNonNull-deref-1-y))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-2 get-x-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-2-x)
+     :named CompareUnknownAndNonNull-deref-2-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-2 get-y-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-2-y)
+     :named CompareUnknownAndNonNull-deref-2-y))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-3 get-x-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-3-x)
+     :named CompareUnknownAndNonNull-deref-3-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-3 get-y-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-3-y)
+     :named CompareUnknownAndNonNull-deref-3-y))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-4 get-x-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-4-x)
+     :named CompareUnknownAndNonNull-deref-4-x))
 
+(assert
   (! (not (is-unsafe-deref-CompareUnknownAndNonNull get-fc-4 get-y-CompareUnknownAndNonNull))
-     :named CompareUnknownAndNonNull-deref-4-y)
-))
+     :named CompareUnknownAndNonNull-deref-4-y))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example CompareUnknownAndNullAdvanced
@@ -1454,38 +1539,41 @@
     (let ((fcs (run-CompareUnknownAndNullAdvanced state)))
       (is-unsafe-to-deref (fc-getter fcs) (ptr-getter state)))))
 
-(assert
-  (=> (not enable-solution-s1)
-      (and
-
+(assert (=> (not enable-solution-s1)
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-1)
-     :named CompareUnknownAndNullAdvanced-reachable-1)
+     :named CompareUnknownAndNullAdvanced-reachable-1)))
 
+(assert (=> (not enable-solution-s1)
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-2)
-     :named CompareUnknownAndNullAdvanced-reachable-2)
+     :named CompareUnknownAndNullAdvanced-reachable-2)))
 
+(assert (=> (not enable-solution-s1)
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-3)
-     :named CompareUnknownAndNullAdvanced-reachable-3)
+     :named CompareUnknownAndNullAdvanced-reachable-3)))
 
+(assert (=> (not enable-solution-s1)
   (! (is-reachable-CompareUnknownAndNullAdvanced get-fc-4)
-     :named CompareUnknownAndNullAdvanced-reachable-4)
+     :named CompareUnknownAndNullAdvanced-reachable-4)))
 
+(assert (=> (not enable-solution-s1)
   ;; The dereference at (1) is actually unsafe, but the structure of the
   ;; dataflow analysis defined in this file, can't detect that. The issue is
-  ;; that the flow condition at (1) does not have information about what
-  ;; happens later.
+  ;; that the flow condition at (1) does not have information about what happens
+  ;; later.
   (! (not (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-1 get-x-CompareUnknownAndNullAdvanced))
-     :named CompareUnknownAndNullAdvanced-deref-1)
+     :named CompareUnknownAndNullAdvanced-deref-1)))
 
+(assert (=> (not enable-solution-s1)
   (! (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-2 get-x-CompareUnknownAndNullAdvanced)
-     :named CompareUnknownAndNullAdvanced-deref-2)
+     :named CompareUnknownAndNullAdvanced-deref-2)))
 
+(assert (=> (not enable-solution-s1)
   (! (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-3 get-x-CompareUnknownAndNullAdvanced)
-     :named CompareUnknownAndNullAdvanced-deref-3)
+     :named CompareUnknownAndNullAdvanced-deref-3)))
 
+(assert (=> (not enable-solution-s1)
   (! (not (is-unsafe-deref-CompareUnknownAndNullAdvanced get-fc-4 get-x-CompareUnknownAndNullAdvanced))
-     :named CompareUnknownAndNullAdvanced-deref-4)
-)))
+     :named CompareUnknownAndNullAdvanced-deref-4)))
 
 (echo "Verifying the selected solution against test cases.")
 (check-sat)
