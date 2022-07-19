@@ -23,6 +23,7 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:sema",
+        "@llvm-project//llvm:Support",
     ],
 )
 

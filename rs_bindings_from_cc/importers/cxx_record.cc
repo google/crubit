@@ -10,6 +10,7 @@
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/Support/ErrorHandling.h"
 
 namespace crubit {
 
@@ -52,9 +53,7 @@ absl::StatusOr<RecordType> TranslateRecordType(
     case clang::TTK_Class:
       return RecordType::kClass;
     case clang::TTK_Enum:
-      CRUBIT_CHECK(false &&
-                   "clang::RecordDecl::getTagKind shouldn't return TTK_Enum");
-      return absl::InternalError(
+      llvm::report_fatal_error(
           "clang::RecordDecl::getTagKind shouldn't return TTK_Enum");
     case clang::TTK_Interface:
       // Some docs about `__interface` can be found here:
@@ -63,8 +62,7 @@ absl::StatusOr<RecordType> TranslateRecordType(
           "`__interface` / clang::TTK_Interface is not supported");
   }
 
-  CRUBIT_CHECK(false && "Unrecognized clang::TagKind");
-  return absl::InternalError("Unrecognized clang::TagKind");
+  llvm::report_fatal_error("Unrecognized clang::TagKind");
 }
 
 }  // namespace
