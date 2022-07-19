@@ -14,7 +14,7 @@
 //
 // On most platforms structs that are 3 words or smaller are passed directly
 // in swiftcall.
-struct UnusualSwiftcallStruct {
+struct UnusualSwiftcallStruct final {
   UnusualSwiftcallStruct() = default;
   UnusualSwiftcallStruct(const UnusualSwiftcallStruct&) = default;
   UnusualSwiftcallStruct(UnusualSwiftcallStruct&&) = default;

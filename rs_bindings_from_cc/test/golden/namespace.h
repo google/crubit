@@ -8,7 +8,7 @@
 #pragma clang lifetime_elision
 
 namespace test_namespace_bindings {
-struct S {
+struct S final {
   int i;
 };
 
@@ -28,7 +28,7 @@ test_namespace_bindings::S identity(test_namespace_bindings::S s);
 namespace test_namespace_bindings_reopened {
 void x();
 namespace inner {
-struct S {};
+struct S final {};
 }  // namespace inner
 }  // namespace test_namespace_bindings_reopened
 
@@ -41,7 +41,7 @@ void z(S s);
 
 namespace test_namespace_bindings_inline {
 inline namespace inner {
-struct StructInInlineNamespace {};
+struct StructInInlineNamespace final {};
 }  // namespace inner
 }  // namespace test_namespace_bindings_inline
 

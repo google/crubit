@@ -7,12 +7,12 @@
 
 #pragma clang lifetime_elision
 
-struct DifferentScope {};
+struct DifferentScope final {};
 
 namespace test_namespace_bindings {
 
 template <typename T>
-class MyTemplate {
+class MyTemplate final {
  public:
   static MyTemplate Create(T value) {
     MyTemplate result;
@@ -29,12 +29,12 @@ class MyTemplate {
 using MyTypeAlias = MyTemplate<int>;
 using OtherTypeAliasInSameTarget = MyTemplate<int>;
 
-struct TemplateParam {};
+struct TemplateParam final {};
 using TemplateWithStructTemplateParam = MyTemplate<TemplateParam>;
 using ParamFromDifferentScope = MyTemplate<DifferentScope>;
 
 template <typename T1, typename T2>
-struct TemplateWithTwoParams {
+struct TemplateWithTwoParams final {
   T1 value1;
   T2 value2;
 };
@@ -47,7 +47,7 @@ using AliasToTemplateOfATemplate =
 }  // namespace test_namespace_bindings
 
 template <typename T>
-struct MyTopLevelTemplate {
+struct MyTopLevelTemplate final {
   T value;
 };
 

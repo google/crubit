@@ -6370,7 +6370,7 @@ mod tests {
             r#"
         namespace test_namespace_bindings {
             inline void f() {};
-            struct S{};
+            struct S final {};
         }
         inline void useS(test_namespace_bindings::S s) {};"#,
         )?)?
@@ -6400,7 +6400,7 @@ mod tests {
             r#"
             namespace test_namespace_bindings {
                 inline namespace inner {
-                    struct MyStruct {};
+                    struct MyStruct final {};
                 }
                 void processMyStruct(MyStruct s);
             }

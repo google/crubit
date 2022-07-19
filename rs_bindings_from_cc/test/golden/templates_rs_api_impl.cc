@@ -145,30 +145,21 @@ __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSEOS1___2f_2fthird_5fp
     class test_namespace_bindings::MyTemplate<int>* __this,
     class test_namespace_bindings::MyTemplate<int>* __param_0) {
   return &__this->operator=(std::move(*__param_0));
-} extern "C" void
+} extern "C" class test_namespace_bindings::MyTemplate<DifferentScope>
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    class test_namespace_bindings::MyTemplate<DifferentScope>* __return,
     struct DifferentScope value) {
-  crubit::construct_at(
-      __return,
-      test_namespace_bindings::MyTemplate<DifferentScope>::Create(value));
-}
-extern "C" void
+  return test_namespace_bindings::MyTemplate<DifferentScope>::Create(value);
+} extern "C" class test_namespace_bindings::MyTemplate<
+    test_namespace_bindings::TemplateParam>
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    class test_namespace_bindings::MyTemplate<
-        test_namespace_bindings::TemplateParam>* __return,
     struct test_namespace_bindings::TemplateParam value) {
-  crubit::construct_at(
-      __return, test_namespace_bindings::MyTemplate<
-                    test_namespace_bindings::TemplateParam>::Create(value));
-}
-extern "C" void
+  return test_namespace_bindings::MyTemplate<
+      test_namespace_bindings::TemplateParam>::Create(value);
+} extern "C" class test_namespace_bindings::MyTemplate<int>
 __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
-    class test_namespace_bindings::MyTemplate<int>* __return, int value) {
-  crubit::construct_at(__return,
-                       test_namespace_bindings::MyTemplate<int>::Create(value));
-}
-extern "C" const struct DifferentScope*
+    int value) {
+  return test_namespace_bindings::MyTemplate<int>::Create(value);
+} extern "C" const struct DifferentScope*
 __rust_thunk___ZNK23test_namespace_bindings10MyTemplateI14DifferentScopeE5valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
     const class test_namespace_bindings::MyTemplate<DifferentScope>* __this) {
   return &__this->value();

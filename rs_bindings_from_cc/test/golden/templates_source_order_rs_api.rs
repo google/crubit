@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:templates_source_order_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
+#![feature(const_ptr_offset_from, custom_inner_attributes)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -19,7 +19,7 @@
 // Error while generating bindings for item 'MyTemplate':
 // Class templates are not supported yet
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TopLevel {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
@@ -40,7 +40,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::Top
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
@@ -59,7 +59,7 @@ pub type Alias5 = crate::__CcTemplateInst10MyTemplateIbE;
 pub type Alias6 = crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE;
 
 pub mod test_namespace_bindings {
-    #[::ctor::recursively_pinned]
+    #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct Inner {
         __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
@@ -83,7 +83,7 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'Inner::operator=':
-    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+    // operator= for Unpin types is not yet supported.
 
     // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'test_namespace_bindings::Inner::operator=':
@@ -100,7 +100,7 @@ pub mod test_namespace_bindings {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_SOURCE_ORDER_H_
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -127,7 +127,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
@@ -143,7 +143,7 @@ impl __CcTemplateInst10MyTemplateI8TopLevelE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -170,7 +170,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
@@ -186,7 +186,7 @@ impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -213,7 +213,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
@@ -229,7 +229,7 @@ impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -256,7 +256,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
@@ -272,7 +272,7 @@ impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIbE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -299,7 +299,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
@@ -312,7 +312,7 @@ impl __CcTemplateInst10MyTemplateIbE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIcE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -339,7 +339,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
@@ -352,7 +352,7 @@ impl __CcTemplateInst10MyTemplateIcE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct __CcTemplateInst10MyTemplateIdE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -379,7 +379,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
@@ -392,7 +392,7 @@ impl __CcTemplateInst10MyTemplateIdE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIfE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -419,7 +419,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
@@ -432,7 +432,7 @@ impl __CcTemplateInst10MyTemplateIfE {
     }
 }
 
-#[::ctor::recursively_pinned]
+#[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIiE {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -459,7 +459,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
-// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+// operator= for Unpin types is not yet supported.
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
@@ -520,7 +520,10 @@ const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_
 const _: () = assert!(::std::mem::size_of::<crate::TopLevel>() == 1);
 const _: () = assert!(::std::mem::align_of::<crate::TopLevel>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::TopLevel: Copy);
+    static_assertions::assert_impl_all!(crate::TopLevel: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::TopLevel: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::TopLevel: Drop);
@@ -529,7 +532,10 @@ const _: () = {
 const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::Inner>() == 1);
 const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::Inner>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Copy);
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::test_namespace_bindings::Inner: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::Inner: Drop);
@@ -539,7 +545,10 @@ const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateI
 const _: () =
     assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateI8TopLevelE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateI8TopLevelE: Drop);
@@ -557,7 +566,12 @@ const _: () = assert!(
     ) == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_any!(
+    static_assertions::assert_impl_all!(
+        crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Clone
+    );
+};
+const _: () = {
+    static_assertions::assert_impl_all!(
         crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE: Copy
     );
 };
@@ -578,9 +592,10 @@ const _: () =
 const _: () =
     assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(
-        crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Copy
-    );
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(
@@ -602,7 +617,12 @@ const _: () = assert!(
     >() == 1
 );
 const _: () = {
-    static_assertions::assert_not_impl_any!(
+    static_assertions::assert_impl_all!(
+        crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Clone
+    );
+};
+const _: () = {
+    static_assertions::assert_impl_all!(
         crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE: Copy
     );
 };
@@ -621,7 +641,10 @@ const _: () = assert!(
 const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
 const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIbE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIbE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIbE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIbE: Drop);
@@ -632,7 +655,10 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
 const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIcE>() == 1);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIcE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIcE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIcE: Drop);
@@ -643,7 +669,10 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
 const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIdE>() == 8);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIdE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIdE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIdE: Drop);
@@ -654,7 +683,10 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIfE>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIfE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIfE: Drop);
@@ -665,7 +697,10 @@ const _: () =
 const _: () = assert!(::std::mem::size_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::__CcTemplateInst10MyTemplateIiE>() == 4);
 const _: () = {
-    static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::__CcTemplateInst10MyTemplateIiE: Copy);
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::__CcTemplateInst10MyTemplateIiE: Drop);
