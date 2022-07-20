@@ -525,9 +525,25 @@ fn api_func_shape(
             func_name = make_rs_ident("assign");
         }
         UnqualifiedIdentifier::Operator(op) if op.name == "+" && param_types.len() == 2 => {
-            // TODO(b/219826128): implement for non-member functions
-            let record = maybe_record
-                .ok_or_else(|| anyhow!("operator+ must be a member function (b/219826128)."))?;
+            let (record, impl_for) = if let Some(record) = maybe_record {
+                (&**record, ImplFor::RefT)
+            } else {
+                match &param_types[0] {
+                    RsTypeKind::Record { record, .. } => (&**record, ImplFor::T),
+                    RsTypeKind::Reference { referent, .. } => (
+                        match &**referent {
+                            RsTypeKind::Record { record, .. } => &**record,
+                            _ => bail!("Expected first parameter referent to be a record"),
+                        },
+                        ImplFor::RefT,
+                    ),
+                    RsTypeKind::RvalueReference { .. } => {
+                        bail!("Not yet supported for rvalue references (b/219826128)")
+                    }
+                    _ => bail!("Expected first parameter to be a record or reference"),
+                }
+            };
+
             impl_kind = ImplKind::Trait {
                 record_name: make_rs_ident(&record.rs_name),
                 trait_name: TraitName::Other {
@@ -535,7 +551,7 @@ fn api_func_shape(
                     params: vec![param_types[1].clone()],
                     is_unsafe_fn: false,
                 },
-                impl_for: ImplFor::RefT,
+                impl_for,
                 trait_generic_params: quote! {},
                 format_first_param_as_self: true,
                 associated_return_type: Some(make_rs_ident("Output")),
@@ -2167,6 +2183,11 @@ impl RsTypeKind {
                 referent = reference_pointee;
                 mutability = reference_mutability;
                 lifetime = quote! {#reference_lifetime};
+            }
+            RsTypeKind::Record { .. } => {
+                // This case doesn't happen for methods, but is needed for free functions mapped to
+                // a trait impl that take the first argument by value.
+                return Ok(quote! { self });
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }

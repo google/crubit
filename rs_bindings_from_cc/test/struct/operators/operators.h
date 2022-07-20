@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_
 
+#include <cstdint>
+
 #pragma clang lifetime_elision
 
 struct TestStruct1 final {
@@ -137,5 +139,35 @@ struct AddableReturnsNontrivial final {
 
   int i;
 };
+
+struct UnpinStruct final {
+  int i;
+};
+
+// impl Add<&UnpinStruct> for &UnpinStruct {
+//     type Output = UnpinStruct;
+//     ..
+// }
+UnpinStruct operator+(const UnpinStruct& lhs, const UnpinStruct& rhs);
+
+// impl Add<&mut UnpinStruct> for &mut UnpinStruct {
+//     type Output = UnpinStruct;
+//     ..
+// }
+UnpinStruct operator+(UnpinStruct& lhs, UnpinStruct& rhs);
+
+// impl Add<UnpinStruct> for UnpinStruct {
+//     type Output = UnpinStruct;
+//     ..
+// }
+UnpinStruct operator+(UnpinStruct lhs, UnpinStruct rhs);
+
+struct AddableOverloaded final {
+  char int16_char;
+  char int32_char;
+};
+
+char operator+(AddableOverloaded lhs, std::int16_t rhs);
+char operator+(AddableOverloaded lhs, std::int32_t rhs);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_

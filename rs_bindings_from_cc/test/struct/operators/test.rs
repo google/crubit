@@ -110,4 +110,32 @@ mod tests {
         }
         assert_eq!(ctor::emplace!(&*s1 + &*s2).i, 33);
     }
+
+    #[test]
+    fn test_add_free_by_const_ref() {
+        let s1 = UnpinStruct { i: 11 };
+        let s2 = UnpinStruct { i: 22 };
+        assert_eq!(33, (&s1 + &s2).i);
+    }
+
+    #[test]
+    fn test_add_free_by_ref() {
+        let mut s1 = UnpinStruct { i: 11 };
+        let mut s2 = UnpinStruct { i: 22 };
+        assert_eq!(33, (&mut s1 + &mut s2).i);
+    }
+
+    #[test]
+    fn test_add_free_by_value() {
+        let s1 = UnpinStruct { i: 11 };
+        let s2 = UnpinStruct { i: 22 };
+        assert_eq!(33, (s1 + s2).i);
+    }
+
+    #[test]
+    fn test_add_overloaded() {
+        let s = AddableOverloaded { int16_char: b'A', int32_char: b'B' };
+        assert_eq!(b'A', s + 0i16);
+        assert_eq!(b'B', s + 0i32);
+    }
 }

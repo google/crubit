@@ -21,3 +21,25 @@ bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
 }
 
 }  // namespace some_other_namespace
+
+//////////////////////////////////////////////////////////////////////
+
+UnpinStruct operator+(const UnpinStruct& lhs, const UnpinStruct& rhs) {
+  return UnpinStruct{lhs.i + rhs.i};
+}
+
+UnpinStruct operator+(UnpinStruct& lhs, UnpinStruct& rhs) {
+  return UnpinStruct{lhs.i + rhs.i};
+}
+
+UnpinStruct operator+(UnpinStruct lhs, UnpinStruct rhs) {
+  return UnpinStruct{lhs.i + rhs.i};
+}
+
+char operator+(AddableOverloaded lhs, std::int16_t rhs) {
+  return lhs.int16_char;
+}
+
+char operator+(AddableOverloaded lhs, std::int32_t rhs) {
+  return lhs.int32_char;
+}

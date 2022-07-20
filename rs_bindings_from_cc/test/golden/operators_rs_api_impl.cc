@@ -115,6 +115,52 @@ extern "C" class AddableFree* __rust_thunk___ZN11AddableFreeaSEOS_(
     class AddableFree* __this, class AddableFree* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN10OverloadedC1Ev(class Overloaded* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN10OverloadedC1ERKS_(
+    class Overloaded* __this, const class Overloaded* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN10OverloadedC1EOS_(
+    class Overloaded* __this, class Overloaded* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN10OverloadedD1Ev(class Overloaded* __this) {
+  std::destroy_at(__this);
+}
+extern "C" class Overloaded* __rust_thunk___ZN10OverloadedaSERKS_(
+    class Overloaded* __this, const class Overloaded* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" class Overloaded* __rust_thunk___ZN10OverloadedaSEOS_(
+    class Overloaded* __this, class Overloaded* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN15IncompatibleLHSC1Ev(
+    class IncompatibleLHS* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN15IncompatibleLHSC1ERKS_(
+    class IncompatibleLHS* __this, const class IncompatibleLHS* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN15IncompatibleLHSC1EOS_(
+    class IncompatibleLHS* __this, class IncompatibleLHS* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN15IncompatibleLHSD1Ev(
+    class IncompatibleLHS* __this) {
+  std::destroy_at(__this);
+}
+extern "C" class IncompatibleLHS* __rust_thunk___ZN15IncompatibleLHSaSERKS_(
+    class IncompatibleLHS* __this, const class IncompatibleLHS* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" class IncompatibleLHS* __rust_thunk___ZN15IncompatibleLHSaSEOS_(
+    class IncompatibleLHS* __this, class IncompatibleLHS* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void __rust_thunk___ZN18AddableReturnsVoidC1Ev(
     class AddableReturnsVoid* __this) {
   crubit::construct_at(__this);
@@ -180,6 +226,12 @@ static_assert(alignof(class AddableFriend) == 4);
 
 static_assert(sizeof(class AddableFree) == 1);
 static_assert(alignof(class AddableFree) == 1);
+
+static_assert(sizeof(class Overloaded) == 1);
+static_assert(alignof(class Overloaded) == 1);
+
+static_assert(sizeof(class IncompatibleLHS) == 1);
+static_assert(alignof(class IncompatibleLHS) == 1);
 
 static_assert(sizeof(class AddableReturnsVoid) == 4);
 static_assert(alignof(class AddableReturnsVoid) == 4);
