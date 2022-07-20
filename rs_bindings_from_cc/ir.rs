@@ -435,9 +435,6 @@ impl Record {
     ///    when passing mutable references to Rust.
     ///
     /// Described in more detail at: docs/unpin
-    ///
-    /// TODO(b/200067242): Actually force mut references to !is_unpin to be
-    /// Pin<&mut T>.
     pub fn is_unpin(&self) -> bool {
         self.is_trivial_abi && !self.is_inheritable
     }
