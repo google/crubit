@@ -190,7 +190,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       ictx_.GetTranslatedName(function_decl);
 
   llvm::Optional<std::string> doc_comment = ictx_.GetComment(function_decl);
-  if (!doc_comment.hasValue() && is_member_or_descendant_of_class_template) {
+  if (!doc_comment.has_value() && is_member_or_descendant_of_class_template) {
     // Despite `is_member_or_descendant_of_class_template` check above, we are
     // not guaranteed that a `func_pattern` exists below.  For example, it may
     // be missing when `function_decl` is an implicitly defined constructor of a

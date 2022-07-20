@@ -59,8 +59,8 @@ llvm::json::Value LifetimeName::ToJson() const {
 
 llvm::json::Value RsType::ToJson() const {
   return llvm::json::Object{
-      {"name", decl_id.hasValue() ? llvm::json::Value(nullptr)
-                                  : llvm::json::Value(name)},
+      {"name", decl_id.has_value() ? llvm::json::Value(nullptr)
+                                   : llvm::json::Value(name)},
       {"lifetime_args", lifetime_args},
       {"type_args", type_args},
       {"decl_id", decl_id},
@@ -69,8 +69,8 @@ llvm::json::Value RsType::ToJson() const {
 
 llvm::json::Value CcType::ToJson() const {
   return llvm::json::Object{
-      {"name", decl_id.hasValue() ? llvm::json::Value(nullptr)
-                                  : llvm::json::Value(name)},
+      {"name", decl_id.has_value() ? llvm::json::Value(nullptr)
+                                   : llvm::json::Value(name)},
       {"is_const", is_const},
       {"type_args", type_args},
       {"decl_id", decl_id},

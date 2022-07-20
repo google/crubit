@@ -119,7 +119,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     cc_name =
         GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl);
     doc_comment = ictx_.GetComment(specialization_decl);
-    if (!doc_comment.hasValue()) {
+    if (!doc_comment.has_value()) {
       doc_comment =
           ictx_.GetComment(specialization_decl->getSpecializedTemplate());
     }
@@ -323,7 +323,7 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
                      base_path_element.Base->getType()->getAsCXXRecordDecl()))
                  .getQuantity()};
       }
-      CRUBIT_CHECK((!offset.hasValue() || *offset >= 0) &&
+      CRUBIT_CHECK((!offset.has_value() || *offset >= 0) &&
                    "Concrete base classes should have non-negative offsets.");
       bases.push_back(
           BaseClass{.base_record_id = GenerateItemId(base_record_decl),

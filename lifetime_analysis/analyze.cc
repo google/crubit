@@ -805,7 +805,7 @@ llvm::Error AnalyzeFunctionBody(
 
   const auto exit_block_state =
       block_to_output_state.at(cfctx->getCFG().getExit().getBlockID());
-  if (!exit_block_state.hasValue()) {
+  if (!exit_block_state.has_value()) {
     assert(false);
     return llvm::createStringError(
         llvm::inconvertibleErrorCode(),
@@ -813,7 +813,7 @@ llvm::Error AnalyzeFunctionBody(
                      "' unexpectedly does not exist"));
   }
 
-  auto exit_lattice = exit_block_state.getValue().Lattice;
+  auto exit_lattice = exit_block_state->Lattice;
   if (exit_lattice.IsError()) {
     return llvm::createStringError(llvm::inconvertibleErrorCode(),
                                    exit_lattice.Error());
