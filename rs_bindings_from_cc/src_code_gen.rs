@@ -905,7 +905,7 @@ fn generate_func(
 
                         // We would need to do this, but it's no longer used:
                         //    return_type = RsTypeKind::Unit;
-                        let _ = return_type;  // proof that we don't need to update it.
+                        let _ = return_type; // proof that we don't need to update it.
                         quoted_return_type = quote! {};
                     }
                 }
@@ -2172,7 +2172,7 @@ impl RsTypeKind {
         }
         let mut_ = mutability.format_for_reference();
         if mutability == &Mutability::Mut && !referent.is_unpin() {
-            // TODO(b/200067242): Add a `use ::std::pin::Pin` to the crate, and use
+            // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
             // `Pin`.
             Ok(quote! {self: ::std::pin::Pin< & #lifetime #mut_ Self>})
         } else {
@@ -2274,7 +2274,7 @@ impl ToTokens for RsTypeKind {
                 let mut_ = mutability.format_for_reference();
                 let reference = quote! {& #lifetime #mut_ #referent};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
-                    // TODO(b/200067242): Add a `use ::std::pin::Pin` to the crate, and use
+                    // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
                     // RsTypeKind-creation time, or returning an RsSnippet from here (and not
                     // implementing ToTokens, but instead some other interface.)
@@ -2284,7 +2284,7 @@ impl ToTokens for RsTypeKind {
                 }
             }
             RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
-                // TODO(b/200067242): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
+                // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
                 if mutability == &Mutability::Mut {
                     quote! {::ctor::RvalueReference<#lifetime, #referent>}
                 } else {
