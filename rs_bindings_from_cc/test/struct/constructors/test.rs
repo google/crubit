@@ -5,6 +5,7 @@
 #[cfg(test)]
 mod tests {
     use constructors::*;
+    use ctor::CtorNew as _;
     use no_elided_lifetimes::*;
     use static_assertions::{assert_impl_all, assert_not_impl_any};
 
@@ -108,8 +109,15 @@ mod tests {
         // constructor, copy constructor, and constructor taking an int.
         assert_not_impl_any!(NonTrivialStructWithConstructors: Clone, Default, From<i32>);
 
-        // TODO(b/200067242): Support constructing non-trivially-relocatable
-        // types. See also <internal link>.
+        ctor::emplace! {
+            let s = NonTrivialStructWithConstructors::ctor_new(123);
+        }
+        assert_eq!(s.int_field, 123);
+
+        ctor::emplace! {
+            let s_clone = ctor::copy(&*s);
+        }
+        assert_eq!(s_clone.int_field, 123);
     }
 
     #[test]

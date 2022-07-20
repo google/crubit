@@ -93,11 +93,6 @@ struct NonTrivialStructWithConstructors final {
   NonTrivialStructWithConstructors();
   explicit NonTrivialStructWithConstructors(int);
 
-  // TODO(lukasza): Cover copy constructor (may need [[clang::trivial_abi]]).
-  // This is desirable mostly for completness / parity with
-  // StructWithUserProvidedConstructors. See <internal link> for
-  // more details (e.g. what should be the return type of `Default::default()`)
-
   // Presence of a user-defined destructor makes this struct non-trivial.
   ~NonTrivialStructWithConstructors();
 
