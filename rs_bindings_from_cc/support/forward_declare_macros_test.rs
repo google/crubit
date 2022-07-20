@@ -180,14 +180,9 @@ fn test_formerly_incomplete() {
     takes_incomplete(x.cc_cast()); // before
     takes_complete(x.cc_cast()); // after
 
-    // calls which previously were, in a fit of paranoia, converting an incomplete
-    // type to itself will also continue to work.
-    // We wish to show this because this demonstrates that the fit of paranoia is,
-    // in fact, a good practice when dealing with incomplete types: do not
-    // assume the things you call will continue to use incomplete types forever!
-    // TODO(jeanpierreda): *require* that callers use .cc_cast(), e.g. by making
-    // these two different Incomplete types (e.g. Incomplete<SymbolName,
-    // CurrentCrate>)
+    // Calls which previously were converting an incomplete type to an incomplete
+    // will also continue to work. In fact, this is required, since different crates
+    // will define different incomplete types.
     let x: &caller::MyType = x.cc_cast();
     takes_incomplete(x.cc_cast()); // before
     takes_complete(x.cc_cast()); // after
