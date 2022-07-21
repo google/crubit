@@ -46,13 +46,21 @@ rust_proc_macro(
 )
 
 rust_test(
+    name = "ctor_proc_macros_test",
+    crate = ":ctor_proc_macros",
+    deps = [
+        "//rs_bindings_from_cc:token_stream_matchers",
+    ],
+)
+
+rust_test(
     name = "ctor_test",
     srcs = ["ctor.rs"],
     proc_macro_deps = [":ctor_proc_macros"],
 )
 
 rust_test(
-    name = "ctor_proc_macros_test",
+    name = "ctor_proc_macros_e2e_test",
     srcs = ["ctor_proc_macros_test.rs"],
     deps = [
         ":ctor",

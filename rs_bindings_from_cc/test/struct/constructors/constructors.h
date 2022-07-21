@@ -36,7 +36,7 @@ struct StructWithImplicitConversionConstructor final {
   int int_field;
 };
 
-struct OtherSimpleStruct {
+struct OtherSimpleStruct final {
   int int_field;
 };
 

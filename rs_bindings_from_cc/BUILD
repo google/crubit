@@ -424,6 +424,7 @@ cc_library(
 rust_library(
     name = "token_stream_matchers",
     srcs = ["token_stream_matchers.rs"],
+    visibility = ["//:__subpackages__"],
     deps = [
         ":ir",
         "//common:arc_anyhow",

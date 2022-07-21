@@ -139,7 +139,7 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
         field.ty = syn::Type::Path(pin_ty);
     };
     // returns the braced parts of a projection pattern and return value.
-    // e.g. {foo, bar}, {foo: Pin::new_unchecked(foo), bar: Pin::new_unchecked(bar)}
+    // e.g. {foo, bar, ..}, {foo: Pin::new_unchecked(foo), bar: Pin::new_unchecked(bar)}
     let pat_project = |fields: &mut syn::Fields| {
         let mut pat = quote! {};
         let mut project = quote! {};
@@ -159,6 +159,8 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
             }
             project.extend(quote! {#lhs: ::std::pin::Pin::new_unchecked(#rhs),});
         }
+        // Also ignore the __must_use_ctor_to_initialize field, if present.
+        pat.extend(quote! {..});
         (quote! {{#pat}}, quote! {{#project}})
     };
     let project_body;
@@ -266,6 +268,69 @@ impl Parse for RecursivelyPinnedArgs {
     }
 }
 
+/// Prevents this type from being directly created outside of this crate in safe
+/// code.
+///
+/// For enums and unit structs, this uses the `#[non_exhaustive]` attribute.
+/// This leads to unfortunate error messages, but there is no other way to
+/// prevent creation of an enum or a unit struct at this time.
+///
+/// For tuple structs, we also use `#[non_exhaustive]`, as it's no worse than
+/// the alternative. Both adding a private field and adding `#[non_exhaustive]`
+/// lead to indirect error messages, but `#[non_exhaustive]` is the more likely
+/// of the two to ever get custom error message support.
+///
+/// Finally, for structs with named fields, we actually *cannot* use
+/// `#[non_exhaustive]`, because it would make the struct not FFI-safe, and
+/// structs with named fields are specifically supported for C++ interop.
+/// Instead, we use a private field with a name that indicates the error.
+/// (`__must_use_ctor_to_initialize`).
+///
+/// Unions are not yet implemented properly.
+///
+/// ---
+///
+/// Note that the use of `#[non_exhaustive]` also has other effects. At the
+/// least: tuple variants and tuple structs marked with `#[non_exhaustive]`
+/// cannot be pattern matched using the "normal" syntax. Instead, one must use
+/// curly braces. (Broken: `T(x, ..)`; woken: `T{0: x, ..}`).
+///
+/// (This does not seem very intentional, and with all luck will be fixed before
+/// too long.)
+fn forbid_initialization(s: &mut syn::DeriveInput) {
+    let non_exhaustive_attr = syn::parse_quote!(#[non_exhaustive]);
+    match &mut s.data {
+        // TODO(b/232969667): prevent creation of unions from safe code.
+        // (E.g. hide inside a struct.)
+        syn::Data::Union(_) => return,
+        syn::Data::Struct(data) => {
+            match &mut data.fields {
+                syn::Fields::Unit | syn::Fields::Unnamed(_) => {
+                    s.attrs.insert(0, non_exhaustive_attr);
+                }
+                syn::Fields::Named(fields) => {
+                    fields.named.push(syn::Field {
+                        attrs: vec![],
+                        vis: syn::Visibility::Inherited,
+                        // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
+                        ident: Some(Ident::new("__must_use_ctor_to_initialize", Span::call_site())),
+                        colon_token: Some(<syn::Token![:]>::default()),
+                        ty: syn::parse_quote!([u8; 0]),
+                    });
+                }
+            }
+        }
+        syn::Data::Enum(e) => {
+            // Enums can't have private fields. Instead, we need to add #[non_exhaustive] to
+            // every variant -- this makes it impossible to construct the
+            // variants.
+            for variant in &mut e.variants {
+                variant.attrs.insert(0, non_exhaustive_attr.clone());
+            }
+        }
+    }
+}
+
 /// `#[recursively_pinned]` pins every field, similar to `#[pin_project]`, and
 /// marks the struct `!Unpin`.
 ///
@@ -314,6 +379,26 @@ impl Parse for RecursivelyPinnedArgs {
 ///
 /// (This is analogous to `#[pin_project(PinnedDrop)]`.)
 ///
+/// ## Direct initialization
+///
+/// Use the `ctor!` macro to instantiate recursively pinned types. For example:
+///
+/// ```
+/// // equivalent to `let x = Point {x: 3, y: 4}`, but uses pinned construction.
+/// emplace! {
+///   let x = ctor!(Point {x: 3, y: 4});
+/// }
+/// ```
+///
+/// Recursively pinned types cannot be created directly in safe code, as they
+/// are pinned from the very moment of their creation.
+///
+/// This is prevented either using `#[non_exhaustive]` or using a private field,
+/// depending on the type in question. For example, enums use
+/// `#[non_exhaustive]`, and structs with named fields use a private field named
+/// `__must_use_ctor_to_initialize`. This can lead to confusing error messages,
+/// so watch out!
+///
 /// ## Supported types
 ///
 /// Structs, enums, and unions are all supported. However, unions do not receive
@@ -321,15 +406,38 @@ impl Parse for RecursivelyPinnedArgs {
 /// unions. (One cannot know which field is active.)
 #[proc_macro_attribute]
 pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
-    let args = syn::parse_macro_input!(args as RecursivelyPinnedArgs);
-    let input = syn::parse_macro_input!(item as syn::DeriveInput);
+    match recursively_pinned_impl(args.into(), item.into()) {
+        Ok(t) => t.into(),
+        Err(e) => e.into_compile_error().into(),
+    }
+}
 
-    let project_pin_impl = match project_pin_impl(&input) {
-        Ok(ok) => ok,
-        Err(e) => return e.into_compile_error().into(),
-    };
+/// A separate function for calling from tests.
+///
+/// See e.g. https://users.rust-lang.org/t/procedural-macro-api-is-used-outside-of-a-procedural-macro/30841
+fn recursively_pinned_impl(
+    args: proc_macro2::TokenStream,
+    item: proc_macro2::TokenStream,
+) -> syn::Result<proc_macro2::TokenStream> {
+    let args = syn::parse2::<RecursivelyPinnedArgs>(args)?;
+    let mut input = syn::parse2::<syn::DeriveInput>(item)?;
 
+    let project_pin_impl = project_pin_impl(&input)?;
     let name = input.ident.clone();
+
+    // Create two copies of input: one (public) has a private field that can't be
+    // instantiated. The other (only visible via
+    // RecursivelyPinned::CtorInitializedFields) doesn't have this field.
+    // This causes `ctor!(Foo {})` to work, but `Foo{}` to complain of a missing
+    // field.
+    let mut ctor_initialized_input = input.clone();
+    // TODO(b/200067242): Remove all attributes that aren't `repr`.
+    // TODO(jeanpierreda): This should really check for name collisions with any types
+    // used in the fields. Collisions with other names don't matter, because the
+    // type is locally defined within a narrow scope.
+    ctor_initialized_input.ident = syn::Ident::new(&format!("__CrubitCtor{name}"), name.span());
+    let ctor_initialized_name = &ctor_initialized_input.ident;
+    forbid_initialization(&mut input);
 
     let (input_impl_generics, input_ty_generics, input_where_clause) =
         input.generics.split_for_impl();
@@ -353,19 +461,133 @@ pub fn recursively_pinned(args: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
-    let expanded = quote! {
+    Ok(quote! {
         #input
         #project_pin_impl
 
         #drop_impl
-
-        unsafe impl #input_impl_generics ::ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {
-            // TODO(b/200067242): Generate a new type here, which omits a special field for
-            // marking types as not to be constructed by value.
-            type CtorInitializedFields = Self;
-        }
         impl #input_impl_generics !Unpin for #name #input_ty_generics #input_where_clause {}
-    };
 
-    TokenStream::from(expanded)
+        // Introduce a new scope to limit the blast radius of the CtorInitializedFields type.
+        // This lets us use relatively readable names: while the impl is visible outside the scope,
+        // type is otherwise not visible.
+        const _ : () = {
+            #ctor_initialized_input
+
+            unsafe impl #input_impl_generics ::ctor::RecursivelyPinned for #name #input_ty_generics #input_where_clause {
+                type CtorInitializedFields = #ctor_initialized_name #input_ty_generics;
+            }
+        };
+    })
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use token_stream_matchers::assert_rs_matches;
+
+    /// Essentially a change detector, but handy for debugging.
+    ///
+    /// At time of writing, we can't write negative compilation tests, so
+    /// asserting on the output is as close as we can get. Once negative
+    /// compilation tests are added, it would be better to test various
+    /// safety features that way.
+    #[test]
+    fn test_recursively_pinned_struct() {
+        let definition =
+            recursively_pinned_impl(quote! {}, quote! {#[repr(C)] struct S {x: i32}}).unwrap();
+
+        // The struct can't be directly created, but can be created via
+        // CtorInitializedFields:
+        assert_rs_matches!(
+            definition,
+            quote! {
+                #[repr(C)]
+                struct S {
+                    x: i32,
+                    __must_use_ctor_to_initialize: [u8; 0]
+                }
+            }
+        );
+        assert_rs_matches!(
+            definition,
+            quote! {
+                const _: () = {
+                    #[repr(C)]
+                    struct __CrubitCtorS {x: i32}
+                    unsafe impl ::ctor::RecursivelyPinned for S {
+                        type CtorInitializedFields = __CrubitCtorS;
+                    }
+                };
+            }
+        );
+
+        // The type is non-Unpin:
+        assert_rs_matches!(
+            definition,
+            quote! {
+                impl !Unpin for S {}
+            }
+        );
+
+        // The remaining features of the generated output are better tested via
+        // real tests that exercise the code.
+    }
+
+    /// The enum version of `test_recursively_pinned_struct`.
+    #[test]
+    fn test_recursively_pinned_enum() {
+        let definition = recursively_pinned_impl(
+            quote! {},
+            quote! {
+                #[repr(C)]
+                enum E {
+                    A,
+                    B(i32),
+                }
+            },
+        )
+        .unwrap();
+
+        // The enum variants can't be directly created, but can be created via
+        // CtorInitializedFields:
+        assert_rs_matches!(
+            definition,
+            quote! {
+                #[repr(C)]
+                enum E {
+                    #[non_exhaustive]
+                    A,
+                    #[non_exhaustive]
+                    B(i32),
+                }
+            }
+        );
+        assert_rs_matches!(
+            definition,
+            quote! {
+                const _: () = {
+                    #[repr(C)]
+                    enum __CrubitCtorE {
+                        A,
+                        B(i32),
+                    }
+                    unsafe impl ::ctor::RecursivelyPinned for E {
+                        type CtorInitializedFields = __CrubitCtorE;
+                    }
+                };
+            }
+        );
+
+        // The type is non-Unpin:
+        assert_rs_matches!(
+            definition,
+            quote! {
+                impl !Unpin for E {}
+            }
+        );
+
+        // The remaining features of the generated output are better tested via
+        // real tests that exercise the code.
+    }
 }
