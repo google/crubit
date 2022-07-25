@@ -180,24 +180,21 @@ fn test_recursively_pinned_generic() {
     .x;
 }
 
-// TODO(b/200067242): Uncomment this test. The derive attribute should be
-// cleared on the `CtorInitializedFields` copy of the struct.
-//
-// #[test]
-// fn test_recursively_pinned_struct_derive_default() {
-//     #[::ctor::recursively_pinned]
-//     #[derive(::ctor::CtorFrom_Default)]
-//     struct Struct {
-//         x: i32,
-//         y: f32,
-//     }
-//
-//     ::ctor::emplace! {
-//         let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(());
-//     }
-//     assert_eq!(p.x, 0);
-//     assert_eq!(p.y, 0.0);
-// }
+#[test]
+fn test_recursively_pinned_struct_derive_default() {
+    #[::ctor::recursively_pinned]
+    #[derive(::ctor::CtorFrom_Default)]
+    struct Struct {
+        x: i32,
+        y: f32,
+    }
+
+    ::ctor::emplace! {
+        let p = <Struct as ::ctor::CtorNew<()>>::ctor_new(());
+    }
+    assert_eq!(p.x, 0);
+    assert_eq!(p.y, 0.0);
+}
 
 /// The same as the previous test, but with the attribute order swapped.
 /// This only compiles with macro_attributes_in_derive_output.

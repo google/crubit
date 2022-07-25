@@ -13,6 +13,8 @@ use syn::Token;
 
 // TODO(jeanpierreda): derive constructors and assignment for copy and move.
 
+const FIELD_FOR_MUST_USE_CTOR: &'static str = "__must_use_ctor_to_initialize";
+
 #[proc_macro_derive(CtorFrom_Default)]
 pub fn derive_default(item: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(item as syn::DeriveInput);
@@ -25,17 +27,23 @@ pub fn derive_default(item: TokenStream) -> TokenStream {
             if let syn::Fields::Unit = data.fields {
                 quote! {}
             } else {
-                let filled_fields = data.fields.iter().enumerate().map(|(i, field)| {
+                let filled_fields = data.fields.iter().enumerate().filter_map(|(i, field)| {
                     let field_i = syn::Index::from(i);
-                    let field_name = match &field.ident {
-                        None => quote! {#field_i},
-                        Some(name) => quote! {#name},
+                    let field_name;
+                    // This logic is here in case you derive default on the output of
+                    // `#[recursively_pinned]`, but it's obviously not very flexible. For example,
+                    // maybe we want to compute a non-colliding field name, and maybe there are
+                    // other ordering problems.
+                    match &field.ident {
+                        Some(name) if name == FIELD_FOR_MUST_USE_CTOR => return None,
+                        Some(name) => field_name = quote! {#name},
+                        None => field_name = quote! {#field_i},
                     };
 
                     let field_type = &field.ty;
-                    quote_spanned! {field.span() =>
+                    Some(quote_spanned! {field.span() =>
                         #field_name: <#field_type as ::ctor::CtorNew<()>>::ctor_new(())
-                    }
+                    })
                 });
                 quote! {{ #(#filled_fields),* }}
             }
@@ -139,7 +147,8 @@ fn project_pin_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::TokenS
         field.ty = syn::Type::Path(pin_ty);
     };
     // returns the braced parts of a projection pattern and return value.
-    // e.g. {foo, bar, ..}, {foo: Pin::new_unchecked(foo), bar: Pin::new_unchecked(bar)}
+    // e.g. {foo, bar, ..}, {foo: Pin::new_unchecked(foo), bar:
+    // Pin::new_unchecked(bar)}
     let pat_project = |fields: &mut syn::Fields| {
         let mut pat = quote! {};
         let mut project = quote! {};
@@ -313,7 +322,7 @@ fn forbid_initialization(s: &mut syn::DeriveInput) {
                         attrs: vec![],
                         vis: syn::Visibility::Inherited,
                         // TODO(jeanpierreda): better hygiene: work even if a field has the same name.
-                        ident: Some(Ident::new("__must_use_ctor_to_initialize", Span::call_site())),
+                        ident: Some(Ident::new(FIELD_FOR_MUST_USE_CTOR, Span::call_site())),
                         colon_token: Some(<syn::Token![:]>::default()),
                         ty: syn::parse_quote!([u8; 0]),
                     });
@@ -431,7 +440,8 @@ fn recursively_pinned_impl(
     // This causes `ctor!(Foo {})` to work, but `Foo{}` to complain of a missing
     // field.
     let mut ctor_initialized_input = input.clone();
-    // TODO(b/200067242): Remove all attributes that aren't `repr`.
+    // Removing repr(C) triggers dead-code detection.
+    ctor_initialized_input.attrs = vec![syn::parse_quote!(#[allow(dead_code)])];
     // TODO(jeanpierreda): This should really check for name collisions with any types
     // used in the fields. Collisions with other names don't matter, because the
     // type is locally defined within a narrow scope.
@@ -513,11 +523,11 @@ mod test {
             definition,
             quote! {
                 const _: () = {
-                    #[repr(C)]
-                    struct __CrubitCtorS {x: i32}
-                    unsafe impl ::ctor::RecursivelyPinned for S {
-                        type CtorInitializedFields = __CrubitCtorS;
-                    }
+                   #[allow(dead_code)]
+                   struct __CrubitCtorS {x: i32}
+                   unsafe impl ::ctor::RecursivelyPinned for S {
+                       type CtorInitializedFields = __CrubitCtorS;
+                   }
                 };
             }
         );
@@ -567,7 +577,7 @@ mod test {
             definition,
             quote! {
                 const _: () = {
-                    #[repr(C)]
+                    #[allow(dead_code)]
                     enum __CrubitCtorE {
                         A,
                         B(i32),
