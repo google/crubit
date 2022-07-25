@@ -24,10 +24,6 @@ extern "C" void __rust_thunk___ZN18HasCustomAlignmentC1EOS_(
     struct HasCustomAlignment* __this, struct HasCustomAlignment* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN18HasCustomAlignmentD1Ev(
-    struct HasCustomAlignment* __this) {
-  std::destroy_at(__this);
-}
 extern "C" struct HasCustomAlignment*
 __rust_thunk___ZN18HasCustomAlignmentaSERKS_(
     struct HasCustomAlignment* __this,
@@ -52,10 +48,6 @@ extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentC1EOS_(
     struct HasFieldWithCustomAlignment* __this,
     struct HasFieldWithCustomAlignment* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN27HasFieldWithCustomAlignmentD1Ev(
-    struct HasFieldWithCustomAlignment* __this) {
-  std::destroy_at(__this);
 }
 extern "C" struct HasFieldWithCustomAlignment*
 __rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(
@@ -83,10 +75,6 @@ extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentC1EOS_(
     struct InheritsFromBaseWithCustomAlignment* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentD1Ev(
-    struct InheritsFromBaseWithCustomAlignment* __this) {
-  std::destroy_at(__this);
-}
 extern "C" struct InheritsFromBaseWithCustomAlignment*
 __rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
     struct InheritsFromBaseWithCustomAlignment* __this,
@@ -112,10 +100,6 @@ extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrC1EOS_(
     struct HasCustomAlignmentWithGnuAttr* __this,
     struct HasCustomAlignmentWithGnuAttr* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN29HasCustomAlignmentWithGnuAttrD1Ev(
-    struct HasCustomAlignmentWithGnuAttr* __this) {
-  std::destroy_at(__this);
 }
 extern "C" struct HasCustomAlignmentWithGnuAttr*
 __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(

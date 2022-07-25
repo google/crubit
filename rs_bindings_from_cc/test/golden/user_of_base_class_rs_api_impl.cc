@@ -22,9 +22,6 @@ extern "C" void __rust_thunk___ZN8Derived2C1EOS_(struct Derived2* __this,
                                                  struct Derived2* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN8Derived2D1Ev(struct Derived2* __this) {
-  std::destroy_at(__this);
-}
 extern "C" struct Derived2* __rust_thunk___ZN8Derived2aSERKS_(
     struct Derived2* __this, const struct Derived2* __param_0) {
   return &__this->operator=(*__param_0);
@@ -44,10 +41,6 @@ extern "C" void __rust_thunk___ZN15VirtualDerived2C1ERKS_(
 extern "C" void __rust_thunk___ZN15VirtualDerived2C1EOS_(
     class VirtualDerived2* __this, class VirtualDerived2* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN15VirtualDerived2D1Ev(
-    class VirtualDerived2* __this) {
-  std::destroy_at(__this);
 }
 extern "C" class VirtualDerived2* __rust_thunk___ZN15VirtualDerived2aSERKS_(
     class VirtualDerived2* __this, const class VirtualDerived2* __param_0) {

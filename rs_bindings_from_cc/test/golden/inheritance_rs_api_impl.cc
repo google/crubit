@@ -22,9 +22,6 @@ extern "C" void __rust_thunk___ZN5Base0C1EOS_(class Base0* __this,
                                               class Base0* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN5Base0D1Ev(class Base0* __this) {
-  std::destroy_at(__this);
-}
 extern "C" class Base0* __rust_thunk___ZN5Base0aSERKS_(
     class Base0* __this, const class Base0* __param_0) {
   return &__this->operator=(*__param_0);
@@ -43,9 +40,6 @@ extern "C" void __rust_thunk___ZN5Base1C1ERKS_(class Base1* __this,
 extern "C" void __rust_thunk___ZN5Base1C1EOS_(class Base1* __this,
                                               class Base1* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN5Base1D1Ev(class Base1* __this) {
-  std::destroy_at(__this);
 }
 extern "C" class Base1* __rust_thunk___ZN5Base1aSERKS_(
     class Base1* __this, const class Base1* __param_0) {
@@ -66,9 +60,6 @@ extern "C" void __rust_thunk___ZN5Base2C1EOS_(class Base2* __this,
                                               class Base2* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN5Base2D1Ev(class Base2* __this) {
-  std::destroy_at(__this);
-}
 extern "C" class Base2* __rust_thunk___ZN5Base2aSERKS_(
     class Base2* __this, const class Base2* __param_0) {
   return &__this->operator=(*__param_0);
@@ -80,24 +71,9 @@ extern "C" class Base2* __rust_thunk___ZN5Base2aSEOS_(class Base2* __this,
 extern "C" void __rust_thunk___ZN7DerivedC1Ev(struct Derived* __this) {
   crubit::construct_at(__this);
 }
-extern "C" void __rust_thunk___ZN7DerivedC1ERKS_(
-    struct Derived* __this, const struct Derived* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
 extern "C" void __rust_thunk___ZN7DerivedC1EOS_(struct Derived* __this,
                                                 struct Derived* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN7DerivedD1Ev(struct Derived* __this) {
-  std::destroy_at(__this);
-}
-extern "C" struct Derived* __rust_thunk___ZN7DerivedaSERKS_(
-    struct Derived* __this, const struct Derived* __param_0) {
-  return &__this->operator=(*__param_0);
-}
-extern "C" struct Derived* __rust_thunk___ZN7DerivedaSEOS_(
-    struct Derived* __this, struct Derived* __param_0) {
-  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN12VirtualBase1C1Ev(
     class VirtualBase1* __this) {
@@ -110,10 +86,6 @@ extern "C" void __rust_thunk___ZN12VirtualBase1C1ERKS_(
 extern "C" void __rust_thunk___ZN12VirtualBase1C1EOS_(
     class VirtualBase1* __this, class VirtualBase1* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN12VirtualBase1D1Ev(
-    class VirtualBase1* __this) {
-  std::destroy_at(__this);
 }
 extern "C" class VirtualBase1* __rust_thunk___ZN12VirtualBase1aSERKS_(
     class VirtualBase1* __this, const class VirtualBase1* __param_0) {
@@ -135,10 +107,6 @@ extern "C" void __rust_thunk___ZN12VirtualBase2C1EOS_(
     class VirtualBase2* __this, class VirtualBase2* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN12VirtualBase2D1Ev(
-    class VirtualBase2* __this) {
-  std::destroy_at(__this);
-}
 extern "C" class VirtualBase2* __rust_thunk___ZN12VirtualBase2aSERKS_(
     class VirtualBase2* __this, const class VirtualBase2* __param_0) {
   return &__this->operator=(*__param_0);
@@ -158,10 +126,6 @@ extern "C" void __rust_thunk___ZN14VirtualDerivedC1ERKS_(
 extern "C" void __rust_thunk___ZN14VirtualDerivedC1EOS_(
     class VirtualDerived* __this, class VirtualDerived* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
-}
-extern "C" void __rust_thunk___ZN14VirtualDerivedD1Ev(
-    class VirtualDerived* __this) {
-  std::destroy_at(__this);
 }
 extern "C" class VirtualDerived* __rust_thunk___ZN14VirtualDerivedaSERKS_(
     class VirtualDerived* __this, const class VirtualDerived* __param_0) {

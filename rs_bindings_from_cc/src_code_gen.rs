@@ -2185,8 +2185,8 @@ impl RsTypeKind {
                 lifetime = quote! {#reference_lifetime};
             }
             RsTypeKind::Record { .. } => {
-                // This case doesn't happen for methods, but is needed for free functions mapped to
-                // a trait impl that take the first argument by value.
+                // This case doesn't happen for methods, but is needed for free functions mapped
+                // to a trait impl that take the first argument by value.
                 return Ok(quote! { self });
             }
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
@@ -2751,6 +2751,10 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
         if can_skip_cc_thunk(db, func) {
             continue;
         }
+        if db.generate_func(func.clone()).unwrap_or_default().is_none() {
+            // No function was generated that will call this thunk.
+            continue;
+        }
 
         let thunk_ident = thunk_ident(func);
         let implementation_function = match &func.name {
@@ -3218,21 +3222,25 @@ mod tests {
 
     #[test]
     fn test_simple_struct() -> Result<()> {
-        let ir = ir_from_cc(&tokens_to_string(quote! {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
             struct SomeStruct final {
+                ~SomeStruct() {}
                 int public_int;
               protected:
                 int protected_int;
               private:
                int private_int;
             };
-        })?)?;
+        "#,
+        )?;
 
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[derive(Clone, Copy)]
+                #[::ctor::recursively_pinned(PinnedDrop)]
                 #[repr(C, align(4))]
                 pub struct SomeStruct {
                     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -3250,9 +3258,8 @@ mod tests {
                 const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
                 const _: () = assert!(::std::mem::size_of::<crate::SomeStruct>() == 12);
                 const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 4);
-                const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Clone); };
-                const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Copy); };
-                const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop); };
+                const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy); };
+                const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Drop); };
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) == 0);
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) == 4);
                 const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) == 8);
@@ -3279,10 +3286,20 @@ mod tests {
 
     #[test]
     fn test_struct_vs_class() -> Result<()> {
-        let ir = ir_from_cc(&tokens_to_string(quote! {
-            struct SomeStruct final { int field; };
-            class SomeClass final { int field; };
-        })?)?;
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct SomeStruct final {
+                SomeStruct() {}
+                int field;
+            };
+            class SomeClass final {
+              public:
+                SomeClass() {}
+                int field;
+            };
+        "#,
+        )?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
 
         // A Rust `struct` is generated for both `SomeStruct` and `SomeClass`.
@@ -4475,6 +4492,7 @@ mod tests {
     fn test_basic_union() -> Result<()> {
         let ir = ir_from_cc(
             r#"
+            #pragma clang lifetime_elision
             union SomeUnion {
                 int some_field;
                 long long some_bigger_field;
@@ -4498,19 +4516,6 @@ mod tests {
             rs_api_impl,
             quote! {
                 extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion*__this) {...}
-            }
-        );
-        assert_cc_matches!(
-            rs_api_impl,
-            quote! {
-                extern "C" void __rust_thunk___ZN9SomeUnionD1Ev(union SomeUnion*__this) {...}
-            }
-        );
-        assert_cc_matches!(
-            rs_api_impl,
-            quote! {
-                extern "C" union SomeUnion* __rust_thunk___ZN9SomeUnionaSERKS_(
-                    union SomeUnion*__this, const union SomeUnion* __param_0) { ... }
             }
         );
         assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(union SomeUnion)==8) });
@@ -5077,9 +5082,7 @@ mod tests {
         assert_rs_not_matches!(rs_api, quote! {impl Drop});
         assert_rs_not_matches!(rs_api, quote! {impl ::ctor::PinnedDrop});
         assert_rs_matches!(rs_api, quote! {pub x: i32});
-        // TODO(b/213326125): Avoid generating thunk impls that are never called.
-        // (The test assertion below should be reversed once this bug is fixed.)
-        assert_cc_matches!(rs_api_impl, quote! { std::destroy_at });
+        assert_cc_not_matches!(rs_api_impl, quote! { std::destroy_at });
         Ok(())
     }
 
@@ -6404,9 +6407,6 @@ mod tests {
                     test_namespace_bindings::f();
                 }
                 ...
-                extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1Ev(
-                    struct test_namespace_bindings::S* __this) {...}
-                ...
                 extern "C" void __rust_thunk___Z4useSN23test_namespace_bindings1SE(
                     struct test_namespace_bindings::S s) { useS(s); }
                 ...
@@ -6497,14 +6497,6 @@ mod tests {
             }
         );
 
-        // Constructors in mangled name order
-        let my_struct_bool_constructor =
-            make_rs_ident("__rust_thunk___ZN8MyStructIbEC1Ev__2f_2ftest_3atesting_5ftarget");
-        let my_struct_double_constructor =
-            make_rs_ident("__rust_thunk___ZN8MyStructIdEC1Ev__2f_2ftest_3atesting_5ftarget");
-        let my_struct_int_constructor =
-            make_rs_ident("__rust_thunk___ZN8MyStructIiEC1Ev__2f_2ftest_3atesting_5ftarget");
-
         // User defined methods in mangled name order
         let my_struct_bool_method =
             make_rs_ident("__rust_thunk___ZN8MyStructIbE4getTEv__2f_2ftest_3atesting_5ftarget");
@@ -6517,9 +6509,6 @@ mod tests {
             &bindings.rs_api_impl,
             quote! {
                 ...
-                extern "C" void #my_struct_bool_constructor(struct MyStruct<bool>*__this) {...} ...
-                extern "C" void #my_struct_double_constructor(struct MyStruct<double>*__this) {...} ...
-                extern "C" void #my_struct_int_constructor(struct MyStruct<int>*__this) {...} ...
                 extern "C" bool #my_struct_bool_method(struct MyStruct<bool>*__this) {...} ...
                 extern "C" double #my_struct_double_method(struct MyStruct<double>*__this) {...} ...
                 extern "C" int #my_struct_int_method(struct MyStruct<int>*__this) {...} ...

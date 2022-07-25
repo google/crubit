@@ -95,19 +95,10 @@ extern "C" void __rust_thunk___ZN17NontrivialByValueC1ERKS_(
     const struct NontrivialByValue* __param_0) {
   crubit::construct_at(__this, *__param_0);
 }
-extern "C" void __rust_thunk___ZN17NontrivialByValueD1Ev(
-    struct NontrivialByValue* __this) {
-  std::destroy_at(__this);
-}
 extern "C" void __rust_thunk___ZN17NontrivialByValueaSES_(
     struct NontrivialByValue* __return, struct NontrivialByValue* __this,
     struct NontrivialByValue other) {
   crubit::construct_at(__return, __this->operator=(other));
-}
-extern "C" void __rust_thunk___ZN17NontrivialByValueeqES_(
-    struct NontrivialByValue* __return, struct NontrivialByValue* __this,
-    struct NontrivialByValue other) {
-  crubit::construct_at(__return, __this->operator==(other));
 }
 
 static_assert(sizeof(struct Nontrivial) == 4);

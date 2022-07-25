@@ -23,10 +23,6 @@ extern "C" void __rust_thunk___ZN13WithBitfieldsC1EOS_(
     struct WithBitfields* __this, struct WithBitfields* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN13WithBitfieldsD1Ev(
-    struct WithBitfields* __this) {
-  std::destroy_at(__this);
-}
 extern "C" struct WithBitfields* __rust_thunk___ZN13WithBitfieldsaSERKS_(
     struct WithBitfields* __this, const struct WithBitfields* __param_0) {
   return &__this->operator=(*__param_0);
