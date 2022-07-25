@@ -22,12 +22,10 @@ using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
 using ast_matchers::hasType;
 using ast_matchers::hasUnaryOperand;
-using ast_matchers::ignoringImplicit;
 using ast_matchers::implicitCastExpr;
 using ast_matchers::isAnyPointer;
 using ast_matchers::isArrow;
 using ast_matchers::memberExpr;
-using ast_matchers::nullPointerConstant;
 using ast_matchers::unaryOperator;
 using ast_matchers::internal::Matcher;
 
@@ -36,7 +34,8 @@ Matcher<Stmt> isPointerVariableReference() {
   return declRefExpr(hasType(isAnyPointer()));
 }
 Matcher<Stmt> isNullPointerLiteral() {
-  return expr(ignoringImplicit(nullPointerConstant()));
+  return implicitCastExpr(anyOf(hasCastKind(CK_NullToPointer),
+                                hasCastKind(CK_NullToMemberPointer)));
 }
 Matcher<Stmt> isAddrOf() { return unaryOperator(hasOperatorName("&")); }
 Matcher<Stmt> isPointerDereference() {

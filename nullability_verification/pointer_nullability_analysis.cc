@@ -72,21 +72,8 @@ void transferInitCXXThisExpr(const Expr* ThisExpr,
 void transferNullPointerLiteral(
     const Expr* NullPointer, const MatchFinder::MatchResult& Result,
     TransferState<PointerNullabilityLattice>& State) {
-  auto* NullPointerVal = cast_or_null<PointerValue>(
-      State.Env.getValue(*NullPointer, SkipPast::None));
-  if (NullPointerVal == nullptr) {
-    // Create storage location and value for null pointer if it doesn't exist
-    auto& NullPointerLoc = State.Env.createStorageLocation(*NullPointer);
-    NullPointerVal = &State.Env.takeOwnership(
-        std::make_unique<PointerValue>(NullPointerLoc));
-    State.Env.setStorageLocation(*NullPointer, NullPointerLoc);
-    State.Env.setValue(NullPointerLoc, *NullPointerVal);
-  }
-  if (!State.Lattice.hasPointerNotNullProperty(NullPointerVal)) {
-    // Set null pointer to be known null if not already set
-    State.Lattice.setPointerNotNullProperty(
-        NullPointerVal, &State.Env.getBoolLiteralValue(false));
-  }
+  initialisePointerNotNullProperty(NullPointer, State,
+                                   &State.Env.getBoolLiteralValue(false));
 }
 
 void transferAddrOf(const UnaryOperator* UnaryOp,
