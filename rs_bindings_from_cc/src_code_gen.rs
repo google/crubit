@@ -8,7 +8,7 @@ use ir::*;
 use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use salsa_utils::PtrEq;
+use salsa_utils::RcEq;
 use std::collections::{BTreeSet, HashSet};
 use std::ffi::{OsStr, OsString};
 use std::iter::{self, Iterator};
@@ -85,7 +85,7 @@ trait BindingsGenerator {
     fn generate_func(
         &self,
         func: Rc<Func>,
-    ) -> Result<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>>;
+    ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 }
@@ -718,7 +718,7 @@ fn api_func_shape(
 fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
-) -> Result<Option<PtrEq<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>> {
+) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
     let ir = db.ir();
     let mut features = BTreeSet::new();
     let param_types = func
@@ -1066,11 +1066,11 @@ fn generate_func(
         }
     }
 
-    Ok(Some(PtrEq(Rc::new((
+    Ok(Some(RcEq::new((
         RsSnippet { features, tokens: api_func },
         thunk.into(),
         Rc::new(function_id),
-    )))))
+    ))))
 }
 
 fn generate_func_thunk(
@@ -1840,7 +1840,7 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
             },
             Ok(None) => GeneratedItem::default(),
             Ok(Some(f)) => {
-                let (api_func, thunk, function_id) = f.as_ref();
+                let (api_func, thunk, function_id) = &*f;
                 if overloaded_funcs.contains(function_id) {
                     GeneratedItem {
                         item: generate_unsupported(&make_unsupported_fn(
@@ -1921,7 +1921,7 @@ fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
     let mut overloaded_funcs = HashSet::new();
     for func in db.ir().functions() {
         if let Ok(Some(f)) = db.generate_func(func.clone()) {
-            let (.., function_id) = f.as_ref();
+            let (.., function_id) = &*f;
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id.clone());
             }

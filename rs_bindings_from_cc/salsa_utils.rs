@@ -7,31 +7,38 @@
 //! TODO(jeanpierreda): give this module a better name.
 
 use std::ops::Deref;
+use std::rc::Rc;
 
 /// A wrapper for a smart pointer, which implements `Eq` as pointer equality.
 ///
 /// This was directly inspired by Chalk's `ArcEq`, which does the same.
-/// However, unlike Chalk, `PtrEq` does not implement `Deref`: that would
-/// normally imply that it has the same behavior as the underlying
-/// pointee, and it obviously does not, as it implements `Eq` even if the
-/// pointee doesn't.
-///
-/// Instead, to access the underlying value, use `.as_ref()`.
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default)]
 #[repr(transparent)]
-pub struct PtrEq<T: Deref>(pub T);
+pub struct RcEq<T>(pub Rc<T>);
 
-impl<T: Deref> PartialEq<PtrEq<T>> for PtrEq<T> {
+impl<T> PartialEq<RcEq<T>> for RcEq<T> {
     fn eq(&self, other: &Self) -> bool {
         std::ptr::eq(&*self.0, &*other.0)
     }
 }
 
-impl<T: Deref> Eq for PtrEq<T> {}
+impl<T> Eq for RcEq<T> {}
 
-impl<T: Deref> PtrEq<T> {
-    pub fn as_ref(&self) -> &T::Target {
+impl<T> Deref for RcEq<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
         &*self.0
     }
 }
 
+impl<T> From<T> for RcEq<T> {
+    fn from(x: T) -> Self {
+        RcEq::new(x)
+    }
+}
+
+impl<T> RcEq<T> {
+    pub fn new(x: T) -> Self {
+        RcEq(Rc::new(x))
+    }
+}
