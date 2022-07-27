@@ -1032,7 +1032,7 @@ fn generate_func(
             api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
-                function_path: syn::parse2(quote! { #record_name :: #func_name })?,
+                function_path: syn::parse2(quote! { #record_name :: #func_name }).unwrap(),
             };
         }
         ImplKind::Trait {
@@ -1096,7 +1096,7 @@ fn generate_func(
             };
             function_id = FunctionId {
                 self_type: Some(record_name.into()),
-                function_path: syn::parse2(quote! { #trait_name :: #func_name })?,
+                function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
             };
         }
     }
