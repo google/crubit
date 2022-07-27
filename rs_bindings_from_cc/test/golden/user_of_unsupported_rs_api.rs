@@ -15,14 +15,31 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=12
-// Error while generating bindings for item 'UseNontrivialCustomType':
-// Non-trivial_abi type 'struct NontrivialCustomType' is not supported by value as parameter #0
+#[inline(always)]
+pub fn UseNontrivialCustomType(
+    non_trivial_custom_type: impl ::ctor::Ctor<Output = unsupported_cc::NontrivialCustomType>,
+) {
+    unsafe {
+        crate::detail::__rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
+            ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(non_trivial_custom_type)),
+        )
+    }
+}
 
 // rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=14
 // Error while generating bindings for item 'UseUnsupportedType':
 // Parameter #0 is not supported: Unsupported type 'ns::StructInNamespace *': Unsupported type 'ns::StructInNamespace': No generated bindings found for 'StructInNamespace'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_UNSUPPORTED_H_
+
+mod detail {
+    #[allow(unused_imports)]
+    use super::*;
+    extern "C" {
+        pub(crate) fn __rust_thunk___Z23UseNontrivialCustomType20NontrivialCustomType(
+            non_trivial_custom_type: &mut unsupported_cc::NontrivialCustomType,
+        );
+    }
+}
 
 const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());

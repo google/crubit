@@ -83,6 +83,14 @@ extern "C" struct NontrivialMembers* __rust_thunk___ZN17NontrivialMembersaSEOS_(
     struct NontrivialMembers* __this, struct NontrivialMembers* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void __rust_thunk___Z12TakesByValue10Nontrivial(
+    struct Nontrivial* nontrivial) {
+  TakesByValue(std::move(*nontrivial));
+}
+extern "C" void __rust_thunk___Z18TakesByValueInline16NontrivialInline(
+    struct NontrivialInline* nontrivial) {
+  TakesByValueInline(std::move(*nontrivial));
+}
 extern "C" void __rust_thunk___Z14ReturnsByValuev(struct Nontrivial* __return) {
   new (__return) auto(ReturnsByValue());
 }
@@ -94,11 +102,6 @@ extern "C" void __rust_thunk___ZN17NontrivialByValueC1ERKS_(
     struct NontrivialByValue* __this,
     const struct NontrivialByValue* __param_0) {
   crubit::construct_at(__this, *__param_0);
-}
-extern "C" void __rust_thunk___ZN17NontrivialByValueaSES_(
-    struct NontrivialByValue* __return, struct NontrivialByValue* __this,
-    struct NontrivialByValue other) {
-  new (__return) auto(__this->operator=(other));
 }
 extern "C" void __rust_thunk___Z24ReturnsNonmovableByValuev(
     struct Nonmovable* __return) {

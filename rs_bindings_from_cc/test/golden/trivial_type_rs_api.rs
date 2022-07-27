@@ -252,9 +252,11 @@ pub mod test_namespace_bindings {
     }
 
     #[inline(always)]
-    pub fn TakesTrivialNonfinalByValue(trivial: crate::test_namespace_bindings::TrivialNonfinal) {
+    pub fn TakesTrivialNonfinalByValue(
+        trivial: impl ::ctor::Ctor<Output = crate::test_namespace_bindings::TrivialNonfinal>,
+    ) {
         unsafe {
-            crate::detail::__rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(trivial)
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(trivial)))
         }
     }
 
@@ -349,9 +351,8 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE(
             trivial: crate::test_namespace_bindings::TrivialWithDefaulted,
         );
-        #[link_name = "_ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-            trivial: crate::test_namespace_bindings::TrivialNonfinal,
+            trivial: &mut crate::test_namespace_bindings::TrivialNonfinal,
         );
         #[link_name = "_ZN23test_namespace_bindings16TakesByReferenceERNS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings16TakesByReferenceERNS_7TrivialE<

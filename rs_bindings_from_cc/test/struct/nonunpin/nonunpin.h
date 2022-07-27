@@ -58,6 +58,7 @@ inline int GetValueFromRvalueRef(Nonunpin&& nonunpin) {
 inline int GetValueFromConstRvalueRef(const Nonunpin&& nonunpin) {
   return nonunpin.value();
 }
+inline int GetValueFromValue(Nonunpin nonunpin) { return nonunpin.value(); }
 
 // A deliberately !Unpin (aggregate) struct.
 struct NonunpinStruct {

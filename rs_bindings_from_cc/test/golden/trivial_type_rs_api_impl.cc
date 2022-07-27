@@ -59,6 +59,11 @@ __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSEOS0_(
     struct test_namespace_bindings::TrivialNonfinal* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
+    struct test_namespace_bindings::TrivialNonfinal* trivial) {
+  test_namespace_bindings::TakesTrivialNonfinalByValue(std::move(*trivial));
+}
 
 static_assert(sizeof(struct test_namespace_bindings::Trivial) == 4);
 static_assert(alignof(struct test_namespace_bindings::Trivial) == 4);

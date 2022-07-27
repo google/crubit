@@ -98,7 +98,7 @@ mod tests {
     }
 
     /// Test that the struct can be returned and passed as all the reference
-    /// types.
+    /// types, and passed by value.
     #[test]
     fn test_ref() {
         ctor::emplace! {
@@ -119,6 +119,10 @@ mod tests {
         {
             let x: ConstRvalueReference<Nonunpin> = x.AsConstRvalueRef();
             assert_eq!(nonunpin::GetValueFromConstRvalueRef(x), 42);
+        }
+        {
+            assert_eq!(nonunpin::GetValueFromValue(ctor::copy(&*x)), 42);
+            assert_eq!(nonunpin::GetValueFromValue(ctor::mov(x)), 42);
         }
     }
 

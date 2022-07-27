@@ -255,6 +255,27 @@ fn can_skip_cc_thunk(db: &dyn BindingsGenerator, func: &Func) -> bool {
             return false;
         }
     }
+    // ## Nontrivial parameter types.
+    //
+    // If the function accepts a value which is nontrivial for the purpose of calls,
+    // then in the underlying ABI, it is actually passed by pointer.
+    //
+    // Because there's no way to upgrade an lvalue (e.g. pointer) to a prvalue, we
+    // cannot implement guaranteed copy/move elision for inline functions for
+    // now: any thunk we generate would need to invoke the correct function as
+    // if by magic.
+    //
+    // And so for now, we always use C++11 semantics, via an intermediate thunk.
+    //
+    // (As a side effect, this, like return values, means that support is
+    // ABI-agnostic.)
+    for param in &func.params {
+        if let Ok(param_type) = db.rs_type_kind(param.type_.rs_type.clone()) {
+            if !param_type.is_unpin() {
+                return false;
+            }
+        }
+    }
 
     true
 }
@@ -745,12 +766,26 @@ fn generate_func(
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
 
     let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
-    let mut thunk_args = param_idents.iter().map(|id| quote! { #id}).collect_vec();
-    let mut api_params = param_idents
-        .iter()
-        .zip(param_types.iter())
-        .map(|(ident, type_)| quote! { #ident : #type_ })
-        .collect_vec();
+    let mut api_params = Vec::with_capacity(func.params.len());
+    let mut thunk_args = Vec::with_capacity(func.params.len());
+    for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
+        if !type_.is_unpin() {
+            // `impl Ctor` will fail to compile in a trait.
+            if let ImplKind::Trait { .. } = &impl_kind {
+                bail!("b/200067242: non-Unpin types are not yet supported by value in traits");
+            }
+            // The generated bindings require a move constructor.
+            if !type_.is_move_constructible() {
+                bail!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_});
+            }
+            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#type_>});
+            thunk_args
+                .push(quote! {::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
+        } else {
+            api_params.push(quote! {#ident: #type_});
+            thunk_args.push(quote! {#ident});
+        }
+    }
     let mut lifetimes = func.lifetime_params.iter().collect_vec();
     let mut maybe_first_api_param = param_types.get(0);
     let mut quoted_return_type = None;
@@ -1119,7 +1154,13 @@ fn generate_func_thunk(
     let lifetimes = func.lifetime_params.iter();
     let generic_params = format_generic_params(lifetimes);
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
-    let param_types = out_param.into_iter().chain(param_types.map(|t| quote! {#t}));
+    let param_types = out_param.into_iter().chain(param_types.map(|t| {
+        if !t.is_unpin() {
+            quote! {&mut #t}
+        } else {
+            quote! {#t}
+        }
+    }));
 
     Ok(quote! {
         #thunk_attr
@@ -2139,6 +2180,24 @@ impl RsTypeKind {
         }
     }
 
+    /// Returns true if the type is known to be move-constructible, false
+    /// otherwise.
+    ///
+    /// For the purposes of this method, references are considered
+    /// move-constructible (as if they were pointers).
+    pub fn is_move_constructible(&self) -> bool {
+        match self {
+            RsTypeKind::IncompleteRecord { .. } => false,
+            RsTypeKind::Record { record, .. } => {
+                record.move_constructor != ir::SpecialMemberFunc::Unavailable
+            }
+            RsTypeKind::TypeAlias { underlying_type, .. } => {
+                underlying_type.is_move_constructible()
+            }
+            _ => true,
+        }
+    }
+
     pub fn format_as_return_type_fragment(&self) -> TokenStream {
         match self {
             RsTypeKind::Unit => quote! {},
@@ -2799,21 +2858,36 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
         let mut param_types = func
             .params
             .iter()
-            .map(|p| format_cc_type(&p.type_.cc_type, &ir))
+            .map(|p| {
+                let formatted = format_cc_type(&p.type_.cc_type, &ir)?;
+                if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
+                    // non-Unpin types are wrapped by a pointer in the thunk.
+                    Ok(quote! {#formatted *})
+                } else {
+                    Ok(formatted)
+                }
+            })
             .collect::<Result<Vec<_>>>()?;
 
-        let arg_expressions: Vec<_> = func
+        let arg_expressions = func
             .params
             .iter()
             .map(|p| {
                 let ident = format_cc_ident(&p.identifier.identifier);
                 match p.type_.cc_type.name.as_deref() {
-                    Some("&") => quote! { * #ident },
-                    Some("&&") => quote! { std::move(* #ident) },
-                    _ => quote! { #ident },
+                    Some("&") => Ok(quote! { * #ident }),
+                    Some("&&") => Ok(quote! { std::move(* #ident) }),
+                    _ => {
+                        // non-Unpin types are wrapped by a pointer in the thunk.
+                        if !db.rs_type_kind(p.type_.rs_type.clone())?.is_unpin() {
+                            Ok(quote! { std::move(* #ident) })
+                        } else {
+                            Ok(quote! { #ident })
+                        }
+                    }
                 }
             })
-            .collect();
+            .collect::<Result<Vec<_>>>()?;
 
         // Here, we add a __return parameter if the return type is not trivially
         // relocatable. (We do this after the arg_expressions computation, so
@@ -6124,7 +6198,7 @@ mod tests {
     /// Assignment is special in that it discards the return type.
     /// So if the return type is !Unpin, it needs to emplace!() it.
     #[test]
-    fn test_nonunpin_assign() -> Result<()> {
+    fn test_nonunpin_return_assign() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
             // This type must be `!Unpin`.
@@ -6168,6 +6242,80 @@ mod tests {
                 }
             }
         );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_param() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct Nontrivial {
+                Nontrivial(Nontrivial&&);
+                ~Nontrivial();
+            };
+
+            void TakesByValue(Nontrivial x);
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                pub fn TakesByValue(x: impl ::ctor::Ctor<Output=crate::Nontrivial>) {
+                    unsafe {
+                        crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(x)))
+                    }
+                }
+            }
+        );
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" void __rust_thunk___Z12TakesByValue10Nontrivial(struct Nontrivial*x) {
+                    TakesByValue(std::move(*x));
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonunpin_trait_param() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct Nontrivial {
+                Nontrivial(Nontrivial&&);
+                Nontrivial& operator=(Nontrivial) {}
+                ~Nontrivial();
+            };
+            "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        // the assign trait shouldn't be implemented for `Nontrivial`.
+        // (In fact, it shouldn't be referenced at all -- thus the very minimal test!)
+        assert_rs_not_matches!(rs_api, quote! {Assign});
+        Ok(())
+    }
+
+    #[test]
+    fn test_nonmovable_param() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin` and non-move constructible.
+            struct Nonmovable {
+                Nonmovable(Nonmovable&&) = delete;
+            };
+
+            void TakesByValue(Nonmovable) {}
+            "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        // Bindings for TakesByValue cannot be generated.
+        assert_rs_not_matches!(rs_api, quote! {TakesByValue});
+        assert_cc_not_matches!(rs_api_impl, quote! {TakesByValue});
         Ok(())
     }
 

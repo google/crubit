@@ -565,13 +565,23 @@ impl NontrivialUnpin {
     }
 }
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=80
-// Error while generating bindings for item 'TakesByValue':
-// Non-trivial_abi type 'struct Nontrivial' is not supported by value as parameter #0
+#[inline(always)]
+pub fn TakesByValue(nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial>) {
+    unsafe {
+        crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
+            ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+        )
+    }
+}
 
-// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=81
-// Error while generating bindings for item 'TakesByValueInline':
-// Non-trivial_abi type 'struct NontrivialInline' is not supported by value as parameter #0
+#[inline(always)]
+pub fn TakesByValueInline(nontrivial: impl ::ctor::Ctor<Output = crate::NontrivialInline>) {
+    unsafe {
+        crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
+            ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+        )
+    }
+}
 
 #[inline(always)]
 pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) {
@@ -674,24 +684,9 @@ impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialByValue,)> for NontrivialByValue 
     }
 }
 
-impl ::ctor::Assign<crate::NontrivialByValue> for NontrivialByValue {
-    #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: crate::NontrivialByValue) {
-        unsafe {
-            let _ = ::ctor::emplace!(::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
-                >| {
-                    crate::detail::__rust_thunk___ZN17NontrivialByValueaSES_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        self,
-                        other,
-                    );
-                }
-            ));
-        }
-    }
-}
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=97
+// Error while generating bindings for item 'NontrivialByValue::operator=':
+// b/200067242: non-Unpin types are not yet supported by value in traits
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=98
 // Error while generating bindings for item 'NontrivialByValue::operator==':
@@ -735,7 +730,7 @@ impl Nonmovable {
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=110
 // Error while generating bindings for item 'TakesNonmovableByValue':
-// Non-trivial_abi type 'struct Nonmovable' is not supported by value as parameter #0
+// Non-movable, non-trivial_abi type 'crate :: Nonmovable' is not supported by value as parameter #0
 
 #[inline(always)]
 pub fn ReturnsNonmovableByValue() -> impl ::ctor::Ctor<Output = crate::Nonmovable> {
@@ -896,6 +891,12 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv<'a>(
             __this: &'a mut crate::NontrivialUnpin,
         );
+        pub(crate) fn __rust_thunk___Z12TakesByValue10Nontrivial(
+            nontrivial: &mut crate::Nontrivial,
+        );
+        pub(crate) fn __rust_thunk___Z18TakesByValueInline16NontrivialInline(
+            nontrivial: &mut crate::NontrivialInline,
+        );
         #[link_name = "_Z17TakesByValueUnpin15NontrivialUnpin"]
         pub(crate) fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             nontrivial: crate::NontrivialUnpin,
@@ -927,11 +928,6 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN17NontrivialByValueC1ERKS_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
             __param_0: &'b crate::NontrivialByValue,
-        );
-        pub(crate) fn __rust_thunk___ZN17NontrivialByValueaSES_<'a>(
-            __return: &mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
-            __this: ::std::pin::Pin<&'a mut crate::NontrivialByValue>,
-            other: crate::NontrivialByValue,
         );
         #[link_name = "_ZN10NonmovableC1Ev"]
         pub(crate) fn __rust_thunk___ZN10NonmovableC1Ev<'a>(

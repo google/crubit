@@ -73,22 +73,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       continue;
     }
 
-    if (const clang::RecordType* record_type =
-            clang::dyn_cast<clang::RecordType>(param->getType())) {
-      if (clang::RecordDecl* record_decl =
-              clang::dyn_cast<clang::RecordDecl>(record_type->getDecl())) {
-        // TODO(b/200067242): non-trivial_abi structs, when passed by value,
-        // have a different representation which needs special support. We
-        // currently do not support it.
-        if (!record_decl->canPassInRegisters()) {
-          add_error(
-              absl::Substitute("Non-trivial_abi type '$0' is not "
-                               "supported by value as parameter #$1",
-                               param->getType().getAsString(), i));
-        }
-      }
-    }
-
     std::optional<Identifier> param_name = ictx_.GetTranslatedIdentifier(param);
     CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({*param_type, *std::move(param_name)});
