@@ -170,4 +170,31 @@ struct AddableOverloaded final {
 char operator+(AddableOverloaded lhs, std::int16_t rhs);
 char operator+(AddableOverloaded lhs, std::int32_t rhs);
 
+struct AddableFriendByConstRef final {
+  friend AddableFriendByConstRef operator+(const AddableFriendByConstRef& lhs,
+                                           const AddableFriendByConstRef& rhs) {
+    return AddableFriendByConstRef{lhs.i + rhs.i};
+  }
+
+  int i;
+};
+
+struct AddableFriendByRef final {
+  friend AddableFriendByRef operator+(AddableFriendByRef& lhs,
+                                      AddableFriendByRef& rhs) {
+    return AddableFriendByRef{lhs.i + rhs.i};
+  }
+
+  int i;
+};
+
+struct AddableFriendByValue final {
+  friend AddableFriendByValue operator+(AddableFriendByValue lhs,
+                                        AddableFriendByValue rhs) {
+    return AddableFriendByValue{lhs.i + rhs.i};
+  }
+
+  int i;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_

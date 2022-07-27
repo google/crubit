@@ -138,4 +138,25 @@ mod tests {
         assert_eq!(b'A', s + 0i16);
         assert_eq!(b'B', s + 0i32);
     }
+
+    #[test]
+    fn test_add_friend_by_const_ref() {
+        let s1 = AddableFriendByConstRef { i: 11 };
+        let s2 = AddableFriendByConstRef { i: 22 };
+        assert_eq!(33, (&s1 + &s2).i);
+    }
+
+    #[test]
+    fn test_add_friend_by_ref() {
+        let mut s1 = AddableFriendByRef { i: 11 };
+        let mut s2 = AddableFriendByRef { i: 22 };
+        assert_eq!(33, (&mut s1 + &mut s2).i);
+    }
+
+    #[test]
+    fn test_add_friend_by_value() {
+        let s1 = AddableFriendByValue { i: 11 };
+        let s2 = AddableFriendByValue { i: 22 };
+        assert_eq!(33, (s1 + s2).i);
+    }
 }
