@@ -322,6 +322,7 @@ pub struct Func {
     pub source_loc: SourceLoc,
     pub id: ItemId,
     pub enclosing_namespace_id: Option<ItemId>,
+    pub adl_enclosing_record: Option<ItemId>,
 }
 
 impl Func {

@@ -85,6 +85,11 @@ class ImportContext {
   virtual IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                          std::set<std::string> errors) = 0;
 
+  // Imports a decl and creates an IR item (or error messages). This allows
+  // importers to recursively delegate to other importers.
+  // Does not use or update the cache.
+  virtual std::optional<IR::Item> ImportDecl(clang::Decl* decl) = 0;
+
   // Returns the item ids of the children and comments of the given decl in
   // source order. This method assumes that the children decls have already been
   // imported.

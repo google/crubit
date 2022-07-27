@@ -38,6 +38,16 @@ cc_library(
 )
 
 cc_library(
+    name = "friend",
+    srcs = ["friend.cc"],
+    hdrs = ["friend.h"],
+    deps = [
+        "//rs_bindings_from_cc:decl_importer",
+        "@llvm-project//clang:ast",
+    ],
+)
+
+cc_library(
     name = "function",
     srcs = ["function.cc"],
     hdrs = ["function.h"],

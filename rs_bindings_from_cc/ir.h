@@ -459,6 +459,13 @@ struct Func {
   SourceLoc source_loc;
   ItemId id;
   llvm::Optional<ItemId> enclosing_namespace_id;
+  // If present, this function should only generate top-level bindings if its
+  // arguments refer to this enclosing record according to the ADL rules.
+  //
+  // This could in principle be resolved while generating the IR, but the richer
+  // Rust type modeling in src_code_gen makes it much easier to do on the
+  // consuming end.
+  llvm::Optional<ItemId> adl_enclosing_record;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {

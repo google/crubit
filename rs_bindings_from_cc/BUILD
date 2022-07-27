@@ -221,6 +221,7 @@ cc_library(
         "//rs_bindings_from_cc/importers:class_template",
         "//rs_bindings_from_cc/importers:cxx_record",
         "//rs_bindings_from_cc/importers:enum",
+        "//rs_bindings_from_cc/importers:friend",
         "//rs_bindings_from_cc/importers:function",
         "//rs_bindings_from_cc/importers:function_template",
         "//rs_bindings_from_cc/importers:namespace",

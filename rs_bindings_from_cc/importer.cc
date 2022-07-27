@@ -35,6 +35,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclFriend.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/RawCommentList.h"
 #include "clang/AST/Type.h"
@@ -891,6 +892,20 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
     return GetMangledName(class_template_specialization_decl);
   } else if (auto* func_decl = clang::dyn_cast<clang::FunctionDecl>(decl)) {
     return GetMangledName(func_decl);
+  } else if (auto* friend_decl = clang::dyn_cast<clang::FriendDecl>(decl)) {
+    if (auto* named_decl = friend_decl->getFriendDecl()) {
+      if (auto function_template_decl =
+              clang::dyn_cast<clang::FunctionTemplateDecl>(named_decl)) {
+        // Reach through the function template declaration for a function that
+        // can be mangled.
+        named_decl = function_template_decl->getTemplatedDecl();
+      }
+      return GetMangledName(named_decl);
+    } else {
+      // This FriendDecl names a type. We don't import those, so we don't have
+      // to assign a name.
+      return "";
+    }
   } else {
     return "";
   }

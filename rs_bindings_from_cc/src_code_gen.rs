@@ -14,6 +14,7 @@ use std::ffi::{OsStr, OsString};
 use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
 use std::process;
+use std::ptr;
 use std::rc::Rc;
 use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string, RustfmtConfig};
 
@@ -471,6 +472,26 @@ enum ImplFor {
     RefT,
 }
 
+/// Returns whether an argument of this type causes ADL to include the `record`.
+fn adl_expands_to(record: &Record, rs_type_kind: &RsTypeKind) -> bool {
+    match rs_type_kind {
+        RsTypeKind::Record { record: nested_record, .. } => ptr::eq(record, &**nested_record),
+        RsTypeKind::Reference { referent, .. } => adl_expands_to(record, &**referent),
+        RsTypeKind::RvalueReference { referent, .. } => adl_expands_to(record, &**referent),
+        _ => false,
+    }
+}
+
+/// Returns whether any type in `param_types` causes ADL to include `record`.
+///
+/// This is an under-approximation. Things not considered include class template
+/// arguments and the parameters and return type of function types.
+///
+/// See https://en.cppreference.com/w/cpp/language/adl
+fn is_visible_by_adl(enclosing_record: &Record, param_types: &[RsTypeKind]) -> bool {
+    param_types.iter().any(|param_type| adl_expands_to(enclosing_record, param_type))
+}
+
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// Returns:
@@ -546,6 +567,13 @@ fn api_func_shape(
             func_name = make_rs_ident("assign");
         }
         UnqualifiedIdentifier::Operator(op) if op.name == "+" && param_types.len() == 2 => {
+            if let Some(decl_id) = func.adl_enclosing_record {
+                let adl_enclosing_record = ir.find_decl::<Rc<Record>>(decl_id)?;
+                if !is_visible_by_adl(adl_enclosing_record, param_types) {
+                    return Ok(None);
+                }
+            }
+
             let (record, impl_for) = if let Some(record) = maybe_record {
                 (&**record, ImplFor::RefT)
             } else {
@@ -586,6 +614,13 @@ fn api_func_shape(
             );
         }
         UnqualifiedIdentifier::Identifier(id) => {
+            if let Some(decl_id) = func.adl_enclosing_record {
+                let adl_enclosing_record = ir.find_decl::<Rc<Record>>(decl_id)?;
+                if !is_visible_by_adl(adl_enclosing_record, param_types) {
+                    return Ok(None);
+                }
+            }
+
             func_name = make_rs_ident(&id.identifier);
             match maybe_record {
                 None => {

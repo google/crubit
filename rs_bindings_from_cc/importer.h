@@ -16,6 +16,7 @@
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 #include "rs_bindings_from_cc/importers/enum.h"
+#include "rs_bindings_from_cc/importers/friend.h"
 #include "rs_bindings_from_cc/importers/function.h"
 #include "rs_bindings_from_cc/importers/function_template.h"
 #include "rs_bindings_from_cc/importers/namespace.h"
@@ -39,6 +40,7 @@ class Importer : public ImportContext {
         std::make_unique<ClassTemplateDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<EnumDeclImporter>(*this));
+    decl_importers_.push_back(std::make_unique<FriendDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<FunctionDeclImporter>(*this));
     decl_importers_.push_back(
         std::make_unique<FunctionTemplateDeclImporter>(*this));
@@ -57,6 +59,7 @@ class Importer : public ImportContext {
                                  std::string error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  std::set<std::string> errors) override;
+  std::optional<IR::Item> ImportDecl(clang::Decl* decl);
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
@@ -103,10 +106,6 @@ class Importer : public ImportContext {
 
   // Returns the Item of a Decl, importing it first if necessary.
   std::optional<IR::Item> GetDeclItem(clang::Decl* decl);
-
-  // Imports a decl and creates an IR item (or error messages).
-  // Does not use or update the cache.
-  std::optional<IR::Item> ImportDecl(clang::Decl* decl);
 
   // Stores the comments of this target in source order.
   void ImportFreeComments();

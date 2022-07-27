@@ -304,6 +304,7 @@ llvm::json::Value Func::ToJson() const {
       {"source_loc", source_loc},
       {"id", id},
       {"enclosing_namespace_id", enclosing_namespace_id},
+      {"adl_enclosing_record", adl_enclosing_record},
   };
 
   return llvm::json::Object{

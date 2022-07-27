@@ -85,6 +85,7 @@ fn test_function() {
                 },
                 id: ItemId(...),
                 enclosing_namespace_id: None,
+                adl_enclosing_record: None,
             }
         }
     );
@@ -2736,7 +2737,9 @@ fn test_operator_names() {
         .functions()
         .filter(|f| {
             // Only SomeStruct member functions (excluding stddef.h stuff).
-            ir.record_for_member_func(f).unwrap().map(|r| r.rs_name == "SomeStruct")
+            ir.record_for_member_func(f)
+                .unwrap()
+                .map(|r| r.rs_name == "SomeStruct")
                 .unwrap_or_default()
         })
         .flat_map(|f| match &f.name {
@@ -3378,6 +3381,35 @@ fn test_incomplete_record_has_rs_name() {
               rs_name: "__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE",
               ...
             } ...
+        }
+    );
+}
+
+#[test]
+fn test_friend() {
+    let ir = ir_from_cc(
+        r#"
+        struct MyStruct {
+          friend int Invisible();
+          friend int VisibleByADL(MyStruct& x);
+        };"#,
+    )
+    .unwrap();
+
+    // NOTE: Actual ADL visibility determination is handled by the IR consumer.
+    // These two friend functions have similar IR representations.
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func { ... name: "Invisible", ... adl_enclosing_record: Some(...) ... } ...
+        }
+    );
+    assert_ir_matches!(
+        ir,
+        quote! {
+            ...
+            Func { ... name: "VisibleByADL", ... adl_enclosing_record: Some(...) ... } ...
         }
     );
 }

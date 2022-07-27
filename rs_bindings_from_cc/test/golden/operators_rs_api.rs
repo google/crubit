@@ -159,6 +159,14 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddableFriend>> for AddableFrie
 // Error while generating bindings for item 'AddableFriend::operator=':
 // operator= for Unpin types is not yet supported.
 
+impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
+    type Output = crate::AddableFriend;
+    #[inline(always)]
+    fn add(self, rhs: &'b crate::AddableFriend) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZplRK13AddableFriendS1_(self, rhs) }
+    }
+}
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddableFree {
@@ -508,6 +516,11 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFriend>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
         );
+        #[link_name = "_ZplRK13AddableFriendS1_"]
+        pub(crate) fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
+            lhs: &'a crate::AddableFriend,
+            rhs: &'b crate::AddableFriend,
+        ) -> crate::AddableFriend;
         pub(crate) fn __rust_thunk___ZN11AddableFreeC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFree>,
         );
