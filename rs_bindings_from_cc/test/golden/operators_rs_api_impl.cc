@@ -85,7 +85,7 @@ extern "C" void __rust_thunk___ZNK26AddableConstMemberNonunpinplERKS_(
     class AddableConstMemberNonunpin* __return,
     const class AddableConstMemberNonunpin* __this,
     const class AddableConstMemberNonunpin* rhs) {
-  crubit::construct_at(__return, __this->operator+(*rhs));
+  new (__return) auto(__this->operator+(*rhs));
 }
 extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(
     class AddableConstMemberNonunpin* __this) {

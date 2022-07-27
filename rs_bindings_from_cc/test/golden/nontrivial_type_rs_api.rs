@@ -697,6 +697,59 @@ impl ::ctor::Assign<crate::NontrivialByValue> for NontrivialByValue {
 // Error while generating bindings for item 'NontrivialByValue::operator==':
 // operator== where operands are not const references
 
+#[::ctor::recursively_pinned(PinnedDrop)]
+#[repr(C)]
+pub struct Nonmovable {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
+
+impl ::ctor::CtorNew<()> for Nonmovable {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
+                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
+
+impl ::ctor::PinnedDrop for Nonmovable {
+    #[inline(always)]
+    unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        crate::detail::__rust_thunk___ZN10NonmovableD1Ev(self)
+    }
+}
+
+impl Nonmovable {
+    #[inline(always)]
+    pub fn MemberFunction<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(self) }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/nontrivial_type.h;l=110
+// Error while generating bindings for item 'TakesNonmovableByValue':
+// Non-trivial_abi type 'struct Nonmovable' is not supported by value as parameter #0
+
+#[inline(always)]
+pub fn ReturnsNonmovableByValue() -> impl ::ctor::Ctor<Output = crate::Nonmovable> {
+    unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nonmovable>>| {
+                crate::detail::__rust_thunk___Z24ReturnsNonmovableByValuev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            },
+        )
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_
 
 mod detail {
@@ -880,6 +933,21 @@ mod detail {
             __this: ::std::pin::Pin<&'a mut crate::NontrivialByValue>,
             other: crate::NontrivialByValue,
         );
+        #[link_name = "_ZN10NonmovableC1Ev"]
+        pub(crate) fn __rust_thunk___ZN10NonmovableC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::Nonmovable>,
+        );
+        #[link_name = "_ZN10NonmovableD1Ev"]
+        pub(crate) fn __rust_thunk___ZN10NonmovableD1Ev<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::Nonmovable>,
+        );
+        #[link_name = "_ZN10Nonmovable14MemberFunctionEv"]
+        pub(crate) fn __rust_thunk___ZN10Nonmovable14MemberFunctionEv<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::Nonmovable>,
+        );
+        pub(crate) fn __rust_thunk___Z24ReturnsNonmovableByValuev(
+            __return: &mut ::std::mem::MaybeUninit<crate::Nonmovable>,
+        );
     }
 }
 
@@ -942,4 +1010,13 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::NontrivialByValue: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::Nonmovable>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::Nonmovable>() == 1);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::Nonmovable: Copy);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::Nonmovable: Drop);
 };

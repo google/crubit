@@ -6,7 +6,7 @@
 mod tests {
     use ctor::{ctor, ConstRvalueReference, RvalueReference};
     use ctor::{Assign as _, CtorNew as _};
-    use nonunpin::{Nonunpin, NonunpinStruct};
+    use nonunpin::{Nonmovable, Nonunpin, NonunpinStruct, ReturnsNonmovable};
     use std::pin::Pin;
 
     /// When a value is constructed in-place, it is initialized, has the correct
@@ -150,5 +150,23 @@ mod tests {
 
         assert_eq!(x.addr(), &*x as *const _ as usize);
         assert_eq!(y.addr(), &*y as *const _ as usize);
+    }
+
+    #[test]
+    fn test_nonmovable_ctor() {
+        ctor::emplace! {
+            let x = Nonmovable::ctor_new(());
+        }
+        assert_eq!(x.addr, &*x as *const _ as usize);
+    }
+
+    /// Thanks to C++17 prvalue semantics, we can in fact return a non-movable
+    /// type by value.
+    #[test]
+    fn test_nonmovable_return_value() {
+        ctor::emplace! {
+            let x = ReturnsNonmovable();
+        }
+        assert_eq!(x.addr, &*x as *const _ as usize);
     }
 }

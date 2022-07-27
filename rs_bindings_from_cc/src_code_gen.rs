@@ -2854,8 +2854,9 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
 
         let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
         let return_stmt = if !is_trivial_return {
+            // Explicitly use placement new so that we get guaranteed copy elision in C++17.
             let out_param = &param_idents[0];
-            quote! {crubit::construct_at(#out_param, #return_expr)}
+            quote! {new(#out_param) auto(#return_expr)}
         } else {
             match func.return_type.cc_type.name.as_deref() {
                 Some("void") => return_expr,
@@ -6113,7 +6114,7 @@ mod tests {
             quote! {
                 extern "C" void __rust_thunk___Z14ReturnsByValueRKiS0_(
                         struct Nontrivial* __return, int const* x, int const* y) {
-                    crubit::construct_at(__return, ReturnsByValue(*x, *y));
+                    new(__return) auto(ReturnsByValue(*x, *y));
                 }
             }
         );
@@ -6163,9 +6164,7 @@ mod tests {
                     struct Nontrivial* __return, struct Nontrivial* __this,
                     const struct Nontrivial* other
                 ) {
-                    crubit::construct_at(
-                        __return,
-                        __this->operator=(*other));
+                    new(__return) auto(__this->operator=(*other));
                 }
             }
         );

@@ -98,4 +98,16 @@ struct NontrivialByValue {
   NontrivialByValue operator==(NontrivialByValue other);
 };
 
+struct Nonmovable final {
+  explicit Nonmovable();
+  Nonmovable(const Nonmovable&) = delete;
+  Nonmovable(Nonmovable&&) = delete;
+  ~Nonmovable();
+
+  void MemberFunction();
+};
+
+void TakesNonmovableByValue(Nonmovable nonmovable);
+Nonmovable ReturnsNonmovableByValue();
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NONTRIVIAL_TYPE_H_

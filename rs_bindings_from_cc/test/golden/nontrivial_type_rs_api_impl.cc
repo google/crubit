@@ -14,7 +14,7 @@
 extern "C" void __rust_thunk___ZN10NontrivialaSEf(struct Nontrivial* __return,
                                                   struct Nontrivial* __this,
                                                   float __param_0) {
-  crubit::construct_at(__return, __this->operator=(__param_0));
+  new (__return) auto(__this->operator=(__param_0));
 }
 extern "C" void __rust_thunk___ZN16NontrivialInlineC1Ev(
     struct NontrivialInline* __this) {
@@ -84,7 +84,7 @@ extern "C" struct NontrivialMembers* __rust_thunk___ZN17NontrivialMembersaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___Z14ReturnsByValuev(struct Nontrivial* __return) {
-  crubit::construct_at(__return, ReturnsByValue());
+  new (__return) auto(ReturnsByValue());
 }
 extern "C" void __rust_thunk___ZN17NontrivialByValueC1Ev(
     struct NontrivialByValue* __this) {
@@ -98,7 +98,11 @@ extern "C" void __rust_thunk___ZN17NontrivialByValueC1ERKS_(
 extern "C" void __rust_thunk___ZN17NontrivialByValueaSES_(
     struct NontrivialByValue* __return, struct NontrivialByValue* __this,
     struct NontrivialByValue other) {
-  crubit::construct_at(__return, __this->operator=(other));
+  new (__return) auto(__this->operator=(other));
+}
+extern "C" void __rust_thunk___Z24ReturnsNonmovableByValuev(
+    struct Nonmovable* __return) {
+  new (__return) auto(ReturnsNonmovableByValue());
 }
 
 static_assert(sizeof(struct Nontrivial) == 4);
@@ -120,5 +124,8 @@ static_assert(CRUBIT_OFFSET_OF(field, struct NontrivialUnpin) == 0);
 
 static_assert(sizeof(struct NontrivialByValue) == 1);
 static_assert(alignof(struct NontrivialByValue) == 1);
+
+static_assert(sizeof(struct Nonmovable) == 1);
+static_assert(alignof(struct Nonmovable) == 1);
 
 #pragma clang diagnostic pop

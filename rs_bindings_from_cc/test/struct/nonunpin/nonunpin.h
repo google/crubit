@@ -64,4 +64,15 @@ struct NonunpinStruct {
   int value;
 };
 
+// A deliberately non-movable, non-copyable struct. (And, therefore, !Unpin).
+struct Nonmovable final {
+  Nonmovable() : addr(reinterpret_cast<uintptr_t>(this)) {}
+  Nonmovable(const Nonmovable&) = delete;
+  Nonmovable(Nonmovable&&) = delete;
+  // The address at the time of construction.
+  uintptr_t addr;
+};
+
+inline Nonmovable ReturnsNonmovable() { return Nonmovable(); }
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_NONUNPIN_NONUNPIN_H_
