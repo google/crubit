@@ -191,7 +191,9 @@ Examples of additional information that interop tooling will need:
 *   **There may be headers that we cannot (or would not want to) change**, for
     example, headers in third-party code, headers that are open-sourced, or when
     first-party owners are not cooperating.
-    *   We can apply the sidecar strategy to these headers.
+    *   We can apply the
+        [sidecar strategy](#additional-information-is-stored-in-sidecar-files)
+        to these headers.
 
 #### Additional information is stored in sidecar files
 
