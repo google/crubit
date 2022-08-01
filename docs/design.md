@@ -269,9 +269,10 @@ to achieve the following goals:
     from the language point of view.**
     *   For example, when we project a C++ type into Rust, its Rust definition
         must be located in a Rust crate. Furthermore, all Rust users of this
-        type must observe it as being defined in the same crate (otherwise, two
-        identical type definitions in different crates are unrelated types in
-        Rust).
+        type must observe it as being defined in the same crate in order for
+        every users to consider that they use the same type. Indeed, this is a
+        rule in Rust, that types defined in different crates are unrelated
+        types.
     *   When we project a Rust type into C++ we could repeat its C++ definition
         in C++ code any number of times (for example, in every C++ user of a
         Rust type). This is technically fine because C++ allows the same type to
