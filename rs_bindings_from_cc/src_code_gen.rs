@@ -495,6 +495,10 @@ fn is_visible_by_adl(enclosing_record: &Record, param_types: &[RsTypeKind]) -> b
 
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
+/// If the shape is a trait, this also mutates the parameter types to be
+/// trait-compatible. In particular, types which would be `impl Ctor<Output=T>`
+/// become a `RvalueReference<'_, T>`.
+///
 /// Returns:
 ///
 ///  * `Err(_)`: something went wrong importing this function.
@@ -504,7 +508,7 @@ fn is_visible_by_adl(enclosing_record: &Record, param_types: &[RsTypeKind]) -> b
 fn api_func_shape(
     func: &Func,
     ir: &IR,
-    param_types: &[RsTypeKind],
+    param_types: &mut [RsTypeKind],
 ) -> Result<Option<(Ident, ImplKind)>> {
     let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func)?;
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
@@ -555,6 +559,7 @@ fn api_func_shape(
             if record.is_unpin() {
                 bail!("operator= for Unpin types is not yet supported.");
             }
+            materialize_ctor_in_caller(param_types);
             let rhs = &param_types[1];
             impl_kind = ImplKind::new_trait(
                 TraitName::Other {
@@ -575,6 +580,7 @@ fn api_func_shape(
                 }
             }
 
+            materialize_ctor_in_caller(param_types);
             let (record, impl_for) = if let Some(record) = maybe_record {
                 (&**record, ImplFor::RefT)
             } else {
@@ -660,6 +666,7 @@ fn api_func_shape(
                 );
                 func_name = make_rs_ident("drop");
             } else {
+                materialize_ctor_in_caller(param_types);
                 impl_kind = ImplKind::new_trait(
                     TraitName::Other {
                         name: quote! {::ctor::PinnedDrop},
@@ -693,6 +700,7 @@ fn api_func_shape(
                 );
             }
 
+            materialize_ctor_in_caller(param_types);
             let record_name = make_rs_ident(&record.rs_name);
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
@@ -763,6 +771,45 @@ fn api_func_shape(
     Ok(Some((func_name, impl_kind)))
 }
 
+/// Mutates the provided parameters so that nontrivial by-value parameters are,
+/// instead, materialized in the caller and passed by rvalue reference.
+///
+/// This produces rvalue references with elided lifetimes. If they compile,
+/// they are correct, but the resulting signatures can be surprising.
+///
+/// For example, consider `From`. This rewriting of function parameters might
+/// create an impl as follows:
+///
+/// ```
+/// // C++: struct Foo{ Foo(Nontrivial x); };
+/// impl From<RvalueReference<'_, Nontrivial>> for Foo {
+///   fn from(x: RvalueReference<'_, Nontrivial>) -> Self { ... }
+/// }
+/// ```
+///
+/// Each `'_` is actually a different lifetime! However, due to lifetime
+/// subtyping, they are allowed to be used in this sort of way, interchangeably.
+/// And indeed, this is even idiomatic. For example, the exact same pattern is
+/// in use here:
+///
+/// https://doc.rust-lang.org/std/string/struct.String.html#impl-From%3C%26%27_%20String%3E
+///
+/// If there is some case where this is actually _not_ okay, then we would need
+/// to generate new named lifetimes, rather than elided lifetimes.
+fn materialize_ctor_in_caller(params: &mut [RsTypeKind]) {
+    for param in params {
+        if param.is_unpin() {
+            continue;
+        }
+        let value = std::mem::replace(param, RsTypeKind::Unit); // Temporarily swap in a garbage value.
+        *param = RsTypeKind::RvalueReference {
+            referent: Rc::new(value),
+            mutability: Mutability::Mut,
+            lifetime: Lifetime::Elided,
+        };
+    }
+}
+
 /// Generates Rust source code for a given `Func`.
 ///
 /// Returns:
@@ -778,7 +825,7 @@ fn generate_func(
 ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
     let ir = db.ir();
     let mut features = BTreeSet::new();
-    let param_types = func
+    let mut param_types = func
         .params
         .iter()
         .map(|p| {
@@ -788,12 +835,12 @@ fn generate_func(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let (func_name, mut impl_kind) = if let Some(values) = api_func_shape(&func, &ir, &param_types)?
-    {
-        values
-    } else {
-        return Ok(None);
-    };
+    let (func_name, mut impl_kind) =
+        if let Some(values) = api_func_shape(&func, &ir, &mut param_types)? {
+            values
+        } else {
+            return Ok(None);
+        };
 
     let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
@@ -807,8 +854,12 @@ fn generate_func(
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
         if !type_.is_unpin() {
             // `impl Ctor` will fail to compile in a trait.
+            // This will only be hit if there was a bug in api_func_shape.
             if let ImplKind::Trait { .. } = &impl_kind {
-                bail!("b/200067242: non-Unpin types are not yet supported by value in traits");
+                panic!(
+                    "non-Unpin types cannot work by value in traits; this should have instead \
+                        become an rvalue reference to force the caller to materialize the Ctor."
+                );
             }
             // The generated bindings require a move constructor.
             if !type_.is_move_constructible() {
@@ -1016,8 +1067,7 @@ fn generate_func(
         };
 
         let fn_generic_params: TokenStream;
-        if let ImplKind::Trait { trait_name, trait_generic_params, impl_for, .. } = &mut impl_kind
-        {
+        if let ImplKind::Trait { trait_name, trait_generic_params, impl_for, .. } = &mut impl_kind {
             // When the impl block is for some kind of reference to T, consider the lifetime
             // parameters on the self parameter to be trait lifetimes so they can be
             // introduced before they are used.
@@ -6388,12 +6438,31 @@ mod tests {
                 Nontrivial& operator=(Nontrivial) {}
                 ~Nontrivial();
             };
+
+            struct Trivial final {
+                /*implicit*/ Trivial(Nontrivial) {}
+            };
             "#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        // the assign trait shouldn't be implemented for `Nontrivial`.
-        // (In fact, it shouldn't be referenced at all -- thus the very minimal test!)
-        assert_rs_not_matches!(rs_api, quote! {Assign});
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl From<::ctor::RvalueReference<'_, crate::Nontrivial>> for Trivial {
+                    #[inline(always)]
+                    fn from(__param_0: ::ctor::RvalueReference<'_, crate::Nontrivial>) -> Self {
+                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                        unsafe {
+                            crate::detail::__rust_thunk___ZN7TrivialC1E10Nontrivial(
+                                &mut tmp,
+                                __param_0
+                            );
+                            tmp.assume_init()
+                        }
+                    }
+                }
+            }
+        );
         Ok(())
     }
 

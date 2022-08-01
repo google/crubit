@@ -94,14 +94,27 @@ extern "C" void __rust_thunk___Z18TakesByValueInline16NontrivialInline(
 extern "C" void __rust_thunk___Z14ReturnsByValuev(struct Nontrivial* __return) {
   new (__return) auto(ReturnsByValue());
 }
-extern "C" void __rust_thunk___ZN17NontrivialByValueC1Ev(
-    struct NontrivialByValue* __this) {
-  crubit::construct_at(__this);
-}
 extern "C" void __rust_thunk___ZN17NontrivialByValueC1ERKS_(
-    struct NontrivialByValue* __this,
-    const struct NontrivialByValue* __param_0) {
-  crubit::construct_at(__this, *__param_0);
+    struct NontrivialByValue* __this, const struct NontrivialByValue* other) {
+  crubit::construct_at(__this, *other);
+}
+extern "C" void __rust_thunk___ZN17NontrivialByValueC1EOS_(
+    struct NontrivialByValue* __this, struct NontrivialByValue* other) {
+  crubit::construct_at(__this, std::move(*other));
+}
+extern "C" struct NontrivialByValue*
+__rust_thunk___ZN17NontrivialByValueaSERKS_(
+    struct NontrivialByValue* __this, const struct NontrivialByValue* other) {
+  return &__this->operator=(*other);
+}
+extern "C" struct NontrivialByValue* __rust_thunk___ZN17NontrivialByValueaSEOS_(
+    struct NontrivialByValue* __this, struct NontrivialByValue* other) {
+  return &__this->operator=(std::move(*other));
+}
+extern "C" void __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial(
+    struct NontrivialByValue* __return, struct NontrivialByValue* __this,
+    struct Nontrivial* other) {
+  new (__return) auto(__this->operator=(std::move(*other)));
 }
 extern "C" void __rust_thunk___Z24ReturnsNonmovableByValuev(
     struct Nonmovable* __return) {

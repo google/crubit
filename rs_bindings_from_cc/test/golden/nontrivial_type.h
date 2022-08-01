@@ -93,8 +93,12 @@ NontrivialUnpin& TakesByReferenceUnpin(NontrivialUnpin& nontrivial);
 
 // Finally, testing for strange by-value APIs.
 struct NontrivialByValue {
-  // NOLINTNEXTLINE(misc-unconventional-assign-operator)
-  NontrivialByValue operator=(NontrivialByValue other);
+  NontrivialByValue(const NontrivialByValue& other) = default;
+  NontrivialByValue(NontrivialByValue&& other) = default;
+  NontrivialByValue& operator=(const NontrivialByValue& other) = default;
+  NontrivialByValue& operator=(NontrivialByValue&& other) = default;
+  // // NOLINTNEXTLINE(misc-unconventional-assign-operator)
+  NontrivialByValue operator=(Nontrivial other);
   NontrivialByValue operator==(NontrivialByValue other);
 };
 
