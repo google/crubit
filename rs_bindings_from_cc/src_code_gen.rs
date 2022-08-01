@@ -395,9 +395,10 @@ enum ImplKind {
         /// Reference style for the `impl` block and self parameters.
         impl_for: ImplFor,
 
-        /// The generic params of trait `impl` (e.g. `<'b>`). These start
-        /// empty and only later are mutated into the correct value.
-        trait_generic_params: TokenStream,
+        /// The generic params of trait `impl` (e.g. `vec![quote!{'b}]`). These
+        /// start empty and only later are mutated into the correct value.
+        trait_generic_params: Vec<TokenStream>,
+
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
         format_first_param_as_self: bool,
@@ -418,7 +419,7 @@ impl ImplKind {
             trait_name,
             record_name,
             impl_for: ImplFor::T,
-            trait_generic_params: quote! {},
+            trait_generic_params: vec![],
             format_first_param_as_self,
             associated_return_type: None,
         }
@@ -601,7 +602,7 @@ fn api_func_shape(
                     is_unsafe_fn: false,
                 },
                 impl_for,
-                trait_generic_params: quote! {},
+                trait_generic_params: vec![],
                 format_first_param_as_self: true,
                 associated_return_type: Some(make_rs_ident("Output")),
             };
@@ -703,7 +704,7 @@ fn api_func_shape(
                             record_name,
                             trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
                             impl_for: ImplFor::T,
-                            trait_generic_params: quote! {},
+                            trait_generic_params: vec![],
                             format_first_param_as_self: false,
                             associated_return_type: Some(make_rs_ident("CtorType")),
                         };
@@ -1015,7 +1016,8 @@ fn generate_func(
         };
 
         let fn_generic_params: TokenStream;
-        if let ImplKind::Trait { trait_name, trait_generic_params, impl_for, .. } = &mut impl_kind {
+        if let ImplKind::Trait { trait_name, trait_generic_params, impl_for, .. } = &mut impl_kind
+        {
             // When the impl block is for some kind of reference to T, consider the lifetime
             // parameters on the self parameter to be trait lifetimes so they can be
             // introduced before they are used.
@@ -1029,9 +1031,16 @@ fn generate_func(
             fn_generic_params = format_generic_params(
                 lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(&lifetime.id)),
             );
-            *trait_generic_params = format_generic_params(
-                lifetimes.iter().filter(|lifetime| trait_lifetimes.contains(&lifetime.id)),
-            );
+            *trait_generic_params = lifetimes
+                .iter()
+                .filter_map(|lifetime| {
+                    if trait_lifetimes.contains(&lifetime.id) {
+                        Some(quote! {#lifetime})
+                    } else {
+                        None
+                    }
+                })
+                .collect();
         } else {
             fn_generic_params = format_generic_params(lifetimes);
         }
@@ -1092,6 +1101,7 @@ fn generate_func(
             };
 
             let extra_items;
+            let trait_generic_params = format_generic_params(trait_generic_params);
             match &trait_name {
                 TraitName::CtorNew(params) => {
                     if let [single_param] = params.as_slice() {
