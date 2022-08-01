@@ -402,13 +402,17 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+                >| {
+                    crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -417,14 +421,18 @@ impl<'b> ::ctor::CtorNew<&'b crate::AddableConstMemberNonunpin> for AddableConst
     #[inline(always)]
     fn ctor_new(args: &'b crate::AddableConstMemberNonunpin) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::AddableConstMemberNonunpin>,
+                >| {
+                    crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::AddableConstMemberNonunpin,)> for AddableConstMemberNonunpin {

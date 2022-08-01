@@ -30,13 +30,15 @@ impl ::ctor::CtorNew<()> for Base0 {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base0C1Ev(::std::pin::Pin::into_inner_unchecked(
-                    dest,
-                ));
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base0>>| {
+                    crate::detail::__rust_thunk___ZN5Base0C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -45,14 +47,16 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base0> for Base0 {
     #[inline(always)]
     fn ctor_new(args: &'b crate::Base0) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base0C1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base0>>| {
+                    crate::detail::__rust_thunk___ZN5Base0C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Base0,)> for Base0 {
@@ -69,14 +73,16 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base0>> for Base0 {
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base0>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base0C1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base0>>| {
+                    crate::detail::__rust_thunk___ZN5Base0C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base0>,)> for Base0 {
@@ -127,13 +133,15 @@ impl ::ctor::CtorNew<()> for Base1 {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base1C1Ev(::std::pin::Pin::into_inner_unchecked(
-                    dest,
-                ));
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base1>>| {
+                    crate::detail::__rust_thunk___ZN5Base1C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -142,14 +150,16 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base1> for Base1 {
     #[inline(always)]
     fn ctor_new(args: &'b crate::Base1) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base1C1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base1>>| {
+                    crate::detail::__rust_thunk___ZN5Base1C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Base1,)> for Base1 {
@@ -166,14 +176,16 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base1>> for Base1 {
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base1>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base1C1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base1>>| {
+                    crate::detail::__rust_thunk___ZN5Base1C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base1>,)> for Base1 {
@@ -221,13 +233,15 @@ impl ::ctor::CtorNew<()> for Base2 {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base2C1Ev(::std::pin::Pin::into_inner_unchecked(
-                    dest,
-                ));
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base2>>| {
+                    crate::detail::__rust_thunk___ZN5Base2C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -236,14 +250,16 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base2> for Base2 {
     #[inline(always)]
     fn ctor_new(args: &'b crate::Base2) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base2C1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base2>>| {
+                    crate::detail::__rust_thunk___ZN5Base2C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Base2,)> for Base2 {
@@ -260,14 +276,16 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base2>> for Base2 {
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base2>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN5Base2C1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Base2>>| {
+                    crate::detail::__rust_thunk___ZN5Base2C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base2>,)> for Base2 {
@@ -366,13 +384,15 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN12VirtualBase1C1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::VirtualBase1>>| {
+                    crate::detail::__rust_thunk___ZN12VirtualBase1C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -381,14 +401,16 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase1> for VirtualBase1 {
     #[inline(always)]
     fn ctor_new(args: &'b crate::VirtualBase1) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN12VirtualBase1C1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::VirtualBase1>>| {
+                    crate::detail::__rust_thunk___ZN12VirtualBase1C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase1,)> for VirtualBase1 {
@@ -405,14 +427,16 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase1>> for V
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualBase1>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN12VirtualBase1C1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::VirtualBase1>>| {
+                    crate::detail::__rust_thunk___ZN12VirtualBase1C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase1>,)> for VirtualBase1 {
@@ -463,13 +487,15 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN12VirtualBase2C1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::VirtualBase2>>| {
+                    crate::detail::__rust_thunk___ZN12VirtualBase2C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -478,14 +504,16 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase2> for VirtualBase2 {
     #[inline(always)]
     fn ctor_new(args: &'b crate::VirtualBase2) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN12VirtualBase2C1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::VirtualBase2>>| {
+                    crate::detail::__rust_thunk___ZN12VirtualBase2C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase2,)> for VirtualBase2 {
@@ -502,14 +530,16 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase2>> for V
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualBase2>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN12VirtualBase2C1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::VirtualBase2>>| {
+                    crate::detail::__rust_thunk___ZN12VirtualBase2C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase2>,)> for VirtualBase2 {
@@ -560,13 +590,17 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN14VirtualDerivedC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::VirtualDerived>,
+                >| {
+                    crate::detail::__rust_thunk___ZN14VirtualDerivedC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -575,14 +609,18 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived> for VirtualDerived {
     #[inline(always)]
     fn ctor_new(args: &'b crate::VirtualDerived) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN14VirtualDerivedC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::VirtualDerived>,
+                >| {
+                    crate::detail::__rust_thunk___ZN14VirtualDerivedC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::VirtualDerived,)> for VirtualDerived {
@@ -599,14 +637,18 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived>> for
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualDerived>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN14VirtualDerivedC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::VirtualDerived>,
+                >| {
+                    crate::detail::__rust_thunk___ZN14VirtualDerivedC1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualDerived>,)> for VirtualDerived {

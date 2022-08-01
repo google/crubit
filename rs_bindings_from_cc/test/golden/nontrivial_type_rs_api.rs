@@ -33,13 +33,15 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                    crate::detail::__rust_thunk___ZN10NontrivialC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -48,14 +50,16 @@ impl ::ctor::CtorNew<i32> for Nontrivial {
     #[inline(always)]
     fn ctor_new(args: i32) -> Self::CtorType {
         let field = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    field,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                    crate::detail::__rust_thunk___ZN10NontrivialC1Ei(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        field,
+                    );
+                },
+            )
+        }
     }
 }
 impl ::ctor::CtorNew<(i32,)> for Nontrivial {
@@ -72,15 +76,17 @@ impl ::ctor::CtorNew<(i32, i32)> for Nontrivial {
     #[inline(always)]
     fn ctor_new(args: (i32, i32)) -> Self::CtorType {
         let (field, unused) = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    field,
-                    unused,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                    crate::detail::__rust_thunk___ZN10NontrivialC1Eii(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        field,
+                        unused,
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -89,14 +95,16 @@ impl<'b> ::ctor::CtorNew<&'b crate::Nontrivial> for Nontrivial {
     #[inline(always)]
     fn ctor_new(args: &'b crate::Nontrivial) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                    crate::detail::__rust_thunk___ZN10NontrivialC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::Nontrivial,)> for Nontrivial {
@@ -113,14 +121,16 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for Non
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                    crate::detail::__rust_thunk___ZN10NontrivialC1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nontrivial {
@@ -213,13 +223,17 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
+                >| {
+                    crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -228,14 +242,18 @@ impl ::ctor::CtorNew<i32> for NontrivialInline {
     #[inline(always)]
     fn ctor_new(args: i32) -> Self::CtorType {
         let field = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    field,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
+                >| {
+                    crate::detail::__rust_thunk___ZN16NontrivialInlineC1Ei(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        field,
+                    );
+                },
+            )
+        }
     }
 }
 impl ::ctor::CtorNew<(i32,)> for NontrivialInline {
@@ -252,15 +270,19 @@ impl ::ctor::CtorNew<(i32, i32)> for NontrivialInline {
     #[inline(always)]
     fn ctor_new(args: (i32, i32)) -> Self::CtorType {
         let (field, unused) = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    field,
-                    unused,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
+                >| {
+                    crate::detail::__rust_thunk___ZN16NontrivialInlineC1Eii(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        field,
+                        unused,
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -269,14 +291,18 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialInline> for NontrivialInline {
     #[inline(always)]
     fn ctor_new(args: &'b crate::NontrivialInline) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
+                >| {
+                    crate::detail::__rust_thunk___ZN16NontrivialInlineC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialInline,)> for NontrivialInline {
@@ -295,14 +321,18 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialInline>>
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialInline>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
+                >| {
+                    crate::detail::__rust_thunk___ZN16NontrivialInlineC1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialInline>,)>
@@ -382,13 +412,17 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialMembers>,
+                >| {
+                    crate::detail::__rust_thunk___ZN17NontrivialMembersC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 
@@ -397,14 +431,18 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialMembers> for NontrivialMembers {
     #[inline(always)]
     fn ctor_new(args: &'b crate::NontrivialMembers) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialMembersC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialMembers>,
+                >| {
+                    crate::detail::__rust_thunk___ZN17NontrivialMembersC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialMembers,)> for NontrivialMembers {
@@ -423,14 +461,18 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialMembers>>
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialMembers>) -> Self::CtorType {
         let __param_0 = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    __param_0,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialMembers>,
+                >| {
+                    crate::detail::__rust_thunk___ZN17NontrivialMembersC1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialMembers>,)>
@@ -650,14 +692,18 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialByValue> for NontrivialByValue {
     #[inline(always)]
     fn ctor_new(args: &'b crate::NontrivialByValue) -> Self::CtorType {
         let other = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialByValueC1ERKS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    other,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
+                >| {
+                    crate::detail::__rust_thunk___ZN17NontrivialByValueC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        other,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialByValue,)> for NontrivialByValue {
@@ -676,14 +722,18 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialByValue>>
     #[inline(always)]
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialByValue>) -> Self::CtorType {
         let other = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN17NontrivialByValueC1EOS_(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                    other,
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
+                >| {
+                    crate::detail::__rust_thunk___ZN17NontrivialByValueC1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        other,
+                    );
+                },
+            )
+        }
     }
 }
 impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialByValue>,)>
@@ -760,13 +810,15 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     #[inline(always)]
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
-        ::ctor::FnCtor::new(
-            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
-                    ::std::pin::Pin::into_inner_unchecked(dest),
-                );
-            },
-        )
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nonmovable>>| {
+                    crate::detail::__rust_thunk___ZN10NonmovableC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
     }
 }
 

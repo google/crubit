@@ -853,6 +853,7 @@ fn generate_func(
         lifetimes,
         params: api_params,
         return_type_fragment: mut quoted_return_type,
+        thunk_prepare,
         thunk_args,
     } = function_signature(
         &mut features,
@@ -870,18 +871,6 @@ fn generate_func(
         // here.
         let thunk_ident = thunk_ident(&func);
         let func_body = match &impl_kind {
-            ImplKind::Trait { trait_name: TraitName::CtorNew(..), .. } => {
-                let thunk_vars = format_tuple_except_singleton(&thunk_args);
-                // TODO(b/226447239): check for copy here and instead use copies in that case?
-                quote! {
-                    let #thunk_vars = args;
-                    ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                        unsafe {
-                            crate::detail::#thunk_ident(::std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
-                        }
-                    })
-                }
-            }
             ImplKind::Trait { trait_name: TraitName::UnpinConstructor { .. }, .. } => {
                 // SAFETY: A user-defined constructor is not guaranteed to
                 // initialize all the fields. To make the `assume_init()` call
@@ -937,7 +926,10 @@ fn generate_func(
                 if !impl_kind.is_unsafe() {
                     body = quote! { unsafe { #body } };
                 }
-                body
+                quote! {
+                    #thunk_prepare
+                    #body
+                }
             }
         };
 
@@ -1106,6 +1098,9 @@ struct BindingsSignature {
     /// literal `Self`.
     return_type_fragment: TokenStream,
 
+    /// Any preparation code to define the arguments in `thunk_args`.
+    thunk_prepare: TokenStream,
+
     /// The arguments passed to the thunk, expressed in terms of `params`.
     thunk_args: Vec<TokenStream>,
 }
@@ -1130,6 +1125,7 @@ fn function_signature(
 ) -> Result<BindingsSignature> {
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
+    let mut thunk_prepare = quote! {};
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
         if !type_.is_unpin() {
             // `impl Ctor` will fail to compile in a trait.
@@ -1195,9 +1191,12 @@ fn function_signature(
             );
         }
 
+        // CtorNew groups parameters into a tuple.
         if let TraitName::CtorNew(args_type) = trait_name {
             let args_type = format_tuple_except_singleton(args_type);
             api_params = vec![quote! {args: #args_type}];
+            let thunk_vars = format_tuple_except_singleton(&thunk_args);
+            thunk_prepare.extend(quote! {let #thunk_vars = args;});
         }
     }
 
@@ -1244,7 +1243,13 @@ fn function_signature(
         }
     }
 
-    Ok(BindingsSignature { lifetimes, params: api_params, return_type_fragment, thunk_args })
+    Ok(BindingsSignature {
+        lifetimes,
+        params: api_params,
+        return_type_fragment,
+        thunk_prepare,
+        thunk_args,
+    })
 }
 
 fn generate_func_thunk(
@@ -6274,11 +6279,11 @@ mod tests {
                     #[inline (always)]
                     fn ctor_new(args: ()) -> Self::CtorType {
                         let () = args;
-                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                            unsafe {
+                        unsafe {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::std::pin::Pin::into_inner_unchecked(dest));
-                            }
-                        })
+                            })
+                        }
                     }
                 }
             }
@@ -6304,11 +6309,11 @@ mod tests {
                     #[inline (always)]
                     fn ctor_new(args: u8) -> Self::CtorType {
                         let input = args;
-                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                            unsafe {
+                        unsafe {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::std::pin::Pin::into_inner_unchecked(dest), input);
-                            }
-                        })
+                            })
+                        }
                     }
                 }
             }
@@ -6334,11 +6339,11 @@ mod tests {
                     #[inline (always)]
                     fn ctor_new(args: (u8, i8)) -> Self::CtorType {
                         let (input1, input2) = args;
-                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
-                            unsafe {
+                        unsafe {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::std::pin::Pin::into_inner_unchecked(dest), input1, input2);
-                            }
-                        })
+                            })
+                        }
                     }
                 }
             }

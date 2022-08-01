@@ -130,13 +130,17 @@ pub mod test_namespace_bindings {
         #[inline(always)]
         fn ctor_new(args: ()) -> Self::CtorType {
             let () = args;
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1Ev(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            unsafe {
+                ::ctor::FnCtor::new(
+                    move |dest: ::std::pin::Pin<
+                        &mut ::std::mem::MaybeUninit<
+                            crate::test_namespace_bindings::TrivialNonfinal,
+                        >,
+                    >| {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1Ev(::std::pin::Pin::into_inner_unchecked(dest));
+                    },
+                )
+            }
         }
     }
 
@@ -145,11 +149,17 @@ pub mod test_namespace_bindings {
         #[inline(always)]
         fn ctor_new(args: &'b crate::test_namespace_bindings::TrivialNonfinal) -> Self::CtorType {
             let __param_0 = args;
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1ERKS0_(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
+            unsafe {
+                ::ctor::FnCtor::new(
+                    move |dest: ::std::pin::Pin<
+                        &mut ::std::mem::MaybeUninit<
+                            crate::test_namespace_bindings::TrivialNonfinal,
+                        >,
+                    >| {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1ERKS0_(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                    },
+                )
+            }
         }
     }
     impl<'b> ::ctor::CtorNew<(&'b crate::test_namespace_bindings::TrivialNonfinal,)>
@@ -178,11 +188,17 @@ pub mod test_namespace_bindings {
             args: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TrivialNonfinal>,
         ) -> Self::CtorType {
             let __param_0 = args;
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| unsafe {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1EOS0_(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
+            unsafe {
+                ::ctor::FnCtor::new(
+                    move |dest: ::std::pin::Pin<
+                        &mut ::std::mem::MaybeUninit<
+                            crate::test_namespace_bindings::TrivialNonfinal,
+                        >,
+                    >| {
+                        crate::detail::__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1EOS0_(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                    },
+                )
+            }
         }
     }
     impl<'b>
