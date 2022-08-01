@@ -847,130 +847,23 @@ fn generate_func(
         .with_context(|| format!("Failed to format return type for {:?}", &func))?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
-
     let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
-    let mut api_params = Vec::with_capacity(func.params.len());
-    let mut thunk_args = Vec::with_capacity(func.params.len());
-    for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
-        if !type_.is_unpin() {
-            // `impl Ctor` will fail to compile in a trait.
-            // This will only be hit if there was a bug in api_func_shape.
-            if let ImplKind::Trait { .. } = &impl_kind {
-                panic!(
-                    "non-Unpin types cannot work by value in traits; this should have instead \
-                        become an rvalue reference to force the caller to materialize the Ctor."
-                );
-            }
-            // The generated bindings require a move constructor.
-            if !type_.is_move_constructible() {
-                bail!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_});
-            }
-            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#type_>});
-            thunk_args
-                .push(quote! {::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
-        } else {
-            api_params.push(quote! {#ident: #type_});
-            thunk_args.push(quote! {#ident});
-        }
-    }
-    let mut lifetimes = func.lifetime_params.iter().collect_vec();
-    let mut quoted_return_type = None;
 
-    if let ImplKind::Trait {
-        trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
-        ..
-    } = &impl_kind
-    {
-        //  Presence of element #0 is indirectly verified by a `Constructor`-related
-        // `match` branch a little bit above.
-        return_type = param_types[0]
-            .referent()
-            .ok_or_else(|| anyhow!("Expected pointer/reference for `__this` parameter"))?
-            .clone();
-        quoted_return_type = Some(quote! {Self});
-
-        // Drop `__this` parameter from the public Rust API.
-        api_params.remove(0);
-        thunk_args.remove(0);
-        param_types.remove(0);
-
-        // Remove the lifetime associated with `__this`.
-        ensure!(
-            func.return_type.rs_type.is_unit_type(),
-            "Unexpectedly non-void return type of a constructor: {:?}",
-            func
-        );
-        let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
-        let no_longer_needed_lifetime_id = maybe_first_lifetime
-            .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
-        lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
-        if let Some(type_still_dependent_on_removed_lifetime) = param_types
-            .iter()
-            .flat_map(|t| t.lifetimes())
-            .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
-        {
-            bail!(
-                "The lifetime of `__this` is unexpectedly also used by another \
-                    parameter {:?} in function {:?}",
-                type_still_dependent_on_removed_lifetime,
-                func.name
-            );
-        }
-
-        if let TraitName::CtorNew(args_type) = trait_name {
-            let args_type = format_tuple_except_singleton(args_type);
-            api_params = vec![quote! {args: #args_type}];
-        }
-    }
-
-    // quoted_return_type corresponds to `return_type`, except that () is the empty
-    // string, non-Unpin by-value types are `impl Ctor<Output=#return_type> +
-    // ...`, and wherever the type is the type of Self, it gets replaced by
-    // literal `Self`.
-    let mut quoted_return_type = if return_type == RsTypeKind::Unit {
-        quote! {}
-    } else {
-        let ty = quoted_return_type.unwrap_or_else(|| quote! {#return_type});
-        if return_type.is_unpin() {
-            quote! {#ty}
-        } else {
-            // This feature seems destined for stabilization, and makes the code
-            // simpler. We don't need it for simple functions, but if the return type is
-            // used as an associated type for a trait.
-            features.insert(make_rs_ident("type_alias_impl_trait"));
-            // The returned lazy FnCtor depends on all inputs.
-            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ ::ctor::Captures<#a>});
-            quote! {impl ::ctor::Ctor<Output=#ty> #(#extra_lifetimes)* }
-        }
-    };
+    let BindingsSignature {
+        lifetimes,
+        params: api_params,
+        return_type_fragment: mut quoted_return_type,
+        thunk_args,
+    } = function_signature(
+        &mut features,
+        &func,
+        &impl_kind,
+        &param_idents,
+        &mut param_types,
+        &mut return_type,
+    )?;
 
     let api_func_def = {
-        // Change `__this: &'a SomeStruct` into `&'a self` if needed.
-        if impl_kind.format_first_param_as_self() {
-            let first_api_param = param_types
-                .get(0)
-                .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            // If param_types[0] exists, so do api_params[0] and thunk_args[0].
-            match impl_kind {
-                ImplKind::None { .. } => unreachable!(),
-                ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. } => {
-                    // In the ImplFor::T reference style (which is implied for ImplKind::Struct) the
-                    // impl block is for `T`. The `self` parameter has a type determined by the
-                    // first parameter (typically a reference of some kind) and can be passed to a
-                    // thunk via the expression `self`.
-                    api_params[0] = first_api_param.format_as_self_param()?;
-                    thunk_args[0] = quote! { self };
-                }
-                ImplKind::Trait { impl_for: ImplFor::RefT, .. } => {
-                    // In the ImplFor::RefT reference style the impl block is for a reference type
-                    // referring to T (`&T`, `&mut T`, or `Pin<&mut T>` so a bare `self` parameter
-                    // has that type and can be passed to a thunk via the expression `self`.
-                    api_params[0] = quote! { self };
-                    thunk_args[0] = quote! { self };
-                }
-            }
-        }
-
         // TODO(b/200067242): the Pin-wrapping code doesn't know to wrap &mut
         // MaybeUninit<T> in Pin if T is !Unpin. It should understand
         // 'structural pinning', so that we do not need into_inner_unchecked()
@@ -1193,6 +1086,165 @@ fn generate_func(
         thunk.into(),
         Rc::new(function_id),
     ))))
+}
+
+/// The function signature for a function's bindings.
+struct BindingsSignature {
+    /// The lifetime parameters for the Rust function.
+    lifetimes: Vec<ir::LifetimeName>,
+
+    /// The parameter list for the Rust function.
+    ///
+    /// For example, `vec![quote!{self}, quote!{x: &i32}]`.
+    params: Vec<TokenStream>,
+
+    /// The return type fragment of the Rust function, as a token stream.
+    ///
+    /// This is the same as the actual return type, except that () is the empty
+    /// tokens, non-Unpin by-value types are `impl Ctor<Output=#return_type> +
+    /// ...`, and wherever the type is the type of `Self`, it gets replaced by
+    /// literal `Self`.
+    return_type_fragment: TokenStream,
+
+    /// The arguments passed to the thunk, expressed in terms of `params`.
+    thunk_args: Vec<TokenStream>,
+}
+
+/// Reformats API parameters and return values to match Rust conventions and the
+/// trait requirements.
+///
+/// For example:
+///
+/// * Use the `self` keyword for the this pointer.
+/// * Use `Self` for the return value of constructor traits.
+/// * For C++ constructors, remove `self` from the Rust side (as it becomes the
+///   return value), retaining it on the C++ side / thunk args.
+/// * serialize a `()` as the empty string.
+fn function_signature(
+    features: &mut BTreeSet<Ident>,
+    func: &Func,
+    impl_kind: &ImplKind,
+    param_idents: &[Ident],
+    param_types: &mut Vec<RsTypeKind>,
+    return_type: &mut RsTypeKind,
+) -> Result<BindingsSignature> {
+    let mut api_params = Vec::with_capacity(func.params.len());
+    let mut thunk_args = Vec::with_capacity(func.params.len());
+    for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
+        if !type_.is_unpin() {
+            // `impl Ctor` will fail to compile in a trait.
+            // This will only be hit if there was a bug in api_func_shape.
+            if let ImplKind::Trait { .. } = &impl_kind {
+                panic!(
+                    "non-Unpin types cannot work by value in traits; this should have instead \
+                        become an rvalue reference to force the caller to materialize the Ctor."
+                );
+            }
+            // The generated bindings require a move constructor.
+            if !type_.is_move_constructible() {
+                bail!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_});
+            }
+            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#type_>});
+            thunk_args
+                .push(quote! {::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
+        } else {
+            api_params.push(quote! {#ident: #type_});
+            thunk_args.push(quote! {#ident});
+        }
+    }
+    let mut lifetimes = func.lifetime_params.iter().cloned().collect_vec();
+    let mut quoted_return_type = None;
+    if let ImplKind::Trait {
+        trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
+        ..
+    } = &impl_kind
+    {
+        //  Presence of element #0 is indirectly verified by a `Constructor`-related
+        // `match` branch a little bit above.
+        *return_type = param_types[0]
+            .referent()
+            .ok_or_else(|| anyhow!("Expected pointer/reference for `__this` parameter"))?
+            .clone();
+        quoted_return_type = Some(quote! {Self});
+
+        // Drop `__this` parameter from the public Rust API.
+        api_params.remove(0);
+        thunk_args.remove(0);
+        param_types.remove(0);
+
+        // Remove the lifetime associated with `__this`.
+        ensure!(
+            func.return_type.rs_type.is_unit_type(),
+            "Unexpectedly non-void return type of a constructor: {:?}",
+            func
+        );
+        let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
+        let no_longer_needed_lifetime_id = maybe_first_lifetime
+            .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
+        lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
+        if let Some(type_still_dependent_on_removed_lifetime) = param_types
+            .iter()
+            .flat_map(|t| t.lifetimes())
+            .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
+        {
+            bail!(
+                "The lifetime of `__this` is unexpectedly also used by another \
+                    parameter {:?} in function {:?}",
+                type_still_dependent_on_removed_lifetime,
+                func.name
+            );
+        }
+
+        if let TraitName::CtorNew(args_type) = trait_name {
+            let args_type = format_tuple_except_singleton(args_type);
+            api_params = vec![quote! {args: #args_type}];
+        }
+    }
+
+    let return_type_fragment = if return_type == &RsTypeKind::Unit {
+        quote! {}
+    } else {
+        let ty = quoted_return_type.unwrap_or_else(|| quote! {#return_type});
+        if return_type.is_unpin() {
+            quote! {#ty}
+        } else {
+            // This feature seems destined for stabilization, and makes the code
+            // simpler. We don't need it for simple functions, but if the return type is
+            // used as an associated type for a trait.
+            features.insert(make_rs_ident("type_alias_impl_trait"));
+            // The returned lazy FnCtor depends on all inputs.
+            let extra_lifetimes = lifetimes.iter().map(|a| quote! {+ ::ctor::Captures<#a>});
+            quote! {impl ::ctor::Ctor<Output=#ty> #(#extra_lifetimes)* }
+        }
+    };
+
+    // Change `__this: &'a SomeStruct` into `&'a self` if needed.
+    if impl_kind.format_first_param_as_self() {
+        let first_api_param = param_types
+            .get(0)
+            .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
+        // If param_types[0] exists, so do api_params[0] and thunk_args[0].
+        match impl_kind {
+            ImplKind::None { .. } => unreachable!(),
+            ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. } => {
+                // In the ImplFor::T reference style (which is implied for ImplKind::Struct) the
+                // impl block is for `T`. The `self` parameter has a type determined by the
+                // first parameter (typically a reference of some kind) and can be passed to a
+                // thunk via the expression `self`.
+                api_params[0] = first_api_param.format_as_self_param()?;
+                thunk_args[0] = quote! { self };
+            }
+            ImplKind::Trait { impl_for: ImplFor::RefT, .. } => {
+                // In the ImplFor::RefT reference style the impl block is for a reference type
+                // referring to T (`&T`, `&mut T`, or `Pin<&mut T>` so a bare `self` parameter
+                // has that type and can be passed to a thunk via the expression `self`.
+                api_params[0] = quote! { self };
+                thunk_args[0] = quote! { self };
+            }
+        }
+    }
+
+    Ok(BindingsSignature { lifetimes, params: api_params, return_type_fragment, thunk_args })
 }
 
 fn generate_func_thunk(
