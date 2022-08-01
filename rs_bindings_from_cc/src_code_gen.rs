@@ -2155,6 +2155,54 @@ impl Mutability {
     }
 }
 
+/// Either a known lifetime, or the magic `'_` elided lifetime.
+///
+/// Warning: elided lifetimes are not always valid, and sometimes named
+/// lifetimes are required. In particular, this should never be used for
+/// output lifetimes.
+///
+/// However, because output lifetimes are never elided, a lifetime that only
+/// occurs in a single input position can always be elided.
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum Lifetime {
+    Named(LifetimeName),
+    Elided,
+}
+
+impl Lifetime {
+    /// Formats a lifetime for use as a reference lifetime parameter.
+    ///
+    /// In this case, elided lifetimes are empty.
+    pub fn format_for_reference(&self) -> TokenStream {
+        match self {
+            Lifetime::Named(lifetime) => quote! {#lifetime},
+            Lifetime::Elided => quote! {},
+        }
+    }
+
+    /// Returns a lifetime ID, if this is a non-elided lifetime. Otherwise
+    /// returns None.
+    pub fn id(&self) -> Option<LifetimeId> {
+        match self {
+            Lifetime::Named(lifetime) => Some(lifetime.id),
+            Lifetime::Elided => None,
+        }
+    }
+}
+
+/// Formats a lifetime for use anywhere.
+///
+/// For the specific context of references, prefer `format_for_reference`, as it
+/// gives a more idiomatic formatting for elided lifetimes.
+impl ToTokens for Lifetime {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Lifetime::Named(named) => named.to_tokens(tokens),
+            Lifetime::Elided => tokens.extend(quote! {'_ }),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum RsTypeKind {
     Pointer {
@@ -2164,12 +2212,12 @@ enum RsTypeKind {
     Reference {
         referent: Rc<RsTypeKind>,
         mutability: Mutability,
-        lifetime: LifetimeName,
+        lifetime: Lifetime,
     },
     RvalueReference {
         referent: Rc<RsTypeKind>,
         mutability: Mutability,
-        lifetime: LifetimeName,
+        lifetime: Lifetime,
     },
     FuncPtr {
         abi: Rc<str>,
@@ -2257,6 +2305,7 @@ impl RsTypeKind {
     pub fn format_mut_ref_as_uninitialized(&self) -> Result<TokenStream> {
         match self {
             RsTypeKind::Reference { referent, lifetime, mutability: Mutability::Mut } => {
+                let lifetime = lifetime.format_for_reference();
                 Ok(quote! { & #lifetime mut ::std::mem::MaybeUninit< #referent > })
             }
             _ => bail!("Expected reference to format as MaybeUninit, got: {:?}", self),
@@ -2286,7 +2335,7 @@ impl RsTypeKind {
             } => {
                 referent = reference_pointee;
                 mutability = reference_mutability;
-                lifetime = quote! {#reference_lifetime};
+                lifetime = reference_lifetime;
             }
             RsTypeKind::Record { .. } => {
                 // This case doesn't happen for methods, but is needed for free functions mapped
@@ -2296,6 +2345,7 @@ impl RsTypeKind {
             _ => bail!("Unexpected type of `self` parameter: {:?}", self),
         }
         let mut_ = mutability.format_for_reference();
+        let lifetime = lifetime.format_for_reference();
         if mutability == &Mutability::Mut && !referent.is_unpin() {
             // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
             // `Pin`.
@@ -2367,8 +2417,8 @@ impl RsTypeKind {
     /// if the same LifetimeId is used in two `type_args`).
     pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
         self.dfs_iter().filter_map(|t| match t {
-            RsTypeKind::Reference { lifetime, .. } => Some(lifetime.id),
-            RsTypeKind::RvalueReference { lifetime, .. } => Some(lifetime.id),
+            RsTypeKind::Reference { lifetime, .. } => lifetime.id(),
+            RsTypeKind::RvalueReference { lifetime, .. } => lifetime.id(),
             _ => None,
         })
     }
@@ -2397,6 +2447,7 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::Reference { referent, mutability, lifetime } => {
                 let mut_ = mutability.format_for_reference();
+                let lifetime = lifetime.format_for_reference();
                 let reference = quote! {& #lifetime #mut_ #referent};
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
@@ -2519,7 +2570,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
         }
         Ok(Rc::new(get_type_args()?.remove(0)))
     };
-    let get_lifetime = || -> Result<LifetimeName> {
+    let get_lifetime = || -> Result<Lifetime> {
         if ty.lifetime_args.len() != 1 {
             bail!("Missing reference lifetime (need exactly 1 lifetime argument): {:?}", ty);
         }
@@ -2527,6 +2578,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
         ir.get_lifetime(lifetime_id)
             .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))
             .cloned()
+            .map(|lifetime| Lifetime::Named(lifetime))
     };
 
     let result = match ty.name.as_deref() {
@@ -6773,5 +6825,29 @@ mod tests {
             }
         );
         Ok(())
+    }
+
+    #[test]
+    fn test_lifetime_elision_for_references() {
+        let type_args: &[RsTypeKind] = &[];
+        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let reference = RsTypeKind::Reference {
+            referent: referent,
+            mutability: Mutability::Const,
+            lifetime: Lifetime::Elided,
+        };
+        assert_rs_matches!(quote! {#reference}, quote! {&T});
+    }
+
+    #[test]
+    fn test_lifetime_elision_for_rvalue_references() {
+        let type_args: &[RsTypeKind] = &[];
+        let referent = Rc::new(RsTypeKind::Other { name: "T".into(), type_args: type_args.into() });
+        let reference = RsTypeKind::RvalueReference {
+            referent: referent,
+            mutability: Mutability::Mut,
+            lifetime: Lifetime::Elided,
+        };
+        assert_rs_matches!(quote! {#reference}, quote! {RvalueReference<'_, T>});
     }
 }

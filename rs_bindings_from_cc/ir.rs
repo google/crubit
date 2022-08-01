@@ -567,11 +567,7 @@ impl From<Record> for Item {
 impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
     type Error = arc_anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Record(r) = value {
-            Ok(r)
-        } else {
-            bail!("Not a Record: {:#?}", value)
-        }
+        if let Item::Record(r) = value { Ok(r) } else { bail!("Not a Record: {:#?}", value) }
     }
 }
 
@@ -601,11 +597,7 @@ impl From<Comment> for Item {
 impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
     type Error = arc_anyhow::Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
-        if let Item::Comment(c) = value {
-            Ok(c)
-        } else {
-            bail!("Not a Comment: {:#?}", value)
-        }
+        if let Item::Comment(c) = value { Ok(c) } else { bail!("Not a Comment: {:#?}", value) }
     }
 }
 
