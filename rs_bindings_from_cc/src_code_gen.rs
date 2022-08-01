@@ -874,7 +874,6 @@ fn generate_func(
         }
     }
     let mut lifetimes = func.lifetime_params.iter().collect_vec();
-    let mut maybe_first_api_param = param_types.get(0);
     let mut quoted_return_type = None;
 
     if let ImplKind::Trait {
@@ -882,17 +881,18 @@ fn generate_func(
         ..
     } = &impl_kind
     {
-        // Drop `__this` parameter from the public Rust API. Presence of
-        // element #0 is indirectly verified by a `Constructor`-related
+        //  Presence of element #0 is indirectly verified by a `Constructor`-related
         // `match` branch a little bit above.
-        api_params.remove(0);
-        thunk_args.remove(0);
-
         return_type = param_types[0]
             .referent()
             .ok_or_else(|| anyhow!("Expected pointer/reference for `__this` parameter"))?
             .clone();
         quoted_return_type = Some(quote! {Self});
+
+        // Drop `__this` parameter from the public Rust API.
+        api_params.remove(0);
+        thunk_args.remove(0);
+        param_types.remove(0);
 
         // Remove the lifetime associated with `__this`.
         ensure!(
@@ -906,7 +906,6 @@ fn generate_func(
         lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
         if let Some(type_still_dependent_on_removed_lifetime) = param_types
             .iter()
-            .skip(1) // Skipping `__this`
             .flat_map(|t| t.lifetimes())
             .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
         {
@@ -918,14 +917,7 @@ fn generate_func(
             );
         }
 
-        // Rebind `maybe_first_api_param` to the next param after `__this`.
-        maybe_first_api_param = param_types.get(1);
-
         if let TraitName::CtorNew(args_type) = trait_name {
-            // CtorNew has no self param, so this should never be used -- and we should fail
-            // if it is.
-            maybe_first_api_param = None;
-
             let args_type = format_tuple_except_singleton(args_type);
             api_params = vec![quote! {args: #args_type}];
         }
@@ -955,10 +947,10 @@ fn generate_func(
     let api_func_def = {
         // Change `__this: &'a SomeStruct` into `&'a self` if needed.
         if impl_kind.format_first_param_as_self() {
-            let first_api_param = maybe_first_api_param
+            let first_api_param = param_types
+                .get(0)
                 .ok_or_else(|| anyhow!("No parameter to format as 'self': {:?}", func))?;
-            // Presence of element #0 is verified by `ok_or_else` on
-            // `maybe_first_api_param` above.
+            // If param_types[0] exists, so do api_params[0] and thunk_args[0].
             match impl_kind {
                 ImplKind::None { .. } => unreachable!(),
                 ImplKind::Struct { .. } | ImplKind::Trait { impl_for: ImplFor::T, .. } => {
