@@ -59,20 +59,27 @@ void transferInitNullablePointer(const Expr* NullablePointer,
                        /*Known=*/&State.Env.getBoolLiteralValue(true));
 }
 
+void transferInitUnknownPointer(const Expr* UnknownPointer,
+                                TransferState<NoopLattice>& State) {
+  initPointerNullState(UnknownPointer, State.Env,
+                       /*Known=*/&State.Env.getBoolLiteralValue(false));
+}
+
 void transferPointerExpr(const Expr* PointerExpr,
                          const MatchFinder::MatchResult& Result,
                          TransferState<NoopLattice>& State) {
-  // TODO(b/233582219): Initialise unannotated pointers with unknown
-  // nullability. The current default for unnannotated pointers is nullable.
   auto Nullability = PointerExpr->getType()
                          ->getNullability(*Result.Context)
-                         .value_or(NullabilityKind::Nullable);
+                         .value_or(NullabilityKind::Unspecified);
   switch (Nullability) {
     case NullabilityKind::NonNull:
       transferInitNotNullPointer(PointerExpr, Result, State);
       break;
-    default:
+    case NullabilityKind::Nullable:
       transferInitNullablePointer(PointerExpr, State);
+      break;
+    default:
+      transferInitUnknownPointer(PointerExpr, State);
   }
 }
 
