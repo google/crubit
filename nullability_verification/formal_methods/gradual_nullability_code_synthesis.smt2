@@ -85,62 +85,51 @@
 (declare-fun is-unsafe-to-deref (Bool PointerValue) Bool)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Solution S1: two bits, no quantifiers.
+;; Solution S1: two bits, no quantifiers
+;; - Bit 1 represents if the pointer's nullability is known
+;; - Bit 2 represents if the pointer is not null
 
 (define-fun enable-solution-s1 () Bool false)
 
 (assert (=> enable-solution-s1
   (forall ((p PointerValue))
     (= (fc-conj--ptr-is-null p)
-       (= p (make-PointerValue false false))))))
+       (= p (make-PointerValue true false))))))
 
 (assert (=> enable-solution-s1
   (forall ((p PointerValue))
     (= (fc-conj--ptr-is-unknown p)
-       (= p (make-PointerValue false true))))))
+        (or
+          (= p (make-PointerValue false false))
+          (= p (make-PointerValue false true)))))))
 
 (assert (=> enable-solution-s1
   (forall ((p PointerValue))
     (= (fc-conj--ptr-is-nonnull p)
-       (= p (make-PointerValue true false))))))
+       (= p (make-PointerValue true true))))))
 
 (assert (=> enable-solution-s1
   (forall ((p PointerValue))
     (= (fc-conj--ptr-is-nullable p)
         (or
-          (= p (make-PointerValue false false))
-          (= p (make-PointerValue true false)))))))
+          (= p (make-PointerValue true false))
+          (= p (make-PointerValue true true)))))))
 
 (assert (=> enable-solution-s1
   (forall ((lhs PointerValue) (rhs PointerValue) (eq Bool))
     (= (fc-conj--ptrs-were-compared lhs rhs eq)
-       (or
+       (and
          ;; nullptr == nullptr
-         (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-null rhs) eq)
+         (=> (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-null rhs))
+             eq)
 
          ;; nullptr != nonnull
-         (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-nonnull rhs) (not eq))
+         (=> (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-nonnull rhs))
+             (not eq))
 
          ;; nonnull != nullptr
-         (and (fc-conj--ptr-is-nonnull lhs) (fc-conj--ptr-is-null rhs) (not eq))
-
-         ;; unknown ?? nonnull
-         (and (fc-conj--ptr-is-unknown lhs) (fc-conj--ptr-is-nonnull rhs))
-
-         ;; nonnull ?? unknown
-         (and (fc-conj--ptr-is-nonnull lhs) (fc-conj--ptr-is-unknown rhs))
-
-         ;; nullptr ?? unknown
-         (and (fc-conj--ptr-is-null lhs) (fc-conj--ptr-is-unknown rhs))
-
-         ;; unknown ?? nullptr
-         (and (fc-conj--ptr-is-unknown lhs) (fc-conj--ptr-is-null rhs))
-
-         ;; unknown ?? unknown
-         (and (fc-conj--ptr-is-unknown lhs) (fc-conj--ptr-is-unknown rhs))
-
-         ;; nonnull ?? nonnull
-         (and (fc-conj--ptr-is-nonnull lhs) (fc-conj--ptr-is-nonnull rhs)))))))
+         (=> (and (fc-conj--ptr-is-nonnull lhs) (fc-conj--ptr-is-null rhs))
+             (not eq)))))))
 
 (assert (=> enable-solution-s1
   (forall ((c Bool)
@@ -1018,7 +1007,7 @@
 ;; Example CompareNonNullAndNonNull
 ;;
 ;; ```
-;; void target(int *x, int *y) {
+;; void target(int * _NonNull x, int * _NonNull y) {
 ;;   // (1)
 ;;   bool b = x == y;
 ;;   // (2)
