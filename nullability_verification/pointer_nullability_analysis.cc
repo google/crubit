@@ -7,6 +7,7 @@
 #include <string>
 
 #include "common/check.h"
+#include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_lattice.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"
@@ -25,55 +26,19 @@ namespace tidy {
 namespace nullability {
 
 using ast_matchers::MatchFinder;
-using dataflow::AtomicBoolValue;
 using dataflow::BoolValue;
 using dataflow::Environment;
 using dataflow::MatchSwitchBuilder;
-using dataflow::PointerValue;
 using dataflow::SkipPast;
 using dataflow::TransferState;
 using dataflow::Value;
 
 namespace {
 
-constexpr llvm::StringLiteral kKnown = "is_known";
-constexpr llvm::StringLiteral kNotNull = "is_notnull";
-
-std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
-    const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State) {
-  auto* PointerVal =
-      cast<PointerValue>(State.Env.getValue(*PointerExpr, SkipPast::Reference));
-  auto& PointerKnown = *cast<AtomicBoolValue>(PointerVal->getProperty(kKnown));
-  auto& PointerNotNull =
-      *cast<AtomicBoolValue>(PointerVal->getProperty(kNotNull));
-  return {PointerKnown, PointerNotNull};
-}
-
-void initPointerBoolProperty(PointerValue& PointerVal, llvm::StringRef Name,
-                             BoolValue* BoolVal, Environment& Env) {
-  if (PointerVal.getProperty(Name) == nullptr) {
-    PointerVal.setProperty(Name,
-                           BoolVal ? *BoolVal : Env.makeAtomicBoolValue());
-  }
-}
-
-/// The nullness information of a pointer is represented by two properties which
-/// indicate if a pointer's nullability (i.e. if the pointer can hold null) is
-/// `Known` and if the pointer's value is `NotNull`.
-void initPointerNullState(const Expr* PointerExpr,
-                          TransferState<PointerNullabilityLattice>& State,
-                          BoolValue* Known, BoolValue* NotNull = nullptr) {
-  if (auto* PointerVal = cast_or_null<PointerValue>(
-          State.Env.getValue(*PointerExpr, SkipPast::Reference))) {
-    initPointerBoolProperty(*PointerVal, kKnown, Known, State.Env);
-    initPointerBoolProperty(*PointerVal, kNotNull, NotNull, State.Env);
-  }
-}
-
 void transferInitNotNullPointer(
     const Expr* NotNullPointer, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
-  initPointerNullState(NotNullPointer, State,
+  initPointerNullState(NotNullPointer, State.Env,
                        /*Known=*/&State.Env.getBoolLiteralValue(true),
                        /*NotNull=*/&State.Env.getBoolLiteralValue(true));
 }
@@ -81,7 +46,7 @@ void transferInitNotNullPointer(
 void transferInitNullPointer(const Expr* NullPointer,
                              const MatchFinder::MatchResult&,
                              TransferState<PointerNullabilityLattice>& State) {
-  initPointerNullState(NullPointer, State,
+  initPointerNullState(NullPointer, State.Env,
                        /*Known=*/&State.Env.getBoolLiteralValue(true),
                        /*NotNull=*/&State.Env.getBoolLiteralValue(false));
 }
@@ -89,50 +54,21 @@ void transferInitNullPointer(const Expr* NullPointer,
 void transferInitNullablePointer(
     const Expr* NullablePointer,
     TransferState<PointerNullabilityLattice>& State) {
-  initPointerNullState(NullablePointer, State,
+  initPointerNullState(NullablePointer, State.Env,
                        /*Known=*/&State.Env.getBoolLiteralValue(true));
 }
 
 void transferInitPointerFromDecl(
     const Expr* PointerExpr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
-  // TODO(wyt): Implement processing of nullability annotations. The current
-  // implementation treats unnannotated pointers as nullable.
+  // TODO(b/233582219): Implement processing of nullability annotations. The
+  // current implementation treats unnannotated pointers as nullable.
   transferInitNullablePointer(PointerExpr, State);
 }
 
-void transferPointerAccess(const Expr* PointerExpr,
-                           TransferState<PointerNullabilityLattice>& State) {
-  auto [PointerKnown, PointerNotNull] = getPointerNullState(PointerExpr, State);
-  auto& PointerNotKnownNull = State.Env.makeNot(
-      State.Env.makeAnd(PointerKnown, State.Env.makeNot(PointerNotNull)));
-  if (!State.Env.flowConditionImplies(PointerNotKnownNull)) {
-    State.Lattice.addViolation(PointerExpr);
-  }
-}
-
-void transferDereference(const UnaryOperator* UnaryOp,
-                         const MatchFinder::MatchResult&,
-                         TransferState<PointerNullabilityLattice>& State) {
-  transferPointerAccess(UnaryOp->getSubExpr(), State);
-}
-
-void transferMemberExprInvolvingPointers(
-    const MemberExpr* MemberExpr, const MatchFinder::MatchResult& Result,
-    TransferState<PointerNullabilityLattice>& State) {
-  if (MemberExpr->isArrow()) {
-    // Base expr is a pointer, check that (->) access is safe
-    transferPointerAccess(MemberExpr->getBase(), State);
-  }
-  if (MemberExpr->getType()->isAnyPointerType()) {
-    // Accessed member is a pointer, initialise its nullability
-    transferInitPointerFromDecl(MemberExpr, Result, State);
-  }
-}
-
-// TODO(wyt): Implement promotion of nullability knownness for initially unknown
-// pointers when there is evidence that it is nullable, for example when the
-// pointer is compared to nullptr, or casted to boolean.
+// TODO(b/233582219): Implement promotion of nullability knownness for initially
+// unknown pointers when there is evidence that it is nullable, for example
+// when the pointer is compared to nullptr, or casted to boolean.
 void transferNullCheckComparison(
     const BinaryOperator* BinaryOp, const MatchFinder::MatchResult& result,
     TransferState<PointerNullabilityLattice>& State) {
@@ -149,8 +85,10 @@ void transferNullCheckComparison(
                         ? State.Env.makeNot(PointerComparison)
                         : PointerComparison;
 
-  auto [LHSKnown, LHSNotNull] = getPointerNullState(BinaryOp->getLHS(), State);
-  auto [RHSKnown, RHSNotNull] = getPointerNullState(BinaryOp->getRHS(), State);
+  auto [LHSKnown, LHSNotNull] =
+      getPointerNullState(BinaryOp->getLHS(), State.Env);
+  auto [RHSKnown, RHSNotNull] =
+      getPointerNullState(BinaryOp->getRHS(), State.Env);
   auto& LHSKnownNotNull = State.Env.makeAnd(LHSKnown, LHSNotNull);
   auto& RHSKnownNotNull = State.Env.makeAnd(RHSKnown, RHSNotNull);
   auto& LHSKnownNull =
@@ -173,7 +111,7 @@ void transferNullCheckImplicitCastPtrToBool(
     const Expr* CastExpr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
   auto [PointerKnown, PointerNotNull] =
-      getPointerNullState(CastExpr->IgnoreImplicit(), State);
+      getPointerNullState(CastExpr->IgnoreImplicit(), State.Env);
   auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
   State.Env.setValue(CastExprLoc, PointerNotNull);
   State.Env.setStorageLocation(*CastExpr, CastExprLoc);
@@ -186,12 +124,7 @@ auto buildTransferer() {
       .CaseOf<Expr>(isCXXThisExpr(), transferInitNotNullPointer)
       .CaseOf<Expr>(isAddrOf(), transferInitNotNullPointer)
       .CaseOf<Expr>(isNullPointerLiteral(), transferInitNullPointer)
-      // Handles initialization of null states of member pointers and safety of
-      // member access (->) on pointers
-      .CaseOf<MemberExpr>(isMemberExprInvolvingPointers(),
-                          transferMemberExprInvolvingPointers)
-      // Handles pointer dereferencing (*ptr)
-      .CaseOf<UnaryOperator>(isPointerDereference(), transferDereference)
+      .CaseOf<MemberExpr>(isMemberOfPointerType(), transferInitPointerFromDecl)
       // Handles comparison between 2 pointers
       .CaseOf<BinaryOperator>(isPointerCheckBinOp(),
                               transferNullCheckComparison)

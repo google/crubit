@@ -48,9 +48,10 @@ Matcher<Stmt> isPointerCheckBinOp() {
 Matcher<Stmt> isImplicitCastPointerToBool() {
   return implicitCastExpr(hasCastKind(CK_PointerToBoolean));
 }
-Matcher<Stmt> isMemberExprInvolvingPointers() {
-  return memberExpr(anyOf(isArrow(), hasType(isAnyPointer())));
+Matcher<Stmt> isMemberOfPointerType() {
+  return memberExpr(hasType(isAnyPointer()));
 }
+Matcher<Stmt> isPointerArrow() { return memberExpr(isArrow()); }
 Matcher<Stmt> isCXXThisExpr() { return cxxThisExpr(); }
 }  // namespace nullability
 }  // namespace tidy

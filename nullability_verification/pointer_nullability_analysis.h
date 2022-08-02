@@ -26,6 +26,8 @@ namespace nullability {
 // TODO(b/233582219): Implement tracking of nullability to distinguish
 // safe/unsafe accesses
 
+/// Analyses constructs in the source code to collect nullability information
+/// about pointers at each program point.
 class PointerNullabilityAnalysis
     : public dataflow::DataflowAnalysis<PointerNullabilityAnalysis,
                                         PointerNullabilityLattice> {
