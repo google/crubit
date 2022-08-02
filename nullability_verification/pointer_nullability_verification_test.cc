@@ -69,207 +69,264 @@ TEST(PointerNullabilityTest, NoPointerOperations) {
   )");
 }
 
-TEST(PointerNullabilityTest, DereferenceWithoutACheck) {
-  checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-}
-
-TEST(PointerNullabilityTest, InitializedWithNullPtrLiteral) {
+TEST(PointerNullabilityTest, DerefNullPtr) {
+  // nullptr
   checkDiagnostics(R"(
     void target() {
-      int *null = nullptr;
-      *null; // [[unsafe]]
+      int *x = nullptr;
+      *x; // [[unsafe]]
     }
   )");
 
+  // 0
   checkDiagnostics(R"(
     void target() {
-      int *null = 0;
-      *null; // [[unsafe]]
+      int *x = 0;
+      *x; // [[unsafe]]
     }
   )");
 }
 
-TEST(PointerNullabilityTest, InitializedWithAddressOf) {
+TEST(PointerNullabilityTest, DerefAddrOf) {
   checkDiagnostics(R"(
-    void target(int x) {
-      int *nonNull = &x;
-      *nonNull;
+    void target() {
+      int i;
+      int *x = &i;
+      *x;
+    }
+  )");
+
+  // transitive
+  checkDiagnostics(R"(
+    void target() {
+      int i;
+      int *x = &i;
+      int *y = x;
+      *y;
     }
   )");
 }
 
-TEST(PointerNullabilityTest, InitializedWithOtherPointer) {
+TEST(PointerNullabilityTest, DerefNullablePtrWithoutACheck) {
   checkDiagnostics(R"(
-    void target(int x) {
-      int *nonNull = &x;
-      int *nonNullCopy = nonNull;
-      *nonNullCopy;
+    void target(int *x) {
+      *x; // [[unsafe]]
     }
   )");
 
+  // transitive
   checkDiagnostics(R"(
-    void target(int* nullable) {
-      int *nullableCopy = nullable;
-      *nullableCopy; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    void target(int* nullable) {
-      int *nullableCopy = nullable;
-      if (nullable) {
-        *nullableCopy;
-      } else {
-        *nullableCopy; // [[unsafe]]
-      }
-      *nullableCopy; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    void target(int* nullable) {
-      int *nullableCopy = nullable;
-      if (nullableCopy) {
-        *nullable;
-      } else {
-        *nullable; // [[unsafe]]
-      }
-      *nullable; // [[unsafe]]
+    void target(int *x) {
+      int *y = x;
+      *y; // [[unsafe]]
     }
   )");
 }
 
-TEST(PointerNullabilityTest, CheckByComparisonToNullPtr) {
+TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
+  // x
   checkDiagnostics(R"(
-    void target(int *maybeNull) {
-      if (maybeNull != nullptr) {
-        *maybeNull;
+    void target(int *x) {
+      *x; // [[unsafe]]
+      if (x) {
+        *x;
       } else {
-        *maybeNull; // [[unsafe]]
+        *x; // [[unsafe]]
       }
-      *maybeNull; // [[unsafe]]
+      *x; // [[unsafe]]
     }
   )");
 
+  // !x
   checkDiagnostics(R"(
-    void target(int *maybeNull) {
-      if (nullptr != maybeNull) {
-        *maybeNull;
+    void target(int *x) {
+      *x; // [[unsafe]]
+      if (!x) {
+        *x; // [[unsafe]]
       } else {
-        *maybeNull; // [[unsafe]]
+        *x;
       }
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      if (maybeNull == nullptr) {
-        *maybeNull; // [[unsafe]]
-      } else {
-        *maybeNull;
-      }
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      if (nullptr == maybeNull) {
-        *maybeNull; // [[unsafe]]
-      } else {
-        *maybeNull;
-      }
-      *maybeNull; // [[unsafe]]
+      *x; // [[unsafe]]
     }
   )");
 }
 
-TEST(PointerNullabilityTest, CheckByImplicitCastToBool) {
+TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
+  // x == nullptr
   checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      if (maybeNull) {
-        *maybeNull;
+    void target(int *x) {
+      *x; // [[unsafe]]
+      if (x == nullptr) {
+        *x; // [[unsafe]]
       } else {
-        *maybeNull; // [[unsafe]]
+        *x;
       }
-      *maybeNull; // [[unsafe]]
+      *x; // [[unsafe]]
     }
   )");
 
+  // nullptr == x
   checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      if (!maybeNull) {
-        *maybeNull; // [[unsafe]]
+    void target(int *x) {
+      *x; // [[unsafe]]
+      if (nullptr == x) {
+        *x; // [[unsafe]]
       } else {
-        *maybeNull;
+        *x;
       }
-      *maybeNull; // [[unsafe]]
+      *x; // [[unsafe]]
+    }
+  )");
+
+  // x != nullptr
+  checkDiagnostics(R"(
+    void target(int *x) {
+      *x; // [[unsafe]]
+      if (x != nullptr) {
+        *x;
+      } else {
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+    }
+  )");
+
+  // nullptr != x
+  checkDiagnostics(R"(
+    void target(int *x) {
+      *x; // [[unsafe]]
+      if (nullptr != x) {
+        *x;
+      } else {
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
+  // x == nonnull
+  checkDiagnostics(R"(
+    void target(int *x) {
+      int i = 0;
+      int *y = &i;
+      *x; // [[unsafe]]
+      *y;
+      if (x == y) {
+        *x;
+        *y;
+      } else {
+        *x; // [[unsafe]]
+        *y;
+      }
+      *x; // [[unsafe]]
+      *y;
+    }
+  )");
+
+  // nonnull == x
+  checkDiagnostics(R"(
+    void target(int *x) {
+      int i = 0;
+      int *y = &i;
+      *x; // [[unsafe]]
+      *y;
+      if (y == x) {
+        *x;
+        *y;
+      } else {
+        *x; // [[unsafe]]
+        *y;
+      }
+      *x; // [[unsafe]]
+      *y;
     }
   )");
 }
 
 TEST(PointerNullabilityTest, CheckByComparisonToOtherNullPtr) {
   checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      int *null = nullptr;
-      if (maybeNull != null) {
-        *maybeNull;
-      } else {
-        *maybeNull; // [[unsafe]]
-      }
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    void target(int* maybeNull) {
-      int *null = nullptr;
-      if (maybeNull == null) {
-        *maybeNull; // [[unsafe]]
-      } else {
-        *maybeNull;
-      }
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-}
-
-TEST(PointerNullabilityTest, CheckByComparisonToOtherNonNullPtr) {
-  checkDiagnostics(R"(
-    void target(int* maybeNull, int x) {
-      int* nonNull = &x;
-      if (maybeNull != nonNull) {
-        *maybeNull; // [[unsafe]]
-      } else {
-        *maybeNull;
-      }
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    void target(int* maybeNull, int x) {
-      int* nonNull = &x;
-      if (maybeNull == nonNull) {
-        *maybeNull;
-      } else {
-        *maybeNull; // [[unsafe]]
-      }
-      *maybeNull; // [[unsafe]]
-    }
-  )");
-}
-
-TEST(PointerNullabilityTest, CheckByComparisonToOtherUnknownPtr) {
-  checkDiagnostics(R"(
-    void target(int* x, int* y) {
+    void target(int *x) {
+      int i = 0;
+      int *y = &i;
+      *x; // [[unsafe]]
+      *y;
       if (x != y) {
         *x; // [[unsafe]]
+        *y;
+      } else {
+        *x;
+        *y;
+      }
+      *x; // [[unsafe]]
+      *y;
+    }
+  )");
+
+  // nonnull != x
+  checkDiagnostics(R"(
+    void target(int *x) {
+      int i = 0;
+      int *y = &i;
+      *x; // [[unsafe]]
+      *y;
+      if (y != x) {
+        *x; // [[unsafe]]
+        *y;
+      } else {
+        *x;
+        *y;
+      }
+      *x; // [[unsafe]]
+      *y;
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, CompareNullablePtrAndNullablePtr) {
+  // x == y
+  checkDiagnostics(R"(
+    void target(int *x, int *y) {
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
+      if (x == y) {
+        *x; // [[unsafe]]
+        *y; // [[unsafe]]
+      } else {
+        *x; // [[unsafe]]
+        *y; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
+    }
+  )");
+
+  // x != y
+  checkDiagnostics(R"(
+    void target(int *x, int *y) {
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
+      if (x != y) {
+        *x; // [[unsafe]]
+        *y; // [[unsafe]]
+      } else {
+        *x; // [[unsafe]]
+        *y; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, TransitiveNullCheck) {
+  checkDiagnostics(R"(
+    void target(int *x) {
+      int *y = x;
+      *x; // [[unsafe]]
+      if (y) {
+        *x;
       } else {
         *x; // [[unsafe]]
       }
@@ -278,114 +335,113 @@ TEST(PointerNullabilityTest, CheckByComparisonToOtherUnknownPtr) {
   )");
 
   checkDiagnostics(R"(
-    void target(int* x, int* y) {
-      if (x == y) {
-        *x; // [[unsafe]]
+    void target(int *x) {
+      int *y = x;
+      *y; // [[unsafe]]
+      if (x) {
+        *y;
       } else {
-        *x; // [[unsafe]]
+        *y; // [[unsafe]]
       }
-      *x; // [[unsafe]]
+      *y; // [[unsafe]]
     }
   )");
 }
 
 TEST(PointerNullabilityTest, BinaryExpressions) {
+  // x && y
   checkDiagnostics(R"(
-    void target(int* x, int* y) {
+    void target(int *x, int *y) {
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
       if (x && y) {
         *x;
+        *y;
       } else {
         *x; // [[unsafe]]
+        *y; // [[unsafe]]
       }
       *x; // [[unsafe]]
+      *y; // [[unsafe]]
     }
   )");
 
+  // x || y
   checkDiagnostics(R"(
-    void target(int* x, int* y) {
+    void target(int *x, int *y) {
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
       if (x || y) {
         *x; // [[unsafe]]
+        *y; // [[unsafe]]
       } else {
         *x; // [[unsafe]]
+        *y; // [[unsafe]]
       }
       *x; // [[unsafe]]
+      *y; // [[unsafe]]
     }
   )");
 
+  // !x && !y
   checkDiagnostics(R"(
-    void target(int* x, int* y) {
+    void target(int *x, int *y) {
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
       if (!x && !y) {
         *x; // [[unsafe]]
+        *y; // [[unsafe]]
       } else {
         *x; // [[unsafe]]
+        *y; // [[unsafe]]
       }
       *x; // [[unsafe]]
+      *y; // [[unsafe]]
     }
   )");
 
+  // !x || !y
   checkDiagnostics(R"(
-    void target(int* x, int* y) {
+    void target(int *x, int *y) {
+      *x; // [[unsafe]]
+      *y; // [[unsafe]]
       if (!x || !y) {
         *x; // [[unsafe]]
+        *y; // [[unsafe]]
       } else {
         *x;
+        *y;
       }
       *x; // [[unsafe]]
+      *y; // [[unsafe]]
     }
   )");
 }
 
-TEST(PointerNullabilityTest, MemberPointers) {
+TEST(PointerNullabilityTest, ArrowOperator) {
+  // (->) member field
   checkDiagnostics(R"(
     struct Foo {
-      Foo* ptr;
+      Foo *foo;
     };
-    void target(Foo foo) {
-      if (foo.ptr) {
-        *foo.ptr;
+    void target(Foo *foo) {
+      foo->foo; // [[unsafe]]
+      if (foo) {
+        foo->foo;
       } else {
-        *foo.ptr; // [[unsafe]]
+        foo->foo; // [[unsafe]]
       }
-      *foo.ptr; // [[unsafe]]
+      foo->foo; // [[unsafe]]
     }
   )");
 
+  // (->) member function
   checkDiagnostics(R"(
     struct Foo {
-      Foo* ptr;
-      void target() {
-        if (ptr) {
-          *ptr;
-        } else {
-          *ptr; // [[unsafe]]
-        }
-        *ptr; // [[unsafe]]
-      }
+      Foo *foo();
     };
-  )");
-
-  checkDiagnostics(R"(
-    class Foo {
-     public:
-      Foo* ptr;
-    };
-    void target(Foo foo) {
-      if (foo.ptr) {
-        *foo.ptr;
-      } else {
-        *foo.ptr; // [[unsafe]]
-      }
-      *foo.ptr; // [[unsafe]]
-    }
-  )");
-}
-
-TEST(PointerNullabilityTest, MemberAccessOnPointer) {
-  checkDiagnostics(R"(
-    struct Foo {
-      void foo();
-    };
-    void target(Foo* foo) {
+    void target(Foo *foo) {
+      foo->foo(); // [[unsafe]]
       if (foo) {
         foo->foo();
       } else {
@@ -394,7 +450,10 @@ TEST(PointerNullabilityTest, MemberAccessOnPointer) {
       foo->foo(); // [[unsafe]]
     }
   )");
+}
 
+TEST(PointerNullabilityTest, ThisPointer) {
+  // (->) implicit `this`
   checkDiagnostics(R"(
     struct Foo {
       void foo();
@@ -404,6 +463,7 @@ TEST(PointerNullabilityTest, MemberAccessOnPointer) {
     };
   )");
 
+  // (->) explicit `this`
   checkDiagnostics(R"(
     struct Foo {
       void foo();
@@ -412,43 +472,39 @@ TEST(PointerNullabilityTest, MemberAccessOnPointer) {
       }
     };
   )");
+}
 
+TEST(PointerNullabilityTest, FieldsOfPointerType) {
+  // dereference field of pointer type
   checkDiagnostics(R"(
     struct Foo {
-      void foo();
+      Foo *ptr;
+    };
+    void target(Foo foo) {
+      *foo.ptr; // [[unsafe]]
+      if (foo.ptr) {
+        *foo.ptr;
+      } else {
+        *foo.ptr; // [[unsafe]]
+      }
+      *foo.ptr; // [[unsafe]]
+    }
+  )");
+
+  // dereference field of pointer type in member function
+  checkDiagnostics(R"(
+    struct Foo {
+      Foo *ptr;
       void target() {
-        Foo *thisCopy = this;
-        thisCopy->foo();
+        *ptr; // [[unsafe]]
+        if (ptr) {
+          *ptr;
+        } else {
+          *ptr; // [[unsafe]]
+        }
+        *ptr; // [[unsafe]]
       }
     };
-  )");
-
-  checkDiagnostics(R"(
-    struct Foo {
-      Foo* foo;
-    };
-    void target(Foo* foo) {
-      if (foo) {
-        foo->foo->foo; // [[unsafe]]
-      } else {
-        foo->foo->foo; // [[unsafe]]
-      }
-      foo->foo->foo; // [[unsafe]]
-    }
-  )");
-
-  checkDiagnostics(R"(
-    struct Foo {
-      Foo* foo;
-    };
-    void target(Foo* foo) {
-      if (foo && foo->foo) {
-        foo->foo->foo;
-      } else {
-        foo->foo; // [[unsafe]]
-      }
-      foo->foo; // [[unsafe]]
-    }
   )");
 }
 
