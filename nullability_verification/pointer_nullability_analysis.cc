@@ -20,6 +20,7 @@
 #include "clang/Analysis/FlowSensitive/NoopLattice.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Basic/Specifiers.h"
 
 namespace clang {
 namespace tidy {
@@ -58,12 +59,21 @@ void transferInitNullablePointer(const Expr* NullablePointer,
                        /*Known=*/&State.Env.getBoolLiteralValue(true));
 }
 
-void transferInitPointerFromDecl(const Expr* PointerExpr,
-                                 const MatchFinder::MatchResult&,
-                                 TransferState<NoopLattice>& State) {
-  // TODO(b/233582219): Implement processing of nullability annotations. The
-  // current implementation treats unnannotated pointers as nullable.
-  transferInitNullablePointer(PointerExpr, State);
+void transferPointerExpr(const Expr* PointerExpr,
+                         const MatchFinder::MatchResult& Result,
+                         TransferState<NoopLattice>& State) {
+  // TODO(b/233582219): Initialise unannotated pointers with unknown
+  // nullability. The current default for unnannotated pointers is nullable.
+  auto Nullability = PointerExpr->getType()
+                         ->getNullability(*Result.Context)
+                         .value_or(NullabilityKind::Nullable);
+  switch (Nullability) {
+    case NullabilityKind::NonNull:
+      transferInitNotNullPointer(PointerExpr, Result, State);
+      break;
+    default:
+      transferInitNullablePointer(PointerExpr, State);
+  }
 }
 
 // TODO(b/233582219): Implement promotion of nullability knownness for initially
@@ -120,11 +130,11 @@ void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
 auto buildTransferer() {
   return MatchSwitchBuilder<TransferState<NoopLattice>>()
       // Handles initialization of the null states of pointers
-      .CaseOf<Expr>(isPointerVariableReference(), transferInitPointerFromDecl)
+      .CaseOf<Expr>(isPointerVariableReference(), transferPointerExpr)
       .CaseOf<Expr>(isCXXThisExpr(), transferInitNotNullPointer)
       .CaseOf<Expr>(isAddrOf(), transferInitNotNullPointer)
       .CaseOf<Expr>(isNullPointerLiteral(), transferInitNullPointer)
-      .CaseOf<MemberExpr>(isMemberOfPointerType(), transferInitPointerFromDecl)
+      .CaseOf<MemberExpr>(isMemberOfPointerType(), transferPointerExpr)
       // Handles comparison between 2 pointers
       .CaseOf<BinaryOperator>(isPointerCheckBinOp(),
                               transferNullCheckComparison)
