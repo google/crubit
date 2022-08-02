@@ -5,7 +5,6 @@
 #ifndef CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_ANALYSIS_H_
 #define CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_ANALYSIS_H_
 
-#include "nullability_verification/pointer_nullability_lattice.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Stmt.h"
@@ -14,6 +13,7 @@
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 #include "clang/Analysis/FlowSensitive/MatchSwitch.h"
+#include "clang/Analysis/FlowSensitive/NoopLattice.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Tooling/Tooling.h"
 
@@ -21,22 +21,17 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
-// Current iteration marks lattice unsafe if there exists a pointer
-// dereference
-// TODO(b/233582219): Implement tracking of nullability to distinguish
-// safe/unsafe accesses
-
 /// Analyses constructs in the source code to collect nullability information
 /// about pointers at each program point.
 class PointerNullabilityAnalysis
     : public dataflow::DataflowAnalysis<PointerNullabilityAnalysis,
-                                        PointerNullabilityLattice> {
+                                        dataflow::NoopLattice> {
  public:
   explicit PointerNullabilityAnalysis(ASTContext& context);
 
-  static PointerNullabilityLattice initialElement() { return {}; }
+  static dataflow::NoopLattice initialElement() { return {}; }
 
-  void transfer(const Stmt* Stmt, PointerNullabilityLattice& Lattice,
+  void transfer(const Stmt* Stmt, dataflow::NoopLattice& Lattice,
                 dataflow::Environment& Env);
 
   bool merge(QualType Type, const dataflow::Value& Val1,
@@ -46,7 +41,7 @@ class PointerNullabilityAnalysis
 
  private:
   // Applies transfer functions on statements
-  dataflow::MatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
+  dataflow::MatchSwitch<dataflow::TransferState<dataflow::NoopLattice>>
       Transferer;
 };
 }  // namespace nullability
