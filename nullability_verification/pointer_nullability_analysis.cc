@@ -35,54 +35,45 @@ using dataflow::Value;
 
 namespace {
 
+constexpr llvm::StringLiteral kNotNull = "is_notnull";
+
 BoolValue& getPointerNotNullProperty(
     const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State) {
   auto* PointerVal =
       cast<PointerValue>(State.Env.getValue(*PointerExpr, SkipPast::Reference));
-  CHECK(State.Lattice.hasPointerNotNullProperty(PointerVal));
-  return *State.Lattice.getPointerNotNullProperty(PointerVal);
+  return *cast<BoolValue>(PointerVal->getProperty(kNotNull));
 }
 
-void initialisePointerNotNullProperty(
-    const Expr* PointerExpr, TransferState<PointerNullabilityLattice>& State,
-    BoolValue* NotNullProperty = nullptr) {
+void initPointerNotNullProperty(const Expr* PointerExpr,
+                                TransferState<PointerNullabilityLattice>& State,
+                                BoolValue* NotNull = nullptr) {
   if (auto* PointerVal = cast_or_null<PointerValue>(
           State.Env.getValue(*PointerExpr, SkipPast::Reference))) {
-    if (!State.Lattice.hasPointerNotNullProperty(PointerVal)) {
-      State.Lattice.setPointerNotNullProperty(
-          PointerVal,
-          NotNullProperty ? NotNullProperty : &State.Env.makeAtomicBoolValue());
+    if (PointerVal->getProperty(kNotNull) == nullptr) {
+      NotNull = NotNull ? NotNull : &State.Env.makeAtomicBoolValue();
+      PointerVal->setProperty(kNotNull, *NotNull);
     }
   }
+}
+
+void transferInitNotNullPointer(
+    const Expr* NotNullPointer, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
+  initPointerNotNullProperty(NotNullPointer, State,
+                             &State.Env.getBoolLiteralValue(true));
+}
+
+void transferInitNullPointer(const Expr* NullPointer,
+                             const MatchFinder::MatchResult& Result,
+                             TransferState<PointerNullabilityLattice>& State) {
+  initPointerNotNullProperty(NullPointer, State,
+                             &State.Env.getBoolLiteralValue(false));
 }
 
 void transferInitPointerVariableReference(
     const Expr* PointerExpr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
-  initialisePointerNotNullProperty(PointerExpr, State);
-}
-
-void transferInitCXXThisExpr(const Expr* ThisExpr,
-                             const MatchFinder::MatchResult&,
-                             TransferState<PointerNullabilityLattice>& State) {
-  initialisePointerNotNullProperty(ThisExpr, State,
-                                   &State.Env.getBoolLiteralValue(true));
-}
-
-void transferNullPointerLiteral(
-    const Expr* NullPointer, const MatchFinder::MatchResult& Result,
-    TransferState<PointerNullabilityLattice>& State) {
-  initialisePointerNotNullProperty(NullPointer, State,
-                                   &State.Env.getBoolLiteralValue(false));
-}
-
-void transferAddrOf(const UnaryOperator* UnaryOp,
-                    const MatchFinder::MatchResult& Result,
-                    TransferState<PointerNullabilityLattice>& State) {
-  auto* PointerVal =
-      cast<PointerValue>(State.Env.getValue(*UnaryOp, SkipPast::None));
-  State.Lattice.setPointerNotNullProperty(PointerVal,
-                                          &State.Env.getBoolLiteralValue(true));
+  initPointerNotNullProperty(PointerExpr, State);
 }
 
 void transferPointerAccess(const Expr* PointerExpr,
@@ -108,7 +99,7 @@ void transferMemberExprInvolvingPointers(
   }
   if (MemberExpr->getType()->isAnyPointerType()) {
     // Accessed member is a pointer, initialise its nullability
-    initialisePointerNotNullProperty(MemberExpr, State);
+    initPointerNotNullProperty(MemberExpr, State);
   }
 }
 
@@ -147,15 +138,11 @@ void transferNullCheckComparison(
 void transferNullCheckImplicitCastPtrToBool(
     const Expr* CastExpr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
-  if (auto* PointerVal = cast_or_null<PointerValue>(State.Env.getValue(
-          *CastExpr->IgnoreImplicit(), SkipPast::Reference))) {
-    auto* PointerNotNull = State.Lattice.getPointerNotNullProperty(PointerVal);
-    CHECK(PointerNotNull != nullptr);
-
-    auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
-    State.Env.setValue(CastExprLoc, *PointerNotNull);
-    State.Env.setStorageLocation(*CastExpr, CastExprLoc);
-  }
+  auto& PointerNotNull =
+      getPointerNotNullProperty(CastExpr->IgnoreImplicit(), State);
+  auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
+  State.Env.setValue(CastExprLoc, PointerNotNull);
+  State.Env.setStorageLocation(*CastExpr, CastExprLoc);
 }
 
 auto buildTransferer() {
@@ -163,15 +150,13 @@ auto buildTransferer() {
       // Handles initialization of the null states of pointers
       .CaseOf<Expr>(isPointerVariableReference(),
                     transferInitPointerVariableReference)
-      .CaseOf<Expr>(isCXXThisExpr(), transferInitCXXThisExpr)
+      .CaseOf<Expr>(isCXXThisExpr(), transferInitNotNullPointer)
+      .CaseOf<Expr>(isAddrOf(), transferInitNotNullPointer)
+      .CaseOf<Expr>(isNullPointerLiteral(), transferInitNullPointer)
       // Handles initialization of null states of member pointers and safety of
       // member access (->) on pointers
       .CaseOf<MemberExpr>(isMemberExprInvolvingPointers(),
                           transferMemberExprInvolvingPointers)
-      // Handles nullptr
-      .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointerLiteral)
-      // Handles address of operator (&var)
-      .CaseOf<UnaryOperator>(isAddrOf(), transferAddrOf)
       // Handles pointer dereferencing (*ptr)
       .CaseOf<UnaryOperator>(isPointerDereference(), transferDereference)
       // Handles comparison between 2 pointers
