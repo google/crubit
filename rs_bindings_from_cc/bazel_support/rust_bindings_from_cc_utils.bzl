@@ -103,6 +103,12 @@ def _get_dep_info(providers):
             return provider
     fail("Couldn't find a DepInfo in the list of providers")
 
+def _get_cc_info(providers):
+    for provider in providers:
+        if hasattr(provider, "linking_context"):
+            return provider
+    fail("Couldn't find a CcInfo in the list of providers")
+
 def _compile_rust(ctx, attr, src, deps):
     """Compiles a Rust source file.
 
@@ -156,7 +162,7 @@ def _compile_rust(ctx, attr, src, deps):
     return DepVariantInfo(
         crate_info = _get_crate_info(providers),
         dep_info = _get_dep_info(providers),
-        cc_info = None,
+        cc_info = _get_cc_info(providers),
         build_info = None,
     )
 
