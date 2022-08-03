@@ -66,4 +66,38 @@ class AddableConstMemberNonunpin final {
   int field_;
 };
 
+struct AddAssignMemberInt final {
+  int operator+=(int rhs);
+};
+
+struct AddAssignMemberByConstRef final {
+  AddAssignMemberByConstRef& operator+=(const AddAssignMemberByConstRef& rhs);
+};
+
+struct AddAssignFreeByConstRef final {};
+AddAssignFreeByConstRef& operator+=(AddAssignFreeByConstRef& lhs,
+                                    const AddAssignFreeByConstRef& rhs);
+
+struct AddAssignFreeByValue final {};
+AddAssignFreeByValue& operator+=(AddAssignFreeByValue& lhs,
+                                 AddAssignFreeByValue rhs);
+
+struct AddAssignFriendByConstRef final {
+  friend AddAssignFriendByConstRef& operator+=(
+      AddAssignFriendByConstRef& lhs, const AddAssignFriendByConstRef& rhs);
+};
+
+struct AddAssignFriendByValue final {
+  friend AddAssignFriendByValue& operator+=(AddAssignFriendByValue& lhs,
+                                            AddAssignFriendByValue rhs);
+};
+
+struct AddAssignProhibitedConstMember final {
+  int operator+=(int rhs) const;
+};
+
+struct AddAssignProhibitedFriendConstLhs final {
+  friend int operator+=(const AddAssignProhibitedFriendConstLhs& lhs, int rhs);
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_

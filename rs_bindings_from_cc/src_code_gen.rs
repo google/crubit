@@ -402,6 +402,9 @@ enum ImplKind {
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
         format_first_param_as_self: bool,
+        /// Whether to drop the C++ function's return value and return unit
+        /// instead.
+        drop_return: bool,
 
         /// If this trait's method returns an associated type, it has this name.
         /// For example, this is `Output` on
@@ -421,6 +424,7 @@ impl ImplKind {
             impl_for: ImplFor::T,
             trait_generic_params: vec![],
             format_first_param_as_self,
+            drop_return: false,
             associated_return_type: None,
         }
     }
@@ -514,7 +518,20 @@ fn api_func_shape(
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
     let func_name: syn::Ident;
+
+    let adl_check_required_and_failed = if let Some(decl_id) = func.adl_enclosing_record {
+        let adl_enclosing_record = ir.find_decl::<Rc<Record>>(decl_id)?;
+        !is_visible_by_adl(adl_enclosing_record, param_types)
+    } else {
+        false
+    };
+
     match &func.name {
+        UnqualifiedIdentifier::Operator(_) | UnqualifiedIdentifier::Identifier(_)
+            if adl_check_required_and_failed =>
+        {
+            return Ok(None);
+        }
         UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
             assert_eq!(
                 param_types.len(),
@@ -561,25 +578,24 @@ fn api_func_shape(
             }
             materialize_ctor_in_caller(param_types);
             let rhs = &param_types[1];
-            impl_kind = ImplKind::new_trait(
-                TraitName::Other {
-                    name: quote! {::ctor::Assign},
-                    params: vec![rhs.clone()],
-                    is_unsafe_fn: false,
-                },
-                make_rs_ident(&record.rs_name),
-                /* format_first_param_as_self= */ true,
-            );
+            impl_kind = {
+                ImplKind::Trait {
+                    trait_name: TraitName::Other {
+                        name: quote! {::ctor::Assign},
+                        params: vec![rhs.clone()],
+                        is_unsafe_fn: false,
+                    },
+                    record_name: make_rs_ident(&record.rs_name),
+                    impl_for: ImplFor::T,
+                    trait_generic_params: vec![],
+                    format_first_param_as_self: true,
+                    drop_return: true,
+                    associated_return_type: None,
+                }
+            };
             func_name = make_rs_ident("assign");
         }
         UnqualifiedIdentifier::Operator(op) if op.name == "+" && param_types.len() == 2 => {
-            if let Some(decl_id) = func.adl_enclosing_record {
-                let adl_enclosing_record = ir.find_decl::<Rc<Record>>(decl_id)?;
-                if !is_visible_by_adl(adl_enclosing_record, param_types) {
-                    return Ok(None);
-                }
-            }
-
             materialize_ctor_in_caller(param_types);
             let (record, impl_for) = if let Some(record) = maybe_record {
                 (&**record, ImplFor::RefT)
@@ -610,9 +626,49 @@ fn api_func_shape(
                 impl_for,
                 trait_generic_params: vec![],
                 format_first_param_as_self: true,
+                drop_return: false,
                 associated_return_type: Some(make_rs_ident("Output")),
             };
             func_name = make_rs_ident("add");
+        }
+        UnqualifiedIdentifier::Operator(op) if op.name == "+=" && param_types.len() == 2 => {
+            materialize_ctor_in_caller(param_types);
+            let record = match &param_types[0] {
+                RsTypeKind::Record { .. } => {
+                    bail!("Compound assignment with by-value left-hand side is not supported")
+                }
+                RsTypeKind::Reference { mutability: Mutability::Const, .. } => {
+                    bail!("Compound assignment with const left-hand side is not supported")
+                }
+                RsTypeKind::Reference { referent, mutability: Mutability::Mut, .. } => {
+                    match &**referent {
+                        RsTypeKind::Record { record, .. } => &**maybe_record.unwrap_or(record),
+                        _ => bail!("Expected first parameter referent to be a record"),
+                    }
+                }
+                RsTypeKind::RvalueReference { .. } => {
+                    bail!("Not yet supported for rvalue references (b/219826128)")
+                }
+                RsTypeKind::Pointer { .. } => {
+                    bail!("Not yet supported for pointers with unknown lifetime (b/219826128)")
+                }
+                _ => bail!("Expected first parameter to be a record or reference"),
+            };
+
+            impl_kind = ImplKind::Trait {
+                record_name: make_rs_ident(&record.rs_name),
+                trait_name: TraitName::Other {
+                    name: quote! {::std::ops::AddAssign},
+                    params: vec![param_types[1].clone()],
+                    is_unsafe_fn: false,
+                },
+                impl_for: ImplFor::T,
+                trait_generic_params: vec![],
+                format_first_param_as_self: true,
+                drop_return: true,
+                associated_return_type: None,
+            };
+            func_name = make_rs_ident("add_assign");
         }
         UnqualifiedIdentifier::Operator(op) => {
             bail!(
@@ -621,13 +677,6 @@ fn api_func_shape(
             );
         }
         UnqualifiedIdentifier::Identifier(id) => {
-            if let Some(decl_id) = func.adl_enclosing_record {
-                let adl_enclosing_record = ir.find_decl::<Rc<Record>>(decl_id)?;
-                if !is_visible_by_adl(adl_enclosing_record, param_types) {
-                    return Ok(None);
-                }
-            }
-
             func_name = make_rs_ident(&id.identifier);
             match maybe_record {
                 None => {
@@ -714,6 +763,7 @@ fn api_func_shape(
                             impl_for: ImplFor::T,
                             trait_generic_params: vec![],
                             format_first_param_as_self: false,
+                            drop_return: false,
                             associated_return_type: Some(make_rs_ident("CtorType")),
                         };
                     }
@@ -903,23 +953,23 @@ fn generate_func(
                         })
                     }
                 };
-                // Somewhat hacky: discard the return value for operator=.
-                if let UnqualifiedIdentifier::Operator(op) = &func.name {
-                    if op.name == "=" {
-                        if return_type.is_unpin() {
-                            // If it's unpin, just discard it:
-                            body = quote! { #body; };
-                        } else {
-                            // Otherwise, in order to discard the return value and return void, we
-                            // need to run the constructor.
-                            body = quote! {let _ = ::ctor::emplace!(#body);};
-                        }
-
-                        // We would need to do this, but it's no longer used:
-                        //    return_type = RsTypeKind::Unit;
-                        let _ = return_type; // proof that we don't need to update it.
-                        quoted_return_type = quote! {};
+                // Discard the return value if requested (for example, when calling a C++
+                // operator that returns a value from a Rust trait that returns
+                // unit).
+                if let ImplKind::Trait { drop_return: true, .. } = impl_kind {
+                    if return_type.is_unpin() {
+                        // If it's unpin, just discard it:
+                        body = quote! { #body; };
+                    } else {
+                        // Otherwise, in order to discard the return value and return void, we
+                        // need to run the constructor.
+                        body = quote! {let _ = ::ctor::emplace!(#body);};
                     }
+
+                    // We would need to do this, but it's no longer used:
+                    //    return_type = RsTypeKind::Unit;
+                    let _ = return_type; // proof that we don't need to update it.
+                    quoted_return_type = quote! {};
                 }
                 // Only need to wrap everything in an `unsafe { ... }` block if
                 // the *whole* api function is safe.

@@ -126,7 +126,7 @@ pub struct ContainingStruct {
     /// Doc comment for an unsupported field.
     ///
     /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'struct ContainingStruct::NestedStruct': No generated bindings found for 'NestedStruct'
+    /// Unsupported type 'NestedStruct': No generated bindings found for 'NestedStruct'
     pub(crate) nested_struct: [::std::mem::MaybeUninit<u8>; 1],
 }
 forward_declare::unsafe_define!(

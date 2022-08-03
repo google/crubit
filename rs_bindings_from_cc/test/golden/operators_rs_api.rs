@@ -487,6 +487,392 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     }
 }
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignMemberInt {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignMemberInt"),
+    crate::AddAssignMemberInt
+);
+
+impl Default for AddAssignMemberInt {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignMemberInt>> for AddAssignMemberInt {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=69
+// Error while generating bindings for item 'AddAssignMemberInt::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=69
+// Error while generating bindings for item 'AddAssignMemberInt::operator=':
+// operator= for Unpin types is not yet supported.
+
+impl ::std::ops::AddAssign<i32> for AddAssignMemberInt {
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: i32) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddAssignMemberIntpLEi(self, rhs);
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignMemberByConstRef {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignMemberByConstRef"),
+    crate::AddAssignMemberByConstRef
+);
+
+impl Default for AddAssignMemberByConstRef {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>>
+    for AddAssignMemberByConstRef
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=73
+// Error while generating bindings for item 'AddAssignMemberByConstRef::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=73
+// Error while generating bindings for item 'AddAssignMemberByConstRef::operator=':
+// operator= for Unpin types is not yet supported.
+
+impl<'b> ::std::ops::AddAssign<&'b crate::AddAssignMemberByConstRef> for AddAssignMemberByConstRef {
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: &'b crate::AddAssignMemberByConstRef) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_(self, rhs);
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignFreeByConstRef {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignFreeByConstRef"),
+    crate::AddAssignFreeByConstRef
+);
+
+impl Default for AddAssignFreeByConstRef {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>>
+    for AddAssignFreeByConstRef
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=77
+// Error while generating bindings for item 'AddAssignFreeByConstRef::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=77
+// Error while generating bindings for item 'AddAssignFreeByConstRef::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=78
+// Error while generating bindings for item 'operator+=':
+// Not yet supported for pointers with unknown lifetime (b/219826128)
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignFreeByValue {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignFreeByValue"),
+    crate::AddAssignFreeByValue
+);
+
+impl Default for AddAssignFreeByValue {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>> for AddAssignFreeByValue {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=81
+// Error while generating bindings for item 'AddAssignFreeByValue::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=81
+// Error while generating bindings for item 'AddAssignFreeByValue::operator=':
+// operator= for Unpin types is not yet supported.
+
+impl ::std::ops::AddAssign<crate::AddAssignFreeByValue> for AddAssignFreeByValue {
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: crate::AddAssignFreeByValue) {
+        unsafe {
+            crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, rhs);
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignFriendByConstRef {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignFriendByConstRef"),
+    crate::AddAssignFriendByConstRef
+);
+
+impl Default for AddAssignFriendByConstRef {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>>
+    for AddAssignFriendByConstRef
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=85
+// Error while generating bindings for item 'AddAssignFriendByConstRef::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=85
+// Error while generating bindings for item 'AddAssignFriendByConstRef::operator=':
+// operator= for Unpin types is not yet supported.
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignFriendByValue {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignFriendByValue"),
+    crate::AddAssignFriendByValue
+);
+
+impl Default for AddAssignFriendByValue {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>>
+    for AddAssignFriendByValue
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=90
+// Error while generating bindings for item 'AddAssignFriendByValue::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=90
+// Error while generating bindings for item 'AddAssignFriendByValue::operator=':
+// operator= for Unpin types is not yet supported.
+
+impl ::std::ops::AddAssign<crate::AddAssignFriendByValue> for AddAssignFriendByValue {
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: crate::AddAssignFriendByValue) {
+        unsafe {
+            crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, rhs);
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignProhibitedConstMember {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignProhibitedConstMember"),
+    crate::AddAssignProhibitedConstMember
+);
+
+impl Default for AddAssignProhibitedConstMember {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>>
+    for AddAssignProhibitedConstMember
+{
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_(
+                &mut tmp, __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=95
+// Error while generating bindings for item 'AddAssignProhibitedConstMember::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=95
+// Error while generating bindings for item 'AddAssignProhibitedConstMember::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=96
+// Error while generating bindings for item 'AddAssignProhibitedConstMember::operator+=':
+// Compound assignment with const left-hand side is not supported
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct AddAssignProhibitedFriendConstLhs {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("AddAssignProhibitedFriendConstLhs"),
+    crate::AddAssignProhibitedFriendConstLhs
+);
+
+impl Default for AddAssignProhibitedFriendConstLhs {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>>
+    for AddAssignProhibitedFriendConstLhs
+{
+    #[inline(always)]
+    fn from(
+        __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
+    ) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_(
+                &mut tmp, __param_0,
+            );
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=99
+// Error while generating bindings for item 'AddAssignProhibitedFriendConstLhs::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=99
+// Error while generating bindings for item 'AddAssignProhibitedFriendConstLhs::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=100
+// Error while generating bindings for item 'operator+=':
+// Compound assignment with const left-hand side is not supported
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
 
 mod detail {
@@ -606,6 +992,82 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev<'a>(
             __this: ::std::pin::Pin<&'a mut crate::AddableConstMemberNonunpin>,
         );
+        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberInt>,
+        );
+        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberInt>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
+        );
+        #[link_name = "_ZN18AddAssignMemberIntpLEi"]
+        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
+            __this: &'a mut crate::AddAssignMemberInt,
+            rhs: i32,
+        ) -> i32;
+        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
+        );
+        #[link_name = "_ZN25AddAssignMemberByConstRefpLERKS_"]
+        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignMemberByConstRef,
+            rhs: &'b crate::AddAssignMemberByConstRef,
+        ) -> &'a mut crate::AddAssignMemberByConstRef;
+        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByValue>,
+        );
+        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByValue>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
+        );
+        #[link_name = "_ZpLR20AddAssignFreeByValueS_"]
+        pub(crate) fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
+            lhs: &'a mut crate::AddAssignFreeByValue,
+            rhs: crate::AddAssignFreeByValue,
+        ) -> &'a mut crate::AddAssignFreeByValue;
+        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
+        );
+        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByValue>,
+        );
+        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByValue>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
+        );
+        #[link_name = "_ZpLR22AddAssignFriendByValueS_"]
+        pub(crate) fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
+            lhs: &'a mut crate::AddAssignFriendByValue,
+            rhs: crate::AddAssignFriendByValue,
+        ) -> &'a mut crate::AddAssignFriendByValue;
+        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
+        );
+        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
+        );
+        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
+        );
+        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
+        );
     }
 }
 
@@ -710,3 +1172,99 @@ const _: () = {
 };
 const _: () =
     assert!(memoffset_unstable_const::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignMemberInt>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignMemberInt>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignMemberInt: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignMemberInt: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignMemberInt: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignMemberByConstRef>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignMemberByConstRef>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignMemberByConstRef: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignMemberByConstRef: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignMemberByConstRef: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignFreeByConstRef>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignFreeByConstRef>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFreeByConstRef: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFreeByConstRef: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignFreeByConstRef: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignFreeByValue>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignFreeByValue>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFreeByValue: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFreeByValue: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignFreeByValue: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignFriendByConstRef>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignFriendByConstRef>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFriendByConstRef: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFriendByConstRef: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignFriendByConstRef: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignFriendByValue>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignFriendByValue>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFriendByValue: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignFriendByValue: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignFriendByValue: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignProhibitedConstMember>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignProhibitedConstMember>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignProhibitedConstMember: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignProhibitedConstMember: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedConstMember: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::AddAssignProhibitedFriendConstLhs>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignProhibitedFriendConstLhs: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::AddAssignProhibitedFriendConstLhs: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedFriendConstLhs: Drop);
+};

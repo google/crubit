@@ -91,6 +91,77 @@ extern "C" void __rust_thunk___ZN26AddableConstMemberNonunpinD1Ev(
     class AddableConstMemberNonunpin* __this) {
   std::destroy_at(__this);
 }
+extern "C" void __rust_thunk___ZN18AddAssignMemberIntC1Ev(
+    struct AddAssignMemberInt* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN18AddAssignMemberIntC1EOS_(
+    struct AddAssignMemberInt* __this, struct AddAssignMemberInt* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN25AddAssignMemberByConstRefC1Ev(
+    struct AddAssignMemberByConstRef* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_(
+    struct AddAssignMemberByConstRef* __this,
+    struct AddAssignMemberByConstRef* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN23AddAssignFreeByConstRefC1Ev(
+    struct AddAssignFreeByConstRef* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_(
+    struct AddAssignFreeByConstRef* __this,
+    struct AddAssignFreeByConstRef* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN20AddAssignFreeByValueC1Ev(
+    struct AddAssignFreeByValue* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN20AddAssignFreeByValueC1EOS_(
+    struct AddAssignFreeByValue* __this,
+    struct AddAssignFreeByValue* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN25AddAssignFriendByConstRefC1Ev(
+    struct AddAssignFriendByConstRef* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_(
+    struct AddAssignFriendByConstRef* __this,
+    struct AddAssignFriendByConstRef* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN22AddAssignFriendByValueC1Ev(
+    struct AddAssignFriendByValue* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN22AddAssignFriendByValueC1EOS_(
+    struct AddAssignFriendByValue* __this,
+    struct AddAssignFriendByValue* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN30AddAssignProhibitedConstMemberC1Ev(
+    struct AddAssignProhibitedConstMember* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_(
+    struct AddAssignProhibitedConstMember* __this,
+    struct AddAssignProhibitedConstMember* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev(
+    struct AddAssignProhibitedFriendConstLhs* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_(
+    struct AddAssignProhibitedFriendConstLhs* __this,
+    struct AddAssignProhibitedFriendConstLhs* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
 
 static_assert(sizeof(class AddableConstMember) == 4);
 static_assert(alignof(class AddableConstMember) == 4);
@@ -115,5 +186,29 @@ static_assert(alignof(class AddableReturnsVoid) == 4);
 
 static_assert(sizeof(class AddableConstMemberNonunpin) == 4);
 static_assert(alignof(class AddableConstMemberNonunpin) == 4);
+
+static_assert(sizeof(struct AddAssignMemberInt) == 1);
+static_assert(alignof(struct AddAssignMemberInt) == 1);
+
+static_assert(sizeof(struct AddAssignMemberByConstRef) == 1);
+static_assert(alignof(struct AddAssignMemberByConstRef) == 1);
+
+static_assert(sizeof(struct AddAssignFreeByConstRef) == 1);
+static_assert(alignof(struct AddAssignFreeByConstRef) == 1);
+
+static_assert(sizeof(struct AddAssignFreeByValue) == 1);
+static_assert(alignof(struct AddAssignFreeByValue) == 1);
+
+static_assert(sizeof(struct AddAssignFriendByConstRef) == 1);
+static_assert(alignof(struct AddAssignFriendByConstRef) == 1);
+
+static_assert(sizeof(struct AddAssignFriendByValue) == 1);
+static_assert(alignof(struct AddAssignFriendByValue) == 1);
+
+static_assert(sizeof(struct AddAssignProhibitedConstMember) == 1);
+static_assert(alignof(struct AddAssignProhibitedConstMember) == 1);
+
+static_assert(sizeof(struct AddAssignProhibitedFriendConstLhs) == 1);
+static_assert(alignof(struct AddAssignProhibitedFriendConstLhs) == 1);
 
 #pragma clang diagnostic pop
