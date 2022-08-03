@@ -59,4 +59,154 @@ mod tests {
         // https://en.cppreference.com/w/cpp/language/adl
         assert_not_impl_any!(OperandForFreeFuncInDifferentNamespace: PartialEq);
     }
+
+    #[test]
+    fn test_many_operators_add() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(10, (&s1 + s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_sub() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(4, (&s1 - s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_mul() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(21, (&s1 * s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_div() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(2, (&s1 / s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_rem() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(1, (&s1 % s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_bit_and() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(3, (&s1 & s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_bit_or() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(7, (&s1 | s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_bit_xor() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(4, (&s1 ^ s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_shl() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(56, (&s1 << s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_shr() {
+        let s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        assert_eq!(0, (&s1 >> s2).i);
+    }
+
+    #[test]
+    fn test_many_operators_add_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 += s2;
+        assert_eq!(10, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_sub_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 -= s2;
+        assert_eq!(4, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_mul_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 *= s2;
+        assert_eq!(21, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_div_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 /= s2;
+        assert_eq!(2, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_rem_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 %= s2;
+        assert_eq!(1, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_bit_and_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 &= s2;
+        assert_eq!(3, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_bit_or_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 |= s2;
+        assert_eq!(7, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_bit_xor_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 ^= s2;
+        assert_eq!(4, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_shl_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 <<= s2;
+        assert_eq!(56, s1.i);
+    }
+
+    #[test]
+    fn test_many_operators_shr_assign() {
+        let mut s1 = ManyOperators { i: 7 };
+        let s2 = ManyOperators { i: 3 };
+        s1 >>= s2;
+        assert_eq!(0, s1.i);
+    }
 }

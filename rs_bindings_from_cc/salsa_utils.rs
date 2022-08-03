@@ -12,9 +12,15 @@ use std::rc::Rc;
 /// A wrapper for a smart pointer, which implements `Eq` as pointer equality.
 ///
 /// This was directly inspired by Chalk's `ArcEq`, which does the same.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 #[repr(transparent)]
 pub struct RcEq<T>(pub Rc<T>);
+
+impl<T> Clone for RcEq<T> {
+    fn clone(&self) -> Self {
+        Self(Rc::clone(&self.0))
+    }
+}
 
 impl<T> PartialEq<RcEq<T>> for RcEq<T> {
     fn eq(&self, other: &Self) -> bool {

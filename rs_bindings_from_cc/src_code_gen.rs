@@ -9,7 +9,7 @@ use itertools::Itertools;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use salsa_utils::RcEq;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ffi::{OsStr, OsString};
 use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
@@ -89,6 +89,8 @@ trait BindingsGenerator {
     ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
+
+    fn operator_metadata(&self) -> RcEq<OperatorMetadata>;
 }
 
 #[salsa::database(BindingsGeneratorStorage)]
@@ -497,6 +499,62 @@ fn is_visible_by_adl(enclosing_record: &Record, param_types: &[RsTypeKind]) -> b
     param_types.iter().any(|param_type| adl_expands_to(enclosing_record, param_type))
 }
 
+#[derive(Debug)]
+struct OperatorMetadata {
+    binary_by_name: HashMap<&'static str, OperatorMetadataEntry>,
+    assign_by_name: HashMap<&'static str, OperatorMetadataEntry>,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct OperatorMetadataEntry {
+    name: &'static str,
+    trait_name: &'static str,
+    method_name: &'static str,
+}
+
+fn operator_metadata(_db: &dyn BindingsGenerator) -> RcEq<OperatorMetadata> {
+    const BINARY_ENTRIES: &[OperatorMetadataEntry] = &[
+        OperatorMetadataEntry { name: "+", trait_name: "Add", method_name: "add" },
+        OperatorMetadataEntry { name: "-", trait_name: "Sub", method_name: "sub" },
+        OperatorMetadataEntry { name: "*", trait_name: "Mul", method_name: "mul" },
+        OperatorMetadataEntry { name: "/", trait_name: "Div", method_name: "div" },
+        OperatorMetadataEntry { name: "%", trait_name: "Rem", method_name: "rem" },
+        OperatorMetadataEntry { name: "&", trait_name: "BitAnd", method_name: "bitand" },
+        OperatorMetadataEntry { name: "|", trait_name: "BitOr", method_name: "bitor" },
+        OperatorMetadataEntry { name: "^", trait_name: "BitXor", method_name: "bitxor" },
+        OperatorMetadataEntry { name: "<<", trait_name: "Shl", method_name: "shl" },
+        OperatorMetadataEntry { name: ">>", trait_name: "Shr", method_name: "shr" },
+    ];
+    const ASSIGN_ENTRIES: &[OperatorMetadataEntry] = &[
+        OperatorMetadataEntry { name: "+=", trait_name: "AddAssign", method_name: "add_assign" },
+        OperatorMetadataEntry { name: "-=", trait_name: "SubAssign", method_name: "sub_assign" },
+        OperatorMetadataEntry { name: "*=", trait_name: "MulAssign", method_name: "mul_assign" },
+        OperatorMetadataEntry { name: "/=", trait_name: "DivAssign", method_name: "div_assign" },
+        OperatorMetadataEntry { name: "%=", trait_name: "RemAssign", method_name: "rem_assign" },
+        OperatorMetadataEntry {
+            name: "&=",
+            trait_name: "BitAndAssign",
+            method_name: "bitand_assign",
+        },
+        OperatorMetadataEntry {
+            name: "|=",
+            trait_name: "BitOrAssign",
+            method_name: "bitor_assign",
+        },
+        OperatorMetadataEntry {
+            name: "^=",
+            trait_name: "BitXorAssign",
+            method_name: "bitxor_assign",
+        },
+        OperatorMetadataEntry { name: "<<=", trait_name: "ShlAssign", method_name: "shl_assign" },
+        OperatorMetadataEntry { name: ">>=", trait_name: "ShrAssign", method_name: "shr_assign" },
+    ];
+    RcEq::new(OperatorMetadata {
+        binary_by_name: BINARY_ENTRIES.iter().map(|e| (e.name, *e)).collect(),
+        assign_by_name: ASSIGN_ENTRIES.iter().map(|e| (e.name, *e)).collect(),
+    })
+}
+
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
 /// If the shape is a trait, this also mutates the parameter types to be
@@ -510,10 +568,13 @@ fn is_visible_by_adl(enclosing_record: &Record, param_types: &[RsTypeKind]) -> b
 ///    destructor might be mapped to no `Drop` impl at all.)
 ///  * `Ok((func_name, impl_kind))`: The function name and ImplKind.
 fn api_func_shape(
+    db: &dyn BindingsGenerator,
     func: &Func,
-    ir: &IR,
     param_types: &mut [RsTypeKind],
 ) -> Result<Option<(Ident, ImplKind)>> {
+    let ir = db.ir();
+    let op_meta = db.operator_metadata();
+
     let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func)?;
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));
     let impl_kind: ImplKind;
@@ -595,7 +656,9 @@ fn api_func_shape(
             };
             func_name = make_rs_ident("assign");
         }
-        UnqualifiedIdentifier::Operator(op) if op.name == "+" && param_types.len() == 2 => {
+        UnqualifiedIdentifier::Operator(op)
+            if op_meta.binary_by_name.contains_key(op.name.as_str()) && param_types.len() == 2 =>
+        {
             materialize_ctor_in_caller(param_types);
             let (record, impl_for) = if let Some(record) = maybe_record {
                 (&**record, ImplFor::RefT)
@@ -616,10 +679,12 @@ fn api_func_shape(
                 }
             };
 
+            let op_meta = op_meta.binary_by_name.get(op.name.as_str()).unwrap();
+            let trait_name = make_rs_ident(op_meta.trait_name);
             impl_kind = ImplKind::Trait {
                 record_name: make_rs_ident(&record.rs_name),
                 trait_name: TraitName::Other {
-                    name: quote! {::std::ops::Add},
+                    name: quote! {::std::ops::#trait_name},
                     params: vec![param_types[1].clone()],
                     is_unsafe_fn: false,
                 },
@@ -629,9 +694,11 @@ fn api_func_shape(
                 drop_return: false,
                 associated_return_type: Some(make_rs_ident("Output")),
             };
-            func_name = make_rs_ident("add");
+            func_name = make_rs_ident(op_meta.method_name);
         }
-        UnqualifiedIdentifier::Operator(op) if op.name == "+=" && param_types.len() == 2 => {
+        UnqualifiedIdentifier::Operator(op)
+            if op_meta.assign_by_name.contains_key(op.name.as_str()) && param_types.len() == 2 =>
+        {
             materialize_ctor_in_caller(param_types);
             let record = match &param_types[0] {
                 RsTypeKind::Record { .. } => {
@@ -655,10 +722,12 @@ fn api_func_shape(
                 _ => bail!("Expected first parameter to be a record or reference"),
             };
 
+            let op_meta = op_meta.assign_by_name.get(op.name.as_str()).unwrap();
+            let trait_name = make_rs_ident(op_meta.trait_name);
             impl_kind = ImplKind::Trait {
                 record_name: make_rs_ident(&record.rs_name),
                 trait_name: TraitName::Other {
-                    name: quote! {::std::ops::AddAssign},
+                    name: quote! {::std::ops::#trait_name},
                     params: vec![param_types[1].clone()],
                     is_unsafe_fn: false,
                 },
@@ -668,7 +737,7 @@ fn api_func_shape(
                 drop_return: true,
                 associated_return_type: None,
             };
-            func_name = make_rs_ident("add_assign");
+            func_name = make_rs_ident(op_meta.method_name);
         }
         UnqualifiedIdentifier::Operator(op) => {
             bail!(
@@ -873,7 +942,6 @@ fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
 ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
-    let ir = db.ir();
     let mut features = BTreeSet::new();
     let mut param_types = func
         .params
@@ -886,7 +954,7 @@ fn generate_func(
         .collect::<Result<Vec<_>>>()?;
 
     let (func_name, mut impl_kind) =
-        if let Some(values) = api_func_shape(&func, &ir, &mut param_types)? {
+        if let Some(values) = api_func_shape(db, &func, &mut param_types)? {
             values
         } else {
             return Ok(None);

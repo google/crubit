@@ -100,4 +100,28 @@ struct AddAssignProhibitedFriendConstLhs final {
   friend int operator+=(const AddAssignProhibitedFriendConstLhs& lhs, int rhs);
 };
 
+struct ManyOperators final {
+  ManyOperators operator+(const ManyOperators& rhs) const;
+  ManyOperators operator-(const ManyOperators& rhs) const;
+  ManyOperators operator*(const ManyOperators& rhs) const;
+  ManyOperators operator/(const ManyOperators& rhs) const;
+  ManyOperators operator%(const ManyOperators& rhs) const;
+  ManyOperators operator&(const ManyOperators& rhs) const;
+  ManyOperators operator|(const ManyOperators& rhs) const;
+  ManyOperators operator^(const ManyOperators& rhs) const;
+  ManyOperators operator<<(const ManyOperators& rhs) const;
+  ManyOperators operator>>(const ManyOperators& rhs) const;
+
+  ManyOperators& operator+=(const ManyOperators& rhs);
+  ManyOperators& operator-=(const ManyOperators& rhs);
+  ManyOperators& operator*=(const ManyOperators& rhs);
+  ManyOperators& operator/=(const ManyOperators& rhs);
+  ManyOperators& operator%=(const ManyOperators& rhs);
+  ManyOperators& operator&=(const ManyOperators& rhs);
+  ManyOperators& operator|=(const ManyOperators& rhs);
+  ManyOperators& operator^=(const ManyOperators& rhs);
+  ManyOperators& operator<<=(const ManyOperators& rhs);
+  ManyOperators& operator>>=(const ManyOperators& rhs);
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_

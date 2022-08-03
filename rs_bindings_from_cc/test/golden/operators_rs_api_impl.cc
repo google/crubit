@@ -162,6 +162,14 @@ extern "C" void __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_(
     struct AddAssignProhibitedFriendConstLhs* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN13ManyOperatorsC1Ev(
+    struct ManyOperators* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN13ManyOperatorsC1EOS_(
+    struct ManyOperators* __this, struct ManyOperators* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
 
 static_assert(sizeof(class AddableConstMember) == 4);
 static_assert(alignof(class AddableConstMember) == 4);
@@ -210,5 +218,8 @@ static_assert(alignof(struct AddAssignProhibitedConstMember) == 1);
 
 static_assert(sizeof(struct AddAssignProhibitedFriendConstLhs) == 1);
 static_assert(alignof(struct AddAssignProhibitedFriendConstLhs) == 1);
+
+static_assert(sizeof(struct ManyOperators) == 1);
+static_assert(alignof(struct ManyOperators) == 1);
 
 #pragma clang diagnostic pop

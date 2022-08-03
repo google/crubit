@@ -873,6 +873,213 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstL
 // Error while generating bindings for item 'operator+=':
 // Compound assignment with const left-hand side is not supported
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct ManyOperators {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate::ManyOperators);
+
+impl Default for ManyOperators {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::ManyOperators>> for ManyOperators {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=103
+// Error while generating bindings for item 'ManyOperators::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/operators.h;l=103
+// Error while generating bindings for item 'ManyOperators::operator=':
+// operator= for Unpin types is not yet supported.
+
+impl<'a, 'b> ::std::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn add(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsplERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn sub(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsmiERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn mul(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsmlERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn div(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsdvERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn rem(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsrmERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn bitand(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsanERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn bitor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsorERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn bitxor(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorseoERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn shl(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorslsERKS_(self, rhs) }
+    }
+}
+
+impl<'a, 'b> ::std::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn shr(self, rhs: &'b crate::ManyOperators) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsrsERKS_(self, rhs) }
+    }
+}
+
+impl<'b> ::std::ops::AddAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn add_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorspLERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::SubAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn sub_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsmIERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::MulAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn mul_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsmLERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::DivAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn div_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsdVERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::RemAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn rem_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsrMERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::BitAndAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn bitand_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsaNERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::BitOrAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn bitor_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsoRERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::BitXorAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn bitxor_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorseOERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::ShlAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn shl_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorslSERKS_(self, rhs);
+        }
+    }
+}
+
+impl<'b> ::std::ops::ShrAssign<&'b crate::ManyOperators> for ManyOperators {
+    #[inline(always)]
+    fn shr_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsrSERKS_(self, rhs);
+        }
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
 
 mod detail {
@@ -1068,6 +1275,113 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
         );
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
+        );
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
+            __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
+        );
+        #[link_name = "_ZNK13ManyOperatorsplERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsplERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsmiERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsmiERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsmlERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsmlERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsdvERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsdvERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsrmERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsrmERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsanERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsanERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsorERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsorERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorseoERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorseoERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorslsERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorslsERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsrsERKS_"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsrsERKS_<'a, 'b>(
+            __this: &'a crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorspLERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorspLERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsmIERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsmIERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsmLERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsmLERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsdVERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsdVERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsrMERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsrMERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsaNERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsaNERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsoRERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsoRERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorseOERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorseOERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorslSERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorslSERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        #[link_name = "_ZN13ManyOperatorsrSERKS_"]
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsrSERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            rhs: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
     }
 }
 
@@ -1267,4 +1581,16 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddAssignProhibitedFriendConstLhs: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::ManyOperators>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::ManyOperators>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::ManyOperators: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::ManyOperators: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::ManyOperators: Drop);
 };

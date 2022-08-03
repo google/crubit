@@ -197,4 +197,82 @@ struct AddableFriendByValue final {
   int i;
 };
 
+//////////////////////////////////////////////////////////////////////
+
+struct ManyOperators final {
+  ManyOperators operator+(const ManyOperators rhs) const {
+    return ManyOperators{i + rhs.i};
+  }
+  ManyOperators operator-(const ManyOperators rhs) const {
+    return ManyOperators{i - rhs.i};
+  }
+  ManyOperators operator*(const ManyOperators rhs) const {
+    return ManyOperators{i * rhs.i};
+  }
+  ManyOperators operator/(const ManyOperators rhs) const {
+    return ManyOperators{i / rhs.i};
+  }
+  ManyOperators operator%(const ManyOperators rhs) const {
+    return ManyOperators{i % rhs.i};
+  }
+  ManyOperators operator&(const ManyOperators rhs) const {
+    return ManyOperators{i & rhs.i};
+  }
+  ManyOperators operator|(const ManyOperators rhs) const {
+    return ManyOperators{i | rhs.i};
+  }
+  ManyOperators operator^(const ManyOperators rhs) const {
+    return ManyOperators{i ^ rhs.i};
+  }
+  ManyOperators operator<<(const ManyOperators rhs) const {
+    return ManyOperators{i << rhs.i};
+  }
+  ManyOperators operator>>(const ManyOperators rhs) const {
+    return ManyOperators{i >> rhs.i};
+  }
+
+  ManyOperators& operator+=(const ManyOperators rhs) {
+    i += rhs.i;
+    return *this;
+  }
+  ManyOperators& operator-=(const ManyOperators rhs) {
+    i -= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator*=(const ManyOperators rhs) {
+    i *= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator/=(const ManyOperators rhs) {
+    i /= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator%=(const ManyOperators rhs) {
+    i %= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator&=(const ManyOperators rhs) {
+    i &= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator|=(const ManyOperators rhs) {
+    i |= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator^=(const ManyOperators rhs) {
+    i ^= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator<<=(const ManyOperators rhs) {
+    i <<= rhs.i;
+    return *this;
+  }
+  ManyOperators& operator>>=(const ManyOperators rhs) {
+    i >>= rhs.i;
+    return *this;
+  }
+
+  int i;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_OPERATORS_H_
