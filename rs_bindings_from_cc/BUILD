@@ -344,6 +344,9 @@ cc_library(
 rust_test(
     name = "ir_from_cc_test",
     srcs = ["ir_from_cc_test.rs"],
+    tags = [
+        "notap",  # b/240563701
+    ],
     deps = [
         ":ir",
         ":ir_testing",
@@ -399,6 +402,9 @@ rust_test(
     name = "src_code_gen_impl_test",
     crate = ":src_code_gen_impl",
     data = [
+    ],
+    tags = [
+        "notap",  # b/240563701
     ],
     deps = [
         ":ir_testing",

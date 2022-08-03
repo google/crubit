@@ -16,6 +16,10 @@ DEPS = {
     "user_of_base_class": ["inheritance"],
 }
 
+TAGS = {
+    "unsupported": ["notap"],  # b/240563701
+}
+
 [cc_library(
     name = name + "_cc",
     hdrs = [name + ".h"],
@@ -56,6 +60,7 @@ DEPS = {
         name + "_rs_file",
         "LICENSE_HEADER",
     ],
+    tags = [tag for tag in (TAGS[name] if name in TAGS else [])],
 ) for name in TESTS]
 
 [rust_test(
