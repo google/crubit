@@ -6,6 +6,7 @@ use arc_anyhow::{anyhow, bail, ensure, Context, Result};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
+use once_cell::sync::Lazy;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
 use salsa_utils::RcEq;
@@ -89,8 +90,6 @@ trait BindingsGenerator {
     ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
-
-    fn operator_metadata(&self) -> RcEq<OperatorMetadata>;
 }
 
 #[salsa::database(BindingsGeneratorStorage)]
@@ -512,7 +511,7 @@ struct OperatorMetadataEntry {
     method_name: &'static str,
 }
 
-fn operator_metadata(_db: &dyn BindingsGenerator) -> RcEq<OperatorMetadata> {
+static OPERATOR_METADATA: Lazy<OperatorMetadata> = Lazy::new(|| {
     const BINARY_ENTRIES: &[OperatorMetadataEntry] = &[
         OperatorMetadataEntry { name: "+", trait_name: "Add", method_name: "add" },
         OperatorMetadataEntry { name: "-", trait_name: "Sub", method_name: "sub" },
@@ -549,11 +548,11 @@ fn operator_metadata(_db: &dyn BindingsGenerator) -> RcEq<OperatorMetadata> {
         OperatorMetadataEntry { name: "<<=", trait_name: "ShlAssign", method_name: "shl_assign" },
         OperatorMetadataEntry { name: ">>=", trait_name: "ShrAssign", method_name: "shr_assign" },
     ];
-    RcEq::new(OperatorMetadata {
+    OperatorMetadata {
         binary_by_name: BINARY_ENTRIES.iter().map(|e| (e.name, *e)).collect(),
         assign_by_name: ASSIGN_ENTRIES.iter().map(|e| (e.name, *e)).collect(),
-    })
-}
+    }
+});
 
 /// Returns the shape of the generated Rust API for a given function definition.
 ///
@@ -573,7 +572,7 @@ fn api_func_shape(
     param_types: &mut [RsTypeKind],
 ) -> Result<Option<(Ident, ImplKind)>> {
     let ir = db.ir();
-    let op_meta = db.operator_metadata();
+    let op_meta = &*OPERATOR_METADATA;
 
     let maybe_record: Option<&Rc<Record>> = ir.record_for_member_func(func)?;
     let has_pointer_params = param_types.iter().any(|p| matches!(p, RsTypeKind::Pointer { .. }));

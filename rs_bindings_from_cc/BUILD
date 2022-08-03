@@ -390,6 +390,7 @@ rust_library(
         "//common:ffi_types",
         "//common:token_stream_printer",
         "@crate_index//:itertools",
+        "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:salsa",

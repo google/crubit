@@ -45,6 +45,9 @@ crates_repository(
         "memoffset": crate.spec(
             version = ">0.0.0",
         ),
+        "once_cell": crate.spec(
+            version = ">0.0.0",
+        ),
         "pin-project": crate.spec(
             version = ">0.0.0",
         ),
