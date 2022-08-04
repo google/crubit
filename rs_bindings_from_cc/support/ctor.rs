@@ -35,9 +35,9 @@
 //!
 //! ```
 //! fn swap(mut x: Pin<&mut CxxClass>, mut y: Pin<&mut CxxClass>) {
-//!  emplace!{ let mut tmp = mov(x.as_mut()); }
-//!  x.assign(mov(y.as_mut()));
-//!  y.assign(mov(tmp));
+//!  emplace!{ let mut tmp = mov!(x.as_mut()); }
+//!  x.assign(mov!(y.as_mut()));
+//!  y.assign(mov!(tmp));
 //! }
 //! ```
 //!
@@ -103,7 +103,7 @@
 
 use std::marker::PhantomData;
 use std::mem::{ManuallyDrop, MaybeUninit};
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 use std::pin::Pin;
 
 pub use ctor_proc_macros::*;
@@ -223,8 +223,16 @@ pub fn copy<T: for<'a> CtorNew<&'a T>, P: Deref<Target = T>>(src: P) -> Copy<P> 
 // DerefMut based move construction
 // ================================
 
+/// Rvalue Reference (move-reference) type.
+///
+/// This creates a new `T` by moving -- either move-construction (construction
+/// from `RvalueReference(&*P)`), or move-assignment (assignment from
+/// `RvalueReference(&*P)`).
+///
+/// Note: this does not actually move until it is used.
+#[must_use = must_use_ctor_assign!("RvalueReference")]
 #[repr(transparent)]
-pub struct RvalueReference<'a, T>(Pin<&'a mut T>);
+pub struct RvalueReference<'a, T>(pub Pin<&'a mut T>);
 
 impl<T> RvalueReference<'_, T> {
     pub fn as_const(&self) -> ConstRvalueReference<'_, T> {
@@ -246,36 +254,33 @@ impl<T> RvalueReference<'_, T> {
         // reborrowed lifetime of the pin, or else it would violate the aliasing
         // rules by coexisting with my_pin. Thus, get_ref must return &T, not
         // &'a T. (For the same reason, as_const returns a ConstRvalueReference
-        // whose lifetime is bound by  self, not 'a.)
+        // whose lifetime is bound by self, not 'a.)
         &*self.0
     }
 }
 
-/// Move type.
-///
-/// This creates a new `P::Target` by moving -- either move-construction
-/// (construction from `RvalueReference(&*P)`), or move-assignment (assignment
-/// from `RvalueReference(&*P)`).
-///
-/// Note: this does not actually move `P` until it is used.
-#[must_use = must_use_ctor_assign!("Move")]
-pub struct Move<P: DerefMut>(Pin<P>);
-
-impl<Output: for<'a> CtorNew<RvalueReference<'a, Output>>, P: DerefMut<Target = Output>> Ctor
-    for Move<P>
+impl<'a, T> Ctor for RvalueReference<'a, T>
+where
+    T: CtorNew<Self>,
 {
-    type Output = Output;
+    type Output = T;
 
-    unsafe fn ctor(mut self, dest: Pin<&mut MaybeUninit<Output>>) {
-        Output::ctor_new(RvalueReference(self.0.as_mut())).ctor(dest);
+    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<T>>) {
+        T::ctor_new(self).ctor(dest);
     }
 }
 
-/// !Unpin to override the blanket Ctor impl.
-impl<P> !Unpin for Move<P> {}
+/// !Unpin to override the blanket `Ctor` impl.
+impl<'a, T> !Unpin for RvalueReference<'a, T> {}
 
+/// Const rvalue reference (move-reference) type. Usually not very helpful.
+///
+/// This implicitly converts to `T` by const-moving -- either
+/// const-move-construction (construction from `ConstRvalueReference(&x)`), or
+/// const-move-assignment (assignment from `ConstRvalueReference(&x)`).
+#[must_use = must_use_ctor_assign!("ConstRvalueReference")]
 #[repr(transparent)]
-pub struct ConstRvalueReference<'a, T>(&'a T);
+pub struct ConstRvalueReference<'a, T>(pub &'a T);
 
 impl<'a, T> ConstRvalueReference<'a, T> {
     pub fn get_ref(&mut self) -> &'a T {
@@ -283,42 +288,43 @@ impl<'a, T> ConstRvalueReference<'a, T> {
     }
 }
 
-/// Const-move type. Usually not very helpful.
-///
-/// This implicitly converts to `P::Target` by const-moving -- either
-/// const-move-construction (construction from `ConstRvalueReference(&*P)`), or
-/// const-move-assignment (assignment from `ConstRvalueReference(&*P)`).
-#[must_use = must_use_ctor_assign!("ConstMove")]
-pub struct ConstMove<P: Deref>(P);
-
-impl<Output: for<'a> CtorNew<ConstRvalueReference<'a, Output>>, P: Deref<Target = Output>> Ctor
-    for ConstMove<P>
+impl<'a, T> Ctor for ConstRvalueReference<'a, T>
+where
+    T: CtorNew<Self>,
 {
-    type Output = Output;
+    type Output = T;
 
-    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<Output>>) {
-        Output::ctor_new(ConstRvalueReference(&*self.0)).ctor(dest);
+    unsafe fn ctor(self, dest: Pin<&mut MaybeUninit<T>>) {
+        T::ctor_new(self).ctor(dest);
     }
 }
 
-/// !Unpin to override the blanket Ctor impl.
-impl<P> !Unpin for ConstMove<P> {}
+/// !Unpin to override the blanket `Ctor` impl.
+impl<'a, T> !Unpin for ConstRvalueReference<'a, T> {}
 
 /// Creates a "to-be-moved" pointer for `src`.
 ///
-/// In other words, this is analogous to C++ `std::move`, except that the
-/// pointer can be owned.
+/// In other words, this is analogous to C++ `std::move`, except that this can
+/// directly create an `RvalueReference<T>` out of e.g. a `Pin<Box<T>>`. The
+/// resulting `RvalueReference` has the lifetime of a temporary, after which the
+/// parameter is destroyed.
 ///
-/// The resulting `Move` can be used as a `CtorNew` or `Assign` source, or as a
-/// `Ctor` directly.
+/// The resulting `RvalueReference` can be used as a `CtorNew` or `Assign`
+/// source, or as a `Ctor` directly.
 ///
 /// Note: this does not actually move the parameter until it is used.
-pub fn mov<P: DerefMut>(src: Pin<P>) -> Move<P> {
-    Move(src)
+#[macro_export]
+macro_rules! mov {
+    ($p:expr) => {
+        $crate::RvalueReference(::std::pin::Pin::as_mut(&mut { $p }))
+    };
 }
 
-pub fn const_mov<P: Deref>(src: P) -> ConstMove<P> {
-    ConstMove(src)
+#[macro_export]
+macro_rules! const_mov {
+    ($p:expr) => {
+        $crate::ConstRvalueReference(&*{ $p })
+    };
 }
 
 // =============
@@ -1006,23 +1012,6 @@ impl<T: for<'a> Assign<&'a T>, P: Deref<Target = T>> Assign<Copy<P>> for T {
     }
 }
 
-/// Assignment from a Move desugars to an assignment from an RvalueReference.
-impl<T: for<'a> Assign<RvalueReference<'a, T>>, P: DerefMut<Target = T>> Assign<Move<P>> for T {
-    fn assign(self: Pin<&mut Self>, mut src: Move<P>) {
-        self.assign(RvalueReference(src.0.as_mut()));
-    }
-}
-
-/// Assignment from a ConstMove desugars to an assignment from a
-/// ConstRvalueReference.
-impl<T: for<'a> Assign<ConstRvalueReference<'a, T>>, P: Deref<Target = T>> Assign<ConstMove<P>>
-    for T
-{
-    fn assign(self: Pin<&mut Self>, src: ConstMove<P>) {
-        self.assign(ConstRvalueReference(&*src.0));
-    }
-}
-
 // TODO(jeanpierreda): Make these less repetitive.
 
 impl<'a, T: Unpin + CtorNew<&'a T>> Assign<&'a T> for T {
@@ -1619,8 +1608,20 @@ mod test {
             let notify_tester = DropCtorLogger {log};
             let new_value = DropCtorLogger {log};
         }
-        notify_tester.assign(mov(new_value));
+        notify_tester.assign(mov!(new_value));
         assert_eq!(*log.borrow(), vec!["move ctor", "drop"]);
+    }
+
+    /// Non-obvious fact: you can mov() an owned reference type! Moving anything
+    /// also performs a rust move, but the resulting rvalue reference is
+    /// still valid for a temporary's lifetime.
+    #[test]
+    fn test_mov_box() {
+        struct S;
+        let x: Pin<Box<S>> = Box::pin(S);
+        fn takes_rvalue_reference(_: RvalueReference<S>) {}
+        takes_rvalue_reference(mov!(x));
+        // let _x = x; // fails to compile: x is moved!
     }
 
     #[test]

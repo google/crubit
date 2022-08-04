@@ -33,7 +33,7 @@ mod tests {
     fn test_move_construct() {
         ctor::emplace! {
             let mut x = Nonunpin::ctor_new(42);
-            let mut y = ctor::mov(x.as_mut());
+            let mut y = ctor::mov!(x.as_mut());
         }
 
         assert_eq!(x.value(), 0); // moved-from
@@ -50,7 +50,7 @@ mod tests {
             let mut y = Nonunpin::ctor_new(8);
         }
 
-        y.as_mut().assign(ctor::mov(x.as_mut()));
+        y.as_mut().assign(ctor::mov!(x.as_mut()));
 
         assert_eq!(x.value(), 0); // moved-from
         assert_eq!(y.value(), 42); // moved-to
@@ -105,24 +105,29 @@ mod tests {
             let mut x = Nonunpin::ctor_new(42);
         }
         {
-            let x: Pin<&mut Nonunpin> = x.as_mut().AsMutRef();
-            assert_eq!(nonunpin::GetValueFromMutRef(x), 42);
+            let x_ref: Pin<&mut Nonunpin> = x.as_mut().AsMutRef();
+            assert_eq!(nonunpin::GetValueFromMutRef(x_ref), 42);
+            assert_eq!(nonunpin::GetValueFromMutRef(x.as_mut()), 42);
         }
         {
-            let x: &Nonunpin = x.AsConstRef();
-            assert_eq!(nonunpin::GetValueFromConstRef(x), 42);
+            let x_ref: &Nonunpin = x.AsConstRef();
+            assert_eq!(nonunpin::GetValueFromConstRef(x_ref), 42);
+            assert_eq!(nonunpin::GetValueFromConstRef(&x), 42);
         }
         {
-            let x: RvalueReference<Nonunpin> = x.as_mut().AsRvalueRef();
-            assert_eq!(nonunpin::GetValueFromRvalueRef(x), 42);
+            let x_ref: RvalueReference<Nonunpin> = x.as_mut().AsRvalueRef();
+            assert_eq!(nonunpin::GetValueFromRvalueRef(x_ref), 42);
+            assert_eq!(nonunpin::GetValueFromRvalueRef(ctor::mov!(x.as_mut())), 42);
         }
         {
-            let x: ConstRvalueReference<Nonunpin> = x.AsConstRvalueRef();
-            assert_eq!(nonunpin::GetValueFromConstRvalueRef(x), 42);
+            let x_ref: ConstRvalueReference<Nonunpin> = x.AsConstRvalueRef();
+            assert_eq!(nonunpin::GetValueFromConstRvalueRef(x_ref), 42);
+            assert_eq!(nonunpin::GetValueFromConstRvalueRef(ctor::const_mov!(&*x)), 42);
+            assert_eq!(nonunpin::GetValueFromConstRvalueRef(ctor::const_mov!(x.as_mut())), 42);
         }
         {
             assert_eq!(nonunpin::GetValueFromValue(ctor::copy(&*x)), 42);
-            assert_eq!(nonunpin::GetValueFromValue(ctor::mov(x)), 42);
+            assert_eq!(nonunpin::GetValueFromValue(ctor::mov!(x)), 42);
         }
     }
 
