@@ -13,7 +13,4 @@ rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [":type_alias"],
-    tags = [
-        "notap",  # b/240563701
-    ],
 )

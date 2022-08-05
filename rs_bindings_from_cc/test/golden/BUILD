@@ -16,9 +16,7 @@ DEPS = {
     "user_of_base_class": ["inheritance"],
 }
 
-TAGS = {
-    "unsupported": ["notap"],  # b/240563701
-}
+TAGS = {}
 
 [cc_library(
     name = name + "_cc",

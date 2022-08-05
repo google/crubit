@@ -784,6 +784,8 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
+  } else if (auto* elaborated = llvm::dyn_cast<clang::ElaboratedType>(type)) {
+    return ConvertQualType(elaborated->getNamedType(), lifetimes, nullable);
   } else if (const auto* tst_type =
                  type->getAs<clang::TemplateSpecializationType>()) {
     return ConvertTemplateSpecializationType(tst_type);
