@@ -9,6 +9,7 @@
 #include <utility>
 #include <variant>
 
+#include "lifetime_analysis/lifetime_constraints.h"
 #include "lifetime_analysis/points_to_map.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
@@ -20,7 +21,7 @@ namespace lifetimes {
 
 class LifetimeLattice {
  public:
-  // Creates a lattice holding an empty points-to map.
+  // Creates a lattice holding an empty points-to map and empty constraints.
   LifetimeLattice() = default;
 
   LifetimeLattice(const LifetimeLattice&) = default;
@@ -28,9 +29,9 @@ class LifetimeLattice {
   LifetimeLattice& operator=(const LifetimeLattice&) = default;
   LifetimeLattice& operator=(LifetimeLattice&&) = default;
 
-  // Creates a lattice containing the given points-to map.
+  // Creates a lattice containing the given points-to map and empty constraints.
   explicit LifetimeLattice(PointsToMap points_to_map)
-      : var_(std::move(points_to_map)) {}
+      : var_(std::make_pair(std::move(points_to_map), LifetimeConstraints())) {}
 
   // Creates an error state containing the error message `err`.
   explicit LifetimeLattice(std::string err) : var_(err) {}
@@ -39,6 +40,11 @@ class LifetimeLattice {
   // Precondition: !IsError().
   PointsToMap& PointsTo();
   const PointsToMap& PointsTo() const;
+
+  // Returns the lifetime constraints.
+  // Precondition: !IsError().
+  LifetimeConstraints& Constraints();
+  const LifetimeConstraints& Constraints() const;
 
   // Returns whether the lattice is in the error state.
   bool IsError() const { return std::holds_alternative<std::string>(var_); }
@@ -64,7 +70,7 @@ class LifetimeLattice {
   }
 
  private:
-  std::variant<PointsToMap, std::string> var_;
+  std::variant<std::pair<PointsToMap, LifetimeConstraints>, std::string> var_;
 };
 
 }  // namespace lifetimes

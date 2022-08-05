@@ -83,10 +83,22 @@ cc_library(
 )
 
 cc_library(
+    name = "lifetime_constraints",
+    srcs = ["lifetime_constraints.cc"],
+    hdrs = ["lifetime_constraints.h"],
+    deps = [
+        "//lifetime_annotations:lifetime",
+        "@llvm-project//clang:analysis",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "lifetime_lattice",
     srcs = ["lifetime_lattice.cc"],
     hdrs = ["lifetime_lattice.h"],
     deps = [
+        ":lifetime_constraints",
         ":points_to_map",
         "@llvm-project//clang:analysis",
         "@llvm-project//llvm:Support",

@@ -26,12 +26,22 @@ std::string LifetimeLattice::ToString() const {
 
 PointsToMap& LifetimeLattice::PointsTo() {
   assert(!IsError());
-  return std::get<PointsToMap>(var_);
+  return std::get<0>(var_).first;
 }
 
 const PointsToMap& LifetimeLattice::PointsTo() const {
   assert(!IsError());
-  return std::get<PointsToMap>(var_);
+  return std::get<0>(var_).first;
+}
+
+LifetimeConstraints& LifetimeLattice::Constraints() {
+  assert(!IsError());
+  return std::get<0>(var_).second;
+}
+
+const LifetimeConstraints& LifetimeLattice::Constraints() const {
+  assert(!IsError());
+  return std::get<0>(var_).second;
 }
 
 llvm::StringRef LifetimeLattice::Error() const {
@@ -53,12 +63,15 @@ clang::dataflow::LatticeJoinEffect LifetimeLattice::join(
     return clang::dataflow::LatticeJoinEffect::Changed;
   }
 
+  auto constraints_effect = Constraints().join(other.Constraints());
+
   PointsToMap joined_points_to_map = PointsTo().Union(other.PointsTo());
-  if (PointsTo() == joined_points_to_map) {
+  if (PointsTo() == joined_points_to_map &&
+      constraints_effect == clang::dataflow::LatticeJoinEffect::Unchanged) {
     return clang::dataflow::LatticeJoinEffect::Unchanged;
   }
 
-  *this = LifetimeLattice(std::move(joined_points_to_map));
+  PointsTo() = std::move(joined_points_to_map);
   return clang::dataflow::LatticeJoinEffect::Changed;
 }
 
