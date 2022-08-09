@@ -118,7 +118,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::SomeStruct>> for Some
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=13
 // Error while generating bindings for item 'SomeOtherStruct':
-// Unsupported type 'struct SomeOtherStruct': No generated bindings found for ''
+// Unsupported type 'SomeOtherStruct': No generated bindings found for ''
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -163,7 +163,7 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::SomeUnion>> for SomeUnion {
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=19
 // Error while generating bindings for item 'SomeOtherUnion':
-// Unsupported type 'union SomeOtherUnion': No generated bindings found for ''
+// Unsupported type 'SomeOtherUnion': No generated bindings found for ''
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
 

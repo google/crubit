@@ -354,7 +354,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 
 // rs_bindings_from_cc/test/golden/doc_comment.h;l=111
 // Error while generating bindings for item 'ConcreteNestedStruct':
-// Unsupported type 'OuterTemplate<int>::NestedStruct': No generated bindings found for 'NestedStruct'
+// Unsupported type 'struct OuterTemplate<int>::NestedStruct': No generated bindings found for 'NestedStruct'
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_DOC_COMMENT_H_
 

@@ -68,7 +68,7 @@ absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
   }
   return absl::OkStatus();
 }
-}
+}  // namespace
 
 // A mapping of C++ standard types to their equivalent Rust types.
 // To produce more idiomatic results, these types receive special handling
@@ -784,8 +784,6 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   } else if (const auto* typedef_type =
                  type->getAsAdjusted<clang::TypedefType>()) {
     return ConvertTypeDecl(typedef_type->getDecl());
-  } else if (auto* elaborated = llvm::dyn_cast<clang::ElaboratedType>(type)) {
-    return ConvertQualType(elaborated->getNamedType(), lifetimes, nullable);
   } else if (const auto* tst_type =
                  type->getAs<clang::TemplateSpecializationType>()) {
     return ConvertTemplateSpecializationType(tst_type);
@@ -803,10 +801,29 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       "Unsupported clang::Type class '", type->getTypeClassName(), "'"));
 }
 
+// Returns a QualType with leading ElaboratedType nodes removed.
+//
+// This is analogous to getDesugaredType but *only* removes ElaboratedType
+// sugar.
+static clang::QualType GetUnelaboratedType(clang::QualType qual_type,
+                                           clang::ASTContext& ast_context) {
+  clang::QualifierCollector qualifiers;
+  while (true) {
+    const clang::Type* type = qualifiers.strip(qual_type);
+    if (const auto* elaborated = llvm::dyn_cast<clang::ElaboratedType>(type)) {
+      qual_type = elaborated->getNamedType();
+      continue;
+    }
+
+    return ast_context.getQualifiedType(type, qualifiers);
+  }
+}
+
 absl::StatusOr<MappedType> Importer::ConvertQualType(
     clang::QualType qual_type,
     std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
     bool nullable) {
+  qual_type = GetUnelaboratedType(std::move(qual_type), ctx_);
   std::string type_string = qual_type.getAsString();
   absl::StatusOr<MappedType> type =
       ConvertType(qual_type.getTypePtr(), lifetimes, nullable);
