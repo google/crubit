@@ -21,6 +21,10 @@ std::string GetClassTemplateSpecializationCcName(
     const clang::ClassTemplateSpecializationDecl* specialization_decl) {
   clang::PrintingPolicy policy(ast_context.getLangOpts());
   policy.IncludeTagDefinition = false;
+  // Canonicalize types -- in particular, the template parameter types must be
+  // desugared out of an `ElaboratedType` so that their namespaces are written
+  // down.
+  policy.PrintCanonicalTypes = true;
   return clang::QualType(specialization_decl->getTypeForDecl(), 0)
       .getAsString(policy);
 }

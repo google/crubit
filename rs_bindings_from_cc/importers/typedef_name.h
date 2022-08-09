@@ -10,7 +10,8 @@
 
 namespace crubit {
 
-// A `DeclImporter` for `TypedefNameDecl`s.
+// A `DeclImporter` for `TypedefNameDecl`s (including `TypeAliasDecl` and
+// `TypedefDecl`).
 class TypedefNameDeclImporter
     : public DeclImporterBase<clang::TypedefNameDecl> {
  public:
