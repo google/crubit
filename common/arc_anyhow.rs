@@ -26,8 +26,6 @@
 //! containing the same error. Error propagation with cached errors requires
 //! that the underlying error type
 
-#![feature(backtrace)]
-
 use std::fmt::{Debug, Display};
 use std::sync::Arc;
 
@@ -117,11 +115,6 @@ impl Debug for StdError {
 impl std::error::Error for StdError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         self.0.source()
-    }
-    fn backtrace(&self) -> Option<&std::backtrace::Backtrace> {
-        // dereference past the inherent backtrace impl added to anyhow::Error in some
-        // compilation modes.
-        (**self.0).backtrace()
     }
 }
 
