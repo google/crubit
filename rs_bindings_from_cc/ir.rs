@@ -306,6 +306,11 @@ pub struct Func {
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
+    /// For tests and internal use only.
+    ///
+    /// Prefer to reconstruct the lifetime params from the parameter types, as
+    /// needed. This allows new parameters and lifetimes to be added that were
+    /// not originally part of the IR.
     pub lifetime_params: Vec<LifetimeName>,
     pub is_inline: bool,
     pub member_func_metadata: Option<MemberFuncMetadata>,

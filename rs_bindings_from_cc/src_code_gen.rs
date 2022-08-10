@@ -12,6 +12,7 @@ use quote::{format_ident, quote, ToTokens};
 use salsa_utils::RcEq;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ffi::{OsStr, OsString};
+use std::fmt::Write as _;
 use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
 use std::process;
@@ -636,7 +637,7 @@ fn api_func_shape(
             if record.is_unpin() {
                 bail!("operator= for Unpin types is not yet supported.");
             }
-            materialize_ctor_in_caller(param_types);
+            materialize_ctor_in_caller(func, param_types);
             let rhs = &param_types[1];
             impl_kind = {
                 ImplKind::Trait {
@@ -658,7 +659,7 @@ fn api_func_shape(
         UnqualifiedIdentifier::Operator(op)
             if op_meta.binary_by_name.contains_key(op.name.as_str()) && param_types.len() == 2 =>
         {
-            materialize_ctor_in_caller(param_types);
+            materialize_ctor_in_caller(func, param_types);
             let (record, impl_for) = if let Some(record) = maybe_record {
                 (&**record, ImplFor::RefT)
             } else {
@@ -698,7 +699,7 @@ fn api_func_shape(
         UnqualifiedIdentifier::Operator(op)
             if op_meta.assign_by_name.contains_key(op.name.as_str()) && param_types.len() == 2 =>
         {
-            materialize_ctor_in_caller(param_types);
+            materialize_ctor_in_caller(func, param_types);
             let record = match &param_types[0] {
                 RsTypeKind::Record { .. } => {
                     bail!("Compound assignment with by-value left-hand side is not supported")
@@ -783,7 +784,7 @@ fn api_func_shape(
                 );
                 func_name = make_rs_ident("drop");
             } else {
-                materialize_ctor_in_caller(param_types);
+                materialize_ctor_in_caller(func, param_types);
                 impl_kind = ImplKind::new_trait(
                     TraitName::Other {
                         name: quote! {::ctor::PinnedDrop},
@@ -817,7 +818,7 @@ fn api_func_shape(
                 );
             }
 
-            materialize_ctor_in_caller(param_types);
+            materialize_ctor_in_caller(func, param_types);
             let record_name = make_rs_ident(&record.rs_name);
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
@@ -891,31 +892,24 @@ fn api_func_shape(
 
 /// Mutates the provided parameters so that nontrivial by-value parameters are,
 /// instead, materialized in the caller and passed by rvalue reference.
-///
-/// This produces rvalue references with elided lifetimes. If they compile,
-/// they are correct, but the resulting signatures can be surprising.
-///
-/// For example, consider `From`. This rewriting of function parameters might
-/// create an impl as follows:
-///
-/// ```
-/// // C++: struct Foo{ Foo(Nontrivial x); };
-/// impl From<RvalueReference<'_, Nontrivial>> for Foo {
-///   fn from(x: RvalueReference<'_, Nontrivial>) -> Self { ... }
-/// }
-/// ```
-///
-/// Each `'_` is actually a different lifetime! However, due to lifetime
-/// subtyping, they are allowed to be used in this sort of way, interchangeably.
-/// And indeed, this is even idiomatic. For example, the exact same pattern is
-/// in use here:
-///
-/// https://doc.rust-lang.org/std/string/struct.String.html#impl-From%3C%26%27_%20String%3E
-///
-/// If there is some case where this is actually _not_ okay, then we would need
-/// to generate new named lifetimes, rather than elided lifetimes.
-fn materialize_ctor_in_caller(params: &mut [RsTypeKind]) {
-    for param in params {
+fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
+    let mut existing_lifetime_params: HashSet<Rc<str>> =
+        params.iter().flat_map(|param| param.lifetimes().map(|lifetime| lifetime.0)).collect();
+    let mut new_lifetime_param = |mut lifetime_name: String| {
+        let suffix_start = lifetime_name.len();
+        let mut next_suffix = 2;
+        loop {
+            if !existing_lifetime_params.contains(&*lifetime_name) {
+                let lifetime_name = <Rc<str>>::from(lifetime_name);
+                existing_lifetime_params.insert(lifetime_name.clone());
+                return Lifetime(lifetime_name);
+            }
+            lifetime_name.truncate(suffix_start);
+            write!(lifetime_name, "_{next_suffix}").unwrap();
+            next_suffix += 1;
+        }
+    };
+    for (func_param, param) in func.params.iter().zip(params.iter_mut()) {
         if param.is_unpin() {
             continue;
         }
@@ -923,7 +917,7 @@ fn materialize_ctor_in_caller(params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: Lifetime::new("_"),
+            lifetime: new_lifetime_param(func_param.identifier.identifier.clone()),
         };
     }
 }
@@ -1078,11 +1072,7 @@ fn generate_func(
             *trait_generic_params = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(lifetime) {
-                        Some(quote! {#lifetime})
-                    } else {
-                        None
-                    }
+                    if trait_lifetimes.contains(lifetime) { Some(quote! {#lifetime}) } else { None }
                 })
                 .collect();
         } else {
@@ -1265,7 +1255,9 @@ fn function_signature(
             thunk_args.push(quote! {#ident});
         }
     }
-    let mut lifetimes = func.lifetime_params.iter().map(Lifetime::from).collect_vec();
+
+    let mut lifetimes: Vec<Lifetime> = unique_lifetimes(&*param_types).collect();
+
     let mut quoted_return_type = None;
     if let ImplKind::Trait {
         trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
@@ -1384,6 +1376,7 @@ fn generate_func_thunk(
     } else {
         quote! {}
     };
+    let lifetimes: Vec<_> = unique_lifetimes(param_types).collect();
 
     // The first parameter is the output parameter, if any.
     let mut param_types = param_types.into_iter();
@@ -1414,7 +1407,7 @@ fn generate_func_thunk(
     }
 
     let thunk_ident = thunk_ident(&func);
-    let lifetimes = func.lifetime_params.iter().map(Lifetime::from);
+
     let generic_params = format_generic_params(lifetimes);
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
     let param_types = out_param.into_iter().chain(param_types.map(|t| {
@@ -2776,6 +2769,16 @@ impl<'ty> Iterator for RsTypeKindIter<'ty> {
             }
         }
     }
+}
+
+fn unique_lifetimes<'a>(
+    types: impl IntoIterator<Item = &'a RsTypeKind> + 'a,
+) -> impl Iterator<Item = Lifetime> + 'a {
+    let mut unordered_lifetimes = HashSet::new();
+    types
+        .into_iter()
+        .flat_map(|ty| ty.lifetimes())
+        .filter(move |lifetime| unordered_lifetimes.insert(lifetime.clone()))
 }
 
 fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind> {
@@ -6471,6 +6474,59 @@ mod tests {
         Ok(())
     }
 
+    /// Traits which monomorphize the `Ctor` parameter into the caller must
+    /// synthesize an RvalueReference parameter, with an appropriate
+    /// lifetime parameter.
+    #[test]
+    fn test_nonunpin_by_value_params() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            // This type must be `!Unpin`.
+            struct HasConstructor {
+                // int& x is here to create a 'b lifetime, which collides with a synthesized
+                // lifetime name. But that's OK! We handle collisions!
+                // (`a` would also work, but that's just because the left hand doesn't know what
+                // the right is doing: the `a` lifetime is present in some places, but eventually
+                // removed from the public interface.)
+                explicit HasConstructor(const int& x, HasConstructor y, HasConstructor b) {}
+            };"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(rs_api, quote! {#[::ctor::recursively_pinned]});
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl <'b, 'y, 'b_2> ::ctor::CtorNew<(
+                    &'b i32,
+                    ::ctor::RvalueReference<'y, crate::HasConstructor>,
+                    ::ctor::RvalueReference<'b_2, crate::HasConstructor>)
+                > for HasConstructor {
+                    // The captures are why we need explicit lifetimes for the two rvalue reference
+                    // parameters.
+                    type CtorType = impl ::ctor::Ctor<Output = Self>
+                        + ::ctor::Captures<'b>
+                        + ::ctor::Captures<'y>
+                        + ::ctor::Captures<'b_2>;
+
+                    #[inline (always)]
+                    fn ctor_new(args: (
+                        &'b i32,
+                        ::ctor::RvalueReference<'y, crate::HasConstructor>,
+                        ::ctor::RvalueReference<'b_2, crate::HasConstructor>)
+                    ) -> Self::CtorType {
+                        let (x, y, b) = args;
+                        unsafe {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
+                                crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::std::pin::Pin::into_inner_unchecked(dest), x, y, b);
+                            })
+                        }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
     #[test]
     fn test_nonunpin_return() -> Result<()> {
         let ir = ir_from_cc(
@@ -6617,9 +6673,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl From<::ctor::RvalueReference<'_, crate::Nontrivial>> for Trivial {
+                impl<'__param_0> From<::ctor::RvalueReference<'__param_0, crate::Nontrivial>> for Trivial {
                     #[inline(always)]
-                    fn from(__param_0: ::ctor::RvalueReference<'_, crate::Nontrivial>) -> Self {
+                    fn from(__param_0: ::ctor::RvalueReference<'__param_0, crate::Nontrivial>) -> Self {
                         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN7TrivialC1E10Nontrivial(

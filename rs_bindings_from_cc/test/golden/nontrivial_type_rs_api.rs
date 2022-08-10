@@ -772,11 +772,13 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::NontrivialByValue>>
     }
 }
 
-impl ::ctor::Assign<::ctor::RvalueReference<'_, crate::Nontrivial>> for NontrivialByValue {
+impl<'other> ::ctor::Assign<::ctor::RvalueReference<'other, crate::Nontrivial>>
+    for NontrivialByValue
+{
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        other: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+        other: ::ctor::RvalueReference<'other, crate::Nontrivial>,
     ) {
         unsafe {
             let _ = ::ctor::emplace!(::ctor::FnCtor::new(
@@ -1046,10 +1048,10 @@ mod detail {
             __this: ::std::pin::Pin<&'a mut crate::NontrivialByValue>,
             other: ::ctor::RvalueReference<'b, crate::NontrivialByValue>,
         ) -> ::std::pin::Pin<&'a mut crate::NontrivialByValue>;
-        pub(crate) fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'a>(
+        pub(crate) fn __rust_thunk___ZN17NontrivialByValueaSE10Nontrivial<'a, 'other>(
             __return: &mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
             __this: ::std::pin::Pin<&'a mut crate::NontrivialByValue>,
-            other: ::ctor::RvalueReference<'_, crate::Nontrivial>,
+            other: ::ctor::RvalueReference<'other, crate::Nontrivial>,
         );
         #[link_name = "_ZN10NonmovableC1Ev"]
         pub(crate) fn __rust_thunk___ZN10NonmovableC1Ev<'a>(

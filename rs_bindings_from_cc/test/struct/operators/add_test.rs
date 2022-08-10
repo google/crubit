@@ -49,12 +49,17 @@ mod tests {
     }
 
     #[test]
-    fn test_add_returns_nontrivial() {
+    fn test_add_nontrivial_by_value() {
         ctor::emplace! {
-            let s1 = ctor::ctor!(AddableReturnsNontrivial {i: 11});
-            let s2 = ctor::ctor!(AddableReturnsNontrivial {i: 22});
+            let s1 = ctor::ctor!(AddableNontrivialByValue {i: 11});
         }
-        assert_eq!(ctor::emplace!(&*s1 + &*s2).i, 33);
+        assert_eq!(
+            ctor::emplace!(
+                &*s1 + ctor::mov!(ctor::emplace!(ctor::ctor!(AddableNontrivialByValue { i: 22 })))
+            )
+            .i,
+            33
+        );
     }
 
     #[test]

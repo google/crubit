@@ -70,11 +70,10 @@ struct AddableReturnsVoid final {
   int i;
 };
 
-struct AddableReturnsNontrivial final {
-  ~AddableReturnsNontrivial() {}
-  AddableReturnsNontrivial operator+(
-      const AddableReturnsNontrivial& rhs) const {
-    return AddableReturnsNontrivial{i + rhs.i};
+struct AddableNontrivialByValue final {
+  ~AddableNontrivialByValue() {}
+  AddableNontrivialByValue operator+(AddableNontrivialByValue rhs) const {
+    return AddableNontrivialByValue{i + rhs.i};
   }
 
   int i;
