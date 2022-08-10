@@ -349,7 +349,7 @@ impl TraitName {
     }
 
     /// Returns the lifetimes used in this trait name.
-    pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
+    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
         self.params().flat_map(|p| p.lifetimes())
     }
 }
@@ -923,7 +923,7 @@ fn materialize_ctor_in_caller(params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: Lifetime::Elided,
+            lifetime: Lifetime::new("_"),
         };
     }
 }
@@ -1070,15 +1070,15 @@ fn generate_func(
                 _ => None,
             };
 
-            let trait_lifetimes: HashSet<LifetimeId> =
+            let trait_lifetimes: HashSet<Lifetime> =
                 trait_name.lifetimes().chain(first_param_lifetimes.into_iter().flatten()).collect();
             fn_generic_params = format_generic_params(
-                lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(&lifetime.id)),
+                lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(lifetime)),
             );
             *trait_generic_params = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(&lifetime.id) {
+                    if trait_lifetimes.contains(lifetime) {
                         Some(quote! {#lifetime})
                     } else {
                         None
@@ -1200,7 +1200,7 @@ fn generate_func(
 /// The function signature for a function's bindings.
 struct BindingsSignature {
     /// The lifetime parameters for the Rust function.
-    lifetimes: Vec<ir::LifetimeName>,
+    lifetimes: Vec<Lifetime>,
 
     /// The parameter list for the Rust function.
     ///
@@ -1265,13 +1265,20 @@ fn function_signature(
             thunk_args.push(quote! {#ident});
         }
     }
-    let mut lifetimes = func.lifetime_params.iter().cloned().collect_vec();
+    let mut lifetimes = func.lifetime_params.iter().map(Lifetime::from).collect_vec();
     let mut quoted_return_type = None;
     if let ImplKind::Trait {
         trait_name: trait_name @ (TraitName::UnpinConstructor { .. } | TraitName::CtorNew(..)),
         ..
     } = &impl_kind
     {
+        // For constructors, we move the output parameter to be the return value.
+        // The return value is "really" void.
+        ensure!(
+            func.return_type.rs_type.is_unit_type(),
+            "Unexpectedly non-void return type of a constructor"
+        );
+
         //  Presence of element #0 is indirectly verified by a `Constructor`-related
         // `match` branch a little bit above.
         *return_type = param_types[0]
@@ -1280,31 +1287,26 @@ fn function_signature(
             .clone();
         quoted_return_type = Some(quote! {Self});
 
+        // Grab the `__this` lifetime to remove it from the lifetime parameters.
+        let this_lifetime = param_types[0]
+            .lifetime()
+            .ok_or_else(|| anyhow!("Missing lifetime for `__this` parameter"))?;
+
         // Drop `__this` parameter from the public Rust API.
         api_params.remove(0);
         thunk_args.remove(0);
         param_types.remove(0);
 
         // Remove the lifetime associated with `__this`.
-        ensure!(
-            func.return_type.rs_type.is_unit_type(),
-            "Unexpectedly non-void return type of a constructor: {:?}",
-            func
-        );
-        let maybe_first_lifetime = func.params[0].type_.rs_type.lifetime_args.first();
-        let no_longer_needed_lifetime_id = maybe_first_lifetime
-            .ok_or_else(|| anyhow!("Missing lifetime on `__this` parameter: {:?}", func))?;
-        lifetimes.retain(|l| l.id != *no_longer_needed_lifetime_id);
+        lifetimes.retain(|l| l != &this_lifetime);
         if let Some(type_still_dependent_on_removed_lifetime) = param_types
             .iter()
             .flat_map(|t| t.lifetimes())
-            .find(|lifetime_id| *lifetime_id == *no_longer_needed_lifetime_id)
+            .find(|lifetime| lifetime == &this_lifetime)
         {
             bail!(
                 "The lifetime of `__this` is unexpectedly also used by another \
-                    parameter {:?} in function {:?}",
-                type_still_dependent_on_removed_lifetime,
-                func.name
+                    parameter: {type_still_dependent_on_removed_lifetime:?}",
             );
         }
 
@@ -1412,7 +1414,7 @@ fn generate_func_thunk(
     }
 
     let thunk_ident = thunk_ident(&func);
-    let lifetimes = func.lifetime_params.iter();
+    let lifetimes = func.lifetime_params.iter().map(Lifetime::from);
     let generic_params = format_generic_params(lifetimes);
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
     let param_types = out_param.into_iter().chain(param_types.map(|t| {
@@ -2371,7 +2373,7 @@ impl Mutability {
     }
 }
 
-/// Either a known lifetime, or the magic `'_` elided lifetime.
+/// Either a named lifetime, or the magic `'_` elided lifetime.
 ///
 /// Warning: elided lifetimes are not always valid, and sometimes named
 /// lifetimes are required. In particular, this should never be used for
@@ -2380,28 +2382,25 @@ impl Mutability {
 /// However, because output lifetimes are never elided, a lifetime that only
 /// occurs in a single input position can always be elided.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-pub enum Lifetime {
-    Named(LifetimeName),
-    Elided,
+pub struct Lifetime(pub Rc<str>);
+
+impl From<&ir::LifetimeName> for Lifetime {
+    fn from(lifetime_name: &ir::LifetimeName) -> Self {
+        Lifetime(lifetime_name.name.clone())
+    }
 }
 
 impl Lifetime {
+    pub fn new(name: &str) -> Self {
+        Lifetime(Rc::from(name))
+    }
     /// Formats a lifetime for use as a reference lifetime parameter.
     ///
     /// In this case, elided lifetimes are empty.
     pub fn format_for_reference(&self) -> TokenStream {
-        match self {
-            Lifetime::Named(lifetime) => quote! {#lifetime},
-            Lifetime::Elided => quote! {},
-        }
-    }
-
-    /// Returns a lifetime ID, if this is a non-elided lifetime. Otherwise
-    /// returns None.
-    pub fn id(&self) -> Option<LifetimeId> {
-        match self {
-            Lifetime::Named(lifetime) => Some(lifetime.id),
-            Lifetime::Elided => None,
+        match &*self.0 {
+            "_" => quote! {},
+            _ => quote! {#self},
         }
     }
 }
@@ -2412,10 +2411,9 @@ impl Lifetime {
 /// gives a more idiomatic formatting for elided lifetimes.
 impl ToTokens for Lifetime {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            Lifetime::Named(named) => named.to_tokens(tokens),
-            Lifetime::Elided => tokens.extend(quote! {'_ }),
-        }
+        let Self(name) = self;
+        let lifetime = syn::Lifetime::new(&format!("'{name}"), proc_macro2::Span::call_site());
+        lifetime.to_tokens(tokens);
     }
 }
 
@@ -2631,12 +2629,8 @@ impl RsTypeKind {
     /// Iterates over all `LifetimeId`s in `self` and in all the nested types.
     /// Note that the results might contain duplicate LifetimeId values (e.g.
     /// if the same LifetimeId is used in two `type_args`).
-    pub fn lifetimes(&self) -> impl Iterator<Item = LifetimeId> + '_ {
-        self.dfs_iter().filter_map(|t| match t {
-            RsTypeKind::Reference { lifetime, .. } => lifetime.id(),
-            RsTypeKind::RvalueReference { lifetime, .. } => lifetime.id(),
-            _ => None,
-        })
+    pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
+        self.dfs_iter().filter_map(Self::lifetime)
     }
 
     /// Returns the pointer or reference target.
@@ -2645,6 +2639,16 @@ impl RsTypeKind {
             Self::Pointer { pointee: p, .. }
             | Self::Reference { referent: p, .. }
             | Self::RvalueReference { referent: p, .. } => Some(&**p),
+            _ => None,
+        }
+    }
+
+    /// Returns the reference lifetime, or None if this is not a reference.
+    pub fn lifetime(&self) -> Option<Lifetime> {
+        match self {
+            Self::Reference { lifetime, .. } | Self::RvalueReference { lifetime, .. } => {
+                Some(lifetime.clone())
+            }
             _ => None,
         }
     }
@@ -2793,8 +2797,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
         let lifetime_id = ty.lifetime_args[0];
         ir.get_lifetime(lifetime_id)
             .ok_or_else(|| anyhow!("no known lifetime with id {lifetime_id:?}"))
-            .cloned()
-            .map(|lifetime| Lifetime::Named(lifetime))
+            .map(Lifetime::from)
     };
 
     let result = match ty.name.as_deref() {
@@ -7069,7 +7072,7 @@ mod tests {
         let reference = RsTypeKind::Reference {
             referent: referent,
             mutability: Mutability::Const,
-            lifetime: Lifetime::Elided,
+            lifetime: Lifetime::new("_"),
         };
         assert_rs_matches!(quote! {#reference}, quote! {&T});
     }
@@ -7081,7 +7084,7 @@ mod tests {
         let reference = RsTypeKind::RvalueReference {
             referent: referent,
             mutability: Mutability::Mut,
-            lifetime: Lifetime::Elided,
+            lifetime: Lifetime::new("_"),
         };
         assert_rs_matches!(quote! {#reference}, quote! {RvalueReference<'_, T>});
     }

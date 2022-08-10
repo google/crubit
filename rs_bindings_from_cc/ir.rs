@@ -113,14 +113,6 @@ pub struct LifetimeName {
     pub id: LifetimeId,
 }
 
-impl ToTokens for LifetimeName {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let lifetime =
-            syn::Lifetime::new(&format!("'{}", self.name), proc_macro2::Span::call_site());
-        lifetime.to_tokens(tokens)
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
     pub name: Option<String>,
@@ -790,8 +782,6 @@ impl IR {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use quote::quote;
-    use token_stream_matchers::assert_rs_matches;
 
     #[test]
     fn test_identifier_debug_print() {
@@ -827,11 +817,5 @@ mod tests {
             items: vec![],
         };
         assert_eq!(ir.flat_ir, expected);
-    }
-
-    #[test]
-    fn test_lifetime_name_to_tokens() {
-        let lifetime = LifetimeName { name: Rc::from("name"), id: LifetimeId(42) };
-        assert_rs_matches!(quote! { #lifetime }, quote! { 'name });
     }
 }
