@@ -23,11 +23,10 @@ using dataflow::SkipPast;
 constexpr llvm::StringLiteral kKnown = "is_known";
 constexpr llvm::StringLiteral kNotNull = "is_notnull";
 
-std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
-    const Expr* PointerExpr, const Environment& Env) {
-  auto* PointerVal =
-      cast<PointerValue>(Env.getValue(*PointerExpr, SkipPast::Reference));
-  return getPointerNullState(*PointerVal, Env);
+PointerValue* getPointerValueFromExpr(const Expr* PointerExpr,
+                                      const Environment& Env) {
+  return cast_or_null<PointerValue>(
+      Env.getValue(*PointerExpr, SkipPast::Reference));
 }
 
 std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
@@ -43,15 +42,6 @@ void initPointerBoolProperty(PointerValue& PointerVal, llvm::StringRef Name,
   if (PointerVal.getProperty(Name) == nullptr) {
     PointerVal.setProperty(Name,
                            BoolVal ? *BoolVal : Env.makeAtomicBoolValue());
-  }
-}
-
-void initPointerNullState(const Expr* PointerExpr, Environment& Env,
-                          BoolValue* KnownConstraint,
-                          BoolValue* NotNullConstraint) {
-  if (auto* PointerVal = cast_or_null<PointerValue>(
-          Env.getValue(*PointerExpr, SkipPast::Reference))) {
-    initPointerNullState(*PointerVal, Env, KnownConstraint, NotNullConstraint);
   }
 }
 

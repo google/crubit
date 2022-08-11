@@ -21,7 +21,10 @@ namespace {
 llvm::Optional<const Stmt*> diagnosePointerAccess(const Stmt* PointerAccessExpr,
                                                   const Expr* PointerExpr,
                                                   const Environment& Env) {
-  auto [PointerKnown, PointerNotNull] = getPointerNullState(PointerExpr, Env);
+  auto* PointerVal = getPointerValueFromExpr(PointerExpr, Env);
+  if (!PointerVal) return PointerAccessExpr;
+
+  auto [PointerKnown, PointerNotNull] = getPointerNullState(*PointerVal, Env);
   auto& PointerNotKnownNull =
       Env.makeNot(Env.makeAnd(PointerKnown, Env.makeNot(PointerNotNull)));
   if (!Env.flowConditionImplies(PointerNotKnownNull)) {

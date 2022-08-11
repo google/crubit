@@ -38,49 +38,44 @@ using dataflow::Value;
 
 namespace {
 
-void transferInitNotNullPointer(const Expr* NotNullPointer,
-                                const MatchFinder::MatchResult&,
-                                TransferState<NoopLattice>& State) {
-  initPointerNullState(NotNullPointer, State.Env,
-                       /*Known=*/&State.Env.getBoolLiteralValue(true),
-                       /*NotNull=*/&State.Env.getBoolLiteralValue(true));
-}
-
-void transferInitNullPointer(const Expr* NullPointer,
-                             const MatchFinder::MatchResult&,
-                             TransferState<NoopLattice>& State) {
-  initPointerNullState(NullPointer, State.Env,
-                       /*Known=*/&State.Env.getBoolLiteralValue(true),
-                       /*NotNull=*/&State.Env.getBoolLiteralValue(false));
-}
-
-void transferInitNullablePointer(const Expr* NullablePointer,
-                                 TransferState<NoopLattice>& State) {
-  initPointerNullState(NullablePointer, State.Env,
-                       /*Known=*/&State.Env.getBoolLiteralValue(true));
-}
-
-void transferInitUnknownPointer(const Expr* UnknownPointer,
-                                TransferState<NoopLattice>& State) {
-  initPointerNullState(UnknownPointer, State.Env,
-                       /*Known=*/&State.Env.getBoolLiteralValue(false));
-}
-
-void transferPointerExpr(const Expr* PointerExpr,
-                         const MatchFinder::MatchResult& Result,
-                         TransferState<NoopLattice>& State) {
-  auto Nullability = PointerExpr->getType()
-                         ->getNullability(*Result.Context)
-                         .value_or(NullabilityKind::Unspecified);
+void initPointerFromAnnotations(PointerValue& PointerVal, QualType Type,
+                                Environment& Env, ASTContext& Ctx) {
+  auto Nullability =
+      Type->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
   switch (Nullability) {
     case NullabilityKind::NonNull:
-      transferInitNotNullPointer(PointerExpr, Result, State);
+      initNotNullPointer(PointerVal, Env);
       break;
     case NullabilityKind::Nullable:
-      transferInitNullablePointer(PointerExpr, State);
+      initNullablePointer(PointerVal, Env);
       break;
     default:
-      transferInitUnknownPointer(PointerExpr, State);
+      initUnknownPointer(PointerVal, Env);
+  }
+}
+
+void transferNullPointer(const Expr* NullPointer,
+                         const MatchFinder::MatchResult&,
+                         TransferState<NoopLattice>& State) {
+  if (auto* PointerVal = getPointerValueFromExpr(NullPointer, State.Env)) {
+    initNullPointer(*PointerVal, State.Env);
+  }
+}
+
+void transferNotNullPointer(const Expr* NotNullPointer,
+                            const MatchFinder::MatchResult&,
+                            TransferState<NoopLattice>& State) {
+  if (auto* PointerVal = getPointerValueFromExpr(NotNullPointer, State.Env)) {
+    initNotNullPointer(*PointerVal, State.Env);
+  }
+}
+
+void transferPointer(const Expr* PointerExpr,
+                     const MatchFinder::MatchResult& Result,
+                     TransferState<NoopLattice>& State) {
+  if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
+    initPointerFromAnnotations(*PointerVal, PointerExpr->getType(), State.Env,
+                               *Result.Context);
   }
 }
 
@@ -103,10 +98,13 @@ void transferNullCheckComparison(const BinaryOperator* BinaryOp,
                         ? State.Env.makeNot(PointerComparison)
                         : PointerComparison;
 
-  auto [LHSKnown, LHSNotNull] =
-      getPointerNullState(BinaryOp->getLHS(), State.Env);
-  auto [RHSKnown, RHSNotNull] =
-      getPointerNullState(BinaryOp->getRHS(), State.Env);
+  auto* LHS = getPointerValueFromExpr(BinaryOp->getLHS(), State.Env);
+  auto* RHS = getPointerValueFromExpr(BinaryOp->getRHS(), State.Env);
+
+  if (!LHS || !RHS) return;
+
+  auto [LHSKnown, LHSNotNull] = getPointerNullState(*LHS, State.Env);
+  auto [RHSKnown, RHSNotNull] = getPointerNullState(*RHS, State.Env);
   auto& LHSKnownNotNull = State.Env.makeAnd(LHSKnown, LHSNotNull);
   auto& RHSKnownNotNull = State.Env.makeAnd(RHSKnown, RHSNotNull);
   auto& LHSKnownNull =
@@ -128,8 +126,12 @@ void transferNullCheckComparison(const BinaryOperator* BinaryOp,
 void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
                                             const MatchFinder::MatchResult&,
                                             TransferState<NoopLattice>& State) {
+  auto* PointerVal =
+      getPointerValueFromExpr(CastExpr->IgnoreImplicit(), State.Env);
+  if (!PointerVal) return;
+
   auto [PointerKnown, PointerNotNull] =
-      getPointerNullState(CastExpr->IgnoreImplicit(), State.Env);
+      getPointerNullState(*PointerVal, State.Env);
   auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
   State.Env.setValue(CastExprLoc, PointerNotNull);
   State.Env.setStorageLocation(*CastExpr, CastExprLoc);
@@ -138,11 +140,11 @@ void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
 auto buildTransferer() {
   return MatchSwitchBuilder<TransferState<NoopLattice>>()
       // Handles initialization of the null states of pointers
-      .CaseOf<Expr>(isPointerVariableReference(), transferPointerExpr)
-      .CaseOf<Expr>(isCXXThisExpr(), transferInitNotNullPointer)
-      .CaseOf<Expr>(isAddrOf(), transferInitNotNullPointer)
-      .CaseOf<Expr>(isNullPointerLiteral(), transferInitNullPointer)
-      .CaseOf<MemberExpr>(isMemberOfPointerType(), transferPointerExpr)
+      .CaseOf<Expr>(isPointerVariableReference(), transferPointer)
+      .CaseOf<Expr>(isCXXThisExpr(), transferNotNullPointer)
+      .CaseOf<Expr>(isAddrOf(), transferNotNullPointer)
+      .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointer)
+      .CaseOf<MemberExpr>(isMemberOfPointerType(), transferPointer)
       // Handles comparison between 2 pointers
       .CaseOf<BinaryOperator>(isPointerCheckBinOp(),
                               transferNullCheckComparison)
