@@ -349,6 +349,9 @@ pub struct Field {
     pub size: usize,
     pub is_no_unique_address: bool,
     pub is_bitfield: bool,
+    // TODO(kinuko): Consider removing this, it is a duplicate of the same information
+    // in `Record`.
+    pub is_inheritable: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -434,7 +437,7 @@ impl Record {
     ///
     /// Described in more detail at: docs/unpin
     pub fn is_unpin(&self) -> bool {
-        self.is_trivial_abi && !self.is_inheritable
+        self.is_trivial_abi && !self.is_inheritable && self.fields.iter().all(|f| !f.is_inheritable)
     }
 
     pub fn is_union(&self) -> bool {

@@ -1475,6 +1475,7 @@ fn test_fully_instantiated_template_in_public_field() -> Result<()> {
                        size: 32,
                        is_no_unique_address: false,
                        is_bitfield: false,
+                       is_inheritable: true,
                    }], ...
                }
         }
@@ -1514,6 +1515,7 @@ fn test_fully_instantiated_template_in_private_field() -> Result<()> {
                        size: 32,
                        is_no_unique_address: false,
                        is_bitfield: false,
+                       is_inheritable: false,
                    }], ...
                }
         }
@@ -2093,6 +2095,7 @@ fn test_record_with_unsupported_field_type() -> Result<()> {
                    size: 8,
                    is_no_unique_address: false,
                    is_bitfield: false,
+                   is_inheritable: false,
                }],
                ...
                size: 1,

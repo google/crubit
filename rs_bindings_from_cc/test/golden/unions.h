@@ -43,4 +43,12 @@ union UnionWithOpaqueField {
   char constant_array_field_not_yet_supported[42];
 };
 
+struct TrivialButInheritable {
+  int x;
+};
+
+union UnionWithInheritable {
+  TrivialButInheritable t;
+};
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_

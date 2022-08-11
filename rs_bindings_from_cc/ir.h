@@ -497,6 +497,7 @@ struct Field {
   uint64_t size;              // Field size in bits.
   bool is_no_unique_address;  // True if the field is [[no_unique_address]].
   bool is_bitfield;           // True if the field is a bitfield.
+  bool is_inheritable;        // True if the field is inheritable.
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Field& f) {

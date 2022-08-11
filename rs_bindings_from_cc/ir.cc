@@ -337,6 +337,7 @@ llvm::json::Value Field::ToJson() const {
       {"size", size},
       {"is_no_unique_address", is_no_unique_address},
       {"is_bitfield", is_bitfield},
+      {"is_inheritable", is_inheritable},
   };
 }
 

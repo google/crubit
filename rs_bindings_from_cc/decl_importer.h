@@ -90,6 +90,8 @@ class ImportContext {
   // Does not use or update the cache.
   virtual std::optional<IR::Item> ImportDecl(clang::Decl* decl) = 0;
 
+  virtual std::optional<IR::Item> GetImportedItem(const clang::Decl* decl) = 0;
+
   // Returns the item ids of the children and comments of the given decl in
   // source order. This method assumes that the children decls have already been
   // imported.

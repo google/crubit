@@ -237,6 +237,19 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
         break;
     }
 
+    bool is_inheritable = false;
+    auto* field_record = field_decl->getType()->getAsCXXRecordDecl();
+    if (field_record) {
+      // If it is a record as a direct member, its item must be already
+      // imported.
+      auto item = ictx_.GetImportedItem(field_record);
+      if (item.has_value()) {
+        if (const auto* record = std::get_if<Record>(&item.value())) {
+          is_inheritable = record->is_inheritable;
+        }
+      }
+    }
+
     std::optional<Identifier> field_name =
         ictx_.GetTranslatedIdentifier(field_decl);
     CRUBIT_CHECK(
@@ -255,7 +268,8 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
                      : ictx_.ctx_.getTypeSize(field_decl->getType()),
          .is_no_unique_address =
              field_decl->hasAttr<clang::NoUniqueAddressAttr>(),
-         .is_bitfield = field_decl->isBitField()});
+         .is_bitfield = field_decl->isBitField(),
+         .is_inheritable = is_inheritable});
   }
   return fields;
 }

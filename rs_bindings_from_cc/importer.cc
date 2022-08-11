@@ -512,6 +512,14 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
   return result;
 }
 
+std::optional<IR::Item> Importer::GetImportedItem(const clang::Decl* decl) {
+  auto it = import_cache_.find(decl);
+  if (it != import_cache_.end()) {
+    return it->second;
+  }
+  return std::nullopt;
+}
+
 BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
   // Template instantiations need to be generated in the target that triggered
   // the instantiation (not in the target where the template is defined).

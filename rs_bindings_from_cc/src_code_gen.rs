@@ -3861,6 +3861,42 @@ mod tests {
     }
 
     #[test]
+    fn test_struct_with_inheritable_field() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct TrivialButInheritable {
+              int x;
+            };
+            struct StructWithInheritable final {
+              TrivialButInheritable t;
+            };
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
+        Ok(())
+    }
+
+    #[test]
+    fn test_union_with_inheritable_field() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct TrivialButInheritable {
+              int x;
+            };
+            union UnionWithInheritable {
+              TrivialButInheritable t;
+            };
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
+        Ok(())
+    }
+
+    #[test]
     fn test_struct_with_unnamed_struct_and_union_members() -> Result<()> {
         // This test input causes `field_decl->getName()` to return an empty string.
         // See also:
@@ -4542,7 +4578,6 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[derive(Clone, Copy)]
                 #[repr(C, align(8))]
                 pub struct Struct {
                     pub(crate) field1: [::std::mem::MaybeUninit<u8>; 8],
@@ -4585,7 +4620,6 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[derive(Clone, Copy)]
                 #[repr(C, align(8))]
                 pub struct Struct {
                     pub(crate) field1: [::std::mem::MaybeUninit<u8>; 8],
