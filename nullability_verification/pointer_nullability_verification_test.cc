@@ -1005,6 +1005,305 @@ TEST(PointerNullabilityTest, UnknownFieldsOfPointerType) {
   )");
 }
 
+TEST(PointerNullabilityTest, MergeNullAndNonNull) {
+  checkDiagnostics(R"(
+    void target(int * _Nonnull y, bool b) {
+      int *x = nullptr;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = y;
+        *x;
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x;
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNullAndNullable) {
+  checkDiagnostics(R"(
+    void target(int * _Nullable y, bool b) {
+      int *x = nullptr;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = y;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNullAndUnknown) {
+  checkDiagnostics(R"(
+    void target(int *y, bool b) {
+      int *x = nullptr;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = y;
+        *x;
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x;
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNonNullAndNull) {
+  checkDiagnostics(R"(
+    void target(int * _Nonnull y, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = nullptr;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNonNullAndNonNull) {
+  checkDiagnostics(R"(
+    void target(int * _Nonnull y, int * _Nonnull z, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = z;
+        *x;
+      }
+      *x;
+      if (b) {
+        *x;
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNonNullAndNullable) {
+  checkDiagnostics(R"(
+    void target(int * _Nonnull y, int * _Nullable z, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = z;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNonNullAndUnknown) {
+  checkDiagnostics(R"(
+    void target(int * _Nonnull y, int *z, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = z;
+        *x;
+      }
+      *x;
+      if (b) {
+        *x;
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNullableAndNull) {
+  checkDiagnostics(R"(
+    void target(int * _Nullable y, bool b) {
+      int *x = y;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = nullptr;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNullableAndNonNull) {
+  checkDiagnostics(R"(
+    void target(int * _Nullable y, int * _Nonnull z, bool b) {
+      int *x = y;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = z;
+        *x;
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x;
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNullableAndNullable) {
+  checkDiagnostics(R"(
+    void target(int * _Nullable y, int * _Nullable z, bool b) {
+      int *x = y;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = z;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeNullableAndUnknown) {
+  checkDiagnostics(R"(
+    void target(int * _Nullable y, int *z, bool b) {
+      int *x = y;
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+        x = z;
+        *x;
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x;
+      } else {
+        *x; // [[unsafe]]
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeUnknownAndNull) {
+  checkDiagnostics(R"(
+    void target(int *y, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = nullptr;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeUnknownAndNonNull) {
+  checkDiagnostics(R"(
+    void target(int *y, int * _Nonnull z, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = z;
+        *x;
+      }
+      *x;
+      if (b) {
+        *x;
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeUnknownAndNullable) {
+  checkDiagnostics(R"(
+    void target(int *y, int * _Nullable z, bool b) {
+      int *x = y;
+      *x;
+      if (b) {
+        *x;
+        x = z;
+        *x; // [[unsafe]]
+      }
+      *x; // [[unsafe]]
+      if (b) {
+        *x; // [[unsafe]]
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
+TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
+  checkDiagnostics(R"(
+    void target(int *y, int *z, bool b) {
+      int *x = y;
+      if (b) {
+        *x;
+        x = z;
+        *x;
+      }
+      *x;
+      if (b) {
+        *x;
+      } else {
+        *x;
+      }
+    }
+  )");
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

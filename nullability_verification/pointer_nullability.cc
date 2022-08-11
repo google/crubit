@@ -27,9 +27,14 @@ std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
     const Expr* PointerExpr, const Environment& Env) {
   auto* PointerVal =
       cast<PointerValue>(Env.getValue(*PointerExpr, SkipPast::Reference));
-  auto& PointerKnown = *cast<AtomicBoolValue>(PointerVal->getProperty(kKnown));
+  return getPointerNullState(*PointerVal, Env);
+}
+
+std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
+    const PointerValue& PointerVal, const Environment& Env) {
+  auto& PointerKnown = *cast<AtomicBoolValue>(PointerVal.getProperty(kKnown));
   auto& PointerNotNull =
-      *cast<AtomicBoolValue>(PointerVal->getProperty(kNotNull));
+      *cast<AtomicBoolValue>(PointerVal.getProperty(kNotNull));
   return {PointerKnown, PointerNotNull};
 }
 
@@ -46,9 +51,15 @@ void initPointerNullState(const Expr* PointerExpr, Environment& Env,
                           BoolValue* NotNullConstraint) {
   if (auto* PointerVal = cast_or_null<PointerValue>(
           Env.getValue(*PointerExpr, SkipPast::Reference))) {
-    initPointerBoolProperty(*PointerVal, kKnown, KnownConstraint, Env);
-    initPointerBoolProperty(*PointerVal, kNotNull, NotNullConstraint, Env);
+    initPointerNullState(*PointerVal, Env, KnownConstraint, NotNullConstraint);
   }
+}
+
+void initPointerNullState(PointerValue& PointerVal, Environment& Env,
+                          BoolValue* KnownConstraint,
+                          BoolValue* NotNullConstraint) {
+  initPointerBoolProperty(PointerVal, kKnown, KnownConstraint, Env);
+  initPointerBoolProperty(PointerVal, kNotNull, NotNullConstraint, Env);
 }
 
 }  // namespace nullability

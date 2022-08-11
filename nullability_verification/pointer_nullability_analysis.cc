@@ -31,6 +31,7 @@ using dataflow::BoolValue;
 using dataflow::Environment;
 using dataflow::MatchSwitchBuilder;
 using dataflow::NoopLattice;
+using dataflow::PointerValue;
 using dataflow::SkipPast;
 using dataflow::TransferState;
 using dataflow::Value;
@@ -163,13 +164,58 @@ void PointerNullabilityAnalysis::transfer(const Stmt* Stmt,
   Transferer(*Stmt, getASTContext(), State);
 }
 
+BoolValue& mergeBoolValues(BoolValue& Bool1, const Environment& Env1,
+                           BoolValue& Bool2, const Environment& Env2,
+                           Environment& MergedEnv) {
+  if (&Bool1 == &Bool2) {
+    return Bool1;
+  }
+
+  auto& MergedBool = MergedEnv.makeAtomicBoolValue();
+
+  // If `Bool1` and `Bool2` is constrained to the same true / false value,
+  // `MergedBool` can be constrained similarly without needing to consider the
+  // path taken - this simplifies the flow condition tracked in `MergedEnv`.
+  // Otherwise, information about which path was taken is used to associate
+  // `MergedBool` with `Bool1` and `Bool2`.
+  if (Env1.flowConditionImplies(Bool1) && Env2.flowConditionImplies(Bool2)) {
+    MergedEnv.addToFlowCondition(MergedBool);
+  } else if (Env1.flowConditionImplies(Env1.makeNot(Bool1)) &&
+             Env2.flowConditionImplies(Env2.makeNot(Bool2))) {
+    MergedEnv.addToFlowCondition(MergedEnv.makeNot(MergedBool));
+  } else {
+    // TODO(b/233582219): Flow conditions are not necessarily mutually
+    // exclusive, a fix is in order: https://reviews.llvm.org/D130270, update
+    // this section when the patch is commited
+    auto& FC1 = Env1.getFlowConditionToken();
+    auto& FC2 = Env2.getFlowConditionToken();
+    MergedEnv.addToFlowCondition(MergedEnv.makeOr(
+        MergedEnv.makeAnd(FC1, MergedEnv.makeIff(MergedBool, Bool1)),
+        MergedEnv.makeAnd(FC2, MergedEnv.makeIff(MergedBool, Bool2))));
+  }
+  return MergedBool;
+}
+
 bool PointerNullabilityAnalysis::merge(QualType Type, const Value& Val1,
                                        const Environment& Env1,
                                        const Value& Val2,
                                        const Environment& Env2,
                                        Value& MergedVal,
                                        Environment& MergedEnv) {
-  return false;
+  if (!Type->isAnyPointerType()) {
+    return false;
+  }
+
+  auto [Known1, NotNull1] = getPointerNullState(cast<PointerValue>(Val1), Env1);
+  auto [Known2, NotNull2] = getPointerNullState(cast<PointerValue>(Val2), Env2);
+
+  auto& Known = mergeBoolValues(Known1, Env1, Known2, Env2, MergedEnv);
+  auto& NotNull = mergeBoolValues(NotNull1, Env1, NotNull2, Env2, MergedEnv);
+
+  initPointerNullState(cast<PointerValue>(MergedVal), MergedEnv, &Known,
+                       &NotNull);
+
+  return true;
 }
 }  // namespace nullability
 }  // namespace tidy
