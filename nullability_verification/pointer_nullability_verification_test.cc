@@ -37,9 +37,10 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
             return PointerNullabilityAnalysis(ASTCtx);
           },
           [&Diagnostics, &Diagnoser](
-              ASTContext &Ctx, const Stmt *Stmt,
+              ASTContext &Ctx, const CFGStmt &Stmt,
               const TypeErasedDataflowAnalysisState &State) {
-            auto StmtDiagnostics = Diagnoser.diagnose(Stmt, Ctx, State.Env);
+            auto StmtDiagnostics =
+                Diagnoser.diagnose(Stmt.getStmt(), Ctx, State.Env);
             if (StmtDiagnostics.has_value()) {
               Diagnostics.push_back(StmtDiagnostics.value());
             }
