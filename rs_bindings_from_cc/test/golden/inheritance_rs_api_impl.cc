@@ -135,6 +135,52 @@ extern "C" class VirtualDerived* __rust_thunk___ZN14VirtualDerivedaSEOS_(
     class VirtualDerived* __this, class VirtualDerived* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN11MethodBase1C1Ev(class MethodBase1* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN11MethodBase1C1ERKS_(
+    class MethodBase1* __this, const class MethodBase1* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN11MethodBase1C1EOS_(
+    class MethodBase1* __this, class MethodBase1* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" class MethodBase1* __rust_thunk___ZN11MethodBase1aSERKS_(
+    class MethodBase1* __this, const class MethodBase1* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" class MethodBase1* __rust_thunk___ZN11MethodBase1aSEOS_(
+    class MethodBase1* __this, class MethodBase1* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN11MethodBase2C1Ev(class MethodBase2* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN11MethodBase2C1ERKS_(
+    class MethodBase2* __this, const class MethodBase2* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN11MethodBase2C1EOS_(
+    class MethodBase2* __this, class MethodBase2* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" class MethodBase2* __rust_thunk___ZN11MethodBase2aSERKS_(
+    class MethodBase2* __this, const class MethodBase2* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" class MethodBase2* __rust_thunk___ZN11MethodBase2aSEOS_(
+    class MethodBase2* __this, class MethodBase2* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN13MethodDerivedC1Ev(
+    class MethodDerived* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN13MethodDerivedC1EOS_(
+    class MethodDerived* __this, class MethodDerived* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
 
 static_assert(sizeof(class Base0) == 1);
 static_assert(alignof(class Base0) == 1);
@@ -157,6 +203,15 @@ static_assert(alignof(class VirtualBase2) == 8);
 
 static_assert(sizeof(class VirtualDerived) == 32);
 static_assert(alignof(class VirtualDerived) == 8);
+
+static_assert(sizeof(class MethodBase1) == 1);
+static_assert(alignof(class MethodBase1) == 1);
+
+static_assert(sizeof(class MethodBase2) == 1);
+static_assert(alignof(class MethodBase2) == 1);
+
+static_assert(sizeof(class MethodDerived) == 1);
+static_assert(alignof(class MethodDerived) == 1);
 
 #pragma clang diagnostic pop
 

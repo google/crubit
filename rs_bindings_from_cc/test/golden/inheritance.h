@@ -36,4 +36,29 @@ class MyAbstractClass {
   virtual ~MyAbstractClass();
 };
 
+// Method inheritance
+
+class MethodBase1 {
+ public:
+  void Public();
+  void Colliding1();
+  void Colliding2();
+
+ protected:
+  void Protected1();
+  void Protected2();
+};
+
+class MethodBase2 {
+ public:
+  void Colliding1();
+  void Colliding2();
+};
+
+class MethodDerived final : public MethodBase1, public MethodBase2 {
+ public:
+  using MethodBase1::Colliding1;
+  using MethodBase1::Protected1;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_

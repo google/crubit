@@ -701,6 +701,284 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
 // Error while generating bindings for item 'MyAbstractClass':
 // Abstract classes are not supported yet
 
+/// Method inheritance
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct MethodBase1 {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase1"), crate::MethodBase1);
+
+impl ::ctor::CtorNew<()> for MethodBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::MethodBase1>>| {
+                    crate::detail::__rust_thunk___ZN11MethodBase1C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
+    }
+}
+
+impl<'b> ::ctor::CtorNew<&'b crate::MethodBase1> for MethodBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::MethodBase1) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::MethodBase1>>| {
+                    crate::detail::__rust_thunk___ZN11MethodBase1C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(&'b crate::MethodBase1,)> for MethodBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::MethodBase1,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'b crate::MethodBase1>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase1>> for MethodBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::MethodBase1>) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::MethodBase1>>| {
+                    crate::detail::__rust_thunk___ZN11MethodBase1C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::MethodBase1>,)> for MethodBase1 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::MethodBase1>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase1>>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::Assign<&'b crate::MethodBase1> for MethodBase1 {
+    #[inline(always)]
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::MethodBase1) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase1aSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::MethodBase1>> for MethodBase1 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase1aSEOS_(self, __param_0);
+        }
+    }
+}
+
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Public<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
+    }
+}
+
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Colliding1<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
+    }
+}
+
+impl MethodBase1 {
+    #[inline(always)]
+    pub fn Colliding2<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
+    }
+}
+
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct MethodBase2 {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase2"), crate::MethodBase2);
+
+impl ::ctor::CtorNew<()> for MethodBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::MethodBase2>>| {
+                    crate::detail::__rust_thunk___ZN11MethodBase2C1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
+    }
+}
+
+impl<'b> ::ctor::CtorNew<&'b crate::MethodBase2> for MethodBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::MethodBase2) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::MethodBase2>>| {
+                    crate::detail::__rust_thunk___ZN11MethodBase2C1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(&'b crate::MethodBase2,)> for MethodBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::MethodBase2,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'b crate::MethodBase2>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase2>> for MethodBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::MethodBase2>) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::MethodBase2>>| {
+                    crate::detail::__rust_thunk___ZN11MethodBase2C1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::MethodBase2>,)> for MethodBase2 {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::MethodBase2>,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase2>>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::Assign<&'b crate::MethodBase2> for MethodBase2 {
+    #[inline(always)]
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::MethodBase2) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase2aSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::MethodBase2>> for MethodBase2 {
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11MethodBase2aSEOS_(self, __param_0);
+        }
+    }
+}
+
+impl MethodBase2 {
+    #[inline(always)]
+    pub fn Colliding1<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
+    }
+}
+
+impl MethodBase2 {
+    #[inline(always)]
+    pub fn Colliding2<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct MethodDerived {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("MethodDerived"), crate::MethodDerived);
+
+impl Default for MethodDerived {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13MethodDerivedC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::MethodDerived>> for MethodDerived {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN13MethodDerivedC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=58
+// Error while generating bindings for item 'MethodDerived::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=58
+// Error while generating bindings for item 'MethodDerived::operator=':
+// operator= for Unpin types is not yet supported.
+
+unsafe impl oops::Inherits<crate::MethodBase1> for MethodDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::MethodBase1 {
+        (derived as *const _ as *const u8).offset(0) as *const crate::MethodBase1
+    }
+}
+unsafe impl oops::Inherits<crate::MethodBase2> for MethodDerived {
+    unsafe fn upcast_ptr(derived: *const Self) -> *const crate::MethodBase2 {
+        (derived as *const _ as *const u8).offset(0) as *const crate::MethodBase2
+    }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 
 mod detail {
@@ -843,6 +1121,71 @@ mod detail {
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(
             from: *const VirtualDerived,
         ) -> *const crate::VirtualBase2;
+        pub(crate) fn __rust_thunk___ZN11MethodBase1C1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase1>,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase1C1ERKS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase1>,
+            __param_0: &'b crate::MethodBase1,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase1C1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase1>,
+            __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase1aSERKS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase1>,
+            __param_0: &'b crate::MethodBase1,
+        ) -> ::std::pin::Pin<&'a mut crate::MethodBase1>;
+        pub(crate) fn __rust_thunk___ZN11MethodBase1aSEOS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase1>,
+            __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
+        ) -> ::std::pin::Pin<&'a mut crate::MethodBase1>;
+        #[link_name = "_ZN11MethodBase16PublicEv"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase16PublicEv<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase1>,
+        );
+        #[link_name = "_ZN11MethodBase110Colliding1Ev"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding1Ev<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase1>,
+        );
+        #[link_name = "_ZN11MethodBase110Colliding2Ev"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase110Colliding2Ev<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase1>,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase2C1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase2>,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase2C1ERKS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase2>,
+            __param_0: &'b crate::MethodBase2,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase2C1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase2>,
+            __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
+        );
+        pub(crate) fn __rust_thunk___ZN11MethodBase2aSERKS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase2>,
+            __param_0: &'b crate::MethodBase2,
+        ) -> ::std::pin::Pin<&'a mut crate::MethodBase2>;
+        pub(crate) fn __rust_thunk___ZN11MethodBase2aSEOS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase2>,
+            __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
+        ) -> ::std::pin::Pin<&'a mut crate::MethodBase2>;
+        #[link_name = "_ZN11MethodBase210Colliding1Ev"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase210Colliding1Ev<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase2>,
+        );
+        #[link_name = "_ZN11MethodBase210Colliding2Ev"]
+        pub(crate) fn __rust_thunk___ZN11MethodBase210Colliding2Ev<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::MethodBase2>,
+        );
+        pub(crate) fn __rust_thunk___ZN13MethodDerivedC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodDerived>,
+        );
+        pub(crate) fn __rust_thunk___ZN13MethodDerivedC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::MethodDerived>,
+            __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
+        );
     }
 }
 
@@ -916,4 +1259,34 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::VirtualDerived: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::MethodBase1>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::MethodBase1>() == 1);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MethodBase1: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MethodBase1: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::MethodBase2>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::MethodBase2>() == 1);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MethodBase2: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MethodBase2: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::MethodDerived>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::MethodDerived>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::MethodDerived: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::MethodDerived: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MethodDerived: Drop);
 };
