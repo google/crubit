@@ -37,6 +37,13 @@ def _is_hdr(input):
 def _filter_hdrs(input_list):
     return [hdr for hdr in input_list if _is_hdr(hdr)]
 
+# Targets which do not receive rust bindings at all.
+targets_to_remove = [
+]
+
+# Specific headers, in specific targets, which do not receive Rust bindings.
+#
+# This is mainly for if the same header is in two different targets, only one of which is canonical.
 public_headers_to_remove = {
 }
 private_headers_to_remove = {
@@ -80,6 +87,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         return []
 
     if not hasattr(ctx.rule.attr, "hdrs"):
+        return []
+
+    if str(ctx.label) in targets_to_remove:
         return []
 
     public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
