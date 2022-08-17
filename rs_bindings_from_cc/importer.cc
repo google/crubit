@@ -957,8 +957,10 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
         }
       }
       if (name.empty()) {
-        // TODO(lukasza): Handle anonymous structs (probably this won't be an
-        // issue until nested types are handled - b/200067824).
+        auto anon_decl_name = anon_decl_names_.find(named_decl);
+        if (anon_decl_name != anon_decl_names_.end()) {
+          return {Identifier(std::string(anon_decl_name->second))};
+        }
         return std::nullopt;
       }
       return {Identifier(std::move(name))};

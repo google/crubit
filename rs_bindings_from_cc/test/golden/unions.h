@@ -51,4 +51,12 @@ union UnionWithInheritable {
   TrivialButInheritable t;
 };
 
+typedef union {
+  bool trivial_member;
+} TypedefUnion;
+
+typedef union {
+  TrivialButInheritable t;
+} TypedefUnionWithInheritable;
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_

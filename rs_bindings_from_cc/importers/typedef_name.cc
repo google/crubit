@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
 
 namespace crubit {
 
@@ -30,11 +31,12 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
 
   std::optional<Identifier> identifier =
       ictx_.GetTranslatedIdentifier(typedef_name_decl);
-  CRUBIT_CHECK(identifier.has_value());  // This should never happen.
+  CRUBIT_CHECK(identifier.has_value());  // This must always hold.
 
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type = ictx_.ConvertQualType(
       typedef_name_decl->getUnderlyingType(), no_lifetimes);
+
   if (underlying_type.ok()) {
     if (const auto* tag_decl = type->getAsTagDecl();
         tag_decl && tag_decl->getDeclContext() == decl_context &&
@@ -51,10 +53,33 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
         .doc_comment = ictx_.GetComment(typedef_name_decl),
         .underlying_type = *underlying_type,
         .enclosing_namespace_id = GetEnclosingNamespaceId(typedef_name_decl)};
-  } else {
-    return ictx_.ImportUnsupportedItem(
-        typedef_name_decl, std::string(underlying_type.status().message()));
+  } else if (typedef_name_decl->getAnonDeclWithTypedefName()) {
+    auto* type = typedef_name_decl->getUnderlyingType().getTypePtrOrNull();
+    if (type && type->getAsRecordDecl()) {
+      // This is an anonymous declaration with a typedef name. (e.g. `typedef
+      // struct {} Foo;` cases)
+      ictx_.AddAnonDeclTypedefName(type->getAsRecordDecl(),
+                                   identifier->Ident());
+      auto item = ictx_.ImportDecl(type->getAsRecordDecl());
+      if (item.has_value()) {
+        // If the align attribute was attached to the typedef decl, we should
+        // apply it to the generated record.
+        if (auto* record = std::get_if<Record>(&item.value())) {
+          auto* aligned = typedef_name_decl->getAttr<clang::AlignedAttr>();
+          if (aligned) {
+            record->alignment =
+                ictx_.ctx_
+                    .toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
+                    .getQuantity();
+          }
+          record->is_anon_record_with_typedef = true;
+        }
+        return item;
+      }
+    }
   }
+  return ictx_.ImportUnsupportedItem(
+      typedef_name_decl, std::string(underlying_type.status().message()));
 }
 
 }  // namespace crubit

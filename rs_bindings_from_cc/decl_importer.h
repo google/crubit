@@ -10,7 +10,6 @@
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/AST/DeclTemplate.h"
 
 namespace crubit {
 
@@ -156,6 +155,10 @@ class ImportContext {
   // MarkAsSuccessfullyImported.
   virtual bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const = 0;
+
+  // Adds an asssociation from anonymous structs/unionts to their typedef names.
+  virtual void AddAnonDeclTypedefName(clang::Decl* record,
+                                      absl::string_view name) = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;

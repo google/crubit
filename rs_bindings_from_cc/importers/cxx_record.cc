@@ -77,6 +77,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (decl_context->isFunctionOrMethod()) {
     return std::nullopt;
   }
+  if (ictx_.HasBeenAlreadySuccessfullyImported(record_decl)) {
+    return std::nullopt;
+  }
   if (const auto* enclosing_namespace = llvm::dyn_cast<clang::NamespaceDecl>(
           decl_context->getEnclosingNamespaceContext())) {
     if (!absl::StrContains(enclosing_namespace->getQualifiedNameAsString(),

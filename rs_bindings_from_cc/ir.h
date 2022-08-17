@@ -97,13 +97,18 @@ inline std::ostream& operator<<(std::ostream& o, const HeaderName& h) {
 CRUBIT_DEFINE_STRONG_INT_TYPE(ItemId, uintptr_t);
 
 inline ItemId GenerateItemId(const clang::Decl* decl) {
-  const clang::Decl* decl_for_id;
   if (auto namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
-    decl_for_id = namespace_decl;
-  } else {
-    decl_for_id = decl->getCanonicalDecl();
+    return ItemId(reinterpret_cast<uintptr_t>(namespace_decl));
   }
-  return ItemId(reinterpret_cast<uintptr_t>(decl_for_id));
+  if (auto typedef_decl = clang::dyn_cast<clang::TypedefDecl>(decl)) {
+    const auto* type = typedef_decl->getUnderlyingType().getTypePtrOrNull();
+    if (type && type->getAsRecordDecl() &&
+        typedef_decl->getAnonDeclWithTypedefName()) {
+      // This is actually defining a record.
+      return ItemId(reinterpret_cast<uintptr_t>(type->getAsRecordDecl()));
+    }
+  }
+  return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
 
 inline ItemId GenerateItemId(const clang::RawComment* comment) {
@@ -628,6 +633,9 @@ struct Record {
   // * https://en.cppreference.com/w/cpp/language/aggregate_initialization
   bool is_aggregate = false;
 
+  // It is an anoymous record with a typedef name.
+  bool is_anon_record_with_typedef = false;
+
   std::vector<ItemId> child_item_ids;
   llvm::Optional<ItemId> enclosing_namespace_id;
 };
@@ -771,6 +779,7 @@ inline std::string InstantiationsAsJson(const IR& ir) {
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
   return o << IrToJson(ir);
 }
+
 }  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_

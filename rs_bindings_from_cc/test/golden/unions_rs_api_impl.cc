@@ -109,6 +109,39 @@ __rust_thunk___ZN20UnionWithInheritableaSEOS_(
     union UnionWithInheritable* __this, union UnionWithInheritable* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN12TypedefUnionC1Ev(TypedefUnion* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN12TypedefUnionC1EOS_(TypedefUnion* __this,
+                                                      TypedefUnion* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
+    TypedefUnionWithInheritable* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1ERKS_(
+    TypedefUnionWithInheritable* __this,
+    const TypedefUnionWithInheritable* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(
+    TypedefUnionWithInheritable* __this,
+    TypedefUnionWithInheritable* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" TypedefUnionWithInheritable*
+__rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_(
+    TypedefUnionWithInheritable* __this,
+    const TypedefUnionWithInheritable* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" TypedefUnionWithInheritable*
+__rust_thunk___ZN27TypedefUnionWithInheritableaSEOS_(
+    TypedefUnionWithInheritable* __this,
+    TypedefUnionWithInheritable* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 
 static_assert(sizeof(union EmptyUnion) == 1);
 static_assert(alignof(union EmptyUnion) == 1);
@@ -150,5 +183,13 @@ static_assert(CRUBIT_OFFSET_OF(x, struct TrivialButInheritable) == 0);
 static_assert(sizeof(union UnionWithInheritable) == 4);
 static_assert(alignof(union UnionWithInheritable) == 4);
 static_assert(CRUBIT_OFFSET_OF(t, union UnionWithInheritable) == 0);
+
+static_assert(sizeof(TypedefUnion) == 1);
+static_assert(alignof(TypedefUnion) == 1);
+static_assert(CRUBIT_OFFSET_OF(trivial_member, TypedefUnion) == 0);
+
+static_assert(sizeof(TypedefUnionWithInheritable) == 4);
+static_assert(alignof(TypedefUnionWithInheritable) == 4);
+static_assert(CRUBIT_OFFSET_OF(t, TypedefUnionWithInheritable) == 0);
 
 #pragma clang diagnostic pop

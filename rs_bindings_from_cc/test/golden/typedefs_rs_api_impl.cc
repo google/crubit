@@ -30,6 +30,26 @@ extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSEOS_(
     struct SomeStruct* __this, struct SomeStruct* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN15SomeOtherStructC1Ev(
+    SomeOtherStruct* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN15SomeOtherStructC1ERKS_(
+    SomeOtherStruct* __this, const SomeOtherStruct* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN15SomeOtherStructC1EOS_(
+    SomeOtherStruct* __this, SomeOtherStruct* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" SomeOtherStruct* __rust_thunk___ZN15SomeOtherStructaSERKS_(
+    SomeOtherStruct* __this, const SomeOtherStruct* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" SomeOtherStruct* __rust_thunk___ZN15SomeOtherStructaSEOS_(
+    SomeOtherStruct* __this, SomeOtherStruct* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void __rust_thunk___ZN9SomeUnionC1Ev(union SomeUnion* __this) {
   crubit::construct_at(__this);
 }
@@ -37,11 +57,24 @@ extern "C" void __rust_thunk___ZN9SomeUnionC1EOS_(union SomeUnion* __this,
                                                   union SomeUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN14SomeOtherUnionC1Ev(SomeOtherUnion* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void __rust_thunk___ZN14SomeOtherUnionC1EOS_(
+    SomeOtherUnion* __this, SomeOtherUnion* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
 
 static_assert(sizeof(struct SomeStruct) == 1);
 static_assert(alignof(struct SomeStruct) == 1);
 
+static_assert(sizeof(SomeOtherStruct) == 1);
+static_assert(alignof(SomeOtherStruct) == 1);
+
 static_assert(sizeof(union SomeUnion) == 1);
 static_assert(alignof(union SomeUnion) == 1);
+
+static_assert(sizeof(SomeOtherUnion) == 1);
+static_assert(alignof(SomeOtherUnion) == 1);
 
 #pragma clang diagnostic pop

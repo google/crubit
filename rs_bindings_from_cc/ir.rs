@@ -405,6 +405,7 @@ pub struct Record {
     pub is_inheritable: bool,
     pub record_type: RecordType,
     pub is_aggregate: bool,
+    pub is_anon_record_with_typedef: bool,
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
 }
@@ -444,6 +445,26 @@ impl Record {
         match self.record_type {
             RecordType::Union => true,
             RecordType::Struct | RecordType::Class => false,
+        }
+    }
+
+    // TODO(kinuko): See if we want to update record.size (but stash the
+    // original value in another field) instead.
+    pub fn aligned_size(&self) -> usize {
+        // `record.size` for anonymous record with typedef may not be aligned in C++,
+        // while the record actually occupies the aligned size.
+        if self.is_anon_record_with_typedef && self.alignment > 0 {
+            let alignment = self.alignment;
+            // Make sure that `alignment` is a power of 2.
+            assert!((alignment & (alignment - 1)) == 0);
+            // Given that `alignment` is a power of 2, we can round it up by
+            // a bit arithmetic: `alignment - 1` clears the single bit of it
+            // while turning all the zeros in the right to 1s. Adding
+            // `alignment - 1` and doing &~ with it effectively rounds it up
+            // to the next multiple of the alignment.
+            (self.size + alignment - 1) & !(alignment - 1)
+        } else {
+            self.size
         }
     }
 }

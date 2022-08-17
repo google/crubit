@@ -1640,7 +1640,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             let (field, offset, end, desc) = cur.unwrap();
             let prev_end = prev.as_ref().map(|(_, _, e, _)| *e).flatten().unwrap_or(offset);
             let next_offset = next.map(|(_, o, _, _)| o);
-            let end = end.or(next_offset).unwrap_or(record.size * 8);
+            let end = end.or(next_offset).unwrap_or(record.aligned_size() * 8);
 
             if let Some((Some(prev_field), _, Some(prev_end), _)) = prev {
                 assert!(
@@ -1748,7 +1748,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let size = Literal::usize_unsuffixed(record.size);
+    let size = Literal::usize_unsuffixed(record.aligned_size());
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_offset_assertions = if record.is_union() {
         // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
@@ -1828,7 +1828,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     let head_padding = if let Some(first_field) = record.fields.first() {
         first_field.offset / 8
     } else {
-        record.size
+        record.aligned_size()
     };
     // Prevent direct initialization for non-aggregate structs.
     //
@@ -2925,10 +2925,14 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
 }
 
 fn cc_tag_kind(record: &ir::Record) -> TokenStream {
-    match record.record_type {
-        RecordType::Struct => quote! { struct },
-        RecordType::Union => quote! { union },
-        RecordType::Class => quote! { class },
+    if record.is_anon_record_with_typedef {
+        quote! {}
+    } else {
+        match record.record_type {
+            RecordType::Struct => quote! { struct },
+            RecordType::Union => quote! { union },
+            RecordType::Class => quote! { class },
+        }
     }
 }
 
@@ -3732,6 +3736,59 @@ mod tests {
         assert_cc_matches!(rs_api_impl, quote! { class SomeClass * __this });
         assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(struct SomeStruct) == 4); });
         assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(class SomeClass) == 4); });
+        Ok(())
+    }
+
+    #[test]
+    fn test_struct_vs_typedefed_struct() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            #pragma clang lifetime_elision
+            struct SomeStruct final {
+              int x;
+            } __attribute__((aligned(16)));
+            typedef struct {
+              int x;
+            } SomeAnonStruct __attribute__((aligned(16)));
+        "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+
+        // A `struct` is generated for both `SomeStruct` and `SomeAnonStruct`, both
+        // in Rust and in C++.
+        assert_rs_matches!(rs_api, quote! { pub struct SomeStruct },);
+        assert_rs_matches!(rs_api, quote! { pub struct SomeAnonStruct },);
+        assert_rs_matches!(rs_api_impl, quote! { struct SomeStruct * __this },);
+        assert_rs_matches!(rs_api_impl, quote! { SomeAnonStruct * __this },);
+
+        // In C++, both have align == 16, but size for `SomeAnonStruct` is not aligned.
+        // `SomeAnonStruct` won't have `struct` in the assert.
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! { static_assert(alignof(struct SomeStruct) == 16); }
+        );
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(alignof(SomeAnonStruct) == 16); });
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(struct SomeStruct) == 16); });
+        assert_cc_matches!(rs_api_impl, quote! { static_assert(sizeof(SomeAnonStruct) == 4); });
+
+        // In Rust, both have align == 16 and size == 16.
+        assert_rs_matches!(
+            rs_api,
+            quote! { assert!(::std::mem::size_of::<crate::SomeStruct>() == 16); }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! { assert!(::std::mem::align_of::<crate::SomeStruct>() == 16); }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! { assert!(::std::mem::size_of::<crate::SomeAnonStruct>() == 16); }
+        );
+        assert_rs_matches!(
+            rs_api,
+            quote! { assert!(::std::mem::align_of::<crate::SomeAnonStruct>() == 16); }
+        );
+
         Ok(())
     }
 

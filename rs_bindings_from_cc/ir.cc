@@ -416,6 +416,7 @@ llvm::json::Value Record::ToJson() const {
       {"is_inheritable", is_inheritable},
       {"record_type", RecordTypeToString(record_type)},
       {"is_aggregate", is_aggregate},
+      {"is_anon_record_with_typedef", is_anon_record_with_typedef},
       {"child_item_ids", std::move(json_item_ids)},
       {"enclosing_namespace_id", enclosing_namespace_id},
   };

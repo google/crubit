@@ -1944,9 +1944,15 @@ fn test_dont_import_typedef_for_structs_from_c() {
 #[test]
 fn test_ignore_typedef_but_import_struct_from_c() {
     let ir = ir_from_cc("typedef struct {} MyStruct;").unwrap();
-    // TODO(b/233653968): Import typedeffed C structs.
-    // assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyStruct" ... } });
+}
+
+#[test]
+fn test_typedef_and_import_struct_from_c() {
+    let ir = ir_from_cc("typedef struct MyStruct {} MyTypedef;").unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyStruct" ...}});
+    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyTypedef" ... } });
 }
 
 #[test]
@@ -1998,9 +2004,15 @@ fn test_dont_import_typedef_for_unions_from_c() {
 #[test]
 fn test_ignore_typedef_but_import_union_from_c() {
     let ir = ir_from_cc("typedef union {} MyUnion;").unwrap();
-    // TODO(b/233653968): Import typedeffed C unions.
-    // assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
     assert_ir_not_matches!(ir, quote! { TypeAlias { identifier: "MyUnion" ... } });
+}
+
+#[test]
+fn test_typedef_and_import_union_from_c() {
+    let ir = ir_from_cc("typedef union MyUnion {} MyTypedef;").unwrap();
+    assert_ir_matches!(ir, quote! { Record { ... cc_name: "MyUnion" ...}});
+    assert_ir_matches!(ir, quote! { TypeAlias { identifier: "MyTypedef" ... } });
 }
 
 #[test]

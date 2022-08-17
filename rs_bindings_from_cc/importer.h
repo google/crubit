@@ -82,6 +82,11 @@ class Importer : public ImportContext {
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
       bool nullable = true) override;
+  void AddAnonDeclTypedefName(clang::Decl* record,
+                              absl::string_view name) override {
+    anon_decl_names_.insert({record, name});
+  }
+
   void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const override;
@@ -129,6 +134,10 @@ class Importer : public ImportContext {
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_for_current_target_;
   std::vector<const clang::RawComment*> comments_;
+
+  // Holds a map from an anon record decl to its typedef name. Used for C-style
+  // typedef'ed unions/structs.
+  absl::flat_hash_map<clang::Decl*, absl::string_view> anon_decl_names_;
 
   // Set of decls that have been successfully imported (i.e. that will be
   // present in the IR output / that will not produce dangling ItemIds in the IR

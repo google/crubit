@@ -530,6 +530,164 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::UnionWithInheritable>
     }
 }
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub union TypedefUnion {
+    pub trivial_member: bool,
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("TypedefUnion"), crate::TypedefUnion);
+
+impl Default for TypedefUnion {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12TypedefUnionC1Ev(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b> From<::ctor::RvalueReference<'b, crate::TypedefUnion>> for TypedefUnion {
+    #[inline(always)]
+    fn from(__param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN12TypedefUnionC1EOS_(&mut tmp, __param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/unions.h;l=54
+// Error while generating bindings for item 'TypedefUnion::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/unions.h;l=54
+// Error while generating bindings for item 'TypedefUnion::operator=':
+// operator= for Unpin types is not yet supported.
+
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub union TypedefUnionWithInheritable {
+    pub t: ::std::mem::ManuallyDrop<crate::TrivialButInheritable>,
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("TypedefUnionWithInheritable"),
+    crate::TypedefUnionWithInheritable
+);
+
+impl ::ctor::CtorNew<()> for TypedefUnionWithInheritable {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+                >| {
+                    crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                    );
+                },
+            )
+        }
+    }
+}
+
+impl<'b> ::ctor::CtorNew<&'b crate::TypedefUnionWithInheritable> for TypedefUnionWithInheritable {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: &'b crate::TypedefUnionWithInheritable) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+                >| {
+                    crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1ERKS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(&'b crate::TypedefUnionWithInheritable,)>
+    for TypedefUnionWithInheritable
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b crate::TypedefUnionWithInheritable,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'b crate::TypedefUnionWithInheritable>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>>
+    for TypedefUnionWithInheritable
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+                >| {
+                    crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_(
+                        ::std::pin::Pin::into_inner_unchecked(dest),
+                        __param_0,
+                    );
+                },
+            )
+        }
+    }
+}
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,)>
+    for TypedefUnionWithInheritable
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::TypedefUnionWithInheritable>>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::Assign<&'b crate::TypedefUnionWithInheritable> for TypedefUnionWithInheritable {
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::TypedefUnionWithInheritable,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_(self, __param_0);
+        }
+    }
+}
+
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>>
+    for TypedefUnionWithInheritable
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableaSEOS_(self, __param_0);
+        }
+    }
+}
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_UNIONS_H_
 
 mod detail {
@@ -631,6 +789,32 @@ mod detail {
             __this: ::std::pin::Pin<&'a mut crate::UnionWithInheritable>,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithInheritable>,
         ) -> ::std::pin::Pin<&'a mut crate::UnionWithInheritable>;
+        pub(crate) fn __rust_thunk___ZN12TypedefUnionC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnion>,
+        );
+        pub(crate) fn __rust_thunk___ZN12TypedefUnionC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnion>,
+            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
+        );
+        pub(crate) fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+        );
+        pub(crate) fn __rust_thunk___ZN27TypedefUnionWithInheritableC1ERKS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+            __param_0: &'b crate::TypedefUnionWithInheritable,
+        );
+        pub(crate) fn __rust_thunk___ZN27TypedefUnionWithInheritableC1EOS_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
+            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
+        );
+        pub(crate) fn __rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::TypedefUnionWithInheritable>,
+            __param_0: &'b crate::TypedefUnionWithInheritable,
+        ) -> ::std::pin::Pin<&'a mut crate::TypedefUnionWithInheritable>;
+        pub(crate) fn __rust_thunk___ZN27TypedefUnionWithInheritableaSEOS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::TypedefUnionWithInheritable>,
+            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnionWithInheritable>,
+        ) -> ::std::pin::Pin<&'a mut crate::TypedefUnionWithInheritable>;
     }
 }
 
@@ -748,4 +932,28 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::UnionWithInheritable: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::TypedefUnion>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::TypedefUnion>() == 1);
+const _: () = {
+    static_assertions::assert_impl_all!(crate::TypedefUnion: Clone);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(crate::TypedefUnion: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::TypedefUnion: Drop);
+};
+const _: () = {
+    static_assertions::assert_impl_all!(bool: Copy);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::TypedefUnionWithInheritable>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::TypedefUnionWithInheritable>() == 4);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::TypedefUnionWithInheritable: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::TypedefUnionWithInheritable: Drop);
 };
