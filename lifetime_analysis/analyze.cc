@@ -469,9 +469,10 @@ void FindLifetimeSubstitutions(const Object* root_object, clang::QualType type,
 // TODO(veluca): this really ought to happen in the dataflow framework/CFG, but
 // at the moment only the *expressions* in initializers get added, not
 // initialization itself.
-void ExtendPointsToMapWithInitializers(
+void ExtendPointsToMapAndConstraintsWithInitializers(
     const clang::CXXConstructorDecl* constructor,
-    const ObjectRepository& object_repository, PointsToMap& points_to_map) {
+    const ObjectRepository& object_repository, PointsToMap& points_to_map,
+    LifetimeConstraints& constraints) {
   auto this_object = object_repository.GetThisObject();
   if (!this_object.has_value()) {
     assert(false);
@@ -487,7 +488,8 @@ void ExtendPointsToMapWithInitializers(
     if (!IsInitExprInitializingARecordObject(init_expr)) {
       TransferInitializer(
           object_repository.GetFieldObject(this_object.value(), field),
-          field->getType(), object_repository, init_expr, points_to_map);
+          field->getType(), object_repository, init_expr, points_to_map,
+          constraints);
     }
   }
 }
@@ -651,6 +653,7 @@ std::pair<FunctionLifetimes, bool> ConstrainLifetimes(
 struct FunctionAnalysis {
   ObjectRepository object_repository;
   PointsToMap points_to_map;
+  LifetimeConstraints constraints;
   LifetimeSubstitutions subst;
 };
 
@@ -782,7 +785,7 @@ llvm::Error AnalyzeFunctionBody(
         callee_lifetimes,
     const DiagnosticReporter& diag_reporter,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
-    std::string* cfg_dot) {
+    LifetimeConstraints& constraints, std::string* cfg_dot) {
   auto cfctx = clang::dataflow::ControlFlowContext::build(
       func, func->getBody(), &func->getASTContext());
   if (!cfctx) return cfctx.takeError();
@@ -830,8 +833,8 @@ llvm::Error AnalyzeFunctionBody(
   // this, or a lifetime parameter of the struct, so processing initializers
   // afterwards is correct.
   if (auto* constructor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
-    ExtendPointsToMapWithInitializers(constructor, object_repository,
-                                      points_to_map);
+    ExtendPointsToMapAndConstraintsWithInitializers(
+        constructor, object_repository, points_to_map, constraints);
   }
 
   if (cfg_dot) {
@@ -879,7 +882,7 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
     std::string* cfg_dot = debug_info ? &(*debug_info)[func].cfg_dot : nullptr;
     if (llvm::Error err = AnalyzeFunctionBody(
             func, callee_lifetimes, diag_reporter, analysis.object_repository,
-            analysis.points_to_map, cfg_dot)) {
+            analysis.points_to_map, analysis.constraints, cfg_dot)) {
       return std::move(err);
     }
   } else {
@@ -949,7 +952,7 @@ llvm::Error DiagnoseReturnLocal(const clang::FunctionDecl* func,
 // function's body, which would include the function's parameters. It's also
 // possible to call this function with an empty inputs in order to generate
 // a FunctionLifetimes that matches the function's signature but without any
-// constraits (i.e. each lifetime that appears would be independent).
+// constraints (i.e. each lifetime that appears would be independent).
 llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
     const clang::FunctionDecl* func, FunctionAnalysis analysis,
     const DiagnosticReporter& diag_reporter) {
@@ -967,7 +970,7 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
     }
   }
 
-  auto& [object_repository, points_to_map, subst] = analysis;
+  auto& [object_repository, points_to_map, constraints, subst] = analysis;
 
   // We create "fake" lifetimes for the function, then walk the type and find
   // out which input-to-the-function-call lifetime to use as a replacement using

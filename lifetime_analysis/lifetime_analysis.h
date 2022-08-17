@@ -28,7 +28,8 @@ namespace lifetimes {
 void TransferInitializer(const Object* dest, clang::QualType type,
                          const ObjectRepository& object_repository,
                          const clang::Expr* init_expr,
-                         PointsToMap& points_to_map);
+                         PointsToMap& points_to_map,
+                         LifetimeConstraints& constraints);
 
 struct FunctionParameter {
   clang::QualType param_type;

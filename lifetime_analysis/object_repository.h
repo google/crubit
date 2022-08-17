@@ -183,6 +183,10 @@ class ObjectRepository {
   // represented by `struct_object`.
   ObjectSet GetBaseClassObject(const ObjectSet& struct_objects,
                                const clang::Type* base) const;
+  ObjectSet GetBaseClassObject(const ObjectSet& struct_objects,
+                               const clang::QualType base) const {
+    return GetBaseClassObject(struct_objects, base.getTypePtr());
+  }
 
   // Returns BaseObjects; useful for producing debugging output.
   const BaseObjects& GetBaseObjects() const { return base_object_map_; }

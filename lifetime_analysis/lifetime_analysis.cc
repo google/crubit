@@ -51,12 +51,13 @@ class TransferStmtVisitor
  public:
   TransferStmtVisitor(
       ObjectRepository& object_repository, PointsToMap& points_to_map,
-      const clang::FunctionDecl* func,
+      LifetimeConstraints& constraints, const clang::FunctionDecl* func,
       const llvm::DenseMap<const clang::FunctionDecl*,
                            FunctionLifetimesOrError>& callee_lifetimes,
       const DiagnosticReporter& diag_reporter)
       : object_repository_(object_repository),
         points_to_map_(points_to_map),
+        constraints_(constraints),
         func_(func),
         callee_lifetimes_(callee_lifetimes),
         diag_reporter_(diag_reporter) {}
@@ -91,18 +92,127 @@ class TransferStmtVisitor
  private:
   ObjectRepository& object_repository_;
   PointsToMap& points_to_map_;
+  LifetimeConstraints& constraints_;
   const clang::FunctionDecl* func_;
   const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
       callee_lifetimes_;
   const DiagnosticReporter& diag_reporter_;
 };
 
+// TODO(veluca): this is quadratic.
+void GenerateConstraintsForAssignment(
+    const ObjectSet& pointers, const ObjectSet& new_pointees,
+    clang::QualType pointer_type, const ObjectRepository& object_repository,
+    PointsToMap& points_to_map, LifetimeConstraints& constraints,
+    llvm::DenseSet<std::pair<const Object*, const Object*>>& seen_pairs) {
+  // Check for cycles.
+  {
+    size_t num_seen_pairs = seen_pairs.size();
+    for (auto pointer : pointers) {
+      for (auto pointee : new_pointees) {
+        seen_pairs.insert({pointer, pointee});
+      }
+    }
+    // All done: all the pairs we have were already seen.
+    if (num_seen_pairs == seen_pairs.size()) return;
+  }
+
+  assert(!pointer_type->isRecordType());
+  if (!pointer_type->isPointerType() && !pointer_type->isReferenceType()) {
+    // Nothing to do.
+    return;
+  }
+
+  ObjectSet old_pointees = points_to_map.GetPointerPointsToSet(pointers);
+
+  // The new pointees must always outlive the old pointees.
+  for (const Object* old : old_pointees) {
+    for (const Object* newp : new_pointees) {
+      constraints.AddOutlivesConstraint(old->GetLifetime(),
+                                        newp->GetLifetime());
+    }
+  }
+
+  // If this pointer is not const, the objects appear in invariant position,
+  // thus we need to insert constraints in the opposite direction too (i.e. we
+  // need equality).
+  if (!pointer_type.isConstQualified()) {
+    for (const Object* old : old_pointees) {
+      for (const Object* newp : new_pointees) {
+        constraints.AddOutlivesConstraint(newp->GetLifetime(),
+                                          old->GetLifetime());
+      }
+    }
+  }
+
+  // Recurse in pointees. As the pointee might be of struct type, we need first
+  // to extract all field pointers from it.
+  struct RecursiveVisitInfo {
+    clang::QualType type;
+    ObjectSet old_pointees;
+    ObjectSet new_pointees;
+  };
+
+  std::vector<RecursiveVisitInfo> calls_to_make;
+  calls_to_make.push_back(
+      {pointer_type->getPointeeType(), old_pointees, new_pointees});
+  while (!calls_to_make.empty()) {
+    RecursiveVisitInfo call = std::move(calls_to_make.back());
+    calls_to_make.pop_back();
+
+    if (const auto* record_type = call.type->getAs<clang::RecordType>()) {
+      for (auto field : record_type->getDecl()->fields()) {
+        calls_to_make.push_back(
+            {field->getType(),
+             object_repository.GetFieldObject(old_pointees, field),
+             object_repository.GetFieldObject(new_pointees, field)});
+      }
+      if (auto* cxxrecord =
+              clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
+        for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
+          calls_to_make.push_back({base.getType(),
+                                   object_repository.GetBaseClassObject(
+                                       old_pointees, base.getType()),
+                                   object_repository.GetBaseClassObject(
+                                       new_pointees, base.getType())});
+        }
+      }
+    } else {
+      GenerateConstraintsForAssignment(
+          call.old_pointees,
+          points_to_map.GetPointerPointsToSet(call.new_pointees), call.type,
+          object_repository, points_to_map, constraints, seen_pairs);
+    }
+  }
+}
+
+void HandlePointsToSetExtension(const ObjectSet& pointers,
+                                const ObjectSet& new_pointees,
+                                clang::QualType pointer_type,
+                                const ObjectRepository& object_repository,
+                                PointsToMap& points_to_map,
+                                LifetimeConstraints& constraints) {
+  llvm::DenseSet<std::pair<const Object*, const Object*>> seen_pairs;
+  // TODO(veluca): record types should probably not get to this point at all, as
+  // their initialization is done by constructor calls. This currently happens
+  // because of the "synthetic" objects used to handle constructor calls.
+  if (!pointer_type->isRecordType()) {
+    GenerateConstraintsForAssignment(pointers, new_pointees, pointer_type,
+                                     object_repository, points_to_map,
+                                     constraints, seen_pairs);
+  }
+  for (const Object* pointer : pointers) {
+    points_to_map.ExtendPointerPointsToSet(pointer, new_pointees);
+  }
+}
+
 }  // namespace
 
 void TransferInitializer(const Object* dest, clang::QualType type,
                          const ObjectRepository& object_repository,
                          const clang::Expr* init_expr,
-                         PointsToMap& points_to_map) {
+                         PointsToMap& points_to_map,
+                         LifetimeConstraints& constraints) {
   type = type.getCanonicalType();
   if (type->isArrayType()) {
     type = type->castAsArrayTypeUnsafe()->getElementType();
@@ -121,7 +231,7 @@ void TransferInitializer(const Object* dest, clang::QualType type,
         ++init;
         TransferInitializer(object_repository.GetFieldObject(dest, f),
                             f->getType(), object_repository, field_init,
-                            points_to_map);
+                            points_to_map, constraints);
       }
       return;
     }
@@ -133,7 +243,8 @@ void TransferInitializer(const Object* dest, clang::QualType type,
     // It's important to use "Extend" (not "Set") here because we process
     // initializers for member variables only _after_ the dataflow analysis has
     // run.
-    points_to_map.ExtendPointerPointsToSet(dest, init_points_to);
+    HandlePointsToSetExtension({dest}, init_points_to, type, object_repository,
+                               points_to_map, constraints);
   }
 }
 
@@ -464,8 +575,9 @@ void LifetimeAnalysis::transfer(const clang::Stmt* stmt, LifetimeLattice& state,
                                 clang::dataflow::Environment& /*environment*/) {
   if (state.IsError()) return;
 
-  TransferStmtVisitor visitor(object_repository_, state.PointsTo(), func_,
-                              callee_lifetimes_, diag_reporter_);
+  TransferStmtVisitor visitor(object_repository_, state.PointsTo(),
+                              state.Constraints(), func_, callee_lifetimes_,
+                              diag_reporter_);
   if (std::optional<std::string> err =
           visitor.Visit(const_cast<clang::Stmt*>(stmt))) {
     state = LifetimeLattice(*err);
@@ -622,6 +734,12 @@ std::optional<std::string> TransferStmtVisitor::VisitReturnStmt(
   }
 
   ObjectSet expr_points_to = points_to_map_.GetExprObjectSet(ret_expr);
+  // TODO(veluca): once constraint-based analysis is ready, we should modify
+  // the handling of return statements as follows:
+  // - create a "deep" return object (as opposed to the current "shallow" return
+  //   object).
+  // - do not extend the points-to-map for the return object; instead, generate
+  //   constraints equivalent to those for assignment.
   points_to_map_.ExtendPointerPointsToSet(object_repository_.GetReturnObject(),
                                           expr_points_to);
   return std::nullopt;
@@ -638,7 +756,7 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclStmt(
       // VisitCallExpr().
       if (var_decl->hasInit() && !var_decl->getType()->isRecordType()) {
         TransferInitializer(var_object, var_decl->getType(), object_repository_,
-                            var_decl->getInit(), points_to_map_);
+                            var_decl->getInit(), points_to_map_, constraints_);
       }
     }
   }
@@ -726,20 +844,22 @@ std::optional<std::string> TransferStmtVisitor::VisitBinaryOperator(
       // don't want to change points-to sets in those cases.
       if (!op->getLHS()->getType()->isPointerType()) break;
       ObjectSet rhs_points_to = points_to_map_.GetExprObjectSet(op->getRHS());
-      for (const Object* pointer : lhs_points_to) {
-        // We can overwrite (instead of extend) the destination points-to-set
-        // only in very specific circumstances:
-        // - We need to know unambiguously what the LHS refers to, so that we
-        //   know we're definitely writing to a particular object, and
-        // - That destination object needs to be "single-valued" (it can't be
-        //   an array, for example).
-        if (lhs_points_to.size() == 1 &&
-            object_repository_.GetObjectValueType(pointer) ==
-                ObjectRepository::ObjectValueType::kSingleValued) {
-          points_to_map_.SetPointerPointsToSet(pointer, rhs_points_to);
-        } else {
-          points_to_map_.ExtendPointerPointsToSet(pointer, rhs_points_to);
-        }
+      // We can overwrite (instead of extend) the destination points-to-set
+      // only in very specific circumstances:
+      // - We need to know unambiguously what the LHS refers to, so that we
+      //   know we're definitely writing to a particular object, and
+      // - That destination object needs to be "single-valued" (it can't be
+      //   an array, for example).
+      if (lhs_points_to.size() == 1 &&
+          object_repository_.GetObjectValueType(*lhs_points_to.begin()) ==
+              ObjectRepository::ObjectValueType::kSingleValued) {
+        // Replacing the points-to-set entirely does not generate any
+        // constraints.
+        points_to_map_.SetPointerPointsToSet(lhs_points_to, rhs_points_to);
+      } else {
+        HandlePointsToSetExtension(lhs_points_to, rhs_points_to,
+                                   op->getLHS()->getType(), object_repository_,
+                                   points_to_map_, constraints_);
       }
       break;
     }
@@ -800,7 +920,7 @@ std::optional<std::string> TransferStmtVisitor::VisitInitListExpr(
     const Object* init_object =
         object_repository_.GetInitializedObject(init_list);
     TransferInitializer(init_object, init_list->getType(), object_repository_,
-                        init_list, points_to_map_);
+                        init_list, points_to_map_, constraints_);
   } else {
     // If the InitListExpr is not initializing a record object, we assume it's
     // initializing an array or a reference and hence associate the InitListExpr
@@ -1025,7 +1145,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
       TransferInitializer(
           object_repository_.GetCallExprArgumentObject(call, i),
           callee->getParamDecl(is_member_operator ? i - 1 : i)->getType(),
-          object_repository_, call->getArg(i), points_to_map_);
+          object_repository_, call->getArg(i), points_to_map_, constraints_);
     }
     if (is_member_operator) {
       points_to_map_.SetPointerPointsToSet(
@@ -1083,7 +1203,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
     TransferInitializer(
         object_repository_.GetCXXConstructExprArgumentObject(construct_expr, i),
         construct_expr->getArg(i)->getType(), object_repository_,
-        construct_expr->getArg(i), points_to_map_);
+        construct_expr->getArg(i), points_to_map_, constraints_);
   }
 
   // Handle the `this` parameter, which should point to the object getting
