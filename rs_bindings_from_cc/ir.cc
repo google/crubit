@@ -414,6 +414,7 @@ llvm::json::Value Record::ToJson() const {
       {"destructor", destructor},
       {"is_trivial_abi", is_trivial_abi},
       {"is_inheritable", is_inheritable},
+      {"is_abstract", is_abstract},
       {"record_type", RecordTypeToString(record_type)},
       {"is_aggregate", is_aggregate},
       {"is_anon_record_with_typedef", is_anon_record_with_typedef},

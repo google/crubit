@@ -697,9 +697,32 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
     }
 }
 
+#[::ctor::recursively_pinned]
+#[repr(C, align(8))]
+pub struct MyAbstractClass {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 8],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("MyAbstractClass"),
+    crate::MyAbstractClass
+);
+
 // rs_bindings_from_cc/test/golden/inheritance.h;l=34
-// Error while generating bindings for item 'MyAbstractClass':
-// Abstract classes are not supported yet
+// Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
+// Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
+
+// rs_bindings_from_cc/test/golden/inheritance.h;l=34
+// Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
+// Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
+
+impl<'b> ::ctor::Assign<&'b crate::MyAbstractClass> for MyAbstractClass {
+    #[inline(always)]
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::MyAbstractClass) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15MyAbstractClassaSERKS_(self, __param_0);
+        }
+    }
+}
 
 /// Method inheritance
 #[::ctor::recursively_pinned]
@@ -1121,6 +1144,10 @@ mod detail {
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(
             from: *const VirtualDerived,
         ) -> *const crate::VirtualBase2;
+        pub(crate) fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::MyAbstractClass>,
+            __param_0: &'b crate::MyAbstractClass,
+        ) -> ::std::pin::Pin<&'a mut crate::MyAbstractClass>;
         pub(crate) fn __rust_thunk___ZN11MethodBase1C1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::MethodBase1>,
         );
@@ -1259,6 +1286,15 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::VirtualDerived: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::MyAbstractClass>() == 8);
+const _: () = assert!(::std::mem::align_of::<crate::MyAbstractClass>() == 8);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MyAbstractClass: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::MyAbstractClass: Drop);
 };
 
 const _: () = assert!(::std::mem::size_of::<crate::MethodBase1>() == 1);

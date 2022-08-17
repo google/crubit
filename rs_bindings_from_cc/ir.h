@@ -623,6 +623,9 @@ struct Record {
   // * The type is a C++ union, which does not support inheritance
   bool is_inheritable = false;
 
+  // Whether this type is abstract.
+  bool is_abstract = false;
+
   // Whether this `Record` corresponds to a C++ `union`, `struct`, or `class`.
   RecordType record_type;
 

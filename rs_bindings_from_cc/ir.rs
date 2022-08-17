@@ -403,6 +403,7 @@ pub struct Record {
     pub destructor: SpecialMemberFunc,
     pub is_trivial_abi: bool,
     pub is_inheritable: bool,
+    pub is_abstract: bool,
     pub record_type: RecordType,
     pub is_aggregate: bool,
     pub is_anon_record_with_typedef: bool,

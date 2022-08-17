@@ -1021,11 +1021,12 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
     );
     let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
 
-    // TODO(b/200067826) This assertion worked because the template specialization was top level
-    // already.
+    // TODO(b/200067826) This assertion worked because the template specialization
+    // was top level already.
     // Make sure the explicit specialization of the struct template appears exactly
     // once in the `top_level_item_ids`.
-    // assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id == record_id).count());
+    // assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id ==
+    // record_id).count());
 
     // Instance method inside the struct template:
     assert_ir_matches!(
@@ -3335,13 +3336,6 @@ fn test_items_inside_linkage_spec_decl_are_considered_toplevel() {
           ...
         }
     );
-}
-
-#[test]
-// TODO(b/234104583): Delete the test once we support abstract classes.
-fn test_abstract_classes_not_supported() {
-    let ir = ir_from_cc("struct MyStruct { virtual void run() = 0; };").unwrap();
-    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "MyStruct" ... } });
 }
 
 #[test]

@@ -92,10 +92,6 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (record_decl->isInjectedClassName()) {
     return std::nullopt;
   }
-  if (record_decl->hasDefinition() && record_decl->isAbstract()) {
-    return ictx_.ImportUnsupportedItem(
-        record_decl, "Abstract classes are not supported yet");
-  }
   if (decl_context->isRecord()) {
     return ictx_.ImportUnsupportedItem(record_decl,
                                        "Nested classes are not supported yet");
@@ -197,6 +193,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_trivial_abi = record_decl->canPassInRegisters(),
       .is_inheritable =
           !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
+      .is_abstract = record_decl->isAbstract(),
       .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),
       .child_item_ids = std::move(item_ids),

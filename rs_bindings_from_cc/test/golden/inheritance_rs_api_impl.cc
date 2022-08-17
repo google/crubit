@@ -135,6 +135,10 @@ extern "C" class VirtualDerived* __rust_thunk___ZN14VirtualDerivedaSEOS_(
     class VirtualDerived* __this, class VirtualDerived* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" class MyAbstractClass* __rust_thunk___ZN15MyAbstractClassaSERKS_(
+    class MyAbstractClass* __this, const class MyAbstractClass* __param_0) {
+  return &__this->operator=(*__param_0);
+}
 extern "C" void __rust_thunk___ZN11MethodBase1C1Ev(class MethodBase1* __this) {
   crubit::construct_at(__this);
 }
@@ -203,6 +207,9 @@ static_assert(alignof(class VirtualBase2) == 8);
 
 static_assert(sizeof(class VirtualDerived) == 32);
 static_assert(alignof(class VirtualDerived) == 8);
+
+static_assert(sizeof(class MyAbstractClass) == 8);
+static_assert(alignof(class MyAbstractClass) == 8);
 
 static_assert(sizeof(class MethodBase1) == 1);
 static_assert(alignof(class MethodBase1) == 1);

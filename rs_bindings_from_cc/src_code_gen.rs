@@ -1967,6 +1967,9 @@ fn check_by_value(record: &Record) -> Result<()> {
             record.cc_name
         )
     }
+    if record.is_abstract {
+        bail!("Can't directly construct values of type `{}`: it is abstract", record.cc_name);
+    }
     Ok(())
 }
 
@@ -3984,49 +3987,120 @@ mod tests {
     #[test]
     fn test_trivial_nonpublic_destructor() -> Result<()> {
         let ir = ir_from_cc(
-            r#"
+            r#"#pragma clang lifetime_elision
             struct Indestructible final {
               Indestructible() = default;
               Indestructible(int);
               Indestructible(const Indestructible&) = default;
+              void Foo() const;
              private:
               ~Indestructible() = default;
             };
 
             Indestructible ReturnsValue();
             void TakesValue(Indestructible);
+            void TakesReference(const Indestructible& x);
         "#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        // It isn't available by value:
         assert_rs_not_matches!(rs_api, quote! {Default});
         assert_rs_not_matches!(rs_api, quote! {From});
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
         assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
         assert_rs_not_matches!(rs_api, quote! {TakesValue});
+        // ... but it is otherwise available:
+        assert_rs_matches!(rs_api, quote! {struct Indestructible});
+        assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
+        assert_rs_matches!(rs_api, quote! {fn TakesReference<'a>(x: &'a crate::Indestructible)});
         Ok(())
     }
 
     #[test]
     fn test_nontrivial_nonpublic_destructor() -> Result<()> {
         let ir = ir_from_cc(
-            r#"
+            r#"#pragma clang lifetime_elision
             struct Indestructible final {
               Indestructible() = default;
               Indestructible(int);
               Indestructible(const Indestructible&) = default;
+              void Foo() const;
              private:
               ~Indestructible() {}
             };
 
             Indestructible ReturnsValue();
             void TakesValue(Indestructible);
+            void TakesReference(const Indestructible& x);
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        // It isn't available by value:
+        assert_rs_not_matches!(rs_api, quote! {CtorNew});
+        assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
+        assert_rs_not_matches!(rs_api, quote! {TakesValue});
+        // ... but it is otherwise available:
+        assert_rs_matches!(rs_api, quote! {struct Indestructible});
+        assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
+        assert_rs_matches!(rs_api, quote! {fn TakesReference<'a>(x: &'a crate::Indestructible)});
+        Ok(())
+    }
+
+    /// trivial abstract structs shouldn't be constructible, not even via
+    /// Copy/Clone.
+    ///
+    /// Right now, a struct can only be Copy/Clone if it's final, but that
+    /// restriction will likely be lifted later.
+    #[test]
+    fn test_trivial_abstract_by_value() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct Abstract final {
+              Abstract() = default;
+              Abstract(int);
+              Abstract(const Abstract&) = default;
+              virtual void Foo() const = 0;
+              void Nonvirtual() const;
+            };
+            void TakesAbstract(const Abstract& a);
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        // It isn't available by value:
+        assert_rs_not_matches!(rs_api, quote! {Default});
+        assert_rs_not_matches!(rs_api, quote! {From});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
+        // ... but it is otherwise available:
+        assert_rs_matches!(rs_api, quote! {struct Abstract});
+        assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
+        assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'a>(&'a self)});
+        assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
+        Ok(())
+    }
+
+    #[test]
+    fn test_nontrivial_abstract_by_value() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct Abstract final {
+              Abstract() {};
+              Abstract(int);
+              Abstract(const Abstract&) {}
+              virtual void Foo() const = 0;
+              void Nonvirtual() const;
+            };
+            void TakesAbstract(const Abstract& a);
         "#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {CtorNew});
-        assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
-        assert_rs_not_matches!(rs_api, quote! {TakesValue});
+        // ... but it is otherwise available:
+        assert_rs_matches!(rs_api, quote! {struct Abstract});
+        assert_rs_matches!(rs_api, quote! {fn Foo<'a>(&'a self)});
+        assert_rs_matches!(rs_api, quote! {fn Nonvirtual<'a>(&'a self)});
+        assert_rs_matches!(rs_api, quote! {fn TakesAbstract<'a>(a: &'a crate::Abstract)});
         Ok(())
     }
 
