@@ -818,6 +818,7 @@ fn api_func_shape(
                 );
             }
 
+            check_by_value(record)?;
             materialize_ctor_in_caller(func, param_types);
             let record_name = make_rs_ident(&record.rs_name);
             if !record.is_unpin() {
@@ -956,6 +957,7 @@ fn generate_func(
     let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
         .with_context(|| format!("Failed to format return type for {:?}", &func))?;
+    return_type.check_by_value()?;
     let param_idents =
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
     let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
@@ -1234,6 +1236,7 @@ fn function_signature(
     let mut thunk_args = Vec::with_capacity(func.params.len());
     let mut thunk_prepare = quote! {};
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
+        type_.check_by_value()?;
         if !type_.is_unpin() {
             // `impl Ctor` will fail to compile in a trait.
             // This will only be hit if there was a bug in api_func_shape.
@@ -1957,12 +1960,24 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     })
 }
 
+fn check_by_value(record: &Record) -> Result<()> {
+    if record.destructor == SpecialMemberFunc::Unavailable {
+        bail!(
+            "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
+            record.cc_name
+        )
+    }
+    Ok(())
+}
+
 fn should_derive_clone(record: &Record) -> bool {
     if record.is_union() {
         // `union`s (unlike `struct`s) should only derive `Clone` if they are `Copy`.
         should_derive_copy(record)
     } else {
-        record.is_unpin() && record.copy_constructor == SpecialMemberFunc::Trivial
+        record.is_unpin()
+            && record.copy_constructor == SpecialMemberFunc::Trivial
+            && check_by_value(record).is_ok()
     }
 }
 
@@ -1971,6 +1986,7 @@ fn should_derive_copy(record: &Record) -> bool {
     record.is_unpin()
         && record.copy_constructor == SpecialMemberFunc::Trivial
         && record.destructor == ir::SpecialMemberFunc::Trivial
+        && check_by_value(record).is_ok()
 }
 
 fn generate_derives(record: &Record) -> Vec<Ident> {
@@ -2495,6 +2511,16 @@ impl RsTypeKind {
                 underlying_type.is_move_constructible()
             }
             _ => true,
+        }
+    }
+
+    /// Returns Ok if the type can be used by value, or an error describing why
+    /// it can't.
+    pub fn check_by_value(&self) -> Result<()> {
+        match self {
+            RsTypeKind::Record { record, .. } => check_by_value(record),
+            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.check_by_value(),
+            _ => Ok(()),
         }
     }
 
@@ -3893,6 +3919,57 @@ mod tests {
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
         assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
+        Ok(())
+    }
+
+    /// Classes with a non-public destructor shouldn't be constructible, not
+    /// even via Copy/Clone.
+    #[test]
+    fn test_trivial_nonpublic_destructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct Indestructible final {
+              Indestructible() = default;
+              Indestructible(int);
+              Indestructible(const Indestructible&) = default;
+             private:
+              ~Indestructible() = default;
+            };
+
+            Indestructible ReturnsValue();
+            void TakesValue(Indestructible);
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {Default});
+        assert_rs_not_matches!(rs_api, quote! {From});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Copy ... )});
+        assert_rs_not_matches!(rs_api, quote! {derive ( ... Clone ... )});
+        assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
+        assert_rs_not_matches!(rs_api, quote! {TakesValue});
+        Ok(())
+    }
+
+    #[test]
+    fn test_nontrivial_nonpublic_destructor() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct Indestructible final {
+              Indestructible() = default;
+              Indestructible(int);
+              Indestructible(const Indestructible&) = default;
+             private:
+              ~Indestructible() {}
+            };
+
+            Indestructible ReturnsValue();
+            void TakesValue(Indestructible);
+        "#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {CtorNew});
+        assert_rs_not_matches!(rs_api, quote! {ReturnsValue});
+        assert_rs_not_matches!(rs_api, quote! {TakesValue});
         Ok(())
     }
 

@@ -43,14 +43,6 @@ extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
     union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN13NonCopyUnion2C1ERKS_(
-    union NonCopyUnion2* __this, const union NonCopyUnion2* __param_0) {
-  crubit::construct_at(__this, *__param_0);
-}
-extern "C" void __rust_thunk___ZN13NonCopyUnion2C1EOS_(
-    union NonCopyUnion2* __this, union NonCopyUnion2* __param_0) {
-  crubit::construct_at(__this, std::move(*__param_0));
-}
 extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSERKS_(
     union NonCopyUnion2* __this, const union NonCopyUnion2* __param_0) {
   return &__this->operator=(*__param_0);

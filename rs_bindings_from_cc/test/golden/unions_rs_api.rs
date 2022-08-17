@@ -228,57 +228,13 @@ pub union NonCopyUnion2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
-impl<'b> ::ctor::CtorNew<&'b crate::NonCopyUnion2> for NonCopyUnion2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: &'b crate::NonCopyUnion2) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::NonCopyUnion2>>| {
-                    crate::detail::__rust_thunk___ZN13NonCopyUnion2C1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(&'b crate::NonCopyUnion2,)> for NonCopyUnion2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (&'b crate::NonCopyUnion2,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::NonCopyUnion2>>::ctor_new(arg)
-    }
-}
+// rs_bindings_from_cc/test/golden/unions.h;l=37
+// Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
+// Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NonCopyUnion2>> for NonCopyUnion2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NonCopyUnion2>) -> Self::CtorType {
-        let __param_0 = args;
-        unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::NonCopyUnion2>>| {
-                    crate::detail::__rust_thunk___ZN13NonCopyUnion2C1EOS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
-        }
-    }
-}
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NonCopyUnion2>,)> for NonCopyUnion2 {
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::NonCopyUnion2>,)) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NonCopyUnion2>>>::ctor_new(arg)
-    }
-}
+// rs_bindings_from_cc/test/golden/unions.h;l=37
+// Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
+// Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
 
 impl<'b> ::ctor::Assign<&'b crate::NonCopyUnion2> for NonCopyUnion2 {
     #[inline(always)]
@@ -621,14 +577,6 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN13NonEmptyUnionC1EOS_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::NonEmptyUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
-        );
-        pub(crate) fn __rust_thunk___ZN13NonCopyUnion2C1ERKS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::NonCopyUnion2>,
-            __param_0: &'b crate::NonCopyUnion2,
-        );
-        pub(crate) fn __rust_thunk___ZN13NonCopyUnion2C1EOS_<'a, 'b>(
-            __this: &'a mut ::std::mem::MaybeUninit<crate::NonCopyUnion2>,
-            __param_0: ::ctor::RvalueReference<'b, crate::NonCopyUnion2>,
         );
         pub(crate) fn __rust_thunk___ZN13NonCopyUnion2aSERKS_<'a, 'b>(
             __this: ::std::pin::Pin<&'a mut crate::NonCopyUnion2>,
