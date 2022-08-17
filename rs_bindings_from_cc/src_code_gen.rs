@@ -501,57 +501,75 @@ fn is_visible_by_adl(enclosing_record: &Record, param_types: &[RsTypeKind]) -> b
 
 #[derive(Debug)]
 struct OperatorMetadata {
-    binary_by_name: HashMap<&'static str, OperatorMetadataEntry>,
-    assign_by_name: HashMap<&'static str, OperatorMetadataEntry>,
+    by_cc_name_and_params: HashMap<(&'static str, usize), OperatorMetadataEntry>,
 }
 
 #[derive(Clone, Copy, Debug)]
 struct OperatorMetadataEntry {
-    name: &'static str,
+    cc_name: &'static str,
+    cc_params: usize,
     trait_name: &'static str,
     method_name: &'static str,
+    is_compound_assignment: bool,
+}
+
+impl OperatorMetadataEntry {
+    const fn unary(
+        cc_name: &'static str,
+        trait_name: &'static str,
+        method_name: &'static str,
+    ) -> Self {
+        Self { cc_name, cc_params: 1, trait_name, method_name, is_compound_assignment: false }
+    }
+
+    const fn binary(
+        cc_name: &'static str,
+        trait_name: &'static str,
+        method_name: &'static str,
+    ) -> Self {
+        Self { cc_name, cc_params: 2, trait_name, method_name, is_compound_assignment: false }
+    }
+
+    const fn assign(
+        cc_name: &'static str,
+        trait_name: &'static str,
+        method_name: &'static str,
+    ) -> Self {
+        Self { cc_name, cc_params: 2, trait_name, method_name, is_compound_assignment: true }
+    }
 }
 
 static OPERATOR_METADATA: Lazy<OperatorMetadata> = Lazy::new(|| {
-    const BINARY_ENTRIES: &[OperatorMetadataEntry] = &[
-        OperatorMetadataEntry { name: "+", trait_name: "Add", method_name: "add" },
-        OperatorMetadataEntry { name: "-", trait_name: "Sub", method_name: "sub" },
-        OperatorMetadataEntry { name: "*", trait_name: "Mul", method_name: "mul" },
-        OperatorMetadataEntry { name: "/", trait_name: "Div", method_name: "div" },
-        OperatorMetadataEntry { name: "%", trait_name: "Rem", method_name: "rem" },
-        OperatorMetadataEntry { name: "&", trait_name: "BitAnd", method_name: "bitand" },
-        OperatorMetadataEntry { name: "|", trait_name: "BitOr", method_name: "bitor" },
-        OperatorMetadataEntry { name: "^", trait_name: "BitXor", method_name: "bitxor" },
-        OperatorMetadataEntry { name: "<<", trait_name: "Shl", method_name: "shl" },
-        OperatorMetadataEntry { name: ">>", trait_name: "Shr", method_name: "shr" },
-    ];
-    const ASSIGN_ENTRIES: &[OperatorMetadataEntry] = &[
-        OperatorMetadataEntry { name: "+=", trait_name: "AddAssign", method_name: "add_assign" },
-        OperatorMetadataEntry { name: "-=", trait_name: "SubAssign", method_name: "sub_assign" },
-        OperatorMetadataEntry { name: "*=", trait_name: "MulAssign", method_name: "mul_assign" },
-        OperatorMetadataEntry { name: "/=", trait_name: "DivAssign", method_name: "div_assign" },
-        OperatorMetadataEntry { name: "%=", trait_name: "RemAssign", method_name: "rem_assign" },
-        OperatorMetadataEntry {
-            name: "&=",
-            trait_name: "BitAndAssign",
-            method_name: "bitand_assign",
-        },
-        OperatorMetadataEntry {
-            name: "|=",
-            trait_name: "BitOrAssign",
-            method_name: "bitor_assign",
-        },
-        OperatorMetadataEntry {
-            name: "^=",
-            trait_name: "BitXorAssign",
-            method_name: "bitxor_assign",
-        },
-        OperatorMetadataEntry { name: "<<=", trait_name: "ShlAssign", method_name: "shl_assign" },
-        OperatorMetadataEntry { name: ">>=", trait_name: "ShrAssign", method_name: "shr_assign" },
+    const ENTRIES: &[OperatorMetadataEntry] = &[
+        OperatorMetadataEntry::unary("-", "Neg", "neg"),
+        // The Rust `Not` trait matches with both the C++ `!` and `~` operators to some extent. The
+        // two operators appear with similar frequency in our target codebase so it's not clear
+        // which is better to map here. Mapping `operator!` to `Not` as chosen here means that a
+        // C++ `!` matches up with a Rust `!`.
+        OperatorMetadataEntry::unary("!", "Not", "not"),
+        OperatorMetadataEntry::binary("+", "Add", "add"),
+        OperatorMetadataEntry::binary("-", "Sub", "sub"),
+        OperatorMetadataEntry::binary("*", "Mul", "mul"),
+        OperatorMetadataEntry::binary("/", "Div", "div"),
+        OperatorMetadataEntry::binary("%", "Rem", "rem"),
+        OperatorMetadataEntry::binary("&", "BitAnd", "bitand"),
+        OperatorMetadataEntry::binary("|", "BitOr", "bitor"),
+        OperatorMetadataEntry::binary("^", "BitXor", "bitxor"),
+        OperatorMetadataEntry::binary("<<", "Shl", "shl"),
+        OperatorMetadataEntry::binary(">>", "Shr", "shr"),
+        OperatorMetadataEntry::assign("+=", "AddAssign", "add_assign"),
+        OperatorMetadataEntry::assign("-=", "SubAssign", "sub_assign"),
+        OperatorMetadataEntry::assign("*=", "MulAssign", "mul_assign"),
+        OperatorMetadataEntry::assign("/=", "DivAssign", "div_assign"),
+        OperatorMetadataEntry::assign("%=", "RemAssign", "rem_assign"),
+        OperatorMetadataEntry::assign("&=", "BitAndAssign", "bitand_assign"),
+        OperatorMetadataEntry::assign("|=", "BitOrAssign", "bitor_assign"),
+        OperatorMetadataEntry::assign("^=", "BitXorAssign", "bitxor_assign"),
+        OperatorMetadataEntry::assign("<<=", "ShlAssign", "shl_assign"),
+        OperatorMetadataEntry::assign(">>=", "ShrAssign", "shr_assign"),
     ];
     OperatorMetadata {
-        binary_by_name: BINARY_ENTRIES.iter().map(|e| (e.name, *e)).collect(),
-        assign_by_name: ASSIGN_ENTRIES.iter().map(|e| (e.name, *e)).collect(),
+        by_cc_name_and_params: ENTRIES.iter().map(|e| ((e.cc_name, e.cc_params), *e)).collect(),
     }
 });
 
@@ -656,95 +674,105 @@ fn api_func_shape(
             };
             func_name = make_rs_ident("assign");
         }
-        UnqualifiedIdentifier::Operator(op)
-            if op_meta.binary_by_name.contains_key(op.name.as_str()) && param_types.len() == 2 =>
+        UnqualifiedIdentifier::Operator(op) => match op_meta
+            .by_cc_name_and_params
+            .get(&(op.name.as_str(), param_types.len()))
         {
-            materialize_ctor_in_caller(func, param_types);
-            let (record, impl_for) = if let Some(record) = maybe_record {
-                (&**record, ImplFor::RefT)
-            } else {
-                match &param_types[0] {
-                    RsTypeKind::Record { record, .. } => (&**record, ImplFor::T),
-                    RsTypeKind::Reference { referent, .. } => (
+            Some(OperatorMetadataEntry {
+                trait_name,
+                method_name,
+                is_compound_assignment: false,
+                ..
+            }) => {
+                materialize_ctor_in_caller(func, param_types);
+                let (record, impl_for) = if let Some(record) = maybe_record {
+                    (&**record, ImplFor::RefT)
+                } else {
+                    match &param_types[0] {
+                        RsTypeKind::Record { record, .. } => (&**record, ImplFor::T),
+                        RsTypeKind::Reference { referent, .. } => (
+                            match &**referent {
+                                RsTypeKind::Record { record, .. } => &**record,
+                                _ => bail!("Expected first parameter referent to be a record"),
+                            },
+                            ImplFor::RefT,
+                        ),
+                        RsTypeKind::RvalueReference { .. } => {
+                            bail!("Not yet supported for rvalue references (b/219826128)")
+                        }
+                        _ => bail!("Expected first parameter to be a record or reference"),
+                    }
+                };
+
+                let trait_name = make_rs_ident(trait_name);
+                impl_kind = ImplKind::Trait {
+                    record_name: make_rs_ident(&record.rs_name),
+                    trait_name: TraitName::Other {
+                        name: quote! {::std::ops::#trait_name},
+                        params: param_types[1..].to_vec(),
+                        is_unsafe_fn: false,
+                    },
+                    impl_for,
+                    trait_generic_params: vec![],
+                    format_first_param_as_self: true,
+                    drop_return: false,
+                    associated_return_type: Some(make_rs_ident("Output")),
+                };
+                func_name = make_rs_ident(method_name);
+            }
+            Some(OperatorMetadataEntry {
+                trait_name,
+                method_name,
+                is_compound_assignment: true,
+                ..
+            }) => {
+                materialize_ctor_in_caller(func, param_types);
+                let record = match &param_types[0] {
+                    RsTypeKind::Record { .. } => {
+                        bail!("Compound assignment with by-value left-hand side is not supported")
+                    }
+                    RsTypeKind::Reference { mutability: Mutability::Const, .. } => {
+                        bail!("Compound assignment with const left-hand side is not supported")
+                    }
+                    RsTypeKind::Reference { referent, mutability: Mutability::Mut, .. } => {
                         match &**referent {
-                            RsTypeKind::Record { record, .. } => &**record,
+                            RsTypeKind::Record { record, .. } => &**maybe_record.unwrap_or(record),
                             _ => bail!("Expected first parameter referent to be a record"),
-                        },
-                        ImplFor::RefT,
-                    ),
+                        }
+                    }
                     RsTypeKind::RvalueReference { .. } => {
                         bail!("Not yet supported for rvalue references (b/219826128)")
                     }
-                    _ => bail!("Expected first parameter to be a record or reference"),
-                }
-            };
-
-            let op_meta = op_meta.binary_by_name.get(op.name.as_str()).unwrap();
-            let trait_name = make_rs_ident(op_meta.trait_name);
-            impl_kind = ImplKind::Trait {
-                record_name: make_rs_ident(&record.rs_name),
-                trait_name: TraitName::Other {
-                    name: quote! {::std::ops::#trait_name},
-                    params: vec![param_types[1].clone()],
-                    is_unsafe_fn: false,
-                },
-                impl_for,
-                trait_generic_params: vec![],
-                format_first_param_as_self: true,
-                drop_return: false,
-                associated_return_type: Some(make_rs_ident("Output")),
-            };
-            func_name = make_rs_ident(op_meta.method_name);
-        }
-        UnqualifiedIdentifier::Operator(op)
-            if op_meta.assign_by_name.contains_key(op.name.as_str()) && param_types.len() == 2 =>
-        {
-            materialize_ctor_in_caller(func, param_types);
-            let record = match &param_types[0] {
-                RsTypeKind::Record { .. } => {
-                    bail!("Compound assignment with by-value left-hand side is not supported")
-                }
-                RsTypeKind::Reference { mutability: Mutability::Const, .. } => {
-                    bail!("Compound assignment with const left-hand side is not supported")
-                }
-                RsTypeKind::Reference { referent, mutability: Mutability::Mut, .. } => {
-                    match &**referent {
-                        RsTypeKind::Record { record, .. } => &**maybe_record.unwrap_or(record),
-                        _ => bail!("Expected first parameter referent to be a record"),
+                    RsTypeKind::Pointer { .. } => {
+                        bail!("Not yet supported for pointers with unknown lifetime (b/219826128)")
                     }
-                }
-                RsTypeKind::RvalueReference { .. } => {
-                    bail!("Not yet supported for rvalue references (b/219826128)")
-                }
-                RsTypeKind::Pointer { .. } => {
-                    bail!("Not yet supported for pointers with unknown lifetime (b/219826128)")
-                }
-                _ => bail!("Expected first parameter to be a record or reference"),
-            };
+                    _ => bail!("Expected first parameter to be a record or reference"),
+                };
 
-            let op_meta = op_meta.assign_by_name.get(op.name.as_str()).unwrap();
-            let trait_name = make_rs_ident(op_meta.trait_name);
-            impl_kind = ImplKind::Trait {
-                record_name: make_rs_ident(&record.rs_name),
-                trait_name: TraitName::Other {
-                    name: quote! {::std::ops::#trait_name},
-                    params: vec![param_types[1].clone()],
-                    is_unsafe_fn: false,
-                },
-                impl_for: ImplFor::T,
-                trait_generic_params: vec![],
-                format_first_param_as_self: true,
-                drop_return: true,
-                associated_return_type: None,
-            };
-            func_name = make_rs_ident(op_meta.method_name);
-        }
-        UnqualifiedIdentifier::Operator(op) => {
-            bail!(
-                "Bindings for this kind of operator (operator {op}) are not supported",
-                op = &op.name
-            );
-        }
+                let trait_name = make_rs_ident(trait_name);
+                impl_kind = ImplKind::Trait {
+                    record_name: make_rs_ident(&record.rs_name),
+                    trait_name: TraitName::Other {
+                        name: quote! {::std::ops::#trait_name},
+                        params: param_types[1..].to_vec(),
+                        is_unsafe_fn: false,
+                    },
+                    impl_for: ImplFor::T,
+                    trait_generic_params: vec![],
+                    format_first_param_as_self: true,
+                    drop_return: true,
+                    associated_return_type: None,
+                };
+                func_name = make_rs_ident(method_name);
+            }
+            None => {
+                bail!(
+                    "Bindings for this kind of operator (operator {op} with {n} parameter(s)) are not supported",
+                    op = &op.name,
+                    n = param_types.len(),
+                );
+            }
+        },
         UnqualifiedIdentifier::Identifier(id) => {
             func_name = make_rs_ident(&id.identifier);
             match maybe_record {
@@ -1074,7 +1102,11 @@ fn generate_func(
             *trait_generic_params = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(lifetime) { Some(quote! {#lifetime}) } else { None }
+                    if trait_lifetimes.contains(lifetime) {
+                        Some(quote! {#lifetime})
+                    } else {
+                        None
+                    }
                 })
                 .collect();
         } else {

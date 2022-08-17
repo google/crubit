@@ -57,7 +57,7 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::TrivialCustomType>> for Trivial
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=13
 // Error while generating bindings for item 'TrivialCustomType::operator||':
-// Bindings for this kind of operator (operator ||) are not supported
+// Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -106,7 +106,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialCustomTyp
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=22
 // Error while generating bindings for item 'NontrivialCustomType::operator||':
-// Bindings for this kind of operator (operator ||) are not supported
+// Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
 // rs_bindings_from_cc/test/golden/unsupported.h;l=33
 // Error while generating bindings for item 'MultipleReasons':

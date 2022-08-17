@@ -200,6 +200,10 @@ struct AddableFriendByValue final {
 //////////////////////////////////////////////////////////////////////
 
 struct ManyOperators final {
+  ManyOperators operator+() const { return ManyOperators{+i}; }
+  ManyOperators operator-() const { return ManyOperators{-i}; }
+  ManyOperators operator!() const { return ManyOperators{!i}; }
+  ManyOperators operator~() const { return ManyOperators{~i}; }
   ManyOperators operator+(const ManyOperators rhs) const {
     return ManyOperators{i + rhs.i};
   }

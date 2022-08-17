@@ -61,6 +61,18 @@ mod tests {
     }
 
     #[test]
+    fn test_many_operators_neg() {
+        let s = ManyOperators { i: 7 };
+        assert_eq!(-7, (-&s).i);
+    }
+
+    #[test]
+    fn test_many_operators_not() {
+        let s = ManyOperators { i: 7 };
+        assert_eq!(0, (!&s).i);
+    }
+
+    #[test]
     fn test_many_operators_add() {
         let s1 = ManyOperators { i: 7 };
         let s2 = ManyOperators { i: 3 };

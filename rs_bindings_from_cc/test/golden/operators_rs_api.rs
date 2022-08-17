@@ -910,6 +910,30 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::ManyOperators>> for ManyOperato
 // Error while generating bindings for item 'ManyOperators::operator=':
 // operator= for Unpin types is not yet supported.
 
+// rs_bindings_from_cc/test/golden/operators.h;l=104
+// Error while generating bindings for item 'ManyOperators::operator+':
+// Bindings for this kind of operator (operator + with 1 parameter(s)) are not supported
+
+impl<'a> ::std::ops::Neg for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn neg(self) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsngEv(self) }
+    }
+}
+
+impl<'a> ::std::ops::Not for &'a crate::ManyOperators {
+    type Output = crate::ManyOperators;
+    #[inline(always)]
+    fn not(self) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZNK13ManyOperatorsntEv(self) }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/operators.h;l=107
+// Error while generating bindings for item 'ManyOperators::operator~':
+// Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
+
 impl<'a, 'b> ::std::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1282,6 +1306,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         );
+        #[link_name = "_ZNK13ManyOperatorsngEv"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
+            __this: &'a crate::ManyOperators,
+        ) -> crate::ManyOperators;
+        #[link_name = "_ZNK13ManyOperatorsntEv"]
+        pub(crate) fn __rust_thunk___ZNK13ManyOperatorsntEv<'a>(
+            __this: &'a crate::ManyOperators,
+        ) -> crate::ManyOperators;
         #[link_name = "_ZNK13ManyOperatorsplERKS_"]
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsplERKS_<'a, 'b>(
             __this: &'a crate::ManyOperators,

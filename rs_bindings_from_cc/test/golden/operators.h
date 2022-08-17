@@ -101,6 +101,11 @@ struct AddAssignProhibitedFriendConstLhs final {
 };
 
 struct ManyOperators final {
+  ManyOperators operator+() const;
+  ManyOperators operator-() const;
+  ManyOperators operator!() const;
+  ManyOperators operator~() const;
+
   ManyOperators operator+(const ManyOperators& rhs) const;
   ManyOperators operator-(const ManyOperators& rhs) const;
   ManyOperators operator*(const ManyOperators& rhs) const;
