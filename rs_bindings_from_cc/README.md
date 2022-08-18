@@ -56,6 +56,8 @@ If possible follow these recommendations:
     Bazel rules generate outputs that can be built and executed) as small
     projects with a `rust_test` or `cc_test` on top in subpackages of `test`.
 
+To run individual rust tests with `bazel test` (like `bazel test --test_filter=<test>` for gtest cases), give the test function name as `--test_arg=<test>`.
+
 To get Rust backtraces for `rs_bindings_from_cc` when running end-to-end tests,
 use `bazel test --action_env=RUST_BACKTRACE=1` to run the tests.
 
