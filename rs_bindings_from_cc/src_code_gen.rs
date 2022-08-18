@@ -1672,7 +1672,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             let (field, offset, end, desc) = cur.unwrap();
             let prev_end = prev.as_ref().map(|(_, _, e, _)| *e).flatten().unwrap_or(offset);
             let next_offset = next.map(|(_, o, _, _)| o);
-            let end = end.or(next_offset).unwrap_or(record.aligned_size() * 8);
+            let end = end.or(next_offset).unwrap_or(record.size * 8);
 
             if let Some((Some(prev_field), _, Some(prev_end), _)) = prev {
                 assert!(
@@ -1780,7 +1780,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let size = Literal::usize_unsuffixed(record.aligned_size());
+    let size = Literal::usize_unsuffixed(record.size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let field_offset_assertions = if record.is_union() {
         // TODO(https://github.com/Gilnaa/memoffset/issues/66): generate assertions for unions once
@@ -1860,7 +1860,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     let head_padding = if let Some(first_field) = record.fields.first() {
         first_field.offset / 8
     } else {
-        record.aligned_size()
+        record.size
     };
     // Prevent direct initialization for non-aggregate structs.
     //
@@ -3049,7 +3049,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     let record_ident = format_cc_ident(&record.cc_name);
     let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
     let namespace_qualifier = quote! { #(#namespace_qualifier::)* };
-    let size = Literal::usize_unsuffixed(record.size);
+    let cc_size = Literal::usize_unsuffixed(record.original_cc_size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = cc_tag_kind(record);
     let field_assertions = record
@@ -3076,7 +3076,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
             quote! { static_assert( #actual_offset == #expected_offset); }
         });
     Ok(quote! {
-        static_assert(sizeof(#tag_kind #namespace_qualifier #record_ident) == #size);
+        static_assert(sizeof(#tag_kind #namespace_qualifier #record_ident) == #cc_size);
         static_assert(alignof(#tag_kind #namespace_qualifier #record_ident) == #alignment);
         #( #field_assertions )*
     })

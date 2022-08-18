@@ -583,8 +583,13 @@ struct Record {
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
   std::vector<LifetimeName> lifetime_params;
-  // Size and alignment in bytes.
+  // Size and alignment in bytes. `original_cc_size` may be different from
+  // `size` when the size this record tells (i.e. sizeof(record)) is not aligned
+  // by `alignment` but actually occupies the size that is aligned. This usually
+  // only happens when `is_anon_record_with_typedef` is true and alignment is
+  // given for the typedef (but not for the record).
   int64_t size;
+  int64_t original_cc_size;
   int64_t alignment;
 
   // True if any base classes exist.

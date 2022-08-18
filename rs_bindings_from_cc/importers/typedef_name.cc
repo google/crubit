@@ -71,6 +71,22 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
                 ictx_.ctx_
                     .toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
                     .getQuantity();
+            record->override_alignment = true;
+
+            // If it has alignment, update the `record->size` to the aligned
+            // one, because that size is going to be used as this record's
+            // canonical size in IR and in the binding code.
+
+            // Make sure that `alignment` is a power of 2.
+            CRUBIT_CHECK(!(record->alignment & (record->alignment - 1)));
+
+            // Given that `alignment` is a power of 2, we can round it up by
+            // a bit arithmetic: `alignment - 1` clears the single bit of it
+            // while turning all the zeros in the right to 1s. Adding
+            // `alignment - 1` and doing &~ with it effectively rounds it up
+            // to the next multiple of the alignment.
+            record->size = (record->size + record->alignment - 1) &
+                           ~(record->alignment - 1);
           }
           record->is_anon_record_with_typedef = true;
         }
