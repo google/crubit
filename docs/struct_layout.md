@@ -50,7 +50,7 @@ derived classes.
 NOTE: This has other, non-layout consequences for Rust: for example, it is not
 safe to obtain two `&mut` references to overlapping objects, unless they are of
 size `0`. (To prevent this, classes that might be base classes are always
-[`!Unpin`](unpin).)
+[`!Unpin`](unpin.md).)
 
 This is impossible to represent in a C-like struct. (Indeed, it's impossible to
 represent even in a C++-like struct, before the introduction of
