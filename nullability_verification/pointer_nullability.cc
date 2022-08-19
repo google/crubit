@@ -23,6 +23,10 @@ using dataflow::SkipPast;
 constexpr llvm::StringLiteral kKnown = "is_known";
 constexpr llvm::StringLiteral kNotNull = "is_notnull";
 
+NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx) {
+  return Type->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
+}
+
 PointerValue* getPointerValueFromExpr(const Expr* PointerExpr,
                                       const Environment& Env) {
   return cast_or_null<PointerValue>(

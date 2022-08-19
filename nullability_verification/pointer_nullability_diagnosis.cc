@@ -6,8 +6,11 @@
 
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/Stmt.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Basic/Specifiers.h"
 
 namespace clang {
@@ -19,26 +22,37 @@ using dataflow::Environment;
 
 namespace {
 
-llvm::Optional<const Stmt*> diagnosePointerAccess(const Stmt* PointerAccessExpr,
-                                                  const Expr* PointerExpr,
-                                                  const Environment& Env) {
-  auto* PointerVal = getPointerValueFromExpr(PointerExpr, Env);
-  if (!PointerVal || isNullable(*PointerVal, Env)) {
-    return PointerAccessExpr;
-  }
-  return llvm::None;
+// Returns true if `Expr` is uninterpreted or known to be nullable.
+bool isNullableOrUntracked(const Expr* E, const Environment& Env) {
+  auto* ActualVal = getPointerValueFromExpr(E, Env);
+  return !ActualVal || isNullable(*ActualVal, Env);
+}
+
+// Returns true if an uninterpreted or nullable `Expr` was assigned to a
+// construct with a non-null `DeclaredType`.
+bool isIncompatibleAssignment(QualType DeclaredType, const Expr* E,
+                              const Environment& Env, ASTContext& Ctx) {
+  assert(DeclaredType->isAnyPointerType());
+  return getNullabilityKind(DeclaredType, Ctx) == NullabilityKind::NonNull &&
+         isNullableOrUntracked(E, Env);
 }
 
 llvm::Optional<const Stmt*> diagnoseDereference(const UnaryOperator* UnaryOp,
                                                 const MatchFinder::MatchResult&,
                                                 const Environment& Env) {
-  return diagnosePointerAccess(UnaryOp, UnaryOp->getSubExpr(), Env);
+  if (isNullableOrUntracked(UnaryOp->getSubExpr(), Env)) {
+    return UnaryOp;
+  }
+  return llvm::None;
 }
 
 llvm::Optional<const Stmt*> diagnoseArrow(
     const MemberExpr* MemberExpr, const MatchFinder::MatchResult& Result,
     const Environment& Env) {
-  return diagnosePointerAccess(MemberExpr, MemberExpr->getBase(), Env);
+  if (isNullableOrUntracked(MemberExpr->getBase(), Env)) {
+    return MemberExpr;
+  }
+  return llvm::None;
 }
 
 // TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
@@ -57,15 +71,11 @@ llvm::Optional<const Stmt*> diagnoseCallExpr(
 
   for (unsigned int I = 0; I < ParamTypes.size(); ++I) {
     auto ParamType = ParamTypes[I];
-    if (!ParamType->isAnyPointerType() ||
-        ParamType->getNullability(*Result.Context)
-                .value_or(NullabilityKind::Unspecified) !=
-            NullabilityKind::NonNull) {
+    if (!ParamType->isAnyPointerType()) {
       continue;
     }
-    auto* Arg = CE->getArg(I);
-    auto* PointerVal = getPointerValueFromExpr(Arg, Env);
-    if (!PointerVal || isNullable(*PointerVal, Env)) {
+    if (isIncompatibleAssignment(ParamType, CE->getArg(I), Env,
+                                 *Result.Context)) {
       return llvm::Optional<const Stmt*>(CE);
     }
   }

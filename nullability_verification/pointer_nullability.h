@@ -7,16 +7,22 @@
 
 #include <utility>
 
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
+#include "clang/Basic/Specifiers.h"
 
 namespace clang {
 namespace tidy {
 namespace nullability {
 
-/// Returns the `PointerValue` allocated to `PointerExpr` if available,
-/// otherwise returns nullptr.
+/// Returns the `NullabilityKind` corresponding to the nullability annotation on
+/// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
+NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx);
+
+/// Returns the `PointerValue` allocated to `PointerExpr` if available.
+/// Otherwise, returns nullptr.
 dataflow::PointerValue* getPointerValueFromExpr(
     const Expr* PointerExpr, const dataflow::Environment& Env);
 
