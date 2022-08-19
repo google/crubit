@@ -50,7 +50,8 @@ def _compile_cc(
         cc_toolchain,
         feature_configuration,
         src,
-        cc_infos):
+        cc_infos,
+        extra_cc_compilation_action_inputs):
     """Compiles a C++ source file.
 
     Args:
@@ -60,6 +61,7 @@ def _compile_cc(
       feature_configuration: A feature configuration.
       src: The source file to be compiled.
       cc_infos: List[CcInfo]: A list of CcInfo dependencies.
+      extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
 
     Returns:
       A CcInfo provider.
@@ -72,6 +74,7 @@ def _compile_cc(
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
         srcs = [src],
+        additional_inputs = extra_cc_compilation_action_inputs,
         grep_includes = ctx.file._grep_includes,
         user_compile_flags = attr.copts if hasattr(attr, "copts") else [],
         compilation_contexts = [cc_info.compilation_context],
@@ -157,6 +160,7 @@ def _compile_rust(ctx, attr, src, deps):
             owner = ctx.label,
         ),
         output_hash = output_hash,
+        force_all_deps_direct = True,
     )
 
     return DepVariantInfo(
@@ -267,7 +271,8 @@ def generate_and_compile_bindings(
         action_inputs,
         targets_and_headers,
         deps_for_cc_file,
-        deps_for_rs_file):
+        deps_for_rs_file,
+        extra_cc_compilation_action_inputs = []):
     """Runs the bindings generator.
 
     Args:
@@ -281,6 +286,7 @@ def generate_and_compile_bindings(
                           "its headers in json format.
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
       deps_for_rs_file: list[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
+      extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
 
     Returns:
       A RustBindingsFromCcInfo containing the result of the compilation of the generated source
@@ -315,6 +321,7 @@ def generate_and_compile_bindings(
         feature_configuration,
         cc_output,
         deps_for_cc_file,
+        extra_cc_compilation_action_inputs,
     )
 
     # Compile the "_rust_api.rs" file

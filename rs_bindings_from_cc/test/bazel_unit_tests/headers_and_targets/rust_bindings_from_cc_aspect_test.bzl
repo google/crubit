@@ -51,8 +51,7 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
         for tah in target_under_test[RustBindingsFromCcInfo].targets_and_headers.to_list()
     ]
 
-    asserts.equals(env, 2, len(targets_and_headers))
-
+    asserts.equals(env, 3, len(targets_and_headers))
     asserts.equals(
         env,
         targets_and_headers[0]["t"],
@@ -62,6 +61,11 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
         env,
         targets_and_headers[1]["t"],
         "//:_nothing_should_depend_on_private_builtin_hdrs",
+    )
+    asserts.equals(
+        env,
+        targets_and_headers[2]["t"],
+        "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:empty",
     )
 
     return analysistest.end(env)
@@ -76,26 +80,6 @@ def _test_lib_has_toolchain_targets_and_headers():
     lib_has_toolchain_targets_and_headers_test(
         name = "lib_has_toolchain_targets_and_headers_test",
         target_under_test = ":empty_with_aspect",
-    )
-
-def _no_targets_and_headers_test_impl(ctx):
-    env = analysistest.begin(ctx)
-    target_under_test = analysistest.target_under_test(env)
-    targets_and_headers = _get_targets_and_headers(target_under_test)
-
-    # only headers and targets from the libc++ are there
-    asserts.equals(env, 1, len(targets_and_headers))
-
-    return analysistest.end(env)
-
-no_targets_and_headers_test = analysistest.make(_no_targets_and_headers_test_impl)
-
-def _test_no_targets_and_headers():
-    native.cc_library(name = "emptylib")
-    attach_aspect(name = "emptylib_with_aspect", dep = ":emptylib")
-    no_targets_and_headers_test(
-        name = "no_targets_and_headers_test",
-        target_under_test = ":emptylib_with_aspect",
     )
 
 def _targets_and_headers_test_impl(ctx):
@@ -133,8 +117,12 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     target_under_test = analysistest.target_under_test(env)
     targets_and_headers = _get_targets_and_headers(target_under_test)
 
-    asserts.equals(env, 3, len(targets_and_headers))
-
+    asserts.equals(env, 4, len(targets_and_headers))
+    asserts.equals(
+        env,
+        targets_and_headers[0]["t"],
+        "//:_nothing_should_depend_on_private_builtin_hdrs",
+    )
     asserts.equals(
         env,
         targets_and_headers[1]["t"],
@@ -149,11 +137,23 @@ def _targets_and_headers_propagate_with_cc_info_test_impl(ctx):
     asserts.equals(
         env,
         targets_and_headers[2]["t"],
+        "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:middle",
+    )
+    asserts.true(
+        env,
+        targets_and_headers[2]["h"][0].endswith(
+            "rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/middle.empty_source_no_public_headers.h",
+        ),
+    )
+
+    asserts.equals(
+        env,
+        targets_and_headers[3]["t"],
         "//rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets:top",
     )
     asserts.equals(
         env,
-        targets_and_headers[2]["h"],
+        targets_and_headers[3]["h"],
         ["rs_bindings_from_cc/test/bazel_unit_tests/headers_and_targets/top.h"],
     )
 
@@ -287,7 +287,6 @@ def rust_bindings_from_cc_aspect_test(name):
 
     Args:
       name: name of the test suite"""
-    _test_no_targets_and_headers()
     _test_targets_and_headers()
     _test_targets_and_headers_propagate_with_cc_infos()
     _test_textual_hdrs_not_in_targets_and_hdrs()
@@ -298,7 +297,6 @@ def rust_bindings_from_cc_aspect_test(name):
     native.test_suite(
         name = name,
         tests = [
-            ":no_targets_and_headers_test",
             ":targets_and_headers_test",
             ":targets_and_headers_propagate_with_cc_info_test",
             ":textual_hdrs_not_in_targets_and_hdrs_test",

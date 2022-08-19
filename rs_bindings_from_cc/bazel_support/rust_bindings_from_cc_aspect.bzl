@@ -23,9 +23,6 @@ load(
     "generate_and_compile_bindings",
 )
 
-# buildifier: disable=bzl-visibility
-load("@rules_rust//rust/private:providers.bzl", "DepVariantInfo")
-
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
 # we are omitting ["inc"] from the list below.
@@ -92,7 +89,22 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if str(ctx.label) in targets_to_remove:
         return []
 
+    extra_cc_compilation_action_inputs = []
     public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
+
+    if not public_hdrs:
+        # This target doesn't have public headers, so there are no bindings to generate. However we
+        # still need to propagate dependencies since not every C++ target is layering check clean.
+        # Since there is no existing API to merge Rust providers besides calling
+        # `rustc_compile_action`, we decided to create an empty file and compile it.
+        empty_header_file = ctx.actions.declare_file(ctx.label.name + ".empty_source_no_public_headers.h")
+        ctx.actions.write(
+            empty_header_file,
+            "// File intentionally left empty, its purpose is to satisfy rules_rust APIs.",
+        )
+        public_hdrs = [empty_header_file]
+        all_standalone_hdrs = public_hdrs
+        extra_cc_compilation_action_inputs = public_hdrs
 
     # At execution time we convert this depset to a json array that gets passed to our tool through
     # the --targets_and_headers flag.
@@ -116,14 +128,6 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
             ctx.attr._std[RustBindingsFromCcInfo].targets_and_headers,
         ],
     )
-
-    if not public_hdrs:
-        empty_cc_info = CcInfo()
-        return RustBindingsFromCcInfo(
-            cc_info = empty_cc_info,
-            dep_variant_info = DepVariantInfo(cc_info = empty_cc_info),
-            targets_and_headers = targets_and_headers,
-        )
 
     header_includes = []
     for hdr in public_hdrs:
@@ -157,6 +161,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file + [
             ctx.attr._std[RustBindingsFromCcInfo].dep_variant_info,
         ],
+        extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
     )
 
 rust_bindings_from_cc_aspect = aspect(
