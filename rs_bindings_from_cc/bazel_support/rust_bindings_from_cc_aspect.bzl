@@ -64,6 +64,14 @@ def _collect_hdrs(ctx):
     all_standalone_hdrs = depset(public_hdrs + private_hdrs).to_list()
     return public_hdrs, all_standalone_hdrs
 
+def _is_proto_library(target):
+    return ProtoInfo in target
+
+def _is_cc_proto_library(target):
+    #TODO(b/232199093): Ideally we would check for a cc_proto_library specific provider such as
+    # `ProtoCcFilesInfo`, but it is currently hidden in builtins.
+    return target.label.name.endswith("cc_proto")
+
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
@@ -83,14 +91,27 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if CcInfo not in target:
         return []
 
-    if not hasattr(ctx.rule.attr, "hdrs"):
-        return []
+    if _is_cc_proto_library(target):
+        # This is cc_proto_library, we are interested in RustBindingsFromCcInfo provider of the
+        # proto_library.
+        return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
 
     if str(ctx.label) in targets_to_remove:
         return []
 
     extra_cc_compilation_action_inputs = []
-    public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
+    extra_rule_specific_deps = []
+    public_hdrs = []
+    all_standalone_hdrs = []
+    if hasattr(ctx.rule.attr, "hdrs"):
+        public_hdrs, all_standalone_hdrs = _collect_hdrs(ctx)
+    elif _is_proto_library(target):
+        #TODO(b/232199093): Ideally we would get this information from a proto-specific provider,
+        # but ProtoCcFilesProvider is private currently. Use it once public.
+        proto_header = target[CcInfo].compilation_context.direct_headers[0]
+        public_hdrs = [proto_header]
+        all_standalone_hdrs = public_hdrs
+        extra_rule_specific_deps = [ctx.rule.attr._cc_lib]
 
     if not public_hdrs:
         # This target doesn't have public headers, so there are no bindings to generate. However we
@@ -105,6 +126,12 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = [empty_header_file]
         all_standalone_hdrs = public_hdrs
         extra_cc_compilation_action_inputs = public_hdrs
+
+    all_deps = ctx.rule.attr.deps + extra_rule_specific_deps + [
+        # TODO(b/217667751): This contains a huge list of headers_and_targets; pass them as a file
+        # instead.
+        ctx.attr._std,
+    ]
 
     # At execution time we convert this depset to a json array that gets passed to our tool through
     # the --targets_and_headers flag.
@@ -121,11 +148,8 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         ] if all_standalone_hdrs else [],
         transitive = [
             t[RustBindingsFromCcInfo].targets_and_headers
-            for t in ctx.rule.attr.deps
+            for t in all_deps
             if RustBindingsFromCcInfo in t
-        ] + [
-            # TODO(b/217667751): This is a huge list of headers; pass it as a file instead;
-            ctx.attr._std[RustBindingsFromCcInfo].targets_and_headers,
         ],
     )
 
@@ -149,24 +173,26 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         targets_and_headers = targets_and_headers,
         deps_for_cc_file = [target[CcInfo]] + [
             dep[RustBindingsFromCcInfo].cc_info
-            for dep in ctx.rule.attr.deps
+            for dep in all_deps
             if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file + [
-            ctx.attr._std[RustBindingsFromCcInfo].cc_info,
-        ],
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = [
             dep[RustBindingsFromCcInfo].dep_variant_info
-            for dep in ctx.rule.attr.deps
+            for dep in all_deps
             if RustBindingsFromCcInfo in dep
-        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file + [
-            ctx.attr._std[RustBindingsFromCcInfo].dep_variant_info,
-        ],
+        ] + ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
         extra_cc_compilation_action_inputs = extra_cc_compilation_action_inputs,
     )
 
 rust_bindings_from_cc_aspect = aspect(
     implementation = _rust_bindings_from_cc_aspect_impl,
-    attr_aspects = ["deps"],
+    attr_aspects = [
+        # for cc_library and similar rules
+        "deps",
+        # for cc_proto_aspect implicit deps
+        "_cc_lib",
+    ],
+    required_aspect_providers = [CcInfo],
     attrs = dict(bindings_attrs.items() + {
         "_std": attr.label(
             default = "//rs_bindings_from_cc:cc_std",
