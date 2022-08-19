@@ -20,6 +20,8 @@ ast_matchers::internal::Matcher<Stmt> isAddrOf();
 ast_matchers::internal::Matcher<Stmt> isPointerDereference();
 ast_matchers::internal::Matcher<Stmt> isPointerCheckBinOp();
 ast_matchers::internal::Matcher<Stmt> isImplicitCastPointerToBool();
+ast_matchers::internal::Matcher<Stmt> isCallExpr();
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

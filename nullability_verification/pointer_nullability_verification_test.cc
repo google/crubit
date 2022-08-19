@@ -1304,6 +1304,91 @@ TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
   )");
 }
 
+TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
+  // free function
+  checkDiagnostics(R"(
+    int * _Nonnull makeNonnull();
+    int * _Nullable makeNullable();
+    int *makeUnannotated();
+    void target() {
+      *makeNonnull();
+      *makeNullable();    // [[unsafe]]
+      *makeUnannotated();
+    }
+  )");
+
+  // member function
+  checkDiagnostics(R"(
+    struct Foo {
+      int * _Nonnull makeNonnull();
+      int * _Nullable makeNullable();
+      int *makeUnannotated();
+    };
+    void target(Foo foo) {
+      *foo.makeNonnull();
+      *foo.makeNullable();    // [[unsafe]]
+      *foo.makeUnannotated();
+    }
+  )");
+
+  // function pointer
+  checkDiagnostics(R"(
+    void target(int * _Nonnull (*makeNonnull)(),
+                int * _Nullable (*makeNullable)(),
+                int * (*makeUnannotated)()) {
+      *makeNonnull();
+      *makeNullable();    // [[unsafe]]
+      *makeUnannotated();
+    }
+  )");
+
+  // pointer to function pointer
+  checkDiagnostics(R"(
+    void target(int * _Nonnull (**makeNonnull)(),
+                int * _Nullable (**makeNullable)(),
+                int * (**makeUnannotated)()) {
+      *(*makeNonnull)();
+      *(*makeNullable)();   // [[unsafe]]
+      *(*makeUnannotated)();
+    }
+  )");
+
+  // function returning a function pointer which returns a pointer
+  checkDiagnostics(R"(
+    typedef int * _Nonnull (*MakeNonnullT)();
+    typedef int * _Nullable (*MakeNullableT)();
+    typedef int * (*MakeUnannotatedT)();
+    void target(MakeNonnullT (*makeNonnull)(),
+                MakeNullableT (*makeNullable)(),
+                MakeUnannotatedT (*makeUnannotated)()) {
+      *(*makeNonnull)()();
+      *(*makeNullable)()();   // [[unsafe]]
+      *(*makeUnannotated)()();
+    }
+  )");
+
+  // function called in loop
+  //
+  // TODO(b/233582219): Fix false negative. The pointer is only null-checked and
+  // therefore safe to dereference on the first iteration of the loop. On
+  // subsequent iterations of the loop, the pointer dereference is unsafe due to
+  // the lack of null check. The diagnoser currently fails to catch the
+  // unsafe dereference as it only evaluates the statement once.
+  checkDiagnostics(R"(
+    int * _Nullable makeNullable();
+    bool makeBool();
+    void target() {
+      bool first = true;
+      while(true) {
+        int *x = makeNullable();
+        if (first && x == nullptr) return;
+        first = false;
+        *x; // false-negative
+      }
+    }
+  )");
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

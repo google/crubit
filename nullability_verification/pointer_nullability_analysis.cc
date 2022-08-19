@@ -137,6 +137,23 @@ void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
   State.Env.setStorageLocation(*CastExpr, CastExprLoc);
 }
 
+void transferCallExpr(const CallExpr* CallExpr,
+                      const MatchFinder::MatchResult& Result,
+                      TransferState<NoopLattice>& State) {
+  auto ReturnType = CallExpr->getType();
+  if (!ReturnType->isAnyPointerType()) return;
+
+  auto* PointerVal = getPointerValueFromExpr(CallExpr, State.Env);
+  if (!PointerVal) {
+    PointerVal = cast<PointerValue>(State.Env.createValue(ReturnType));
+    auto& CallExprLoc = State.Env.createStorageLocation(*CallExpr);
+    State.Env.setValue(CallExprLoc, *PointerVal);
+    State.Env.setStorageLocation(*CallExpr, CallExprLoc);
+  }
+  initPointerFromAnnotations(*PointerVal, ReturnType, State.Env,
+                             *Result.Context);
+}
+
 auto buildTransferer() {
   return MatchSwitchBuilder<TransferState<NoopLattice>>()
       // Handles initialization of the null states of pointers
@@ -145,6 +162,7 @@ auto buildTransferer() {
       .CaseOf<Expr>(isAddrOf(), transferNotNullPointer)
       .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointer)
       .CaseOf<MemberExpr>(isMemberOfPointerType(), transferPointer)
+      .CaseOf<CallExpr>(isCallExpr(), transferCallExpr)
       // Handles comparison between 2 pointers
       .CaseOf<BinaryOperator>(isPointerCheckBinOp(),
                               transferNullCheckComparison)
