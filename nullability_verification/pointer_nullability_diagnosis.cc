@@ -8,6 +8,7 @@
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/Expr.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Basic/Specifiers.h"
 
 namespace clang {
 namespace tidy {
@@ -22,12 +23,7 @@ llvm::Optional<const Stmt*> diagnosePointerAccess(const Stmt* PointerAccessExpr,
                                                   const Expr* PointerExpr,
                                                   const Environment& Env) {
   auto* PointerVal = getPointerValueFromExpr(PointerExpr, Env);
-  if (!PointerVal) return PointerAccessExpr;
-
-  auto [PointerKnown, PointerNotNull] = getPointerNullState(*PointerVal, Env);
-  auto& PointerNotKnownNull =
-      Env.makeNot(Env.makeAnd(PointerKnown, Env.makeNot(PointerNotNull)));
-  if (!Env.flowConditionImplies(PointerNotKnownNull)) {
+  if (!PointerVal || isNullable(*PointerVal, Env)) {
     return PointerAccessExpr;
   }
   return llvm::None;
@@ -45,6 +41,38 @@ llvm::Optional<const Stmt*> diagnoseArrow(
   return diagnosePointerAccess(MemberExpr, MemberExpr->getBase(), Env);
 }
 
+// TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
+// a function returned from another function), or when the callee cannot be
+// interpreted as a function type (e.g. a pointer to a function pointer).
+llvm::Optional<const Stmt*> diagnoseCallExpr(
+    const CallExpr* CE, const MatchFinder::MatchResult& Result,
+    const Environment& Env) {
+  auto* Callee = CE->getCalleeDecl();
+  if (!Callee) return llvm::None;
+
+  auto* CalleeType = Callee->getFunctionType();
+  if (!CalleeType) return llvm::None;
+
+  auto ParamTypes = CalleeType->getAs<FunctionProtoType>()->getParamTypes();
+
+  for (unsigned int I = 0; I < ParamTypes.size(); ++I) {
+    auto ParamType = ParamTypes[I];
+    if (!ParamType->isAnyPointerType() ||
+        ParamType->getNullability(*Result.Context)
+                .value_or(NullabilityKind::Unspecified) !=
+            NullabilityKind::NonNull) {
+      continue;
+    }
+    auto* Arg = CE->getArg(I);
+    auto* PointerVal = getPointerValueFromExpr(Arg, Env);
+    if (!PointerVal || isNullable(*PointerVal, Env)) {
+      return llvm::Optional<const Stmt*>(CE);
+    }
+  }
+
+  return llvm::None;
+}
+
 auto buildDiagnoser() {
   return dataflow::MatchSwitchBuilder<const Environment,
                                       llvm::Optional<const Stmt*>>()
@@ -52,6 +80,8 @@ auto buildDiagnoser() {
       .CaseOf<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       // (->)
       .CaseOf<MemberExpr>(isPointerArrow(), diagnoseArrow)
+      // Check compatibility of parameter assignments
+      .CaseOf<CallExpr>(isCallExpr(), diagnoseCallExpr)
       .Build();
 }
 

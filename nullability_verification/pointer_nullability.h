@@ -80,6 +80,10 @@ inline void initUnknownPointer(dataflow::PointerValue& PointerVal,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(false));
 }
 
+/// Returns true if there is evidence that `PointerVal` may hold a nullptr.
+bool isNullable(const dataflow::PointerValue& PointerVal,
+                const dataflow::Environment& Env);
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

@@ -1389,6 +1389,97 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   )");
 }
 
+TEST(PointerNullabilityTest, CallExprParamAssignment) {
+  // free function with single param
+  checkDiagnostics(R"(
+    void takeNonnull(int * _Nonnull);
+    void takeNullable(int * _Nullable);
+    void takeUnannotated(int *);
+    void target(int * _Nonnull ptr_nonnull,
+                int * _Nullable ptr_nullable,
+                int *ptr_unannotated) {
+      takeNonnull(nullptr);             // [[unsafe]]
+      takeNonnull(ptr_nonnull);
+      takeNonnull(ptr_nullable);        // [[unsafe]]
+      takeNonnull(ptr_unannotated);
+
+      takeNullable(nullptr);
+      takeNullable(ptr_nonnull);
+      takeNullable(ptr_nullable);
+      takeNullable(ptr_unannotated);
+
+      takeUnannotated(nullptr);
+      takeUnannotated(ptr_nonnull);
+      takeUnannotated(ptr_nullable);
+      takeUnannotated(ptr_unannotated);
+    }
+  )");
+
+  // free function with multiple params of mixed nullability
+  checkDiagnostics(R"(
+    void takeMixed(int *, int * _Nullable, int * _Nonnull);
+    void target() {
+      takeMixed(nullptr, nullptr, nullptr); // [[unsafe]]
+    }
+  )");
+
+  // member function
+  checkDiagnostics(R"(
+    struct Foo {
+      void takeNonnull(int * _Nonnull);
+      void takeNullable(int * _Nullable);
+      void takeUnannotated(int *);
+    };
+    void target(Foo foo) {
+      foo.takeNonnull(nullptr);     // [[unsafe]]
+      foo.takeNullable(nullptr);
+      foo.takeUnannotated(nullptr);
+    }
+  )");
+
+  // function pointer
+  checkDiagnostics(R"(
+    void target(void (*takeNonnull)(int * _Nonnull),
+                void (*takeNullable)(int * _Nullable),
+                void (*takeUnannotated)(int *)) {
+      takeNonnull(nullptr);     // [[unsafe]]
+      takeNullable(nullptr);
+      takeUnannotated(nullptr);
+    }
+  )");
+
+  // pointer to function pointer
+  //
+  // TODO(b/233582219): Fix false negative. Implement support for retrieving
+  // parameter types from a pointer to function pointer.
+  checkDiagnostics(R"(
+    void target(void (**takeNonnull)(int * _Nonnull),
+                void (**takeNullable)(int * _Nullable),
+                void (**takeUnannotated)(int *)) {
+      (*takeNonnull)(nullptr);    // false-negative
+      (*takeNullable)(nullptr);
+      (*takeUnannotated)(nullptr);
+    }
+  )");
+
+  // function returned from function
+  //
+  // TODO(b/233582219): Fix false negative. Implement support for retrieving
+  // parameter types for functions returned by another function.
+  checkDiagnostics(R"(
+    typedef void (*takeNonnullF)(int * _Nonnull);
+    typedef void (*takeNullableF)(int * _Nullable);
+    typedef void (*takeUnannotatedF)(int *);
+    void target(takeNonnullF (*takeNonnull)(),
+                takeNullableF (*takeNullable)(),
+                takeUnannotatedF (*takeUnannotated)()) {
+      (*takeNonnull)()(nullptr);    // false-negative
+      (*takeNullable)()(nullptr);
+      (*takeUnannotated)()(nullptr);
+    }
+  )");
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

@@ -52,6 +52,13 @@ void initPointerNullState(PointerValue& PointerVal, Environment& Env,
   initPointerBoolProperty(PointerVal, kNotNull, NotNullConstraint, Env);
 }
 
+bool isNullable(const PointerValue& PointerVal, const Environment& Env) {
+  auto [PointerKnown, PointerNotNull] = getPointerNullState(PointerVal, Env);
+  auto& PointerNotKnownNull =
+      Env.makeNot(Env.makeAnd(PointerKnown, Env.makeNot(PointerNotNull)));
+  return !Env.flowConditionImplies(PointerNotKnownNull);
+}
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang
