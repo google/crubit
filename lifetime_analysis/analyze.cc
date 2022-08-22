@@ -973,7 +973,6 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
 
   auto& [object_repository, points_to_map, constraints, subst] = analysis;
 
-  constexpr bool kUseConstraintBasedAnalysis = false;
   FunctionLifetimes result;
 
   if (kUseConstraintBasedAnalysis) {

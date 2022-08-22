@@ -117,6 +117,10 @@ void GenerateConstraintsForAssignment(
     if (num_seen_pairs == seen_pairs.size()) return;
   }
 
+  if (pointer_type->isIncompleteType()) {
+    // Nothing we *can* do.
+    return;
+  }
   assert(!pointer_type->isRecordType());
   if (!pointer_type->isPointerType() && !pointer_type->isReferenceType()) {
     // Nothing to do.
@@ -159,6 +163,11 @@ void GenerateConstraintsForAssignment(
   while (!calls_to_make.empty()) {
     RecursiveVisitInfo call = std::move(calls_to_make.back());
     calls_to_make.pop_back();
+
+    if (call.type->isIncompleteType()) {
+      // Nothing we *can* do.
+      continue;
+    }
 
     if (const auto* record_type = call.type->getAs<clang::RecordType>()) {
       for (auto field : record_type->getDecl()->fields()) {
@@ -372,8 +381,14 @@ void PropagateLifetimesToPointees(
         }
         SetAllPointersPointsToSetRespectingTypes(objects, points_to,
                                                  points_to_map_, ast_context_);
-        assert(points_to_map_.GetPointerPointsToSet(objects).Contains(
-            points_to_original));
+        if (!kUseConstraintBasedAnalysis) {
+          // This assertion may fail to be true when visiting the return value
+          // object, if its objects were created recursively.
+          // TODO(veluca): figure out a way to preserve this assertion in the
+          // presence of fictitious objects.
+          assert(points_to_map_.GetPointerPointsToSet(objects).Contains(
+              points_to_original));
+        }
       }
       // Return the original points-to set, not the modified one. The original
       // points-to set is sufficient because it captures the arguments that
@@ -736,12 +751,11 @@ std::optional<std::string> TransferStmtVisitor::VisitReturnStmt(
   ObjectSet expr_points_to = points_to_map_.GetExprObjectSet(ret_expr);
   // TODO(veluca): once constraint-based analysis is ready, we should modify
   // the handling of return statements as follows:
-  // - create a "deep" return object (as opposed to the current "shallow" return
-  //   object).
   // - do not extend the points-to-map for the return object; instead, generate
   //   constraints equivalent to those for assignment.
-  points_to_map_.ExtendPointerPointsToSet(object_repository_.GetReturnObject(),
-                                          expr_points_to);
+  HandlePointsToSetExtension({object_repository_.GetReturnObject()},
+                             expr_points_to, return_type, object_repository_,
+                             points_to_map_, constraints_);
   return std::nullopt;
 }
 

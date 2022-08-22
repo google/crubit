@@ -18,6 +18,8 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
+constexpr bool kUseConstraintBasedAnalysis = false;
+
 // Any object that has a lifetime. Multiple objects might have the same
 // lifetime, but two equal objects always have the same lifetime.
 class Object {

@@ -461,12 +461,14 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
   if (definition) func = definition;
   func_ = func;
 
-  // For the return value, we only need to create field objects.
-  return_object_ = CreateObject(Lifetime::CreateLocal(), func->getReturnType());
+  // For the return value, we only need to create field objects, except if we
+  // use constraint-based analysis.
+  return_object_ =
+      CreateObject(Lifetime::CreateVariable(), func->getReturnType());
   CreateObjects(
       return_object_, func->getReturnType(),
-      [](const clang::Expr*) { return Lifetime::CreateLocal(); },
-      /*transitive=*/false);
+      [](const clang::Expr*) { return Lifetime::CreateVariable(); },
+      /*transitive=*/kUseConstraintBasedAnalysis);
 
   if (method_decl) {
     if (!method_decl->isStatic()) {
