@@ -59,7 +59,7 @@ class Importer : public ImportContext {
                                  std::string error) override;
   IR::Item ImportUnsupportedItem(const clang::Decl* decl,
                                  std::set<std::string> errors) override;
-  std::optional<IR::Item> ImportDecl(clang::Decl* decl);
+  std::optional<IR::Item> ImportDecl(clang::Decl* decl) override;
   std::optional<IR::Item> GetImportedItem(const clang::Decl* decl) override;
   std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) override;
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
