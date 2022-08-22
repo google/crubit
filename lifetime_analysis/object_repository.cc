@@ -513,7 +513,12 @@ std::string ObjectRepository::DebugString() const {
   for (const auto& [field, object] : field_object_map_) {
     os << "Field '";
     field.second->printName(os);
-    os << "' on " << field.first->Type().getAsString()
+    os << "' on " << field.first->DebugString()
+       << " object: " << object->DebugString() << "\n";
+  }
+  for (const auto& [base, object] : base_object_map_) {
+    os << "Base of type " << clang::QualType(base.second, 0).getAsString()
+       << " of " << base.first->DebugString()
        << " object: " << object->DebugString() << "\n";
   }
   os << "Return " << return_object_->DebugString() << "\n";
