@@ -116,6 +116,10 @@ class ObjectRepository {
   const Object* GetOriginalParameterValue(
       const clang::ParmVarDecl* var_decl) const;
 
+  // Synthetizes a FunctionLifetimes that has as lifetimes the initial lifetimes
+  // of the function currently being analyzed, before any analysis runs.
+  FunctionLifetimes GetOriginalFunctionLifetimes() const;
+
   // Returns the object associated with an argument to a CallExpr.
   const Object* GetCallExprArgumentObject(const clang::CallExpr* expr,
                                           size_t arg_index) const;
@@ -253,6 +257,10 @@ class ObjectRepository {
   llvm::DenseMap<const clang::Expr*, const Object*> call_expr_this_pointers_;
 
   llvm::DenseMap<clang::QualType, const Object*> static_objects_;
+
+  const clang::FunctionDecl* func_;
+
+  llvm::DenseMap<const Object*, ObjectLifetimes> initial_object_lifetimes_;
 };
 
 }  // namespace lifetimes

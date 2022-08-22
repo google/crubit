@@ -165,6 +165,8 @@ class FunctionLifetimes {
   ValueLifetimes return_lifetimes_;
   std::optional<ValueLifetimes> this_lifetimes_;
 
+  friend class ObjectRepository;
+
   static llvm::Expected<FunctionLifetimes> Create(
       const clang::FunctionProtoType* type, clang::TypeLoc type_loc,
       const clang::QualType this_type,

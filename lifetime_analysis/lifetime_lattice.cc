@@ -80,7 +80,7 @@ bool LifetimeLattice::operator==(const LifetimeLattice& other) const {
     // Any error compares equal to any other error.
     return IsError() && other.IsError();
   }
-  return PointsTo() == other.PointsTo();
+  return PointsTo() == other.PointsTo() && Constraints() == other.Constraints();
 }
 
 }  // namespace lifetimes

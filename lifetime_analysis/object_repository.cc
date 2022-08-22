@@ -12,6 +12,7 @@
 
 #include "lifetime_analysis/object.h"
 #include "lifetime_analysis/visit_lifetimes.h"
+#include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/pointee_type.h"
 #include "lifetime_annotations/type_lifetimes.h"
@@ -458,6 +459,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
   const auto* definition = func->getDefinition();
   assert(definition || (method_decl && method_decl->isPure()));
   if (definition) func = definition;
+  func_ = func;
 
   // For the return value, we only need to create field objects.
   return_object_ = CreateObject(Lifetime::CreateLocal(), func->getReturnType());
@@ -561,6 +563,39 @@ const Object* ObjectRepository::GetOriginalParameterValue(
     llvm::report_fatal_error("Didn't find caller object for parameter");
   }
   return iter->second;
+}
+
+FunctionLifetimes ObjectRepository::GetOriginalFunctionLifetimes() const {
+  FunctionLifetimes ret;
+  auto get_initial_lifetimes_or_die = [&](const Object* object) {
+    auto iter = initial_object_lifetimes_.find(object);
+    if (iter == initial_object_lifetimes_.end()) {
+      llvm::errs() << "Didn't find lifetimes for object "
+                   << object->DebugString();
+      llvm::report_fatal_error("Didn't find lifetimes for object");
+    }
+    return iter->second;
+  };
+  ret.return_lifetimes_ =
+      get_initial_lifetimes_or_die(GetReturnObject()).GetValueLifetimes();
+  if (this_object_.has_value()) {
+    ret.this_lifetimes_ = ValueLifetimes::PointerTo(
+        clang::dyn_cast<clang::CXXMethodDecl>(func_)->getThisType(),
+        get_initial_lifetimes_or_die(*this_object_));
+  }
+  ret.param_lifetimes_.reserve(func_->getNumParams());
+  for (size_t i = 0; i < func_->getNumParams(); i++) {
+    ret.param_lifetimes_.push_back(
+        get_initial_lifetimes_or_die(
+            GetOriginalParameterValue(func_->getParamDecl(i)))
+            .GetValueLifetimes());
+  }
+  if (!ret.IsValidForDecl(func_)) {
+    llvm::errs() << "Internal error: did not produce valid function lifetimes";
+    llvm::report_fatal_error(
+        "Internal error: did not produce valid function lifetimes");
+  }
+  return ret;
 }
 
 const Object* ObjectRepository::GetCallExprArgumentObject(
@@ -797,11 +832,11 @@ void ObjectRepository::CreateObjects(const Object* root_object,
     llvm::DenseMap<ObjectLifetimes, const Object*> object_cache_;
   };
   Visitor visitor(*this, transitive);
-  VisitLifetimes(
-      {root_object}, type,
+  initial_object_lifetimes_[root_object] =
       ObjectLifetimes(root_object->GetLifetime(),
-                      ValueLifetimes::Create(type, lifetime_factory).get()),
-      visitor);
+                      ValueLifetimes::Create(type, lifetime_factory).get());
+  VisitLifetimes({root_object}, type, initial_object_lifetimes_[root_object],
+                 visitor);
 }
 
 // Clones an object and its base classes and fields, if any.
@@ -817,6 +852,7 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     return new_obj;
   };
   const Object* new_root = clone(object);
+  initial_object_lifetimes_[new_root] = initial_object_lifetimes_[object];
   std::vector<ObjectPair> object_stack{{object, new_root}};
   while (!object_stack.empty()) {
     auto [orig_object, new_object] = object_stack.back();

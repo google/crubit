@@ -99,6 +99,10 @@ class ValueLifetimes {
     return Create(type, clang::TypeLoc(), lifetime_factory);
   }
 
+  // Creates a ValueLifetimes for a pointer to a given ObjectLifetimes.
+  static ValueLifetimes PointerTo(clang::QualType pointer_type,
+                                  const ObjectLifetimes& object);
+
   // Returns a ValueLifetimes for a lifetime-less type.
   // `type` must not be a pointer-like type or a record type.
   static ValueLifetimes ForLifetimeLessType(clang::QualType type);

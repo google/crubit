@@ -88,6 +88,8 @@ cc_library(
     hdrs = ["lifetime_constraints.h"],
     deps = [
         "//lifetime_annotations:lifetime",
+        "//lifetime_annotations:lifetime_substitutions",
+        "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:analysis",
         "@llvm-project//llvm:Support",
     ],

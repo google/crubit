@@ -273,6 +273,16 @@ bool SameType(clang::QualType type1, clang::QualType type2) {
 
 }  // namespace
 
+ValueLifetimes ValueLifetimes::PointerTo(const clang::QualType pointer_type,
+                                         const ObjectLifetimes& obj) {
+  ValueLifetimes ret;
+  ret.type_ = pointer_type;
+  assert(pointer_type->getPointeeType().getCanonicalType() ==
+         obj.Type().getCanonicalType());
+  ret.pointee_lifetimes_ = std::make_unique<ObjectLifetimes>(obj);
+  return ret;
+}
+
 llvm::Expected<ValueLifetimes> ValueLifetimes::Create(
     clang::QualType type, clang::TypeLoc type_loc,
     LifetimeFactory lifetime_factory) {

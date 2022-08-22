@@ -823,6 +823,7 @@ llvm::Error AnalyzeFunctionBody(
   }
 
   points_to_map = exit_lattice.PointsTo();
+  constraints = exit_lattice.Constraints();
 
   // Adding initializers to the PointsToMap *before* dataflow analysis is
   // problematic because the expressions do not have a lifetime yet in the map
@@ -972,51 +973,59 @@ llvm::Expected<FunctionLifetimes> ConstructFunctionLifetimes(
 
   auto& [object_repository, points_to_map, constraints, subst] = analysis;
 
-  // We create "fake" lifetimes for the function, then walk the type and find
-  // out which input-to-the-function-call lifetime to use as a replacement using
-  // UnifyLifetimes.
-  FunctionLifetimeFactorySingleCallback factory(
-      [](const clang::Expr*) { return Lifetime::CreateVariable(); });
-  FunctionLifetimes result =
-      FunctionLifetimes::CreateForDecl(func, factory).get();
+  constexpr bool kUseConstraintBasedAnalysis = false;
+  FunctionLifetimes result;
 
-  // For each parameter that is of reference-like type, find the lifetimes of
-  // all of its transitive pointees. At each level of indirection, unify all
-  // lifetimes in the points-to set into a single lifetime by performing
-  // appropriate substitutions.
-  for (unsigned i = 0; i < func->getNumParams(); ++i) {
-    const clang::ParmVarDecl* param = func->getParamDecl(i);
-    FindLifetimeSubstitutions(
-        object_repository.GetOriginalParameterValue(param), param->getType(),
-        points_to_map, object_repository, result.GetParamLifetimes(i), subst);
-  }
-
-  // If in a member function, handle the implicit `this` argument.
-  if (const auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(func)) {
-    if (!method_decl->isStatic()) {
-      auto this_object = object_repository.GetThisObject();
-      if (!this_object.has_value()) {
-        assert(false);
-        return llvm::createStringError(llvm::inconvertibleErrorCode(),
-                                       "Programming logic error");
-      }
-      // `this` does not have a local variable. We magick a pointer that points
-      // to `this` anyway for consistency with the other calls.
-      const Object* points_to_this = object_repository.CreateObject(
-          Lifetime::CreateLocal(), method_decl->getThisType());
-      points_to_map.SetPointerPointsToSet(points_to_this,
-                                          {this_object.value()});
-      FindLifetimeSubstitutions(points_to_this, method_decl->getThisType(),
-                                points_to_map, object_repository,
-                                result.GetThisLifetimes(), subst);
+  if (kUseConstraintBasedAnalysis) {
+    result = object_repository.GetOriginalFunctionLifetimes();
+    if (llvm::Error err = constraints.ApplyToFunctionLifetimes(result)) {
+      return std::move(err);
     }
+  } else {
+    // We create "fake" lifetimes for the function, then walk the type and find
+    // out which input-to-the-function-call lifetime to use as a replacement
+    // using UnifyLifetimes.
+    FunctionLifetimeFactorySingleCallback factory(
+        [](const clang::Expr*) { return Lifetime::CreateVariable(); });
+    result = FunctionLifetimes::CreateForDecl(func, factory).get();
+    // For each parameter that is of reference-like type, find the lifetimes of
+    // all of its transitive pointees. At each level of indirection, unify all
+    // lifetimes in the points-to set into a single lifetime by performing
+    // appropriate substitutions.
+    for (unsigned i = 0; i < func->getNumParams(); ++i) {
+      const clang::ParmVarDecl* param = func->getParamDecl(i);
+      FindLifetimeSubstitutions(
+          object_repository.GetOriginalParameterValue(param), param->getType(),
+          points_to_map, object_repository, result.GetParamLifetimes(i), subst);
+    }
+
+    // If in a member function, handle the implicit `this` argument.
+    if (const auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(func)) {
+      if (!method_decl->isStatic()) {
+        auto this_object = object_repository.GetThisObject();
+        if (!this_object.has_value()) {
+          assert(false);
+          return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                         "Programming logic error");
+        }
+        // `this` does not have a local variable. We magick a pointer that
+        // points to `this` anyway for consistency with the other calls.
+        const Object* points_to_this = object_repository.CreateObject(
+            Lifetime::CreateLocal(), method_decl->getThisType());
+        points_to_map.SetPointerPointsToSet(points_to_this,
+                                            {this_object.value()});
+        FindLifetimeSubstitutions(points_to_this, method_decl->getThisType(),
+                                  points_to_map, object_repository,
+                                  result.GetThisLifetimes(), subst);
+      }
+    }
+
+    FindLifetimeSubstitutions(
+        object_repository.GetReturnObject(), func->getReturnType(),
+        points_to_map, object_repository, result.GetReturnLifetimes(), subst);
+
+    result.SubstituteLifetimes(subst);
   }
-
-  FindLifetimeSubstitutions(
-      object_repository.GetReturnObject(), func->getReturnType(), points_to_map,
-      object_repository, result.GetReturnLifetimes(), subst);
-
-  result.SubstituteLifetimes(subst);
 
   if (llvm::Error err = DiagnoseReturnLocal(func, result, diag_reporter)) {
     return std::move(err);
