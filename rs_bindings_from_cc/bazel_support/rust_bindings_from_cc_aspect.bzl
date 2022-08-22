@@ -67,10 +67,8 @@ def _collect_hdrs(ctx):
 def _is_proto_library(target):
     return ProtoInfo in target
 
-def _is_cc_proto_library(target):
-    #TODO(b/232199093): Ideally we would check for a cc_proto_library specific provider such as
-    # `ProtoCcFilesInfo`, but it is currently hidden in builtins.
-    return target.label.name.endswith("cc_proto")
+def _is_cc_proto_library(rule):
+    return rule.kind == "cc_proto_library"
 
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # We use a fake generator only when we are building the real one, in order to avoid
@@ -91,7 +89,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     if CcInfo not in target:
         return []
 
-    if _is_cc_proto_library(target):
+    if _is_cc_proto_library(ctx.rule):
         # This is cc_proto_library, we are interested in RustBindingsFromCcInfo provider of the
         # proto_library.
         return [ctx.rule.attr.deps[0][RustBindingsFromCcInfo]]
