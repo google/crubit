@@ -5,7 +5,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
     "deps_for_bindings",
 )
-load("//third_party/bazel_skylib:bzl_library.bzl", "bzl_library")
+load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 licenses(["notice"])
