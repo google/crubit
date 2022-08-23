@@ -138,7 +138,15 @@ def _compile_rust(ctx, attr, src, deps):
         extension = ".rlib",
     )
 
+    rmeta_name = "{prefix}{name}-{lib_hash}{extension}".format(
+        prefix = "lib",
+        name = crate_name,
+        lib_hash = output_hash,
+        extension = ".rmeta",
+    )
+
     lib = ctx.actions.declare_file(lib_name)
+    rmeta = ctx.actions.declare_file(rmeta_name)
 
     providers = rustc_compile_action(
         ctx = ctx,
@@ -153,6 +161,7 @@ def _compile_rust(ctx, attr, src, deps):
             proc_macro_deps = depset([]),
             aliases = {},
             output = lib,
+            metadata = rmeta,
             edition = "2018",
             is_test = False,
             rustc_env = {},

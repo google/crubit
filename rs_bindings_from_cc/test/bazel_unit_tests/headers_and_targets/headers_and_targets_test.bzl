@@ -6,28 +6,13 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
-    "rust_bindings_from_cc_aspect",
-)
-load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
     "RustBindingsFromCcInfo",
 )
-
-ActionsInfo = provider(
-    doc = ("A provider that contains compile and linking information for the generated" +
-           " `.cc` and `.rs` files."),
-    fields = {"actions": "asdf"},
-)
-
-def _attach_aspect_impl(ctx):
-    return [ctx.attr.dep[RustBindingsFromCcInfo], ActionsInfo(actions = ctx.attr.dep.actions)]
-
-attach_aspect = rule(
-    implementation = _attach_aspect_impl,
-    attrs = {
-        "dep": attr.label(aspects = [rust_bindings_from_cc_aspect]),
-    },
+load(
+    "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
+    "ActionsInfo",
+    "attach_aspect",
 )
 
 def _is_std(t):
@@ -282,7 +267,7 @@ def _test_generated_headers_specified_with_full_path():
         target_under_test = ":generated_header_with_aspect",
     )
 
-def rust_bindings_from_cc_aspect_test(name):
+def headers_and_targets_test(name):
     """Sets up rust_bindings_from_cc_aspect test suite.
 
     Args:

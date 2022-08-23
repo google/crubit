@@ -6,31 +6,9 @@
 
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_aspect.bzl",
-    "rust_bindings_from_cc_aspect",
-)
-load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
-    "RustBindingsFromCcInfo",
-)
-
-ActionsInfo = provider(
-    doc = ("A provider that contains compile and linking information for the generated" +
-           " `.cc` and `.rs` files."),
-    fields = {"actions": "List[Action]"},
-)
-
-def _attach_aspect_impl(ctx):
-    return [
-        ctx.attr.dep[RustBindingsFromCcInfo],
-        ActionsInfo(actions = ctx.attr.dep.actions),
-    ]
-
-attach_aspect = rule(
-    implementation = _attach_aspect_impl,
-    attrs = {
-        "dep": attr.label(aspects = [rust_bindings_from_cc_aspect]),
-    },
+    "//rs_bindings_from_cc/test/bazel_unit_tests:defs.bzl",
+    "ActionsInfo",
+    "attach_aspect",
 )
 
 def _filter_by_substring(arr, substring):
