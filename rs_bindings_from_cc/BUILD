@@ -448,28 +448,7 @@ rust_test(
     ],
 )
 
-LIBCXX_HEADERS = [
-    "cstddef",
-    "cstdlib",
-    "version",
-    "limits",
-    "climits",
-    "cfloat",
-    "cstdint",
-    "new",
-    "typeinfo",
-    "exception",
-    "initializer_list",
-    "compare",
-    "csignal",
-    "csetjmp",
-    "cstdarg",
-    "string",
-    "memory",
-    "stdint.h",
-    "stddef.h",
-    "stdlib.h",
-]
+LIBCXX_HEADERS = ["ctime"]
 
 LIBC_HEADERS = []
 
