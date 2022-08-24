@@ -44,6 +44,14 @@ using AliasToTemplateWithTwoParams = TemplateWithTwoParams<int, float>;
 using AliasToTemplateOfATemplate =
     TemplateWithTwoParams<TemplateWithTwoParams<int, int>, int>;
 
+template <typename T>
+struct MyStruct {
+  T t;
+};
+
+template <>
+struct MyStruct<char> {};
+
 }  // namespace test_namespace_bindings
 
 template <typename T>

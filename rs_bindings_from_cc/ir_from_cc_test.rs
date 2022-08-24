@@ -1002,7 +1002,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
         quote! {
           Record {
             rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE", ...
-            cc_name: "test_namespace_bindings::MyStruct<int>", ...
+            cc_name: "MyStruct<int>", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment for template specialization for T=int."), ...
             fields: [Field {
@@ -1019,7 +1019,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
           }
         }
     );
-    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
 
     // TODO(b/200067826) This assertion worked because the template specialization
     // was top level already.
@@ -3409,7 +3409,7 @@ fn test_incomplete_record_has_rs_name() {
         quote! {
             ...
             IncompleteRecord {
-              cc_name: "test_namespace_bindings::MyTemplate<test_namespace_bindings::Param>",
+              cc_name: "MyTemplate<test_namespace_bindings::Param>",
               rs_name: "__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE",
               ...
             } ...

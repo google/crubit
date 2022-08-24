@@ -8,7 +8,9 @@
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/Type.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/ErrorHandling.h"
 
@@ -25,8 +27,34 @@ std::string GetClassTemplateSpecializationCcName(
   // desugared out of an `ElaboratedType` so that their namespaces are written
   // down.
   policy.PrintCanonicalTypes = true;
-  return clang::QualType(specialization_decl->getTypeForDecl(), 0)
-      .getAsString(policy);
+
+  // TODO(200067826): Remove special handling of epxlicit class template
+  // specializations.
+  // Currently we generate the bindings for explicit class template
+  // specializations inside the module (opposed to the bindings
+  // generated for implicit class template specializations, which are top
+  // level). This means that explicit class template specializations have a
+  // parent namespace, and we will obtain the namespace qualifier by invoking
+  // src_code_gen::generate_namespace_qualifier().
+  //
+  // In order not to end up with duplicated namespacd qualifiers, we make this
+  // function return the non-namespace qualified name of the decl.
+  //
+  // This logic should go away once we start generating top level bindings for
+  // explicit class template specializations.
+  if (specialization_decl->isExplicitSpecialization()) {
+    llvm::SmallString<128> storage;
+    llvm::raw_svector_ostream out(storage);
+    out << specialization_decl->getName();
+    auto args_list =
+        specialization_decl->getTemplateInstantiationArgs().asArray();
+    auto param_list = specialization_decl->getDescribedTemplateParams();
+    clang::printTemplateArgumentList(out, args_list, policy, param_list);
+    return out.str().str();
+  } else {
+    return clang::QualType(specialization_decl->getTypeForDecl(), 0)
+        .getAsString(policy);
+  }
 }
 
 AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {

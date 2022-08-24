@@ -124,6 +124,33 @@ __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1EOS1___2f
   crubit::construct_at(__this, std::move(*__param_0));
 }
 extern "C" void
+__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::MyStruct<char>* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::MyStruct<char>* __this,
+    const struct test_namespace_bindings::MyStruct<char>* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::MyStruct<char>* __this,
+    struct test_namespace_bindings::MyStruct<char>* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" struct test_namespace_bindings::MyStruct<char>*
+__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::MyStruct<char>* __this,
+    const struct test_namespace_bindings::MyStruct<char>* __param_0) {
+  return &__this->operator=(*__param_0);
+} extern "C" struct test_namespace_bindings::MyStruct<char>*
+__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::MyStruct<char>* __this,
+    struct test_namespace_bindings::MyStruct<char>* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+} extern "C" void
 __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
     struct MyTopLevelTemplate<test_namespace_bindings::TemplateParam>* __this) {
   crubit::construct_at(__this);
@@ -193,6 +220,9 @@ static_assert(
         value2,
         struct test_namespace_bindings::TemplateWithTwoParams<int, float>) ==
     4);
+
+static_assert(sizeof(struct test_namespace_bindings::MyStruct<char>) == 1);
+static_assert(alignof(struct test_namespace_bindings::MyStruct<char>) == 1);
 
 static_assert(
     sizeof(struct MyTopLevelTemplate<test_namespace_bindings::TemplateParam>) ==
