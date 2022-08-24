@@ -11,77 +11,63 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
-extern "C" void __rust_thunk___ZN23test_namespace_bindings7TrivialC1Ev(
-    struct test_namespace_bindings::Trivial* __this) {
+extern "C" void __rust_thunk___ZN2ns7TrivialC1Ev(struct ns::Trivial* __this) {
   crubit::construct_at(__this);
 }
-extern "C" void __rust_thunk___ZN23test_namespace_bindings7TrivialC1EOS0_(
-    struct test_namespace_bindings::Trivial* __this,
-    struct test_namespace_bindings::Trivial* __param_0) {
+extern "C" void __rust_thunk___ZN2ns7TrivialC1EOS0_(
+    struct ns::Trivial* __this, struct ns::Trivial* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void
-__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1Ev(
-    struct test_namespace_bindings::TrivialWithDefaulted* __this) {
+extern "C" void __rust_thunk___ZN2ns20TrivialWithDefaultedC1Ev(
+    struct ns::TrivialWithDefaulted* __this) {
   crubit::construct_at(__this);
 }
-extern "C" void
-__rust_thunk___ZN23test_namespace_bindings20TrivialWithDefaultedC1EOS0_(
-    struct test_namespace_bindings::TrivialWithDefaulted* __this,
-    struct test_namespace_bindings::TrivialWithDefaulted* __param_0) {
+extern "C" void __rust_thunk___ZN2ns20TrivialWithDefaultedC1EOS0_(
+    struct ns::TrivialWithDefaulted* __this,
+    struct ns::TrivialWithDefaulted* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" void __rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1Ev(
-    struct test_namespace_bindings::TrivialNonfinal* __this) {
+extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
+    struct ns::TrivialNonfinal* __this) {
   crubit::construct_at(__this);
 }
-extern "C" void
-__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1ERKS0_(
-    struct test_namespace_bindings::TrivialNonfinal* __this,
-    const struct test_namespace_bindings::TrivialNonfinal* __param_0) {
+extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_(
+    struct ns::TrivialNonfinal* __this,
+    const struct ns::TrivialNonfinal* __param_0) {
   crubit::construct_at(__this, *__param_0);
 }
-extern "C" void
-__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalC1EOS0_(
-    struct test_namespace_bindings::TrivialNonfinal* __this,
-    struct test_namespace_bindings::TrivialNonfinal* __param_0) {
+extern "C" void __rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
+    struct ns::TrivialNonfinal* __this, struct ns::TrivialNonfinal* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
-extern "C" struct test_namespace_bindings::TrivialNonfinal*
-__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSERKS0_(
-    struct test_namespace_bindings::TrivialNonfinal* __this,
-    const struct test_namespace_bindings::TrivialNonfinal* __param_0) {
+extern "C" struct ns::TrivialNonfinal*
+__rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_(
+    struct ns::TrivialNonfinal* __this,
+    const struct ns::TrivialNonfinal* __param_0) {
   return &__this->operator=(*__param_0);
 }
-extern "C" struct test_namespace_bindings::TrivialNonfinal*
-__rust_thunk___ZN23test_namespace_bindings15TrivialNonfinalaSEOS0_(
-    struct test_namespace_bindings::TrivialNonfinal* __this,
-    struct test_namespace_bindings::TrivialNonfinal* __param_0) {
+extern "C" struct ns::TrivialNonfinal*
+__rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_(
+    struct ns::TrivialNonfinal* __this, struct ns::TrivialNonfinal* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void
-__rust_thunk___ZN23test_namespace_bindings27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-    struct test_namespace_bindings::TrivialNonfinal* trivial) {
-  test_namespace_bindings::TakesTrivialNonfinalByValue(std::move(*trivial));
+__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
+    struct ns::TrivialNonfinal* trivial) {
+  ns::TakesTrivialNonfinalByValue(std::move(*trivial));
 }
 
-static_assert(sizeof(struct test_namespace_bindings::Trivial) == 4);
-static_assert(alignof(struct test_namespace_bindings::Trivial) == 4);
+static_assert(sizeof(struct ns::Trivial) == 4);
+static_assert(alignof(struct ns::Trivial) == 4);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::Trivial) == 0);
+
+static_assert(sizeof(struct ns::TrivialWithDefaulted) == 4);
+static_assert(alignof(struct ns::TrivialWithDefaulted) == 4);
 static_assert(CRUBIT_OFFSET_OF(trivial_field,
-                               struct test_namespace_bindings::Trivial) == 0);
+                               struct ns::TrivialWithDefaulted) == 0);
 
-static_assert(sizeof(struct test_namespace_bindings::TrivialWithDefaulted) ==
-              4);
-static_assert(alignof(struct test_namespace_bindings::TrivialWithDefaulted) ==
-              4);
-static_assert(CRUBIT_OFFSET_OF(
-                  trivial_field,
-                  struct test_namespace_bindings::TrivialWithDefaulted) == 0);
-
-static_assert(sizeof(struct test_namespace_bindings::TrivialNonfinal) == 4);
-static_assert(alignof(struct test_namespace_bindings::TrivialNonfinal) == 4);
-static_assert(
-    CRUBIT_OFFSET_OF(trivial_field,
-                     struct test_namespace_bindings::TrivialNonfinal) == 0);
+static_assert(sizeof(struct ns::TrivialNonfinal) == 4);
+static_assert(alignof(struct ns::TrivialNonfinal) == 4);
+static_assert(CRUBIT_OFFSET_OF(trivial_field, struct ns::TrivialNonfinal) == 0);
 
 #pragma clang diagnostic pop

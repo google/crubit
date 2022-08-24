@@ -11,14 +11,6 @@ namespace crubit {
 std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
 
-  // TODO(rosica) In order to fully enable namespaces we first need to ensure
-  // that each decl Item contains information on its namespace parents.
-  if (!absl::StrContains(namespace_decl->getQualifiedNameAsString(),
-                         "test_namespace_bindings")) {
-    return ictx_.ImportUnsupportedItem(namespace_decl,
-                                       "Namespaces are not supported yet");
-  }
-
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
         namespace_decl, "Anonymous namespaces are not supported yet");

@@ -1907,13 +1907,6 @@ fn test_template_in_dependency_and_alias_in_current_target() -> Result<()> {
 
 #[test]
 fn test_well_known_types_check_namespaces() -> Result<()> {
-    // Check that we don't treat a type called `int32_t` in a user-defined
-    // namespace as if it was the standard type `int32_t`.
-    // Because we don't support namespaces yet, the outcome of this should be
-    // that `f()` is unsupported, rather than being imported with a parameter
-    // type of `i32`.
-    // Once we support namespaces, change this test to check that `f()` is
-    // imported with the correct paramter type `my_namespace::int32_t`.
     let ir = ir_from_cc(
         r#"
             namespace my_namespace {
@@ -1922,9 +1915,27 @@ fn test_well_known_types_check_namespaces() -> Result<()> {
             void f(my_namespace::int32_t i);
         "#,
     )?;
-    assert_strings_contain(
-        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
-        "f",
+    assert_ir_matches!(
+        ir,
+        quote! {
+          Func { ...
+            name: "f", ...
+            params: [
+             FuncParam {
+               type_: MappedType {
+                 rs_type: RsType {
+                   name: None, ...
+                   decl_id: Some(...), ...
+                 },
+                 cc_type: CcType {
+                   name: None, ...
+                   decl_id: Some(...), ...
+                 },
+               },
+               identifier: "i",
+             }], ...
+          }
+        }
     );
     Ok(())
 }
@@ -2931,7 +2942,7 @@ fn test_top_level_items() {
               Func { ... name: "top_level_func" ... }
             },
             quote! {
-              UnsupportedItem { ... name: "top_level_namespace" ... }
+              Namespace { ... name: "top_level_namespace" ... }
             },
             quote! {
               Comment {
@@ -3299,25 +3310,6 @@ fn test_namespace_stored_data_in_ir() {
         .unwrap(),
         true
     );
-}
-
-#[test]
-fn test_records_from_namespaces_not_imported_yet() {
-    let ir = ir_from_cc(
-        r#"
-          namespace my_namespace {
-            template <typename T> struct MyStruct { T t; };
-          }
-          typedef my_namespace::MyStruct<int> MySpecialization;
-          void my_func(MySpecialization param);
-    "#,
-    )
-    .unwrap();
-
-    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "my_namespace" ...} });
-    let msg = "Parameter #0 is not supported: Unsupported type 'MySpecialization': \
-        No generated bindings found for 'MySpecialization'";
-    assert_ir_matches!(ir, quote! { UnsupportedItem { name: "my_func", message: #msg ...} });
 }
 
 #[test]

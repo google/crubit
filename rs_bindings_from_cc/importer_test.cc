@@ -56,6 +56,8 @@ std::optional<IR::Item> FindItemById(const IR& ir, ItemId id) {
     } else if (auto* unsupported = std::get_if<UnsupportedItem>(&item);
                unsupported && unsupported->id == id) {
       return item;
+    } else if (auto* ns = std::get_if<Namespace>(&item); ns && ns->id == id) {
+      return item;
     }
   }
   return std::nullopt;
@@ -66,6 +68,7 @@ UnqualifiedIdentifier GetName(const T& x) {
   return x.identifier;
 }
 UnqualifiedIdentifier GetName(const Func& x) { return x.name; }
+UnqualifiedIdentifier GetName(const Namespace& x) { return x.name; }
 
 // Matches an IR node that has the given identifier.
 MATCHER_P(IdentifierIs, identifier, "") {
@@ -828,7 +831,7 @@ TEST(ImporterTest, TopLevelItemIds) {
           VariantWith<Record>(RsNameIs("TopLevelStruct")),
           VariantWith<Comment>(TextIs("Top level comment")),
           VariantWith<Func>(IdentifierIs("top_level_func")),
-          VariantWith<UnsupportedItem>(NameIs("top_level_namespace")),
+          VariantWith<Namespace>(IdentifierIs("top_level_namespace")),
           VariantWith<Comment>(TextIs("namespace top_level_namespace"))));
 }
 

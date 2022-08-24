@@ -5,7 +5,7 @@
 // Automatically @generated Rust bindings for C++ target
 // //rs_bindings_from_cc/test/golden:types_cc
 #![rustfmt::skip]
-#![feature(const_ptr_offset_from, custom_inner_attributes)]
+#![feature(const_ptr_offset_from, custom_inner_attributes, negative_impls)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -154,6 +154,98 @@ impl From<Color> for u32 {
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
+
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct __CcTemplateInstNSt3__u17integral_constantIbLb0EEE {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std::integral_constant<bool, false>"),
+    crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE
+);
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, false>::std::integral_constant<bool, false>':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, false>::std::integral_constant<bool, false>':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, false>::integral_constant':
+// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
+// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
+// Error while generating bindings for item 'std::integral_constant<bool, false>::value_type':
+// Typedefs nested in classes are not supported yet
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
+// Error while generating bindings for item 'std::integral_constant<bool, false>::type':
+// Typedefs nested in classes are not supported yet
+
+// <unknown location>
+// Error while generating bindings for item 'std::integral_constant<bool, false>::operator bool':
+// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, false>::value_type': No generated bindings found for 'value_type'
+
+// <unknown location>
+// Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
+// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, false>::value_type': No generated bindings found for 'value_type'
+
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct __CcTemplateInstNSt3__u17integral_constantIbLb1EEE {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("std::integral_constant<bool, true>"),
+    crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE
+);
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, true>::std::integral_constant<bool, true>':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, true>::std::integral_constant<bool, true>':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, true>::integral_constant':
+// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
+// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
+// Error while generating bindings for item 'std::integral_constant<bool, true>::value_type':
+// Typedefs nested in classes are not supported yet
+
+// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
+// Error while generating bindings for item 'std::integral_constant<bool, true>::type':
+// Typedefs nested in classes are not supported yet
+
+// <unknown location>
+// Error while generating bindings for item 'std::integral_constant<bool, true>::operator bool':
+// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, true>::value_type': No generated bindings found for 'value_type'
+
+// <unknown location>
+// Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
+// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, true>::value_type': No generated bindings found for 'value_type'
 
 mod detail {
     #[allow(unused_imports)]
@@ -339,3 +431,37 @@ const _: () = assert!(
     memoffset_unstable_const::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field)
         == 280
 );
+
+const _: () = assert!(
+    ::std::mem::size_of::<crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE>() == 1
+);
+const _: () = assert!(
+    ::std::mem::align_of::<crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE>() == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE: Drop
+    );
+};
+
+const _: () = assert!(
+    ::std::mem::size_of::<crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE>() == 1
+);
+const _: () = assert!(
+    ::std::mem::align_of::<crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE>() == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE: Drop
+    );
+};

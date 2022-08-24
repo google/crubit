@@ -26,6 +26,74 @@ extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();
 }
 
+static_assert(sizeof(struct std::integral_constant<bool, false>) == 1);
+static_assert(alignof(struct std::integral_constant<bool, false>) == 1);
+
+static_assert(sizeof(struct std::integral_constant<bool, true>) == 1);
+static_assert(alignof(struct std::integral_constant<bool, true>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<bool>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<bool>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<char>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<char>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<signed char>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<signed char>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<unsigned char>) ==
+              1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<unsigned char>) ==
+              1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<wchar_t>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<wchar_t>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<char16_t>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<char16_t>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<char32_t>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<char32_t>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<short>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<short>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<unsigned short>) ==
+              1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<unsigned short>) ==
+              1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<int>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<int>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<unsigned int>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<unsigned int>) ==
+              1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<long>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<long>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<unsigned long>) ==
+              1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<unsigned long>) ==
+              1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<long long>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<long long>) == 1);
+
+static_assert(
+    sizeof(struct std::__u::__libcpp_is_integral<unsigned long long>) == 1);
+static_assert(
+    alignof(struct std::__u::__libcpp_is_integral<unsigned long long>) == 1);
+
+static_assert(sizeof(struct std::__u::__libcpp_is_integral<__int128>) == 1);
+static_assert(alignof(struct std::__u::__libcpp_is_integral<__int128>) == 1);
+
+static_assert(
+    sizeof(struct std::__u::__libcpp_is_integral<unsigned __int128>) == 1);
+static_assert(
+    alignof(struct std::__u::__libcpp_is_integral<unsigned __int128>) == 1);
+
 static_assert(sizeof(struct SomeStruct) == 1);
 static_assert(alignof(struct SomeStruct) == 1);
 

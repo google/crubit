@@ -9,11 +9,10 @@
 
 #pragma clang lifetime_elision
 
-test_namespace_bindings::Trivial UsesImportedType(
-    test_namespace_bindings::Trivial t);
+ns::Trivial UsesImportedType(ns::Trivial t);
 
 struct UserOfImportedType final {
-  test_namespace_bindings::Trivial* trivial;
+  ns::Trivial* trivial;
 };
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_

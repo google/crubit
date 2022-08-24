@@ -7,7 +7,7 @@
 
 #pragma clang lifetime_elision
 
-namespace test_namespace_bindings {
+namespace ns {
 // Implicitly defined special member functions are trivial on a struct with
 // only trivial members.
 struct Trivial final {
@@ -43,6 +43,6 @@ void TakesByReference(Trivial& trivial);
 void TakesWithDefaultedByReference(TrivialWithDefaulted& trivial);
 void TakesTrivialNonfinalByReference(TrivialNonfinal& trivial);
 
-}  // namespace test_namespace_bindings
+}  // namespace ns
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TRIVIAL_TYPE_H_

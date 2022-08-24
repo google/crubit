@@ -32,14 +32,6 @@ struct NontrivialCustomType final {
 // currently supported.
 volatile int* MultipleReasons(volatile int* n);
 
-namespace ns {
-void FunctionInNamespace();
-struct StructInNamespace final {
-  void NonStaticMemberFunction();
-  void StaticMemberFunction();
-};
-}  // namespace ns
-
 struct ContainingStruct final {
   struct NestedStruct final {
     void NonStaticMemberFunction();

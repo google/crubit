@@ -114,12 +114,6 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialCustomTyp
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=35
-// Error while generating bindings for item 'ns':
-// Namespaces are not supported yet
-
-// namespace ns
-
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
@@ -156,15 +150,15 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::ContainingStruct>> for Containi
     }
 }
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=43
+// rs_bindings_from_cc/test/golden/unsupported.h;l=35
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=43
+// rs_bindings_from_cc/test/golden/unsupported.h;l=35
 // Error while generating bindings for item 'ContainingStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unsupported.h;l=44
+// rs_bindings_from_cc/test/golden/unsupported.h;l=36
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
 // Nested classes are not supported yet
 
