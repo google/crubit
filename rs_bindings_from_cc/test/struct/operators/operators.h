@@ -59,13 +59,16 @@ struct OperandForFreeFuncInDifferentNamespace final {
   int i;
 };
 
-namespace some_other_namespace {
+namespace test_namespace_bindings {
 
 // This should *not* generate PartialEq, because we are trying to mimic ADL.
-bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
-                const OperandForFreeFuncInDifferentNamespace& rhs);
 
-}  // namespace some_other_namespace
+// TODO(b/200066396): We currently generate PartialEq here, but it doesn't
+// compile.
+// bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
+//                 const OperandForFreeFuncInDifferentNamespace& rhs);
+
+}  // namespace test_namespace_bindings
 
 //////////////////////////////////////////////////////////////////////
 

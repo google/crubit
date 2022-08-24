@@ -13,11 +13,11 @@ bool operator==(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs) {
   return (lhs.i % 10) == (rhs.i % 10);
 }
 
-namespace some_other_namespace {
+namespace test_namespace_bindings {
 
-bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
-                const OperandForFreeFuncInDifferentNamespace& rhs) {
-  return (lhs.i % 10) == (rhs.i % 10);
-}
+// bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
+//                 const OperandForFreeFuncInDifferentNamespace& rhs) {
+//   return (lhs.i % 10) == (rhs.i % 10);
+// }
 
-}  // namespace some_other_namespace
+}  // namespace test_namespace_bindings

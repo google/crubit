@@ -57,7 +57,14 @@ mod tests {
         // only generate bindings for PartialEq if `operator==` free function is
         // defined in the same namespace as the lhs. See also
         // https://en.cppreference.com/w/cpp/language/adl
-        assert_not_impl_any!(OperandForFreeFuncInDifferentNamespace: PartialEq);
+
+        // TODO(b/200066396): This test passed for the wrong reasons; we
+        // *generate* bindings for PartialEq when the `operator==` free
+        // function is defined in a different namespace. They currently don't
+        // compile.
+
+        // assert_not_impl_any!(OperandForFreeFuncInDifferentNamespace:
+        // PartialEq);
     }
 
     #[test]
