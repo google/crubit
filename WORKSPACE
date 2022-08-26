@@ -101,13 +101,15 @@ load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 bazel_skylib_workspace()
 
 # https://abseil.io/docs/cpp/quickstart#set-up-a-bazel-workspace-to-work-with-abseil
-# https://github.com/abseil/abseil-cpp/releases/tag/20211102.0
-
+#
+# From https://abseil.io/about/releases: Abseil encourages developers to “live
+# at head”.  92fdbfb301f8b301b28ab5c99e7361e775c2fb8a was the head/ToT on
+# 2022-08-25.
 http_archive(
     name = "absl",
-    sha256 = "a4567ff02faca671b95e31d315bab18b42b6c6f1a60e91c6ea84e5a2142112c2",
-    strip_prefix = "abseil-cpp-20211102.0",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.zip"],
+    sha256 = "feea6e761ab9df667f054531b4e4d5d143eaa78f2c40dbf5ba45289142cbcc1d",
+    strip_prefix = "abseil-cpp-92fdbfb301f8b301b28ab5c99e7361e775c2fb8a",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/92fdbfb301f8b301b28ab5c99e7361e775c2fb8a.zip"],
 )
 
 # https://google.github.io/googletest/quickstart-bazel.html
