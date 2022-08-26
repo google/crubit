@@ -1331,6 +1331,29 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
     }
   )");
 
+  // overloaded operator call
+  checkDiagnostics(R"(
+    struct MakeNonnull {
+      int * _Nonnull operator()();
+    };
+    struct MakeNullable {
+      int * _Nullable operator()();
+    };
+    struct MakeUnannotated {
+      int *operator()();
+    };
+    void target() {
+      MakeNonnull makeNonnull;
+      *makeNonnull();
+
+      MakeNullable makeNullable;
+      *makeNullable();  // [[unsafe]]
+
+      MakeUnannotated makeUnannotated;
+      *makeUnannotated();
+    }
+  )");
+
   // function pointer
   checkDiagnostics(R"(
     void target(int * _Nonnull (*makeNonnull)(),
@@ -1427,10 +1450,58 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
     }
   )");
 
+  // overloaded operator with single param
+  checkDiagnostics(R"(
+    // map<int * _Nonnull, int>
+    struct MapWithNonnullKeys {
+      int &operator[](int * _Nonnull key);
+    };
+    // map<int * _Nullable, int>
+    struct MapWithNullableKeys {
+      int &operator[](int * _Nullable key);
+    };
+    // map<int *, int>
+    struct MapWithUnannotatedKeys {
+      int &operator[](int *key);
+    };
+    void target(int * _Nonnull ptr_nonnull,
+                int * _Nullable ptr_nullable,
+                int *ptr_unannotated) {
+      MapWithNonnullKeys nonnull_keys;
+      nonnull_keys[nullptr] = 42;             // [[unsafe]]
+      nonnull_keys[ptr_nonnull] = 42;
+      nonnull_keys[ptr_nullable] = 42;        // [[unsafe]]
+      nonnull_keys[ptr_unannotated] = 42;
+
+      MapWithNullableKeys nullable_keys;
+      nullable_keys[nullptr] = 42;
+      nullable_keys[ptr_nonnull] = 42;
+      nullable_keys[ptr_nullable] = 42;
+      nullable_keys[ptr_unannotated] = 42;
+
+      MapWithUnannotatedKeys unannotated_keys;
+      unannotated_keys[nullptr] = 42;
+      unannotated_keys[ptr_nonnull] = 42;
+      unannotated_keys[ptr_nullable] = 42;
+      unannotated_keys[ptr_unannotated] = 42;
+    }
+  )");
+
   // free function with multiple params of mixed nullability
   checkDiagnostics(R"(
     void takeMixed(int *, int * _Nullable, int * _Nonnull);
     void target() {
+      takeMixed(nullptr, nullptr, nullptr); // [[unsafe]]
+    }
+  )");
+
+  // overloaded operator with multiple params of mixed nullability
+  checkDiagnostics(R"(
+    struct TakeMixed {
+      void operator()(int *, int * _Nullable, int * _Nonnull);
+    };
+    void target() {
+      TakeMixed takeMixed;
       takeMixed(nullptr, nullptr, nullptr); // [[unsafe]]
     }
   )");

@@ -8,6 +8,7 @@
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/Stmt.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -55,6 +56,22 @@ llvm::Optional<const Stmt*> diagnoseArrow(
   return llvm::None;
 }
 
+bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
+                                ArrayRef<const Expr*> Args,
+                                const Environment& Env, ASTContext& Ctx) {
+  assert(ParamTypes.size() == Args.size());
+  for (unsigned int I = 0; I < Args.size(); ++I) {
+    auto ParamType = ParamTypes[I].getNonReferenceType();
+    if (!ParamType->isAnyPointerType()) {
+      continue;
+    }
+    if (isIncompatibleAssignment(ParamType, Args[I], Env, Ctx)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
 // a function returned from another function), or when the callee cannot be
 // interpreted as a function type (e.g. a pointer to a function pointer).
@@ -68,19 +85,16 @@ llvm::Optional<const Stmt*> diagnoseCallExpr(
   if (!CalleeType) return llvm::None;
 
   auto ParamTypes = CalleeType->getAs<FunctionProtoType>()->getParamTypes();
-
-  for (unsigned int I = 0; I < ParamTypes.size(); ++I) {
-    auto ParamType = ParamTypes[I].getNonReferenceType();
-    if (!ParamType->isAnyPointerType()) {
-      continue;
-    }
-    if (isIncompatibleAssignment(ParamType, CE->getArg(I), Env,
-                                 *Result.Context)) {
-      return llvm::Optional<const Stmt*>(CE);
-    }
+  ArrayRef<const Expr*> Args(CE->getArgs(), CE->getNumArgs());
+  if (isa<CXXOperatorCallExpr>(CE)) {
+    // The first argument of an operator call expression is the operand which
+    // does not appear in the list of parameter types.
+    Args = Args.drop_front();
   }
 
-  return llvm::None;
+  return isIncompatibleArgumentList(ParamTypes, Args, Env, *Result.Context)
+             ? llvm::Optional<const Stmt*>(CE)
+             : llvm::None;
 }
 
 auto buildDiagnoser() {
