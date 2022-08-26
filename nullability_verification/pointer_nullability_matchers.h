@@ -21,6 +21,7 @@ ast_matchers::internal::Matcher<Stmt> isPointerDereference();
 ast_matchers::internal::Matcher<Stmt> isPointerCheckBinOp();
 ast_matchers::internal::Matcher<Stmt> isImplicitCastPointerToBool();
 ast_matchers::internal::Matcher<Stmt> isCallExpr();
+ast_matchers::internal::Matcher<Stmt> isPointerReturn();
 
 }  // namespace nullability
 }  // namespace tidy

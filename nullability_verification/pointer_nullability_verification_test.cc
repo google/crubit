@@ -1628,6 +1628,115 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   )");
 }
 
+TEST(PointerNullabilityTest, ReturnStatements) {
+  // nonnull return type
+  checkDiagnostics(R"(
+    int * _Nonnull target() {
+      return nullptr; // [[unsafe]]
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nonnull target(int * _Nonnull ptr_nonnull) {
+      return ptr_nonnull;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nonnull target(int * _Nullable ptr_nullable) {
+      return ptr_nullable; // [[unsafe]]
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nonnull target(int *ptr_unannotated) {
+      return ptr_unannotated;
+    }
+  )");
+
+  // nullable return type
+  checkDiagnostics(R"(
+    int * _Nullable target() {
+      return nullptr;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nullable target(int * _Nonnull ptr_nonnull) {
+      return ptr_nonnull;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nullable target(int * _Nullable ptr_nullable) {
+      return ptr_nullable;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nullable target(int *ptr_unannotated) {
+      return ptr_unannotated;
+    }
+  )");
+
+  // unannotated return type
+  checkDiagnostics(R"(
+    int * target() {
+      return nullptr;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * target(int * _Nonnull ptr_nonnull) {
+      return ptr_nonnull;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * target(int * _Nullable ptr_nullable) {
+      return ptr_nullable;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * target(int *ptr_unannotated) {
+      return ptr_unannotated;
+    }
+  )");
+
+  // multiple return statements
+  checkDiagnostics(R"(
+    int * _Nonnull target(bool b, int * _Nonnull ptr_nonnull) {
+      if (b) {
+        return nullptr; // [[unsafe]]
+      }
+      return ptr_nonnull;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nonnull target(int * _Nullable ptr_nullable,
+                          int * _Nonnull ptr_nonnull) {
+      if (ptr_nullable) {
+        return ptr_nullable;
+      }
+      return ptr_nonnull;
+    }
+  )");
+  checkDiagnostics(R"(
+    int * _Nonnull target(int * _Nullable ptr_nullable_1,
+                          int * _Nullable ptr_nullable_2) {
+      if (ptr_nullable_1) {
+        return ptr_nullable_2; // [[unsafe]]
+      }
+      return ptr_nullable_1; // [[unsafe]]
+    }
+  )");
+
+  // return result of merging 2 pointer values
+  checkDiagnostics(R"(
+    int * _Nonnull target(bool b, int i) {
+      int *ptr;
+      if (b) {
+        ptr = &i;
+      } else {
+        ptr = nullptr;
+      }
+      return ptr; // [[unsafe]]
+    }
+  )");
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

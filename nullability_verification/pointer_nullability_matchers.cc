@@ -21,12 +21,14 @@ using ast_matchers::hasAnyOperatorName;
 using ast_matchers::hasCastKind;
 using ast_matchers::hasOperands;
 using ast_matchers::hasOperatorName;
+using ast_matchers::hasReturnValue;
 using ast_matchers::hasType;
 using ast_matchers::hasUnaryOperand;
 using ast_matchers::implicitCastExpr;
 using ast_matchers::isAnyPointer;
 using ast_matchers::isArrow;
 using ast_matchers::memberExpr;
+using ast_matchers::returnStmt;
 using ast_matchers::unaryOperator;
 using ast_matchers::internal::Matcher;
 
@@ -55,6 +57,9 @@ Matcher<Stmt> isMemberOfPointerType() {
 Matcher<Stmt> isPointerArrow() { return memberExpr(isArrow()); }
 Matcher<Stmt> isCXXThisExpr() { return cxxThisExpr(); }
 Matcher<Stmt> isCallExpr() { return callExpr(); }
+Matcher<Stmt> isPointerReturn() {
+  return returnStmt(hasReturnValue(hasType(isAnyPointer())));
+}
 
 }  // namespace nullability
 }  // namespace tidy

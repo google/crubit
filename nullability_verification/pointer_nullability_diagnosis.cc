@@ -97,6 +97,20 @@ llvm::Optional<const Stmt*> diagnoseCallExpr(
              : llvm::None;
 }
 
+llvm::Optional<const Stmt*> diagnoseReturn(
+    const ReturnStmt* RS, const MatchFinder::MatchResult& Result,
+    const Environment& Env) {
+  auto ReturnType = cast<FunctionDecl>(Env.getDeclCtx())->getReturnType();
+  assert(ReturnType->isPointerType());
+
+  auto* ReturnExpr = RS->getRetValue();
+  assert(ReturnExpr->getType()->isPointerType());
+
+  return isIncompatibleAssignment(ReturnType, ReturnExpr, Env, *Result.Context)
+             ? llvm::Optional<const Stmt*>(RS)
+             : llvm::None;
+}
+
 auto buildDiagnoser() {
   return dataflow::MatchSwitchBuilder<const Environment,
                                       llvm::Optional<const Stmt*>>()
@@ -106,6 +120,7 @@ auto buildDiagnoser() {
       .CaseOf<MemberExpr>(isPointerArrow(), diagnoseArrow)
       // Check compatibility of parameter assignments
       .CaseOf<CallExpr>(isCallExpr(), diagnoseCallExpr)
+      .CaseOf<ReturnStmt>(isPointerReturn(), diagnoseReturn)
       .Build();
 }
 
