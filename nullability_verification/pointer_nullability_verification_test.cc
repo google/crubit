@@ -58,7 +58,7 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
             }
             EXPECT_THAT(ActualLines, ContainerEq(ExpectedLines));
           },
-          {"-fsyntax-only", "-std=c++17", "-Wno-unused-value"}),
+          {"-fsyntax-only", "-std=c++17", "-Wno-unused-value", "-Wno-nonnull"}),
       llvm::Succeeded());
 }
 
@@ -1367,6 +1367,18 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
     }
   )");
 
+  // free function returns reference to pointer
+  checkDiagnostics(R"(
+    int * _Nonnull & makeNonnull();
+    int * _Nullable & makeNullable();
+    int *&makeUnannotated();
+    void target() {
+      *makeNonnull();
+      *makeNullable();    // [[unsafe]]
+      *makeUnannotated();
+    }
+  )");
+
   // function called in loop
   //
   // TODO(b/233582219): Fix false negative. The pointer is only null-checked and
@@ -1476,6 +1488,71 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       (*takeNonnull)()(nullptr);    // false-negative
       (*takeNullable)()(nullptr);
       (*takeUnannotated)()(nullptr);
+    }
+  )");
+
+  // passing a reference to a nonnull pointer
+  //
+  // TODO(b/233582219): Fix false negative. When the nonnull pointer is passed
+  // by reference into the callee which takes a nullable parameter, its value
+  // may be changed to null, making it unsafe to dereference when we return from
+  // the function call. Some possible approaches for handling this case:
+  // (1) Disallow passing a nonnull pointer as a nullable reference - and warn
+  // at the function call.
+  // (2) Assume in worst case the nonnull pointer becomes nullable after the
+  // call - and warn at the dereference.
+  // (3) Sacrifice soundness for reduction in noise, and skip the warning.
+  checkDiagnostics(R"(
+    void takeNonnullRef(int * _Nonnull &);
+    void takeNullableRef(int * _Nullable &);
+    void takeUnannotatedRef(int *&);
+    void target(int * _Nonnull ptr_nonnull) {
+      takeNonnullRef(ptr_nonnull);
+      *ptr_nonnull;
+
+      // false-negative
+      takeNullableRef(ptr_nonnull);
+      *ptr_nonnull;
+
+      takeUnannotatedRef(ptr_nonnull);
+      *ptr_nonnull;
+    }
+  )");
+
+  // passing a reference to a nullable pointer
+  checkDiagnostics(R"(
+    void takeNonnullRef(int * _Nonnull &);
+    void takeNullableRef(int * _Nullable &);
+    void takeUnannotatedRef(int *&);
+    void target(int * _Nullable ptr_nullable) {
+      takeNonnullRef(ptr_nullable);    // [[unsafe]]
+      *ptr_nullable;                   // [[unsafe]]
+
+      takeNullableRef(ptr_nullable);
+      *ptr_nullable;                   // [[unsafe]]
+
+      takeUnannotatedRef(ptr_nullable);
+      *ptr_nullable;                   // [[unsafe]]
+    }
+  )");
+
+  // passing a reference to an unannotated pointer
+  //
+  // TODO(b/233582219): Fix false negative. The unannotated pointer should be
+  // considered nullable if it has been used as a nullable pointer.
+  checkDiagnostics(R"(
+    void takeNonnullRef(int * _Nonnull &);
+    void takeNullableRef(int * _Nullable &);
+    void takeUnannotatedRef(int *&);
+    void target(int *ptr_unannotated) {
+      takeNonnullRef(ptr_unannotated);
+      *ptr_unannotated;
+
+      takeNullableRef(ptr_unannotated);
+      *ptr_unannotated;  // false-negative
+
+      takeUnannotatedRef(ptr_unannotated);
+      *ptr_unannotated;
     }
   )");
 }

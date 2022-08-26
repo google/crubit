@@ -70,7 +70,7 @@ llvm::Optional<const Stmt*> diagnoseCallExpr(
   auto ParamTypes = CalleeType->getAs<FunctionProtoType>()->getParamTypes();
 
   for (unsigned int I = 0; I < ParamTypes.size(); ++I) {
-    auto ParamType = ParamTypes[I];
+    auto ParamType = ParamTypes[I].getNonReferenceType();
     if (!ParamType->isAnyPointerType()) {
       continue;
     }
