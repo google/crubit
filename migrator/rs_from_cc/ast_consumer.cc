@@ -4,7 +4,7 @@
 
 #include "migrator/rs_from_cc/ast_consumer.h"
 
-#include "common/check.h"
+#include "absl/log/check.h"
 #include "migrator/rs_from_cc/converter.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -19,7 +19,7 @@ void AstConsumer::HandleTranslationUnit(clang::ASTContext& ast_context) {
     // There is nothing more for us to do here.
     return;
   }
-  CRUBIT_CHECK(instance_.hasSema());
+  CHECK(instance_.hasSema());
   Converter converter(invocation_, ast_context);
   converter.Convert(ast_context.getTranslationUnitDecl());
 }

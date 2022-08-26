@@ -17,7 +17,7 @@ cc_library(
     deps = [
         ":pointer_nullability",
         ":pointer_nullability_matchers",
-        "//common:check",
+        "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

@@ -56,15 +56,6 @@ rust_test(
 )
 
 cc_library(
-    name = "check",
-    hdrs = ["check.h"],
-    deps = [
-        "@absl//absl/base:core_headers",
-        "@llvm-project//llvm:Support",
-    ],
-)
-
-cc_library(
     name = "strong_int",
     hdrs = ["strong_int.h"],
     deps = [
@@ -123,8 +114,8 @@ cc_library(
     srcs = ["test_utils.cc"],
     hdrs = ["test_utils.h"],
     deps = [
-        ":check",
         ":file_io",
+        "@absl//absl/log:check",
         "@absl//absl/strings",
         "@com_google_googletest//:gtest",
         "@llvm-project//llvm:Support",

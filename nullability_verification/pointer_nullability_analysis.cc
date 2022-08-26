@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "common/check.h"
+#include "absl/log/check.h"
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"

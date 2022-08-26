@@ -6,9 +6,9 @@
 
 #include <limits>
 
+#include "absl/log/check.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/str_cat.h"
-#include "common/check.h"
 
 namespace crubit {
 
@@ -32,8 +32,8 @@ std::string ConvertToCcIdentifier(const BazelLabel& target) {
   }
   result.shrink_to_fit();
 
-  CRUBIT_CHECK(!result.empty());
-  CRUBIT_CHECK(absl::ascii_isalpha(result[0]) || result[0] == '_');
+  CHECK(!result.empty());
+  CHECK(absl::ascii_isalpha(result[0]) || result[0] == '_');
   return result;
 }
 

@@ -18,6 +18,8 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/log/check.h"
+#include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
@@ -25,7 +27,6 @@
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
-#include "common/check.h"
 #include "common/status_macros.h"
 #include "lifetime_annotations/type_lifetimes.h"
 #include "rs_bindings_from_cc/ast_util.h"
@@ -735,7 +736,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
                                    std::move(mapped_return_type),
                                    std::move(mapped_param_types));
       } else {
-        CRUBIT_CHECK(type->isLValueReferenceType());
+        CHECK(type->isLValueReferenceType());
         return MappedType::FuncRef(cc_call_conv, rs_abi, lifetime,
                                    std::move(mapped_return_type),
                                    std::move(mapped_param_types));
@@ -751,7 +752,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
       return MappedType::LValueReferenceTo(std::move(mapped_pointee_type),
                                            lifetime);
     } else {
-      CRUBIT_CHECK(type->isRValueReferenceType());
+      CHECK(type->isRValueReferenceType());
       if (!lifetime.has_value()) {
         return absl::UnimplementedError(
             "Unsupported type: && without lifetime");
@@ -801,7 +802,7 @@ absl::StatusOr<MappedType> Importer::ConvertType(
   } else if (const auto* deduced_type = type->getAs<clang::DeducedType>()) {
     // Deduction should have taken place earlier (e.g. via DeduceReturnType
     // called from FunctionDeclImporter::Import).
-    CRUBIT_CHECK(deduced_type->isDeduced());
+    CHECK(deduced_type->isDeduced());
     return ConvertQualType(deduced_type->getDeducedType(), lifetimes);
   }
 
@@ -868,7 +869,7 @@ std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
     // with regular C and C++ structs.
     constexpr llvm::StringRef kZtsPrefix = "_ZTS";
     constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
-    CRUBIT_CHECK(buffer.str().take_front(4) == kZtsPrefix);
+    CHECK(buffer.str().take_front(4) == kZtsPrefix);
     return llvm::formatv("{0}{1}", kCcTemplatePrefix,
                          buffer.str().drop_front(kZtsPrefix.size()));
   }
@@ -972,12 +973,10 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
     case clang::DeclarationName::CXXOperatorName:
       switch (named_decl->getDeclName().getCXXOverloadedOperator()) {
         case clang::OO_None:
-          CRUBIT_CHECK(false &&
-                       "No OO_None expected under CXXOperatorName branch");
+          LOG(FATAL) << "No OO_None expected under CXXOperatorName branch";
           return std::nullopt;
         case clang::NUM_OVERLOADED_OPERATORS:
-          CRUBIT_CHECK(false &&
-                       "No NUM_OVERLOADED_OPERATORS expected at runtime");
+          LOG(FATAL) << "No NUM_OVERLOADED_OPERATORS expected at runtime";
           return std::nullopt;
           // clang-format off
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
@@ -988,7 +987,7 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
         #undef OVERLOADED_OPERATOR
           // clang-format on
       }
-      CRUBIT_CHECK(false && "The `switch` above should handle all cases");
+      LOG(FATAL) << "The `switch` above should handle all cases";
       return std::nullopt;
     default:
       // To be implemented later: CXXConversionFunctionName.

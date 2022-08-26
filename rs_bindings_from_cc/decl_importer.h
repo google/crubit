@@ -6,6 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "lifetime_annotations/lifetime_annotations.h"
 #include "rs_bindings_from_cc/bazel_types.h"
@@ -25,8 +26,8 @@ class Invocation {
                           clang::tidy::lifetimes::LifetimeAnnotationContext>()),
         header_targets_(header_targets) {
     // Caller should verify that the inputs are non-empty.
-    CRUBIT_CHECK(!entry_headers_.empty());
-    CRUBIT_CHECK(!header_targets_.empty());
+    CHECK(!entry_headers_.empty());
+    CHECK(!header_targets_.empty());
 
     ir_.used_headers.insert(ir_.used_headers.end(), entry_headers_.begin(),
                             entry_headers.end());

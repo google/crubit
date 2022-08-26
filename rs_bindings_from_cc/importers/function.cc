@@ -29,7 +29,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   std::set<std::string> errors;
   auto add_error = [&errors](std::string msg) {
     auto result = errors.insert(std::move(msg));
-    CRUBIT_CHECK(result.second && "Duplicated error message");
+    CHECK(result.second) << "Duplicated error message";
   };
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
@@ -57,7 +57,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   }
 
   if (lifetimes) {
-    CRUBIT_CHECK(lifetimes->IsValidForDecl(function_decl));
+    CHECK(lifetimes->IsValidForDecl(function_decl));
   }
 
   for (unsigned i = 0; i < function_decl->getNumParams(); ++i) {
@@ -74,7 +74,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     }
 
     std::optional<Identifier> param_name = ictx_.GetTranslatedIdentifier(param);
-    CRUBIT_CHECK(param_name.has_value());  // No known failure cases.
+    CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({*param_type, *std::move(param_name)});
   }
 
@@ -107,7 +107,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   for (clang::tidy::lifetimes::Lifetime lifetime : all_free_lifetimes) {
     std::optional<llvm::StringRef> name =
         lifetime_symbol_table.LookupLifetime(lifetime);
-    CRUBIT_CHECK(name.has_value());
+    CHECK(name.has_value());
     lifetime_params.push_back(
         {.name = name->str(), .id = LifetimeId(lifetime.Id())});
   }
@@ -196,7 +196,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
 
   // Silence ClangTidy, checked above: calling `add_error` if
   // `!return_type.ok()` and returning early if `!errors.empty()`.
-  CRUBIT_CHECK(return_type.ok());
+  CHECK(return_type.ok());
 
   if (translated_name.has_value()) {
     return Func{

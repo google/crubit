@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "gtest/gtest.h"
-#include "common/check.h"
+#include "absl/log/check.h"
 #include "common/file_io.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
@@ -22,14 +22,14 @@ static std::string MakeTmpdirForCurrentTest() {
       absl::StrCat(testing::TempDir(), "/", current_test_name, "/");
   llvm::StringRef parent_dir =
       llvm::sys::path::parent_path(current_test_tmpdir_path);
-  CRUBIT_CHECK(!llvm::sys::fs::create_directories(parent_dir));
+  CHECK(!llvm::sys::fs::create_directories(parent_dir));
   return current_test_tmpdir_path;
 }
 
 std::string WriteFileForCurrentTest(absl::string_view filename,
                                     absl::string_view content) {
   std::string path = absl::StrCat(MakeTmpdirForCurrentTest(), "/", filename);
-  CRUBIT_CHECK(SetFileContents(path, content).ok());
+  CHECK(SetFileContents(path, content).ok());
   return path;
 }
 

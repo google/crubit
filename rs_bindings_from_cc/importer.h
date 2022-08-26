@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/log/die_if_null.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
@@ -35,7 +36,7 @@ class Importer : public ImportContext {
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema)
       : ImportContext(invocation, ctx, sema),
-        mangler_(CRUBIT_DIE_IF_NULL(ctx_.createMangleContext())) {
+        mangler_(ABSL_DIE_IF_NULL(ctx_.createMangleContext())) {
     decl_importers_.push_back(
         std::make_unique<ClassTemplateDeclImporter>(*this));
     decl_importers_.push_back(std::make_unique<CXXRecordDeclImporter>(*this));

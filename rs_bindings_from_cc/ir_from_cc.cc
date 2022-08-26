@@ -10,12 +10,12 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
-#include "common/check.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/frontend_action.h"
 #include "rs_bindings_from_cc/ir.h"
@@ -40,10 +40,10 @@ absl::StatusOr<IR> IrFromCc(
   // Caller should verify that the inputs are not empty.
   // TODO(b/440066049): Generate a source file for requested instantiations once
   // cl/430823388 is submitted.
-  CRUBIT_CHECK(!extra_source_code.empty() || !public_headers.empty() ||
-               !extra_instantiations.empty());
-  CRUBIT_CHECK(!extra_source_code.empty() || !headers_to_targets.empty() ||
-               !extra_instantiations.empty());
+  CHECK(!extra_source_code.empty() || !public_headers.empty() ||
+        !extra_instantiations.empty());
+  CHECK(!extra_source_code.empty() || !headers_to_targets.empty() ||
+        !extra_instantiations.empty());
 
   std::vector<HeaderName> entrypoint_headers(public_headers.begin(),
                                              public_headers.end());

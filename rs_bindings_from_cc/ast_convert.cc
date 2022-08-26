@@ -5,7 +5,7 @@
 #include "rs_bindings_from_cc/ast_convert.h"
 
 #include "absl/functional/function_ref.h"
-#include "common/check.h"
+#include "absl/log/check.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
@@ -86,9 +86,8 @@ SpecialMemberFunc GetSpecialMemberFunc(
     case clang::AS_private:
       return SpecialMemberFunc::kUnavailable;
     case clang::AS_none:
-      CRUBIT_CHECK(
-          false &&
-          "We should never be encoding a 'none' access specifier in IR.");
+      CHECK(false &&
+            "We should never be encoding a 'none' access specifier in IR.");
       // We have to return something. kDeleted seems like a safe fallback.
       return SpecialMemberFunc::kUnavailable;
   }

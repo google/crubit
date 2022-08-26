@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/namespace.h"
 
+#include "absl/log/check.h"
 #include "absl/strings/match.h"
 
 namespace crubit {
@@ -18,7 +19,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
 
   ictx_.ImportDeclsFromDeclContext(namespace_decl);
   auto identifier = ictx_.GetTranslatedIdentifier(namespace_decl);
-  CRUBIT_CHECK(identifier.has_value());
+  CHECK(identifier.has_value());
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   return Namespace{
       .name = *identifier,

@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "common/check.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "clang/AST/Decl.h"
@@ -305,7 +305,7 @@ class Identifier {
  public:
   explicit Identifier(std::string identifier)
       : identifier_(std::move(identifier)) {
-    CRUBIT_CHECK(!identifier_.empty());
+    CHECK(!identifier_.empty());
   }
 
   absl::string_view Ident() const { return identifier_; }
@@ -326,7 +326,7 @@ inline std::ostream& operator<<(std::ostream& o, const Identifier& id) {
 class IntegerConstant {
  public:
   explicit IntegerConstant(const llvm::APSInt& value) {
-    CRUBIT_CHECK(value.getSignificantBits() <= 64);
+    CHECK_LE(value.getSignificantBits(), 64);
     is_negative_ = value < 0;
     wrapped_value_ = static_cast<uint64_t>(value.getExtValue());
   }
@@ -346,7 +346,7 @@ class IntegerConstant {
 class Operator {
  public:
   explicit Operator(std::string name) : name_(std::move(name)) {
-    CRUBIT_CHECK(!name_.empty());
+    CHECK(!name_.empty());
   }
 
   absl::string_view Name() const { return name_; }

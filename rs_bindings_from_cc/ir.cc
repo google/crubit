@@ -13,8 +13,8 @@
 #include <variant>
 #include <vector>
 
+#include "absl/log/check.h"
 #include "absl/strings/string_view.h"
-#include "common/check.h"
 #include "common/strong_int.h"
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "llvm/Support/JSON.h"
@@ -96,7 +96,7 @@ MappedType PointerOrReferenceTo(MappedType pointee_type,
                                               : internal::kRustPtrMut;
     }
   } else {
-    CRUBIT_CHECK(has_lifetime);
+    CHECK(has_lifetime);
     rs_name = pointee_type.cc_type.is_const ? internal::kRustRvalueRefConst
                                             : internal::kRustRvalueRefMut;
   }
@@ -144,13 +144,12 @@ MappedType MappedType::FuncPtr(absl::string_view cc_call_conv,
   MappedType result = FuncRef(cc_call_conv, rs_abi, lifetime,
                               std::move(return_type), std::move(param_types));
 
-  CRUBIT_CHECK(result.cc_type.name == internal::kCcLValueRef);
+  CHECK_EQ(result.cc_type.name, internal::kCcLValueRef);
   result.cc_type.name = std::string(internal::kCcPtr);
 
   RsType rs_func_ptr_type = std::move(result.rs_type);
-  CRUBIT_CHECK(
-      rs_func_ptr_type.name.substr(0, internal::kRustFuncPtr.length()) ==
-      internal::kRustFuncPtr);
+  CHECK(rs_func_ptr_type.name.substr(0, internal::kRustFuncPtr.length()) ==
+        internal::kRustFuncPtr);
   result.rs_type =
       RsType{.name = "Option", .type_args = {std::move(rs_func_ptr_type)}};
 

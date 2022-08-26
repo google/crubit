@@ -4,7 +4,6 @@
 
 #include "rs_bindings_from_cc/ast_util.h"
 
-#include "common/check.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
 

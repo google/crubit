@@ -114,7 +114,6 @@ cc_library(
     hdrs = ["ast_util.h"],
     visibility = ["//:__subpackages__"],
     deps = [
-        "//common:check",
         "@llvm-project//clang:ast",
     ],
 )
@@ -124,8 +123,8 @@ cc_library(
     srcs = ["bazel_types.cc"],
     hdrs = ["bazel_types.h"],
     deps = [
-        "//common:check",
         "//common:string_type",
+        "@absl//absl/log:check",
         "@absl//absl/strings",
     ],
 )
@@ -175,8 +174,8 @@ cc_library(
         ":bazel_types",
         "//lifetime_annotations",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/log:check",
         "@absl//absl/status:statusor",
-        "@llvm-project//clang:ast",
     ],
 )
 
@@ -199,7 +198,7 @@ cc_library(
     deps = [
         ":decl_importer",
         ":importer",
-        "//common:check",
+        "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:frontend",
     ],
@@ -210,14 +209,12 @@ cc_library(
     srcs = ["importer.cc"],
     hdrs = ["importer.h"],
     deps = [
-        ":ast_convert",
+        ":ast_util",
         ":bazel_types",
         ":cc_ir",
         ":decl_importer",
-        "//common:check",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
-        "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc/importers:class_template",
         "//rs_bindings_from_cc/importers:cxx_record",
         "//rs_bindings_from_cc/importers:enum",
@@ -228,6 +225,9 @@ cc_library(
         "//rs_bindings_from_cc/importers:typedef_name",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/container:flat_hash_set",
+        "@absl//absl/log",
+        "@absl//absl/log:check",
+        "@absl//absl/log:die_if_null",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
@@ -262,9 +262,9 @@ cc_library(
     hdrs = ["ir.h"],
     deps = [
         ":bazel_types",
-        "//common:check",
         "//common:strong_int",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/log:check",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//clang:ast",
@@ -315,14 +315,12 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         ":frontend_action",
-        ":importer",
-        "//common:check",
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/log:check",
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@absl//absl/types:span",
-        "@llvm-project//clang:basic",
         "@llvm-project//clang:frontend",
         "@llvm-project//clang:tooling",
     ],
@@ -416,8 +414,8 @@ cc_library(
     visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":cc_ir",
-        "//common:check",
         "@absl//absl/functional:function_ref",
+        "@absl//absl/log:check",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
     ],
@@ -495,7 +493,6 @@ cc_library(
     deps = [
         ":collect_instantiations",
         "//common:cc_ffi_types",
-        "//common:check",
         "@absl//absl/status:statusor",
         "@absl//absl/types:span",
         "@llvm-project//llvm:Support",

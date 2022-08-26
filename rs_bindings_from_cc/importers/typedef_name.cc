@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 
+#include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 
@@ -31,7 +32,7 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
 
   std::optional<Identifier> identifier =
       ictx_.GetTranslatedIdentifier(typedef_name_decl);
-  CRUBIT_CHECK(identifier.has_value());  // This must always hold.
+  CHECK(identifier.has_value());  // This must always hold.
 
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type = ictx_.ConvertQualType(
@@ -78,7 +79,7 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
             // canonical size in IR and in the binding code.
 
             // Make sure that `alignment` is a power of 2.
-            CRUBIT_CHECK(!(record->alignment & (record->alignment - 1)));
+            CHECK(!(record->alignment & (record->alignment - 1)));
 
             // Given that `alignment` is a power of 2, we can round it up by
             // a bit arithmetic: `alignment - 1` clears the single bit of it

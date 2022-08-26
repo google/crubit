@@ -17,9 +17,11 @@ cc_library(
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
     deps = [
+        "@absl//absl/log",
+        "@absl//absl/log:check",
+        "@absl//absl/log:die_if_null",
         "@absl//absl/strings",
         "//rs_bindings_from_cc:ast_convert",
-        "//rs_bindings_from_cc:ast_util",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:sema",
@@ -74,6 +76,7 @@ cc_library(
     srcs = ["namespace.cc"],
     hdrs = ["namespace.h"],
     deps = [
+        "@absl//absl/log:check",
         "@absl//absl/strings",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
@@ -85,6 +88,7 @@ cc_library(
     srcs = ["typedef_name.cc"],
     hdrs = ["typedef_name.h"],
     deps = [
+        "@absl//absl/log:check",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],

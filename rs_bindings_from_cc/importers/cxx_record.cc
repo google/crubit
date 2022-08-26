@@ -4,6 +4,9 @@
 
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
+#include "absl/log/check.h"
+#include "absl/log/die_if_null.h"
+#include "absl/log/log.h"
 #include "absl/strings/match.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "clang/AST/ASTContext.h"
@@ -66,9 +69,8 @@ AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
     case clang::AS_private:
       return kPrivate;
     case clang::AS_none:
-      CRUBIT_CHECK(
-          false &&
-          "We should never be encoding a 'none' access specifier in IR.");
+      LOG(FATAL)
+          << "We should never be encoding a 'none' access specifier in IR.";
       // We have to return something. Conservatively return private so we don't
       // inadvertently make a private member variable accessible in Rust.
       return kPrivate;
@@ -158,7 +160,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (clang::CXXRecordDecl* complete = record_decl->getDefinition()) {
     record_decl = complete;
   } else {
-    CRUBIT_CHECK(!record_decl->isCompleteDefinition());
+    CHECK(!record_decl->isCompleteDefinition());
     ictx_.MarkAsSuccessfullyImported(record_decl);
     return IncompleteRecord{
         .cc_name = std::move(cc_name),
@@ -272,10 +274,9 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
 
     std::optional<Identifier> field_name =
         ictx_.GetTranslatedIdentifier(field_decl);
-    CRUBIT_CHECK(
-        field_name ||
-        !field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
-            "Unnamed fields can't be annotated with [[no_unique_address]]");
+    CHECK(field_name ||
+          !field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
+              "Unnamed fields can't be annotated with [[no_unique_address]]");
     fields.push_back(
         {.identifier = field_name ? *std::move(field_name)
                                   : llvm::Optional<Identifier>(llvm::None),
@@ -344,7 +345,7 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
       }
 
       clang::CXXRecordDecl* base_record_decl =
-          CRUBIT_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
+          ABSL_DIE_IF_NULL(base_specifier.getType()->getAsCXXRecordDecl());
       if (!ictx_.HasBeenAlreadySuccessfullyImported(base_record_decl)) {
         continue;
       }
@@ -357,12 +358,12 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
         }
         *offset +=
             {ictx_.ctx_.getASTRecordLayout(base_path_element.Class)
-                 .getBaseClassOffset(CRUBIT_DIE_IF_NULL(
+                 .getBaseClassOffset(ABSL_DIE_IF_NULL(
                      base_path_element.Base->getType()->getAsCXXRecordDecl()))
                  .getQuantity()};
       }
-      CRUBIT_CHECK((!offset.has_value() || *offset >= 0) &&
-                   "Concrete base classes should have non-negative offsets.");
+      CHECK((!offset.has_value() || *offset >= 0) &&
+            "Concrete base classes should have non-negative offsets.");
       bases.push_back(
           BaseClass{.base_record_id = GenerateItemId(base_record_decl),
                     .offset = offset});
