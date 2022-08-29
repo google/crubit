@@ -674,9 +674,12 @@ GetTemplateArgs(clang::TypeLoc type_loc) {
     args.push_back({});
     for (unsigned i = 0; i < template_specialization_type_loc.getNumArgs();
          ++i) {
-      args.back().push_back(template_specialization_type_loc.getArgLoc(i)
-                                .getTypeSourceInfo()
-                                ->getTypeLoc());
+      if (auto* source_info = template_specialization_type_loc.getArgLoc(i)
+                                  .getTypeSourceInfo()) {
+        args.back().push_back(source_info->getTypeLoc());
+      } else {
+        args.back().push_back(clang::TypeLoc());
+      }
     }
   } else if (auto record_type_loc = type_loc.getAs<clang::RecordTypeLoc>()) {
     if (auto specialization_decl =

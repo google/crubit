@@ -220,6 +220,16 @@ TEST_F(LifetimeAnnotationsTest, LifetimeElision_Templates) {
               IsOkAndHolds(LifetimesAre({{"f", "a -> a"}, {"g", "a -> a"}})));
 }
 
+TEST_F(LifetimeAnnotationsTest, LifetimeElision_TemplatesWithConstant) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
+        #pragma clang lifetime_elision
+        template <class T, bool B> class vector {};
+        int* f(vector<int *, true>);
+        vector<int*, false> g(int *);
+  )"),
+              IsOkAndHolds(LifetimesAre({{"f", "a -> a"}, {"g", "a -> a"}})));
+}
+
 TEST_F(LifetimeAnnotationsTest, LifetimeElision_NestedTemplates) {
   EXPECT_THAT(GetNamedLifetimeAnnotations(R"(
         #pragma clang lifetime_elision
