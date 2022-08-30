@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
+#include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
 namespace {
@@ -22,7 +23,6 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
     {"t": "target1", "h": ["a.h"]}
   ])";
 
-  WriteFileForCurrentTest("a.h", "//empty header");
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
@@ -35,17 +35,22 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
-      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs()));
+      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
+                                  /* virtual_headers_contents= */
+                                  {{HeaderName("a.h"), "namespace ns{}"}}));
 
   ASSERT_EQ(result.ir.used_headers.size(), 1);
   ASSERT_EQ(result.ir.used_headers.front().IncludePath(), "a.h");
+
+  // Check that IR items have the proper owning target set.
+  auto item = result.ir.get_items_if<Namespace>().front();
+  ASSERT_EQ(item->owning_target.value(), "target1");
 }
 
 TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h"]}
   ])";
-  WriteFileForCurrentTest("a.h", "// empty header");
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
@@ -58,7 +63,9 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
-      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs()));
+      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
+                                  /* virtual_headers_contents= */
+                                  {{HeaderName("a.h"), "// empty header"}}));
 
   ASSERT_THAT(InstantiationsAsJson(result.ir), StrEq("{}"));
 }
@@ -67,7 +74,6 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h"]}
   ])";
-  WriteFileForCurrentTest("a.h", "// empty header");
   std::string a_rs_path =
       WriteFileForCurrentTest("a.rs", "cc_template!(MyTemplate<bool>);");
   ASSERT_OK_AND_ASSIGN(
@@ -81,7 +87,9 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
-      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs()));
+      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
+                                  /* virtual_headers_contents= */
+                                  {{HeaderName("a.h"), "// empty header"}}));
 
   // TODO(b/440066049): Actually populate the instantiations map once
   // cl/430823388 is submitted.

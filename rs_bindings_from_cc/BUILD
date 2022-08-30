@@ -99,6 +99,7 @@ cc_test(
     name = "generate_bindings_and_metadata_test",
     srcs = ["generate_bindings_and_metadata_test.cc"],
     deps = [
+        ":cc_ir",
         ":cmdline",
         ":generate_bindings_and_metadata",
         "//common:rust_allocator_shims",

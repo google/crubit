@@ -26,8 +26,9 @@ struct BindingsAndMetadata {
 
 // Returns `BindingsAndMetadata` as requested by the user on the command line.
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
-    Cmdline& cmdline, std::vector<std::string> clang_args);
-
+    Cmdline& cmdline, std::vector<std::string> clang_args,
+    absl::flat_hash_map<const HeaderName, const std::string>
+        virtual_headers_contents = {});
 }  // namespace crubit
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_GENERATE_BINDINGS_AND_METADATA_H_

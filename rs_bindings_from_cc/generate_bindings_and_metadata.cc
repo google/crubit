@@ -12,7 +12,9 @@
 namespace crubit {
 
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
-    Cmdline& cmdline, std::vector<std::string> clang_args) {
+    Cmdline& cmdline, std::vector<std::string> clang_args,
+    absl::flat_hash_map<const HeaderName, const std::string>
+        virtual_headers_contents) {
   std::vector<absl::string_view> clang_args_view;
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
                          clang_args.end());
@@ -22,12 +24,11 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       crubit::CollectInstantiations(cmdline.rust_sources()));
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir,
-      crubit::IrFromCc(
-          /* extra_source_code= */ "", cmdline.current_target(),
-          cmdline.public_headers(),
-          /* virtual_headers_contents= */ {}, cmdline.headers_to_targets(),
-          clang_args_view, requested_instantiations));
+      IR ir, crubit::IrFromCc(
+                 /* extra_source_code= */ "", cmdline.current_target(),
+                 cmdline.public_headers(), virtual_headers_contents,
+                 cmdline.headers_to_targets(), clang_args_view,
+                 requested_instantiations));
 
   CRUBIT_ASSIGN_OR_RETURN(
       crubit::Bindings bindings,
