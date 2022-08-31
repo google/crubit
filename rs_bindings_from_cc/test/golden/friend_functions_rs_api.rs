@@ -73,6 +73,15 @@ pub fn visible_rref<'a>(__param_0: ::ctor::RvalueReference<'a, crate::SomeClass>
     unsafe { crate::detail::__rust_thunk___Z12visible_rrefO9SomeClass(__param_0) }
 }
 
+/// A function can be declared multiple times - e.g. once in a friend
+/// declaration below + in a definition below.  This example mimics
+/// Uint128Low64 declarations from absl/numeric/int128.h.  This is a
+/// regression test for b/244311755.
+#[inline(always)]
+pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> i32 {
+    unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_FRIEND_FUNCTIONS_H_
 
 mod detail {
@@ -100,6 +109,9 @@ mod detail {
         pub(crate) fn __rust_thunk___Z12visible_rrefO9SomeClass<'a>(
             __param_0: ::ctor::RvalueReference<'a, crate::SomeClass>,
         );
+        pub(crate) fn __rust_thunk___Z21multiple_declarationsRK9SomeClass<'a>(
+            __param_0: &'a crate::SomeClass,
+        ) -> i32;
     }
 }
 

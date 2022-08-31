@@ -18,6 +18,10 @@ extern "C" void __rust_thunk___ZN9SomeClassC1EOS_(class SomeClass* __this,
                                                   class SomeClass* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" int __rust_thunk___Z21multiple_declarationsRK9SomeClass(
+    const class SomeClass* __param_0) {
+  return multiple_declarations(*__param_0);
+}
 
 static_assert(sizeof(class SomeClass) == 1);
 static_assert(alignof(class SomeClass) == 1);

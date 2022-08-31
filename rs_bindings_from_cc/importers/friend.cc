@@ -9,6 +9,7 @@
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "llvm/ADT/STLExtras.h"
 
 namespace crubit {
 
@@ -17,15 +18,20 @@ std::optional<IR::Item> FriendDeclImporter::Import(
   if (!ictx_.IsFromCurrentTarget(friend_decl)) return std::nullopt;
 
   // Recurse to import the function declaration.
-  clang::NamedDecl* named_decl = friend_decl->getFriendDecl();
+  clang::NamedDecl* named_decl = clang::dyn_cast_or_null<clang::FunctionDecl>(
+      friend_decl->getFriendDecl());
   if (!named_decl) {
     // This friend declaration refers to a type. We don't need to import it.
     return std::nullopt;
   }
-  std::optional<IR::Item> item = ictx_.ImportDecl(named_decl);
-  if (!item.has_value()) return std::nullopt;
-  Func* func_item = std::get_if<Func>(&*item);
-  if (!func_item) return std::nullopt;
+
+  // If there is a non-friend declaration elsewhere, then we can skip this
+  // friend decl.
+  bool is_redeclared_outside_of_friend_decl =
+      llvm::any_of(named_decl->redecls(), [](const clang::Decl* redecl) {
+        return (clang::Decl::FOK_None == redecl->getFriendObjectKind());
+      });
+  if (is_redeclared_outside_of_friend_decl) return std::nullopt;
 
   // Get the enclosing record declaration.
   clang::DeclContext* decl_context = friend_decl->getDeclContext();
@@ -40,6 +46,17 @@ std::optional<IR::Item> FriendDeclImporter::Import(
         friend_decl, "DeclContext was unexpectedly not a CXXRecordDecl");
   }
 
+  // If `!is_redeclared_outside_of_friend_decl`, then we need to emit a new item
+  // to support the following case from
+  // https://en.cppreference.com/w/cpp/language/adl: "ADL can find a friend
+  // function (typically, an overloaded operator) that is defined entirely
+  // within a class or class template, even if it was never declared at
+  // namespace level."
+  std::optional<IR::Item> item = ictx_.ImportDecl(named_decl);
+  if (!item.has_value()) return std::nullopt;
+  if (std::holds_alternative<UnsupportedItem>(*item)) return std::nullopt;
+  Func* func_item = std::get_if<Func>(&*item);
+  CHECK(func_item);  // Guaranteed by `isa<clang::FunctionDecl>` above.
   // Return the recursively generated function item almost as-is. It needs a
   // fresh item ID because it came from this friend_decl. And it needs an ADL
   // enclosing record note because as a friend function it is not visible at top

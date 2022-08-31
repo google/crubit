@@ -18,6 +18,14 @@ class SomeClass final {
   // Friend functions that are not visible via ADL and thus generate no
   // top-level bindings.
   friend void invisible_int(int param);
+
+  // A function can be declared multiple times - e.g. once in a friend
+  // declaration below + in a definition below.  This example mimics
+  // Uint128Low64 declarations from absl/numeric/int128.h.  This is a
+  // regression test for b/244311755.
+  friend constexpr int multiple_declarations(const SomeClass&);
 };
+
+constexpr int multiple_declarations(const SomeClass&) { return 123; }
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_FRIEND_FUNCTIONS_H_

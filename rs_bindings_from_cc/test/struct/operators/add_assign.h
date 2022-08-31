@@ -45,18 +45,22 @@ struct AddAssignMemberByConstRef final {
   int i;
 };
 
-struct AddAssignFreeByValue final {
-  friend AddAssignFreeByValue& operator+=(AddAssignFreeByValue& lhs,
-                                          AddAssignFreeByValue rhs);
-
-  int i;
-};
-
+// This tests the following aspect of
+// https://en.cppreference.com/w/cpp/language/adl: "ADL can find a friend
+// function (typically, an overloaded operator) that is defined entirely within
+// a class or class template, even if it was never declared at namespace level."
 struct AddAssignFriendByValue final {
+  friend AddAssignFriendByValue& operator+=(AddAssignFriendByValue& lhs,
+                                            AddAssignFriendByValue rhs);
+
   int i;
 };
 
-AddAssignFriendByValue& operator+=(AddAssignFriendByValue& lhs,
-                                   AddAssignFriendByValue rhs);
+struct AddAssignFreeByValue final {
+  int i;
+};
+
+AddAssignFreeByValue& operator+=(AddAssignFreeByValue& lhs,
+                                 AddAssignFreeByValue rhs);
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_ADD_ASSIGN_H_
