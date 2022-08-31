@@ -167,6 +167,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         .rs_name = std::move(rs_name),
         .id = GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
+        .record_type = *record_type,
         // We generate top level bindings for implicit class template
         // specializations.
         .enclosing_namespace_id = is_implicit_class_template_specialization_decl

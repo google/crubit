@@ -655,6 +655,7 @@ struct IncompleteRecord {
   std::string rs_name;
   ItemId id;
   BazelLabel owning_target;
+  RecordType record_type;
   llvm::Optional<ItemId> enclosing_namespace_id;
 };
 

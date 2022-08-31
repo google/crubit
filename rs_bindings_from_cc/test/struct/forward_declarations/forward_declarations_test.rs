@@ -177,3 +177,16 @@ fn test_write_incomplete_nonunpin() {
     declaration_2::WriteNonunpinStruct(decl1_s.as_mut().cc_cast(), 3);
     assert_eq!(declaration_1::ReadNonunpinStruct(&*decl1_s), 3);
 }
+
+#[test]
+fn test_inline_functions_with_incomplete_parameters() {
+    let unpin = definition::UnpinStruct { field: 42 };
+    let unpin_ref = &unpin;
+    assert_eq!(42, declaration_1::InlineFunctionTakingUnpinStruct(unpin_ref.cc_cast()));
+
+    ctor::emplace! {
+      let nonunpin = ctor::ctor!(definition::NonunpinStruct {field: 123});
+    }
+    let nonunpin_ref = &*nonunpin;
+    assert_eq!(123, declaration_1::InlineFunctionTakingNonunpinStruct(nonunpin_ref.cc_cast()));
+}

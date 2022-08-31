@@ -381,6 +381,7 @@ llvm::json::Value IncompleteRecord::ToJson() const {
       {"rs_name", rs_name},
       {"id", id},
       {"owning_target", owning_target},
+      {"record_type", RecordTypeToString(record_type)},
   };
 
   return llvm::json::Object{

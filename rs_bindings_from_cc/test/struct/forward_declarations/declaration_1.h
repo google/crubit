@@ -15,4 +15,16 @@ void WriteUnpinStruct(UnpinStruct& s, int value);
 int ReadNonunpinStruct(const NonunpinStruct& s);
 void WriteNonunpinStruct(NonunpinStruct& s, int value);
 
+// `inline` keyword forces generation of C++ thunks in the generated
+// `..._rs_api_impl.cc` file.
+inline int InlineFunctionTakingUnpinStruct(const UnpinStruct& s) {
+  return ReadUnpinStruct(s);
+}
+
+// `inline` keyword forces generation of C++ thunks in the generated
+// `..._rs_api_impl.cc` file.
+inline int InlineFunctionTakingNonunpinStruct(const NonunpinStruct& s) {
+  return ReadNonunpinStruct(s);
+}
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_FORWARD_DECLARATIONS_DECLARATION_1_H_

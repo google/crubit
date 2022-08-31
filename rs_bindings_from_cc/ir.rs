@@ -8,7 +8,7 @@
 
 use arc_anyhow::{anyhow, bail, Context, Result};
 use proc_macro2::{Literal, TokenStream};
-use quote::{ToTokens, TokenStreamExt};
+use quote::{quote, ToTokens, TokenStreamExt};
 use serde::Deserialize;
 use std::collections::hash_map::{Entry, HashMap};
 use std::convert::TryFrom;
@@ -374,6 +374,7 @@ pub struct IncompleteRecord {
     pub rs_name: String,
     pub id: ItemId,
     pub owning_target: BazelLabel,
+    pub record_type: RecordType,
     pub enclosing_namespace_id: Option<ItemId>,
 }
 
@@ -382,6 +383,17 @@ pub enum RecordType {
     Struct,
     Union,
     Class,
+}
+
+impl ToTokens for RecordType {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let tag = match self {
+            RecordType::Struct => quote! { struct },
+            RecordType::Union => quote! { union },
+            RecordType::Class => quote! { class },
+        };
+        tag.to_tokens(tokens)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

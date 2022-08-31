@@ -2944,6 +2944,12 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
 
 fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     Ok(match item {
+        Item::IncompleteRecord(incomplete_record) => {
+            let ident = format_cc_ident(&incomplete_record.cc_name);
+            let namespace_qualifier = generate_namespace_qualifier(incomplete_record.id, ir)?;
+            let tag_kind = incomplete_record.record_type;
+            quote! { #tag_kind #(#namespace_qualifier::)*  #ident }
+        }
         Item::Record(record) => {
             let ident = format_cc_ident(&record.cc_name);
             let namespace_qualifier = generate_namespace_qualifier(record.id, ir)?;
@@ -2963,11 +2969,7 @@ fn cc_tag_kind(record: &ir::Record) -> TokenStream {
     if record.is_anon_record_with_typedef {
         quote! {}
     } else {
-        match record.record_type {
-            RecordType::Struct => quote! { struct },
-            RecordType::Union => quote! { union },
-            RecordType::Class => quote! { class },
-        }
+        record.record_type.into_token_stream()
     }
 }
 
