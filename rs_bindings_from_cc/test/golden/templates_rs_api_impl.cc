@@ -162,6 +162,76 @@ __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamE
         __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" void
+__rust_thunk___ZN24template_template_params6PolicyIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct template_template_params::Policy<int>* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void
+__rust_thunk___ZN24template_template_params6PolicyIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct template_template_params::Policy<int>* __this,
+    const struct template_template_params::Policy<int>* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void
+__rust_thunk___ZN24template_template_params6PolicyIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct template_template_params::Policy<int>* __this,
+    struct template_template_params::Policy<int>* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" struct template_template_params::Policy<int>*
+__rust_thunk___ZN24template_template_params6PolicyIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct template_template_params::Policy<int>* __this,
+    const struct template_template_params::Policy<int>* __param_0) {
+  return &__this->operator=(*__param_0);
+} extern "C" struct template_template_params::Policy<int>*
+__rust_thunk___ZN24template_template_params6PolicyIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct template_template_params::Policy<int>* __this,
+    struct template_template_params::Policy<int>* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+} extern "C" void
+__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void
+__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __this,
+    const class template_template_params::MyTemplate<
+        template_template_params::Policy>* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void
+__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __this,
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" class template_template_params::MyTemplate<
+    template_template_params::Policy>*
+__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __this,
+    const class template_template_params::MyTemplate<
+        template_template_params::Policy>* __param_0) {
+  return &__this->operator=(*__param_0);
+} extern "C" class template_template_params::MyTemplate<
+    template_template_params::Policy>*
+__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __this,
+    class template_template_params::MyTemplate<
+        template_template_params::Policy>* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+} extern "C" int
+__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc() {
+  return template_template_params::MyTemplate<
+      template_template_params::Policy>::GetPolicy();
+}
 
 static_assert(sizeof(struct DifferentScope) == 1);
 static_assert(alignof(struct DifferentScope) == 1);
@@ -236,5 +306,13 @@ static_assert(
         value,
         struct MyTopLevelTemplate<test_namespace_bindings::TemplateParam>) ==
     0);
+
+static_assert(sizeof(struct template_template_params::Policy<int>) == 1);
+static_assert(alignof(struct template_template_params::Policy<int>) == 1);
+
+static_assert(sizeof(class template_template_params::MyTemplate<
+                     template_template_params::Policy>) == 1);
+static_assert(alignof(class template_template_params::MyTemplate<
+                      template_template_params::Policy>) == 1);
 
 #pragma clang diagnostic pop

@@ -67,4 +67,26 @@ struct MyTopLevelTemplate<int>;
 
 void processForwardDeclaredSpecialization(MyTopLevelTemplate<int>* i);
 
+namespace template_template_params {
+
+template <typename TPolicyType>
+struct Policy {
+  static constexpr TPolicyType policy = TPolicyType();
+};
+
+template <>
+struct Policy<int> {
+  static constexpr int policy = 42;
+};
+
+template <template <class> class TPolicy>
+class MyTemplate {
+ public:
+  static int GetPolicy() { return TPolicy<int>::policy; }
+};
+
+using MyTypeAlias = MyTemplate<Policy>;
+
+}  // namespace template_template_params
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_

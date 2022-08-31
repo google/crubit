@@ -182,6 +182,52 @@ pub fn processForwardDeclaredSpecialization<'a>(
     }
 }
 
+pub mod template_template_params {
+    // rs_bindings_from_cc/test/golden/templates.h;l=72
+    // Error while generating bindings for item 'template_template_params::Policy':
+    // Class templates are not supported yet
+
+    #[::ctor::recursively_pinned]
+    #[repr(C)]
+    pub struct __CcTemplateInstN24template_template_params6PolicyIiEE {
+        __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("Policy<int>"),
+        crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE
+    );
+
+    impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params6PolicyIiEE {
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: ()) -> Self::CtorType {
+            let () = args;
+            unsafe {
+                ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params6PolicyIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest)); })
+            }
+        }
+    }
+
+    impl<'b>::ctor::CtorNew<&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>for __CcTemplateInstN24template_template_params6PolicyIiEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE)->Self::CtorType{ let __param_0=args;unsafe{ ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params6PolicyIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); }) } } }
+    impl<'b>::ctor::CtorNew<(&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE,)>for __CcTemplateInstN24template_template_params6PolicyIiEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:(&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE,))->Self::CtorType{ let(arg,)=args;<Self as::ctor::CtorNew<&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>::ctor_new(arg) } }
+
+    impl<'b>::ctor::CtorNew<::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>for __CcTemplateInstN24template_template_params6PolicyIiEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args: ::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>)->Self::CtorType{ let __param_0=args;unsafe{ ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params6PolicyIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); }) } } }
+    impl<'b>::ctor::CtorNew<(::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,)>for __CcTemplateInstN24template_template_params6PolicyIiEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:(::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,))->Self::CtorType{ let(arg,)=args;<Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>>::ctor_new(arg) } }
+
+    impl<'b>::ctor::Assign<&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>for __CcTemplateInstN24template_template_params6PolicyIiEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0:&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE){ unsafe{ crate::detail::__rust_thunk___ZN24template_template_params6PolicyIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    impl<'b>::ctor::Assign<::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>for __CcTemplateInstN24template_template_params6PolicyIiEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0: ::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>){ unsafe{ crate::detail::__rust_thunk___ZN24template_template_params6PolicyIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    // rs_bindings_from_cc/test/golden/templates.h;l=82
+    // Error while generating bindings for item 'template_template_params::MyTemplate':
+    // Class templates are not supported yet
+
+    pub type MyTypeAlias =
+        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE;
+}
+
+// namespace template_template_params
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
 #[derive(Clone, Copy)]
@@ -571,6 +617,158 @@ impl<'b>
 // Error while generating bindings for item 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>::operator=':
 // operator= for Unpin types is not yet supported.
 
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!(
+        "template_template_params::MyTemplate<template_template_params::Policy>"
+    ),
+    crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+);
+
+impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest)); })
+        }
+    }
+}
+
+impl<'b>
+    ::ctor::CtorNew<
+        &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+    > for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); })
+        }
+    }
+}
+impl<'b>
+    ::ctor::CtorNew<(
+        &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+    )> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<
+            &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >>::ctor_new(arg)
+    }
+}
+
+impl<'b>
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >,
+    > for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); })
+        }
+    }
+}
+impl<'b>
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >,
+    )> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (
+            ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+        ),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+        >>::ctor_new(arg)
+    }
+}
+
+impl<'b>
+    ::ctor::Assign<&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>
+    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
+
+impl<'b>
+    ::ctor::Assign<
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >,
+    > for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
+
+impl __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE {
+    #[inline(always)]
+    pub fn GetPolicy() -> i32 {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
+        }
+    }
+}
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -616,6 +814,27 @@ mod detail {
         >(
             i: Option<::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
         );
+        pub(crate) fn __rust_thunk___ZN24template_template_params6PolicyIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,
+        );
+        pub(crate) fn __rust_thunk___ZN24template_template_params6PolicyIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,
+            __param_0:&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE,
+        );
+        pub(crate) fn __rust_thunk___ZN24template_template_params6PolicyIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,
+            __param_0: ::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,
+        );
+        pub(crate)fn __rust_thunk___ZN24template_template_params6PolicyIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,__param_0:&'b crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE)->::std::pin::Pin<&'a mut crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>;
+        pub(crate)fn __rust_thunk___ZN24template_template_params6PolicyIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>,__param_0: ::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>)->::std::pin::Pin<&'a mut crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -740,6 +959,57 @@ mod detail {
             __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
             __param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
         );
+        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+            __param_0:&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        );
+        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>,
+            __param_0:&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        ) -> ::std::pin::Pin<
+            &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >;
+        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: ::std::pin::Pin<&'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+            >,
+        ) -> ::std::pin::Pin<
+            &'a mut crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+        >;
+        pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc()
+        -> i32;
     }
 }
 
@@ -787,6 +1057,29 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(
         crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE:
+            Drop
+    );
+};
+
+const _: () = assert!(
+    ::std::mem::size_of::<
+        crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE,
+    >() == 1
+);
+const _: () = assert!(
+    ::std::mem::align_of::<
+        crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE,
+    >() == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE:
+            Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE:
             Drop
     );
 };
@@ -995,3 +1288,24 @@ const _: () = assert!(
         value
     ) == 0
 );
+
+const _: () = assert!(
+    ::std::mem::size_of::<
+        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+    >() == 1
+);
+const _: () = assert!(
+    ::std::mem::align_of::<
+        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
+    >() == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE: Drop
+    );
+};
