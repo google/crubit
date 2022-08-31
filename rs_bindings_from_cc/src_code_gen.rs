@@ -599,7 +599,9 @@ fn api_func_shape(
     let func_name: syn::Ident;
 
     let adl_check_required_and_failed = if let Some(decl_id) = func.adl_enclosing_record {
-        let adl_enclosing_record = ir.find_decl::<Rc<Record>>(decl_id)?;
+        let adl_enclosing_record = ir
+            .find_decl::<Rc<Record>>(decl_id)
+            .with_context(|| format!("Failed to look up `adl_enclosing_record` of {:?}", func))?;
         !is_visible_by_adl(adl_enclosing_record, param_types)
     } else {
         false
@@ -1899,7 +1901,9 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         .child_item_ids
         .iter()
         .map(|id| {
-            let item = ir.find_decl(*id)?;
+            let item = ir
+                .find_decl(*id)
+                .with_context(|| format!("Failed to look up `record.child_item_ids` for {:?}", record))?;
             generate_item(db, item)
         })
         .collect::<Result<Vec<_>>>()?;
@@ -2106,7 +2110,9 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
     let mut features = BTreeSet::new();
 
     for item_id in namespace.child_item_ids.iter() {
-        let item = ir.find_decl(*item_id)?;
+        let item = ir
+            .find_decl(*item_id)
+            .with_context(|| format!("Failed to look up namespace.child_item_ids for {:?}", namespace))?;
         let generated = generate_item(db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
@@ -2307,7 +2313,9 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
     features.insert(make_rs_ident("custom_inner_attributes"));
 
     for top_level_item_id in ir.top_level_item_ids() {
-        let item = ir.find_decl(*top_level_item_id)?;
+        let item = ir
+            .find_decl(*top_level_item_id)
+            .context("Failed to look up ir.top_level_item_ids")?;
         let generated = generate_item(&db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {

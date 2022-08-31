@@ -642,14 +642,6 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
   if (HasBeenAlreadySuccessfullyImported(specialization_decl))
     return ConvertTypeDecl(specialization_decl);
 
-  if (IsFromCurrentTarget(specialization_decl) &&
-      !specialization_decl->isExplicitSpecialization()) {
-    // Store implicit `specialization_decl`s so that they will get included in
-    // IR::top_level_item_ids.
-    class_template_instantiations_for_current_target_.insert(
-        specialization_decl);
-  }
-
   // `Sema::isCompleteType` will try to instantiate the class template as a
   // side-effect and we rely on this here. `decl->getDefinition()` can
   // return nullptr before the call to sema and return its definition
@@ -669,6 +661,14 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
     return absl::InvalidArgumentError(absl::Substitute(
         "Failed to create bindings for template specialization type $0: $1",
         type_string, import_status.message()));
+  }
+
+  if (IsFromCurrentTarget(specialization_decl) &&
+      !specialization_decl->isExplicitSpecialization()) {
+    // Store implicit `specialization_decl`s so that they will get included in
+    // IR::top_level_item_ids.
+    class_template_instantiations_for_current_target_.insert(
+        specialization_decl);
   }
 
   return ConvertTypeDecl(specialization_decl);

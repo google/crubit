@@ -89,4 +89,20 @@ using MyTypeAlias = MyTemplate<Policy>;
 
 }  // namespace template_template_params
 
+namespace forward_declared_template {
+
+// This namespaces is a regression test for b/244227110 that is based on
+// `<iosfwd>`:
+// - `ForwardDeclaredTemplate` corresponds roughly to the `basic_ios` class
+//   template.
+// - `TypeAliasToForwardDeclaredTemplate` corresponds toughtly to the
+//   `typedef basic_ios<char> ios` type alias.
+
+template <typename T>
+class ForwardDeclaredTemplate;
+
+using TypeAliasToForwardDeclaredTemplate = ForwardDeclaredTemplate<int>;
+
+}  // namespace forward_declared_template
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_

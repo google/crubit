@@ -794,7 +794,7 @@ impl IR {
         if let Some(meta) = func.member_func_metadata.as_ref() {
             Ok(Some(
                 self.find_decl(meta.record_id)
-                    .context("Failed to retrieve Record for MemberFuncMetadata")?,
+                    .with_context(|| format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func))?,
             ))
         } else {
             Ok(None)
