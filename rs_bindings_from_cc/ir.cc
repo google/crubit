@@ -399,6 +399,7 @@ llvm::json::Value Record::ToJson() const {
   llvm::json::Object record{
       {"rs_name", rs_name},
       {"cc_name", cc_name},
+      {"mangled_cc_name", mangled_cc_name},
       {"id", id},
       {"owning_target", owning_target},
       {"doc_comment", doc_comment},

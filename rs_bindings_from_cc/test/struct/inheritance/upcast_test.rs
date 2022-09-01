@@ -5,7 +5,6 @@
 mod tests {
     use ctor::CtorNew as _;
     use oops::Upcast as _;
-    use upcast::virtual_inheritance::*;
     use upcast::*;
 
     #[test]
@@ -27,6 +26,7 @@ mod tests {
 
     #[test]
     fn test_virtual_upcast() {
+        use upcast::virtual_inheritance::*;
         ctor::emplace! {
             let derived = VirtualDerived::ctor_new(());
         }
@@ -44,5 +44,17 @@ mod tests {
         assert_eq!(base1 as *const _ as usize, base1_address);
         let base1: &Base1 = base3.upcast();
         assert_eq!(base1 as *const _ as usize, base1_address);
+    }
+
+    #[test]
+    fn test_upcast_thunk_name_uniqueness() {
+        ctor::emplace! {
+            let derived = another_namespace::VirtualBase2::ctor_new(());
+        }
+        let derived = &*derived;
+
+        let base1: &Base1 = derived.upcast();
+        let base1_address = base1 as *const _ as usize;
+        assert_eq!(base1_address, derived.base1_address());
     }
 }

@@ -854,24 +854,30 @@ absl::StatusOr<MappedType> Importer::ConvertQualType(
 }
 
 std::string Importer::GetMangledName(const clang::NamedDecl* named_decl) const {
-  if (auto specialization_decl =
-          clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(named_decl)) {
-    // Itanium mangler produces valid Rust identifiers, use it to generate a
-    // name for this instantiation.
+  if (auto record_decl = clang::dyn_cast<clang::RecordDecl>(named_decl)) {
+    // Mangled record names are used to 1) provide valid Rust identifiers for
+    // C++ template specializations, and 2) help build unique names for virtual
+    // upcast thunks.
     llvm::SmallString<128> storage;
     llvm::raw_svector_ostream buffer(storage);
-    mangler_->mangleTypeName(ctx_.getRecordType(specialization_decl), buffer);
+    mangler_->mangleTypeName(ctx_.getRecordType(record_decl), buffer);
 
     // The Itanium mangler does not provide a way to get the mangled
     // representation of a type. Instead, we call mangleTypeName() that
     // returns the name of the RTTI typeinfo symbol, and remove the _ZTS
-    // prefix. Then we prepend __CcTemplateInst to reduce chances of conflict
-    // with regular C and C++ structs.
+    // prefix.
     constexpr llvm::StringRef kZtsPrefix = "_ZTS";
-    constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
     CHECK(buffer.str().take_front(4) == kZtsPrefix);
-    return llvm::formatv("{0}{1}", kCcTemplatePrefix,
-                         buffer.str().drop_front(kZtsPrefix.size()));
+    llvm::StringRef mangled_record_name =
+        buffer.str().drop_front(kZtsPrefix.size());
+
+    if (clang::isa<clang::ClassTemplateSpecializationDecl>(named_decl)) {
+      // We prepend __CcTemplateInst to reduce chances of conflict
+      // with regular C and C++ structs.
+      constexpr llvm::StringRef kCcTemplatePrefix = "__CcTemplateInst";
+      return llvm::formatv("{0}{1}", kCcTemplatePrefix, mangled_record_name);
+    }
+    return std::string(mangled_record_name);
   }
 
   clang::GlobalDecl decl;

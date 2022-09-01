@@ -576,6 +576,7 @@ struct Record {
   // `rs_name` is similar to "__CcTemplateInst8MyStructIiE").
   std::string rs_name;
   std::string cc_name;
+  std::string mangled_cc_name;
 
   ItemId id;
   BazelLabel owning_target;

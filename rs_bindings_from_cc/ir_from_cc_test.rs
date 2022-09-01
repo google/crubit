@@ -2170,6 +2170,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
            Record {
                rs_name: "DerivedClass",
                cc_name: "DerivedClass",
+               mangled_cc_name: "12DerivedClass",
                id: ItemId(...),
                owning_target: BazelLabel("//test:testing_target"),
                doc_comment: Some(...),
@@ -2308,6 +2309,7 @@ fn test_struct() {
             Record {
                 rs_name: "SomeStruct" ...
                 cc_name: "SomeStruct" ...
+                mangled_cc_name: "10SomeStruct" ...
                 fields: [
                     Field {
                         identifier: Some("first_field"), ...

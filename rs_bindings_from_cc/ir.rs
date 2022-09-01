@@ -400,6 +400,7 @@ impl ToTokens for RecordType {
 pub struct Record {
     pub rs_name: String,
     pub cc_name: String,
+    pub mangled_cc_name: String,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub doc_comment: Option<String>,

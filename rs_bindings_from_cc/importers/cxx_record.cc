@@ -203,6 +203,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   return Record{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
+      .mangled_cc_name = ictx_.GetMangledName(record_decl),
       .id = GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
       .doc_comment = std::move(doc_comment),

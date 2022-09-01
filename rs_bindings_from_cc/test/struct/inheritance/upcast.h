@@ -82,4 +82,21 @@ class VirtualDerived : public virtual VirtualBase2,
 
 }  // namespace virtual_inheritance
 
+namespace another_namespace {
+
+// This class has the same name as another `VirtualBase2` above (in another
+// namespace) to check that upcast thunks have unique names that take the
+// namespace into account.
+class VirtualBase2 : public virtual Base1 {
+ public:
+  VirtualBase2() = default;
+
+  size_t base1_address() const {
+    const Base1* base = this;
+    return reinterpret_cast<size_t>(base);
+  }
+};
+
+}  // namespace another_namespace
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_INHERITANCE_UPCAST_H_

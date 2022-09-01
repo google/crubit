@@ -222,28 +222,30 @@ static_assert(alignof(class MethodDerived) == 1);
 
 #pragma clang diagnostic pop
 
-extern "C" const class Base1& __crubit_dynamic_upcast__VirtualBase1__to__Base1(
+extern "C" const class Base1&
+__crubit_dynamic_upcast__12VirtualBase1__to__5Base1(
     const class VirtualBase1& from) {
   return from;
 }
 
-extern "C" const class Base1& __crubit_dynamic_upcast__VirtualBase2__to__Base1(
+extern "C" const class Base1&
+__crubit_dynamic_upcast__12VirtualBase2__to__5Base1(
     const class VirtualBase2& from) {
   return from;
 }
 
 extern "C" const class VirtualBase1&
-__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(
+__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase1(
     const class VirtualDerived& from) {
   return from;
 }
 extern "C" const class Base1&
-__crubit_dynamic_upcast__VirtualDerived__to__Base1(
+__crubit_dynamic_upcast__14VirtualDerived__to__5Base1(
     const class VirtualDerived& from) {
   return from;
 }
 extern "C" const class VirtualBase2&
-__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(
+__crubit_dynamic_upcast__14VirtualDerived__to__12VirtualBase2(
     const class VirtualDerived& from) {
   return from;
 }
