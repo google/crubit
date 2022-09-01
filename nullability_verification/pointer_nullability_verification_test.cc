@@ -22,7 +22,8 @@ namespace {
 
 using dataflow::Environment;
 using dataflow::TypeErasedDataflowAnalysisState;
-using dataflow::test::AnalysisData;
+using dataflow::test::AnalysisInputs;
+using dataflow::test::AnalysisOutputs;
 using dataflow::test::checkDataflow;
 using ::testing::ContainerEq;
 using ::testing::Test;
@@ -32,33 +33,39 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
   PointerNullabilityDiagnoser Diagnoser;
   ASSERT_THAT_ERROR(
       checkDataflow<PointerNullabilityAnalysis>(
-          SourceCode, ast_matchers::hasName("target"),
-          [](ASTContext &ASTCtx, Environment &) {
-            return PointerNullabilityAnalysis(ASTCtx);
-          },
-          [&Diagnostics, &Diagnoser](
-              ASTContext &Ctx, const CFGStmt &Stmt,
-              const TypeErasedDataflowAnalysisState &State) {
-            auto StmtDiagnostics =
-                Diagnoser.diagnose(Stmt.getStmt(), Ctx, State.Env);
-            if (StmtDiagnostics.has_value()) {
-              Diagnostics.push_back(StmtDiagnostics.value());
-            }
-          },
-          [&Diagnostics](AnalysisData AnalysisData) {
+          AnalysisInputs<PointerNullabilityAnalysis>(
+              SourceCode, ast_matchers::hasName("target"),
+              [](ASTContext &ASTCtx, Environment &) {
+                return PointerNullabilityAnalysis(ASTCtx);
+              })
+              .withPostVisitCFG(
+                  [&Diagnostics, &Diagnoser](
+                      ASTContext &Ctx, const CFGElement &Elem,
+                      const TypeErasedDataflowAnalysisState &State) {
+                    if (llvm::Optional<CFGStmt> Stmt = Elem.getAs<CFGStmt>()) {
+                      auto StmtDiagnostics =
+                          Diagnoser.diagnose(Stmt->getStmt(), Ctx, State.Env);
+                      if (StmtDiagnostics.has_value()) {
+                        Diagnostics.push_back(StmtDiagnostics.value());
+                      }
+                    }
+                  })
+              .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
+                                 "-Wno-unused-value", "-Wno-nonnull"}),
+          [&Diagnostics](
+              const llvm::DenseMap<unsigned, std::string> &Annotations,
+              const AnalysisOutputs &AnalysisData) {
             llvm::DenseSet<unsigned> ExpectedLines, ActualLines;
-            auto &SrcMgr = AnalysisData.ASTCtx.getSourceManager();
-            for (auto [Stmt, _] : AnalysisData.Annotations) {
-              ExpectedLines.insert(
-                  SrcMgr.getPresumedLineNumber(Stmt->getBeginLoc()));
+            for (const auto &[Line, _] : Annotations) {
+              ExpectedLines.insert(Line);
             }
+            auto &SrcMgr = AnalysisData.ASTCtx.getSourceManager();
             for (auto *Stmt : Diagnostics) {
               ActualLines.insert(
                   SrcMgr.getPresumedLineNumber(Stmt->getBeginLoc()));
             }
             EXPECT_THAT(ActualLines, ContainerEq(ExpectedLines));
-          },
-          {"-fsyntax-only", "-std=c++17", "-Wno-unused-value", "-Wno-nonnull"}),
+          }),
       llvm::Succeeded());
 }
 
