@@ -30,6 +30,9 @@ std::string GetClassTemplateSpecializationCcName(
   // desugared out of an `ElaboratedType` so that their namespaces are written
   // down.
   policy.PrintCanonicalTypes = true;
+  // Return `basic_string_view<char16_t>` instead of 'u16string_view' despite
+  // `_LIBCPP_PREFERRED_NAME(u16string_view)`.  See also b/244350186.
+  policy.UsePreferredNames = false;
 
   // TODO(200067826): Remove special handling of epxlicit class template
   // specializations.

@@ -228,11 +228,11 @@ pub mod template_template_params {
 
 // namespace template_template_params
 
-pub mod forward_declared_template { // rs_bindings_from_cc/test/golden/templates.h;l=101
+pub mod forward_declared_template { // rs_bindings_from_cc/test/golden/templates.h;l=100
     // Error while generating bindings for item 'forward_declared_template::ForwardDeclaredTemplate':
     // Class templates are not supported yet
 
-    // rs_bindings_from_cc/test/golden/templates.h;l=104
+    // rs_bindings_from_cc/test/golden/templates.h;l=103
     // Error while generating bindings for item 'forward_declared_template::TypeAliasToForwardDeclaredTemplate':
     // Unsupported type 'ForwardDeclaredTemplate<int>': 'ForwardDeclaredTemplate<int>' template specialization is incomplete
 }

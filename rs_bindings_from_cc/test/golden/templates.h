@@ -89,14 +89,13 @@ using MyTypeAlias = MyTemplate<Policy>;
 
 }  // namespace template_template_params
 
-namespace forward_declared_template {
-
-// This namespaces is a regression test for b/244227110 that is based on
+// This namespace is a regression test for b/244227110 that is based on
 // `<iosfwd>`:
 // - `ForwardDeclaredTemplate` corresponds roughly to the `basic_ios` class
 //   template.
 // - `TypeAliasToForwardDeclaredTemplate` corresponds toughtly to the
 //   `typedef basic_ios<char> ios` type alias.
+namespace forward_declared_template {
 
 template <typename T>
 class ForwardDeclaredTemplate;

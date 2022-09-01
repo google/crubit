@@ -113,6 +113,38 @@ __rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_(
     struct HasCustomAlignmentWithGnuAttr* __param_0) {
   return &__this->operator=(std::move(*__param_0));
 }
+extern "C" void
+__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
+    struct template_with_preferred_name::SomeTemplate<int>* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void
+__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
+    struct template_with_preferred_name::SomeTemplate<int>* __this,
+    const struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void
+__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
+    struct template_with_preferred_name::SomeTemplate<int>* __this,
+    struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" struct template_with_preferred_name::SomeTemplate<int>*
+__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
+    struct template_with_preferred_name::SomeTemplate<int>* __this,
+    const struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
+  return &__this->operator=(*__param_0);
+} extern "C" struct template_with_preferred_name::SomeTemplate<int>*
+__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
+    struct template_with_preferred_name::SomeTemplate<int>* __this,
+    struct template_with_preferred_name::SomeTemplate<int>* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+} extern "C" int
+__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(
+    struct template_with_preferred_name::SomeTemplate<int>* __this) {
+  return __this->foo();
+}
 
 static_assert(sizeof(struct HasCustomAlignment) == 64);
 static_assert(alignof(struct HasCustomAlignment) == 64);
@@ -126,5 +158,10 @@ static_assert(alignof(struct InheritsFromBaseWithCustomAlignment) == 64);
 
 static_assert(sizeof(struct HasCustomAlignmentWithGnuAttr) == 64);
 static_assert(alignof(struct HasCustomAlignmentWithGnuAttr) == 64);
+
+static_assert(sizeof(struct template_with_preferred_name::SomeTemplate<int>) ==
+              1);
+static_assert(alignof(struct template_with_preferred_name::SomeTemplate<int>) ==
+              1);
 
 #pragma clang diagnostic pop

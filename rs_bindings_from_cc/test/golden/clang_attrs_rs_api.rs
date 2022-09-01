@@ -514,7 +514,198 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::HasCustomAlignmentWit
     }
 }
 
+pub mod template_with_preferred_name {
+    // rs_bindings_from_cc/test/golden/clang_attrs.h;l=27
+    // Error while generating bindings for item 'template_with_preferred_name::SomeTemplate':
+    // Class templates are not supported yet
+
+    /// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
+    /// definition of the `string_view` type alias.
+    pub type SpecializedTypeAlias =
+        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE;
+
+    // Based on `llvm/include/c++/v1/string_view` - mimics definition of
+    // `basic_string_view` class template (focusing on the attributes related to the
+    // preferred name).
+}
+
+// namespace template_with_preferred_name
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_CLANG_ATTRS_H_
+
+/// Based on `llvm/include/c++/v1/__fwd/string_view.h` - mimics
+/// forward declaration of `basic_string_view` class template.
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("template_with_preferred_name::SomeTemplate<int>"),
+    crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+);
+
+impl ::ctor::CtorNew<()> for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
+    type CtorType = impl ::ctor::Ctor<Output = Self>;
+    #[inline(always)]
+    fn ctor_new(args: ()) -> Self::CtorType {
+        let () = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<
+                        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+                    >,
+                >| {
+                    crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
+                },
+            )
+        }
+    }
+}
+
+impl<'b>
+    ::ctor::CtorNew<&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<
+                        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+                    >,
+                >| {
+                    crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                },
+            )
+        }
+    }
+}
+impl<'b>
+    ::ctor::CtorNew<(&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,)>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<
+            &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >>::ctor_new(arg)
+    }
+}
+
+impl<'b>
+    ::ctor::CtorNew<
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >,
+    > for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >,
+    ) -> Self::CtorType {
+        let __param_0 = args;
+        unsafe {
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<
+                        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+                    >,
+                >| {
+                    crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+                },
+            )
+        }
+    }
+}
+impl<'b>
+    ::ctor::CtorNew<(
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >,
+    )> for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(
+        args: (
+            ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+        ),
+    ) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<
+            ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+        >>::ctor_new(arg)
+    }
+}
+
+impl<'b>
+    ::ctor::Assign<&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self,__param_0);
+        }
+    }
+}
+
+impl<'b>
+    ::ctor::Assign<
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >,
+    > for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+{
+    #[inline(always)]
+    fn assign<'a>(
+        self: ::std::pin::Pin<&'a mut Self>,
+        __param_0: ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >,
+    ) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self,__param_0);
+        }
+    }
+}
+
+impl __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE {
+    #[inline(always)]
+    pub fn foo<'a>(self: ::std::pin::Pin<&'a mut Self>) -> i32 {
+        unsafe {
+            crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self)
+        }
+    }
+}
 
 mod detail {
     #[allow(unused_imports)]
@@ -596,6 +787,66 @@ mod detail {
             __this: ::std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
         ) -> ::std::pin::Pin<&'a mut crate::HasCustomAlignmentWithGnuAttr>;
+        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+            'a,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+            __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        );
+        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+            'a,
+            'b,
+        >(
+            __this: ::std::pin::Pin<
+                &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+            __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        ) -> ::std::pin::Pin<
+            &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >;
+        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+            'a,
+            'b,
+        >(
+            __this: ::std::pin::Pin<
+                &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+        ) -> ::std::pin::Pin<
+            &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+        >;
+        pub(crate) fn __rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiE3fooEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc<
+            'a,
+        >(
+            __this: ::std::pin::Pin<
+                &'a mut crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
+            >,
+        ) -> i32;
     }
 }
 
@@ -637,4 +888,23 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::HasCustomAlignmentWithGnuAttr: Drop);
+};
+
+const _: () = assert!(
+    ::std::mem::size_of::<crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>(
+    ) == 1
+);
+const _: () = assert!(
+    ::std::mem::align_of::<crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>(
+    ) == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE: Drop
+    );
 };
