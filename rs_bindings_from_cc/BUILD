@@ -537,3 +537,32 @@ rust_test(
         "@crate_index//:quote",
     ],
 )
+
+cc_library(
+    name = "collect_namespaces",
+    srcs = ["collect_namespaces.cc"],
+    hdrs = ["collect_namespaces.h"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":cc_ir",
+        "@absl//absl/container:btree",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/strings",
+        "@llvm-project//llvm:Support",
+    ],
+)
+
+cc_test(
+    name = "collect_namespaces_test",
+    srcs = ["collect_namespaces_test.cc"],
+    deps = [
+        ":cc_ir",
+        ":collect_namespaces",
+        ":ir_from_cc",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
+        "@absl//absl/strings",
+        "@absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
