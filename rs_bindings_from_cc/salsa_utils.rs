@@ -6,6 +6,8 @@
 //!
 //! TODO(jeanpierreda): give this module a better name.
 
+use proc_macro2::TokenStream;
+use quote::ToTokens;
 use std::ops::Deref;
 use std::rc::Rc;
 
@@ -46,5 +48,14 @@ impl<T> From<T> for RcEq<T> {
 impl<T> RcEq<T> {
     pub fn new(x: T) -> Self {
         RcEq(Rc::new(x))
+    }
+}
+
+impl<T> ToTokens for RcEq<T>
+where
+    T: ToTokens,
+{
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.0.as_ref().to_tokens(tokens)
     }
 }

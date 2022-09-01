@@ -48,6 +48,7 @@ __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespace
         __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" void __rust_thunk___ZN4impl3fooEv() { impl::foo(); }
 
 static_assert(sizeof(struct test_namespace_bindings::S) == 4);
 static_assert(alignof(struct test_namespace_bindings::S) == 4);

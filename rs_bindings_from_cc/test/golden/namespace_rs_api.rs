@@ -237,6 +237,17 @@ pub fn useStructInInlineNamespaceSkipInlineQualifier(
     }
 }
 
+pub mod r#impl {
+    // `impl` is a reserved keyword in Rust
+
+    #[inline(always)]
+    pub fn foo() {
+        unsafe { crate::detail::__rust_thunk___ZN4impl3fooEv() }
+    }
+}
+
+// namespace impl
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
 
 mod detail {
@@ -302,6 +313,7 @@ mod detail {
         pub(crate) fn __rust_thunk___Z45useStructInInlineNamespaceSkipInlineQualifierN30test_namespace_bindings_inline5inner23StructInInlineNamespaceE(
             s: crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
         );
+        pub(crate) fn __rust_thunk___ZN4impl3fooEv();
     }
 }
 

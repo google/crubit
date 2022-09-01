@@ -50,4 +50,8 @@ void useStructInInlineNamespaceWithFullQualifier(
 void useStructInInlineNamespaceSkipInlineQualifier(
     test_namespace_bindings_inline::StructInInlineNamespace s);
 
+namespace impl {  // `impl` is a reserved keyword in Rust
+inline void foo() {}
+}  // namespace impl
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NAMESPACE_H_
