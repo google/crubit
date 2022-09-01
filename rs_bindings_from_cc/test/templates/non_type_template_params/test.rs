@@ -11,4 +11,9 @@ mod tests {
         assert_eq!(123 * 100, MyMultiplierX100::Multiply(123));
         assert_eq!(123 * 1000, MyMultiplierX1000::Multiply(123));
     }
+
+    #[test]
+    fn test_big_const() {
+        assert_eq!(18446744073709551615, BigNumericConst::GetValue());
+    }
 }

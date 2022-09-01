@@ -33,6 +33,9 @@ std::string GetClassTemplateSpecializationCcName(
   // Return `basic_string_view<char16_t>` instead of 'u16string_view' despite
   // `_LIBCPP_PREFERRED_NAME(u16string_view)`.  See also b/244350186.
   policy.UsePreferredNames = false;
+  // Use type suffix (e.g. `123u` rather than just `123`) to avoid the
+  // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.
+  policy.AlwaysIncludeTypeForTemplateArgument = true;
 
   // TODO(200067826): Remove special handling of epxlicit class template
   // specializations.
