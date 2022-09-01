@@ -2128,6 +2128,7 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
+    let mut thunk_impls = vec![];
     let mut assertions = vec![];
     let mut has_record = false;
     let mut features = BTreeSet::new();
@@ -2140,6 +2141,9 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
+        }
+        if !generated.thunk_impls.is_empty() {
+            thunk_impls.push(generated.thunk_impls);
         }
         if !generated.assertions.is_empty() {
             assertions.push(generated.assertions);
@@ -2169,14 +2173,6 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         quote! { pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__ }
     };
 
-    let thunks_tokens = quote! {
-        #( #thunks )*
-    };
-
-    let assertions_tokens = quote! {
-        #( #assertions )*
-    };
-
     let namespace_tokens = quote! {
         pub mod #name {
             #use_stmt_for_previous_namespace
@@ -2189,8 +2185,9 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         item: namespace_tokens,
         features: features,
         has_record: has_record,
-        thunks: thunks_tokens,
-        assertions: assertions_tokens,
+        thunks: quote! { #( #thunks )* },
+        thunk_impls: quote! { #( #thunk_impls )* },
+        assertions: quote! { #( #assertions )* },
         ..Default::default()
     })
 }
@@ -2968,27 +2965,29 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
     Ok(result)
 }
 
+fn cc_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
+    let ident = format_cc_ident(&record.cc_name);
+    let namespace_qualifier = format_cc_namespace_qualifier(record.id, ir)?;
+    let tag_kind = cc_tag_kind(record);
+    Ok(quote! { #tag_kind #namespace_qualifier #ident })
+}
+
 fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
-    Ok(match item {
+    match item {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = format_cc_ident(&incomplete_record.cc_name);
             let namespace_qualifier = format_cc_namespace_qualifier(incomplete_record.id, ir)?;
             let tag_kind = incomplete_record.record_type;
-            quote! { #tag_kind #namespace_qualifier #ident }
+            Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
-        Item::Record(record) => {
-            let ident = format_cc_ident(&record.cc_name);
-            let namespace_qualifier = format_cc_namespace_qualifier(record.id, ir)?;
-            let tag_kind = cc_tag_kind(record);
-            quote! { #tag_kind #namespace_qualifier #ident }
-        }
+        Item::Record(record) => cc_type_name_for_record(record, ir),
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
             let namespace_qualifier = format_cc_namespace_qualifier(type_alias.id, ir)?;
-            quote! { #namespace_qualifier #ident }
+            Ok(quote! { #namespace_qualifier #ident })
         }
         _ => bail!("Item does not define a type: {:?}", item),
-    })
+    }
 }
 
 fn cc_tag_kind(record: &ir::Record) -> TokenStream {
@@ -3151,7 +3150,7 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
 
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
-fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
+fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> {
     let mut impls = Vec::with_capacity(record.unambiguous_public_bases.len());
     let mut thunks = vec![];
     let mut cc_impls = vec![];
@@ -3160,7 +3159,7 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
             .find_decl(base.base_record_id)
             .with_context(|| format!("Can't find a base record of {:?}", record))?;
         let base_name = RsTypeKind::new_record(base_record.clone(), ir)?.into_token_stream();
-        let derived_name = make_rs_ident(&record.rs_name);
+        let derived_name = RsTypeKind::new_record(record.clone(), ir)?.into_token_stream();
         let body;
         if let Some(offset) = base.offset {
             let offset = Literal::i64_unsuffixed(offset);
@@ -3172,8 +3171,8 @@ fn cc_struct_upcast_impl(record: &Record, ir: &IR) -> Result<GeneratedItem> {
                 "__crubit_dynamic_upcast__{}__to__{}",
                 record.rs_name, base_record.rs_name
             ));
-            let base_cc_name = format_cc_ident(&base_record.cc_name);
-            let derived_cc_name = format_cc_ident(&record.cc_name);
+            let base_cc_name = cc_type_name_for_record(base_record.as_ref(), ir)?;
+            let derived_cc_name = cc_type_name_for_record(record.as_ref(), ir)?;
             cc_impls.push(quote! {
                 extern "C" const #base_cc_name& #cast_fn_name(const #derived_cc_name& from) {
                     return from;
@@ -5525,7 +5524,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                unsafe impl oops::Inherits<crate::VirtualBase> for Derived {
+                unsafe impl oops::Inherits<crate::VirtualBase> for crate::Derived {
                     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase {
                         crate::detail::__crubit_dynamic_upcast__Derived__to__VirtualBase(derived)
                     }
@@ -5534,23 +5533,23 @@ mod tests {
         );
         assert_rs_matches!(
             rs_api,
-            quote! { unsafe impl oops::Inherits<crate::UnambiguousPublicBase> for Derived }
+            quote! { unsafe impl oops::Inherits<crate::UnambiguousPublicBase> for crate::Derived }
         );
         assert_rs_matches!(
             rs_api,
-            quote! { unsafe impl oops::Inherits<crate::MultipleInheritance> for Derived }
+            quote! { unsafe impl oops::Inherits<crate::MultipleInheritance> for crate::Derived }
         );
         assert_rs_not_matches!(
             rs_api,
-            quote! {unsafe impl oops::Inherits<crate::PrivateBase> for Derived}
+            quote! {unsafe impl oops::Inherits<crate::PrivateBase> for crate::Derived}
         );
         assert_rs_not_matches!(
             rs_api,
-            quote! {unsafe impl oops::Inherits<crate::ProtectedBase> for Derived}
+            quote! {unsafe impl oops::Inherits<crate::ProtectedBase> for crate::Derived}
         );
         assert_rs_not_matches!(
             rs_api,
-            quote! {unsafe impl oops::Inherits<crate::AmbiguousPublicBase> for Derived}
+            quote! {unsafe impl oops::Inherits<crate::AmbiguousPublicBase> for crate::Derived}
         );
         Ok(())
     }

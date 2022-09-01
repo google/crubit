@@ -381,7 +381,9 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::InheritsFromBaseWithC
     }
 }
 
-unsafe impl oops::Inherits<crate::HasCustomAlignment> for InheritsFromBaseWithCustomAlignment {
+unsafe impl oops::Inherits<crate::HasCustomAlignment>
+    for crate::InheritsFromBaseWithCustomAlignment
+{
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::HasCustomAlignment {
         (derived as *const _ as *const u8).offset(0) as *const crate::HasCustomAlignment
     }

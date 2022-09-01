@@ -356,17 +356,17 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::Derived>> for Derived {
 // Error while generating bindings for item 'Derived::operator=':
 // operator= for Unpin types is not yet supported.
 
-unsafe impl oops::Inherits<crate::Base0> for Derived {
+unsafe impl oops::Inherits<crate::Base0> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base0 {
         (derived as *const _ as *const u8).offset(0) as *const crate::Base0
     }
 }
-unsafe impl oops::Inherits<crate::Base1> for Derived {
+unsafe impl oops::Inherits<crate::Base1> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         (derived as *const _ as *const u8).offset(0) as *const crate::Base1
     }
 }
-unsafe impl oops::Inherits<crate::Base2> for Derived {
+unsafe impl oops::Inherits<crate::Base2> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base2 {
         (derived as *const _ as *const u8).offset(10) as *const crate::Base2
     }
@@ -469,7 +469,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualBase1>> for Vi
     }
 }
 
-unsafe impl oops::Inherits<crate::Base1> for VirtualBase1 {
+unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase1 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         crate::detail::__crubit_dynamic_upcast__VirtualBase1__to__Base1(derived)
     }
@@ -572,7 +572,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualBase2>> for Vi
     }
 }
 
-unsafe impl oops::Inherits<crate::Base1> for VirtualBase2 {
+unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         crate::detail::__crubit_dynamic_upcast__VirtualBase2__to__Base1(derived)
     }
@@ -681,17 +681,17 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualDerived>> for 
     }
 }
 
-unsafe impl oops::Inherits<crate::VirtualBase1> for VirtualDerived {
+unsafe impl oops::Inherits<crate::VirtualBase1> for crate::VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase1 {
         crate::detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(derived)
     }
 }
-unsafe impl oops::Inherits<crate::Base1> for VirtualDerived {
+unsafe impl oops::Inherits<crate::Base1> for crate::VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base1 {
         crate::detail::__crubit_dynamic_upcast__VirtualDerived__to__Base1(derived)
     }
 }
-unsafe impl oops::Inherits<crate::VirtualBase2> for VirtualDerived {
+unsafe impl oops::Inherits<crate::VirtualBase2> for crate::VirtualDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::VirtualBase2 {
         crate::detail::__crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(derived)
     }
@@ -991,12 +991,12 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::MethodDerived>> for MethodDeriv
 // Error while generating bindings for item 'MethodDerived::operator=':
 // operator= for Unpin types is not yet supported.
 
-unsafe impl oops::Inherits<crate::MethodBase1> for MethodDerived {
+unsafe impl oops::Inherits<crate::MethodBase1> for crate::MethodDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::MethodBase1 {
         (derived as *const _ as *const u8).offset(0) as *const crate::MethodBase1
     }
 }
-unsafe impl oops::Inherits<crate::MethodBase2> for MethodDerived {
+unsafe impl oops::Inherits<crate::MethodBase2> for crate::MethodDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::MethodBase2 {
         (derived as *const _ as *const u8).offset(0) as *const crate::MethodBase2
     }
@@ -1092,7 +1092,7 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase1>,
         ) -> ::std::pin::Pin<&'a mut crate::VirtualBase1>;
         pub fn __crubit_dynamic_upcast__VirtualBase1__to__Base1(
-            from: *const VirtualBase1,
+            from: *const crate::VirtualBase1,
         ) -> *const crate::Base1;
         pub(crate) fn __rust_thunk___ZN12VirtualBase2C1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::VirtualBase2>,
@@ -1114,7 +1114,7 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase2>,
         ) -> ::std::pin::Pin<&'a mut crate::VirtualBase2>;
         pub fn __crubit_dynamic_upcast__VirtualBase2__to__Base1(
-            from: *const VirtualBase2,
+            from: *const crate::VirtualBase2,
         ) -> *const crate::Base1;
         pub(crate) fn __rust_thunk___ZN14VirtualDerivedC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::VirtualDerived>,
@@ -1136,13 +1136,13 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived>,
         ) -> ::std::pin::Pin<&'a mut crate::VirtualDerived>;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase1(
-            from: *const VirtualDerived,
+            from: *const crate::VirtualDerived,
         ) -> *const crate::VirtualBase1;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__Base1(
-            from: *const VirtualDerived,
+            from: *const crate::VirtualDerived,
         ) -> *const crate::Base1;
         pub fn __crubit_dynamic_upcast__VirtualDerived__to__VirtualBase2(
-            from: *const VirtualDerived,
+            from: *const crate::VirtualDerived,
         ) -> *const crate::VirtualBase2;
         pub(crate) fn __rust_thunk___ZN15MyAbstractClassaSERKS_<'a, 'b>(
             __this: ::std::pin::Pin<&'a mut crate::MyAbstractClass>,

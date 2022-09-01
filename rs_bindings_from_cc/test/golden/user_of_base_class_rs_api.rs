@@ -118,17 +118,17 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::Derived2>> for Derive
     }
 }
 
-unsafe impl oops::Inherits<inheritance_cc::Base0> for Derived2 {
+unsafe impl oops::Inherits<inheritance_cc::Base0> for crate::Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base0 {
         crate::detail::__crubit_dynamic_upcast__Derived2__to__Base0(derived)
     }
 }
-unsafe impl oops::Inherits<inheritance_cc::Base1> for Derived2 {
+unsafe impl oops::Inherits<inheritance_cc::Base1> for crate::Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
         (derived as *const _ as *const u8).offset(8) as *const inheritance_cc::Base1
     }
 }
-unsafe impl oops::Inherits<inheritance_cc::Base2> for Derived2 {
+unsafe impl oops::Inherits<inheritance_cc::Base2> for crate::Derived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base2 {
         (derived as *const _ as *const u8).offset(18) as *const inheritance_cc::Base2
     }
@@ -244,17 +244,17 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualDerived2>> for
     }
 }
 
-unsafe impl oops::Inherits<inheritance_cc::VirtualBase1> for VirtualDerived2 {
+unsafe impl oops::Inherits<inheritance_cc::VirtualBase1> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase1 {
         crate::detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(derived)
     }
 }
-unsafe impl oops::Inherits<inheritance_cc::Base1> for VirtualDerived2 {
+unsafe impl oops::Inherits<inheritance_cc::Base1> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::Base1 {
         crate::detail::__crubit_dynamic_upcast__VirtualDerived2__to__Base1(derived)
     }
 }
-unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for VirtualDerived2 {
+unsafe impl oops::Inherits<inheritance_cc::VirtualBase2> for crate::VirtualDerived2 {
     unsafe fn upcast_ptr(derived: *const Self) -> *const inheritance_cc::VirtualBase2 {
         crate::detail::__crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(derived)
     }
@@ -286,7 +286,7 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::Derived2>,
         ) -> ::std::pin::Pin<&'a mut crate::Derived2>;
         pub fn __crubit_dynamic_upcast__Derived2__to__Base0(
-            from: *const Derived2,
+            from: *const crate::Derived2,
         ) -> *const inheritance_cc::Base0;
         pub(crate) fn __rust_thunk___ZN15VirtualDerived2C1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::VirtualDerived2>,
@@ -308,13 +308,13 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived2>,
         ) -> ::std::pin::Pin<&'a mut crate::VirtualDerived2>;
         pub fn __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(
-            from: *const VirtualDerived2,
+            from: *const crate::VirtualDerived2,
         ) -> *const inheritance_cc::VirtualBase1;
         pub fn __crubit_dynamic_upcast__VirtualDerived2__to__Base1(
-            from: *const VirtualDerived2,
+            from: *const crate::VirtualDerived2,
         ) -> *const inheritance_cc::Base1;
         pub fn __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(
-            from: *const VirtualDerived2,
+            from: *const crate::VirtualDerived2,
         ) -> *const inheritance_cc::VirtualBase2;
     }
 }

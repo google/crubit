@@ -60,22 +60,23 @@ static_assert(alignof(class VirtualDerived2) == 8);
 
 #pragma clang diagnostic pop
 
-extern "C" const Base0& __crubit_dynamic_upcast__Derived2__to__Base0(
-    const Derived2& from) {
+extern "C" const class Base0& __crubit_dynamic_upcast__Derived2__to__Base0(
+    const struct Derived2& from) {
   return from;
 }
 
-extern "C" const VirtualBase1&
+extern "C" const class VirtualBase1&
 __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase1(
-    const VirtualDerived2& from) {
+    const class VirtualDerived2& from) {
   return from;
 }
-extern "C" const Base1& __crubit_dynamic_upcast__VirtualDerived2__to__Base1(
-    const VirtualDerived2& from) {
+extern "C" const class Base1&
+__crubit_dynamic_upcast__VirtualDerived2__to__Base1(
+    const class VirtualDerived2& from) {
   return from;
 }
-extern "C" const VirtualBase2&
+extern "C" const class VirtualBase2&
 __crubit_dynamic_upcast__VirtualDerived2__to__VirtualBase2(
-    const VirtualDerived2& from) {
+    const class VirtualDerived2& from) {
   return from;
 }

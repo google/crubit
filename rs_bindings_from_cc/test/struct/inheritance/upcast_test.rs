@@ -5,6 +5,7 @@
 mod tests {
     use ctor::CtorNew as _;
     use oops::Upcast as _;
+    use upcast::virtual_inheritance::*;
     use upcast::*;
 
     #[test]
