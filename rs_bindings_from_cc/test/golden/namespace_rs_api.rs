@@ -26,9 +26,16 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::S
     );
 
-    // rs_bindings_from_cc/test/golden/namespace.h;l=11
-    // Error while generating bindings for item 'S::S':
-    // Cannot generate bindings for overloaded function
+    impl Default for S {
+        #[inline(always)]
+        fn default() -> Self {
+            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1Ev(&mut tmp);
+                tmp.assume_init()
+            }
+        }
+    }
 
     impl<'b> From<::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>> for S {
         #[inline(always)]
@@ -96,9 +103,18 @@ pub mod test_namespace_bindings_reopened_0 {
             crate::test_namespace_bindings_reopened::inner::S
         );
 
-        // rs_bindings_from_cc/test/golden/namespace.h;l=31
-        // Error while generating bindings for item 'S::S':
-        // Cannot generate bindings for overloaded function
+        impl Default for S {
+            #[inline(always)]
+            fn default() -> Self {
+                let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                unsafe {
+                    crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev(
+                        &mut tmp,
+                    );
+                    tmp.assume_init()
+                }
+            }
+        }
 
         impl<'b>
             From<::ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>>
@@ -254,6 +270,9 @@ mod detail {
     #[allow(unused_imports)]
     use super::*;
     extern "C" {
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
+        );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::S>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>,
@@ -271,6 +290,11 @@ mod detail {
         ) -> crate::test_namespace_bindings::S;
         #[link_name = "_ZN32test_namespace_bindings_reopened1xEv"]
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened1xEv();
+        pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1Ev<'a>(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::test_namespace_bindings_reopened::inner::S,
+            >,
+        );
         pub(crate) fn __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<
                 crate::test_namespace_bindings_reopened::inner::S,

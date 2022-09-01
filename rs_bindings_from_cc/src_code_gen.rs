@@ -966,6 +966,7 @@ fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
 ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
+    let ir = db.ir();
     let mut features = BTreeSet::new();
     let mut param_types = func
         .params
@@ -983,6 +984,7 @@ fn generate_func(
         } else {
             return Ok(None);
         };
+    let namespace_qualifier = format_rs_namespace_qualifier(func.id, &ir)?;
 
     let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
@@ -1140,13 +1142,18 @@ fn generate_func(
     match impl_kind {
         ImplKind::None { .. } => {
             api_func = quote! { #doc_comment #api_func_def };
-            function_id = FunctionId { self_type: None, function_path: func_name.into() };
+            function_id = FunctionId {
+                self_type: None,
+                function_path: syn::parse2(quote! { #namespace_qualifier #func_name }).unwrap(),
+            };
         }
         ImplKind::Struct { record_name, .. } => {
             api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
-                function_path: syn::parse2(quote! { #record_name :: #func_name }).unwrap(),
+                function_path: syn::parse2(quote! {
+                    #namespace_qualifier #record_name :: #func_name
+                }).unwrap(),
             };
         }
         ImplKind::Trait {
@@ -1210,7 +1217,10 @@ fn generate_func(
                 #extra_items
             };
             function_id = FunctionId {
-                self_type: Some(record_name.into()),
+                // Because of ADL rules the `impl_for` record is always in the same namespace as
+                // the function behind the trait implementation.  Therefore, it is okay to use the
+                // `namespace_qualifier` (of the function, not the record) below.
+                self_type: Some(syn::parse2(quote! { #namespace_qualifier #record_name }).unwrap()),
                 function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
             };
         }
@@ -6243,6 +6253,9 @@ mod tests {
                   S3(int i);
                   S3(double d);
                 };
+
+                namespace foo { void not_overloaded(); }
+                namespace bar { void not_overloaded(); }
             "#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -6264,6 +6277,10 @@ mod tests {
         // We can also import overloaded single-parameter constructors.
         assert_rs_matches!(rs_api, quote! {impl From<i32> for S3});
         assert_rs_matches!(rs_api, quote! {impl From<f64> for S3});
+
+        // And we can import functions that have the same name + signature, but that are
+        // in 2 different namespaces.
+        assert_rs_matches!(rs_api, quote! { pub fn not_overloaded() });
         Ok(())
     }
 
