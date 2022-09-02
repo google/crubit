@@ -17,34 +17,33 @@ namespace crubit {
 // stores the names of the namespace children, as it is the only information
 // that the cc_import! macro needs in order to be able to merge namespaces
 // across targets.
-struct NamespaceForCcImport {
+struct NamespaceNode {
   llvm::json::Value ToJson() const;
 
   std::string name;
-  std::vector<NamespaceForCcImport> children;
+  std::vector<NamespaceNode> children;
 };
 
-inline std::ostream& operator<<(std::ostream& o,
-                                const NamespaceForCcImport& ns) {
+inline std::ostream& operator<<(std::ostream& o, const NamespaceNode& ns) {
   return o << std::string(llvm::formatv("{0:2}", ns.ToJson()));
 }
 
 // Representation of all C++ namespaces within the current target.
-struct AllNamespacesForCcImport {
+struct NamespacesHierarchy {
   llvm::json::Value ToJson() const;
 
-  std::vector<NamespaceForCcImport> namespaces;
+  std::vector<NamespaceNode> namespaces;
 };
 
 inline std::ostream& operator<<(std::ostream& o,
-                                const AllNamespacesForCcImport& all) {
+                                const NamespacesHierarchy& all) {
   return o << std::string(llvm::formatv("{0:2}", all.ToJson()));
 }
 
 // Returns the current target's namespace hierarchy in JSON serializable format.
-AllNamespacesForCcImport CollectNamespaces(const IR& ir);
+NamespacesHierarchy CollectNamespaces(const IR& ir);
 
-inline std::string NamespacesAsJson(const AllNamespacesForCcImport& topLevel) {
+inline std::string NamespacesAsJson(const NamespacesHierarchy& topLevel) {
   return llvm::formatv("{0:2}", topLevel.ToJson());
 }
 }  // namespace crubit

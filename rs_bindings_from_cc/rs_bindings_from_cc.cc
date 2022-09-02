@@ -17,7 +17,9 @@
 #include "common/file_io.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/cmdline.h"
+#include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace crubit {
@@ -37,6 +39,9 @@ absl::Status Main(std::vector<char*> args) {
     if (!cmdline.instantiations_out().empty()) {
       CRUBIT_RETURN_IF_ERROR(
           SetFileContents(cmdline.instantiations_out(), "[]"));
+    }
+    if (!cmdline.namespaces_out().empty()) {
+      CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.namespaces_out(), "[]"));
     }
     return absl::OkStatus();
   }
@@ -62,6 +67,12 @@ absl::Status Main(std::vector<char*> args) {
     CRUBIT_RETURN_IF_ERROR(SetFileContents(
         cmdline.instantiations_out(),
         crubit::InstantiationsAsJson(bindings_and_metadata.ir)));
+  }
+
+  if (!cmdline.namespaces_out().empty()) {
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(
+        cmdline.namespaces_out(),
+        crubit::NamespacesAsJson(bindings_and_metadata.namespaces)));
   }
 
   return absl::OkStatus();

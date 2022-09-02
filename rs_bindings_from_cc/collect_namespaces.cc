@@ -79,14 +79,14 @@ class NamespaceTrie {
     }
   }
 
-  // Converts a trie node into the JSON serializable NamespaceForCcImport.
-  NamespaceForCcImport NodeToNamespaceForCcImport(const Node* node) const {
-    std::vector<NamespaceForCcImport> namespaces;
+  // Converts a trie node into the JSON serializable NamespaceNode.
+  NamespaceNode NodeToNamespaceNode(const Node* node) const {
+    std::vector<NamespaceNode> namespaces;
     namespaces.reserve(node->child_name_to_idx.size());
     for (const auto& [_, idx] : node->child_name_to_idx) {
-      namespaces.push_back(NodeToNamespaceForCcImport(&trie_nodes_[idx]));
+      namespaces.push_back(NodeToNamespaceNode(&trie_nodes_[idx]));
     }
-    return NamespaceForCcImport{std::string(node->name), std::move(namespaces)};
+    return NamespaceNode{std::string(node->name), std::move(namespaces)};
   }
 
  public:
@@ -118,21 +118,21 @@ class NamespaceTrie {
     }
   }
 
-  // Converts the trie into the JSON serializable AllNamespacesForCcImport.
-  AllNamespacesForCcImport ToAllNamespacesForCcImport() {
-    std::vector<NamespaceForCcImport> namespaces;
+  // Converts the trie into the JSON serializable NamespacesHierarchy.
+  NamespacesHierarchy ToNamespacesHierarchy() {
+    std::vector<NamespaceNode> namespaces;
     namespaces.reserve(this->top_level_name_to_idx_.size());
     for (auto& [_, idx] : this->top_level_name_to_idx_) {
-      namespaces.push_back(NodeToNamespaceForCcImport(&trie_nodes_[idx]));
+      namespaces.push_back(NodeToNamespaceNode(&trie_nodes_[idx]));
     }
-    return AllNamespacesForCcImport{std::move(namespaces)};
+    return NamespacesHierarchy{std::move(namespaces)};
   }
 };
 
 }  // namespace
 
 // Returns the current target's namespace hierarchy in JSON serializable format.
-AllNamespacesForCcImport CollectNamespaces(const IR& ir) {
+NamespacesHierarchy CollectNamespaces(const IR& ir) {
   auto all_namespaces = ir.get_items_if<Namespace>();
   absl::flat_hash_map<ItemId, const Namespace*> id_to_namespace;
   for (auto ns : all_namespaces) {
@@ -152,10 +152,10 @@ AllNamespacesForCcImport CollectNamespaces(const IR& ir) {
     trie.InsertTopLevel(ns);
   }
 
-  return trie.ToAllNamespacesForCcImport();
+  return trie.ToNamespacesHierarchy();
 }
 
-llvm::json::Value NamespaceForCcImport::ToJson() const {
+llvm::json::Value NamespaceNode::ToJson() const {
   std::vector<llvm::json::Value> json_children;
   json_children.reserve(children.size());
   for (const auto& child : children) {
@@ -172,7 +172,7 @@ llvm::json::Value NamespaceForCcImport::ToJson() const {
   };
 }
 
-llvm::json::Value AllNamespacesForCcImport::ToJson() const {
+llvm::json::Value NamespacesHierarchy::ToJson() const {
   std::vector<llvm::json::Value> json_namespaces;
   json_namespaces.reserve(namespaces.size());
   for (const auto& ns : namespaces) {

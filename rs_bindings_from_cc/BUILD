@@ -67,6 +67,7 @@ cc_binary(
         ":bazel_types",
         ":cc_ir",
         ":cmdline",
+        ":collect_namespaces",
         ":generate_bindings_and_metadata",
         "//common:file_io",
         "//common:rust_allocator_shims",
@@ -88,6 +89,7 @@ cc_library(
         ":cc_collect_instantiations",
         ":cc_ir",
         ":cmdline",
+        ":collect_namespaces",
         ":ir_from_cc",
         ":src_code_gen",
         "//common:status_macros",
@@ -101,6 +103,7 @@ cc_test(
     deps = [
         ":cc_ir",
         ":cmdline",
+        ":collect_namespaces",
         ":generate_bindings_and_metadata",
         "//common:rust_allocator_shims",
         "//common:test_utils",

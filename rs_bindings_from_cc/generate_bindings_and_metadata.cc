@@ -6,6 +6,7 @@
 
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
+#include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
 
@@ -36,10 +37,13 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                                cmdline.rustfmt_exe_path(),
                                cmdline.rustfmt_config_path()));
 
+  auto top_level_namespaces = crubit::CollectNamespaces(ir);
+
   return BindingsAndMetadata{
       .ir = ir,
       .rs_api = bindings.rs_api,
       .rs_api_impl = bindings.rs_api_impl,
+      .namespaces = top_level_namespaces,
   };
 }
 

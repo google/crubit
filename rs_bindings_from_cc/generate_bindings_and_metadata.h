@@ -10,6 +10,7 @@
 
 #include "absl/status/statusor.h"
 #include "rs_bindings_from_cc/cmdline.h"
+#include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
@@ -22,6 +23,8 @@ struct BindingsAndMetadata {
   std::string rs_api;
   // Generated C++ source code.
   std::string rs_api_impl;
+  // A hierarchy tree for all C++ namespaces used in the target.
+  NamespacesHierarchy namespaces;
 };
 
 // Returns `BindingsAndMetadata` as requested by the user on the command line.

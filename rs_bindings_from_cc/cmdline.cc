@@ -57,6 +57,9 @@ ABSL_FLAG(std::string, instantiations_out, "",
           "[template instantiation mode only] output path for the JSON file "
           "with mapping from a template instantiation to a generated Rust "
           "struct name. This file is used by cc_template! macro expansion.");
+ABSL_FLAG(std::string, namespaces_out, "",
+          "(optional) output path for the JSON file containing the target's"
+          "namespace hierarchy.");
 
 namespace crubit {
 
@@ -78,7 +81,8 @@ bool fromJSON(const llvm::json::Value& json, TargetAndHeaders& out,
 absl::StatusOr<Cmdline> Cmdline::Create() {
   return CreateFromArgs(
       absl::GetFlag(FLAGS_cc_out), absl::GetFlag(FLAGS_rs_out),
-      absl::GetFlag(FLAGS_ir_out), absl::GetFlag(FLAGS_crubit_support_path),
+      absl::GetFlag(FLAGS_ir_out), absl::GetFlag(FLAGS_namespaces_out),
+      absl::GetFlag(FLAGS_crubit_support_path),
       absl::GetFlag(FLAGS_rustfmt_exe_path),
       absl::GetFlag(FLAGS_rustfmt_config_path), absl::GetFlag(FLAGS_do_nothing),
       absl::GetFlag(FLAGS_public_headers),
@@ -89,9 +93,9 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
 
 absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     std::string cc_out, std::string rs_out, std::string ir_out,
-    std::string crubit_support_path, std::string rustfmt_exe_path,
-    std::string rustfmt_config_path, bool do_nothing,
-    std::vector<std::string> public_headers,
+    std::string namespaces_out, std::string crubit_support_path,
+    std::string rustfmt_exe_path, std::string rustfmt_config_path,
+    bool do_nothing, std::vector<std::string> public_headers,
     std::string targets_and_headers_str, std::vector<std::string> rust_sources,
     std::string instantiations_out) {
   Cmdline cmdline;
@@ -107,6 +111,8 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
   cmdline.cc_out_ = std::move(cc_out);
 
   cmdline.ir_out_ = std::move(ir_out);
+
+  cmdline.namespaces_out_ = std::move(namespaces_out);
 
   if (crubit_support_path.empty()) {
     return absl::InvalidArgumentError("please specify --crubit_support_path");

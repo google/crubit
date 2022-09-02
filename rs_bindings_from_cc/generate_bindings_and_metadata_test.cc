@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
+#include "rs_bindings_from_cc/collect_namespaces.h"
 #include "rs_bindings_from_cc/ir.h"
 
 namespace crubit {
@@ -26,7 +27,7 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "crubit_support_path",
+          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -54,7 +55,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "crubit_support_path",
+          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -79,7 +80,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "crubit_support_path",
+          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -94,6 +95,88 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
   // TODO(b/440066049): Actually populate the instantiations map once
   // cl/430823388 is submitted.
   ASSERT_THAT(InstantiationsAsJson(result.ir), StrEq("{}"));
+}
+
+TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
+  constexpr absl::string_view kTargetsAndHeaders = R"([
+    {"t": "target1", "h": ["a.h"]}
+  ])";
+  constexpr absl::string_view kHeaderContent = R"(
+    namespace top_level_1 {
+      namespace middle {
+        namespace inner_1 {}
+      }
+      namespace middle {
+        namespace inner_2 {}
+      }
+    }
+
+    namespace top_level_2 {
+      namespace inner_3 {}
+    }
+
+    namespace top_level_1 {}
+  )";
+  constexpr absl::string_view kExpected = R"({
+  "namespaces": [
+    {
+      "namespace": {
+        "children": [
+          {
+            "namespace": {
+              "children": [
+                {
+                  "namespace": {
+                    "children": [],
+                    "name": "inner_1"
+                  }
+                },
+                {
+                  "namespace": {
+                    "children": [],
+                    "name": "inner_2"
+                  }
+                }
+              ],
+              "name": "middle"
+            }
+          }
+        ],
+        "name": "top_level_1"
+      }
+    },
+    {
+      "namespace": {
+        "children": [
+          {
+            "namespace": {
+              "children": [],
+              "name": "inner_3"
+            }
+          }
+        ],
+        "name": "top_level_2"
+      }
+    }
+  ]
+})";
+
+  ASSERT_OK_AND_ASSIGN(
+      Cmdline cmdline,
+      Cmdline::CreateForTesting(
+          "cc_out", "rs_out", "ir_out", "namespaces_json",
+          "crubit_support_path", std::string(kDefaultRustfmtExePath),
+          "nowhere/rustfmt.toml",
+          /* do_nothing= */ false,
+          /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
+          /* rust_sources= */ {}, /* instantiations_out= */ ""));
+  ASSERT_OK_AND_ASSIGN(BindingsAndMetadata result,
+                       GenerateBindingsAndMetadata(
+                           cmdline, DefaultClangArgs(),
+                           /* virtual_headers_contents= */
+                           {{HeaderName("a.h"), std::string(kHeaderContent)}}));
+
+  ASSERT_THAT(NamespacesAsJson(result.namespaces), StrEq(kExpected));
 }
 
 }  // namespace
