@@ -325,16 +325,13 @@ static std::vector<clang::Decl*> GetCanonicalChildren(
       continue;
     }
 
-    clang::Decl* decl_to_import;
-    if (auto namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
-      decl_to_import = namespace_decl;
-    } else {
-      // TODO(b/244630626): `decl_to_import` may be a non-canonical function
-      // decl as a child of a namespace.  We should consider *skipping*
-      // non-canonical decls instead.
-      decl_to_import = decl->getCanonicalDecl();
+    // In general we only import (and include as children) canonical decls.
+    // Namespaces are exempted to ensure that we process every one of
+    // (potential) multiple namespace blocks with the same name.
+    if (decl == decl->getCanonicalDecl() ||
+        clang::isa<clang::NamespaceDecl>(decl)) {
+      result.push_back(decl);
     }
-    result.push_back(decl_to_import);
   }
 
   return result;

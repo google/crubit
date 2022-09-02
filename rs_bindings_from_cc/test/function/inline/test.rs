@@ -21,4 +21,9 @@ mod tests {
     fn test_double_unsigned_int() {
         assert_eq!(double_unsigned_int(123), 246);
     }
+
+    #[test]
+    fn test_forward_declared_doubler() {
+        assert_eq!(foo::forward_declared_doubler(124), 248);
+    }
 }

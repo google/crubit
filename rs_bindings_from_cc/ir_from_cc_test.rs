@@ -3405,10 +3405,10 @@ fn test_function_redeclared_as_friend() {
 
     // There should only be a single Func item.
     //
-    // Additionally, this assert also verifies (a bit haphazardly) that
-    // `child_item_ids` and `top_level_item_ids` have the right length, which
-    // indirectly verifies that the `function_id` is included in
-    // `top_level_item_ids` and is not included in the record's `child_item_ids`).
+    // Additionally, this assert also verifies that `child_item_ids` and
+    // `top_level_item_ids` have the right length, which indirectly verifies
+    // that the `function_id` is not included in `top_level_item_ids` and is
+    // included in the record's `child_item_ids`).
     assert_ir_matches!(
         ir,
         quote! {
@@ -3423,6 +3423,7 @@ fn test_function_redeclared_as_friend() {
                         ItemId(...),
                         ItemId(...),
                         ItemId(...),
+                        ItemId(#function_id),
                     ] ...
                     enclosing_namespace_id: None ...
                 }),
@@ -3435,10 +3436,56 @@ fn test_function_redeclared_as_friend() {
                 Func(Func {
                     name: "bar" ...
                     enclosing_namespace_id: None ...
-                    adl_enclosing_record: None,
+                    adl_enclosing_record: Some(ItemId(...)) ...
                 }),
             ],
-            top_level_item_ids: [ItemId(...), ItemId(#function_id)]
+            top_level_item_ids: [ItemId(...)]
+        }
+    );
+}
+
+#[test]
+fn test_function_redeclared_in_separate_namespace_chunk() {
+    let ir = ir_from_cc(
+        r#"
+        namespace ns { inline void f(); }
+        namespace ns { inline void f() {} }
+        "#,
+    )
+    .unwrap();
+
+    // The function should appear only once in IR items.  (This is a bit redundant
+    // with the assert below, but double-checks that `...` didn't miss a Func
+    // item.)
+    let functions = ir
+        .functions()
+        .filter(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("f")))
+        .collect_vec();
+    assert_eq!(1, functions.len());
+    let function_id = functions[0].id;
+
+    // The function should appear only once.  This assert not only verifies that the
+    // `Func` item appears only once, but it also verifies that it also only
+    // appears once in `child_item_ids`.
+    assert_ir_matches!(
+        ir,
+        quote! {
+            items: [
+                ...
+                Namespace(Namespace {
+                    name: "ns" ...
+                    child_item_ids: [ItemId(#function_id)] ...
+                    enclosing_namespace_id: None ...
+                }),
+                Func(Func {
+                    name: "f" ...
+                    enclosing_namespace_id: Some(ItemId(...)) ...
+                }),
+                Namespace(Namespace {
+                    name: "ns" ...
+                    child_item_ids: [] ...
+                }),
+            ]
         }
     );
 }

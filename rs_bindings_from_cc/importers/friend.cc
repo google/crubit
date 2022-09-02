@@ -9,7 +9,6 @@
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
-#include "llvm/ADT/STLExtras.h"
 
 namespace crubit {
 
@@ -17,21 +16,14 @@ std::optional<IR::Item> FriendDeclImporter::Import(
     clang::FriendDecl* friend_decl) {
   if (!ictx_.IsFromCurrentTarget(friend_decl)) return std::nullopt;
 
-  // Recurse to import the function declaration.
+  // Check if this is a `friend` declaration for a function (and not for a
+  // type).
   clang::NamedDecl* named_decl = clang::dyn_cast_or_null<clang::FunctionDecl>(
       friend_decl->getFriendDecl());
-  if (!named_decl) {
-    // This friend declaration refers to a type. We don't need to import it.
-    return std::nullopt;
-  }
+  if (!named_decl) return std::nullopt;
 
-  // If there is a non-friend declaration elsewhere, then we can skip this
-  // friend decl.
-  bool is_redeclared_outside_of_friend_decl =
-      llvm::any_of(named_decl->redecls(), [](const clang::Decl* redecl) {
-        return (clang::Decl::FOK_None == redecl->getFriendObjectKind());
-      });
-  if (is_redeclared_outside_of_friend_decl) return std::nullopt;
+  // Skip non-canonical decls, similarly to GetCanonicalChildren in importer.cc
+  if (named_decl != named_decl->getCanonicalDecl()) return std::nullopt;
 
   // Get the enclosing record declaration.
   clang::DeclContext* decl_context = friend_decl->getDeclContext();
