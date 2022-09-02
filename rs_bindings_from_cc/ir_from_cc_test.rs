@@ -3382,6 +3382,68 @@ fn test_inline_namespace() {
 }
 
 #[test]
+fn test_function_redeclared_as_friend() {
+    let ir = ir_from_cc(
+        r#"
+            class SomeClass final {
+              friend constexpr int bar();
+            };
+            constexpr int bar() { return 123; }
+        "#,
+    )
+    .unwrap();
+
+    // The function should appear only once in IR items.  (This is a bit redundant
+    // with the assert below, but double-checks that `...` didn't miss a Func
+    // item.)
+    let functions = ir
+        .functions()
+        .filter(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("bar")))
+        .collect_vec();
+    assert_eq!(1, functions.len());
+    let function_id = functions[0].id;
+
+    // There should only be a single Func item.
+    //
+    // Additionally, this assert also verifies (a bit haphazardly) that
+    // `child_item_ids` and `top_level_item_ids` have the right length, which
+    // indirectly verifies that the `function_id` is included in
+    // `top_level_item_ids` and is not included in the record's `child_item_ids`).
+    assert_ir_matches!(
+        ir,
+        quote! {
+            items: [
+                ...
+                Record(Record {
+                    rs_name: "SomeClass" ...
+                    child_item_ids: [
+                        ItemId(...),
+                        ItemId(...),
+                        ItemId(...),
+                        ItemId(...),
+                        ItemId(...),
+                        ItemId(...),
+                    ] ...
+                    enclosing_namespace_id: None ...
+                }),
+                Func(Func { name: Constructor ...  }),
+                Func(Func { name: Constructor ...  }),
+                UnsupportedItem(UnsupportedItem { name: "SomeClass::SomeClass" ...  }),
+                Func(Func { name: Destructor ...  }),
+                Func(Func { name: "operator=" ...  }),
+                UnsupportedItem(UnsupportedItem { name: "SomeClass::operator=" ...  }),
+                Func(Func {
+                    name: "bar" ...
+                    enclosing_namespace_id: None ...
+                    adl_enclosing_record: None,
+                }),
+            ],
+            top_level_item_ids: [ItemId(...), ItemId(#function_id)]
+        }
+    );
+}
+
+#[test]
 fn test_incomplete_record_has_rs_name() {
     let ir = ir_from_cc(
         r#"

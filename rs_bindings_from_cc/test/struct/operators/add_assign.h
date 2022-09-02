@@ -63,4 +63,18 @@ struct AddAssignFreeByValue final {
 AddAssignFreeByValue& operator+=(AddAssignFreeByValue& lhs,
                                  AddAssignFreeByValue rhs);
 
+// This provides additional test coverage for b/244311755.
+struct AddAssignInlineFriendByValue final {
+  friend inline AddAssignInlineFriendByValue& operator+=(
+      AddAssignInlineFriendByValue& lhs, AddAssignInlineFriendByValue rhs);
+
+  int i;
+};
+
+inline AddAssignInlineFriendByValue& operator+=(
+    AddAssignInlineFriendByValue& lhs, AddAssignInlineFriendByValue rhs) {
+  lhs.i += rhs.i;
+  return lhs;
+}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_STRUCT_OPERATORS_ADD_ASSIGN_H_

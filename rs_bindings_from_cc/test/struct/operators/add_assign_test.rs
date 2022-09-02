@@ -52,4 +52,12 @@ mod tests {
         s1 += s2;
         assert_eq!(33, s1.i);
     }
+
+    #[test]
+    fn test_add_assign_inline_friend_by_value() {
+        let mut s1 = AddAssignInlineFriendByValue { i: 111 };
+        let s2 = AddAssignInlineFriendByValue { i: 222 };
+        s1 += s2;
+        assert_eq!(333, s1.i);
+    }
 }
