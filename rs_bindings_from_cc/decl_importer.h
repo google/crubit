@@ -92,9 +92,11 @@ class ImportContext {
 
   virtual std::optional<IR::Item> GetImportedItem(const clang::Decl* decl) = 0;
 
-  // Returns the item ids of the children and comments of the given decl in
-  // source order. This method assumes that the children decls have already been
-  // imported.
+  // Imports children of `decl`.
+  //
+  // Returns item ids of the children that belong to the current target.  This
+  // includes ids of comments within `decl`.  The returned ids are ordered by
+  // their source order.
   virtual std::vector<ItemId> GetItemIdsInSourceOrder(clang::Decl* decl) = 0;
 
   // Mangles the name of a named decl.
