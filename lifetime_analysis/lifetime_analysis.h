@@ -40,7 +40,8 @@ struct FunctionParameter {
 std::optional<ObjectSet> TransferLifetimesForCall(
     const clang::Expr* call, const std::vector<FunctionParameter>& fn_params,
     const ValueLifetimes& return_lifetimes, ObjectRepository& object_repository,
-    PointsToMap& points_to_map, clang::ASTContext& ast_context);
+    PointsToMap& points_to_map, LifetimeConstraints& constraints,
+    clang::ASTContext& ast_context);
 
 // Function to call to report a diagnostic.
 // This has the same interface as ClangTidyCheck::diag().

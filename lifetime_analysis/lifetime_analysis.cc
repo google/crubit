@@ -100,7 +100,7 @@ class TransferStmtVisitor
 };
 
 // TODO(veluca): this is quadratic.
-void GenerateConstraintsForAssignment(
+void GenerateConstraintsForAssignmentImpl(
     const ObjectSet& pointers, const ObjectSet& new_pointees,
     clang::QualType pointer_type, const ObjectRepository& object_repository,
     PointsToMap& points_to_map, LifetimeConstraints& constraints,
@@ -173,26 +173,38 @@ void GenerateConstraintsForAssignment(
       for (auto field : record_type->getDecl()->fields()) {
         calls_to_make.push_back(
             {field->getType(),
-             object_repository.GetFieldObject(old_pointees, field),
-             object_repository.GetFieldObject(new_pointees, field)});
+             object_repository.GetFieldObject(call.old_pointees, field),
+             object_repository.GetFieldObject(call.new_pointees, field)});
       }
       if (auto* cxxrecord =
               clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
         for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
           calls_to_make.push_back({base.getType(),
                                    object_repository.GetBaseClassObject(
-                                       old_pointees, base.getType()),
+                                       call.old_pointees, base.getType()),
                                    object_repository.GetBaseClassObject(
-                                       new_pointees, base.getType())});
+                                       call.new_pointees, base.getType())});
         }
       }
     } else {
-      GenerateConstraintsForAssignment(
+      GenerateConstraintsForAssignmentImpl(
           call.old_pointees,
           points_to_map.GetPointerPointsToSet(call.new_pointees), call.type,
           object_repository, points_to_map, constraints, seen_pairs);
     }
   }
+}
+
+void GenerateConstraintsForAssignment(const ObjectSet& pointers,
+                                      const ObjectSet& new_pointees,
+                                      clang::QualType pointer_type,
+                                      const ObjectRepository& object_repository,
+                                      PointsToMap& points_to_map,
+                                      LifetimeConstraints& constraints) {
+  llvm::DenseSet<std::pair<const Object*, const Object*>> seen_pairs;
+  GenerateConstraintsForAssignmentImpl(pointers, new_pointees, pointer_type,
+                                       object_repository, points_to_map,
+                                       constraints, seen_pairs);
 }
 
 void HandlePointsToSetExtension(const ObjectSet& pointers,
@@ -201,14 +213,13 @@ void HandlePointsToSetExtension(const ObjectSet& pointers,
                                 const ObjectRepository& object_repository,
                                 PointsToMap& points_to_map,
                                 LifetimeConstraints& constraints) {
-  llvm::DenseSet<std::pair<const Object*, const Object*>> seen_pairs;
   // TODO(veluca): record types should probably not get to this point at all, as
   // their initialization is done by constructor calls. This currently happens
   // because of the "synthetic" objects used to handle constructor calls.
   if (!pointer_type->isRecordType()) {
     GenerateConstraintsForAssignment(pointers, new_pointees, pointer_type,
                                      object_repository, points_to_map,
-                                     constraints, seen_pairs);
+                                     constraints);
   }
   for (const Object* pointer : pointers) {
     points_to_map.ExtendPointerPointsToSet(pointer, new_pointees);
@@ -336,16 +347,18 @@ void CollectLifetimes(
 void PropagateLifetimesToPointees(
     const Object* arg_object, clang::QualType type,
     const ValueLifetimes& value_lifetimes, PointsToMap& points_to_map,
-    ObjectRepository& object_repository,
+    ObjectRepository& object_repository, LifetimeConstraints& constraints,
     const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
     clang::ASTContext& ast_context) {
   class Visitor : public LifetimeVisitor {
    public:
     Visitor(ObjectRepository& object_repository, PointsToMap& points_to_map,
+            LifetimeConstraints& constraints,
             const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
             clang::ASTContext& ast_context)
         : object_repository_(object_repository),
           points_to_map_(points_to_map),
+          constraints_(constraints),
           lifetime_to_object_set_(lifetime_to_object_set),
           ast_context_(ast_context) {}
 
@@ -389,6 +402,9 @@ void PropagateLifetimesToPointees(
           assert(points_to_map_.GetPointerPointsToSet(objects).Contains(
               points_to_original));
         }
+        GenerateConstraintsForAssignment(
+            objects, points_to_map_.GetPointerPointsToSet(objects), type,
+            object_repository_, points_to_map_, constraints_);
       }
       // Return the original points-to set, not the modified one. The original
       // points-to set is sufficient because it captures the arguments that
@@ -401,11 +417,12 @@ void PropagateLifetimesToPointees(
    private:
     ObjectRepository& object_repository_;
     PointsToMap& points_to_map_;
+    LifetimeConstraints& constraints_;
     const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set_;
     clang::ASTContext& ast_context_;
   };
-  Visitor visitor(object_repository, points_to_map, lifetime_to_object_set,
-                  ast_context);
+  Visitor visitor(object_repository, points_to_map, constraints,
+                  lifetime_to_object_set, ast_context);
   VisitLifetimes({arg_object}, type,
                  ObjectLifetimes(arg_object->GetLifetime(), value_lifetimes),
                  visitor);
@@ -420,7 +437,8 @@ bool AllStatic(const ValueLifetimes& lifetimes) {
 std::optional<ObjectSet> TransferLifetimesForCall(
     const clang::Expr* call, const std::vector<FunctionParameter>& fn_params,
     const ValueLifetimes& return_lifetimes, ObjectRepository& object_repository,
-    PointsToMap& points_to_map, clang::ASTContext& ast_context) {
+    PointsToMap& points_to_map, LifetimeConstraints& constraints,
+    clang::ASTContext& ast_context) {
   // TODO(mboehme): The following description says what we _want_ to do, but
   // this isn't what we actually do right now. Modify the code so that it
   // corresponds to the description, then remove this TODO.
@@ -541,7 +559,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   // Step 2: Propagate points-to sets to output parameters.
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
     PropagateLifetimesToPointees(arg_object, type, param_lifetimes,
-                                 points_to_map, object_repository,
+                                 points_to_map, object_repository, constraints,
                                  lifetime_to_object_set, ast_context);
   }
 
@@ -551,7 +569,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
       const Object* init_object = object_repository.GetInitializedObject(call);
       PropagateLifetimesToPointees(
           init_object, call->getType(), return_lifetimes, points_to_map,
-          object_repository, lifetime_to_object_set, ast_context);
+          object_repository, constraints, lifetime_to_object_set, ast_context);
     } else {
       ObjectSet rval_points_to;
 
@@ -749,13 +767,15 @@ std::optional<std::string> TransferStmtVisitor::VisitReturnStmt(
   }
 
   ObjectSet expr_points_to = points_to_map_.GetExprObjectSet(ret_expr);
-  // TODO(veluca): once constraint-based analysis is ready, we should modify
-  // the handling of return statements as follows:
-  // - do not extend the points-to-map for the return object; instead, generate
-  //   constraints equivalent to those for assignment.
-  HandlePointsToSetExtension({object_repository_.GetReturnObject()},
-                             expr_points_to, return_type, object_repository_,
-                             points_to_map_, constraints_);
+  if (!kUseConstraintBasedAnalysis) {
+    HandlePointsToSetExtension({object_repository_.GetReturnObject()},
+                               expr_points_to, return_type, object_repository_,
+                               points_to_map_, constraints_);
+  } else {
+    GenerateConstraintsForAssignment(
+        {object_repository_.GetReturnObject()}, expr_points_to, return_type,
+        object_repository_, points_to_map_, constraints_);
+  }
   return std::nullopt;
 }
 
@@ -1179,7 +1199,8 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
 
     std::optional<ObjectSet> single_call_points_to = TransferLifetimesForCall(
         call, fn_params, callee_lifetimes.GetReturnLifetimes(),
-        object_repository_, points_to_map_, callee->getASTContext());
+        object_repository_, points_to_map_, constraints_,
+        callee->getASTContext());
     if (single_call_points_to) {
       if (call_points_to) {
         call_points_to.value().Add(std::move(single_call_points_to).value());
@@ -1246,7 +1267,8 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
   TransferLifetimesForCall(
       construct_expr, fn_params,
       ValueLifetimes::ForLifetimeLessType(constructor->getReturnType()),
-      object_repository_, points_to_map_, constructor->getASTContext());
+      object_repository_, points_to_map_, constraints_,
+      constructor->getASTContext());
   return std::nullopt;
 }
 
