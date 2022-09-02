@@ -28,8 +28,6 @@ RustBindingsFromCcInfo = provider(
                              "compiled `.rs` file."),
         "targets_and_headers": ("A depset of strings, each one representing mapping of target to " +
                                 "its headers in json format."),
-        "namespaces": ("A json file containing the namespace hierarchy for the target we " +
-                       "are generating bindings for."),
     },
 )
 
@@ -43,7 +41,6 @@ GeneratedBindingsInfo = provider(
     fields = {
         "cc_file": "The generated C++ source file.",
         "rust_file": "The generated Rust source file.",
-        "namespaces_file": "The generated namespace hierarchy in JSON format.",
     },
 )
 
@@ -211,7 +208,6 @@ def _generate_bindings(
     """
     cc_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_impl.cc")
     rs_output = ctx.actions.declare_file(ctx.label.name + "_rust_api.rs")
-    namespaces_output = ctx.actions.declare_file(ctx.label.name + "_namespaces.json")
 
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
@@ -242,8 +238,6 @@ def _generate_bindings(
                 rs_output.path,
                 "--cc_out",
                 cc_output.path,
-                "--namespaces_out",
-                namespaces_output.path,
                 "--crubit_support_path",
                 "rs_bindings_from_cc/support",
                 "--rustfmt_exe_path",
@@ -272,10 +266,10 @@ def _generate_bindings(
             ] + ctx.files._rustfmt_cfg,
             transitive = [action_inputs],
         ),
-        additional_outputs = [rs_output, namespaces_output],
+        additional_outputs = [rs_output],
         variables = variables,
     )
-    return (cc_output, rs_output, namespaces_output)
+    return (cc_output, rs_output)
 
 def generate_and_compile_bindings(
         ctx,
@@ -316,7 +310,7 @@ def generate_and_compile_bindings(
         unsupported_features = ctx.disabled_features + ["module_maps"],
     )
 
-    cc_output, rs_output, namespaces_output = _generate_bindings(
+    cc_output, rs_output = _generate_bindings(
         ctx = ctx,
         attr = attr,
         cc_toolchain = cc_toolchain,
@@ -352,14 +346,12 @@ def generate_and_compile_bindings(
             cc_info = cc_info,
             dep_variant_info = dep_variant_info,
             targets_and_headers = targets_and_headers,
-            namespaces = namespaces_output,
         ),
         GeneratedBindingsInfo(
             cc_file = cc_output,
             rust_file = rs_output,
-            namespaces_file = namespaces_output,
         ),
-        OutputGroupInfo(out = depset([cc_output, rs_output, namespaces_output])),
+        OutputGroupInfo(out = depset([cc_output, rs_output])),
     ]
 
 def _get_hdrs_command_line(hdrs):
@@ -381,7 +373,7 @@ bindings_attrs = {
     "_grep_includes": attr.label(
         allow_single_file = True,
         default = Label("@bazel_tools//tools/cpp:grep-includes"),
-        cfg = "exec",
+        cfg = "host",
     ),
     "_rustfmt": attr.label(
         default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
