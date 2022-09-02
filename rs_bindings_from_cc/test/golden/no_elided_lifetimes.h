@@ -20,4 +20,16 @@ struct TriviallyCopyableButNontriviallyDestructible {
 
 void take_pointer(int* p);
 
+class WrappedValue {
+ public:
+  WrappedValue(int value) : value_(value) {}
+
+  WrappedValue operator+(const WrappedValue& rhs) const {
+    return WrappedValue(value_ + rhs.value_);
+  }
+
+ private:
+  int value_;
+};
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_

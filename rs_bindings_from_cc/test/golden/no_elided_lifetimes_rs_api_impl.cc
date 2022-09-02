@@ -19,4 +19,7 @@ static_assert(sizeof(struct TriviallyCopyableButNontriviallyDestructible) == 1);
 static_assert(alignof(struct TriviallyCopyableButNontriviallyDestructible) ==
               1);
 
+static_assert(sizeof(class WrappedValue) == 4);
+static_assert(alignof(class WrappedValue) == 4);
+
 #pragma clang diagnostic pop

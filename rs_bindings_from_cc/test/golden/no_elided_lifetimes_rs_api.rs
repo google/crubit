@@ -91,6 +91,40 @@ pub unsafe fn take_pointer(p: *mut i32) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
+#[::ctor::recursively_pinned]
+#[repr(C, align(4))]
+pub struct WrappedValue {
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
+    /// Reason for representing this field as a blob of bytes:
+    /// Types of non-public C++ fields can be elided away
+    pub(crate) value_: [::std::mem::MaybeUninit<u8>; 4],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate::WrappedValue);
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
+// Error while generating bindings for item 'WrappedValue::WrappedValue':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
+// Error while generating bindings for item 'WrappedValue::WrappedValue':
+// Parameter #0 is not supported: Unsupported type 'class WrappedValue &&': Unsupported type: && without lifetime
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
+// Error while generating bindings for item 'WrappedValue::operator=':
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
+// Error while generating bindings for item 'WrappedValue::operator=':
+// Parameter #0 is not supported: Unsupported type 'class WrappedValue &&': Unsupported type: && without lifetime
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=25
+// Error while generating bindings for item 'WrappedValue::WrappedValue':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=27
+// Error while generating bindings for item 'WrappedValue::operator+':
+// Expected first parameter to be a record or reference
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_NO_ELIDED_LIFETIMES_H_
 
 mod detail {
@@ -146,3 +180,13 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::TriviallyCopyableButNontriviallyDestructible: Drop);
 };
+
+const _: () = assert!(::std::mem::size_of::<crate::WrappedValue>() == 4);
+const _: () = assert!(::std::mem::align_of::<crate::WrappedValue>() == 4);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::WrappedValue: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::WrappedValue: Drop);
+};
+const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WrappedValue, value_) == 0);

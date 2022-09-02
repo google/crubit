@@ -687,23 +687,19 @@ fn api_func_shape(
                 ..
             }) => {
                 materialize_ctor_in_caller(func, param_types);
-                let (record, impl_for) = if let Some(record) = maybe_record {
-                    (&**record, ImplFor::RefT)
-                } else {
-                    match &param_types[0] {
-                        RsTypeKind::Record { record, .. } => (&**record, ImplFor::T),
-                        RsTypeKind::Reference { referent, .. } => (
-                            match &**referent {
-                                RsTypeKind::Record { record, .. } => &**record,
-                                _ => bail!("Expected first parameter referent to be a record"),
-                            },
-                            ImplFor::RefT,
-                        ),
-                        RsTypeKind::RvalueReference { .. } => {
-                            bail!("Not yet supported for rvalue references (b/219826128)")
-                        }
-                        _ => bail!("Expected first parameter to be a record or reference"),
+                let (record, impl_for) = match &param_types[0] {
+                    RsTypeKind::Record { record, .. } => (&**record, ImplFor::T),
+                    RsTypeKind::Reference { referent, .. } => (
+                        match &**referent {
+                            RsTypeKind::Record { record, .. } => &**record,
+                            _ => bail!("Expected first parameter referent to be a record"),
+                        },
+                        ImplFor::RefT,
+                    ),
+                    RsTypeKind::RvalueReference { .. } => {
+                        bail!("Not yet supported for rvalue references (b/219826128)")
                     }
+                    _ => bail!("Expected first parameter to be a record or reference"),
                 };
 
                 let trait_name = make_rs_ident(trait_name);
