@@ -314,10 +314,34 @@ class Importer::SourceLocationComparator {
   const clang::SourceManager& sm;
 };
 
+static std::vector<clang::Decl*> GetCanonicalChildren(
+    const clang::DeclContext* decl_context) {
+  std::vector<clang::Decl*> result;
+  for (clang::Decl* decl : decl_context->decls()) {
+    if (const auto* linkage_spec_decl =
+            llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
+      llvm::move(GetCanonicalChildren(linkage_spec_decl),
+                 std::back_inserter(result));
+      continue;
+    }
+
+    clang::Decl* decl_to_import;
+    if (auto namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
+      decl_to_import = namespace_decl;
+    } else {
+      // TODO(b/244630626): `decl_to_import` may be a non-canonical function
+      // decl as a child of a namespace.  We should consider *skipping*
+      // non-canonical decls instead.
+      decl_to_import = decl->getCanonicalDecl();
+    }
+    result.push_back(decl_to_import);
+  }
+
+  return result;
+}
+
 std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     clang::Decl* parent_decl) {
-  auto decl_context = clang::cast<clang::DeclContext>(parent_decl);
-
   clang::SourceManager& sm = ctx_.getSourceManager();
   std::vector<SourceLocationComparator::OrderedItemId> items;
   auto compare_locations = SourceLocationComparator(sm);
@@ -337,25 +361,9 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
   }
 
   absl::flat_hash_set<ItemId> visited_item_ids;
-  std::vector<clang::Decl*> decls_to_visit;
-  llvm::copy(decl_context->decls(), std::back_inserter(decls_to_visit));
 
-  while (!decls_to_visit.empty()) {
-    clang::Decl* child = decls_to_visit.back();
-    decls_to_visit.pop_back();
-    clang::Decl* decl;
-    if (auto namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(child)) {
-      decl = namespace_decl;
-    } else {
-      decl = child->getCanonicalDecl();
-    }
-
-    if (const auto* linkage_spec_decl =
-            llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
-      absl::c_copy(linkage_spec_decl->decls(),
-                   std::back_inserter(decls_to_visit));
-    }
-
+  auto* decl_context = clang::cast<clang::DeclContext>(parent_decl);
+  for (auto decl : GetCanonicalChildren(decl_context)) {
     auto item = GetDeclItem(decl);
     // We generated IR for top level items coming from different targets,
     // however we shouldn't generate bindings for them, so we don't add them
@@ -470,19 +478,8 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
 
 void Importer::ImportDeclsFromDeclContext(
     const clang::DeclContext* decl_context) {
-  for (auto decl : decl_context->decls()) {
-    if (const auto* linkage_spec_decl =
-            llvm::dyn_cast<clang::LinkageSpecDecl>(decl)) {
-      ImportDeclsFromDeclContext(linkage_spec_decl);
-    } else {
-      clang::Decl* decl_to_import;
-      if (auto namespace_decl = llvm::dyn_cast<clang::NamespaceDecl>(decl)) {
-        decl_to_import = namespace_decl;
-      } else {
-        decl_to_import = decl->getCanonicalDecl();
-      }
-      GetDeclItem(decl_to_import);
-    }
+  for (auto decl : GetCanonicalChildren(decl_context)) {
+    GetDeclItem(decl);
   }
 }
 
