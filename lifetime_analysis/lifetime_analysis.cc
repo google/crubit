@@ -103,7 +103,8 @@ class TransferStmtVisitor
 void GenerateConstraintsForAssignmentImpl(
     const ObjectSet& pointers, const ObjectSet& new_pointees,
     clang::QualType pointer_type, const ObjectRepository& object_repository,
-    PointsToMap& points_to_map, LifetimeConstraints& constraints,
+    const PointsToMap& points_to_map, bool is_in_invariant_context,
+    LifetimeConstraints& constraints,
     llvm::DenseSet<std::pair<const Object*, const Object*>>& seen_pairs) {
   // Check for cycles.
   {
@@ -137,10 +138,9 @@ void GenerateConstraintsForAssignmentImpl(
     }
   }
 
-  // If this pointer is not const, the objects appear in invariant position,
-  // thus we need to insert constraints in the opposite direction too (i.e. we
-  // need equality).
-  if (!pointer_type.isConstQualified()) {
+  // If we are in an invariant context, we need to insert constraints in the
+  // opposite direction too (i.e. we need equality).
+  if (is_in_invariant_context) {
     for (const Object* old : old_pointees) {
       for (const Object* newp : new_pointees) {
         constraints.AddOutlivesConstraint(newp->GetLifetime(),
@@ -148,6 +148,11 @@ void GenerateConstraintsForAssignmentImpl(
       }
     }
   }
+
+  // See https://doc.rust-lang.org/nomicon/subtyping.html for an explanation of
+  // variance; here in particular, we use the fact that the pointee of a pointer
+  // is covariant if the pointer is const-qualified, and invariant otherwise.
+  is_in_invariant_context = !pointer_type.isConstQualified();
 
   // Recurse in pointees. As the pointee might be of struct type, we need first
   // to extract all field pointers from it.
@@ -190,7 +195,8 @@ void GenerateConstraintsForAssignmentImpl(
       GenerateConstraintsForAssignmentImpl(
           call.old_pointees,
           points_to_map.GetPointerPointsToSet(call.new_pointees), call.type,
-          object_repository, points_to_map, constraints, seen_pairs);
+          object_repository, points_to_map, is_in_invariant_context,
+          constraints, seen_pairs);
     }
   }
 }
@@ -202,9 +208,10 @@ void GenerateConstraintsForAssignment(const ObjectSet& pointers,
                                       PointsToMap& points_to_map,
                                       LifetimeConstraints& constraints) {
   llvm::DenseSet<std::pair<const Object*, const Object*>> seen_pairs;
-  GenerateConstraintsForAssignmentImpl(pointers, new_pointees, pointer_type,
-                                       object_repository, points_to_map,
-                                       constraints, seen_pairs);
+  // Outer-most pointers are never invariant.
+  GenerateConstraintsForAssignmentImpl(
+      pointers, new_pointees, pointer_type, object_repository, points_to_map,
+      /*is_in_invariant_context=*/false, constraints, seen_pairs);
 }
 
 void HandlePointsToSetExtension(const ObjectSet& pointers,
