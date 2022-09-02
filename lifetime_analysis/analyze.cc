@@ -222,6 +222,34 @@ std::string PointsToGraphDot(const ObjectRepository& object_repository,
                       "}");
 }
 
+std::string ConstraintsEdgesDot(const ObjectRepository& object_repository,
+                                const LifetimeConstraints& constraints,
+                                absl::string_view name_prefix) {
+  std::vector<std::string> lines;
+
+  llvm::DenseSet<Lifetime> all_lifetimes;
+  for (const auto& cstr : constraints.AllConstraints()) {
+    lines.push_back(absl::StrFormat(R"("%1$s%2$d" -> "%1$s%3$d")", name_prefix,
+                                    cstr.second.Id(), cstr.first.Id()));
+    all_lifetimes.insert(cstr.first);
+    all_lifetimes.insert(cstr.second);
+  }
+
+  for (auto lftm : all_lifetimes) {
+    lines.push_back(absl::StrFormat(R"("%s%d"[label="%s"])", name_prefix,
+                                    lftm.Id(), lftm.DebugString()));
+  }
+
+  return absl::StrJoin(lines, ";\n");
+}
+
+std::string ConstraintsDot(const ObjectRepository& object_repository,
+                           const LifetimeConstraints& constraints) {
+  return absl::StrCat("digraph d {\n",
+                      ConstraintsEdgesDot(object_repository, constraints, ""),
+                      "}");
+}
+
 std::string CfgBlockLabel(const clang::CFGBlock* block, const clang::CFG& cfg,
                           const clang::ASTContext& ast_context) {
   std::string block_name = absl::StrCat("B", block->getBlockID());
@@ -310,6 +338,9 @@ std::string CreateCfgDot(
         absl::StrAppend(&result,
                         PointsToEdgesDot(object_repository, lattice.PointsTo(),
                                          absl::StrCat("B", id, "_")));
+        absl::StrAppend(&result, ConstraintsEdgesDot(
+                                     object_repository, lattice.Constraints(),
+                                     absl::StrCat("B", id, "_cstr_")));
       }
     }
 
@@ -906,6 +937,8 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
         analysis.object_repository.DebugString();
     (*debug_info)[func].points_to_map_dot =
         PointsToGraphDot(analysis.object_repository, analysis.points_to_map);
+    (*debug_info)[func].constraints_dot =
+        ConstraintsDot(analysis.object_repository, analysis.constraints);
   }
 
   if (llvm::Error err =

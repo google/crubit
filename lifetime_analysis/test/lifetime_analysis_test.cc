@@ -56,6 +56,9 @@ void LifetimeAnalysisTest::TearDown() {
       SaveDotFile(debug_info.points_to_map_dot,
                   absl::StrCat(func, "_points_to"), test_name,
                   "Points-to map of exit block");
+      SaveDotFile(debug_info.constraints_dot,
+                  absl::StrCat(func, "_constraints"), test_name,
+                  "Constraint set at exit block");
       SaveDotFile(debug_info.cfg_dot, absl::StrCat(func, "_cfg"), test_name,
                   "Control-flow graph");
     }

@@ -33,6 +33,9 @@ struct FunctionDebugInfo {
 
   // A graph of the CFG in .dot file format.
   std::string cfg_dot;
+
+  // A graph of the constraints in .dot file format.
+  std::string constraints_dot;
 };
 
 // Returns if the two FunctionLifetimes have the same structures, without

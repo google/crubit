@@ -35,6 +35,11 @@ class LifetimeConstraints {
     return outlives_constraints_ == other.outlives_constraints_;
   }
 
+  // Accessor for debug purposes.
+  const llvm::DenseSet<std::pair<Lifetime, Lifetime>>& AllConstraints() const {
+    return outlives_constraints_;
+  }
+
  private:
   // Constraints of the form p.first <= p.second
   llvm::DenseSet<std::pair<Lifetime, Lifetime>> outlives_constraints_;
