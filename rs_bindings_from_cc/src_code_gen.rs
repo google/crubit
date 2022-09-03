@@ -392,6 +392,7 @@ enum ImplKind {
         /// Note that `record_name` might *not* be from
         /// `func.member_func_metadata`.
         record_name: Ident,
+        record_qualifier: NamespaceQualifier,
         /// For example, `quote!{ From<i32> }`.
         trait_name: TraitName,
         /// Reference style for the `impl` block and self parameters.
@@ -417,18 +418,20 @@ enum ImplKind {
 impl ImplKind {
     fn new_trait(
         trait_name: TraitName,
-        record_name: Ident,
+        record: &Record,
+        ir: &IR,
         format_first_param_as_self: bool,
-    ) -> Self {
-        ImplKind::Trait {
+    ) -> Result<Self> {
+        Ok(ImplKind::Trait {
             trait_name,
-            record_name,
+            record_name: make_rs_ident(&record.rs_name),
+            record_qualifier: NamespaceQualifier::new(record.id, ir)?,
             impl_for: ImplFor::T,
             trait_generic_params: vec![],
             format_first_param_as_self,
             drop_return: false,
             associated_return_type: None,
-        }
+        })
     }
     fn format_first_param_as_self(&self) -> bool {
         matches!(
@@ -625,7 +628,6 @@ fn api_func_shape(
                     RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
                 ) => match &**lhs {
                     RsTypeKind::Record { record: lhs_record, .. } => {
-                        let lhs: Ident = make_rs_ident(&lhs_record.rs_name);
                         func_name = make_rs_ident("eq");
                         impl_kind = ImplKind::new_trait(
                             TraitName::Other {
@@ -633,9 +635,9 @@ fn api_func_shape(
                                 params: vec![(**rhs).clone()],
                                 is_unsafe_fn: false,
                             },
-                            lhs,
+                            lhs_record, &ir,
                             /* format_first_param_as_self= */ true,
-                        );
+                        )?;
                     }
                     _ => {
                         bail!("operator== where lhs doesn't refer to a record",);
@@ -667,6 +669,7 @@ fn api_func_shape(
                         is_unsafe_fn: false,
                     },
                     record_name: make_rs_ident(&record.rs_name),
+                    record_qualifier: NamespaceQualifier::new(record.id, &ir)?,
                     impl_for: ImplFor::T,
                     trait_generic_params: vec![],
                     format_first_param_as_self: true,
@@ -705,6 +708,7 @@ fn api_func_shape(
                 let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
                     record_name: make_rs_ident(&record.rs_name),
+                    record_qualifier: NamespaceQualifier::new(record.id, &ir)?,
                     trait_name: TraitName::Other {
                         name: quote! {::std::ops::#trait_name},
                         params: param_types[1..].to_vec(),
@@ -750,6 +754,7 @@ fn api_func_shape(
                 let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
                     record_name: make_rs_ident(&record.rs_name),
+                    record_qualifier: NamespaceQualifier::new(record.id, &ir)?,
                     trait_name: TraitName::Other {
                         name: quote! {::std::ops::#trait_name},
                         params: param_types[1..].to_vec(),
@@ -805,9 +810,9 @@ fn api_func_shape(
             if record.is_unpin() {
                 impl_kind = ImplKind::new_trait(
                     TraitName::Other { name: quote! {Drop}, params: vec![], is_unsafe_fn: false },
-                    make_rs_ident(&record.rs_name),
+                    record, &ir,
                     /* format_first_param_as_self= */ true,
-                );
+                )?;
                 func_name = make_rs_ident("drop");
             } else {
                 materialize_ctor_in_caller(func, param_types);
@@ -817,9 +822,9 @@ fn api_func_shape(
                         params: vec![],
                         is_unsafe_fn: true,
                     },
-                    make_rs_ident(&record.rs_name),
+                    record, &ir,
                     /* format_first_param_as_self= */ true,
-                );
+                )?;
                 func_name = make_rs_ident("pinned_drop");
             }
         }
@@ -855,6 +860,7 @@ fn api_func_shape(
                     [_this, params @ ..] => {
                         impl_kind = ImplKind::Trait {
                             record_name,
+                            record_qualifier: NamespaceQualifier::new(record.id, &ir)?,
                             trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
                             impl_for: ImplFor::T,
                             trait_generic_params: vec![],
@@ -870,9 +876,9 @@ fn api_func_shape(
                     1 => {
                         impl_kind = ImplKind::new_trait(
                             TraitName::UnpinConstructor { name: quote! {Default}, params: vec![] },
-                            record_name,
+                            record, &ir,
                             /* format_first_param_as_self= */ false,
-                        );
+                        )?;
                         func_name = make_rs_ident("default");
                     }
                     2 => {
@@ -886,9 +892,9 @@ fn api_func_shape(
                                         name: quote! {Clone},
                                         params: vec![],
                                     },
-                                    record_name,
+                                    record, &ir,
                                     /* format_first_param_as_self= */ true,
-                                );
+                                )?;
                                 func_name = make_rs_ident("clone");
                             }
                         } else if !instance_method_metadata.is_explicit_ctor {
@@ -898,9 +904,9 @@ fn api_func_shape(
                                     name: quote! {From},
                                     params: vec![param_type.clone()],
                                 },
-                                record_name,
+                                record, &ir,
                                 /* format_first_param_as_self= */ false,
-                            );
+                            )?;
                             func_name = make_rs_ident("from");
                         } else {
                             bail!("Not yet supported type of constructor parameter",);
@@ -980,7 +986,7 @@ fn generate_func(
         } else {
             return Ok(None);
         };
-    let namespace_qualifier = format_rs_namespace_qualifier(func.id, &ir)?;
+    let namespace_qualifier = NamespaceQualifier::new(func.id, &ir)?.format_for_rs();
 
     let mut return_type = db
         .rs_type_kind(func.return_type.rs_type.clone())
@@ -1155,6 +1161,7 @@ fn generate_func(
         ImplKind::Trait {
             trait_name,
             record_name,
+            record_qualifier,
             impl_for,
             trait_generic_params,
             associated_return_type,
@@ -1212,11 +1219,9 @@ fn generate_func(
                 }
                 #extra_items
             };
+            let record_qualifier = record_qualifier.format_for_rs();
             function_id = FunctionId {
-                // Because of ADL rules the `impl_for` record is always in the same namespace as
-                // the function behind the trait implementation.  Therefore, it is okay to use the
-                // `namespace_qualifier` (of the function, not the record) below.
-                self_type: Some(syn::parse2(quote! { #namespace_qualifier #record_name }).unwrap()),
+                self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
             };
         }
@@ -1554,37 +1559,38 @@ fn needs_manually_drop(db: &Database, ty: ir::RsType) -> Result<bool> {
     Ok(!ty_implements_copy)
 }
 
-fn get_namespaces(item_id: ItemId, ir: &IR) -> Result<impl Iterator<Item = &Namespace>> {
-    let mut namespaces = vec![];
-    let item: &Item = ir.find_decl(item_id)?;
-    let mut enclosing_namespace_id = item.enclosing_namespace_id();
-    while let Some(parent_id) = enclosing_namespace_id {
-        let namespace_item = ir.find_decl(parent_id)?;
-        match namespace_item {
-            Item::Namespace(ns) => {
-                namespaces.push(ns.as_ref());
-                enclosing_namespace_id = ns.enclosing_namespace_id;
-            }
-            _ => {
-                bail!("Expected namespace");
+#[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
+struct NamespaceQualifier(Vec<String>);
+
+impl NamespaceQualifier {
+    fn new(item_id: ItemId, ir: &IR) -> Result<Self> {
+        let mut namespaces = vec![];
+        let item: &Item = ir.find_decl(item_id)?;
+        let mut enclosing_namespace_id = item.enclosing_namespace_id();
+        while let Some(parent_id) = enclosing_namespace_id {
+            let namespace_item = ir.find_decl(parent_id)?;
+            match namespace_item {
+                Item::Namespace(ns) => {
+                    namespaces.push(ns.name.identifier.clone());
+                    enclosing_namespace_id = ns.enclosing_namespace_id;
+                }
+                _ => {
+                    bail!("Expected namespace");
+                }
             }
         }
+        Ok(Self(namespaces.into_iter().rev().collect_vec()))
     }
-    Ok(namespaces.into_iter().rev())
-}
 
-/// Returns the Rust namespace qualifier for the given item.
-fn format_rs_namespace_qualifier(item_id: ItemId, ir: &IR) -> Result<TokenStream> {
-    let namespace_rs_idents =
-        get_namespaces(item_id, ir)?.map(|ns| make_rs_ident(&ns.name.identifier));
-    Ok(quote! { #(#namespace_rs_idents::)* })
-}
+    fn format_for_rs(&self) -> TokenStream {
+        let namespace_rs_idents = self.0.iter().map(|ns| make_rs_ident(ns));
+        quote! { #(#namespace_rs_idents::)* }
+    }
 
-/// Returns the C++ namespace qualifier for the given item.
-fn format_cc_namespace_qualifier(item_id: ItemId, ir: &IR) -> Result<TokenStream> {
-    let namespace_cc_idents =
-        get_namespaces(item_id, ir)?.map(|ns| format_cc_ident(&ns.name.identifier));
-    Ok(quote! { #(#namespace_cc_idents::)* })
+    fn format_for_cc(&self) -> TokenStream {
+        let namespace_cc_idents = self.0.iter().map(|ns| format_cc_ident(ns));
+        quote! { #(#namespace_cc_idents::)* }
+    }
 }
 
 /// Generates Rust source code for a given incomplete record declaration.
@@ -1632,7 +1638,7 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
     let ir = db.ir();
     let ident = make_rs_ident(&record.rs_name);
-    let namespace_qualifier = format_rs_namespace_qualifier(record.id, &ir)?;
+    let namespace_qualifier = NamespaceQualifier::new(record.id, &ir)?.format_for_rs();
     let qualified_ident = {
         quote! { crate:: #namespace_qualifier #ident }
     };
@@ -2513,13 +2519,13 @@ enum RsTypeKind {
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
         /// The namespace qualifier for this record.
-        namespace_qualifier: RcEq<TokenStream>,
+        namespace_qualifier: Rc<NamespaceQualifier>,
     },
     /// A complete record type.
     Record {
         record: Rc<Record>,
         /// The namespace qualifier for this record.
-        namespace_qualifier: RcEq<TokenStream>,
+        namespace_qualifier: Rc<NamespaceQualifier>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
@@ -2527,7 +2533,7 @@ enum RsTypeKind {
         type_alias: Rc<TypeAlias>,
         underlying_type: Rc<RsTypeKind>,
         /// The namespace qualifier for this alias.
-        namespace_qualifier: RcEq<TokenStream>,
+        namespace_qualifier: Rc<NamespaceQualifier>,
         /// The imported crate this comes from, or None if the current crate.
         crate_ident: Option<Ident>,
     },
@@ -2540,7 +2546,7 @@ enum RsTypeKind {
 
 impl RsTypeKind {
     pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
-        let namespace_qualifier = RcEq::new(format_rs_namespace_qualifier(record.id, ir)?);
+        let namespace_qualifier = Rc::new(NamespaceQualifier::new(record.id, ir)?);
         let crate_ident = rs_imported_crate_name(&record.owning_target, ir);
         Ok(RsTypeKind::Record { record, namespace_qualifier, crate_ident })
     }
@@ -2775,6 +2781,7 @@ impl ToTokens for RsTypeKind {
                 crate_ident,
             } => {
                 let record_ident = make_rs_ident(&incomplete_record.rs_name);
+                let namespace_qualifier = namespace_qualifier.format_for_rs();
                 match crate_ident {
                     Some(ci) => {
                         quote! { #ci #namespace_qualifier #record_ident }
@@ -2786,6 +2793,7 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::Record { record, namespace_qualifier, crate_ident } => {
                 let ident = make_rs_ident(&record.rs_name);
+                let namespace_qualifier = namespace_qualifier.format_for_rs();
                 match crate_ident {
                     Some(ci) => {
                         quote! { #ci:: #namespace_qualifier #ident }
@@ -2797,6 +2805,7 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::TypeAlias { type_alias, namespace_qualifier, crate_ident, .. } => {
                 let ident = make_rs_ident(&type_alias.identifier.identifier);
+                let namespace_qualifier = namespace_qualifier.format_for_rs();
                 match crate_ident {
                     Some(ci) => {
                         quote! { #ci:: #namespace_qualifier #ident }
@@ -2895,13 +2904,13 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             match ir.item_for_type(&ty)? {
                 Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                     incomplete_record: incomplete_record.clone(),
-                    namespace_qualifier: RcEq::new(format_rs_namespace_qualifier(incomplete_record.id, &ir)?),
+                    namespace_qualifier: Rc::new(NamespaceQualifier::new(incomplete_record.id, &ir)?),
                     crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
                     type_alias: type_alias.clone(),
-                    namespace_qualifier: RcEq::new(format_rs_namespace_qualifier(type_alias.id, &ir)?),
+                    namespace_qualifier: Rc::new(NamespaceQualifier::new(type_alias.id, &ir)?),
                     crate_ident: rs_imported_crate_name(&type_alias.owning_target, &ir),
                     underlying_type: Rc::new(
                         db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
@@ -2963,7 +2972,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
 
 fn cc_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
     let ident = format_cc_ident(&record.cc_name);
-    let namespace_qualifier = format_cc_namespace_qualifier(record.id, ir)?;
+    let namespace_qualifier = NamespaceQualifier::new(record.id, ir)?.format_for_cc();
     let tag_kind = cc_tag_kind(record);
     Ok(quote! { #tag_kind #namespace_qualifier #ident })
 }
@@ -2972,14 +2981,14 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = format_cc_ident(&incomplete_record.cc_name);
-            let namespace_qualifier = format_cc_namespace_qualifier(incomplete_record.id, ir)?;
+            let namespace_qualifier = NamespaceQualifier::new(incomplete_record.id, ir)?.format_for_cc();
             let tag_kind = incomplete_record.record_type;
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
         Item::Record(record) => cc_type_name_for_record(record, ir),
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
-            let namespace_qualifier = format_cc_namespace_qualifier(type_alias.id, ir)?;
+            let namespace_qualifier = NamespaceQualifier::new(type_alias.id, ir)?.format_for_cc();
             Ok(quote! { #namespace_qualifier #ident })
         }
         _ => bail!("Item does not define a type: {:?}", item),
@@ -3070,7 +3079,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
         return Ok(quote! {});
     }
     let record_ident = format_cc_ident(&record.cc_name);
-    let namespace_qualifier = format_cc_namespace_qualifier(record.id, ir)?;
+    let namespace_qualifier = NamespaceQualifier::new(record.id, ir)?.format_for_cc();
     let cc_size = Literal::usize_unsuffixed(record.original_cc_size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
     let tag_kind = cc_tag_kind(record);
@@ -3234,12 +3243,12 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
                         } else {
                             let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
                             let record_ident = format_cc_ident(&record.cc_name);
-                            let namespace_qualifier = format_cc_namespace_qualifier(record.id, &ir)?;
+                            let namespace_qualifier = NamespaceQualifier::new(record.id, &ir)?.format_for_cc();
                             quote! { #namespace_qualifier #record_ident :: #fn_ident }
                         }
                     }
                     None => {
-                        let namespace_qualifier = format_cc_namespace_qualifier(func.id, &ir)?;
+                        let namespace_qualifier = NamespaceQualifier::new(func.id, &ir)?.format_for_cc();
                         quote! { #namespace_qualifier #fn_ident }
                     }
                 }
