@@ -81,7 +81,7 @@
 // =================================================================
 // == Implementation details, do not rely on anything below here. ==
 // =================================================================
-
+namespace crubit {
 // Some builds do not support C++14 fully yet, using C++11 constexpr technique.
 constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
   return (index == -1 ? false
@@ -89,21 +89,22 @@ constexpr bool HasPotentialConditionalOperator(const char* lhs, int index) {
                                            : HasPotentialConditionalOperator(
                                                  lhs, index - 1)));
 }
+}  // namespace crubit
 
-#define CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(statusor, lhs, rexpr, \
-                                                    error_expression)     \
-  auto statusor = (rexpr);                                                \
-  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                               \
-    error_expression;                                                     \
-  }                                                                       \
-  {                                                                       \
-    static_assert(                                                        \
-        #lhs[0] != '(' || #lhs[sizeof(#lhs) - 2] != ')' ||                \
-            !HasPotentialConditionalOperator(#lhs, sizeof(#lhs) - 2),     \
-        "Identified potential conditional operator, consider not "        \
-        "using CRUBIT_ASSIGN_OR_RETURN");                                 \
-  }                                                                       \
-  CRUBIT_STATUS_MACROS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =        \
+#define CRUBIT_STATUS_MACROS_IMPL_ASSIGN_OR_RETURN_(statusor, lhs, rexpr,     \
+                                                    error_expression)         \
+  auto statusor = (rexpr);                                                    \
+  if (ABSL_PREDICT_FALSE(!statusor.ok())) {                                   \
+    error_expression;                                                         \
+  }                                                                           \
+  {                                                                           \
+    static_assert(                                                            \
+        #lhs[0] != '(' || #lhs[sizeof(#lhs) - 2] != ')' ||                    \
+            !crubit::HasPotentialConditionalOperator(#lhs, sizeof(#lhs) - 2), \
+        "Identified potential conditional operator, consider not "            \
+        "using CRUBIT_ASSIGN_OR_RETURN");                                     \
+  }                                                                           \
+  CRUBIT_STATUS_MACROS_IMPL_UNPARENTHESIZE_IF_PARENTHESIZED(lhs) =            \
       std::move(statusor).value()
 
 // Internal helpers for macro expansion.
