@@ -4,9 +4,13 @@
 
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
+#include <string>
+
+#include "absl/strings/string_view.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
+#include "rs_bindings_from_cc/ir.h"
 #include "rs_bindings_from_cc/ir_from_cc.h"
 #include "rs_bindings_from_cc/src_code_gen.h"
 
@@ -20,22 +24,20 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
                          clang_args.end());
 
-  CRUBIT_ASSIGN_OR_RETURN(
-      std::vector<std::string> requested_instantiations,
-      crubit::CollectInstantiations(cmdline.rust_sources()));
+  CRUBIT_ASSIGN_OR_RETURN(std::vector<std::string> requested_instantiations,
+                          CollectInstantiations(cmdline.rust_sources()));
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, crubit::IrFromCc(
+      IR ir, IrFromCc(
                  /* extra_source_code= */ "", cmdline.current_target(),
                  cmdline.public_headers(), virtual_headers_contents,
                  cmdline.headers_to_targets(), clang_args_view,
                  requested_instantiations));
 
-  CRUBIT_ASSIGN_OR_RETURN(
-      crubit::Bindings bindings,
-      crubit::GenerateBindings(ir, cmdline.crubit_support_path(),
-                               cmdline.rustfmt_exe_path(),
-                               cmdline.rustfmt_config_path()));
+  CRUBIT_ASSIGN_OR_RETURN(Bindings bindings,
+                          GenerateBindings(ir, cmdline.crubit_support_path(),
+                                           cmdline.rustfmt_exe_path(),
+                                           cmdline.rustfmt_config_path()));
 
   auto top_level_namespaces = crubit::CollectNamespaces(ir);
 

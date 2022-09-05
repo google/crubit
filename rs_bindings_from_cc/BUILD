@@ -94,6 +94,7 @@ cc_library(
         ":src_code_gen",
         "//common:status_macros",
         "@absl//absl/status:statusor",
+        "@absl//absl/strings",
     ],
 )
 
