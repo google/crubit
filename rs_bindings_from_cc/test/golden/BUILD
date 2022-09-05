@@ -7,7 +7,10 @@ load("@rules_rust//rust:defs.bzl", "rust_test")
 
 licenses(["notice"])
 
-TESTS = [name[:-2] for name in glob(["*.h"])]
+TESTS = [name[:-2] for name in glob(
+    ["*.h"],
+    exclude = ["*namespaces_json.h"],
+)]
 
 # Maps a test to the list of tests it depends on.
 DEPS = {
@@ -66,6 +69,37 @@ TAGS = {}
     srcs = ["empty_rs_test.rs"],
     cc_deps = ["%s_cc" % name],
 ) for name in TESTS]
+
+cc_library(
+    name = "namespaces_json",
+    hdrs = ["namespaces_json.h"],
+    copts = ["-Wno-google3-inline-namespace"],
+)
+
+generate_bindings(
+    name = "namespaces_json_generated_bindings",
+    cc_library = "namespaces_json",
+)
+
+filegroup(
+    name = "namespaces_json_file",
+    srcs = ["namespaces_json_generated_bindings"],
+    output_group = "namespaces_file",
+)
+
+sh_test(
+    name = "namespaces_json_test",
+    srcs = ["test.sh"],
+    args = [
+        "$(location namespaces_json.json)",
+        "$(location namespaces_json_file)",
+    ],
+    data = [
+        "LICENSE_HEADER",
+        ":namespaces_json.json",
+        ":namespaces_json_file",
+    ],
+)
 
 # Only there so build-cleaner doesn't try to add separate targets for generated files.
 filegroup(

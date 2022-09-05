@@ -20,6 +20,7 @@ def _generate_bindings_impl(ctx):
     return OutputGroupInfo(
         cc_file = [bindings.cc_file],
         rust_file = [bindings.rust_file],
+        namespaces_file = [bindings.namespaces_file],
     )
 
 generate_bindings = rule(

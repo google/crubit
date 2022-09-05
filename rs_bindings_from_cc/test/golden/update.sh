@@ -17,7 +17,13 @@ PKG="rs_bindings_from_cc/test/golden"
 cd "${G3}/${PKG}"
 
 TARGETS=()
+
 for header in *.h; do
+  # The namespaces_json.h header is used to inspect the generated .json file.
+  # Updates to namespaces_json.json, if needed, shall be performed manually.
+  if [[ "${header}" == "namespaces_json.h" ]]; then
+    continue;
+  fi
   TARGETS+=(":${header%.h}_cc_file")
   TARGETS+=(":${header%.h}_rs_file")
 done
@@ -25,6 +31,9 @@ done
 bazel build "${TARGETS[@]}"
 
 for header in *.h; do
+  if [[ "${header}" == "namespaces_json.h" ]]; then
+    continue;
+  fi
   # Since these files are checked in, they need a license header.
   cat LICENSE_HEADER "$(bazel info bazel-bin)/${PKG}/${header%.h}_cc_rust_api.rs" > "${header%.h}_rs_api.rs"
   cat LICENSE_HEADER "$(bazel info bazel-bin)/${PKG}/${header%.h}_cc_rust_api_impl.cc" > "${header%.h}_rs_api_impl.cc"
