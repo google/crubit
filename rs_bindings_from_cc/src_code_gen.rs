@@ -635,7 +635,8 @@ fn api_func_shape(
                                 params: vec![(**rhs).clone()],
                                 is_unsafe_fn: false,
                             },
-                            lhs_record, &ir,
+                            lhs_record,
+                            &ir,
                             /* format_first_param_as_self= */ true,
                         )?;
                     }
@@ -810,7 +811,8 @@ fn api_func_shape(
             if record.is_unpin() {
                 impl_kind = ImplKind::new_trait(
                     TraitName::Other { name: quote! {Drop}, params: vec![], is_unsafe_fn: false },
-                    record, &ir,
+                    record,
+                    &ir,
                     /* format_first_param_as_self= */ true,
                 )?;
                 func_name = make_rs_ident("drop");
@@ -822,7 +824,8 @@ fn api_func_shape(
                         params: vec![],
                         is_unsafe_fn: true,
                     },
-                    record, &ir,
+                    record,
+                    &ir,
                     /* format_first_param_as_self= */ true,
                 )?;
                 func_name = make_rs_ident("pinned_drop");
@@ -876,7 +879,8 @@ fn api_func_shape(
                     1 => {
                         impl_kind = ImplKind::new_trait(
                             TraitName::UnpinConstructor { name: quote! {Default}, params: vec![] },
-                            record, &ir,
+                            record,
+                            &ir,
                             /* format_first_param_as_self= */ false,
                         )?;
                         func_name = make_rs_ident("default");
@@ -892,7 +896,8 @@ fn api_func_shape(
                                         name: quote! {Clone},
                                         params: vec![],
                                     },
-                                    record, &ir,
+                                    record,
+                                    &ir,
                                     /* format_first_param_as_self= */ true,
                                 )?;
                                 func_name = make_rs_ident("clone");
@@ -904,7 +909,8 @@ fn api_func_shape(
                                     name: quote! {From},
                                     params: vec![param_type.clone()],
                                 },
-                                record, &ir,
+                                record,
+                                &ir,
                                 /* format_first_param_as_self= */ false,
                             )?;
                             func_name = make_rs_ident("from");
@@ -1108,11 +1114,7 @@ fn generate_func(
             *trait_generic_params = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(lifetime) {
-                        Some(quote! {#lifetime})
-                    } else {
-                        None
-                    }
+                    if trait_lifetimes.contains(lifetime) { Some(quote! {#lifetime}) } else { None }
                 })
                 .collect();
         } else {
@@ -1155,7 +1157,8 @@ fn generate_func(
                 self_type: None,
                 function_path: syn::parse2(quote! {
                     #namespace_qualifier #record_name :: #func_name
-                }).unwrap(),
+                })
+                .unwrap(),
             };
         }
         ImplKind::Trait {
@@ -1841,15 +1844,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
     // TODO(b/212696226): Generate `assert_impl_all!` or `assert_not_impl_any!`
     // assertions about the `Copy` trait - this trait should be implemented
     // iff `should_implement_drop(record)` is false.
-    let mut record_features = BTreeSet::new();
-    let mut assertion_features = BTreeSet::new();
-
-    // TODO(mboehme): For the time being, we're using unstable features to
-    // be able to use offset_of!() in static assertions. This is fine for a
-    // prototype, but longer-term we want to either get those features
-    // stabilized or find an alternative. For more details, see
-    // b/200120034#comment15
-    assertion_features.insert(make_rs_ident("const_ptr_offset_from"));
+    let mut features = BTreeSet::new();
 
     let derives = generate_derives(record);
     let derives = if derives.is_empty() {
@@ -1869,7 +1864,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         // negative_impls are necessary for universal initialization due to Rust's
         // coherence rules: PhantomPinned isn't enough to prove to Rust that a
         // blanket impl that requires Unpin doesn't apply. See http://<internal link>=h.f6jp8ifzgt3n
-        record_features.insert(make_rs_ident("negative_impls"));
+        features.insert(make_rs_ident("negative_impls"));
         if should_implement_drop(record) {
             quote! {#[::ctor::recursively_pinned(PinnedDrop)]}
         } else {
@@ -1926,9 +1921,9 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         .child_item_ids
         .iter()
         .map(|id| {
-            let item = ir
-                .find_decl(*id)
-                .with_context(|| format!("Failed to look up `record.child_item_ids` for {:?}", record))?;
+            let item = ir.find_decl(*id).with_context(|| {
+                format!("Failed to look up `record.child_item_ids` for {:?}", record)
+            })?;
             generate_item(db, item)
         })
         .collect::<Result<Vec<_>>>()?;
@@ -1951,7 +1946,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
         if !generated.thunk_impls.is_empty() {
             thunk_impls_from_record_items.push(generated.thunk_impls);
         }
-        record_features.extend(generated.features.clone());
+        features.extend(generated.features.clone());
     }
 
     let record_tokens = quote! {
@@ -2013,7 +2008,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
 
     Ok(GeneratedItem {
         item: record_tokens,
-        features: record_features.union(&assertion_features).cloned().collect(),
+        features,
         assertions: assertion_tokens,
         thunks: thunk_tokens,
         thunk_impls: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
@@ -2136,9 +2131,9 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
     let mut features = BTreeSet::new();
 
     for item_id in namespace.child_item_ids.iter() {
-        let item = ir
-            .find_decl(*item_id)
-            .with_context(|| format!("Failed to look up namespace.child_item_ids for {:?}", namespace))?;
+        let item = ir.find_decl(*item_id).with_context(|| {
+            format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
+        })?;
         let generated = generate_item(db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
@@ -2335,9 +2330,8 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
     features.insert(make_rs_ident("custom_inner_attributes"));
 
     for top_level_item_id in ir.top_level_item_ids() {
-        let item = ir
-            .find_decl(*top_level_item_id)
-            .context("Failed to look up ir.top_level_item_ids")?;
+        let item =
+            ir.find_decl(*top_level_item_id).context("Failed to look up ir.top_level_item_ids")?;
         let generated = generate_item(&db, item)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
@@ -2904,7 +2898,10 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             match ir.item_for_type(&ty)? {
                 Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                     incomplete_record: incomplete_record.clone(),
-                    namespace_qualifier: Rc::new(NamespaceQualifier::new(incomplete_record.id, &ir)?),
+                    namespace_qualifier: Rc::new(NamespaceQualifier::new(
+                        incomplete_record.id,
+                        &ir,
+                    )?),
                     crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
@@ -2981,7 +2978,8 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
             let ident = format_cc_ident(&incomplete_record.cc_name);
-            let namespace_qualifier = NamespaceQualifier::new(incomplete_record.id, ir)?.format_for_cc();
+            let namespace_qualifier =
+                NamespaceQualifier::new(incomplete_record.id, ir)?.format_for_cc();
             let tag_kind = incomplete_record.record_type;
             Ok(quote! { #tag_kind #namespace_qualifier #ident })
         }
@@ -3243,12 +3241,14 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
                         } else {
                             let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
                             let record_ident = format_cc_ident(&record.cc_name);
-                            let namespace_qualifier = NamespaceQualifier::new(record.id, &ir)?.format_for_cc();
+                            let namespace_qualifier =
+                                NamespaceQualifier::new(record.id, &ir)?.format_for_cc();
                             quote! { #namespace_qualifier #record_ident :: #fn_ident }
                         }
                     }
                     None => {
-                        let namespace_qualifier = NamespaceQualifier::new(func.id, &ir)?.format_for_cc();
+                        let namespace_qualifier =
+                            NamespaceQualifier::new(func.id, &ir)?.format_for_cc();
                         quote! { #namespace_qualifier #fn_ident }
                     }
                 }
