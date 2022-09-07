@@ -1121,7 +1121,7 @@ const _: () = {
     );
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
         value_
     ) == 0
@@ -1153,7 +1153,7 @@ const _: () = {
     );
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
         value_
     ) == 0
@@ -1182,7 +1182,7 @@ const _: () = {
     );
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
         value_
     ) == 0
@@ -1215,13 +1215,13 @@ const _: () = {
     );
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         value1
     ) == 0
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
         value2
     ) == 8
@@ -1253,13 +1253,13 @@ const _: () = {
     );
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         value1
     ) == 0
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
         value2
     ) == 4
@@ -1294,7 +1294,7 @@ const _: () = {
     );
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
+    memoffset::offset_of!(
         crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
         value
     ) == 0

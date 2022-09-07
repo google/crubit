@@ -329,7 +329,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Derived2: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Derived2, derived_1) == 20);
+const _: () = assert!(memoffset::offset_of!(crate::Derived2, derived_1) == 20);
 
 const _: () = assert!(::std::mem::size_of::<crate::VirtualDerived2>() == 32);
 const _: () = assert!(::std::mem::align_of::<crate::VirtualDerived2>() == 8);

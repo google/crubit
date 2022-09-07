@@ -1830,7 +1830,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
                     let expected_offset = Literal::usize_unsuffixed(field.offset / 8);
 
                     let actual_offset_expr = quote! {
-                        memoffset_unstable_const::offset_of!(#qualified_ident, #field_ident)
+                        memoffset::offset_of!(#qualified_ident, #field_ident)
                     };
                     quote! {
                         const _: () = assert!(#actual_offset_expr == #expected_offset);
@@ -3748,9 +3748,9 @@ mod tests {
                 const _: () = assert!(::std::mem::align_of::<crate::SomeStruct>() == 4);
                 const _: () = { static_assertions::assert_not_impl_any!(crate::SomeStruct: Copy); };
                 const _: () = { static_assertions::assert_impl_all!(crate::SomeStruct: Drop); };
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, public_int) == 0);
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, protected_int) == 4);
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SomeStruct, private_int) == 8);
+                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, public_int) == 0);
+                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, protected_int) == 4);
+                const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, private_int) == 8);
             }
         );
         assert_cc_matches!(
@@ -3967,8 +3967,7 @@ mod tests {
                 }
                 ...
                 const _: () = assert!(
-                    memoffset_unstable_const::offset_of!(
-                        crate::StructWithUnsupportedField, my_field) == 0);
+                    memoffset::offset_of!(crate::StructWithUnsupportedField, my_field) == 0);
             }
         );
         Ok(())
@@ -3998,10 +3997,8 @@ mod tests {
                    pub last_field: i32,
                }
                ...
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::SomeStruct, first_field) == 0);
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
-                       crate::SomeStruct, last_field) == 8);
+               const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, first_field) == 0);
+               const _: () = assert!(memoffset::offset_of!(crate::SomeStruct, last_field) == 8);
             }
         );
         Ok(())
@@ -4207,13 +4204,13 @@ mod tests {
                    pub last_field: i32,
                }
                ...
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
+               const _: () = assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, first_field) == 0);
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
+               const _: () = assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, __unnamed_field1) == 4);
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
+               const _: () = assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, __unnamed_field2) == 12);
-               const _: () = assert!(memoffset_unstable_const::offset_of!(
+               const _: () = assert!(memoffset::offset_of!(
                        crate::StructWithUnnamedMembers, last_field) == 16);
             }
         );
@@ -7194,7 +7191,7 @@ mod tests {
                 const _: () = assert!(::std::mem::size_of::<crate::test_namespace_bindings::S>() == 4);
                 const _: () = assert!(::std::mem::align_of::<crate::test_namespace_bindings::S>() == 4);
                 ...
-                const _: () = assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+                const _: () = assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
             }
         );
         Ok(())

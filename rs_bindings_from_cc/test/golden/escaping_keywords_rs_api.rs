@@ -96,4 +96,4 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::r#type: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::r#type, r#dyn) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::r#type, r#dyn) == 0);

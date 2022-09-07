@@ -125,14 +125,8 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::SomeClass: Drop);
 };
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
-        crate::test_namespace_bindings::SomeClass,
-        public_member_variable_
-    ) == 0
+    memoffset::offset_of!(crate::test_namespace_bindings::SomeClass, public_member_variable_) == 0
 );
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
-        crate::test_namespace_bindings::SomeClass,
-        private_member_variable_
-    ) == 4
+    memoffset::offset_of!(crate::test_namespace_bindings::SomeClass, private_member_variable_) == 4
 );

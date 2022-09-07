@@ -189,4 +189,4 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::WrappedValue: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::WrappedValue, value_) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::WrappedValue, value_) == 0);

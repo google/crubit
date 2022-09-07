@@ -1430,7 +1430,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableConstMember: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::AddableConstMember, field_) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::AddableConstMember, field_) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::AddableNonConstMember>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::AddableNonConstMember>() == 4);
@@ -1443,8 +1443,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableNonConstMember: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::AddableNonConstMember, field_) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::AddableNonConstMember, field_) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::AddableFriend>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::AddableFriend>() == 4);
@@ -1457,7 +1456,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableFriend: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::AddableFriend, field_) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::AddableFriend, field_) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::AddableFree>() == 1);
 const _: () = assert!(::std::mem::align_of::<crate::AddableFree>() == 1);
@@ -1506,7 +1505,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::AddableReturnsVoid: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::AddableReturnsVoid, field_) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::AddableReturnsVoid, field_) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::AddableConstMemberNonunpin>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::AddableConstMemberNonunpin>() == 4);
@@ -1516,8 +1515,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::AddableConstMemberNonunpin: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::AddableConstMemberNonunpin, field_) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::AddAssignMemberInt>() == 1);
 const _: () = assert!(::std::mem::align_of::<crate::AddAssignMemberInt>() == 1);

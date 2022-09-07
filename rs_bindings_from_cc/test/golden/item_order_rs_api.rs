@@ -137,7 +137,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::FirstStruct: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::FirstStruct, field) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::FirstStruct, field) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::SecondStruct>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::SecondStruct>() == 4);
@@ -150,4 +150,4 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::SecondStruct: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::SecondStruct, field) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::SecondStruct, field) == 0);

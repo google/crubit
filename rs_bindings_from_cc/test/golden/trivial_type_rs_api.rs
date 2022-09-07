@@ -349,7 +349,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::Trivial: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::ns::Trivial, trivial_field) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::ns::Trivial, trivial_field) == 0);
 const _: () = assert!(::std::mem::size_of::<crate::ns::TrivialWithDefaulted>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::ns::TrivialWithDefaulted>() == 4);
 const _: () = {
@@ -361,9 +361,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::TrivialWithDefaulted: Drop);
 };
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::ns::TrivialWithDefaulted, trivial_field) == 0
-);
+const _: () = assert!(memoffset::offset_of!(crate::ns::TrivialWithDefaulted, trivial_field) == 0);
 const _: () = assert!(::std::mem::size_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::ns::TrivialNonfinal>() == 4);
 const _: () = {
@@ -372,5 +370,4 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::ns::TrivialNonfinal: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::ns::TrivialNonfinal, trivial_field) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::ns::TrivialNonfinal, trivial_field) == 0);

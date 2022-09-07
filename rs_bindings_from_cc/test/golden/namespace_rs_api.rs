@@ -354,8 +354,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::S: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::test_namespace_bindings::S, i) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::test_namespace_bindings::S, i) == 0);
 
 const _: () =
     assert!(::std::mem::size_of::<crate::test_namespace_bindings_reopened::inner::S>() == 1);

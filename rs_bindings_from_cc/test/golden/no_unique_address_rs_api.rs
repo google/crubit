@@ -452,8 +452,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Struct: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Struct, field1) == 0);
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Struct, field2) == 4);
+const _: () = assert!(memoffset::offset_of!(crate::Struct, field1) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::Struct, field2) == 4);
 
 const _: () = assert!(::std::mem::size_of::<crate::PaddingBetweenFields>() == 8);
 const _: () = assert!(::std::mem::align_of::<crate::PaddingBetweenFields>() == 4);
@@ -466,10 +466,8 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::PaddingBetweenFields: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::PaddingBetweenFields, field1) == 0);
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::PaddingBetweenFields, field2) == 4);
+const _: () = assert!(memoffset::offset_of!(crate::PaddingBetweenFields, field1) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::PaddingBetweenFields, field2) == 4);
 
 const _: () = assert!(::std::mem::size_of::<crate::FieldInTailPadding_InnerStruct>() == 8);
 const _: () = assert!(::std::mem::align_of::<crate::FieldInTailPadding_InnerStruct>() == 4);
@@ -479,14 +477,10 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::FieldInTailPadding_InnerStruct: Drop);
 };
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_int_field)
-        == 0
-);
-const _: () = assert!(
-    memoffset_unstable_const::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_char_field)
-        == 4
-);
+const _: () =
+    assert!(memoffset::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_int_field) == 0);
+const _: () =
+    assert!(memoffset::offset_of!(crate::FieldInTailPadding_InnerStruct, inner_char_field) == 4);
 const _: () = {
     static_assertions::assert_impl_all!(i32: Copy);
 };
@@ -502,13 +496,9 @@ const _: () = {
 const _: () = {
     static_assertions::assert_impl_all!(crate::FieldInTailPadding: Drop);
 };
-const _: () =
-    assert!(memoffset_unstable_const::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::FieldInTailPadding, inner_struct) == 0);
 const _: () = assert!(
-    memoffset_unstable_const::offset_of!(
-        crate::FieldInTailPadding,
-        char_in_tail_padding_of_prev_field
-    ) == 5
+    memoffset::offset_of!(crate::FieldInTailPadding, char_in_tail_padding_of_prev_field) == 5
 );
 const _: () = {
     static_assertions::assert_impl_all!(u8: Copy);

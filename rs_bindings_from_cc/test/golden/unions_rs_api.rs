@@ -840,7 +840,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::Nontrivial: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::Nontrivial, field) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::Nontrivial, field) == 0);
 
 const _: () =
     assert!(::std::mem::size_of::<crate::TriviallyCopyableButNontriviallyDestructible>() == 1);
@@ -923,7 +923,7 @@ const _: () = {
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::TrivialButInheritable: Drop);
 };
-const _: () = assert!(memoffset_unstable_const::offset_of!(crate::TrivialButInheritable, x) == 0);
+const _: () = assert!(memoffset::offset_of!(crate::TrivialButInheritable, x) == 0);
 
 const _: () = assert!(::std::mem::size_of::<crate::UnionWithInheritable>() == 4);
 const _: () = assert!(::std::mem::align_of::<crate::UnionWithInheritable>() == 4);

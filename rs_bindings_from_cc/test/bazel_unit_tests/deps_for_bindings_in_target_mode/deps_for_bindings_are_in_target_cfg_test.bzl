@@ -22,7 +22,7 @@ def _deps_for_bindings_in_target_cfg_impl(ctx):
     tut = analysistest.target_under_test(env)
 
     # The compiled binding implicitly depends on the
-    # //third_party/rust/memoffset/v0_6:memoffset_unstable_const crate.
+    # //third_party/rust/memoffset/v0_6:memoffset crate.
     # Here we check that the -Ldependency and -Lextern arguments for this crate point to a
     # non exec path, aka target configuration.
 
