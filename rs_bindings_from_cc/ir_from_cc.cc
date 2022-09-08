@@ -68,6 +68,8 @@ absl::StatusOr<IR> IrFromCc(
   }
 
   std::vector<std::string> args_as_strings{
+      // TODO(b/245621427): Remove -std=gnu++14
+      "-std=gnu++14",
       // Parse non-doc comments that are used as documention
       "-fparse-all-comments"};
   args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
