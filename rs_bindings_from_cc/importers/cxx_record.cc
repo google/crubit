@@ -7,13 +7,13 @@
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
-#include "absl/strings/match.h"
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/ErrorHandling.h"
 
@@ -51,7 +51,7 @@ std::string GetClassTemplateSpecializationCcName(
   //
   // This logic should go away once we start generating top level bindings for
   // explicit class template specializations.
-  if (specialization_decl->isExplicitSpecialization()) {
+  if (specialization_decl->isExplicitInstantiationOrSpecialization()) {
     llvm::SmallString<128> storage;
     llvm::raw_svector_ostream out(storage);
     out << specialization_decl->getName();
@@ -143,8 +143,16 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
+    if (specialization_decl->getSpecializationKind() ==
+        clang::TSK_ExplicitInstantiationDeclaration) {
+      return ictx_.ImportUnsupportedItem(
+          record_decl,
+          "Explicit class template instantiation declarations are not handled "
+          "yet.");
+    }
+
     is_implicit_class_template_specialization_decl =
-        !specialization_decl->isExplicitSpecialization();
+        !specialization_decl->isExplicitInstantiationOrSpecialization();
     rs_name = ictx_.GetMangledName(specialization_decl);
     cc_name =
         GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl);

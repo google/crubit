@@ -143,10 +143,22 @@ fn test_dont_import_record_nested_in_func() {
 }
 
 #[test]
-fn test_dont_import_unused_class_template_or_specialization() {
-    let ir = ir_from_cc("template <class T> struct Template{}; template<> struct Template<int>{};")
-        .unwrap();
-    assert_ir_not_matches!(ir, quote! { Record { ... "Template" ... } });
+fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
+    let ir = ir_from_cc(
+        "
+        template <class T> struct MyTemplate{};
+        extern template struct MyTemplate<int>;
+      ",
+    )
+    .unwrap();
+    assert_ir_not_matches!(ir, quote! { Record });
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "MyTemplate",
+          message: "Explicit class template instantiation declarations are not handled yet." ...
+        }}
+    );
 }
 
 #[test]
@@ -696,8 +708,22 @@ fn test_type_conversion() -> Result<()> {
     let type_mapping: HashMap<_, _> = fields
         .map(|f| {
             (
-                f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_str(),
-                f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_str(),
+                f.type_
+                    .as_ref()
+                    .unwrap()
+                    .cc_type
+                    .name
+                    .as_ref()
+                    .unwrap()
+                    .as_str(),
+                f.type_
+                    .as_ref()
+                    .unwrap()
+                    .rs_type
+                    .name
+                    .as_ref()
+                    .unwrap()
+                    .as_str(),
             )
         })
         .collect();
@@ -869,7 +895,7 @@ fn test_typedef_duplicate() -> Result<()> {
 }
 
 #[test]
-fn test_typedef_of_fully_instantiated_template() -> Result<()> {
+fn test_typedef_of_full_template_specialization() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision
             namespace test_namespace_bindings {
@@ -887,7 +913,7 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
                 using MyTypeAlias = MyStruct<int>;
             }"#,
     )?;
-    // Instantiation of the struct template:
+    // Instantiation of MyStruct<int> specialization:
     assert_ir_matches!(
         ir,
         quote! {
@@ -939,7 +965,7 @@ fn test_typedef_of_fully_instantiated_template() -> Result<()> {
           }
         }
     );
-    // Member function of the struct template instantiation:
+    // Member function of the MyTemplate<int> specialization:
     assert_ir_matches!(
         ir,
         quote! {
@@ -996,7 +1022,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 using MyTypeAlias = MyStruct<int>;
               }"#,
     )?;
-    // Instantiation of the struct template based on the specialization for T=int:
+    // Instantiation of the explicit MyStruct<int> specialization:
     assert_ir_matches!(
         ir,
         quote! {
@@ -1028,7 +1054,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
     // assert_eq!(1, ir.top_level_item_ids().filter(|&&id| id ==
     // record_id).count());
 
-    // Instance method inside the struct template:
+    // Instance method inside the explicit MyStruct<int> specialization:
     assert_ir_matches!(
         ir,
         quote! {
@@ -1049,7 +1075,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
 }
 
 #[test]
-fn test_multiple_typedefs_to_same_template() -> Result<()> {
+fn test_multiple_typedefs_to_same_specialization() -> Result<()> {
     let ir = ir_from_cc(
         r#" #pragma clang lifetime_elision
             template <typename T>
@@ -1140,6 +1166,28 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     );
 
     Ok(())
+}
+
+#[test]
+fn test_explicit_class_template_instantiation_definitions_are_imported() {
+    let ir = ir_from_cc(
+        "
+        namespace my_namespace {
+          template <class T> struct MyTemplate{};
+          template struct MyTemplate<int>;
+        }
+      ",
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { Record {
+          rs_name: "__CcTemplateInstN12my_namespace10MyTemplateIiEE", ...
+          cc_name: "MyTemplate<int>", ...
+          owning_target: BazelLabel("//test:testing_target"), ...
+          enclosing_namespace_id: Some(...), ...
+        }}
+    );
 }
 
 #[test]
@@ -2070,7 +2118,10 @@ fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
 fn test_typedef_nested_in_record_not_supported() {
     let ir = ir_from_cc("struct S { typedef int MyTypedefDecl; };").unwrap();
     assert_strings_contain(
-        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
+        ir.unsupported_items()
+            .map(|i| i.name.as_str())
+            .collect_vec()
+            .as_slice(),
         "S::MyTypedefDecl",
     );
 }
@@ -2652,7 +2703,10 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
     // once we start importing nested structs.
     let ir = ir_from_cc("struct X { struct Y {}; };")?;
     assert_strings_contain(
-        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
+        ir.unsupported_items()
+            .map(|i| i.name.as_str())
+            .collect_vec()
+            .as_slice(),
         "X::Y",
     );
     Ok(())
@@ -3491,7 +3545,7 @@ fn test_function_redeclared_in_separate_namespace_chunk() {
 }
 
 #[test]
-fn test_incomplete_record_has_rs_name() {
+fn test_forward_declared_specialization_has_rs_name() {
     let ir = ir_from_cc(
         r#"
         namespace test_namespace_bindings {

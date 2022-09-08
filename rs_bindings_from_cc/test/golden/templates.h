@@ -49,8 +49,31 @@ struct MyStruct {
   T t;
 };
 
+// Explicit class template specialization with definition should not be imported
+// unless also instantiated.
+// TODO(b/245680028): `MyStruct<bool>` should not be imported.
+template <>
+struct MyStruct<bool> {};
+
+// Explicit class template specialization with definition should be imported
+// even when not instantiated if there is a type alias for it.
 template <>
 struct MyStruct<char> {};
+using MyCharStruct = MyStruct<char>;
+
+// Forward declared explicit class template specialization should be imported
+// so the forward declaration code is generated (`forward_declare!`).
+template <>
+struct MyStruct<int>;
+
+// Explicit class template instantiation definition is imported similarly to
+// how implicit typedeffed instantiations are.
+template class MyStruct<float>;
+
+// Explicit class template instantiation declaration is not handled (yet?)
+// TODO(b/245467707): Consider handling these as a build speed/ergonomic
+// optimization.
+extern template class MyStruct<double>;
 
 }  // namespace test_namespace_bindings
 

@@ -130,6 +130,42 @@ pub mod test_namespace_bindings {
     // Error while generating bindings for item 'test_namespace_bindings::MyStruct':
     // Class templates are not supported yet
 
+    /// Explicit class template specialization with definition should not be imported
+    /// unless also instantiated.
+    /// TODO(b/245680028): `MyStruct<bool>` should not be imported.
+    #[::ctor::recursively_pinned]
+    #[repr(C)]
+    pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIbEE {
+        __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("MyStruct<bool>"),
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE
+    );
+
+    impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE {
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: ()) -> Self::CtorType {
+            let () = args;
+            unsafe {
+                ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>|{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIbEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest)); })
+            }
+        }
+    }
+
+    impl<'b>::ctor::CtorNew<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE)->Self::CtorType{ let __param_0=args;unsafe{ ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>|{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIbEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); }) } } }
+    impl<'b>::ctor::CtorNew<(&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE,)>for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:(&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE,))->Self::CtorType{ let(arg,)=args;<Self as::ctor::CtorNew<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>::ctor_new(arg) } }
+
+    impl<'b>::ctor::CtorNew<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>)->Self::CtorType{ let __param_0=args;unsafe{ ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>|{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIbEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); }) } } }
+    impl<'b>::ctor::CtorNew<(::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,)>for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:(::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,))->Self::CtorType{ let(arg,)=args;<Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>>::ctor_new(arg) } }
+
+    impl<'b>::ctor::Assign<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE){ unsafe{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIbEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    impl<'b>::ctor::Assign<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>>for __CcTemplateInstN23test_namespace_bindings8MyStructIbEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>){ unsafe{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIbEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    /// Explicit class template specialization with definition should be imported
+    /// even when not instantiated if there is a type alias for it.
     #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
@@ -160,11 +196,53 @@ pub mod test_namespace_bindings {
     impl<'b>::ctor::Assign<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE){ unsafe{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
 
     impl<'b>::ctor::Assign<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>>for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>){ unsafe{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    pub type MyCharStruct =
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE;
+
+    forward_declare::forward_declare!(pub __CcTemplateInstN23test_namespace_bindings8MyStructIiEE = forward_declare::symbol!("__CcTemplateInstN23test_namespace_bindings8MyStructIiEE"));
+
+    /// Explicit class template instantiation definition is imported similarly to
+    /// how implicit typedeffed instantiations are.
+    #[::ctor::recursively_pinned]
+    #[repr(C)]
+    pub struct __CcTemplateInstN23test_namespace_bindings8MyStructIfEE {
+        pub t: f32,
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("MyStruct<float>"),
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE
+    );
+
+    impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE {
+        type CtorType = impl ::ctor::Ctor<Output = Self>;
+        #[inline(always)]
+        fn ctor_new(args: ()) -> Self::CtorType {
+            let () = args;
+            unsafe {
+                ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>|{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest)); })
+            }
+        }
+    }
+
+    impl<'b>::ctor::CtorNew<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE)->Self::CtorType{ let __param_0=args;unsafe{ ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>|{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIfEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); }) } } }
+    impl<'b>::ctor::CtorNew<(&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE,)>for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:(&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE,))->Self::CtorType{ let(arg,)=args;<Self as::ctor::CtorNew<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>::ctor_new(arg) } }
+
+    impl<'b>::ctor::CtorNew<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>)->Self::CtorType{ let __param_0=args;unsafe{ ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>|{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIfEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); }) } } }
+    impl<'b>::ctor::CtorNew<(::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,)>for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE{ type CtorType=impl::ctor::Ctor<Output=Self>+::ctor::Captures<'b>;#[inline(always)]fn ctor_new(args:(::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,))->Self::CtorType{ let(arg,)=args;<Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>>::ctor_new(arg) } }
+
+    impl<'b>::ctor::Assign<&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE){ unsafe{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIfEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    impl<'b>::ctor::Assign<::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>>for __CcTemplateInstN23test_namespace_bindings8MyStructIfEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>){ unsafe{ crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIfEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
+
+    // rs_bindings_from_cc/test/golden/templates.h;l=76
+    // Error while generating bindings for item 'test_namespace_bindings::MyStruct':
+    // Explicit class template instantiation declarations are not handled yet.
 }
 
 // namespace test_namespace_bindings
 
-// rs_bindings_from_cc/test/golden/templates.h;l=57
+// rs_bindings_from_cc/test/golden/templates.h;l=80
 // Error while generating bindings for item 'MyTopLevelTemplate':
 // Class templates are not supported yet
 
@@ -183,7 +261,7 @@ pub fn processForwardDeclaredSpecialization<'a>(
 }
 
 pub mod template_template_params {
-    // rs_bindings_from_cc/test/golden/templates.h;l=72
+    // rs_bindings_from_cc/test/golden/templates.h;l=95
     // Error while generating bindings for item 'template_template_params::Policy':
     // Class templates are not supported yet
 
@@ -218,7 +296,7 @@ pub mod template_template_params {
 
     impl<'b>::ctor::Assign<::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>>for __CcTemplateInstN24template_template_params6PolicyIiEE{ #[inline(always)]fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>,__param_0: ::ctor::RvalueReference<'b,crate::template_template_params::__CcTemplateInstN24template_template_params6PolicyIiEE>){ unsafe{ crate::detail::__rust_thunk___ZN24template_template_params6PolicyIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0); } } }
 
-    // rs_bindings_from_cc/test/golden/templates.h;l=82
+    // rs_bindings_from_cc/test/golden/templates.h;l=105
     // Error while generating bindings for item 'template_template_params::MyTemplate':
     // Class templates are not supported yet
 
@@ -228,11 +306,11 @@ pub mod template_template_params {
 
 // namespace template_template_params
 
-pub mod forward_declared_template { // rs_bindings_from_cc/test/golden/templates.h;l=100
+pub mod forward_declared_template { // rs_bindings_from_cc/test/golden/templates.h;l=123
     // Error while generating bindings for item 'forward_declared_template::ForwardDeclaredTemplate':
     // Class templates are not supported yet
 
-    // rs_bindings_from_cc/test/golden/templates.h;l=103
+    // rs_bindings_from_cc/test/golden/templates.h;l=126
     // Error while generating bindings for item 'forward_declared_template::TypeAliasToForwardDeclaredTemplate':
     // Unsupported type 'ForwardDeclaredTemplate<int>': 'ForwardDeclaredTemplate<int>' template specialization is incomplete
 }
@@ -620,11 +698,11 @@ impl<'b>
     }
 }
 
-// rs_bindings_from_cc/test/golden/templates.h;l=58
+// rs_bindings_from_cc/test/golden/templates.h;l=81
 // Error while generating bindings for item 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates.h;l=58
+// rs_bindings_from_cc/test/golden/templates.h;l=81
 // Error while generating bindings for item 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>::operator=':
 // operator= for Unpin types is not yet supported.
 
@@ -798,6 +876,27 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::TemplateParam>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIbEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,
+        );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIbEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,
+            __param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE,
+        );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIbEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,
+            __param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,
+        );
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings8MyStructIbEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,__param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE)->::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings8MyStructIbEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>,__param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>)->::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -819,6 +918,27 @@ mod detail {
         );
         pub(crate)fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>,__param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE)->::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>;
         pub(crate)fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>,__param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>)->::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIfEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,
+        );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIfEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,
+            __param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE,
+        );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIfEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut::std::mem::MaybeUninit<crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,
+            __param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,
+        );
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings8MyStructIfEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,__param_0:&'b crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE)->::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings8MyStructIfEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this: ::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>,__param_0: ::ctor::RvalueReference<'b,crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>)->::std::pin::Pin<&'a mut crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE>;
         #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
         pub(crate) fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE<
             'a,
@@ -1051,6 +1171,28 @@ const _: () = {
 };
 const _: () = assert!(
     ::std::mem::size_of::<
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE,
+    >() == 1
+);
+const _: () = assert!(
+    ::std::mem::align_of::<
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE,
+    >() == 1
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE:
+            Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIbEE:
+            Drop
+    );
+};
+const _: () = assert!(
+    ::std::mem::size_of::<
         crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
     >() == 1
 );
@@ -1071,6 +1213,34 @@ const _: () = {
             Drop
     );
 };
+const _: () = assert!(
+    ::std::mem::size_of::<
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE,
+    >() == 4
+);
+const _: () = assert!(
+    ::std::mem::align_of::<
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE,
+    >() == 4
+);
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE:
+            Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE:
+            Drop
+    );
+};
+const _: () = assert!(
+    memoffset::offset_of!(
+        crate::test_namespace_bindings::__CcTemplateInstN23test_namespace_bindings8MyStructIfEE,
+        t
+    ) == 0
+);
 
 const _: () = assert!(
     ::std::mem::size_of::<
