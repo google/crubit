@@ -520,6 +520,7 @@ pub struct Namespace {
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
+    pub is_inline: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]

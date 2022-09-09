@@ -2150,10 +2150,12 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
     }
 
     let reopened_namespace_idx = ir.get_reopened_namespace_idx(namespace.id)?;
-    let should_skip_index =
+    // True if this is actually the module with the name `#name`, rather than e.g.
+    // `#name_0`, `#name_1`, etc.
+    let is_canonical_namespace_module =
         ir.is_last_reopened_namespace(namespace.id, namespace.canonical_namespace_id)?;
 
-    let name = if should_skip_index {
+    let name = if is_canonical_namespace_module {
         make_rs_ident(&namespace.name.identifier)
     } else {
         make_rs_ident(&format!("{}_{}", &namespace.name.identifier, reopened_namespace_idx))
@@ -2170,12 +2172,20 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         quote! { pub use super::#previous_namespace_ident::*; __NEWLINE__ __NEWLINE__ }
     };
 
+    let use_stmt_for_inline_namespace = if namespace.is_inline && is_canonical_namespace_module {
+        quote! {pub use #name::*; __NEWLINE__}
+    } else {
+        quote! {}
+    };
+
     let namespace_tokens = quote! {
         pub mod #name {
             #use_stmt_for_previous_namespace
 
             #( #items __NEWLINE__ __NEWLINE__ )*
         }
+        __NEWLINE__
+        #use_stmt_for_inline_namespace
     };
 
     Ok(GeneratedItem {
@@ -7286,6 +7296,7 @@ mod tests {
                         ...
                         pub struct MyStruct {...} ...
                     }
+                    pub use inner::*;
                     ...
                     pub fn processMyStruct(s: crate::test_namespace_bindings::inner::MyStruct)
                     ...
@@ -7295,6 +7306,38 @@ mod tests {
                 ...
                 pub fn processMyStructSkipInlineNamespaceQualifier(s: crate::test_namespace_bindings::inner::MyStruct)
                 ...
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_inline_namespace_not_marked_inline() -> Result<()> {
+        let rs_api = generate_bindings_tokens(ir_from_cc(
+            r#"
+            inline namespace my_inline {}
+            namespace foo {}
+            namespace my_inline {  // still an inline namespace!
+                struct MyStruct final {};
+            }
+            "#,
+        )?)?
+        .rs_api;
+
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+               ...
+               pub mod my_inline_0 {}
+               pub mod foo {}
+               pub mod my_inline {
+                   pub use super::my_inline_0::*;
+                   ...
+                   pub struct MyStruct {...}
+                   ...
+               }
+               pub use my_inline::*;
+               ...
             }
         );
         Ok(())

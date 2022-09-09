@@ -751,6 +751,7 @@ struct Namespace {
   BazelLabel owning_target;
   std::vector<ItemId> child_item_ids;
   llvm::Optional<ItemId> enclosing_namespace_id;
+  bool is_inline = false;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {

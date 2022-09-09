@@ -29,15 +29,13 @@ mod tests {
     }
 
     #[test]
-    fn test_limits() {
+    fn test_limits_inline() {
         // Tests of items from the `<limits>` header.
         // https://en.cppreference.com/w/cpp/types/numeric_limits/float_round_style:
-        //
-        // TODO(b/244601795): Stop mentioning the `inline` `__u` namespace below
-        assert_eq!(0, std::__u::float_round_style::round_toward_zero.into());
-        assert_eq!(1, std::__u::float_round_style::round_to_nearest.into());
-        assert_eq!(2, std::__u::float_round_style::round_toward_infinity.into());
-        assert_eq!(3, std::__u::float_round_style::round_toward_neg_infinity.into());
-        assert_eq!(-1, std::__u::float_round_style::round_indeterminate.into());
+        assert_eq!(0, std::float_round_style::round_toward_zero.into());
+        assert_eq!(1, std::float_round_style::round_to_nearest.into());
+        assert_eq!(2, std::float_round_style::round_toward_infinity.into());
+        assert_eq!(3, std::float_round_style::round_toward_neg_infinity.into());
+        assert_eq!(-1, std::float_round_style::round_indeterminate.into());
     }
 }

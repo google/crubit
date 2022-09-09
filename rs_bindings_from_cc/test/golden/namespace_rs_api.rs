@@ -229,6 +229,7 @@ pub mod test_namespace_bindings_inline {
         // Error while generating bindings for item 'StructInInlineNamespace::operator=':
         // operator= for Unpin types is not yet supported.
     }
+    pub use inner::*;
 
     // namespace inner
 }

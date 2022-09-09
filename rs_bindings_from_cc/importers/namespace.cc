@@ -29,7 +29,7 @@ std::optional<IR::Item> NamespaceDeclImporter::Import(
       .owning_target = ictx_.GetOwningTarget(namespace_decl),
       .child_item_ids = std::move(item_ids),
       .enclosing_namespace_id = GetEnclosingNamespaceId(namespace_decl),
-  };
+      .is_inline = namespace_decl->isInline()};
 }
 
 }  // namespace crubit
