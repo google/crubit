@@ -24,9 +24,16 @@
 
 namespace crubit {
 
+std::string InstantiationsAsJson(
+    const BindingsAndMetadata& bindings_and_metadata) {
+  llvm::json::Object obj;
+  for (const auto& entry : bindings_and_metadata.instantiations) {
+    obj[entry.first] = entry.second;
+  }
+  return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
+}
+
 absl::Status Main(std::vector<char*> args) {
-  using crubit::Cmdline;
-  using crubit::IR;
   CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
 
   if (cmdline.do_nothing()) {
@@ -50,8 +57,8 @@ absl::Status Main(std::vector<char*> args) {
   clang_args.insert(clang_args.end(), args.begin(), args.end());
 
   CRUBIT_ASSIGN_OR_RETURN(
-      crubit::BindingsAndMetadata bindings_and_metadata,
-      crubit::GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
+      BindingsAndMetadata bindings_and_metadata,
+      GenerateBindingsAndMetadata(cmdline, std::move(clang_args)));
 
   if (!cmdline.ir_out().empty()) {
     CRUBIT_RETURN_IF_ERROR(
@@ -64,9 +71,9 @@ absl::Status Main(std::vector<char*> args) {
       SetFileContents(cmdline.cc_out(), bindings_and_metadata.rs_api_impl));
 
   if (!cmdline.instantiations_out().empty()) {
-    CRUBIT_RETURN_IF_ERROR(SetFileContents(
-        cmdline.instantiations_out(),
-        crubit::InstantiationsAsJson(bindings_and_metadata.ir)));
+    CRUBIT_RETURN_IF_ERROR(
+        SetFileContents(cmdline.instantiations_out(),
+                        InstantiationsAsJson(bindings_and_metadata)));
   }
 
   if (!cmdline.namespaces_out().empty()) {

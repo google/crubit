@@ -77,6 +77,7 @@ cc_binary(
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
+        "@llvm-project//clang:format",
         "@llvm-project//llvm:Support",
     ],
 )
@@ -107,9 +108,12 @@ cc_test(
         ":collect_namespaces",
         ":generate_bindings_and_metadata",
         "//common:rust_allocator_shims",
+        "//common:status_macros",
         "//common:test_utils",
+        "@absl//absl/status",
+        "@absl//absl/status:statusor",
         "@absl//absl/strings",
-        "@com_google_googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main_no_heapcheck",
     ],
 )
 
@@ -265,6 +269,7 @@ cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
+    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":bazel_types",
         "//common:strong_int",

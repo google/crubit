@@ -139,6 +139,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
 
   std::string rs_name, cc_name;
   llvm::Optional<std::string> doc_comment;
+  bool is_explicit_class_template_instantiation_definition = false;
   bool is_implicit_class_template_specialization_decl = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
@@ -151,6 +152,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
           "yet.");
     }
 
+    is_explicit_class_template_instantiation_definition =
+        specialization_decl->getSpecializationKind() ==
+        clang::TSK_ExplicitInstantiationDefinition;
     is_implicit_class_template_specialization_decl =
         !specialization_decl->isExplicitInstantiationOrSpecialization();
     rs_name = ictx_.GetMangledName(specialization_decl);
@@ -234,6 +238,8 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_abstract = record_decl->isAbstract(),
       .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),
+      .is_explicit_class_template_instantiation_definition =
+          is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
       // We generate top level bindings for implicit class template
       // specializations.

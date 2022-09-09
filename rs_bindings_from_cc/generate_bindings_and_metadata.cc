@@ -39,13 +39,21 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                                            cmdline.rustfmt_exe_path(),
                                            cmdline.rustfmt_config_path()));
 
+  absl::flat_hash_map<std::string, std::string> instantiations;
+  for (const auto* record : ir.get_items_if<Record>()) {
+    if (record->is_explicit_class_template_instantiation_definition) {
+      instantiations.insert({record->cc_name, record->rs_name});
+    }
+  }
+
   auto top_level_namespaces = crubit::CollectNamespaces(ir);
 
   return BindingsAndMetadata{
       .ir = ir,
       .rs_api = bindings.rs_api,
       .rs_api_impl = bindings.rs_api_impl,
-      .namespaces = top_level_namespaces,
+      .namespaces = std::move(top_level_namespaces),
+      .instantiations = std::move(instantiations),
   };
 }
 

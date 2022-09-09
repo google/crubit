@@ -4,8 +4,14 @@
 
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
+#include <string>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
+#include "common/status_macros.h"
 #include "common/test_utils.h"
 #include "rs_bindings_from_cc/cmdline.h"
 #include "rs_bindings_from_cc/collect_namespaces.h"
@@ -14,6 +20,9 @@
 namespace crubit {
 namespace {
 
+using ::testing::ElementsAre;
+using ::testing::IsEmpty;
+using ::testing::Pair;
 using ::testing::StrEq;
 
 constexpr absl::string_view kDefaultRustfmtExePath =
@@ -68,33 +77,91 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
                                   /* virtual_headers_contents= */
                                   {{HeaderName("a.h"), "// empty header"}}));
 
-  ASSERT_THAT(InstantiationsAsJson(result.ir), StrEq("{}"));
+  ASSERT_THAT(result.instantiations, IsEmpty());
 }
 
-TEST(GenerateBindingsAndMetadataTest, InstantiationsJsonGenerated) {
+absl::StatusOr<absl::flat_hash_map<std::string, std::string>>
+GetInstantiationsFor(absl::string_view header_content,
+                     absl::string_view rust_source) {
+  std::string a_rs_path = WriteFileForCurrentTest("a.rs", rust_source);
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h"]}
   ])";
-  std::string a_rs_path =
-      WriteFileForCurrentTest("a.rs", "cc_template!(MyTemplate<bool>);");
-  ASSERT_OK_AND_ASSIGN(
+
+  CRUBIT_ASSIGN_OR_RETURN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
-          /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
+          /* public_headers= */
+          {"a.h"}, std::string(kTargetsAndHeaders),
           /* rust_sources= */ {a_rs_path}, "instantiations_out"));
 
-  ASSERT_OK_AND_ASSIGN(
+  CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
-      GenerateBindingsAndMetadata(cmdline, DefaultClangArgs(),
-                                  /* virtual_headers_contents= */
-                                  {{HeaderName("a.h"), "// empty header"}}));
+      GenerateBindingsAndMetadata(
+          cmdline, DefaultClangArgs(),
+          /* virtual_headers_contents= */
+          {{HeaderName("a.h"), std::string(header_content)}}));
 
-  // TODO(b/440066049): Actually populate the instantiations map once
-  // cl/430823388 is submitted.
-  ASSERT_THAT(InstantiationsAsJson(result.ir), StrEq("{}"));
+  return std::move(result.instantiations);
+}
+
+TEST(GenerateBindingsAndMetadataTest,
+     InstantiationsEmptyForTypedeffedTemplates) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations, GetInstantiationsFor(
+                                                R"cc(
+                                                  template <typename T>
+                                                  class MyTemplate {
+                                                    T t;
+                                                  };
+
+                                                  using MyFunnyTemplate = MyTemplate<bool>;
+                                                )cc",
+                                                ""));
+
+  ASSERT_THAT(instantiations, IsEmpty());
+}
+
+TEST(GenerateBindingsAndMetadataTest,
+     InstantiationsEmptyForExplicitInstantiationDeclarations) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations, GetInstantiationsFor(
+                                                R"cc(
+                                                  template <typename T>
+                                                  class MyTemplate {
+                                                    T t;
+                                                  };
+
+                                                  extern template class MyTemplate<bool>;
+                                                )cc",
+                                                ""));
+
+  ASSERT_THAT(instantiations, IsEmpty());
+}
+
+// This test only documents expected behavior, but don't take is as a
+// requirement that we put all explicit class template instantiation defitions
+// into the JSON file. Only the instantiations triggered by `cc_template!` are
+// required to appear there. For example we may decide in the future to not
+// import instantiations that are not requested from `cc_template!` and then
+// this test could be safely deleted.
+TEST(GenerateBindingsAndMetadataTest,
+     InstantiationsGeneratedForExplicitClassTemplateInstantiationDefinitions) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations, GetInstantiationsFor(
+                                                R"cc(
+                                                  template <typename T>
+                                                  class MyTemplate {
+                                                    T t;
+                                                  };
+
+                                                  template class MyTemplate<bool>;
+                                                )cc",
+                                                ""));
+
+  ASSERT_THAT(
+      instantiations,
+      ElementsAre(Pair("MyTemplate<bool>", "__CcTemplateInst10MyTemplateIbE")));
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {

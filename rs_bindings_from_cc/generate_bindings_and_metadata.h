@@ -25,6 +25,9 @@ struct BindingsAndMetadata {
   std::string rs_api_impl;
   // A hierarchy tree for all C++ namespaces used in the target.
   NamespacesHierarchy namespaces;
+  // C++ class templates explicitly instantiated in this TU and their Rust
+  // struct name.
+  absl::flat_hash_map<std::string, std::string> instantiations;
 };
 
 // Returns `BindingsAndMetadata` as requested by the user on the command line.

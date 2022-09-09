@@ -645,6 +645,11 @@ struct Record {
   // It is an anoymous record with a typedef name.
   bool is_anon_record_with_typedef = false;
 
+  // True when this record is created from an explicit class template
+  // instantiation definition (which is also what cc_template!{} macro results
+  // in).
+  bool is_explicit_class_template_instantiation_definition = false;
+
   std::vector<ItemId> child_item_ids;
   llvm::Optional<ItemId> enclosing_namespace_id;
 };
@@ -770,20 +775,10 @@ struct IR {
                             UnsupportedItem, Comment, Namespace>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
-  absl::flat_hash_map<std::string, std::string> instantiations;
 };
 
 inline std::string IrToJson(const IR& ir) {
   return std::string(llvm::formatv("{0:2}", ir.ToJson()));
-}
-
-// Instantiations from the `IR` serialized as JSON.
-inline std::string InstantiationsAsJson(const IR& ir) {
-  llvm::json::Object obj;
-  for (const auto& entry : ir.instantiations) {
-    obj[entry.first] = entry.second;
-  }
-  return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
 }
 
 inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
