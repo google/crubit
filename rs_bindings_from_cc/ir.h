@@ -29,6 +29,7 @@
 #include "rs_bindings_from_cc/bazel_types.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/Optional.h"
@@ -124,6 +125,12 @@ inline llvm::Optional<ItemId> GetEnclosingNamespaceId(const clang::Decl* decl) {
   auto enclosing_namespace =
       decl->getDeclContext()->getEnclosingNamespaceContext();
   if (enclosing_namespace->isTranslationUnit()) return llvm::None;
+
+  // Class template specializations are always emitted in the top-level
+  // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
+  if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
+    return llvm::None;
+
   auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
   return GenerateItemId(namespace_decl);
 }

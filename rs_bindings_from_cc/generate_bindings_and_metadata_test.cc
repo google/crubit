@@ -140,8 +140,8 @@ TEST(GenerateBindingsAndMetadataTest,
   ASSERT_THAT(instantiations, IsEmpty());
 }
 
-// This test only documents expected behavior, but don't take is as a
-// requirement that we put all explicit class template instantiation defitions
+// This test only documents *currently* expected behavior, but don't take is as
+// a requirement that we put all explicit class template instantiation defitions
 // into the JSON file. Only the instantiations triggered by `cc_template!` are
 // required to appear there. For example we may decide in the future to not
 // import instantiations that are not requested from `cc_template!` and then
@@ -156,6 +156,8 @@ TEST(GenerateBindingsAndMetadataTest,
                                                   };
 
                                                   template class MyTemplate<bool>;
+
+                                                  using MyTypeAlias = MyTemplate<bool>;
                                                 )cc",
                                                 ""));
 

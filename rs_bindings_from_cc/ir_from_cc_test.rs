@@ -156,7 +156,7 @@ fn test_explicit_class_template_instantiation_declaration_not_supported_yet() {
         ir,
         quote! { UnsupportedItem {
           name: "MyTemplate",
-          message: "Explicit class template instantiation declarations are not handled yet." ...
+          message: "Class templates are not supported yet" ...
         }}
     );
 }
@@ -1028,7 +1028,7 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
         quote! {
           Record {
             rs_name: "__CcTemplateInstN23test_namespace_bindings8MyStructIiEE", ...
-            cc_name: "MyStruct<int>", ...
+            cc_name: "test_namespace_bindings::MyStruct<int>", ...
             owning_target: BazelLabel("//test:testing_target"), ...
             doc_comment: Some("Doc comment for template specialization for T=int."), ...
             fields: [Field {
@@ -1041,11 +1041,11 @@ fn test_typedef_for_explicit_template_specialization() -> Result<()> {
                 access: Public,
                 offset: 0, ...
             }], ...
-            enclosing_namespace_id: Some(...), ...
+            enclosing_namespace_id: None, ...
           }
         }
     );
-    let record_id = retrieve_record(&ir, "MyStruct<int>").id;
+    let record_id = retrieve_record(&ir, "test_namespace_bindings::MyStruct<int>").id;
 
     // TODO(b/200067826) This assertion worked because the template specialization
     // was top level already.
@@ -1166,28 +1166,6 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     );
 
     Ok(())
-}
-
-#[test]
-fn test_explicit_class_template_instantiation_definitions_are_imported() {
-    let ir = ir_from_cc(
-        "
-        namespace my_namespace {
-          template <class T> struct MyTemplate{};
-          template struct MyTemplate<int>;
-        }
-      ",
-    )
-    .unwrap();
-    assert_ir_matches!(
-        ir,
-        quote! { Record {
-          rs_name: "__CcTemplateInstN12my_namespace10MyTemplateIiEE", ...
-          cc_name: "MyTemplate<int>", ...
-          owning_target: BazelLabel("//test:testing_target"), ...
-          enclosing_namespace_id: Some(...), ...
-        }}
-    );
 }
 
 #[test]
@@ -3557,6 +3535,8 @@ fn test_forward_declared_specialization_has_rs_name() {
           struct Param {};
 
           template<> struct MyTemplate<Param>;
+
+          using MyTypeAlias = MyTemplate<Param>;
         }"#,
     )
     .unwrap();
@@ -3566,7 +3546,7 @@ fn test_forward_declared_specialization_has_rs_name() {
         quote! {
             ...
             IncompleteRecord {
-              cc_name: "MyTemplate<test_namespace_bindings::Param>",
+              cc_name: "test_namespace_bindings::MyTemplate<test_namespace_bindings::Param>",
               rs_name: "__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE",
               ...
             } ...

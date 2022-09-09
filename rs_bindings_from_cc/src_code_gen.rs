@@ -7409,6 +7409,8 @@ mod tests {
               struct Param {};
 
               template<> struct MyTemplate<Param>;
+
+              using MyTypeAlias = MyTemplate<Param>;
             }"#,
         )?)?
         .rs_api;
@@ -7417,11 +7419,7 @@ mod tests {
             rs_api,
             quote! {
                 ...
-                pub mod test_namespace_bindings {
-                    ...
-                    forward_declare::forward_declare!(pub __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE = forward_declare::symbol!("__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE"));
-                    ...
-                }
+                forward_declare::forward_declare!(pub __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE = forward_declare::symbol!("__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_5ParamEEE"));
                 ...
             }
         );

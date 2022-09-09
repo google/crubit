@@ -51,7 +51,6 @@ struct MyStruct {
 
 // Explicit class template specialization with definition should not be imported
 // unless also instantiated.
-// TODO(b/245680028): `MyStruct<bool>` should not be imported.
 template <>
 struct MyStruct<bool> {};
 

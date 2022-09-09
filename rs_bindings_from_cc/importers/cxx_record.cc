@@ -37,33 +37,8 @@ std::string GetClassTemplateSpecializationCcName(
   // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.
   policy.AlwaysIncludeTypeForTemplateArgument = true;
 
-  // TODO(200067826): Remove special handling of epxlicit class template
-  // specializations.
-  // Currently we generate the bindings for explicit class template
-  // specializations inside the module (opposed to the bindings
-  // generated for implicit class template specializations, which are top
-  // level). This means that explicit class template specializations have a
-  // parent namespace, and we will obtain the namespace qualifier by invoking
-  // src_code_gen::generate_namespace_qualifier().
-  //
-  // In order not to end up with duplicated namespacd qualifiers, we make this
-  // function return the non-namespace qualified name of the decl.
-  //
-  // This logic should go away once we start generating top level bindings for
-  // explicit class template specializations.
-  if (specialization_decl->isExplicitInstantiationOrSpecialization()) {
-    llvm::SmallString<128> storage;
-    llvm::raw_svector_ostream out(storage);
-    out << specialization_decl->getName();
-    auto args_list =
-        specialization_decl->getTemplateInstantiationArgs().asArray();
-    auto param_list = specialization_decl->getDescribedTemplateParams();
-    clang::printTemplateArgumentList(out, args_list, policy, param_list);
-    return out.str().str();
-  } else {
-    return clang::QualType(specialization_decl->getTypeForDecl(), 0)
-        .getAsString(policy);
-  }
+  return clang::QualType(specialization_decl->getTypeForDecl(), 0)
+      .getAsString(policy);
 }
 
 AccessSpecifier TranslateAccessSpecifier(clang::AccessSpecifier access) {
@@ -140,23 +115,12 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   std::string rs_name, cc_name;
   llvm::Optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
-  bool is_implicit_class_template_specialization_decl = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
               record_decl)) {
-    if (specialization_decl->getSpecializationKind() ==
-        clang::TSK_ExplicitInstantiationDeclaration) {
-      return ictx_.ImportUnsupportedItem(
-          record_decl,
-          "Explicit class template instantiation declarations are not handled "
-          "yet.");
-    }
-
     is_explicit_class_template_instantiation_definition =
         specialization_decl->getSpecializationKind() ==
         clang::TSK_ExplicitInstantiationDefinition;
-    is_implicit_class_template_specialization_decl =
-        !specialization_decl->isExplicitInstantiationOrSpecialization();
     rs_name = ictx_.GetMangledName(specialization_decl);
     cc_name =
         GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl);
@@ -186,11 +150,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         .id = GenerateItemId(record_decl),
         .owning_target = ictx_.GetOwningTarget(record_decl),
         .record_type = *record_type,
-        // We generate top level bindings for implicit class template
-        // specializations.
-        .enclosing_namespace_id = is_implicit_class_template_specialization_decl
-                                      ? llvm::None
-                                      : GetEnclosingNamespaceId(record_decl)};
+        .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl)};
   }
 
   // At this point we know that the import of `record_decl` will succeed /
@@ -241,11 +201,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_explicit_class_template_instantiation_definition =
           is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
-      // We generate top level bindings for implicit class template
-      // specializations.
-      .enclosing_namespace_id = is_implicit_class_template_specialization_decl
-                                    ? llvm::None
-                                    : GetEnclosingNamespaceId(record_decl),
+      .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl),
   };
 }
 

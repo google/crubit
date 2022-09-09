@@ -325,6 +325,14 @@ static std::vector<clang::Decl*> GetCanonicalChildren(
       continue;
     }
 
+    // `CXXRecordDeclImporter::Import` supports class template specializations
+    // but such import should only be triggered when
+    // `Importer::ConvertTemplateSpecializationType` is called (which means that
+    // the specialization is actually used in an explicit instantiation via
+    // `cc_template!` macro, in a type alias, or as a parameter type of a
+    // function, etc.).
+    if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl)) continue;
+
     // In general we only import (and include as children) canonical decls.
     // Namespaces are exempted to ensure that we process every one of
     // (potential) multiple namespace blocks with the same name.
@@ -640,11 +648,8 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
   // side-effect and we rely on this here. `decl->getDefinition()` can
   // return nullptr before the call to sema and return its definition
   // afterwards.
-  if (!sema_.isCompleteType(specialization_decl->getLocation(),
-                            ctx_.getRecordType(specialization_decl))) {
-    return absl::InvalidArgumentError(absl::Substitute(
-        "'$0' template specialization is incomplete", type_string));
-  }
+  (void)sema_.isCompleteType(specialization_decl->getLocation(),
+                             ctx_.getRecordType(specialization_decl));
 
   // TODO(lukasza): Limit specialization depth? (e.g. using
   // `isSpecializationDepthGreaterThan` from earlier prototypes).
@@ -657,13 +662,9 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  if (IsFromCurrentTarget(specialization_decl) &&
-      !specialization_decl->isExplicitSpecialization()) {
-    // Store implicit `specialization_decl`s so that they will get included in
-    // IR::top_level_item_ids.
-    class_template_instantiations_for_current_target_.insert(
-        specialization_decl);
-  }
+  // Store `specialization_decl`s so that they will get included in
+  // IR::top_level_item_ids.
+  class_template_instantiations_for_current_target_.insert(specialization_decl);
 
   return ConvertTypeDecl(specialization_decl);
 }
