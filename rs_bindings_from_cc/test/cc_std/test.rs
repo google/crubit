@@ -6,9 +6,11 @@
 
 #[cfg(test)]
 mod tests {
+    use cc_std::*;
+
     #[test]
-    fn test_return_value() {
-        use cc_std::*;
+    fn test_ctime() {
+        // Tests of items from the `<ctime>` header.
         ctor::emplace! {
             let _t = ctor::ctor!(tm {
                 tm_gmtoff: 0,
@@ -24,5 +26,18 @@ mod tests {
                 tm_zone: "zone".as_ptr(),
             });
         }
+    }
+
+    #[test]
+    fn test_limits() {
+        // Tests of items from the `<limits>` header.
+        // https://en.cppreference.com/w/cpp/types/numeric_limits/float_round_style:
+        //
+        // TODO(b/244601795): Stop mentioning the `inline` `__u` namespace below
+        assert_eq!(0, std::__u::float_round_style::round_toward_zero.into());
+        assert_eq!(1, std::__u::float_round_style::round_to_nearest.into());
+        assert_eq!(2, std::__u::float_round_style::round_toward_infinity.into());
+        assert_eq!(3, std::__u::float_round_style::round_toward_neg_infinity.into());
+        assert_eq!(-1, std::__u::float_round_style::round_indeterminate.into());
     }
 }

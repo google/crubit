@@ -460,7 +460,41 @@ rust_test(
     ],
 )
 
-LIBCXX_HEADERS = ["ctime"]
+LIBCXX_HEADERS = [
+    "atomic",
+    "cassert",
+    "cctype",
+    "cerrno",
+    "cfenv",
+    "cfloat",
+    "chrono",
+    "cinttypes",
+    "climits",
+    "cmath",
+    "condition_variable",
+    "csetjmp",
+    "csignal",
+    "cstdarg",
+    "cstddef",
+    "cstdint",
+    "cstdio",
+    "cstdlib",
+    "ctime",
+    "cuchar",
+    "cwchar",
+    "cwctype",
+    "initializer_list",
+    "limits",
+    "memory",
+    "mutex",
+    "new",
+    "numeric",
+    "ratio",
+    "scoped_allocator",
+    "string_view",
+    "tuple",
+    "type_traits",
+]
 
 LIBC_HEADERS = []
 
