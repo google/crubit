@@ -110,6 +110,9 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         public_hdrs = [proto_header]
         all_standalone_hdrs = public_hdrs
         extra_rule_specific_deps = [ctx.rule.attr._cc_lib]
+    elif ctx.rule.kind == "cc_embed_data":
+        public_hdrs = target[CcInfo].compilation_context.direct_public_headers
+        all_standalone_hdrs = target[CcInfo].compilation_context.direct_headers
 
     if not public_hdrs:
         # This target doesn't have public headers, so there are no bindings to generate. However we
@@ -125,7 +128,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         all_standalone_hdrs = public_hdrs
         extra_cc_compilation_action_inputs = public_hdrs
 
-    all_deps = ctx.rule.attr.deps + extra_rule_specific_deps + [
+    all_deps = getattr(ctx.rule.attr, "deps", []) + extra_rule_specific_deps + [
         # TODO(b/217667751): This contains a huge list of headers_and_targets; pass them as a file
         # instead.
         ctx.attr._std,
