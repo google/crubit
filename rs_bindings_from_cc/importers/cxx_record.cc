@@ -4,6 +4,7 @@
 
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
+#include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/log/log.h"
@@ -16,23 +17,42 @@
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/ErrorHandling.h"
-
 namespace crubit {
 
 namespace {
 
+// Types which are overridden to pretend to be final.
+//
+// WARNING: marking a non-final type as final is very dangerous!
+// See docs/unpin.md
+//
+// In particular, only include a type in `FinalOverrides` if the type has no
+// usable tail padding -- for example, if
+/// `std::has_unique_object_representations_v<T>`, or 3if the type itself is
+// POD for the purpose of layout (in the Itanium ABI).
+//
+// This should be enforced by asserting in `override_final_test.cc` that it
+// has no tail padding.
+const absl::flat_hash_set<absl::string_view>& FinalOverrides() {
+  static auto& final_overrides = *new absl::flat_hash_set<absl::string_view>{
+      // string_view only has a pointer and a size_t, which are both the same
+      // size, and so has no usable tail padding.
+      "std::string_view",
+  };
+  return final_overrides;
+}
+
 std::string GetClassTemplateSpecializationCcName(
     const clang::ASTContext& ast_context,
-    const clang::ClassTemplateSpecializationDecl* specialization_decl) {
+    const clang::ClassTemplateSpecializationDecl* specialization_decl,
+    bool use_preferred_names) {
   clang::PrintingPolicy policy(ast_context.getLangOpts());
   policy.IncludeTagDefinition = false;
   // Canonicalize types -- in particular, the template parameter types must be
   // desugared out of an `ElaboratedType` so that their namespaces are written
   // down.
   policy.PrintCanonicalTypes = true;
-  // Return `basic_string_view<char16_t>` instead of 'u16string_view' despite
-  // `_LIBCPP_PREFERRED_NAME(u16string_view)`.  See also b/244350186.
-  policy.UsePreferredNames = false;
+  policy.UsePreferredNames = use_preferred_names;
   // Use type suffix (e.g. `123u` rather than just `123`) to avoid the
   // `-Wimplicitly-unsigned-literal` warning.  See also b/244616557.
   policy.AlwaysIncludeTypeForTemplateArgument = true;
@@ -112,7 +132,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         record_decl, std::string(record_type.status().message()));
   }
 
-  std::string rs_name, cc_name;
+  std::string rs_name, cc_name, preferred_cc_name;
   llvm::Optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
   if (auto* specialization_decl =
@@ -122,8 +142,13 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         specialization_decl->getSpecializationKind() ==
         clang::TSK_ExplicitInstantiationDefinition;
     rs_name = ictx_.GetMangledName(specialization_decl);
-    cc_name =
-        GetClassTemplateSpecializationCcName(ictx_.ctx_, specialization_decl);
+    // use_preferred_names = false so that this returns e.g.
+    // `basic_string_view<char16_t>` instead of 'u16string_view' despite
+    // `_LIBCPP_PREFERRED_NAME(u16string_view)`.  See also b/244350186.
+    cc_name = GetClassTemplateSpecializationCcName(
+        ictx_.ctx_, specialization_decl, /*use_preferred_names=*/false);
+    preferred_cc_name = GetClassTemplateSpecializationCcName(
+        ictx_.ctx_, specialization_decl, /*use_preferred_names=*/true);
     doc_comment = ictx_.GetComment(specialization_decl);
     if (!doc_comment.has_value()) {
       doc_comment =
@@ -174,6 +199,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
   }
 
+  bool is_effectively_final = record_decl->isEffectivelyFinal() ||
+                              record_decl->isUnion() ||
+                              FinalOverrides().contains(preferred_cc_name);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
   return Record{
       .rs_name = std::move(rs_name),
@@ -193,8 +221,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .move_constructor = GetMoveCtorSpecialMemberFunc(*record_decl),
       .destructor = GetDestructorSpecialMemberFunc(*record_decl),
       .is_trivial_abi = record_decl->canPassInRegisters(),
-      .is_inheritable =
-          !record_decl->isEffectivelyFinal() && !record_decl->isUnion(),
+      .is_inheritable = !is_effectively_final,
       .is_abstract = record_decl->isAbstract(),
       .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),

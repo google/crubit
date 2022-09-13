@@ -17,10 +17,10 @@ cc_library(
     srcs = ["cxx_record.cc"],
     hdrs = ["cxx_record.h"],
     deps = [
+        "@absl//absl/container:flat_hash_set",
         "@absl//absl/log",
         "@absl//absl/log:check",
         "@absl//absl/log:die_if_null",
-        "@absl//absl/strings",
         "//rs_bindings_from_cc:ast_convert",
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
@@ -93,4 +93,10 @@ cc_library(
         "//rs_bindings_from_cc:decl_importer",
         "@llvm-project//clang:ast",
     ],
+)
+
+cc_test(
+    name = "override_final_test",
+    srcs = ["override_final_test.cc"],
+    deps = ["@com_google_googletest//:gtest_main"],
 )
