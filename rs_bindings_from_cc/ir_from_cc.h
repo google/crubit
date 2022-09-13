@@ -16,6 +16,11 @@
 
 namespace crubit {
 
+// Name of the namespace in which we generate code that triggers class template
+// instantiations.
+static constexpr absl::string_view kInstantiationsNamespaceName =
+    "__cc_template_instantiations";
+
 // Parses C++ source code into IR.
 //
 // Parameters:

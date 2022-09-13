@@ -94,6 +94,8 @@ cc_library(
         ":ir_from_cc",
         ":src_code_gen",
         "//common:status_macros",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/container:flat_hash_set",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
     ],

@@ -4,8 +4,12 @@
 
 #include "rs_bindings_from_cc/generate_bindings_and_metadata.h"
 
+#include <optional>
 #include <string>
+#include <utility>
 
+#include "absl/container/flat_hash_map.h"
+#include "absl/container/flat_hash_set.h"
 #include "absl/strings/string_view.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/collect_instantiations.h"
@@ -15,6 +19,40 @@
 #include "rs_bindings_from_cc/src_code_gen.h"
 
 namespace crubit {
+
+std::optional<const Namespace*> FindNamespace(const IR& ir,
+                                              absl::string_view name) {
+  for (const auto* ns : ir.get_items_if<Namespace>()) {
+    if (ns->name.Ident() == kInstantiationsNamespaceName) {
+      return ns;
+    }
+  }
+  return std::nullopt;
+}
+
+std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
+                                                         ItemId namespace_id) {
+  absl::flat_hash_set<ItemId> record_ids;
+  for (const auto* type_alias : ir.get_items_if<TypeAlias>()) {
+    if (type_alias->enclosing_namespace_id.has_value() &&
+        type_alias->enclosing_namespace_id == namespace_id) {
+      const MappedType* mapped_type = &type_alias->underlying_type;
+      CHECK(mapped_type->cc_type.decl_id.has_value());
+      CHECK(mapped_type->rs_type.decl_id.has_value());
+      CHECK(mapped_type->cc_type.decl_id.value() ==
+            mapped_type->rs_type.decl_id.value());
+      record_ids.insert(mapped_type->rs_type.decl_id.value());
+    }
+  }
+
+  std::vector<const Record*> result;
+  for (const auto* record : ir.get_items_if<Record>()) {
+    if (record_ids.find(record->id) != record_ids.end()) {
+      result.push_back(record);
+    }
+  }
+  return result;
+}
 
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     Cmdline& cmdline, std::vector<std::string> clang_args,
@@ -40,8 +78,12 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                                            cmdline.rustfmt_config_path()));
 
   absl::flat_hash_map<std::string, std::string> instantiations;
-  for (const auto* record : ir.get_items_if<Record>()) {
-    if (record->is_explicit_class_template_instantiation_definition) {
+  std::optional<const Namespace*> ns =
+      FindNamespace(ir, kInstantiationsNamespaceName);
+  if (ns.has_value()) {
+    std::vector<const Record*> records =
+        FindInstantiationsInNamespace(ir, ns.value()->id);
+    for (const auto* record : records) {
       instantiations.insert({record->cc_name, record->rs_name});
     }
   }

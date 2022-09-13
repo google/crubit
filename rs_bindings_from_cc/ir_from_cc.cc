@@ -13,6 +13,7 @@
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "absl/types/span.h"
@@ -38,8 +39,6 @@ absl::StatusOr<IR> IrFromCc(
     absl::Span<const absl::string_view> args,
     absl::Span<const std::string> extra_instantiations) {
   // Caller should verify that the inputs are not empty.
-  // TODO(b/440066049): Generate a source file for requested instantiations once
-  // cl/430823388 is submitted.
   CHECK(!extra_source_code.empty() || !public_headers.empty() ||
         !extra_instantiations.empty());
   CHECK(!extra_source_code.empty() || !headers_to_targets.empty() ||
@@ -66,7 +65,19 @@ absl::StatusOr<IR> IrFromCc(
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
                               header_name.IncludePath());
   }
-
+  if (!extra_instantiations.empty()) {
+    absl::SubstituteAndAppend(&virtual_input_file_content, "namespace $0 {\n",
+                              kInstantiationsNamespaceName);
+    int counter = 0;
+    for (const std::string& extra_instantiation : extra_instantiations) {
+      absl::SubstituteAndAppend(&virtual_input_file_content,
+                                "using __cc_template_instantiation_$0 = $1;\n",
+                                counter++, extra_instantiation);
+    }
+    absl::SubstituteAndAppend(&virtual_input_file_content,
+                              "}  // namespace $0\n",
+                              kInstantiationsNamespaceName);
+  }
   std::vector<std::string> args_as_strings{
       // TODO(b/245621427): Remove -std=gnu++14
       "-std=gnu++14",

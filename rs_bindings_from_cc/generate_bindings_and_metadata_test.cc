@@ -109,61 +109,95 @@ GetInstantiationsFor(absl::string_view header_content,
 }
 
 TEST(GenerateBindingsAndMetadataTest,
-     InstantiationsEmptyForTypedeffedTemplates) {
-  ASSERT_OK_AND_ASSIGN(auto instantiations, GetInstantiationsFor(
-                                                R"cc(
-                                                  template <typename T>
-                                                  class MyTemplate {
-                                                    T t;
-                                                  };
+     RegularTypeAliasNotPresentInInstantiations) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations,
+                       GetInstantiationsFor(
+                           R"cc(
+                             template <typename T>
+                             class MyTemplate {};
 
-                                                  using MyFunnyTemplate = MyTemplate<bool>;
-                                                )cc",
-                                                ""));
+                             using MyFunnyTemplate = MyTemplate<bool>;
 
-  ASSERT_THAT(instantiations, IsEmpty());
+                             template <typename T>
+                             class ExpectedTemplate {};
+                           )cc",
+                           "cc_template!{ExpectedTemplate<bool>}"));
+
+  ASSERT_THAT(instantiations,
+              ElementsAre(Pair("ExpectedTemplate<bool>",
+                               "__CcTemplateInst16ExpectedTemplateIbE")));
 }
 
 TEST(GenerateBindingsAndMetadataTest,
-     InstantiationsEmptyForExplicitInstantiationDeclarations) {
-  ASSERT_OK_AND_ASSIGN(auto instantiations, GetInstantiationsFor(
-                                                R"cc(
-                                                  template <typename T>
-                                                  class MyTemplate {
-                                                    T t;
-                                                  };
+     ExplicitClassTemplateInstantiationDeclarationsNotPresentInInstantiations) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations,
+                       GetInstantiationsFor(
+                           R"cc(
+                             template <typename T>
+                             class MyTemplate {};
 
-                                                  extern template class MyTemplate<bool>;
-                                                )cc",
-                                                ""));
+                             extern template class MyTemplate<bool>;
 
-  ASSERT_THAT(instantiations, IsEmpty());
+                             template <typename T>
+                             class ExpectedTemplate {};
+                           )cc",
+                           "cc_template!{ExpectedTemplate<bool>}"));
+
+  ASSERT_THAT(instantiations,
+              ElementsAre(Pair("ExpectedTemplate<bool>",
+                               "__CcTemplateInst16ExpectedTemplateIbE")));
 }
 
-// This test only documents *currently* expected behavior, but don't take is as
-// a requirement that we put all explicit class template instantiation defitions
-// into the JSON file. Only the instantiations triggered by `cc_template!` are
-// required to appear there. For example we may decide in the future to not
-// import instantiations that are not requested from `cc_template!` and then
-// this test could be safely deleted.
 TEST(GenerateBindingsAndMetadataTest,
-     InstantiationsGeneratedForExplicitClassTemplateInstantiationDefinitions) {
-  ASSERT_OK_AND_ASSIGN(auto instantiations, GetInstantiationsFor(
-                                                R"cc(
-                                                  template <typename T>
-                                                  class MyTemplate {
-                                                    T t;
-                                                  };
+     ExplicitClassTemplateInstantiationDefinitionsNotPresentInInstantiations) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations,
+                       GetInstantiationsFor(
+                           R"cc(
+                             template <typename T>
+                             class MyTemplate {};
 
-                                                  template class MyTemplate<bool>;
+                             template class MyTemplate<bool>;
 
-                                                  using MyTypeAlias = MyTemplate<bool>;
-                                                )cc",
-                                                ""));
+                             template <typename T>
+                             class ExpectedTemplate {};
+                           )cc",
+                           "cc_template!{ExpectedTemplate<bool>}"));
 
-  ASSERT_THAT(
-      instantiations,
-      ElementsAre(Pair("MyTemplate<bool>", "__CcTemplateInst10MyTemplateIbE")));
+  ASSERT_THAT(instantiations,
+              ElementsAre(Pair("ExpectedTemplate<bool>",
+                               "__CcTemplateInst16ExpectedTemplateIbE")));
+}
+
+TEST(GenerateBindingsAndMetadataTest,
+     RegularRecordsNotPresentInInstantiations) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations,
+                       GetInstantiationsFor(
+                           R"cc(
+                             struct MyStruct {};
+
+                             template <typename T>
+                             class ExpectedTemplate {};
+                           )cc",
+                           "cc_template!{ExpectedTemplate<bool>}"));
+
+  ASSERT_THAT(instantiations,
+              ElementsAre(Pair("ExpectedTemplate<bool>",
+                               "__CcTemplateInst16ExpectedTemplateIbE")));
+}
+
+TEST(GenerateBindingsAndMetadataTest,
+     InstantiationsAreGeneratedForCcTemplateMacro) {
+  ASSERT_OK_AND_ASSIGN(auto instantiations,
+                       GetInstantiationsFor(
+                           R"cc(
+                             template <typename T>
+                             class ExpectedTemplate {};
+                           )cc",
+                           "cc_template!{ExpectedTemplate<bool>}"));
+
+  ASSERT_THAT(instantiations,
+              ElementsAre(Pair("ExpectedTemplate<bool>",
+                               "__CcTemplateInst16ExpectedTemplateIbE")));
 }
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
