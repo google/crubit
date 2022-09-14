@@ -7,7 +7,9 @@
 
 #pragma clang lifetime_elision
 
-struct SomeStruct {};
+struct SomeStruct {
+  typedef int nested_type;
+};
 typedef struct SomeStruct SomeStruct;
 
 typedef struct {
@@ -18,5 +20,7 @@ typedef union SomeUnion SomeUnion;
 
 typedef union {
 } SomeOtherUnion;
+
+SomeStruct::nested_type FunctionUsingNestedType();
 
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_

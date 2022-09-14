@@ -703,6 +703,8 @@ struct TypeAlias {
   BazelLabel owning_target;
   llvm::Optional<std::string> doc_comment;
   MappedType underlying_type;
+  SourceLoc source_loc;
+  llvm::Optional<ItemId> enclosing_record_id;
   llvm::Optional<ItemId> enclosing_namespace_id;
 };
 

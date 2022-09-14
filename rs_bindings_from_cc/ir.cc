@@ -458,6 +458,8 @@ llvm::json::Value TypeAlias::ToJson() const {
       {"owning_target", owning_target},
       {"doc_comment", doc_comment},
       {"underlying_type", underlying_type},
+      {"source_loc", source_loc},
+      {"enclosing_record_id", enclosing_record_id},
       {"enclosing_namespace_id", enclosing_namespace_id},
   };
 

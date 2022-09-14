@@ -326,6 +326,16 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
     })
 }
 
+fn make_unsupported_nested_type_alias(type_alias: &TypeAlias) -> Result<UnsupportedItem> {
+    Ok(UnsupportedItem {
+        // TODO(jeanpierreda): It would be nice to include the enclosing record name here too.
+        name: type_alias.identifier.identifier.to_string(),
+        message: "Typedefs nested in classes are not supported yet".to_string(),
+        source_loc: type_alias.source_loc.clone(),
+        id: type_alias.id,
+    })
+}
+
 /// The name of a one-function trait, with extra entries for
 /// specially-understood traits and families of traits.
 enum TraitName {
@@ -2278,6 +2288,12 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
                 && !ir.is_stdlib_target(&type_alias.owning_target)
             {
                 GeneratedItem::default()
+            } else if type_alias.enclosing_record_id.is_some() {
+                // TODO(b/200067824): support nested type aliases.
+                GeneratedItem {
+                    item: generate_unsupported(&make_unsupported_nested_type_alias(type_alias)?)?,
+                    ..Default::default()
+                }
             } else {
                 GeneratedItem { item: generate_type_alias(db, type_alias)?, ..Default::default() }
             }
@@ -2915,14 +2931,25 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
-                Item::TypeAlias(type_alias) => RsTypeKind::TypeAlias {
-                    type_alias: type_alias.clone(),
-                    namespace_qualifier: Rc::new(NamespaceQualifier::new(type_alias.id, &ir)?),
-                    crate_ident: rs_imported_crate_name(&type_alias.owning_target, &ir),
-                    underlying_type: Rc::new(
-                        db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
-                    ),
-                },
+                Item::TypeAlias(type_alias) => {
+                    // TODO(b/200067824): support nested type aliases.
+                    if type_alias.enclosing_record_id.is_some() {
+                        // Until this is supported, we import this as the underlying type.
+                        db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?
+                    } else {
+                        RsTypeKind::TypeAlias {
+                            type_alias: type_alias.clone(),
+                            namespace_qualifier: Rc::new(NamespaceQualifier::new(
+                                type_alias.id,
+                                &ir,
+                            )?),
+                            crate_ident: rs_imported_crate_name(&type_alias.owning_target, &ir),
+                            underlying_type: Rc::new(
+                                db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
+                            ),
+                        }
+                    }
+                }
                 other_item => bail!("Item does not define a type: {:?}", other_item),
             }
         }
@@ -2978,10 +3005,15 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
 }
 
 fn cc_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
+    let tagless = cc_tagless_type_name_for_record(record, ir)?;
+    let tag_kind = cc_tag_kind(record);
+    Ok(quote! { #tag_kind #tagless })
+}
+
+fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
     let ident = format_cc_ident(&record.cc_name);
     let namespace_qualifier = NamespaceQualifier::new(record.id, ir)?.format_for_cc();
-    let tag_kind = cc_tag_kind(record);
-    Ok(quote! { #tag_kind #namespace_qualifier #ident })
+    Ok(quote! { #namespace_qualifier #ident })
 }
 
 fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
@@ -2996,8 +3028,15 @@ fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
         Item::Record(record) => cc_type_name_for_record(record, ir),
         Item::TypeAlias(type_alias) => {
             let ident = format_cc_ident(&type_alias.identifier.identifier);
-            let namespace_qualifier = NamespaceQualifier::new(type_alias.id, ir)?.format_for_cc();
-            Ok(quote! { #namespace_qualifier #ident })
+            if let Some(record_id) = type_alias.enclosing_record_id {
+                let parent =
+                    cc_tagless_type_name_for_record(ir.find_decl::<Rc<Record>>(record_id)?, ir)?;
+                Ok(quote! { #parent :: #ident })
+            } else {
+                let namespace_qualifier =
+                    NamespaceQualifier::new(type_alias.id, ir)?.format_for_cc();
+                Ok(quote! { #namespace_qualifier #ident })
+            }
         }
         _ => bail!("Item does not define a type: {:?}", item),
     }
@@ -3863,6 +3902,29 @@ mod tests {
             quote! { assert!(::std::mem::align_of::<crate::SomeAnonStruct>() == 16); }
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_typedef_member() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"
+            struct SomeStruct final {
+              typedef int Type;
+            };
+            inline SomeStruct::Type Function() {return 0;}
+        "#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        // TODO(b/200067824): This should use the alias's real name in Rust, as well.
+        assert_rs_matches!(rs_api, quote! { pub fn Function() -> i32 { ... } },);
+
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" SomeStruct::Type __rust_thunk___Z8Functionv(){ return Function(); }
+            },
+        );
         Ok(())
     }
 

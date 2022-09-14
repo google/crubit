@@ -7,20 +7,20 @@
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
+#include "clang/AST/Decl.h"
 
 namespace crubit {
 
 std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     clang::TypedefNameDecl* typedef_name_decl) {
   const clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
+  llvm::Optional<ItemId> enclosing_record_id = llvm::None;
   if (decl_context) {
     if (decl_context->isFunctionOrMethod()) {
       return std::nullopt;
     }
-    if (decl_context->isRecord()) {
-      return ictx_.ImportUnsupportedItem(
-          typedef_name_decl,
-          "Typedefs nested in classes are not supported yet");
+    if (auto* record_decl = llvm::dyn_cast<clang::RecordDecl>(decl_context)) {
+      enclosing_record_id = GenerateItemId(record_decl);
     }
   }
 
@@ -53,7 +53,11 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
         .owning_target = ictx_.GetOwningTarget(typedef_name_decl),
         .doc_comment = ictx_.GetComment(typedef_name_decl),
         .underlying_type = *underlying_type,
-        .enclosing_namespace_id = GetEnclosingNamespaceId(typedef_name_decl)};
+        .source_loc =
+            ictx_.ConvertSourceLocation(typedef_name_decl->getBeginLoc()),
+        .enclosing_record_id = enclosing_record_id,
+        .enclosing_namespace_id = GetEnclosingNamespaceId(typedef_name_decl),
+    };
   } else if (typedef_name_decl->getAnonDeclWithTypedefName()) {
     auto* type = typedef_name_decl->getUnderlyingType().getTypePtrOrNull();
     if (type && type->getAsRecordDecl()) {

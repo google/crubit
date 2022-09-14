@@ -487,6 +487,8 @@ pub struct TypeAlias {
     pub owning_target: BazelLabel,
     pub doc_comment: Option<String>,
     pub underlying_type: MappedType,
+    pub source_loc: SourceLoc,
+    pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
 }
 
@@ -519,6 +521,7 @@ pub struct Namespace {
     pub owning_target: BazelLabel,
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
+    pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
     pub is_inline: bool,
 }
@@ -794,10 +797,9 @@ impl IR {
     /// `self`, returns an error.
     pub fn record_for_member_func<'a>(&self, func: &'a Func) -> Result<Option<&Rc<Record>>> {
         if let Some(meta) = func.member_func_metadata.as_ref() {
-            Ok(Some(
-                self.find_decl(meta.record_id)
-                    .with_context(|| format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func))?,
-            ))
+            Ok(Some(self.find_decl(meta.record_id).with_context(|| {
+                format!("Failed to retrieve Record for MemberFuncMetadata of {:?}", func)
+            })?))
         } else {
             Ok(None)
         }

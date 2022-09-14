@@ -708,22 +708,8 @@ fn test_type_conversion() -> Result<()> {
     let type_mapping: HashMap<_, _> = fields
         .map(|f| {
             (
-                f.type_
-                    .as_ref()
-                    .unwrap()
-                    .cc_type
-                    .name
-                    .as_ref()
-                    .unwrap()
-                    .as_str(),
-                f.type_
-                    .as_ref()
-                    .unwrap()
-                    .rs_type
-                    .name
-                    .as_ref()
-                    .unwrap()
-                    .as_str(),
+                f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_str(),
+                f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_str(),
             )
         })
         .collect();
@@ -824,6 +810,8 @@ fn test_typedef() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
             underlying_type: #int,
+            source_loc: SourceLoc {...},
+            enclosing_record_id: None,
             enclosing_namespace_id: None,
           }
         }
@@ -837,6 +825,8 @@ fn test_typedef() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             underlying_type: #int,
+            source_loc: SourceLoc {...},
+            enclosing_record_id: None,
             enclosing_namespace_id: None,
           }
         }
@@ -2093,18 +2083,6 @@ fn test_ignore_union_typedef_from_decl_context_redecl_from_multiple_targets() {
 }
 
 #[test]
-fn test_typedef_nested_in_record_not_supported() {
-    let ir = ir_from_cc("struct S { typedef int MyTypedefDecl; };").unwrap();
-    assert_strings_contain(
-        ir.unsupported_items()
-            .map(|i| i.name.as_str())
-            .collect_vec()
-            .as_slice(),
-        "S::MyTypedefDecl",
-    );
-}
-
-#[test]
 fn test_records_nested_in_records_not_supported_yet() {
     let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
     assert_ir_matches!(
@@ -2681,10 +2659,7 @@ fn test_unsupported_items_are_emitted() -> Result<()> {
     // once we start importing nested structs.
     let ir = ir_from_cc("struct X { struct Y {}; };")?;
     assert_strings_contain(
-        ir.unsupported_items()
-            .map(|i| i.name.as_str())
-            .collect_vec()
-            .as_slice(),
+        ir.unsupported_items().map(|i| i.name.as_str()).collect_vec().as_slice(),
         "X::Y",
     );
     Ok(())

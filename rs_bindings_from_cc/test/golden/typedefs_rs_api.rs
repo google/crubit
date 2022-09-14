@@ -113,6 +113,10 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::SomeStruct>> for Some
 }
 
 // rs_bindings_from_cc/test/golden/typedefs.h;l=11
+// Error while generating bindings for item 'nested_type':
+// Typedefs nested in classes are not supported yet
+
+// rs_bindings_from_cc/test/golden/typedefs.h;l=13
 // Error while generating bindings for item 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.
 
@@ -255,15 +259,15 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::SomeUnion>> for SomeUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=16
+// rs_bindings_from_cc/test/golden/typedefs.h;l=18
 // Error while generating bindings for item 'SomeUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=16
+// rs_bindings_from_cc/test/golden/typedefs.h;l=18
 // Error while generating bindings for item 'SomeUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=17
+// rs_bindings_from_cc/test/golden/typedefs.h;l=19
 // Error while generating bindings for item 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
 
@@ -296,13 +300,18 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::SomeOtherUnion>> for SomeOtherU
     }
 }
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=19
+// rs_bindings_from_cc/test/golden/typedefs.h;l=21
 // Error while generating bindings for item 'SomeOtherUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=19
+// rs_bindings_from_cc/test/golden/typedefs.h;l=21
 // Error while generating bindings for item 'SomeOtherUnion::operator=':
 // operator= for Unpin types is not yet supported.
+
+#[inline(always)]
+pub fn FunctionUsingNestedType() -> i32 {
+    unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }
+}
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPEDEFS_H_
 
@@ -362,6 +371,8 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         );
+        #[link_name = "_Z23FunctionUsingNestedTypev"]
+        pub(crate) fn __rust_thunk___Z23FunctionUsingNestedTypev() -> i32;
     }
 }
 

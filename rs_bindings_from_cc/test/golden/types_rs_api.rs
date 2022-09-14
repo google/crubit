@@ -186,20 +186,16 @@ forward_declare::unsafe_define!(
 // Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
-// Error while generating bindings for item 'std::integral_constant<bool, false>::value_type':
+// Error while generating bindings for item 'value_type':
 // Typedefs nested in classes are not supported yet
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
-// Error while generating bindings for item 'std::integral_constant<bool, false>::type':
+// Error while generating bindings for item 'type':
 // Typedefs nested in classes are not supported yet
 
 // <unknown location>
-// Error while generating bindings for item 'std::integral_constant<bool, false>::operator bool':
-// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, false>::value_type': No generated bindings found for 'value_type'
-
-// <unknown location>
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
-// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, false>::value_type': No generated bindings found for 'value_type'
+// Bindings for this kind of operator (operator () with 1 parameter(s)) are not supported
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -232,20 +228,16 @@ forward_declare::unsafe_define!(
 // Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
-// Error while generating bindings for item 'std::integral_constant<bool, true>::value_type':
+// Error while generating bindings for item 'value_type':
 // Typedefs nested in classes are not supported yet
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
-// Error while generating bindings for item 'std::integral_constant<bool, true>::type':
+// Error while generating bindings for item 'type':
 // Typedefs nested in classes are not supported yet
 
 // <unknown location>
-// Error while generating bindings for item 'std::integral_constant<bool, true>::operator bool':
-// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, true>::value_type': No generated bindings found for 'value_type'
-
-// <unknown location>
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
-// Return type is not supported: Unsupported type 'std::integral_constant<_Bool, true>::value_type': No generated bindings found for 'value_type'
+// Bindings for this kind of operator (operator () with 1 parameter(s)) are not supported
 
 mod detail {
     #[allow(unused_imports)]
