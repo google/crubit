@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <string_view>
+#include <type_traits>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -11,10 +12,10 @@ namespace {
 using testing::Ne;
 
 template <typename T>
-class TailPaddingTest : public testing::Test {};
-TYPED_TEST_SUITE_P(TailPaddingTest);
+class OverrideFinalTest : public testing::Test {};
+TYPED_TEST_SUITE_P(OverrideFinalTest);
 
-TYPED_TEST_P(TailPaddingTest, NoTailPaddingInBase) {
+TYPED_TEST_P(OverrideFinalTest, NoTailPaddingInBase) {
   struct Derived : public TypeParam {
     char extra;
   };
@@ -22,8 +23,17 @@ TYPED_TEST_P(TailPaddingTest, NoTailPaddingInBase) {
   EXPECT_THAT(sizeof(Derived), Ne(sizeof(TypeParam)));
 }
 
-REGISTER_TYPED_TEST_SUITE_P(TailPaddingTest, NoTailPaddingInBase);
-INSTANTIATE_TYPED_TEST_SUITE_P(BuiltinTypes, TailPaddingTest,
+TYPED_TEST_P(OverrideFinalTest, NotPolymorphic) {
+  EXPECT_FALSE(std::is_polymorphic_v<TypeParam>);
+}
+
+TYPED_TEST_P(OverrideFinalTest, TriviallyDestructible) {
+  EXPECT_TRUE(std::is_trivially_destructible_v<TypeParam>);
+}
+
+REGISTER_TYPED_TEST_SUITE_P(OverrideFinalTest, NoTailPaddingInBase,
+                            NotPolymorphic, TriviallyDestructible);
+INSTANTIATE_TYPED_TEST_SUITE_P(BuiltinTypes, OverrideFinalTest,
                                ::testing::Types<std::string_view>);
 
 }  // namespace
