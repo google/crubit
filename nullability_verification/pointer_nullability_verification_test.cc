@@ -40,14 +40,12 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
               })
               .withPostVisitCFG(
                   [&Diagnostics, &Diagnoser](
-                      ASTContext &Ctx, const CFGElement &Elem,
+                      ASTContext &Ctx, const CFGElement &Elt,
                       const TypeErasedDataflowAnalysisState &State) {
-                    if (llvm::Optional<CFGStmt> Stmt = Elem.getAs<CFGStmt>()) {
-                      auto StmtDiagnostics =
-                          Diagnoser.diagnose(Stmt->getStmt(), Ctx, State.Env);
-                      if (StmtDiagnostics.has_value()) {
-                        Diagnostics.push_back(StmtDiagnostics.value());
-                      }
+                    auto EltDiagnostics =
+                        Diagnoser.diagnose(&Elt, Ctx, State.Env);
+                    if (EltDiagnostics.has_value()) {
+                      Diagnostics.push_back(EltDiagnostics.value());
                     }
                   })
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",

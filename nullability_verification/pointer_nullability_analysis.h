@@ -6,16 +6,12 @@
 #define CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_ANALYSIS_H_
 
 #include "clang/AST/ASTContext.h"
-#include "clang/AST/Expr.h"
-#include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
+#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/NoopLattice.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
-#include "clang/Tooling/Tooling.h"
 
 namespace clang {
 namespace tidy {
@@ -31,7 +27,7 @@ class PointerNullabilityAnalysis
 
   static dataflow::NoopLattice initialElement() { return {}; }
 
-  void transfer(const Stmt* Stmt, dataflow::NoopLattice& Lattice,
+  void transfer(const CFGElement* Elt, dataflow::NoopLattice& Lattice,
                 dataflow::Environment& Env);
 
   bool merge(QualType Type, const dataflow::Value& Val1,
@@ -41,7 +37,7 @@ class PointerNullabilityAnalysis
 
  private:
   // Applies transfer functions on statements
-  dataflow::MatchSwitch<dataflow::TransferState<dataflow::NoopLattice>>
+  dataflow::CFGMatchSwitch<dataflow::TransferState<dataflow::NoopLattice>>
       Transferer;
 };
 }  // namespace nullability

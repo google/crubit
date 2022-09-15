@@ -11,6 +11,7 @@
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Stmt.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Basic/Specifiers.h"
 
@@ -19,6 +20,7 @@ namespace tidy {
 namespace nullability {
 
 using ast_matchers::MatchFinder;
+using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
 
 namespace {
@@ -112,15 +114,14 @@ llvm::Optional<const Stmt*> diagnoseReturn(
 }
 
 auto buildDiagnoser() {
-  return dataflow::MatchSwitchBuilder<const Environment,
-                                      llvm::Optional<const Stmt*>>()
+  return CFGMatchSwitchBuilder<const Environment, llvm::Optional<const Stmt*>>()
       // (*)
-      .CaseOf<UnaryOperator>(isPointerDereference(), diagnoseDereference)
+      .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       // (->)
-      .CaseOf<MemberExpr>(isPointerArrow(), diagnoseArrow)
+      .CaseOfCFGStmt<MemberExpr>(isPointerArrow(), diagnoseArrow)
       // Check compatibility of parameter assignments
-      .CaseOf<CallExpr>(isCallExpr(), diagnoseCallExpr)
-      .CaseOf<ReturnStmt>(isPointerReturn(), diagnoseReturn)
+      .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)
+      .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
       .Build();
 }
 

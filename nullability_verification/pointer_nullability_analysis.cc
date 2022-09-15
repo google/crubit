@@ -15,8 +15,8 @@
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/NoopLattice.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
@@ -28,8 +28,8 @@ namespace nullability {
 
 using ast_matchers::MatchFinder;
 using dataflow::BoolValue;
+using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
-using dataflow::MatchSwitchBuilder;
 using dataflow::NoopLattice;
 using dataflow::PointerValue;
 using dataflow::SkipPast;
@@ -155,20 +155,20 @@ void transferCallExpr(const CallExpr* CallExpr,
 }
 
 auto buildTransferer() {
-  return MatchSwitchBuilder<TransferState<NoopLattice>>()
+  return CFGMatchSwitchBuilder<TransferState<NoopLattice>>()
       // Handles initialization of the null states of pointers
-      .CaseOf<Expr>(isPointerVariableReference(), transferPointer)
-      .CaseOf<Expr>(isCXXThisExpr(), transferNotNullPointer)
-      .CaseOf<Expr>(isAddrOf(), transferNotNullPointer)
-      .CaseOf<Expr>(isNullPointerLiteral(), transferNullPointer)
-      .CaseOf<MemberExpr>(isMemberOfPointerType(), transferPointer)
-      .CaseOf<CallExpr>(isCallExpr(), transferCallExpr)
+      .CaseOfCFGStmt<Expr>(isPointerVariableReference(), transferPointer)
+      .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferNotNullPointer)
+      .CaseOfCFGStmt<Expr>(isAddrOf(), transferNotNullPointer)
+      .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferNullPointer)
+      .CaseOfCFGStmt<MemberExpr>(isMemberOfPointerType(), transferPointer)
+      .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferCallExpr)
       // Handles comparison between 2 pointers
-      .CaseOf<BinaryOperator>(isPointerCheckBinOp(),
-                              transferNullCheckComparison)
+      .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),
+                                     transferNullCheckComparison)
       // Handles checking of pointer as boolean
-      .CaseOf<Expr>(isImplicitCastPointerToBool(),
-                    transferNullCheckImplicitCastPtrToBool)
+      .CaseOfCFGStmt<Expr>(isImplicitCastPointerToBool(),
+                           transferNullCheckImplicitCastPtrToBool)
       .Build();
 }
 }  // namespace
@@ -177,11 +177,11 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext& Context)
     : DataflowAnalysis<PointerNullabilityAnalysis, NoopLattice>(Context),
       Transferer(buildTransferer()) {}
 
-void PointerNullabilityAnalysis::transfer(const Stmt* Stmt,
+void PointerNullabilityAnalysis::transfer(const CFGElement* Elt,
                                           NoopLattice& Lattice,
                                           Environment& Env) {
   TransferState<NoopLattice> State(Lattice, Env);
-  Transferer(*Stmt, getASTContext(), State);
+  Transferer(*Elt, getASTContext(), State);
 }
 
 BoolValue& mergeBoolValues(BoolValue& Bool1, const Environment& Env1,

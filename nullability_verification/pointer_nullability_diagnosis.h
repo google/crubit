@@ -7,8 +7,8 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Stmt.h"
+#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/MatchSwitch.h"
 #include "llvm/ADT/Optional.h"
 
 namespace clang {
@@ -30,14 +30,14 @@ class PointerNullabilityDiagnoser {
   ///
   /// TODO(b/233582219): Extend diagnosis to return more information, e.g. the
   /// type of violation.
-  llvm::Optional<const Stmt*> diagnose(const Stmt* Stmt, ASTContext& Ctx,
+  llvm::Optional<const Stmt*> diagnose(const CFGElement* Elt, ASTContext& Ctx,
                                        const dataflow::Environment& Env) {
-    return Diagnoser(*Stmt, Ctx, Env);
+    return Diagnoser(*Elt, Ctx, Env);
   }
 
  private:
-  dataflow::MatchSwitch<const dataflow::Environment,
-                        llvm::Optional<const Stmt*>>
+  dataflow::CFGMatchSwitch<const dataflow::Environment,
+                           llvm::Optional<const Stmt*>>
       Diagnoser;
 };
 
