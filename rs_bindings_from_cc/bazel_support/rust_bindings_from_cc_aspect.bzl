@@ -70,6 +70,9 @@ def _is_proto_library(target):
 def _is_cc_proto_library(rule):
     return rule.kind == "cc_proto_library"
 
+def retain_proto_dot_h_headers(headers):
+    return [h for h in headers if h.path.endswith("proto.h")]
+
 def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # We use a fake generator only when we are building the real one, in order to avoid
     # dependency cycles.
@@ -106,8 +109,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     elif _is_proto_library(target):
         #TODO(b/232199093): Ideally we would get this information from a proto-specific provider,
         # but ProtoCcFilesProvider is private currently. Use it once public.
-        # (Slicing because e.g. portable_proto_library has an empty direct_headers.)
-        public_hdrs = target[CcInfo].compilation_context.direct_headers[0:1]
+        public_hdrs = retain_proto_dot_h_headers(target[CcInfo].compilation_context.direct_headers)
         all_standalone_hdrs = public_hdrs
         extra_rule_specific_deps = [ctx.rule.attr._cc_lib]
     elif ctx.rule.kind == "cc_embed_data":
