@@ -12,13 +12,13 @@ not be used yet.
 """
 
 load(
-    "//rs_bindings_from_cc/bazel_support:deps_for_bindings.bzl",
+    "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "DepsForBindingsInfo",
+    "RustBindingsFromCcInfo",
+    "RustToolchainHeadersInfo",
 )
 load(
     "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
-    "RustBindingsFromCcInfo",
-    "RustToolchainHeadersInfo",
     "bindings_attrs",
     "generate_and_compile_bindings",
 )

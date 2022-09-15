@@ -20,14 +20,9 @@ load(
     "DepInfo",
     "DepVariantInfo",
 )
-
-DepsForBindingsInfo = provider(
-    doc = """A provider that serves to pass on dependencies needed when compiling the generated
-          Rust and C++ files.""",
-    fields = {
-        "deps_for_rs_file": "list[DepVariantInfo]",
-        "deps_for_cc_file": "list[CcInfo]",
-    },
+load(
+    "//rs_bindings_from_cc/bazel_support:providers.bzl",
+    "DepsForBindingsInfo",
 )
 
 def _deps_for_bindings_impl(ctx):

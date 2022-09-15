@@ -5,7 +5,7 @@
 """This module contains unit tests for the _namespace.json output file."""
 
 load(
-    "//rs_bindings_from_cc/bazel_support:rust_bindings_from_cc_utils.bzl",
+    "//rs_bindings_from_cc/bazel_support:providers.bzl",
     "RustBindingsFromCcInfo",
 )
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
