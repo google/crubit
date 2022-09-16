@@ -874,6 +874,24 @@ llvm::Error AnalyzeFunctionBody(
         constructor, object_repository, points_to_map, constraints);
   }
 
+  // Extend the constraint set with constraints of the form "'a >= 'static" for
+  // every object that is (transitively) reachable from a 'static object.
+  std::vector<const Object*> stack =
+      points_to_map.GetAllPointersWithLifetime(Lifetime::Static());
+  llvm::DenseSet<const Object*> visited;
+  while (!stack.empty()) {
+    const Object* obj = stack.back();
+    stack.pop_back();
+    if (visited.contains(obj)) {
+      continue;
+    }
+    visited.insert(obj);
+    constraints.AddOutlivesConstraint(Lifetime::Static(), obj->GetLifetime());
+    for (auto pointee : points_to_map.GetPointerPointsToSet(obj)) {
+      stack.push_back(pointee);
+    }
+  }
+
   if (cfg_dot) {
     *cfg_dot = CreateCfgDot(cfctx->getCFG(), func->getASTContext(),
                             block_to_output_state, object_repository);
