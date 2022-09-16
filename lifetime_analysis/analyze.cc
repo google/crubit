@@ -539,7 +539,9 @@ void MergeLifetimes(Lifetime target, Lifetime base, Lifetime constraining,
   if (base == Lifetime::Static()) {
     if (variance == kCovariant) {
       subst.Add(target, constraining);
-      is_more_constraining = true;
+      if (constraining != Lifetime::Static()) {
+        is_more_constraining = true;
+      }
     } else {
       subst.Add(target, base);
     }
