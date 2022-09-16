@@ -151,8 +151,9 @@ void GenerateConstraintsForAssignmentImpl(
 
   // See https://doc.rust-lang.org/nomicon/subtyping.html for an explanation of
   // variance; here in particular, we use the fact that the pointee of a pointer
-  // is covariant if the pointer is const-qualified, and invariant otherwise.
-  is_in_invariant_context = !pointer_type.isConstQualified();
+  // is covariant if the pointer points to a const-qualified type, and invariant
+  // otherwise.
+  is_in_invariant_context = !pointer_type->getPointeeType().isConstQualified();
 
   // Recurse in pointees. As the pointee might be of struct type, we need first
   // to extract all field pointers from it.
