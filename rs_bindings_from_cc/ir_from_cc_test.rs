@@ -2371,6 +2371,46 @@ fn test_struct_forward_declaration() {
 }
 
 #[test]
+fn test_struct_forward_declaration_in_namespace() -> Result<()> {
+    let ir = ir_from_cc(
+        r#"
+        namespace MyNamespace {
+        struct FwdDeclared;
+        }
+        "#,
+    )?;
+
+    assert_eq!(1, ir.namespaces().count());
+    let ns = ir.namespaces().next().unwrap();
+    assert_eq!("MyNamespace", ns.name.identifier);
+    assert_eq!(1, ns.child_item_ids.len());
+
+    let ns_id = ns.id;
+    let child_id = ns.child_item_ids[0];
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Namespace(Namespace {
+                name: "MyNamespace" ...
+                id: ItemId(#ns_id) ...
+                child_item_ids: [ItemId(#child_id)] ...
+                enclosing_record_id: None ...
+                enclosing_namespace_id: None ...
+            }),
+            IncompleteRecord(IncompleteRecord {
+                cc_name: "FwdDeclared" ...
+                rs_name: "FwdDeclared" ...
+                id: ItemId(#child_id) ...
+                ...
+                enclosing_namespace_id: Some(ItemId(#ns_id)) ...
+            }),
+        }
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_union() {
     let ir = ir_from_cc("union SomeUnion { int first_field; int second_field; };").unwrap();
     assert_ir_matches!(

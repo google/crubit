@@ -190,3 +190,11 @@ fn test_inline_functions_with_incomplete_parameters() {
     let nonunpin_ref = &*nonunpin;
     assert_eq!(123, declaration_1::InlineFunctionTakingNonunpinStruct(nonunpin_ref.cc_cast()));
 }
+
+#[test]
+fn test_forward_declared_used_as_field_type() {
+    // This is a regression test for b/246962427.  This mostly verifies that the
+    // generated bindings compile (and are usable at a very basic level).
+    use no_definition_in_headers::no_definition_in_headers::*;
+    let _s = Defined { field: std::ptr::null_mut() };
+}

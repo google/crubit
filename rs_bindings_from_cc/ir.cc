@@ -382,6 +382,7 @@ llvm::json::Value IncompleteRecord::ToJson() const {
       {"id", id},
       {"owning_target", owning_target},
       {"record_type", RecordTypeToString(record_type)},
+      {"enclosing_namespace_id", enclosing_namespace_id},
   };
 
   return llvm::json::Object{

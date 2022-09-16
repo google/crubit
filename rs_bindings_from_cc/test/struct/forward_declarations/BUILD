@@ -26,6 +26,11 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "no_definition_in_headers",
+    hdrs = ["no_definition_in_headers.h"],
+)
+
 rust_test(
     name = "forward_declarations_test",
     srcs = ["forward_declarations_test.rs"],
@@ -33,6 +38,7 @@ rust_test(
         ":declaration_1",
         ":declaration_2",
         ":definition",
+        ":no_definition_in_headers",
     ],
     deps = [
         "//rs_bindings_from_cc/support:ctor",
