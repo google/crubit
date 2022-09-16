@@ -14,6 +14,17 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
+  if (function_decl->isInStdNamespace() &&
+      function_decl->hasAttr<clang::VisibilityAttr>()) {
+    auto visibility = function_decl->getAttr<clang::VisibilityAttr>();
+    if (visibility->getVisibility() ==
+        clang::VisibilityAttr::VisibilityType::Hidden) {
+      return ictx_.ImportUnsupportedItem(
+          function_decl,
+          "Functions from the standard library with hidden visibility are not "
+          "supported");
+    }
+  }
 
   // TODO(lukasza, mboehme): Consider changing the GetLifetimeAnnotations API to
   // distinguish 1) no lifetime annotations found vs 2) erroneous lifetime

@@ -125,6 +125,17 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;
   }
+  if (record_decl->isInStdNamespace() &&
+      record_decl->hasAttr<clang::VisibilityAttr>()) {
+    auto visibility = record_decl->getAttr<clang::VisibilityAttr>();
+    if (visibility->getVisibility() ==
+        clang::VisibilityAttr::VisibilityType::Hidden) {
+      return ictx_.ImportUnsupportedItem(
+          record_decl,
+          "Records from the standard library with hidden visibility are not "
+          "supported");
+    }
+  }
 
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
   if (!record_type.ok()) {

@@ -486,6 +486,7 @@ LIBCXX_HEADERS = [
     "cwchar",
     "cwctype",
     "initializer_list",
+    "ios",
     "limits",
     "memory",
     "mutex",
