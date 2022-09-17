@@ -521,7 +521,6 @@ pub struct Namespace {
     pub owning_target: BazelLabel,
     #[serde(default)]
     pub child_item_ids: Vec<ItemId>,
-    pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
     pub is_inline: bool,
 }
