@@ -15,6 +15,7 @@ using ast_matchers::anyOf;
 using ast_matchers::binaryOperator;
 using ast_matchers::callExpr;
 using ast_matchers::cxxConstructExpr;
+using ast_matchers::cxxCtorInitializer;
 using ast_matchers::cxxThisExpr;
 using ast_matchers::declRefExpr;
 using ast_matchers::expr;
@@ -28,6 +29,7 @@ using ast_matchers::hasUnaryOperand;
 using ast_matchers::implicitCastExpr;
 using ast_matchers::isAnyPointer;
 using ast_matchers::isArrow;
+using ast_matchers::isMemberInitializer;
 using ast_matchers::memberExpr;
 using ast_matchers::returnStmt;
 using ast_matchers::unaryOperator;
@@ -62,6 +64,9 @@ Matcher<Stmt> isPointerReturn() {
   return returnStmt(hasReturnValue(hasType(isAnyPointer())));
 }
 Matcher<Stmt> isConstructExpr() { return cxxConstructExpr(); }
+Matcher<CXXCtorInitializer> isCtorMemberInitializer() {
+  return cxxCtorInitializer(isMemberInitializer());
+}
 
 }  // namespace nullability
 }  // namespace tidy

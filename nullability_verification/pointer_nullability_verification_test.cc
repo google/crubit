@@ -1792,6 +1792,44 @@ TEST(PointerNullabilityTest, ConstructExpr) {
   )");
 }
 
+TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
+  checkDiagnostics(R"(
+    int * _Nullable makeNullable();
+    struct target {
+      int * _Nonnull ptr_nonnull;
+      int * _Nullable ptr_nullable;
+      int * ptr_unannotated;
+      target(): ptr_nonnull(makeNullable()), // [[unsafe]]
+                ptr_nullable(makeNullable()),
+                ptr_unannotated(makeNullable()) {}
+    };
+  )");
+
+  checkDiagnostics(R"(
+    int * _Nonnull makeNonnull();
+    struct target {
+      int * _Nonnull ptr_nonnull;
+      int * _Nullable ptr_nullable;
+      int * ptr_unannotated;
+      target(): ptr_nonnull(makeNonnull()),
+                ptr_nullable(makeNonnull()),
+                ptr_unannotated(makeNonnull()) {}
+    };
+  )");
+
+  checkDiagnostics(R"(
+    int *makeUnannotated();
+    struct target {
+      int * _Nonnull ptr_nonnull;
+      int * _Nullable ptr_nullable;
+      int * ptr_unannotated;
+      target(): ptr_nonnull(makeUnannotated()),
+                ptr_nullable(makeUnannotated()),
+                ptr_unannotated(makeUnannotated()) {}
+    };
+  )");
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

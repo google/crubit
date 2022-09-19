@@ -7,6 +7,7 @@
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Stmt.h"
@@ -127,6 +128,28 @@ llvm::Optional<const Stmt*> diagnoseReturn(
              : llvm::None;
 }
 
+llvm::Optional<const Stmt*> diagnoseMemberInitializer(
+    const CXXCtorInitializer* CI, const MatchFinder::MatchResult& Result,
+    const Environment& Env) {
+  assert(CI->isAnyMemberInitializer());
+  auto MemberType = CI->getAnyMember()->getType();
+  if (!MemberType->isAnyPointerType()) {
+    return llvm::None;
+  }
+  auto MemberInitExpr = CI->getInit();
+  return isIncompatibleAssignment(MemberType, MemberInitExpr, Env,
+                                  *Result.Context)
+             // TODO(b/233582219): CtorInitializer is not compatible with the
+             // return type as it is not a Stmt. Therefore, we currently return
+             // the expression in the initializer. The return type should be
+             // modified to work over different AST nodes. For example,
+             // returning a SourceLocation or creating a Diagnostic base class
+             // that will contain more information about the violation and store
+             // the relevant AST nodes.
+             ? llvm::Optional<const Stmt*>(MemberInitExpr)
+             : llvm::None;
+}
+
 auto buildDiagnoser() {
   return CFGMatchSwitchBuilder<const Environment, llvm::Optional<const Stmt*>>()
       // (*)
@@ -137,6 +160,8 @@ auto buildDiagnoser() {
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)
       .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
       .CaseOfCFGStmt<CXXConstructExpr>(isConstructExpr(), diagnoseConstructExpr)
+      .CaseOfCFGInit<CXXCtorInitializer>(isCtorMemberInitializer(),
+                                         diagnoseMemberInitializer)
       .Build();
 }
 

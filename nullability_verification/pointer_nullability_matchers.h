@@ -23,6 +23,7 @@ ast_matchers::internal::Matcher<Stmt> isImplicitCastPointerToBool();
 ast_matchers::internal::Matcher<Stmt> isCallExpr();
 ast_matchers::internal::Matcher<Stmt> isPointerReturn();
 ast_matchers::internal::Matcher<Stmt> isConstructExpr();
+ast_matchers::internal::Matcher<CXXCtorInitializer> isCtorMemberInitializer();
 
 }  // namespace nullability
 }  // namespace tidy
