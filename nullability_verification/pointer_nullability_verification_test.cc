@@ -1742,6 +1742,56 @@ TEST(PointerNullabilityTest, ReturnStatements) {
   )");
 }
 
+TEST(PointerNullabilityTest, ConstructExpr) {
+  // Constructor call assigned to local variable.
+  checkDiagnostics(R"(
+    struct TakeNonnull {
+      explicit TakeNonnull(int * _Nonnull) {}
+    };
+    struct TakeNullable {
+      explicit TakeNullable(int * _Nullable) {}
+    };
+    struct TakeUnannotated {
+      explicit TakeUnannotated(int *) {}
+    };
+    int * _Nonnull makeNonnull();
+    int * _Nullable makeNullable();
+    int *makeUnannotated();
+    void target() {
+      auto NN1 = TakeNonnull(makeNonnull());
+      auto NN2 = TakeNonnull(makeNullable());        // [[unsafe]]
+      auto NN3 = TakeNonnull(makeUnannotated());
+
+      auto NB1 = TakeNullable(makeNonnull());
+      auto NB2 = TakeNullable(makeNullable());
+      auto NB3 = TakeNullable(makeUnannotated());
+
+      auto UN1 = TakeUnannotated(makeNonnull());
+      auto UN2 = TakeUnannotated(makeNullable());
+      auto UN3 = TakeUnannotated(makeUnannotated());
+    }
+  )");
+
+  // Constructor call in a base initializer.
+  checkDiagnostics(R"(
+    struct TakeNonnull {
+      explicit TakeNonnull(int * _Nonnull);
+    };
+    struct target: TakeNonnull {
+      target(int * _Nullable ptr_nullable): TakeNonnull(ptr_nullable) {} // [[unsafe]]
+    };
+  )");
+
+  // Call to a delegating constructor
+  checkDiagnostics(R"(
+    int * _Nullable makeNullable();
+    struct target {
+      target(int * _Nonnull);
+      target(): target(makeNullable()) {} // [[unsafe]]
+    };
+  )");
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

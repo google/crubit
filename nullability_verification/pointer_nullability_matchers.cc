@@ -14,6 +14,7 @@ namespace nullability {
 using ast_matchers::anyOf;
 using ast_matchers::binaryOperator;
 using ast_matchers::callExpr;
+using ast_matchers::cxxConstructExpr;
 using ast_matchers::cxxThisExpr;
 using ast_matchers::declRefExpr;
 using ast_matchers::expr;
@@ -60,6 +61,7 @@ Matcher<Stmt> isCallExpr() { return callExpr(); }
 Matcher<Stmt> isPointerReturn() {
   return returnStmt(hasReturnValue(hasType(isAnyPointer())));
 }
+Matcher<Stmt> isConstructExpr() { return cxxConstructExpr(); }
 
 }  // namespace nullability
 }  // namespace tidy

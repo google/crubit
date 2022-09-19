@@ -99,6 +99,20 @@ llvm::Optional<const Stmt*> diagnoseCallExpr(
              : llvm::None;
 }
 
+llvm::Optional<const Stmt*> diagnoseConstructExpr(
+    const CXXConstructExpr* CE, const MatchFinder::MatchResult& Result,
+    const Environment& Env) {
+  auto ConstructorParamTypes = CE->getConstructor()
+                                   ->getType()
+                                   ->getAs<FunctionProtoType>()
+                                   ->getParamTypes();
+  ArrayRef<const Expr*> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
+  return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs, Env,
+                                    *Result.Context)
+             ? llvm::Optional<const Stmt*>(CE)
+             : llvm::None;
+}
+
 llvm::Optional<const Stmt*> diagnoseReturn(
     const ReturnStmt* RS, const MatchFinder::MatchResult& Result,
     const Environment& Env) {
@@ -122,6 +136,7 @@ auto buildDiagnoser() {
       // Check compatibility of parameter assignments
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), diagnoseCallExpr)
       .CaseOfCFGStmt<ReturnStmt>(isPointerReturn(), diagnoseReturn)
+      .CaseOfCFGStmt<CXXConstructExpr>(isConstructExpr(), diagnoseConstructExpr)
       .Build();
 }
 
