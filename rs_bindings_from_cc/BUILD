@@ -115,7 +115,7 @@ cc_test(
         "@absl//absl/status",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
-        "@com_google_googletest//:gtest_main_no_heapcheck",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

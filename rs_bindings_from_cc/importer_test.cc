@@ -213,9 +213,6 @@ auto RsConstPointsTo(const Matcher& matcher) {
 // Matches a MappedType that is void.
 MATCHER(IsVoid, "") { return arg.IsVoid(); }
 
-// Matches a MappedType that is an integer.
-auto IsInt() { return AllOf(CcTypeIs(IsCcInt()), RsTypeIs(IsRsInt())); }
-
 // Matches a MappedType that is a pointer to integer.
 auto IsIntPtr() {
   return AllOf(CcTypeIs(CcPointsTo(IsCcInt())),
@@ -226,12 +223,6 @@ auto IsIntPtr() {
 auto IsIntRef() {
   return AllOf(CcTypeIs(CcReferenceTo(IsCcInt())),
                RsTypeIs(RsPointsTo(IsRsInt())));
-}
-
-// Matches a MappedType for cc and rs types with no type arguments.
-auto IsSimpleType(absl::string_view rs_name, absl::string_view cc_name) {
-  return AllOf(CcTypeIs(NameIs(cc_name), CcTypeParamsAre()),
-               RsTypeIs(NameIs(rs_name), RsTypeParamsAre()));
 }
 
 // Matches a Record that has fields matching `matchers`.

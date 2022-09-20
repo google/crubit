@@ -690,16 +690,6 @@ struct FunctionAnalysis {
   LifetimeSubstitutions subst;
 };
 
-bool HasRecordTypeFields(const clang::RecordDecl* record) {
-  for (const clang::FieldDecl* field : record->fields()) {
-    if (field->getType()->isRecordType()) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 const CXXConstructorDecl* GetDefaultConstructor(const CXXRecordDecl* record) {
   for (const CXXConstructorDecl* ctor : record->ctors()) {
     if (ctor->isDefaultConstructor()) {
