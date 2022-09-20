@@ -18,6 +18,7 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Type.h"
+#include "clang/Analysis/CFG.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -70,7 +71,7 @@ class LifetimeAnalysis
 
   bool IsEqual(const LifetimeLattice& state1, const LifetimeLattice& state2);
 
-  void transfer(const clang::Stmt* stmt, LifetimeLattice& state,
+  void transfer(const clang::CFGElement* elt, LifetimeLattice& state,
                 clang::dataflow::Environment& environment);
 
  private:

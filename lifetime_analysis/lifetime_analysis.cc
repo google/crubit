@@ -32,6 +32,7 @@
 #include "clang/AST/StmtVisitor.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/Type.h"
+#include "clang/Analysis/CFG.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
@@ -612,9 +613,14 @@ bool LifetimeAnalysis::IsEqual(const LifetimeLattice& state1,
   return state1 == state2;
 }
 
-void LifetimeAnalysis::transfer(const clang::Stmt* stmt, LifetimeLattice& state,
+void LifetimeAnalysis::transfer(const clang::CFGElement* elt,
+                                LifetimeLattice& state,
                                 clang::dataflow::Environment& /*environment*/) {
   if (state.IsError()) return;
+
+  auto cfg_stmt = elt->getAs<clang::CFGStmt>();
+  if (!cfg_stmt) return;
+  auto stmt = cfg_stmt->getStmt();
 
   TransferStmtVisitor visitor(object_repository_, state.PointsTo(),
                               state.Constraints(), func_, callee_lifetimes_,
