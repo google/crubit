@@ -17,6 +17,7 @@ namespace {
 
 using ::testing::ElementsAre;
 using ::testing::IsEmpty;
+using ::testing::StrEq;
 
 MATCHER_P(NameIs, name, "") { return arg.name == name; }
 
@@ -29,7 +30,8 @@ TEST(CollectNamespacesTest, Namespaces) {
   )";
   ASSERT_OK_AND_ASSIGN(IR ir, IrFromCc(file));
 
-  auto top_level_namespaces = CollectNamespaces(ir).namespaces;
+  auto namespace_hierarchy = CollectNamespaces(ir);
+  auto top_level_namespaces = namespace_hierarchy.namespaces;
 
   ASSERT_THAT(top_level_namespaces.size(), 2);
   EXPECT_THAT(top_level_namespaces,
@@ -37,6 +39,9 @@ TEST(CollectNamespacesTest, Namespaces) {
 
   ASSERT_THAT(top_level_namespaces[0].children.size(), 1);
   EXPECT_THAT(top_level_namespaces[0].children[0], NameIs("inner"));
+
+  ASSERT_THAT(namespace_hierarchy.label.value(),
+              StrEq("//test:testing_target"));
 }
 
 TEST(CollectNamespacesTest, ReopenedNamespaces) {

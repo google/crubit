@@ -620,6 +620,7 @@ cc_library(
     hdrs = ["collect_namespaces.h"],
     visibility = ["//:__subpackages__"],
     deps = [
+        ":bazel_types",
         ":cc_ir",
         "@absl//absl/container:btree",
         "@absl//absl/container:flat_hash_map",

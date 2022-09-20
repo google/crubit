@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
 #include "llvm/Support/JSON.h"
 
@@ -32,6 +33,7 @@ inline std::ostream& operator<<(std::ostream& o, const NamespaceNode& ns) {
 struct NamespacesHierarchy {
   llvm::json::Value ToJson() const;
 
+  BazelLabel label;
   std::vector<NamespaceNode> namespaces;
 };
 

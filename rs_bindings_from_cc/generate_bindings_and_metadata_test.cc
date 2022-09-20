@@ -221,45 +221,34 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
     namespace top_level_1 {}
   )";
   constexpr absl::string_view kExpected = R"({
+  "label": "target1",
   "namespaces": [
     {
-      "namespace": {
-        "children": [
-          {
-            "namespace": {
-              "children": [
-                {
-                  "namespace": {
-                    "children": [],
-                    "name": "inner_1"
-                  }
-                },
-                {
-                  "namespace": {
-                    "children": [],
-                    "name": "inner_2"
-                  }
-                }
-              ],
-              "name": "middle"
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "name": "inner_1"
+            },
+            {
+              "children": [],
+              "name": "inner_2"
             }
-          }
-        ],
-        "name": "top_level_1"
-      }
+          ],
+          "name": "middle"
+        }
+      ],
+      "name": "top_level_1"
     },
     {
-      "namespace": {
-        "children": [
-          {
-            "namespace": {
-              "children": [],
-              "name": "inner_3"
-            }
-          }
-        ],
-        "name": "top_level_2"
-      }
+      "children": [
+        {
+          "children": [],
+          "name": "inner_3"
+        }
+      ],
+      "name": "top_level_2"
     }
   ]
 })";

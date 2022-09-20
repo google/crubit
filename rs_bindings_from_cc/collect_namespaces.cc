@@ -10,7 +10,9 @@
 #include "absl/container/btree_map.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/string_view.h"
+#include "rs_bindings_from_cc/bazel_types.h"
 #include "rs_bindings_from_cc/ir.h"
+#include "llvm/Support/JSON.h"
 
 namespace crubit {
 namespace {
@@ -51,6 +53,8 @@ class NamespaceTrie {
   // trie_nodes_ vector. We use a btree_map so that at conversion time we get
   // deterministic JSON output.
   absl::btree_map<absl::string_view, int> top_level_name_to_idx_;
+  // The current target's label.
+  BazelLabel label_;
   // A map of item id to the IR Namespace item. It allows us to look up the
   // children namespace items.
   absl::flat_hash_map<ItemId, const Namespace*>& id_to_namespace_;
@@ -90,8 +94,9 @@ class NamespaceTrie {
   }
 
  public:
-  NamespaceTrie(absl::flat_hash_map<ItemId, const Namespace*>& id_to_namespace)
-      : id_to_namespace_(id_to_namespace) {}
+  NamespaceTrie(BazelLabel label,
+                absl::flat_hash_map<ItemId, const Namespace*>& id_to_namespace)
+      : label_(label), id_to_namespace_(id_to_namespace) {}
 
   NamespaceTrie(NamespaceTrie&) = delete;
   NamespaceTrie& operator=(NamespaceTrie&) = delete;
@@ -125,7 +130,7 @@ class NamespaceTrie {
     for (auto& [_, idx] : this->top_level_name_to_idx_) {
       namespaces.push_back(NodeToNamespaceNode(&trie_nodes_[idx]));
     }
-    return NamespacesHierarchy{std::move(namespaces)};
+    return NamespacesHierarchy{label_, std::move(namespaces)};
   }
 };
 
@@ -143,7 +148,7 @@ NamespacesHierarchy CollectNamespaces(const IR& ir) {
     id_to_namespace.insert({ns->id, ns});
   }
 
-  NamespaceTrie trie(id_to_namespace);
+  NamespaceTrie trie(ir.current_target, id_to_namespace);
   for (auto namespace_id : ir.top_level_item_ids) {
     if (id_to_namespace.count(namespace_id) == 0) {
       continue;
@@ -162,13 +167,9 @@ llvm::json::Value NamespaceNode::ToJson() const {
     json_children.push_back(child.ToJson());
   }
 
-  llvm::json::Object ns{
+  return llvm::json::Object{
       {"name", name},
       {"children", std::move(json_children)},
-  };
-
-  return llvm::json::Object{
-      {"namespace", std::move(ns)},
   };
 }
 
@@ -180,6 +181,7 @@ llvm::json::Value NamespacesHierarchy::ToJson() const {
   }
 
   return llvm::json::Object{
+      {"label", label.value()},
       {"namespaces", std::move(json_namespaces)},
   };
 }

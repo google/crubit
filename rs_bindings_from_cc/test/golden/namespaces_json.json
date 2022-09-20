@@ -3,45 +3,34 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 {
+  "label": "//rs_bindings_from_cc/test/golden:namespaces_json",
   "namespaces": [
     {
-      "namespace": {
-        "children": [
-          {
-            "namespace": {
-              "children": [
-                {
-                  "namespace": {
-                    "children": [],
-                    "name": "baz"
-                  }
-                }
-              ],
-              "name": "bar"
-            }
-          },
-          {
-            "namespace": {
+      "children": [
+        {
+          "children": [
+            {
               "children": [],
               "name": "baz"
             }
-          }
-        ],
-        "name": "foo"
-      }
+          ],
+          "name": "bar"
+        },
+        {
+          "children": [],
+          "name": "baz"
+        }
+      ],
+      "name": "foo"
     },
     {
-      "namespace": {
-        "children": [
-          {
-            "namespace": {
-              "children": [],
-              "name": "foo"
-            }
-          }
-        ],
-        "name": "xyz"
-      }
+      "children": [
+        {
+          "children": [],
+          "name": "foo"
+        }
+      ],
+      "name": "xyz"
     }
   ]
 }
