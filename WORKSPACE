@@ -113,11 +113,11 @@ http_archive(
 )
 
 # https://google.github.io/googletest/quickstart-bazel.html
-
 http_archive(
   name = "com_google_googletest",
-  urls = ["https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip"],
-  strip_prefix = "googletest-609281088cfefc76f9d0ce82e1ff6c30cc3591e5",
+  urls = ["https://github.com/google/googletest/archive/1336c4b6d1a6f4bc6beebccb920e5ff858889292.zip"],
+  strip_prefix = "googletest-1336c4b6d1a6f4bc6beebccb920e5ff858889292",
+  sha256 = "7fda611bceb5a793824a3c63ecbf68d2389e70c38f5763e9b1d415ca24912f44"
 )
 
 # Create the "loader" repository, then use it to configure the desired LLVM
