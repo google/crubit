@@ -1,0 +1,21 @@
+# Part of the Crubit project, under the Apache License v2.0 with LLVM
+# Exceptions. See /LICENSE for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# TODO(lukasza): Switch to Bazel.  (Having `cargo` support in the long-term
+# would be nice, but in the short-term we expect to use only Bazel during
+# development.  Therefore any `cargo` support would probably rot and get stale
+# quickly.)
+
+[package]
+name = "cc_bindings_from_rs"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "cc_bindings_from_rs"
+path = "main.rs"
+
+[dependencies]
+itertools = "0.10.4"
+lazy_static = "1.4.0"
