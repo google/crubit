@@ -22,10 +22,12 @@ pub fn public_function() {
 
 fn private_function() {}
 
-$ cargo run -- $HOME/scratch/test.rs --crate-type=lib --sysroot `rustc --print sysroot`
-...
-CRATE NAME: test
-EXPORTED FN: public_function
+$ cargo run -- \
+    --h_out=$HOME/scratch/test.h -- \
+    $HOME/scratch/test.rs --crate-type=lib --sysroot `rustc --print sysroot`
+
+$ cat $HOME/scratch/test.h
+// Public functions: public_function
 ```
 
 

@@ -17,5 +17,10 @@ name = "cc_bindings_from_rs"
 path = "main.rs"
 
 [dependencies]
+anyhow = "1.0.65"
+getopts = "0.2"
 itertools = "0.10.4"
 lazy_static = "1.4.0"
+
+[dev-dependencies]
+tempfile = "3.3.0"

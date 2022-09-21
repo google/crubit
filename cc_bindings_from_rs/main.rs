@@ -16,36 +16,98 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 
+use anyhow::Context;
+use cmdline::Cmdline;
 use itertools::Itertools;
 use rustc_interface::interface::Compiler;
 use rustc_interface::Queries;
+use rustc_middle::ty::TyCtxt;
+use std::fmt::Display;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 
-#[derive(Default)]
-struct CompilerCallbacks {}
+struct CompilerCallbacks<'a> {
+    cmdline: &'a Cmdline,
+    result: anyhow::Result<()>,
+}
 
-impl rustc_driver::Callbacks for CompilerCallbacks {
+impl<'a> CompilerCallbacks<'a> {
+    fn new(cmdline: &'a Cmdline) -> Self {
+        Self { cmdline, result: Ok(()) }
+    }
+
+    fn generate_and_write_bindings(&self, tcx: TyCtxt) -> anyhow::Result<()> {
+        let bindings = lib::GeneratedBindings::new(tcx);
+        // TODO(lukasza): Use `tokens_to_string` from
+        // `../common.token_stream_printer.rs`.
+        write_file(self.cmdline.h_out(), bindings.h_body)
+    }
+}
+
+impl rustc_driver::Callbacks for CompilerCallbacks<'_> {
     fn after_analysis<'tcx>(
         &mut self,
         _compiler: &Compiler,
         queries: &'tcx Queries<'tcx>,
     ) -> rustc_driver::Compilation {
-        let rustc_result = lib::enter_tcx(queries, |tcx| {
-            // TODO(lukasza): Replace this with actually generating C++ bindings.
-            for fn_name in lib::get_names_of_exported_fns(tcx) {
-                println!("EXPORTED FN: {}", fn_name);
-            }
-        });
+        let rustc_result = lib::enter_tcx(queries, |tcx| self.generate_and_write_bindings(tcx));
 
-        // Expecting no rustc errors here, because `after_analysis` is only called by
-        // `rustc_driver` if earlier compiler analysis was successful (which as the
-        // *last* compilation phase presumably covers *all* errors).
-        rustc_result.expect("Expecting no compile errors inside `after_analysis` callback.");
+        // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
+        // called by `rustc_driver` if earlier compiler analysis was successful
+        // (which as the *last* compilation phase presumably covers *all*
+        // errors).
+        self.result =
+            rustc_result.expect("Expecting no compile errors inside `after_analysis` callback.");
 
         rustc_driver::Compilation::Stop
     }
 }
 
-fn main() {
+fn write_file(path: &Path, content: impl Display) -> anyhow::Result<()> {
+    File::create(path)
+        .and_then(|mut f| write!(f, "{}", content))
+        .with_context(|| format!("Error when writing to {}", path.display()))
+}
+
+/// Wrapper around `rustc_driver::RunCompiler::run` that returns
+/// `anyhow::Result<()>` instead of either returning
+/// `rustc_interface::interface::Result<()>` or panicking with a special
+/// sentinel value.
+fn run_compiler<T>(rustc_args: &[String], callbacks: &mut T) -> anyhow::Result<()>
+where
+    T: rustc_driver::Callbacks + Send,
+{
+    // Rust compiler unwinds with a special sentinel value to abort compilation on
+    // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
+    // translate them into a Result, and 2) resume and propagate other panics.
+    let result = rustc_driver::catch_fatal_errors(|| {
+        rustc_driver::RunCompiler::new(rustc_args, callbacks).run()
+    });
+
+    // Flatten `Result<Result<T, ...>>` into `Result<T, ...>`.
+    let result = result.and_then(|result| result);
+
+    // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
+    // use `?` because the trait `std::error::Error` is not implemented for
+    // `ErrorGuaranteed` which is required by the impl of
+    // `From<ErrorGuaranteed>` for `anyhow::Error`.)
+    result.map_err(|_err| {
+        // We can ignore `_err` because it has no payload / because this type has only
+        // one valid/possible value.
+        anyhow::format_err!("Errors reported by Rust compiler.")
+    })
+}
+
+// TODO(lukasza): Add end-to-end tests that verify that the exit code is
+// non-zero when:
+// * input contains syntax errors - test coverage for `run_compiler`.
+// * mandatory parameters (e.g. `--h_out`) are missing - test coverage for how
+//   `main` calls `Cmdline::new`.
+// * `--h_out` cannot be written to (in this case, the error message should
+//   include the os-level error + Crubit-level error that includes the file
+//   name) - test coverage for `write_file`.
+fn main() -> anyhow::Result<()> {
     rustc_driver::init_env_logger("CRUBIT_LOG");
 
     // TODO: Investigate if we should install a signal handler here.  See also how
@@ -53,20 +115,21 @@ fn main() {
 
     rustc_driver::install_ice_hook();
 
-    // `std::env::args()` will panic if any of the cmdline arguments are not valid
-    // Unicode.  This seems okay.
-    let args = std::env::args().collect_vec();
+    // Parse Crubit's cmdline arguments.
+    let cmdline = {
+        // `std::env::args()` will panic if any of the cmdline arguments are not valid
+        // Unicode.  This seems okay.
+        let args = std::env::args().collect_vec();
+        Cmdline::new(&args)?
+    };
 
-    // Rust compiler unwinds with a special sentinel value to abort compilation on
-    // fatal errors. We use `catch_with_exit_code` to 1) catch such panics and
-    // translate them into an exit code, and 2) resume and propagate other
-    // panics.
-    let exit_code = rustc_driver::catch_with_exit_code(|| {
-        let mut callbacks = CompilerCallbacks::default();
-        rustc_driver::RunCompiler::new(&args, &mut callbacks).run()
-    });
-    std::process::exit(exit_code);
+    // Invoke the Rust compiler with Crubit-specific `callbacks`.
+    let mut callbacks = CompilerCallbacks::new(&cmdline);
+    run_compiler(cmdline.rustc_args(), &mut callbacks)?;
+    callbacks.result
 }
 
-// TODO(lukasza): Make `lib` a separate crate (once we move to Bazel).
+// TODO(lukasza): Make `cmdline` and `lib` a separate crate (once we move to
+// Bazel).
+mod cmdline;
 mod lib;
