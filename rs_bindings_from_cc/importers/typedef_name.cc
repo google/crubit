@@ -6,7 +6,6 @@
 
 #include "absl/log/check.h"
 #include "clang/AST/ASTContext.h"
-#include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 
 namespace crubit {
@@ -26,6 +25,11 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
 
   clang::QualType type =
       typedef_name_decl->getASTContext().getTypedefType(typedef_name_decl);
+  if (typedef_name_decl->getAnonDeclWithTypedefName()) {
+    // Anonymous declarations with typedefs just incorporate the typedef name
+    // into their item, instead of having a separate TypeAlias item in addition.
+    return std::nullopt;
+  }
   if (MapKnownCcTypeToRsType(type.getAsString()).has_value()) {
     return std::nullopt;
   }
@@ -58,46 +62,6 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
         .enclosing_record_id = enclosing_record_id,
         .enclosing_namespace_id = GetEnclosingNamespaceId(typedef_name_decl),
     };
-  } else if (typedef_name_decl->getAnonDeclWithTypedefName()) {
-    auto* type = typedef_name_decl->getUnderlyingType().getTypePtrOrNull();
-    if (type && type->getAsRecordDecl()) {
-      // This is an anonymous declaration with a typedef name. (e.g. `typedef
-      // struct {} Foo;` cases)
-      ictx_.AddAnonDeclTypedefName(type->getAsRecordDecl(),
-                                   identifier->Ident());
-      auto item = ictx_.ImportDecl(type->getAsRecordDecl());
-      if (item.has_value()) {
-        // If the align attribute was attached to the typedef decl, we should
-        // apply it to the generated record.
-        if (auto* record = std::get_if<Record>(&item.value())) {
-          auto* aligned = typedef_name_decl->getAttr<clang::AlignedAttr>();
-          if (aligned) {
-            record->alignment =
-                ictx_.ctx_
-                    .toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
-                    .getQuantity();
-            record->override_alignment = true;
-
-            // If it has alignment, update the `record->size` to the aligned
-            // one, because that size is going to be used as this record's
-            // canonical size in IR and in the binding code.
-
-            // Make sure that `alignment` is a power of 2.
-            CHECK(!(record->alignment & (record->alignment - 1)));
-
-            // Given that `alignment` is a power of 2, we can round it up by
-            // a bit arithmetic: `alignment - 1` clears the single bit of it
-            // while turning all the zeros in the right to 1s. Adding
-            // `alignment - 1` and doing &~ with it effectively rounds it up
-            // to the next multiple of the alignment.
-            record->size = (record->size + record->alignment - 1) &
-                           ~(record->alignment - 1);
-          }
-          record->is_anon_record_with_typedef = true;
-        }
-        return item;
-      }
-    }
   }
   return ictx_.ImportUnsupportedItem(
       typedef_name_decl, std::string(underlying_type.status().message()));

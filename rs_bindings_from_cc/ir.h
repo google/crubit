@@ -101,14 +101,6 @@ inline ItemId GenerateItemId(const clang::Decl* decl) {
   if (auto namespace_decl = clang::dyn_cast<clang::NamespaceDecl>(decl)) {
     return ItemId(reinterpret_cast<uintptr_t>(namespace_decl));
   }
-  if (auto typedef_decl = clang::dyn_cast<clang::TypedefDecl>(decl)) {
-    const auto* type = typedef_decl->getUnderlyingType().getTypePtrOrNull();
-    if (type && type->getAsRecordDecl() &&
-        typedef_decl->getAnonDeclWithTypedefName()) {
-      // This is actually defining a record.
-      return ItemId(reinterpret_cast<uintptr_t>(type->getAsRecordDecl()));
-    }
-  }
   return ItemId(reinterpret_cast<uintptr_t>(decl->getCanonicalDecl()));
 }
 

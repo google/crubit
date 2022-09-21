@@ -90,6 +90,10 @@ class ImportContext {
   // Does not use or update the cache.
   virtual std::optional<IR::Item> ImportDecl(clang::Decl* decl) = 0;
 
+  // Returns the Item of a Decl, importing it first if necessary.
+  // Updates the cache.
+  virtual std::optional<IR::Item> GetDeclItem(clang::Decl* decl) = 0;
+
   virtual std::optional<IR::Item> GetImportedItem(const clang::Decl* decl) = 0;
 
   // Imports children of `decl`.
@@ -158,10 +162,6 @@ class ImportContext {
   // MarkAsSuccessfullyImported.
   virtual bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const = 0;
-
-  // Adds an asssociation from anonymous structs/unionts to their typedef names.
-  virtual void AddAnonDeclTypedefName(clang::Decl* record,
-                                      absl::string_view name) = 0;
 
   Invocation& invocation_;
   clang::ASTContext& ctx_;

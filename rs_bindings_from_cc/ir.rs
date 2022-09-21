@@ -58,7 +58,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
             match lifetimes.entry(lifetime.id) {
                 Entry::Occupied(occupied) => {
                     bail!(
-                        "Duplicate use of lifetime ID {:?} for names: '{}, '{}",
+                        "Duplicate use of lifetime ID {:?} in item {item:?} for names: '{}, '{}",
                         lifetime.id,
                         &occupied.get().name,
                         &lifetime.name

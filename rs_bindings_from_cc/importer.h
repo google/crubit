@@ -31,7 +31,7 @@ namespace crubit {
 // Iterates over the AST created from the invocation's entry headers and
 // creates an intermediate representation of the import (`IR`) into the
 // invocation object.
-class Importer : public ImportContext {
+class Importer final : public ImportContext {
  public:
   explicit Importer(Invocation& invocation, clang::ASTContext& ctx,
                     clang::Sema& sema)
@@ -83,10 +83,6 @@ class Importer : public ImportContext {
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
       bool nullable = true) override;
-  void AddAnonDeclTypedefName(clang::Decl* record,
-                              absl::string_view name) override {
-    anon_decl_names_.insert({record, name});
-  }
 
   void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
@@ -111,9 +107,7 @@ class Importer : public ImportContext {
   // deterministic/reproducible order.
   std::vector<ItemId> GetOrderedItemIdsOfTemplateInstantiations() const;
 
-  // Returns the Item of a Decl, importing it first if necessary.
-  std::optional<IR::Item> GetDeclItem(clang::Decl* decl);
-
+  std::optional<IR::Item> GetDeclItem(clang::Decl* decl) override;
   // Stores the comments of this target in source order.
   void ImportFreeComments();
 
@@ -135,10 +129,6 @@ class Importer : public ImportContext {
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
       class_template_instantiations_for_current_target_;
   std::vector<const clang::RawComment*> comments_;
-
-  // Holds a map from an anon record decl to its typedef name. Used for C-style
-  // typedef'ed unions/structs.
-  absl::flat_hash_map<clang::Decl*, absl::string_view> anon_decl_names_;
 
   // Set of decls that have been successfully imported (i.e. that will be
   // present in the IR output / that will not produce dangling ItemIds in the IR

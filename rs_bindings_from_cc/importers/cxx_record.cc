@@ -11,6 +11,7 @@
 #include "rs_bindings_from_cc/ast_convert.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/Type.h"
@@ -214,7 +215,9 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
                               record_decl->isUnion() ||
                               FinalOverrides().contains(preferred_cc_name);
   auto item_ids = ictx_.GetItemIdsInSourceOrder(record_decl);
-  return Record{
+  const clang::TypedefNameDecl* anon_typedef =
+      record_decl->getTypedefNameForAnonDecl();
+  auto record = Record{
       .rs_name = std::move(rs_name),
       .cc_name = std::move(cc_name),
       .mangled_cc_name = ictx_.GetMangledName(record_decl),
@@ -236,11 +239,45 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .is_abstract = record_decl->isAbstract(),
       .record_type = *record_type,
       .is_aggregate = record_decl->isAggregate(),
+      .is_anon_record_with_typedef = anon_typedef != nullptr,
       .is_explicit_class_template_instantiation_definition =
           is_explicit_class_template_instantiation_definition,
       .child_item_ids = std::move(item_ids),
       .enclosing_namespace_id = GetEnclosingNamespaceId(record_decl),
   };
+
+  // If the align attribute was attached to the typedef decl, we should
+  // apply it to the generated record.
+  //
+  // TODO(jeanpierreda): We also need this logic for non-anonymous structs, where we
+  // instead copy the struct into a new decl with this typedef's decl id.
+  // So this part probably needs to be factored out somewhere that
+  // typedef_name.cc can get at it.
+  if (anon_typedef != nullptr) {
+    auto* aligned = anon_typedef->getAttr<clang::AlignedAttr>();
+    if (aligned) {
+      record.alignment =
+          ictx_.ctx_.toCharUnitsFromBits(aligned->getAlignment(ictx_.ctx_))
+              .getQuantity();
+      record.override_alignment = true;
+
+      // If it has alignment, update the `record->size` to the aligned
+      // one, because that size is going to be used as this record's
+      // canonical size in IR and in the binding code.
+
+      // Make sure that `alignment` is a power of 2.
+      CHECK(!(record.alignment & (record.alignment - 1)));
+
+      // Given that `alignment` is a power of 2, we can round it up by
+      // a bit arithmetic: `alignment - 1` clears the single bit of it
+      // while turning all the zeros in the right to 1s. Adding
+      // `alignment - 1` and doing &~ with it effectively rounds it up
+      // to the next multiple of the alignment.
+      record.size =
+          (record.size + record.alignment - 1) & ~(record.alignment - 1);
+    }
+  }
+  return record;
 }
 
 std::vector<Field> CXXRecordDeclImporter::ImportFields(
@@ -265,11 +302,11 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       case clang::AS_protected:
       case clang::AS_private:
       case clang::AS_none:
-        // As a performance optimization (i.e. to keep the generated code small)
-        // we can emit private fields as opaque blobs of bytes.  This may avoid
-        // the need to include supporting types in the generated code (e.g.
-        // avoiding extra template instantiations).  See also b/226580208 and
-        // <internal link>.
+        // As a performance optimization (i.e. to keep the generated code
+        // small) we can emit private fields as opaque blobs of bytes.  This
+        // may avoid the need to include supporting types in the generated
+        // code (e.g. avoiding extra template instantiations).  See also
+        // b/226580208 and <internal link>.
         type = absl::UnavailableError(
             "Types of non-public C++ fields can be elided away");
         break;

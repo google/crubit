@@ -959,9 +959,13 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
         }
       }
       if (name.empty()) {
-        auto anon_decl_name = anon_decl_names_.find(named_decl);
-        if (anon_decl_name != anon_decl_names_.end()) {
-          return {Identifier(std::string(anon_decl_name->second))};
+        if (auto* tag_type = llvm::dyn_cast<clang::TagDecl>(named_decl)) {
+          if (auto* typedef_decl = tag_type->getTypedefNameForAnonDecl()) {
+            std::optional<Identifier> identifier =
+                GetTranslatedIdentifier(typedef_decl);
+            CHECK(identifier.has_value());  // This must always hold.
+            return {*std::move(identifier)};
+          }
         }
         return std::nullopt;
       }
