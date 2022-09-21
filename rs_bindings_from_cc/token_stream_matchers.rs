@@ -114,12 +114,12 @@ macro_rules! assert_ir_not_matches {
 macro_rules! assert_items_match {
     ($items:expr, $patterns:expr $(,)*) => {
         assert_eq!($items.len(), $patterns.len());
-        for (idx, (item, pattern)) in itertools::enumerate(itertools::zip($items, $patterns)) {
-            $crate::internal::match_item(&item, &pattern).expect(&format!(
-                "input at position {} unexpectedly didn't match the pattern",
-                &idx
-            ));
-        }
+                for (idx, (item, pattern)) in $items.into_iter().zip($patterns).enumerate() {
+                    $crate::internal::match_item(&item, &pattern).expect(&format!(
+                        "input at position {} unexpectedly didn't match the pattern",
+                        &idx
+                    ));
+                }
     };
 }
 
