@@ -61,6 +61,33 @@ To run individual rust tests with `bazel test` (like `bazel test --test_filter=<
 To get Rust backtraces for `rs_bindings_from_cc` when running end-to-end tests,
 use `bazel test --action_env=RUST_BACKTRACE=1` to run the tests.
 
+## Debugging
+
+If you want to build the tool specially, for example using sanitizers, use the
+script at `rs_bindings_from_cc/generate_bindings_for_target_with_tool_flags.sh`, for example:
+
+```
+rs_bindings_from_cc/generate_bindings_for_target_with_tool_flags.sh \
+  //base \
+  --config=asan
+```
+
+If you want to build the tool specially and use it for generating bindings from
+a golden file, use the `<header basename>_rs_test` target. For `types.h` the
+command would be:
+
+```
+rs_bindings_from_cc/generate_bindings_for_target_with_tool_flags.sh \
+  //rs_bindings_from_cc/test/golden:types_rs_test \
+  --config=asan
+```
+
+If you want to see the Clang AST dump of some file (generated files work too), run:
+
+```
+bazel build --per_file_copt=<PATH_TO_FILE>@-Xclang,-ast-dump,-fno-color-diagnostics <TARGET> > /tmp/output_file
+```
+
 ## Contributing
 
 Chat room (internal): https://chat.google.com/room/AAAAImO--WA
