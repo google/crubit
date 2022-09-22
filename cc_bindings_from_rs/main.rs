@@ -16,58 +16,90 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 
-use anyhow::Context;
+// TODO(lukasza): Make `cmdline` and `lib` a separate crate (once we move to
+// Bazel).
+mod cmdline;
+mod lib;
+
 use cmdline::Cmdline;
 use itertools::Itertools;
-use rustc_interface::interface::Compiler;
-use rustc_interface::Queries;
-use rustc_middle::ty::TyCtxt;
-use std::fmt::Display;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
-struct CompilerCallbacks<'a> {
-    cmdline: &'a Cmdline,
-    result: anyhow::Result<()>,
-}
+mod bindings_generation {
 
-impl<'a> CompilerCallbacks<'a> {
-    fn new(cmdline: &'a Cmdline) -> Self {
-        Self { cmdline, result: Ok(()) }
-    }
+    use anyhow::Context;
+    use rustc_middle::ty::TyCtxt;
+    use std::fmt::Display;
+    use std::fs::File;
+    use std::io::Write;
+    use std::path::Path;
 
-    fn generate_and_write_bindings(&self, tcx: TyCtxt) -> anyhow::Result<()> {
-        let bindings = lib::GeneratedBindings::new(tcx);
+    use crate::cmdline::Cmdline;
+    use crate::lib::GeneratedBindings;
+
+    pub fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
+        let bindings = GeneratedBindings::generate(tcx);
+
         // TODO(lukasza): Use `tokens_to_string` from
         // `../common.token_stream_printer.rs`.
-        write_file(self.cmdline.h_out(), bindings.h_body)
+        write_file(cmdline.h_out(), bindings.h_body)
+    }
+
+    fn write_file(path: &Path, content: impl Display) -> anyhow::Result<()> {
+        File::create(path)
+            .and_then(|mut f| write!(f, "{}", content))
+            .with_context(|| format!("Error when writing to {}", path.display()))
     }
 }
 
-impl rustc_driver::Callbacks for CompilerCallbacks<'_> {
-    fn after_analysis<'tcx>(
-        &mut self,
-        _compiler: &Compiler,
-        queries: &'tcx Queries<'tcx>,
-    ) -> rustc_driver::Compilation {
-        let rustc_result = lib::enter_tcx(queries, |tcx| self.generate_and_write_bindings(tcx));
+/// Glue that enables the top-level `main() -> anyhow::Result<()>` to call into
+/// `fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()>` in the
+/// `bindings_generation` module.
+mod callbacks {
 
-        // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
-        // called by `rustc_driver` if earlier compiler analysis was successful
-        // (which as the *last* compilation phase presumably covers *all*
-        // errors).
-        self.result =
-            rustc_result.expect("Expecting no compile errors inside `after_analysis` callback.");
+    use rustc_interface::interface::Compiler;
+    use rustc_interface::Queries;
 
-        rustc_driver::Compilation::Stop
+    use crate::cmdline::Cmdline;
+    use crate::lib::enter_tcx;
+
+    /// When passed to `rustc_driver::RunCompiler::run`, the `CompilerCallbacks`
+    /// below will wait until Rust compiler parsing and analysis are done,
+    /// and then will invoke `bindings_generation::main` and stash/expose
+    /// its result via `CompilerCallbacks::into_result`.
+    pub struct CompilerCallbacks<'a> {
+        cmdline: &'a Cmdline,
+        result: anyhow::Result<()>,
     }
-}
 
-fn write_file(path: &Path, content: impl Display) -> anyhow::Result<()> {
-    File::create(path)
-        .and_then(|mut f| write!(f, "{}", content))
-        .with_context(|| format!("Error when writing to {}", path.display()))
+    impl<'a> CompilerCallbacks<'a> {
+        pub fn new(cmdline: &'a Cmdline) -> Self {
+            Self { cmdline, result: Ok(()) }
+        }
+
+        pub fn into_result(self) -> anyhow::Result<()> {
+            self.result
+        }
+    }
+
+    impl rustc_driver::Callbacks for CompilerCallbacks<'_> {
+        fn after_analysis<'tcx>(
+            &mut self,
+            _compiler: &Compiler,
+            queries: &'tcx Queries<'tcx>,
+        ) -> rustc_driver::Compilation {
+            let rustc_result =
+                enter_tcx(queries, |tcx| crate::bindings_generation::main(self.cmdline, tcx));
+
+            // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
+            // called by `rustc_driver` if earlier compiler analysis was successful
+            // (which as the *last* compilation phase presumably covers *all*
+            // errors).
+            self.result = rustc_result
+                .expect("Expecting no compile errors inside `after_analysis` callback.");
+
+            rustc_driver::Compilation::Stop
+        }
+    }
 }
 
 /// Wrapper around `rustc_driver::RunCompiler::run` that returns
@@ -124,12 +156,7 @@ fn main() -> anyhow::Result<()> {
     };
 
     // Invoke the Rust compiler with Crubit-specific `callbacks`.
-    let mut callbacks = CompilerCallbacks::new(&cmdline);
+    let mut callbacks = callbacks::CompilerCallbacks::new(&cmdline);
     run_compiler(cmdline.rustc_args(), &mut callbacks)?;
-    callbacks.result
+    callbacks.into_result()
 }
-
-// TODO(lukasza): Make `cmdline` and `lib` a separate crate (once we move to
-// Bazel).
-mod cmdline;
-mod lib;

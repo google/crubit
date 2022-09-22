@@ -14,7 +14,7 @@ use rustc_span::def_id::LOCAL_CRATE;
 fn get_names_of_exported_fns(tcx: TyCtxt) -> impl Iterator<Item = String> + '_ {
     tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(move |(symbol, _)| match symbol {
         ExportedSymbol::NonGeneric(def_id) => {
-            match tcx.hir().find_by_def_id(def_id.expect_local()).unwrap() {
+            match tcx.hir().get_by_def_id(def_id.expect_local()) {
                 Node::Item(Item { kind: ItemKind::Fn { .. }, .. }) => {
                     Some(tcx.def_path_str(*def_id))
                 }
@@ -33,7 +33,7 @@ pub struct GeneratedBindings {
 }
 
 impl GeneratedBindings {
-    pub fn new(tcx: TyCtxt) -> Self {
+    pub fn generate(tcx: TyCtxt) -> Self {
         let h_body = format!(
             "// Public functions: {}\n",
             get_names_of_exported_fns(tcx).collect_vec().join(", ")
@@ -109,7 +109,7 @@ mod tests {
         F: FnOnce(&GeneratedBindings) -> T + Send,
         T: Send,
     {
-        run_compiler(source, |tcx| f(&GeneratedBindings::new(tcx)))
+        run_compiler(source, |tcx| f(&GeneratedBindings::generate(tcx)))
     }
 
     /// Compiles Rust `source` then calls `f` on the `TyCtxt` representation
