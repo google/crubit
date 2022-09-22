@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{bail, Result};
+use anyhow::{bail, Result};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;

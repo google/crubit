@@ -91,7 +91,7 @@ rust_library(
     data = [
     ],
     deps = [
-        ":arc_anyhow",
+        "@crate_index//:anyhow",
         "@crate_index//:proc-macro2",
     ],
 )

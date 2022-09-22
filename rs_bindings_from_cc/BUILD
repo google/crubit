@@ -443,8 +443,8 @@ rust_library(
     visibility = ["//:__subpackages__"],
     deps = [
         ":ir",
-        "//common:arc_anyhow",
         "//common:token_stream_printer",
+        "@crate_index//:anyhow",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",

@@ -126,7 +126,7 @@ macro_rules! assert_items_match {
 /// Only used to make stuff needed by exported macros available
 pub mod internal {
 
-    use arc_anyhow::{anyhow, Result};
+    use anyhow::{anyhow, Result};
     use ir::{Item, IR};
     use itertools::Itertools;
     pub use proc_macro2::TokenStream;
