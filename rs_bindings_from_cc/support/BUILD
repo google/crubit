@@ -49,7 +49,7 @@ rust_test(
     name = "ctor_proc_macros_test",
     crate = ":ctor_proc_macros",
     deps = [
-        "//rs_bindings_from_cc:token_stream_matchers",
+        "//common:token_stream_matchers",
     ],
 )
 

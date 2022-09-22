@@ -86,6 +86,29 @@ cc_library(
 )
 
 rust_library(
+    name = "token_stream_matchers",
+    testonly = 1,
+    srcs = ["token_stream_matchers.rs"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":token_stream_printer",
+        "@crate_index//:anyhow",
+        "@crate_index//:proc-macro2",
+    ],
+)
+
+rust_test(
+    name = "token_stream_matchers_test",
+    crate = ":token_stream_matchers",
+    data = [
+    ],
+    deps = [
+        "//common:rust_allocator_shims",
+        "@crate_index//:quote",
+    ],
+)
+
+rust_library(
     name = "token_stream_printer",
     srcs = ["token_stream_printer.rs"],
     data = [

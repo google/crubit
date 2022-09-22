@@ -301,9 +301,6 @@ rust_library(
 rust_test(
     name = "rs_ir_test",
     crate = ":ir",
-    deps = [
-        ":token_stream_matchers",
-    ],
 )
 
 rust_library(
@@ -356,8 +353,8 @@ rust_test(
     srcs = ["ir_from_cc_test.rs"],
     deps = [
         ":ir",
+        ":ir_matchers",
         ":ir_testing",
-        ":token_stream_matchers",
         "//common:arc_anyhow",
         "//common:rust_allocator_shims",
         "@crate_index//:itertools",
@@ -416,9 +413,10 @@ rust_test(
     data = [
     ],
     deps = [
+        ":ir_matchers",
         ":ir_testing",
-        ":token_stream_matchers",
         "//common:rust_allocator_shims",
+        "//common:token_stream_matchers",
         "@crate_index//:static_assertions",
     ],
 )
@@ -438,11 +436,14 @@ cc_library(
 )
 
 rust_library(
-    name = "token_stream_matchers",
-    srcs = ["token_stream_matchers.rs"],
+    name = "ir_matchers",
+    testonly = 1,
+    srcs = ["ir_matchers.rs"],
     visibility = ["//:__subpackages__"],
     deps = [
         ":ir",
+        ":ir_testing",
+        "//common:token_stream_matchers",
         "//common:token_stream_printer",
         "@crate_index//:anyhow",
         "@crate_index//:itertools",
@@ -452,12 +453,11 @@ rust_library(
 )
 
 rust_test(
-    name = "token_stream_matchers_test",
-    crate = ":token_stream_matchers",
+    name = "ir_matchers_test",
+    crate = ":ir_matchers",
     data = [
     ],
     deps = [
-        ":ir_testing",
         "//common:rust_allocator_shims",
     ],
 )

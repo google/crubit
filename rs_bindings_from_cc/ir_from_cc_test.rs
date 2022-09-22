@@ -5,12 +5,12 @@
 
 use arc_anyhow::Result;
 use ir::*;
+use ir_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 use ir_testing::*;
 use itertools::Itertools;
 use quote::quote;
 use std::collections::{HashMap, HashSet};
 use std::iter::Iterator;
-use token_stream_matchers::{assert_ir_matches, assert_ir_not_matches, assert_items_match};
 
 #[test]
 fn test_function() {

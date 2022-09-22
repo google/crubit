@@ -3466,14 +3466,14 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ir_matchers::assert_ir_matches;
     use ir_testing::{
         ir_from_cc, ir_from_cc_dependency, ir_record, make_ir_from_items, retrieve_func,
         with_lifetime_macros,
     };
     use static_assertions::{assert_impl_all, assert_not_impl_any};
     use token_stream_matchers::{
-        assert_cc_matches, assert_cc_not_matches, assert_ir_matches, assert_rs_matches,
-        assert_rs_not_matches,
+        assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
     use token_stream_printer::{rs_tokens_to_formatted_string_for_tests, tokens_to_string};
 
