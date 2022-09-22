@@ -9,7 +9,6 @@ use itertools::Itertools;
 use once_cell::sync::Lazy;
 use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote, ToTokens};
-use salsa_utils::RcEq;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
@@ -88,7 +87,7 @@ trait BindingsGenerator {
     fn generate_func(
         &self,
         func: Rc<Func>,
-    ) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
+    ) -> Result<Option<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 }
@@ -180,6 +179,32 @@ struct RsSnippet {
 impl From<TokenStream> for RsSnippet {
     fn from(tokens: TokenStream) -> Self {
         RsSnippet { features: BTreeSet::new(), tokens }
+    }
+}
+
+impl Eq for RsSnippet {}
+
+impl PartialEq for RsSnippet {
+    fn eq(&self, other: &Self) -> bool {
+        fn to_comparable_tuple(_x: &RsSnippet) -> (&BTreeSet<Ident>, String) {
+            // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
+            // `String`. This is a bit expensive, but should be okay (especially
+            // given that this code doesn't execute at this point).  Having a
+            // working `impl PartialEq` helps `salsa` reuse unchanged memoized
+            // results of previous computations (although this is a bit
+            // theoretical, since right now we don't re-set `salsa`'s inputs  - we only call
+            // `set_ir` once).
+            //
+            // TODO(lukasza): If incremental `salsa` computations are ever used in the
+            // future, we may end up hitting the `panic!` below.  At that point
+            // it should be okay to just remove the `panic!`, but we should also
+            // 1) think about improving performance of comparing `TokenStream`
+            // for equality and 2) add unit tests covering this `PartialEq` `impl`.
+            panic!("This code is not expected to execute in practice");
+            #[allow(unreachable_code)]
+            (&_x.features, _x.tokens.to_string())
+        }
+        to_comparable_tuple(self) == to_comparable_tuple(other)
     }
 }
 
@@ -983,7 +1008,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
 fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
-) -> Result<Option<RcEq<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
+) -> Result<Option<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
     let ir = db.ir();
     let mut features = BTreeSet::new();
     let mut param_types = func
@@ -1240,7 +1265,7 @@ fn generate_func(
         }
     }
 
-    Ok(Some(RcEq::new((
+    Ok(Some(Rc::new((
         RsSnippet { features, tokens: api_func },
         thunk.into(),
         Rc::new(function_id),
