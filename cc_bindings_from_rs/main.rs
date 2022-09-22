@@ -68,16 +68,20 @@ mod callbacks {
     /// its result via `CompilerCallbacks::into_result`.
     pub struct CompilerCallbacks<'a> {
         cmdline: &'a Cmdline,
-        result: anyhow::Result<()>,
+        result: Option<anyhow::Result<()>>,
     }
 
     impl<'a> CompilerCallbacks<'a> {
         pub fn new(cmdline: &'a Cmdline) -> Self {
-            Self { cmdline, result: Ok(()) }
+            Self { cmdline, result: None }
         }
 
         pub fn into_result(self) -> anyhow::Result<()> {
-            self.result
+            assert!(
+                self.result.is_some(),
+                "CompilerCallbacks::run_main should have been called by now"
+            );
+            self.result.unwrap()
         }
     }
 
@@ -87,15 +91,16 @@ mod callbacks {
             _compiler: &Compiler,
             queries: &'tcx Queries<'tcx>,
         ) -> rustc_driver::Compilation {
-            let rustc_result =
-                enter_tcx(queries, |tcx| crate::bindings_generation::main(self.cmdline, tcx));
+            let rustc_result = enter_tcx(queries, |tcx| {
+                assert!(self.result.is_none(), "after_analysis should only run once");
+                self.result = Some(crate::bindings_generation::main(self.cmdline, tcx));
+            });
 
             // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
             // called by `rustc_driver` if earlier compiler analysis was successful
             // (which as the *last* compilation phase presumably covers *all*
             // errors).
-            self.result = rustc_result
-                .expect("Expecting no compile errors inside `after_analysis` callback.");
+            rustc_result.expect("Expecting no compile errors inside `after_analysis` callback.");
 
             rustc_driver::Compilation::Stop
         }
