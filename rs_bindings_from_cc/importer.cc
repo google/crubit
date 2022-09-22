@@ -411,8 +411,8 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
 std::vector<ItemId> Importer::GetOrderedItemIdsOfTemplateInstantiations()
     const {
   std::vector<SourceLocationComparator::OrderedItemId> items;
-  items.reserve(class_template_instantiations_for_current_target_.size());
-  for (const auto* decl : class_template_instantiations_for_current_target_) {
+  items.reserve(class_template_instantiations_.size());
+  for (const auto* decl : class_template_instantiations_) {
     items.push_back({GetSourceOrderKey(decl), GenerateItemId(decl)});
   }
 
@@ -664,7 +664,7 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
 
   // Store `specialization_decl`s so that they will get included in
   // IR::top_level_item_ids.
-  class_template_instantiations_for_current_target_.insert(specialization_decl);
+  class_template_instantiations_.insert(specialization_decl);
 
   return ConvertTypeDecl(specialization_decl);
 }

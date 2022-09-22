@@ -127,7 +127,7 @@ class Importer final : public ImportContext {
   absl::flat_hash_map<const clang::Decl*, std::optional<IR::Item>>
       import_cache_;
   absl::flat_hash_set<const clang::ClassTemplateSpecializationDecl*>
-      class_template_instantiations_for_current_target_;
+      class_template_instantiations_;
   std::vector<const clang::RawComment*> comments_;
 
   // Set of decls that have been successfully imported (i.e. that will be
