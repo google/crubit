@@ -51,8 +51,8 @@ mod bindings_main {
     }
 }
 
-/// Glue that enables the top-level `main() -> anyhow::Result<()>` to call into
-/// `fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()>` in the
+/// Glue that enables the top-level `fn main() -> anyhow::Result<()>` to call
+/// into `fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()>` in the
 /// `bindings_main` module.  This mostly wraps and simplifies a subset of APIs
 /// from the `rustc_driver` module.
 mod bindings_driver {
@@ -66,10 +66,7 @@ mod bindings_driver {
     /// Wrapper around `rustc_driver::RunCompiler` that exposes a simplified API
     /// (e.g. doesn't take arbitrary `Callbacks` but always calls into
     /// `bindings_main::main`).
-    pub struct RunCompiler<'a> {
-        cmdline: &'a Cmdline,
-        bindings_main_result: Option<anyhow::Result<()>>,
-    }
+    pub struct RunCompiler<'a>(BindingsCallbacks<'a>);
 
     impl<'a> RunCompiler<'a> {
         /// Creates new Rust compiler runner that will
@@ -77,7 +74,7 @@ mod bindings_driver {
         /// - pass `cmdline` to `bindings_main::main` (in addition to passing
         ///   `TyCtxt` - see the doc comment of `RunCompiler::run` below).
         pub fn new(cmdline: &'a Cmdline) -> Self {
-            Self { cmdline, bindings_main_result: None }
+            Self(BindingsCallbacks { cmdline, bindings_main_result: None })
         }
 
         /// Runs Rust compiler and then passes the `TyCtxt` of the
@@ -89,7 +86,7 @@ mod bindings_driver {
             // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
             // translate them into a Result, and 2) resume and propagate other panics.
             let rustc_result = rustc_driver::catch_fatal_errors(|| {
-                rustc_driver::RunCompiler::new(self.cmdline.rustc_args(), &mut self).run()
+                rustc_driver::RunCompiler::new(self.0.cmdline.rustc_args(), &mut self.0).run()
             });
 
             // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. get the Result
@@ -107,18 +104,24 @@ mod bindings_driver {
                 anyhow::format_err!("Errors reported by Rust compiler.")
             });
 
-            // Return either `rustc_result` or `self.bindings_main_result`.
+            // Return either `rustc_result` or `self.0.bindings_main_result`.
             rustc_result.and_then(|()| {
                 assert!(
-                    self.bindings_main_result.is_some(),
-                    "RunCompiler::run_main should have been called by now"
+                    self.0.bindings_main_result.is_some(),
+                    "BindingsCallbacks::run_main should have been called by now"
                 );
-                self.bindings_main_result.unwrap()
+                self.0.bindings_main_result.unwrap()
             })
         }
     }
 
-    impl rustc_driver::Callbacks for RunCompiler<'_> {
+    /// Non-`pub` to avoid exposing `impl rustc_driver::Callbacks`.
+    struct BindingsCallbacks<'a> {
+        cmdline: &'a Cmdline,
+        bindings_main_result: Option<anyhow::Result<()>>,
+    }
+
+    impl rustc_driver::Callbacks for BindingsCallbacks<'_> {
         fn after_analysis<'tcx>(
             &mut self,
             _compiler: &Compiler,
