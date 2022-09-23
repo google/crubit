@@ -24,7 +24,7 @@ mod lib;
 use cmdline::Cmdline;
 use itertools::Itertools;
 
-mod bindings_generation {
+mod bindings_main {
 
     use anyhow::Context;
     use rustc_middle::ty::TyCtxt;
@@ -53,8 +53,9 @@ mod bindings_generation {
 
 /// Glue that enables the top-level `main() -> anyhow::Result<()>` to call into
 /// `fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()>` in the
-/// `bindings_generation` module.
-mod callbacks {
+/// `bindings_main` module.  This mostly wraps and simplifies a subset of APIs
+/// from the `rustc_driver` module.
+mod bindings_driver {
 
     use rustc_interface::interface::Compiler;
     use rustc_interface::Queries;
@@ -62,38 +63,74 @@ mod callbacks {
     use crate::cmdline::Cmdline;
     use crate::lib::enter_tcx;
 
-    /// When passed to `rustc_driver::RunCompiler::run`, the `CompilerCallbacks`
-    /// below will wait until Rust compiler parsing and analysis are done,
-    /// and then will invoke `bindings_generation::main` and stash/expose
-    /// its result via `CompilerCallbacks::into_result`.
-    pub struct CompilerCallbacks<'a> {
+    /// Wrapper around `rustc_driver::RunCompiler` that exposes a simplified API
+    /// (e.g. doesn't take arbitrary `Callbacks` but always calls into
+    /// `bindings_main::main`).
+    pub struct RunCompiler<'a> {
         cmdline: &'a Cmdline,
-        result: Option<anyhow::Result<()>>,
+        bindings_main_result: Option<anyhow::Result<()>>,
     }
 
-    impl<'a> CompilerCallbacks<'a> {
+    impl<'a> RunCompiler<'a> {
+        /// Creates new Rust compiler runner that will
+        /// - pass `cmdline.rustc_args()` to the Rust compiler
+        /// - pass `cmdline` to `bindings_main::main` (in addition to passing
+        ///   `TyCtxt` - see the doc comment of `RunCompiler::run` below).
         pub fn new(cmdline: &'a Cmdline) -> Self {
-            Self { cmdline, result: None }
+            Self { cmdline, bindings_main_result: None }
         }
 
-        pub fn into_result(self) -> anyhow::Result<()> {
-            assert!(
-                self.result.is_some(),
-                "CompilerCallbacks::run_main should have been called by now"
-            );
-            self.result.unwrap()
+        /// Runs Rust compiler and then passes the `TyCtxt` of the
+        /// parsed+analyzed Rust crate into `bindings_main::main`.
+        /// Returns the combined results from Rust compiler *and*
+        /// `bindings_main::main`.
+        pub fn run(mut self) -> anyhow::Result<()> {
+            // Rust compiler unwinds with a special sentinel value to abort compilation on
+            // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
+            // translate them into a Result, and 2) resume and propagate other panics.
+            let rustc_result = rustc_driver::catch_fatal_errors(|| {
+                rustc_driver::RunCompiler::new(self.cmdline.rustc_args(), &mut self).run()
+            });
+
+            // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. get the Result
+            // from `RunCompiler::run` rather than the Result from
+            // `catch_fatal_errors`).
+            let rustc_result = rustc_result.and_then(|result| result);
+
+            // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
+            // use `?` because the trait `std::error::Error` is not implemented for
+            // `ErrorGuaranteed` which is required by the impl of
+            // `From<ErrorGuaranteed>` for `anyhow::Error`.)
+            let rustc_result = rustc_result.map_err(|_err| {
+                // We can ignore `_err` because it has no payload / because this type has only
+                // one valid/possible value.
+                anyhow::format_err!("Errors reported by Rust compiler.")
+            });
+
+            // Return either `rustc_result` or `self.bindings_main_result`.
+            rustc_result.and_then(|()| {
+                assert!(
+                    self.bindings_main_result.is_some(),
+                    "RunCompiler::run_main should have been called by now"
+                );
+                self.bindings_main_result.unwrap()
+            })
         }
     }
 
-    impl rustc_driver::Callbacks for CompilerCallbacks<'_> {
+    impl rustc_driver::Callbacks for RunCompiler<'_> {
         fn after_analysis<'tcx>(
             &mut self,
             _compiler: &Compiler,
             queries: &'tcx Queries<'tcx>,
         ) -> rustc_driver::Compilation {
             let rustc_result = enter_tcx(queries, |tcx| {
-                assert!(self.result.is_none(), "after_analysis should only run once");
-                self.result = Some(crate::bindings_generation::main(self.cmdline, tcx));
+                assert!(
+                    self.bindings_main_result.is_none(),
+                    "after_analysis should only run once"
+                );
+                self.bindings_main_result =
+                    Some(crate::bindings_main::main(self.cmdline, tcx))
             });
 
             // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
@@ -107,38 +144,9 @@ mod callbacks {
     }
 }
 
-/// Wrapper around `rustc_driver::RunCompiler::run` that returns
-/// `anyhow::Result<()>` instead of either returning
-/// `rustc_interface::interface::Result<()>` or panicking with a special
-/// sentinel value.
-fn run_compiler<T>(rustc_args: &[String], callbacks: &mut T) -> anyhow::Result<()>
-where
-    T: rustc_driver::Callbacks + Send,
-{
-    // Rust compiler unwinds with a special sentinel value to abort compilation on
-    // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
-    // translate them into a Result, and 2) resume and propagate other panics.
-    let result = rustc_driver::catch_fatal_errors(|| {
-        rustc_driver::RunCompiler::new(rustc_args, callbacks).run()
-    });
-
-    // Flatten `Result<Result<T, ...>>` into `Result<T, ...>`.
-    let result = result.and_then(|result| result);
-
-    // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
-    // use `?` because the trait `std::error::Error` is not implemented for
-    // `ErrorGuaranteed` which is required by the impl of
-    // `From<ErrorGuaranteed>` for `anyhow::Error`.)
-    result.map_err(|_err| {
-        // We can ignore `_err` because it has no payload / because this type has only
-        // one valid/possible value.
-        anyhow::format_err!("Errors reported by Rust compiler.")
-    })
-}
-
 // TODO(lukasza): Add end-to-end tests that verify that the exit code is
 // non-zero when:
-// * input contains syntax errors - test coverage for `run_compiler`.
+// * input contains syntax errors - test coverage for `RunCompiler::run`.
 // * mandatory parameters (e.g. `--h_out`) are missing - test coverage for how
 //   `main` calls `Cmdline::new`.
 // * `--h_out` cannot be written to (in this case, the error message should
@@ -160,8 +168,7 @@ fn main() -> anyhow::Result<()> {
         Cmdline::new(&args)?
     };
 
-    // Invoke the Rust compiler with Crubit-specific `callbacks`.
-    let mut callbacks = callbacks::CompilerCallbacks::new(&cmdline);
-    run_compiler(cmdline.rustc_args(), &mut callbacks)?;
-    callbacks.into_result()
+    // Invoke the Rust compiler and call `bindings_main::main` after parsing and
+    // analysis are done.
+    bindings_driver::RunCompiler::new(&cmdline).run()
 }
