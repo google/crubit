@@ -27,6 +27,9 @@ $ cargo run -- \
     $HOME/scratch/test.rs --crate-type=lib --sysroot `rustc --print sysroot`
 
 $ cat $HOME/scratch/test.h
+// Automatically @generated C++ bindings for the following Rust crate:
+// test
+
 // List of public functions:
 // public_function
 ```

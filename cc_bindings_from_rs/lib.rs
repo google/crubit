@@ -35,17 +35,31 @@ pub struct GeneratedBindings {
 
 impl GeneratedBindings {
     pub fn generate(tcx: TyCtxt) -> Self {
-        let comment_body = format!(
-            "List of public functions:\n{}",
-            get_names_of_exported_fns(tcx).collect_vec().join(",\n")
-        );
-        let h_body = quote! { __COMMENT__ #comment_body };
+        let top_comment = {
+            let crate_name = tcx.crate_name(LOCAL_CRATE);
+            let txt = format!(
+                "Automatically @generated C++ bindings for the following Rust crate:\n\
+                 {crate_name}"
+            );
+            quote! { __COMMENT__ #txt __NEWLINE__ }
+        };
+
+        let h_body = {
+            let comment_with_names_of_public_functions = format!(
+                "List of public functions:\n{}",
+                get_names_of_exported_fns(tcx).collect_vec().join(",\n")
+            );
+            quote! {
+                #top_comment
+                __COMMENT__ #comment_with_names_of_public_functions
+            }
+        };
 
         Self { h_body }
     }
 }
 
-/// Helper (used by `main` and `test::run_compiler`) for invokind functions
+/// Helper (used by `main` and `test::run_compiler`) for invoking functions
 /// operating on `TyCtxt`.
 pub fn enter_tcx<'tcx, F, T>(
     queries: &'tcx Queries<'tcx>,
@@ -101,10 +115,14 @@ mod tests {
             // TODO(lukasza): Use `assert_cc_matches!` from
             // `rs_bindings_from_cc/token_stream_matchers.rs` here.
             let h_body = tokens_to_string(bindings.h_body)?;
-            assert!(h_body.contains("// List of public functions:"), "h_body = {}", h_body);
-            assert!(h_body.contains("// public_function"), "h_body = {}", h_body);
-            assert!(!h_body.contains("private_function"), "h_body = {}", h_body);
-
+            assert_eq!(
+                h_body,
+                "// Automatically @generated C++ bindings for the following Rust crate:\n\
+                 // rust_out\n\
+                 \n\
+                 // List of public functions:\n\
+                 // public_function\n"
+            );
             Ok(())
         })
     }
