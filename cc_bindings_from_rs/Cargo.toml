@@ -21,6 +21,8 @@ anyhow = "1.0.65"
 getopts = "0.2"
 itertools = "0.10.4"
 lazy_static = "1.4.0"
+proc-macro2 = "1.0.43"
+quote = "1.0.21"
 
 [dev-dependencies]
 tempfile = "3.3.0"

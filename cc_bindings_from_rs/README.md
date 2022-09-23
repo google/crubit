@@ -27,7 +27,8 @@ $ cargo run -- \
     $HOME/scratch/test.rs --crate-type=lib --sysroot `rustc --print sysroot`
 
 $ cat $HOME/scratch/test.h
-// Public functions: public_function
+// List of public functions:
+// public_function
 ```
 
 

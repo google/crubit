@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use itertools::Itertools;
+use proc_macro2::TokenStream;
+use quote::quote;
 use rustc_hir::{Item, ItemKind, Node};
 use rustc_interface::Queries;
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
@@ -28,16 +30,16 @@ fn get_names_of_exported_fns(tcx: TyCtxt) -> impl Iterator<Item = String> + '_ {
 }
 
 pub struct GeneratedBindings {
-    // TODO(lukasza): Use `TokenStream` from `proc_macro2` instead of a `String`.
-    pub h_body: String,
+    pub h_body: TokenStream,
 }
 
 impl GeneratedBindings {
     pub fn generate(tcx: TyCtxt) -> Self {
-        let h_body = format!(
-            "// Public functions: {}\n",
-            get_names_of_exported_fns(tcx).collect_vec().join(", ")
+        let comment_body = format!(
+            "List of public functions:\n{}",
+            get_names_of_exported_fns(tcx).collect_vec().join(",\n")
         );
+        let h_body = quote! { __COMMENT__ #comment_body };
 
         Self { h_body }
     }
@@ -61,7 +63,10 @@ where
 mod tests {
     use super::GeneratedBindings;
 
+    use anyhow::Result;
     use itertools::Itertools;
+
+    use crate::token_stream_printer::tokens_to_string;
 
     #[test]
     fn test_get_names_of_exported_fns_public_vs_private() {
@@ -84,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_happy_path() {
+    fn test_generated_bindings_happy_path() -> Result<()> {
         let test_src = r#"
                 pub fn public_function() {
                     private_function()
@@ -95,8 +100,12 @@ mod tests {
         test_generated_bindings(test_src, |bindings| {
             // TODO(lukasza): Use `assert_cc_matches!` from
             // `rs_bindings_from_cc/token_stream_matchers.rs` here.
-            assert!(bindings.h_body.contains("// Public functions: public_function"));
-            assert!(!bindings.h_body.contains("private_function"));
+            let h_body = tokens_to_string(bindings.h_body)?;
+            assert!(h_body.contains("// List of public functions:"), "h_body = {}", h_body);
+            assert!(h_body.contains("// public_function"), "h_body = {}", h_body);
+            assert!(!h_body.contains("private_function"), "h_body = {}", h_body);
+
+            Ok(())
         })
     }
 
@@ -106,10 +115,10 @@ mod tests {
 
     fn test_generated_bindings<F, T>(source: &str, f: F) -> T
     where
-        F: FnOnce(&GeneratedBindings) -> T + Send,
+        F: FnOnce(GeneratedBindings) -> T + Send,
         T: Send,
     {
-        run_compiler(source, |tcx| f(&GeneratedBindings::generate(tcx)))
+        run_compiler(source, |tcx| f(GeneratedBindings::generate(tcx)))
     }
 
     /// Compiles Rust `source` then calls `f` on the `TyCtxt` representation

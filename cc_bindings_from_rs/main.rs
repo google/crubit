@@ -20,6 +20,8 @@ extern crate rustc_span;
 // Bazel).
 mod cmdline;
 mod lib;
+#[path = "../common/token_stream_printer.rs"]
+mod token_stream_printer;
 
 use cmdline::Cmdline;
 use itertools::Itertools;
@@ -35,13 +37,11 @@ mod bindings_main {
 
     use crate::cmdline::Cmdline;
     use crate::lib::GeneratedBindings;
+    use crate::token_stream_printer::tokens_to_string;
 
     pub fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
         let bindings = GeneratedBindings::generate(tcx);
-
-        // TODO(lukasza): Use `tokens_to_string` from
-        // `../common.token_stream_printer.rs`.
-        write_file(cmdline.h_out(), bindings.h_body)
+        write_file(cmdline.h_out(), tokens_to_string(bindings.h_body)?)
     }
 
     fn write_file(path: &Path, content: impl Display) -> anyhow::Result<()> {
