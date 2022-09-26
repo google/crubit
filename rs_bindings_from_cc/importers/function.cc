@@ -32,6 +32,20 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
         function_decl,
         "Internal functions from the standard library are not supported");
   }
+  // Method is private, we don't need to import it.
+  if (auto* method_decl =
+          clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
+    switch (method_decl->getAccess()) {
+      case clang::AS_public:
+        break;
+      case clang::AS_protected:
+      case clang::AS_private:
+      case clang::AS_none:
+        // No need for IR to include Func representing private methods.
+        // TODO(lukasza): Revisit this for protected methods.
+        return std::nullopt;
+    }
+  }
 
   // TODO(lukasza, mboehme): Consider changing the GetLifetimeAnnotations API to
   // distinguish 1) no lifetime annotations found vs 2) erroneous lifetime
@@ -137,16 +151,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   llvm::Optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    switch (method_decl->getAccess()) {
-      case clang::AS_public:
-        break;
-      case clang::AS_protected:
-      case clang::AS_private:
-      case clang::AS_none:
-        // No need for IR to include Func representing private methods.
-        // TODO(lukasza): Revisit this for protected methods.
-        return std::nullopt;
-    }
     llvm::Optional<MemberFuncMetadata::InstanceMethodMetadata>
         instance_metadata;
     if (method_decl->isInstance()) {

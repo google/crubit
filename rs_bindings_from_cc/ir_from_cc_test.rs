@@ -3596,3 +3596,43 @@ fn test_friend() {
         }
     );
 }
+
+fn generate_member_func_with_visibility(record_type: &str, visibility: &str) -> String {
+    format!(
+        r#"
+{record_type} Bar {{
+ {visibility}
+  void myfunc() {{}}
+}};"#
+    )
+}
+
+#[test]
+fn test_private_method() {
+    let ir_with_function = quote! {
+      ...
+      Func { ... name: "myfunc", ... }
+      ...
+    };
+    for (record_type, visibility, expect_function) in vec![
+        ("struct", "public:", true),
+        ("struct", "protected:", false),
+        ("struct", "private:", false),
+        // tests without visiblity keyword, public is the default for struct
+        ("struct", "", true),
+        ("class", "public:", true),
+        ("class", "protected:", false),
+        ("class", "private:", false),
+        // tests without visiblity keyword, private is the default for class
+        ("class", "", false),
+    ] {
+        let record = generate_member_func_with_visibility(record_type, visibility);
+        let ir = ir_from_cc(&record).unwrap();
+        eprintln!("{}", record);
+        if expect_function {
+            assert_ir_matches!(ir, ir_with_function);
+        } else {
+            assert_ir_not_matches!(ir, ir_with_function);
+        }
+    }
+}
