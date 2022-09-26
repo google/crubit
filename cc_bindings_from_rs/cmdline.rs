@@ -41,7 +41,6 @@ mod tests {
     use super::*;
 
     use itertools::Itertools;
-    use std::io::Write;
     use tempfile::tempdir;
 
     fn new_cmdline(args: &[&str]) -> Result<Cmdline, Fail> {
@@ -97,11 +96,10 @@ mod tests {
     fn test_here_file() -> anyhow::Result<()> {
         let tmpdir = tempdir()?;
         let tmpfile = tmpdir.path().join("herefile");
-        let mut f = std::fs::File::create(tmpfile.clone())?;
-        writeln!(f, "--h_out=foo.h")?;
-        writeln!(f, "--")?;
-        writeln!(f, "test.rs")?;
-        writeln!(f, "--crate-type=lib")?;
+        std::fs::write(
+            &tmpfile,
+            &["--h_out=foo.h", "--", "test.rs", "--crate-type=lib"].join("\n"),
+        )?;
 
         let cmdline = Cmdline::new(&[format!("@{}", tmpfile.display())])?;
         assert_eq!(Path::new("foo.h"), cmdline.h_out());

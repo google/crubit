@@ -30,9 +30,6 @@ mod bindings_main {
 
     use anyhow::Context;
     use rustc_middle::ty::TyCtxt;
-    use std::fmt::Display;
-    use std::fs::File;
-    use std::io::Write;
     use std::path::Path;
 
     use crate::cmdline::Cmdline;
@@ -41,12 +38,11 @@ mod bindings_main {
 
     pub fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
         let bindings = GeneratedBindings::generate(tcx);
-        write_file(cmdline.h_out(), tokens_to_string(bindings.h_body)?)
+        write_file(cmdline.h_out(), &tokens_to_string(bindings.h_body)?)
     }
 
-    fn write_file(path: &Path, content: impl Display) -> anyhow::Result<()> {
-        File::create(path)
-            .and_then(|mut f| write!(f, "{}", content))
+    fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
+        std::fs::write(path, content)
             .with_context(|| format!("Error when writing to {}", path.display()))
     }
 }
