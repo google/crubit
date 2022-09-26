@@ -7,23 +7,30 @@
 #include "absl/strings/substitute.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "clang/Sema/Sema.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace crubit {
+static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
+  const clang::DeclContext* context = decl->getDeclContext();
+  while (context) {
+    if (context->isStdNamespace()) {
+      return true;
+    }
+    context = context->getParent();
+  }
+  return false;
+}
 
 std::optional<IR::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
-  if (function_decl->isInStdNamespace() &&
-      function_decl->hasAttr<clang::VisibilityAttr>()) {
-    auto visibility = function_decl->getAttr<clang::VisibilityAttr>();
-    if (visibility->getVisibility() ==
-        clang::VisibilityAttr::VisibilityType::Hidden) {
-      return ictx_.ImportUnsupportedItem(
-          function_decl,
-          "Functions from the standard library with hidden visibility are not "
-          "supported");
-    }
+  clang::IdentifierInfo* id = function_decl->getIdentifier();
+  if (IsInStdNamespace(function_decl) && id != nullptr &&
+      id->getName().find("__") != llvm::StringRef::npos) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl,
+        "Internal functions from the standard library are not supported");
   }
 
   // TODO(lukasza, mboehme): Consider changing the GetLifetimeAnnotations API to
