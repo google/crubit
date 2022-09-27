@@ -25,12 +25,29 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
     clang::FunctionDecl* function_decl) {
   if (!ictx_.IsFromCurrentTarget(function_decl)) return std::nullopt;
   if (function_decl->isDeleted()) return std::nullopt;
-  clang::IdentifierInfo* id = function_decl->getIdentifier();
-  if (IsInStdNamespace(function_decl) && id != nullptr &&
-      id->getName().find("__") != llvm::StringRef::npos) {
-    return ictx_.ImportUnsupportedItem(
-        function_decl,
-        "Internal functions from the standard library are not supported");
+
+  if (IsInStdNamespace(function_decl)) {
+    if (clang::IdentifierInfo* id = function_decl->getIdentifier();
+        id != nullptr && id->getName().find("__") != llvm::StringRef::npos) {
+      return ictx_.ImportUnsupportedItem(
+          function_decl,
+          "Internal functions from the standard library are not supported");
+    }
+    // Disable all member functions except the destructor (which cannot have
+    // special requirements) until we can conditionally import them, or disable
+    // them on a more fine-grained basis.
+    if (clang::FunctionDecl* templated_function_decl =
+            function_decl->getInstantiatedFromMemberFunction();
+        templated_function_decl != nullptr &&
+        !ictx_.IsFromCurrentTarget(templated_function_decl) &&
+        templated_function_decl->getDeclName().getNameKind() !=
+            clang::DeclarationName::NameKind::CXXDestructorName) {
+      return ictx_.ImportUnsupportedItem(
+          function_decl,
+          "TODO(b/248542210,b/248577708): as a temporary workaround for "
+          "un-instantiable function templates, template functions from the STL "
+          "cannot be instantiated in user crates");
+    }
   }
   // Method is private, we don't need to import it.
   if (auto* method_decl =

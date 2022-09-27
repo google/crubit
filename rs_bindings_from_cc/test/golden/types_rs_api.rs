@@ -194,8 +194,12 @@ forward_declare::unsafe_define!(
 // Typedefs nested in classes are not supported yet
 
 // <unknown location>
+// Error while generating bindings for item 'std::integral_constant<bool, false>::operator bool':
+// TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
+
+// <unknown location>
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
-// Bindings for this kind of operator (operator () with 1 parameter(s)) are not supported
+// TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -236,8 +240,12 @@ forward_declare::unsafe_define!(
 // Typedefs nested in classes are not supported yet
 
 // <unknown location>
+// Error while generating bindings for item 'std::integral_constant<bool, true>::operator bool':
+// TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
+
+// <unknown location>
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
-// Bindings for this kind of operator (operator () with 1 parameter(s)) are not supported
+// TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
 mod detail {
     #[allow(unused_imports)]
