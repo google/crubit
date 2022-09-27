@@ -5,8 +5,6 @@
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
-// TODO(lukasza): Remove the `extern crate` declarations - they shouldn't be
-// needed once we switch to Bazel.
 extern crate rustc_driver;
 extern crate rustc_error_codes;
 extern crate rustc_errors;
@@ -20,8 +18,6 @@ extern crate rustc_span;
 // Bazel).
 mod cmdline;
 mod lib;
-#[path = "../common/token_stream_printer.rs"]
-mod token_stream_printer;
 
 use cmdline::Cmdline;
 use itertools::Itertools;
@@ -34,7 +30,7 @@ mod bindings_main {
 
     use crate::cmdline::Cmdline;
     use crate::lib::GeneratedBindings;
-    use crate::token_stream_printer::tokens_to_string;
+    use token_stream_printer::tokens_to_string;
 
     pub fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
         let bindings = GeneratedBindings::generate(tcx);

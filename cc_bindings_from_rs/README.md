@@ -11,29 +11,28 @@ Most `rustc` cmdline parameters should be supported (e.g. `--crate-type`).
 Example:
 
 ```
-# Set CARGO_TARGET_DIR to avoid generating build artifacts inside of the source
-# tree (i.e. generate them elsewhere - where `hg status` cannot see them).
-$ export CARGO_TARGET_DIR=$HOME/scratch/cargo-target
 
-$ cat $HOME/scratch/test.rs
+$ cat scratch/test.rs
 pub fn public_function() {
     private_function()
 }
 
 fn private_function() {}
 
-$ cargo run -- \
-    --h_out=$HOME/scratch/test.h -- \
-    $HOME/scratch/test.rs --crate-type=lib --sysroot `rustc --print sysroot`
+$ bazel run \
+    //cc_bindings_from_rs:cc_bindings_from_rs_legacy_toolchain_runner -- \
+    --h_out=$(pwd)/test.h -- \
+    $(pwd)/test.rs \
+    --crate-type=lib \
+    --sysroot $(pwd)/third_party/unsupported_toolchains/rust/toolchains/nightly
 
-$ cat $HOME/scratch/test.h
+$ cat bazel-out/scratch/test.h
 // Automatically @generated C++ bindings for the following Rust crate:
 // test
 
 // List of public functions:
 // public_function
 ```
-
 
 ## Contributing
 

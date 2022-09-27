@@ -80,7 +80,7 @@ mod tests {
     use anyhow::Result;
     use itertools::Itertools;
 
-    use crate::token_stream_printer::tokens_to_string;
+    use token_stream_printer::tokens_to_string;
 
     #[test]
     fn test_get_names_of_exported_fns_public_vs_private() {
@@ -146,24 +146,7 @@ mod tests {
         F: for<'tcx> FnOnce(rustc_middle::ty::TyCtxt<'tcx>) -> T + Send,
         T: Send,
     {
-        use lazy_static::lazy_static;
         use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
-        use std::path::PathBuf;
-
-        // TODO(lukasza): This probably won't work in Bazel...
-        lazy_static! {
-            static ref RUSTC_SYSROOT: String = {
-                let output = std::process::Command::new("rustc")
-                    .arg("--print=sysroot")
-                    .current_dir(".")
-                    .output()
-                    .expect("For now we depend on `rustc` invocation to succeed... sorry...");
-                std::str::from_utf8(&output.stdout)
-                    .expect("Only UTF-8 compatible rustc sysroot is supported... sorry...")
-                    .trim()
-                    .into()
-            };
-        }
 
         const TEST_FILENAME: &str = "crubit_unittests.rs";
 
@@ -173,9 +156,16 @@ mod tests {
         // `Mir`, etc. would also trigger code gen).
         let output_types = OutputTypes::new(&[(OutputType::Bitcode, None /* PathBuf */)]);
 
+        let runfiles = runfiles::Runfiles::create().unwrap();
+        let sysroot_path =
+            runfiles.rlocation(if std::env::var("LEGACY_TOOLCHAIN_RUST_TEST").is_ok() {
+                "google3/third_party/unsupported_toolchains/rust/toolchains/nightly"
+            } else {
+                "google3/nowhere/llvm/rust"
+            });
         let opts = Options {
             crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-            maybe_sysroot: Some(PathBuf::from(RUSTC_SYSROOT.clone())),
+            maybe_sysroot: Some(sysroot_path),
             output_types,
             ..Default::default()
         };
