@@ -35,6 +35,7 @@ rust_binary(
         "//common:rust_allocator_shims",
         "//common:token_stream_printer",
         "@crate_index//:anyhow",
+        "@crate_index//:either",
         "@crate_index//:getopts",
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",

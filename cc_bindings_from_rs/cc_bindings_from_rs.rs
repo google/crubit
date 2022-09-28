@@ -32,6 +32,7 @@ use token_stream_printer::tokens_to_string;
 /// module.
 mod bindings_driver {
 
+    use either::Either;
     use rustc_interface::interface::Compiler;
     use rustc_interface::Queries;
     use rustc_middle::ty::TyCtxt;
@@ -63,8 +64,7 @@ mod bindings_driver {
         R: Send,
     {
         args: &'a [String],
-        callback: Option<F>,
-        callback_result: Option<anyhow::Result<R>>,
+        callback_or_result: Either<F, anyhow::Result<R>>,
     }
 
     impl<'a, F, R> AfterAnalysisCallback<'a, F, R>
@@ -73,7 +73,7 @@ mod bindings_driver {
         R: Send,
     {
         fn new(args: &'a [String], callback: F) -> Self {
-            Self { args, callback: Some(callback), callback_result: None }
+            Self { args, callback_or_result: Either::Left(callback) }
         }
 
         /// Runs Rust compiler and then passes the `TyCtxt` of the
@@ -105,11 +105,7 @@ mod bindings_driver {
 
             // Return either `rustc_result` or `self.callback_result`.
             rustc_result.and_then(|()| {
-                assert!(
-                    self.callback_result.is_some(),
-                    "The callback should have been called by now"
-                );
-                self.callback_result.unwrap()
+                self.callback_or_result.right_or_else(|_| panic!("The callback should have been called by now"))
             })
         }
     }
@@ -125,12 +121,12 @@ mod bindings_driver {
             queries: &'tcx Queries<'tcx>,
         ) -> rustc_driver::Compilation {
             let rustc_result = enter_tcx(queries, |tcx| {
-                assert!(
-                    self.callback_result.is_none(),
-                    "after_analysis should only run once (1)"
-                );
-                let callback = self.callback.take().expect("after_analysis should only run once (2)");
-                self.callback_result = Some(callback(tcx));
+                let callback = {
+                    let temporary_placeholder = Either::Right(Err(anyhow::anyhow!("unused")));
+                    std::mem::replace(&mut self.callback_or_result, temporary_placeholder)
+                        .left_or_else(|_| panic!("`after_analysis` should only run once"))
+                };
+                self.callback_or_result = Either::Right(callback(tcx));
             });
 
             // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
