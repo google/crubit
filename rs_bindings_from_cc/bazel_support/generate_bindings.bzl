@@ -69,6 +69,7 @@ def generate_bindings(
         variables_extension = {
             "rs_bindings_from_cc_tool": ctx.executable._generator.path,
             "rs_bindings_from_cc_flags": [
+                "--stderrthreshold=2",
                 "--rs_out",
                 rs_output.path,
                 "--cc_out",

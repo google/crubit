@@ -33,7 +33,7 @@ std::string InstantiationsAsJson(
   return std::string(llvm::formatv("{0:2}", llvm::json::Value(std::move(obj))));
 }
 
-absl::Status Main(std::vector<char*> args) {
+absl::Status Main(absl::Span<char* const> args) {
   CRUBIT_ASSIGN_OR_RETURN(Cmdline cmdline, Cmdline::Create());
 
   if (cmdline.do_nothing()) {
@@ -89,7 +89,7 @@ absl::Status Main(std::vector<char*> args) {
 
 int main(int argc, char* argv[]) {
   auto args = absl::ParseCommandLine(argc, argv);
-  absl::Status status = crubit::Main(std::move(args));
+  absl::Status status = crubit::Main(args);
   if (!status.ok()) {
     llvm::errs() << status.message() << "\n";
     return -1;
