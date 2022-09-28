@@ -4,43 +4,29 @@ load(
     "rust_test",
 )
 
-rust_library(
+cc_library(
     name = "two",
-    srcs = ["two.rs"],
+    hdrs = ["two.h"],
 )
 
-rust_library(
+cc_library(
     name = "three",
-    srcs = ["three.rs"],
+    hdrs = ["three.h"],
 )
 
 rust_library(
     name = "math",
     srcs = ["math.rs"],
-    data = [
-        "three_namespaces.json",
-        "two_namespaces.json",
+    cc_deps = [
+        ":three",
+        ":two",
     ],
     proc_macro_deps = [
         "//cc_import",
-    ],
-    rustc_env = {"CC_IMPORT_NAMESPACES": (
-        "[" +
-        "    \"rs_bindings_from_cc/test/cc_import/two_namespaces.json\"," +
-        "    \"rs_bindings_from_cc/test/cc_import/three_namespaces.json\"" +
-        "]"
-    )},
-    deps = [
-        ":three",
-        ":two",
     ],
 )
 
 rust_test(
     name = "math_test",
     crate = ":math",
-    data = [
-        "three_namespaces.json",
-        "two_namespaces.json",
-    ],
 )
