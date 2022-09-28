@@ -1,0 +1,23 @@
+{
+    "label": "//rs_bindings_from_cc/test/cc_import:three",
+    "namespaces": [
+        {
+            "name": "simple_math",
+            "children": [
+                {
+                    "name": "add",
+                    "children": []
+                }
+            ]
+        },
+        {
+            "name": "complex_math",
+            "children": [
+                {
+                    "name": "three_only",
+                    "children": []
+                }
+            ]
+        }
+    ]
+}

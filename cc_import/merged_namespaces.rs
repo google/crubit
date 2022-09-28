@@ -2,9 +2,13 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use import_internal::{AbsoluteLabel, Mode};
+use proc_macro2::{Span, TokenStream};
+use quote::{quote, ToTokens, TokenStreamExt};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use syn::Ident;
 
 /// Representation of a target's namespace hierarchy, as encoded in the
 /// *_namespace.json file.
@@ -115,6 +119,45 @@ impl MergedNamespaceHierarchy {
             }
         }
     }
+}
+
+impl ToTokens for MergedNamespaceHierarchy {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        for namespace in self.top_level_namespaces.values() {
+            to_use_stmts(namespace, tokens, &mut vec![]);
+        }
+    }
+}
+
+fn to_use_stmts(
+    namespace: &MergedNamespace,
+    tokens: &mut TokenStream,
+    outer_namespaces: &mut Vec<Ident>,
+) {
+    let module_name = Ident::new(&namespace.name, Span::call_site());
+
+    let mut inner_tokens = TokenStream::new();
+    for label_literal in namespace.labels.iter() {
+        let span = Span::call_site();
+        let label = AbsoluteLabel::parse(label_literal, &span).expect("Couldn't parse label");
+        // TODO(rosica): Use mangled name for the crate.
+        let crate_name = &label.crate_name(&Mode::NoRenaming);
+        let crate_ident = Ident::new(crate_name, span);
+        inner_tokens.append_all(quote! {
+            pub use #crate_ident::#(#outer_namespaces::)*#module_name::*;
+        });
+    }
+    outer_namespaces.push(module_name);
+    for inner in namespace.children.values() {
+        to_use_stmts(inner, &mut inner_tokens, outer_namespaces);
+    }
+    let module_name = outer_namespaces.pop();
+
+    tokens.extend(quote! {
+        pub mod #module_name {
+            #inner_tokens
+        }
+    });
 }
 
 #[cfg(test)]
@@ -292,5 +335,87 @@ mod tests {
         let MergedNamespace { name: _, children: _, labels: d_labels } = children.get("d").unwrap();
         // Namespace d only exists in the second target
         assert_eq!(d_labels.iter().collect::<Vec<_>>(), ["//:label2"]);
+    }
+
+    #[test]
+    fn test_to_tokens() {
+        let hierarchy_one: JsonNamespaceHierarchy = serde_json::from_str(
+            r#"{
+            "label": "//foo/bar:baz",
+            "namespaces": [
+                {
+                    "name": "top_level_1",
+                    "children": [
+                        {
+                            "name": "reopened",
+                            "children": [
+                                {
+                                    "name": "baz_specific",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let hierarchy_two: JsonNamespaceHierarchy = serde_json::from_str(
+            r#"{
+            "label": "//foo/bar:xyz",
+            "namespaces": [
+                {
+                    "name": "top_level_1",
+                    "children": [
+                        {
+                            "name": "xyz_specific",
+                            "children": []
+                        },
+                        {
+                            "name": "reopened",
+                            "children": []
+                        }
+                    ]
+                },
+                {
+                    "name": "top_level_2",
+                    "children": []
+                }
+            ]
+        }"#,
+        )
+        .unwrap();
+
+        let mut merged_hierarchy =
+            MergedNamespaceHierarchy::from_json_namespace_hierarchy(&hierarchy_one);
+        let merged_hierarchy_two =
+            MergedNamespaceHierarchy::from_json_namespace_hierarchy(&hierarchy_two);
+
+        merged_hierarchy.merge(merged_hierarchy_two);
+
+        token_stream_matchers::assert_rs_matches!(
+            quote! {#merged_hierarchy},
+            quote! {
+                pub mod top_level_1 {
+                    pub use baz::top_level_1::*;
+                    pub use xyz::top_level_1::*;
+                    pub mod reopened {
+                        pub use baz::top_level_1::reopened::*;
+                        pub mod baz_specific {
+                            pub use baz::top_level_1::reopened::baz_specific::*;
+                        }
+                    }
+                    pub mod xyz_specific {
+                        pub use xyz::top_level_1::xyz_specific::*;
+                    }
+                }
+                pub mod top_level_2 {
+                    pub use xyz::top_level_2::*;
+                }
+
+            }
+        );
     }
 }
