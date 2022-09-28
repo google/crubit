@@ -74,13 +74,23 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::GeneratedBindings;
 
     use anyhow::Result;
     use itertools::Itertools;
+    use std::path::PathBuf;
 
     use token_stream_printer::tokens_to_string;
+
+    pub fn get_sysroot_for_testing() -> PathBuf {
+        let runfiles = runfiles::Runfiles::create().unwrap();
+        runfiles.rlocation(if std::env::var("LEGACY_TOOLCHAIN_RUST_TEST").is_ok() {
+            "google3/third_party/unsupported_toolchains/rust/toolchains/nightly"
+        } else {
+            "google3/nowhere/llvm/rust"
+        })
+    }
 
     #[test]
     fn test_get_names_of_exported_fns_public_vs_private() {
@@ -156,16 +166,9 @@ mod tests {
         // `Mir`, etc. would also trigger code gen).
         let output_types = OutputTypes::new(&[(OutputType::Bitcode, None /* PathBuf */)]);
 
-        let runfiles = runfiles::Runfiles::create().unwrap();
-        let sysroot_path =
-            runfiles.rlocation(if std::env::var("LEGACY_TOOLCHAIN_RUST_TEST").is_ok() {
-                "google3/third_party/unsupported_toolchains/rust/toolchains/nightly"
-            } else {
-                "google3/nowhere/llvm/rust"
-            });
         let opts = Options {
             crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-            maybe_sysroot: Some(sysroot_path),
+            maybe_sysroot: Some(get_sysroot_for_testing()),
             output_types,
             ..Default::default()
         };

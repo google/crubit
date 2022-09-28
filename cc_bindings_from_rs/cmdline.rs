@@ -43,21 +43,26 @@ mod tests {
     use itertools::Itertools;
     use tempfile::tempdir;
 
-    fn new_cmdline(args: &[&str]) -> Result<Cmdline, Fail> {
-        let args = args.iter().map(|s| s.to_string()).collect_vec();
+    fn new_cmdline<'a>(args: impl IntoIterator<Item = &'a str>) -> Result<Cmdline, Fail> {
+        // When `Cmdline::new` is invoked from `main.rs`, it includes not only the
+        // "real" cmdline arguments, but also the name of the executable.
+        let args = std::iter::once("cc_bindings_from_rs_unittest_executable")
+            .chain(args)
+            .map(|s| s.to_string())
+            .collect_vec();
         Cmdline::new(&args)
     }
 
     #[test]
     fn test_h_out_happy_path() -> Result<(), Fail> {
-        let cmdline = new_cmdline(&["--h_out=foo.h"])?;
+        let cmdline = new_cmdline(["--h_out=foo.h"])?;
         assert_eq!(Path::new("foo.h"), cmdline.h_out());
         Ok(())
     }
 
     #[test]
     fn test_h_out_missing() {
-        match new_cmdline(&[]) {
+        match new_cmdline([]) {
             Err(Fail::OptionMissing(arg)) if arg == H_OUT => (),
             other => panic!("Unexpected success or unrecognized error: {:?}", other),
         }
@@ -65,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_h_out_without_arg() {
-        match new_cmdline(&["--h_out"]) {
+        match new_cmdline(["--h_out"]) {
             Err(Fail::ArgumentMissing(arg)) if arg == H_OUT => (),
             other => panic!("Unexpected success or unrecognized error: {:?}", other),
         }
@@ -73,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_h_out_duplicated() {
-        match new_cmdline(&["--h_out=foo.h", "--h_out=bar.h"]) {
+        match new_cmdline(["--h_out=foo.h", "--h_out=bar.h"]) {
             Err(Fail::OptionDuplicated(arg)) if arg == H_OUT => (),
             other => panic!("Unexpected success or unrecognized error: {:?}", other),
         }
@@ -82,10 +87,10 @@ mod tests {
     #[test]
     fn test_rustc_args_happy_path() -> Result<(), Fail> {
         // Note that this test would fail without the `--` separator.
-        let cmdline = new_cmdline(&["--h_out=foo.h", "--", "test.rs", "--crate-type=lib"])?;
+        let cmdline = new_cmdline(["--h_out=foo.h", "--", "test.rs", "--crate-type=lib"])?;
         let rustc_args = cmdline.rustc_args();
         assert!(
-            itertools::equal(&["test.rs", "--crate-type=lib"], rustc_args),
+            itertools::equal(&["cc_bindings_from_rs_unittest_executable", "test.rs", "--crate-type=lib"], rustc_args),
             "rustc_args = {:?}",
             rustc_args
         );
