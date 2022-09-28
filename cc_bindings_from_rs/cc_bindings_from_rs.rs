@@ -19,66 +19,73 @@ extern crate rustc_span;
 mod cmdline;
 mod lib;
 
-use cmdline::Cmdline;
+use anyhow::Context;
 use itertools::Itertools;
+use rustc_middle::ty::TyCtxt;
+use std::path::Path;
 
-mod bindings_main {
+use cmdline::Cmdline;
+use lib::GeneratedBindings;
+use token_stream_printer::tokens_to_string;
 
-    use anyhow::Context;
-    use rustc_middle::ty::TyCtxt;
-    use std::path::Path;
-
-    use crate::cmdline::Cmdline;
-    use crate::lib::GeneratedBindings;
-    use token_stream_printer::tokens_to_string;
-
-    pub fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
-        let bindings = GeneratedBindings::generate(tcx);
-        write_file(cmdline.h_out(), &tokens_to_string(bindings.h_body)?)
-    }
-
-    fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
-        std::fs::write(path, content)
-            .with_context(|| format!("Error when writing to {}", path.display()))
-    }
-}
-
-/// Glue that enables the top-level `fn main() -> anyhow::Result<()>` to call
-/// into `fn main(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()>` in the
-/// `bindings_main` module.  This mostly wraps and simplifies a subset of APIs
-/// from the `rustc_driver` module.
+/// This mostly wraps and simplifies a subset of APIs from the `rustc_driver`
+/// module.
 mod bindings_driver {
 
     use rustc_interface::interface::Compiler;
     use rustc_interface::Queries;
+    use rustc_middle::ty::TyCtxt;
 
-    use crate::cmdline::Cmdline;
     use crate::lib::enter_tcx;
 
-    /// Wrapper around `rustc_driver::RunCompiler` that exposes a simplified API
-    /// (e.g. doesn't take arbitrary `Callbacks` but always calls into
-    /// `bindings_main::main`).
-    pub struct RunCompiler<'a>(BindingsCallbacks<'a>);
+    /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
+    /// simplified API:
+    /// - Takes a `callback` that will be invoked from within Rust compiler,
+    ///   after parsing and analysis are done,
+    /// - Compilation will stop after parsing, analysis, and the `callback are
+    ///   done,
+    /// - Returns the combined results from the Rust compiler *and* the
+    ///   `callback`.
+    pub fn run_after_analysis_and_stop<F, R>(
+        rustc_args: &[String],
+        callback: F,
+    ) -> anyhow::Result<R>
+    where
+        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+        R: Send,
+    {
+        AfterAnalysisCallback::new(rustc_args, callback).run()
+    }
 
-    impl<'a> RunCompiler<'a> {
-        /// Creates new Rust compiler runner that will
-        /// - pass `cmdline.rustc_args()` to the Rust compiler
-        /// - pass `cmdline` to `bindings_main::main` (in addition to passing
-        ///   `TyCtxt` - see the doc comment of `RunCompiler::run` below).
-        pub fn new(cmdline: &'a Cmdline) -> Self {
-            Self(BindingsCallbacks { cmdline, bindings_main_result: None })
+    struct AfterAnalysisCallback<'a, F, R>
+    where
+        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+        R: Send,
+    {
+        args: &'a [String],
+        callback: Option<F>,
+        callback_result: Option<anyhow::Result<R>>,
+    }
+
+    impl<'a, F, R> AfterAnalysisCallback<'a, F, R>
+    where
+        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+        R: Send,
+    {
+        fn new(args: &'a [String], callback: F) -> Self {
+            Self { args, callback: Some(callback), callback_result: None }
         }
 
         /// Runs Rust compiler and then passes the `TyCtxt` of the
         /// parsed+analyzed Rust crate into `bindings_main::main`.
         /// Returns the combined results from Rust compiler *and*
         /// `bindings_main::main`.
-        pub fn run(mut self) -> anyhow::Result<()> {
+        fn run(mut self) -> anyhow::Result<R> {
             // Rust compiler unwinds with a special sentinel value to abort compilation on
             // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
             // translate them into a Result, and 2) resume and propagate other panics.
             let rustc_result = rustc_driver::catch_fatal_errors(|| {
-                rustc_driver::RunCompiler::new(self.0.cmdline.rustc_args(), &mut self.0).run()
+                rustc_driver::RunCompiler::new(self.args, &mut self).run()
             });
 
             // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. get the Result
@@ -96,24 +103,22 @@ mod bindings_driver {
                 anyhow::format_err!("Errors reported by Rust compiler.")
             });
 
-            // Return either `rustc_result` or `self.0.bindings_main_result`.
+            // Return either `rustc_result` or `self.callback_result`.
             rustc_result.and_then(|()| {
                 assert!(
-                    self.0.bindings_main_result.is_some(),
-                    "BindingsCallbacks::run_main should have been called by now"
+                    self.callback_result.is_some(),
+                    "The callback should have been called by now"
                 );
-                self.0.bindings_main_result.unwrap()
+                self.callback_result.unwrap()
             })
         }
     }
 
-    /// Non-`pub` to avoid exposing `impl rustc_driver::Callbacks`.
-    struct BindingsCallbacks<'a> {
-        cmdline: &'a Cmdline,
-        bindings_main_result: Option<anyhow::Result<()>>,
-    }
-
-    impl rustc_driver::Callbacks for BindingsCallbacks<'_> {
+    impl<'a, F, R> rustc_driver::Callbacks for AfterAnalysisCallback<'_, F, R>
+    where
+        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
+        R: Send,
+    {
         fn after_analysis<'tcx>(
             &mut self,
             _compiler: &Compiler,
@@ -121,11 +126,11 @@ mod bindings_driver {
         ) -> rustc_driver::Compilation {
             let rustc_result = enter_tcx(queries, |tcx| {
                 assert!(
-                    self.bindings_main_result.is_none(),
-                    "after_analysis should only run once"
+                    self.callback_result.is_none(),
+                    "after_analysis should only run once (1)"
                 );
-                self.bindings_main_result =
-                    Some(crate::bindings_main::main(self.cmdline, tcx))
+                let callback = self.callback.take().expect("after_analysis should only run once (2)");
+                self.callback_result = Some(callback(tcx));
             });
 
             // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
@@ -139,12 +144,24 @@ mod bindings_driver {
     }
 }
 
+fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
+    std::fs::write(path, content)
+        .with_context(|| format!("Error when writing to {}", path.display()))
+}
+
+fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
+    let bindings = GeneratedBindings::generate(tcx);
+    write_file(cmdline.h_out(), tokens_to_string(bindings.h_body)?.as_str())
+}
+
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
 /// should only happen once for the binary (e.g. it doesn't call
 /// `install_ice_hook`) and therefore can be used from the tests module below.
 fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
     let cmdline = Cmdline::new(args)?;
-    bindings_driver::RunCompiler::new(&cmdline).run()
+    bindings_driver::run_after_analysis_and_stop(cmdline.rustc_args(), |tcx| {
+        run_with_tcx(&cmdline, tcx)
+    })
 }
 
 // TODO(lukasza): Add end-to-end shell tests that invoke our executable
