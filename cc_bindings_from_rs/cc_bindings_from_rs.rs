@@ -196,6 +196,14 @@ mod tests {
         tempdir: TempDir,
     }
 
+    /// Result of `TestArgs::run` that helps tests access test outputs (e.g. the
+    /// internally generated `h_path` and/or `rs_input_path`).
+    #[derive(Debug)]
+    struct TestResult {
+        h_path: PathBuf,
+        rs_input_path: PathBuf,
+    }
+
     impl TestArgs {
         fn default_args() -> anyhow::Result<Self> {
             Ok(Self {
@@ -241,9 +249,9 @@ mod tests {
         ///
         /// Returns the path to the `h_out` file.  The file's lifetime is the
         /// same as `&self`.
-        fn run(&self) -> anyhow::Result<PathBuf> {
+        fn run(&self) -> anyhow::Result<TestResult> {
             let h_path = match self.h_path.as_ref() {
-                None => self.tempdir.path().join("test_crate.rs"),
+                None => self.tempdir.path().join("test_crate_cc_api.h"),
                 Some(s) => PathBuf::from(s),
             };
 
@@ -273,24 +281,28 @@ mod tests {
 
             run_with_cmdline_args(&args)?;
 
-            Ok(h_path)
+            Ok(TestResult { h_path, rs_input_path })
         }
     }
 
     #[test]
     fn test_happy_path() -> anyhow::Result<()> {
         let test_args = TestArgs::default_args()?;
-        let h_path = test_args.run().expect("Default args should succeed");
+        let test_result = test_args.run().expect("Default args should succeed");
 
-        assert!(h_path.exists());
-        let h_body = std::fs::read_to_string(&h_path)?;
+        assert!(test_result.h_path.exists());
+        let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        let rs_input_path = test_result.rs_input_path.display().to_string();
         assert_eq!(
             h_body,
-            "// Automatically @generated C++ bindings for the following Rust crate:\n\
-             // test_crate\n\
-             \n\
-             // List of public functions:\n\
-             // public_function\n"
+            format!(
+                "// Automatically @generated C++ bindings for the following Rust crate:\n\
+                 // test_crate\n\
+                 \n\
+                 // Error while generating bindings for `public_function` \
+                         defined at {rs_input_path}:1:2: 1:26: \
+                         Nothing works yet!\n"
+            )
         );
         Ok(())
     }

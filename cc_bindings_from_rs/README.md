@@ -30,8 +30,7 @@ $ cat bazel-out/scratch/test.h
 // Automatically @generated C++ bindings for the following Rust crate:
 // test
 
-// List of public functions:
-// public_function
+// Error while generating bindings for `public_function` defined at [...]/scratch/test.rs:1:1: 1:25: Nothing works yet!
 ```
 
 ## Contributing
