@@ -8,25 +8,26 @@ not be used yet.
 
 Most `rustc` cmdline parameters should be supported (e.g. `--crate-type`).
 
-Example:
+The following example should work in the current dev environment:
 
 ```
+$ cd crubit/cc_bindings_from_rs
+$ bazel build :cc_bindings_from_rs
+...
+$ CC_BINDINGS_FROM_RS_BINARY=$(find `bazel info bazel-bin` -name cc_bindings_from_rs -type f)
+$ export LD_LIBRARY_PATH=$PWD/../../unsupported_toolchains/rust/toolchains/nightly/lib/rustlib/x86_64-unknown-linux-gnu/lib
 
-$ cat scratch/test.rs
+$ echo > test.rs "
 pub fn public_function() {
     private_function()
 }
-
 fn private_function() {}
+"
 
-$ bazel run \
-    //cc_bindings_from_rs:cc_bindings_from_rs_legacy_toolchain_runner -- \
-    --h-out=$(pwd)/test.h -- \
-    $(pwd)/test.rs \
-    --crate-type=lib \
-    --sysroot $(pwd)/third_party/unsupported_toolchains/rust/toolchains/nightly
+$ $CC_BINDINGS_FROM_RS_BINARY --h-out=test.h -- test.rs --crate-type=lib \
+    --sysroot $(pwd)/../../unsupported_toolchains/rust/toolchains/nightly
 
-$ cat bazel-out/scratch/test.h
+$ cat test.h
 // Automatically @generated C++ bindings for the following Rust crate:
 // test
 
