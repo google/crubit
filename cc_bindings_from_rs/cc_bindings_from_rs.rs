@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#![feature(never_type)]
 #![feature(rustc_private)]
 #![deny(rustc::internal)]
 
@@ -188,11 +189,8 @@ fn main() -> anyhow::Result<()> {
         .map_err(|anyhow_err| match anyhow_err.downcast::<clap::Error>() {
             // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
             // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
-            //
-            // Note that the signature is `fn exit(&self) -> !` (i.e. this function call doesn't
-            // return).
             Ok(clap_err) => {
-                clap_err.exit()
+                let _ : ! = clap_err.exit();
             },
 
             // Return `other_err` from `main`.  This will print the error message (no color codes
