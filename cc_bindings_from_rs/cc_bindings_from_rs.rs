@@ -161,8 +161,17 @@ fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
 }
 
 // TODO(lukasza): Add end-to-end shell tests that invoke our executable
-// and verify 1) the happy path (zero exit code) and 2) any random
-// error path (non-zero exit code).
+// and verify:
+//
+// 1) the happy path (verify zero exit code + contents of the generated .h)
+//
+// 2) `clap` error path (verify non-zero exit code + error output
+//    [not sure if *colored* output can be verified])
+//
+// 3) `clap` --help path (verify *zero* exit code;  the error message is
+//    already verified in unit tests under `cmdline.rs`)
+//
+// 4) other error path (verify non-zero exit code + error output)
 fn main() -> anyhow::Result<()> {
     rustc_driver::init_env_logger("CRUBIT_LOG");
 
@@ -176,6 +185,20 @@ fn main() -> anyhow::Result<()> {
     let args = std::env::args().collect_vec();
 
     run_with_cmdline_args(&args)
+        .map_err(|anyhow_err| match anyhow_err.downcast::<clap::Error>() {
+            // Explicitly call `clap::Error::exit`, because 1) it results in *colored* output and
+            // 2) it uses a zero exit code for specific "errors" (e.g. for `--help` output).
+            //
+            // Note that the signature is `fn exit(&self) -> !` (i.e. this function call doesn't
+            // return).
+            Ok(clap_err) => {
+                clap_err.exit()
+            },
+
+            // Return `other_err` from `main`.  This will print the error message (no color codes
+            // though) and terminate the process with a non-zero exit code.
+            Err(other_err) => other_err,
+        })
 }
 
 #[cfg(test)]
