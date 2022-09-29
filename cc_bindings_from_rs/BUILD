@@ -70,6 +70,7 @@ rust_test(
         "notap",
     ],
     deps = [
+        "//common:token_stream_matchers",
         "@crate_index//:tempfile",
         "@rules_rust//tools/runfiles",
     ],

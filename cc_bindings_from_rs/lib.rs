@@ -88,10 +88,10 @@ fn format_crate(tcx: TyCtxt) -> TokenStream {
 pub mod tests {
     use super::GeneratedBindings;
 
-    use anyhow::Result;
+    use quote::quote;
     use std::path::PathBuf;
 
-    use token_stream_printer::tokens_to_string;
+    use token_stream_matchers::{assert_cc_matches, assert_cc_not_matches};
 
     pub fn get_sysroot_for_testing() -> PathBuf {
         let runfiles = runfiles::Runfiles::create().unwrap();
@@ -104,33 +104,86 @@ pub mod tests {
 
     #[test]
     #[should_panic]
-    fn test_panic_when_syntax_errors_in_test_inputs() {
+    fn test_infra_panic_when_syntax_errors_in_test_inputs() {
         run_compiler("syntax error here", |_tcx| ())
     }
 
     #[test]
-    fn test_generated_bindings_happy_path() -> Result<()> {
+    fn test_generated_bindings_fn_success() {
+        // This test covers only a single example of a function that should get a C++
+        // binding. Additional coverage of functions items will be provided by
+        // future, `format_def`-focused tests.
         let test_src = r#"
-                pub fn public_function() {
-                    private_function()
+                pub extern "C" fn public_function() {
+                    println!("foo");
                 }
-
-                fn private_function() {}
             "#;
         test_generated_bindings(test_src, |bindings| {
-            // TODO(lukasza): Use `assert_cc_matches!` from
-            // `rs_bindings_from_cc/token_stream_matchers.rs` here.
-            let h_body = tokens_to_string(bindings.h_body)?;
-            assert_eq!(
-                h_body,
-                "// Automatically @generated C++ bindings for the following Rust crate:\n\
-                 // rust_out\n\
-                 \n\
-                 // Error while generating bindings for `public_function` \
-                         defined at <crubit_unittests.rs>:2:17: 2:41: \
-                         Nothing works yet!\n"
+            // TODO(lukasza): Fix test expectations once this becomes supported (in early Q4
+            // 2022).
+            let expected_comment_txt = "Error while generating bindings for `public_function` \
+                                        defined at <crubit_unittests.rs>:2:17: 2:52: \
+                                        Nothing works yet!";
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    __COMMENT__ #expected_comment_txt
+                }
             );
-            Ok(())
+        });
+    }
+
+    #[test]
+    fn test_generated_bindings_fn_non_pub() {
+        let test_src = r#"
+                extern "C" fn private_function() {
+                    println!("foo");
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            // Non-public functions should not be present in the generated bindings.
+            assert_cc_not_matches!(bindings.h_body, quote! { private_function });
+        });
+    }
+
+    #[test]
+    fn test_generated_bindings_top_comment() {
+        let test_src = "pub fn public_function() {}";
+        test_generated_bindings(test_src, |bindings| {
+            let expected_comment_txt = "Automatically @generated C++ bindings for the following Rust crate:\n\
+                 rust_out";
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    __COMMENT__ #expected_comment_txt
+                }
+            );
+        })
+    }
+
+    #[test]
+    fn test_generated_bindings_unsupported_item() {
+        // This test verifies how `Err` from `format_def` is formatted as a C++ comment.
+        // - This test covers only a single example of an unsupported item.  Additional
+        //   coverage of unsupported items will be provided by future,
+        //   `format_def`-focused tests.
+        // - This test somewhat arbitrarily chooses an example of an unsupported item
+        //   (i.e. if this becomes supported in the future, then the test will have to
+        //   be modified to use another `test_src` input).
+        let test_src = r#"
+                pub fn public_function() {}
+            "#;
+
+        test_generated_bindings(test_src, |bindings| {
+            let expected_comment_txt = "Error while generating bindings for `public_function` \
+                                        defined at <crubit_unittests.rs>:2:17: 2:41: \
+                                        Nothing works yet!";
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    __COMMENT__ #expected_comment_txt
+                }
+            );
         })
     }
 
