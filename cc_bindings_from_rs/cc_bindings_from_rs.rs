@@ -147,7 +147,7 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
     let bindings = GeneratedBindings::generate(tcx);
-    write_file(cmdline.h_out(), tokens_to_string(bindings.h_body)?.as_str())
+    write_file(&cmdline.h_out, tokens_to_string(bindings.h_body)?.as_str())
 }
 
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
@@ -155,7 +155,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
 /// `install_ice_hook`) and therefore can be used from the tests module below.
 fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
     let cmdline = Cmdline::new(args)?;
-    bindings_driver::run_after_analysis_and_stop(cmdline.rustc_args(), |tcx| {
+    bindings_driver::run_after_analysis_and_stop(&cmdline.rustc_args, |tcx| {
         run_with_tcx(&cmdline, tcx)
     })
 }
@@ -268,7 +268,7 @@ mod tests {
 
             let mut args = vec![
                 "cc_bindings_from_rs_unittest_executable".to_string(),
-                format!("--h_out={}", h_path.display()),
+                format!("--h-out={}", h_path.display()),
             ];
             args.extend(self.extra_crubit_args.iter().cloned());
             args.extend([
@@ -317,7 +317,11 @@ mod tests {
             .expect_err("--unrecognized_crubit_flag should trigger an error");
 
         let msg = err.to_string();
-        assert_eq!("Unrecognized option: 'unrecognized-crubit-flag'", msg);
+        assert!(
+            msg.contains("Found argument '--unrecognized-crubit-flag' which wasn't expected"),
+            "msg = {}",
+            msg,
+        );
         Ok(())
     }
 
@@ -336,12 +340,12 @@ mod tests {
 
     #[test]
     fn test_invalid_h_out_path() -> anyhow::Result<()> {
-        // Tests not only the specific problem of an invalid `--h_out` argument, but
+        // Tests not only the specific problem of an invalid `--h-out` argument, but
         // also tests that errors from `bindings_main::main` are propagated.
         let err = TestArgs::default_args()?
             .with_h_path("../..")
             .run()
-            .expect_err("Unwriteable --h_out should trigger an error");
+            .expect_err("Unwriteable --h-out should trigger an error");
 
         let msg = err.to_string();
         assert_eq!("Error when writing to ../..", msg);

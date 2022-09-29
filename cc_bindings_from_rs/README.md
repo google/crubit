@@ -21,7 +21,7 @@ fn private_function() {}
 
 $ bazel run \
     //cc_bindings_from_rs:cc_bindings_from_rs_legacy_toolchain_runner -- \
-    --h_out=$(pwd)/test.h -- \
+    --h-out=$(pwd)/test.h -- \
     $(pwd)/test.rs \
     --crate-type=lib \
     --sysroot $(pwd)/third_party/unsupported_toolchains/rust/toolchains/nightly
