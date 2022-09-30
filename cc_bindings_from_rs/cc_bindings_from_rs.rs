@@ -16,18 +16,26 @@ extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
 
-// TODO(lukasza): Make `cmdline` and `lib` a separate crate (once we move to
-// Bazel).
+// TODO(lukasza): Make `bindings` and `cmdline` separate crates (once we move to
+// Bazel).  This hasn't been done that yet, because:
+// * Today it would require replicating `rustc_driver`-related `BUILD` hacks
+//   into additional targets.  And since this particular problem will go away on
+//   its own in Q4 2022 or Q1 2023, maybe for now we can ignore having
+//   multi-source-file crate?
+// * To avoid the ickyness above, one may want to start by making `cmdline.rs`
+//   `rustc_driver`-agnostic first (switching `@herefile` to a `clap`-based,
+//   manually coded behavior).  But this refactoring feels a bit arbitrary and
+//   needs more discussion (maybe we want to keep `@file` support from rustc?).
+mod bindings;
 mod cmdline;
-mod lib;
 
 use anyhow::Context;
 use itertools::Itertools;
 use rustc_middle::ty::TyCtxt;
 use std::path::Path;
 
+use bindings::GeneratedBindings;
 use cmdline::Cmdline;
-use lib::GeneratedBindings;
 use token_stream_printer::tokens_to_string;
 
 /// This mostly wraps and simplifies a subset of APIs from the `rustc_driver`
@@ -39,7 +47,7 @@ mod bindings_driver {
     use rustc_interface::Queries;
     use rustc_middle::ty::TyCtxt;
 
-    use crate::lib::enter_tcx;
+    use crate::bindings::enter_tcx;
 
     /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
     /// simplified API:
@@ -204,7 +212,7 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::run_with_cmdline_args;
 
-    use crate::lib::tests::get_sysroot_for_testing;
+    use crate::bindings::tests::get_sysroot_for_testing;
     use itertools::Itertools;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};

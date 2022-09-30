@@ -17,9 +17,9 @@ licenses(["notice"])
 rust_binary(
     name = "cc_bindings_from_rs",
     srcs = [
+        "bindings.rs",
         "cc_bindings_from_rs.rs",
         "cmdline.rs",
-        "lib.rs",
     ],
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
@@ -30,7 +30,6 @@ rust_binary(
         "nobuilder",
         "notap",
     ],
-    visibility = ["//:__subpackages__"],
     deps = [
         "//common:rust_allocator_shims",
         "//common:token_stream_printer",
@@ -40,7 +39,6 @@ rust_binary(
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
-        "@crate_index//:tracing",
     ],
 )
 
