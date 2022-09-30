@@ -123,8 +123,14 @@ pub mod tests {
 
     #[test]
     #[should_panic]
-    fn test_infra_panic_when_syntax_errors_in_test_inputs() {
+    fn test_infra_panic_when_test_input_contains_syntax_errors() {
         run_compiler("syntax error here", |_tcx| ())
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_infra_panic_when_test_input_triggers_analysis_errors() {
+        run_compiler("#![feature(no_such_feature)]", |_tcx| ())
     }
 
     #[test]
@@ -261,9 +267,25 @@ pub mod tests {
             registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
         };
 
-        rustc_interface::interface::run_compiler(config, |compiler| {
-            compiler.enter(|queries| super::enter_tcx(queries, f))
-        })
-        .expect("Test inputs shouldn't cause compilation errors.")
+        use rustc_interface::interface::Result;
+        let result: Result<Result<T>> =
+            rustc_interface::interface::run_compiler(config, |compiler| {
+                compiler.enter(|queries| {
+                    super::enter_tcx(queries, |tcx| {
+                        // Explicitly check the result of `analysis` stage to detect compilation
+                        // errors that the earlier stages might miss.  This helps ensure that the
+                        // test inputs are valid Rust (even if `f` wouldn't
+                        // have triggered full analysis).
+                        tcx.analysis(())?;
+
+                        Ok(f(tcx))
+                    })
+                })
+            });
+        // Flatten the outer and inner results into a single result.  (outer result
+        // comes from `enter_tcx`; inner result comes from `analysis`).
+        let result: Result<T> = result.and_then(|result| result);
+
+        result.expect("Test inputs shouldn't cause compilation errors")
     }
 }
