@@ -134,6 +134,11 @@ pub mod tests {
     }
 
     #[test]
+    fn test_infra_nightly_features_ok_in_test_input() {
+        run_compiler("#![feature(yeet_expr)]", |_tcx| ())
+    }
+
+    #[test]
     fn test_generated_bindings_fn_success() {
         // This test covers only a single example of a function that should get a C++
         // binding. Additional coverage of functions items will be provided by
@@ -243,6 +248,7 @@ pub mod tests {
             maybe_sysroot: Some(get_sysroot_for_testing()),
             output_types,
             edition: rustc_span::edition::Edition::Edition2021,
+            unstable_features: rustc_feature::UnstableFeatures::Allow,
             ..Default::default()
         };
 
