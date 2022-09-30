@@ -66,18 +66,37 @@ fn format_unsupported_def(
 }
 
 fn format_crate(tcx: TyCtxt) -> TokenStream {
+    // TODO(lukasza): We probably shouldn't be using `exported_symbols` as the main
+    // entry point for finding Rust definitions that need to be wrapping in C++
+    // bindings.  For example, it _seems_ that things like `type` aliases or
+    // `struct`s (without an `impl`) won't be visible to a linker and therefore
+    // won't have exported symbols.
     let snippets =
         tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(move |(symbol, _)| match symbol {
             ExportedSymbol::NonGeneric(def_id) => {
-                let def_id = def_id.expect_local(); // Exports are always from the local crate.
-                match format_def(tcx, def_id) {
-                    Ok(snippet) => Some(snippet),
-                    Err(err) => Some(format_unsupported_def(tcx, def_id, err)),
-                }
+                // It seems that non-generic exported symbols should all be defined in the
+                // `LOCAL_CRATE`.  Furthermore, `def_id` seems to be a `LocalDefId`.  OTOH, it
+                // isn't clear why `ExportedSymbol::NonGeneric` holds a `DefId` rather than a
+                // `LocalDefId`.  For now, we assert `expect_local` below (and if it fails, then
+                // hopefully it will help us understand these things better and maybe add
+                // extra unit tests against out code).
+                let local_id = def_id.expect_local();
+
+                Some(match format_def(tcx, local_id) {
+                    Ok(snippet) => snippet,
+                    Err(err) => format_unsupported_def(tcx, local_id, err),
+                })
             }
-            ExportedSymbol::Generic(def_id, ..) => {
-                let def_id = def_id.expect_local(); // Exports are always from the local crate.
-                Some(format_unsupported_def(tcx, def_id, "Generics are not supported yet."))
+            ExportedSymbol::Generic(def_id, _substs) => {
+                // Ignore non-local defs.  Map local defs to an unsupported comment.
+                //
+                // We are guessing that a non-local `def_id` can happen when the `LOCAL_CRATE`
+                // exports a monomorphization/specialization of a generic defined in a different
+                // crate.  One specific example (covered via `async fn` in one of the tests) is
+                // `DefId(2:14250 ~ core[ef75]::future::from_generator)`.
+                def_id.as_local().map(|local_id| {
+                    format_unsupported_def(tcx, local_id, "Generics are not supported yet.")
+                })
             }
             ExportedSymbol::DropGlue(_) | ExportedSymbol::NoDefId(_) => None,
         });
@@ -168,15 +187,16 @@ pub mod tests {
         //   coverage of unsupported items will be provided by future,
         //   `format_def`-focused tests.
         // - This test somewhat arbitrarily chooses an example of an unsupported item
-        //   (i.e. if this becomes supported in the future, then the test will have to
-        //   be modified to use another `test_src` input).
+        //   (i.e. if `async fn` becomes supported by `cc_bindings_from_rs` in the
+        //   future, then the test will have to be modified to use another `test_src`
+        //   input).
         let test_src = r#"
-                pub fn public_function() {}
+                pub async fn public_function() {}
             "#;
 
         test_generated_bindings(test_src, |bindings| {
             let expected_comment_txt = "Error while generating bindings for `public_function` \
-                                        defined at <crubit_unittests.rs>:2:17: 2:41: \
+                                        defined at <crubit_unittests.rs>:2:17: 2:47: \
                                         Nothing works yet!";
             assert_cc_matches!(
                 bindings.h_body,
@@ -216,6 +236,7 @@ pub mod tests {
             crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
             maybe_sysroot: Some(get_sysroot_for_testing()),
             output_types,
+            edition: rustc_span::edition::Edition::Edition2021,
             ..Default::default()
         };
 
