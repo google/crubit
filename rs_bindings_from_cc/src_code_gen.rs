@@ -3103,6 +3103,13 @@ fn format_cc_call_conv_as_clang_attribute(rs_abi: &str) -> Result<TokenStream> {
 }
 
 fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
+    // Formatting *both* pointers *and* references as pointers, because:
+    // - Pointers and references have the same representation in the ABI.
+    // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++
+    //   function thunks declared as `extern "C"` (see b/238681766).
+    format_cc_type_inner(ty, ir, /* references_ok= */ false)
+}
+fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result<TokenStream> {
     let const_fragment = if ty.is_const {
         quote! {const}
     } else {
@@ -3110,16 +3117,21 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
     };
     if let Some(ref name) = ty.name {
         match name.as_str() {
-            // Formatting *both* pointers *and* references as pointers, because:
-            // - Pointers and references have the same representation in the ABI.
-            // - Clang's `-Wreturn-type-c-linkage` warns when using references in C++ function
-            //   thunks declared as `extern "C"` (see b/238681766).
-            "*" | "&" | "&&" => {
+            mut name @ ("*" | "&" | "&&") => {
                 if ty.type_args.len() != 1 {
                     bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);
                 }
-                let nested_type = format_cc_type(&ty.type_args[0], ir)?;
-                Ok(quote! {#nested_type * #const_fragment})
+                let nested_type = format_cc_type_inner(&ty.type_args[0], ir, references_ok)?;
+                if !references_ok {
+                    name = "*";
+                }
+                let ptr = match name {
+                    "*" => quote! {*},
+                    "&" => quote! {&},
+                    "&&" => quote! {&&},
+                    _ => unreachable!(),
+                };
+                Ok(quote! {#nested_type #ptr #const_fragment})
             }
             cc_type_name => match cc_type_name.strip_prefix("#funcValue ") {
                 None => {
@@ -3132,10 +3144,14 @@ fn format_cc_type(ty: &ir::CcType, ir: &IR) -> Result<TokenStream> {
                 Some(abi) => match ty.type_args.split_last() {
                     None => bail!("funcValue type without a return type: {:?}", ty),
                     Some((ret_type, param_types)) => {
-                        let ret_type = format_cc_type(ret_type, ir)?;
+                        // Function pointer types don't ignore references, but luckily,
+                        // `-Wreturn-type-c-linkage` does. So we can just re-enable references now
+                        // so that the function type is exactly correct.
+                        let ret_type =
+                            format_cc_type_inner(ret_type, ir, /* references_ok= */ true)?;
                         let param_types = param_types
                             .iter()
-                            .map(|t| format_cc_type(t, ir))
+                            .map(|t| format_cc_type_inner(t, ir, /* references_ok= */ true))
                             .collect::<Result<Vec<_>>>()?;
                         let attr = format_cc_call_conv_as_clang_attribute(abi)?;
                         // `type_identity_t` is used below to avoid having to

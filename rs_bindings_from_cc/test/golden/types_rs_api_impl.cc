@@ -25,6 +25,10 @@ extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
 extern "C" void __rust_thunk___Z21VoidReturningFunctionv() {
   VoidReturningFunction();
 }
+extern "C" crubit::type_identity_t<int&(int const&, int*)>*
+__rust_thunk___Z32FunctionPointerReturningFunctionv() {
+  return FunctionPointerReturningFunction();
+}
 
 static_assert(sizeof(struct std::integral_constant<bool, false>) == 1);
 static_assert(alignof(struct std::integral_constant<bool, false>) == 1);

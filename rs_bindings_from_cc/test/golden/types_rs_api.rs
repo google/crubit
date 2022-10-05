@@ -153,6 +153,16 @@ impl From<Color> for u32 {
     }
 }
 
+/// Note especially the use of references. If we convert those to pointers,
+/// this becomes un-compilable. The syntax here is awful, but this is a function
+/// returning a function. In ML-like syntax:
+/// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
+#[inline(always)]
+pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
+{
+    unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
+}
+
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
 #[::ctor::recursively_pinned]
@@ -263,6 +273,8 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,
         );
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
+        pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv()
+        -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>;
     }
 }
 

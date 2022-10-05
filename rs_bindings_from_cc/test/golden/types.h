@@ -87,4 +87,12 @@ inline void VoidReturningFunction() {}
 
 enum Color : unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };
 
+// Note especially the use of references. If we convert those to pointers,
+// this becomes un-compilable. The syntax here is awful, but this is a function
+// returning a function. In ML-like syntax:
+// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
+inline int& (*FunctionPointerReturningFunction())(const int&, int*) {
+  return nullptr;
+}
+
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
