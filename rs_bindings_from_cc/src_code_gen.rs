@@ -3429,27 +3429,32 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
             return_type_name = quote! {void};
         }
 
-        let needs_this_deref = match &func.member_func_metadata {
-            None => false,
-            Some(meta) => match &func.name {
-                UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => false,
+        let this_ref_qualification = func.member_func_metadata.as_ref().and_then(|meta| {
+            match &func.name {
+                UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
                 UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
-                    meta.instance_method_metadata.is_some()
+                    meta.instance_method_metadata.as_ref().map(|instance_method|instance_method.reference)
                 }
-            },
-        };
-        let (implementation_function, arg_expressions) = if !needs_this_deref {
-            (implementation_function, arg_expressions.clone())
-        } else {
+            }
+        });
+        let (implementation_function, arg_expressions) = if let Some(this_ref_qualification) = this_ref_qualification {
             let this_param = func
                 .params
                 .first()
                 .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
+
             let this_arg = format_cc_ident(&this_param.identifier.identifier);
+            let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
+                quote! {std::move(*#this_arg).}
+            } else {
+                quote! {#this_arg->}
+            };
             (
-                quote! { #this_arg -> #implementation_function},
+                quote! { #this_dot #implementation_function},
                 arg_expressions.iter().skip(1).cloned().collect_vec(),
             )
+        } else {
+            (implementation_function, arg_expressions.clone())
         };
 
         let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};

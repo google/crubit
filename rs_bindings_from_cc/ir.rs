@@ -268,7 +268,7 @@ impl fmt::Debug for UnqualifiedIdentifier {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Deserialize)]
 pub enum ReferenceQualification {
     LValue,
     RValue,
