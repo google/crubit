@@ -50,6 +50,7 @@
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/Regex.h"
 
 namespace crubit {
@@ -373,8 +374,9 @@ std::vector<ItemId> Importer::GetItemIdsInSourceOrder(
     // We generated IR for top level items coming from different targets,
     // however we shouldn't generate bindings for them, so we don't add them
     // to ir.top_level_item_ids.
-    if (decl_context->isTranslationUnit() && !IsFromCurrentTarget(decl))
+    if (decl_context->isTranslationUnit() && !IsFromCurrentTarget(decl)) {
       continue;
+    }
     // Only add item ids for decls that can be successfully imported.
     if (item.has_value()) {
       auto item_id = GenerateItemId(decl);
@@ -490,11 +492,70 @@ void Importer::ImportDeclsFromDeclContext(
 
 std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   // TODO: Move `decl->getCanonicalDecl()` from callers into here.
-  auto it = import_cache_.find(decl);
-  if (it == import_cache_.end()) {
-    it = import_cache_.insert({decl, ImportDecl(decl)}).first;
+  if (auto it = import_cache_.find(decl); it != import_cache_.end()) {
+    return it->second;
   }
-  return it->second;
+  // Here, we need to be careful. Recursive imports break cycles as follows:
+  // an item which may, in the process of being imported, then import itself,
+  // will mark itself as being successfully imported in the future via
+  // `MarkAsSuccessfullyImported()` during its own import process. Then later
+  // attempts to import it will, instead of trying to import it again (causing
+  // an infinite loop), short-circuit and return a null item at that time.
+  //
+  // This means that import_cache_ can change *during the call to ImportDecl*,
+  // and in particular, because `GetDeclItem` caches, and because recursive
+  // calls return null, it might specifically have been changed to have a
+  // null entry for the decl we are currently importing.
+  //
+  // For example, consider the following type:
+  //
+  // ```c++
+  // struct Foo{ Foo* x; }
+  // ```
+  //
+  // 1. First, we call `GetDeclItem(mystruct)`
+  // 2. If importing `x` itself attempts an import of `Foo*`, then that would
+  //    call `GetDeclItem(mystruct)` inside of an existing call to
+  //    `GetDeclItem(mystruct)`.
+  // 3. The nested call returns early, returning null (because this is a
+  //    cyclic invocation), and `GetDeclItem` **caches the null entry**.
+  // 4. finally, the original `GetDeclItem` call finishes its call to
+  //    `ImportDecl`. It must now overwrite the nulled cache entry from the
+  //    earlier import to instead use the real entry.
+  //
+  // TODO(jeanpierreda): find and eliminate all re-entrant imports, and replace with
+  // a CHECK(inserted).
+
+  // Note: insert_or_assign, not insert, in case a record, so as to overwrite
+  // any null entries introduced by cycles.
+
+  std::optional<IR::Item> result = ImportDecl(decl);
+  auto [it, inserted] = import_cache_.try_emplace(decl, result);
+  if (!inserted) {
+    // TODO(jeanpierreda): Fix and promote to CHECK.
+    // At least one cycle occurs with Typedef, where a typedef will import
+    // itself during its own import. This isn't an infinite loop, because the
+    // recursive cycle gets broken between the two by CXXRecordDecl, but the
+    // result is that we get this typedef inserted while we were attempting to
+    // insert it.
+    //
+    // Alternatively, maybe it's sufficient to check that they're _equal_.
+    // It's not a bug at all to import it twice if it has no effect.
+    LOG_IF(INFO, !it->second.has_value())
+        << "re-entrant import discovered, where the re-entrant import had a "
+           "non-null value."
+        << "\n  trying to import a " << decl->getDeclKindName()
+        << "\n  present entry: " << ItemToString(it->second)
+        << "\n  was going to be inserted: " << ItemToString(result);
+    it->second = result;
+  }
+  if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
+    // TODO(forster): Should we even visit the nested decl if we couldn't
+    // import the parent? For now we have tests that check that we generate
+    // error messages for those decls, so we're visiting.
+    ImportDeclsFromDeclContext(record_decl);
+  }
+  return result;
 }
 
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
@@ -504,14 +565,6 @@ std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
       result = importer->ImportDecl(decl);
     }
   }
-
-  if (auto* record_decl = clang::dyn_cast<clang::CXXRecordDecl>(decl)) {
-    // TODO(forster): Should we even visit the nested decl if we couldn't
-    // import the parent? For now we have tests that check that we generate
-    // error messages for those decls, so we're visiting.
-    ImportDeclsFromDeclContext(record_decl);
-  }
-
   return result;
 }
 

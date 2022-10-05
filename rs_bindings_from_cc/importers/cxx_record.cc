@@ -110,7 +110,12 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     return std::nullopt;
   }
   if (ictx_.HasBeenAlreadySuccessfullyImported(record_decl)) {
-    return std::nullopt;
+    return ictx_.ImportUnsupportedItem(
+        record_decl,
+        "THIS IS A BUG: the type was marked as imported, so we short-circuited "
+        "evaluation here. However, instead of the fully imported type being "
+        "used, apparently this empty stub was used instead. Report this "
+        "upstream.");
   }
   if (record_decl->isInjectedClassName()) {
     return std::nullopt;

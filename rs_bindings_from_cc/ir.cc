@@ -544,4 +544,9 @@ llvm::json::Value IR::ToJson() const {
   };
 }
 
+std::string ItemToString(const IR::Item& item) {
+  return std::visit(
+      [&](auto&& item) { return llvm::formatv("{0}", item.ToJson()); }, item);
+}
+
 }  // namespace crubit

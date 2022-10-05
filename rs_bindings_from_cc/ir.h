@@ -787,6 +787,13 @@ inline std::ostream& operator<<(std::ostream& o, const IR& ir) {
   return o << IrToJson(ir);
 }
 
+// Utility function to convert items to string.
+std::string ItemToString(const IR::Item& item);
+inline std::string ItemToString(const std::optional<IR::Item>& item) {
+  if (item.has_value()) return ItemToString(*item);
+  return "null";
+}
+
 }  // namespace crubit
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_IR_H_
