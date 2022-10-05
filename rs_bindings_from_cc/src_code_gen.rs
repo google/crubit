@@ -3429,33 +3429,34 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
             return_type_name = quote! {void};
         }
 
-        let this_ref_qualification = func.member_func_metadata.as_ref().and_then(|meta| {
-            match &func.name {
+        let this_ref_qualification =
+            func.member_func_metadata.as_ref().and_then(|meta| match &func.name {
                 UnqualifiedIdentifier::Constructor | UnqualifiedIdentifier::Destructor => None,
-                UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => {
-                    meta.instance_method_metadata.as_ref().map(|instance_method|instance_method.reference)
-                }
-            }
-        });
-        let (implementation_function, arg_expressions) = if let Some(this_ref_qualification) = this_ref_qualification {
-            let this_param = func
-                .params
-                .first()
-                .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
+                UnqualifiedIdentifier::Identifier(_) | UnqualifiedIdentifier::Operator(_) => meta
+                    .instance_method_metadata
+                    .as_ref()
+                    .map(|instance_method| instance_method.reference),
+            });
+        let (implementation_function, arg_expressions) =
+            if let Some(this_ref_qualification) = this_ref_qualification {
+                let this_param = func
+                    .params
+                    .first()
+                    .ok_or_else(|| anyhow!("Instance methods must have `__this` param."))?;
 
-            let this_arg = format_cc_ident(&this_param.identifier.identifier);
-            let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
-                quote! {std::move(*#this_arg).}
+                let this_arg = format_cc_ident(&this_param.identifier.identifier);
+                let this_dot = if this_ref_qualification == ir::ReferenceQualification::RValue {
+                    quote! {std::move(*#this_arg).}
+                } else {
+                    quote! {#this_arg->}
+                };
+                (
+                    quote! { #this_dot #implementation_function},
+                    arg_expressions.iter().skip(1).cloned().collect_vec(),
+                )
             } else {
-                quote! {#this_arg->}
+                (implementation_function, arg_expressions.clone())
             };
-            (
-                quote! { #this_dot #implementation_function},
-                arg_expressions.iter().skip(1).cloned().collect_vec(),
-            )
-        } else {
-            (implementation_function, arg_expressions.clone())
-        };
 
         let return_expr = quote! {#implementation_function( #( #arg_expressions ),* )};
         let return_stmt = if !is_trivial_return {
@@ -4928,11 +4929,6 @@ mod tests {
             rs_api,
             quote! {
                 pub struct Derived {
-                    // TODO(b/232984274): delete this.
-                    // Currently, our tests use C++14 instead of C++17. In C++14, `Derived`
-                    // is not an aggregate, because it has a base class. C++17 removed this
-                    // restriction, and allows aggregates to have base classes.
-                    __non_field_data:  [::std::mem::MaybeUninit<u8>; 0],
                     pub x: i16,
                 }
             }
