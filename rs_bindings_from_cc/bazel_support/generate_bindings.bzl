@@ -13,6 +13,9 @@ load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 def _get_hdrs_command_line(hdrs):
     return ["--public_headers=" + ",".join([x.path for x in hdrs])]
 
+def _get_extra_rs_srcs_command_line(extra_rs_srcs):
+    return ["--extra_rs_srcs=" + ",".join([x.path for x in extra_rs_srcs])]
+
 def generate_bindings(
         ctx,
         attr,
@@ -22,7 +25,8 @@ def generate_bindings(
         public_hdrs,
         header_includes,
         action_inputs,
-        targets_and_headers):
+        targets_and_headers,
+        extra_rs_srcs):
     """Runs the bindings generator.
 
     Args:
@@ -36,6 +40,7 @@ def generate_bindings(
       action_inputs: A depset of inputs to the bindings generating action.
       targets_and_headers: A depset of strings, each one representing mapping of target to " +
                           "its headers in json format.
+      extra_rs_srcs: A list of extra source files to add.
 
     Returns:
       tuple(cc_output, rs_output): The generated source files.
@@ -82,7 +87,7 @@ def generate_bindings(
                 "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt",
                 "--rustfmt_config_path",
                 "nowhere/rustfmt.toml",
-            ] + _get_hdrs_command_line(public_hdrs),
+            ] + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs),
             "targets_and_headers": targets_and_headers,
         },
     )
@@ -101,7 +106,7 @@ def generate_bindings(
             direct = [
                 ctx.executable._rustfmt,
                 ctx.executable._generator,
-            ] + ctx.files._rustfmt_cfg,
+            ] + ctx.files._rustfmt_cfg + extra_rs_srcs,
             transitive = [action_inputs],
         ),
         additional_outputs = [rs_output, namespaces_output],

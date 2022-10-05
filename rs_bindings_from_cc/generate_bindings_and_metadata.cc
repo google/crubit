@@ -62,15 +62,16 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
                          clang_args.end());
 
-  CRUBIT_ASSIGN_OR_RETURN(std::vector<std::string> requested_instantiations,
-                          CollectInstantiations(cmdline.rust_sources()));
+  CRUBIT_ASSIGN_OR_RETURN(
+      std::vector<std::string> requested_instantiations,
+      CollectInstantiations(cmdline.srcs_to_scan_for_instantiations()));
 
   CRUBIT_ASSIGN_OR_RETURN(
       IR ir, IrFromCc(
                  /* extra_source_code= */ "", cmdline.current_target(),
                  cmdline.public_headers(), virtual_headers_contents,
-                 cmdline.headers_to_targets(), clang_args_view,
-                 requested_instantiations));
+                 cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
+                 clang_args_view, requested_instantiations));
 
   CRUBIT_ASSIGN_OR_RETURN(Bindings bindings,
                           GenerateBindings(ir, cmdline.crubit_support_path(),

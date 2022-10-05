@@ -77,6 +77,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
         targets_and_headers = targets_and_headers,
+        extra_rs_srcs = ctx.files.extra_rs_srcs,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,
     )
@@ -88,6 +89,7 @@ bindings_for_toolchain_headers = rule(
             "hdrs": attr.label(),
             "public_libc_hdrs": attr.string_list(),
             "public_libcxx_hdrs": attr.string_list(),
+            "extra_rs_srcs": attr.label_list(allow_files = True),
             "_stl": attr.label(default = "//third_party/stl:stl"),
         }.items(),
     ),

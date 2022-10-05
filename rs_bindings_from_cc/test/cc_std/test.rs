@@ -38,4 +38,11 @@ mod tests {
         assert_eq!(3, std::float_round_style::round_toward_neg_infinity.into());
         assert_eq!(-1, std::float_round_style::round_indeterminate.into());
     }
+
+    #[test]
+    fn test_string_view() {
+        let x = "this is a string";
+        let x_sv = std::string_view::from(x);
+        assert_eq!(x, <&str>::try_from(x_sv).unwrap());
+    }
 }

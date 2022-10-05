@@ -36,6 +36,7 @@ absl::StatusOr<IR> IrFromCc(
     absl::flat_hash_map<const HeaderName, const std::string>
         virtual_headers_contents,
     absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets,
+    absl::Span<const std::string> extra_rs_srcs,
     absl::Span<const absl::string_view> args,
     absl::Span<const std::string> extra_instantiations) {
   // Caller should verify that the inputs are not empty.
@@ -85,18 +86,33 @@ absl::StatusOr<IR> IrFromCc(
       "-fparse-all-comments"};
   args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
 
-  if (Invocation invocation(current_target, entrypoint_headers,
-                            headers_to_targets);
-      clang::tooling::runToolOnCodeWithArgs(
+  Invocation invocation(current_target, entrypoint_headers, headers_to_targets);
+  if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings, kVirtualInputPath,
           "rs_bindings_from_cc",
           std::make_shared<clang::PCHContainerOperations>(), file_contents)) {
-    return invocation.ir_;
-  } else {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Could not compile header contents");
   }
+
+  invocation.ir_.items.reserve(invocation.ir_.items.size() +
+                               extra_rs_srcs.size());
+  int i = 0;
+  for (const std::string& extra_source : extra_rs_srcs) {
+    // TODO(jeanpierreda): It'd be nice to give these human-readable names, e.g. the
+    // name of the file without the `.rs`, but it's also annoying to handle name
+    // collisions.
+    ItemId id(reinterpret_cast<uintptr_t>(&extra_source));
+    invocation.ir_.items.push_back(UseMod{
+        .path = extra_source,
+        .mod_name = Identifier(absl::StrCat("__crubit_mod_", i)),
+        .id = id,
+    });
+    invocation.ir_.top_level_item_ids.push_back(id);
+    ++i;
+  }
+  return invocation.ir_;
 }
 
 }  // namespace crubit

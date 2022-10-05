@@ -752,6 +752,21 @@ inline std::ostream& operator<<(std::ostream& o, const Namespace& n) {
   return o << std::string(llvm::formatv("{0:2}", n.ToJson()));
 }
 
+// Declare a module and use its contents.
+//
+// This is used to support extra Rust source files.
+struct UseMod {
+  llvm::json::Value ToJson() const;
+
+  std::string path;
+  Identifier mod_name;
+  ItemId id;
+};
+
+inline std::ostream& operator<<(std::ostream& o, const UseMod& use_mod) {
+  return o << std::string(llvm::formatv("{0:2}", use_mod.ToJson()));
+}
+
 // A complete intermediate representation of bindings for publicly accessible
 // declarations of a single C++ library.
 struct IR {
@@ -774,7 +789,7 @@ struct IR {
   BazelLabel current_target;
 
   using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,
-                            UnsupportedItem, Comment, Namespace>;
+                            UnsupportedItem, Comment, Namespace, UseMod>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
 };

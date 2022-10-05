@@ -35,13 +35,14 @@ def _get_cc_info(providers):
             return provider
     fail("Couldn't find a CcInfo in the list of providers")
 
-def compile_rust(ctx, attr, src, deps):
+def compile_rust(ctx, attr, src, extra_srcs, deps):
     """Compiles a Rust source file.
 
     Args:
       ctx: The rule context.
       attr: The current rule's attributes.
       src: The source file to be compiled.
+      extra_srcs: Additional source files to include in the crate.
       deps: List[DepVariantInfo]: A list of dependencies needed.
 
     Returns:
@@ -79,7 +80,7 @@ def compile_rust(ctx, attr, src, deps):
             name = crate_name,
             type = "rlib",
             root = src,
-            srcs = depset([src]),
+            srcs = depset([src] + extra_srcs),
             deps = depset(deps),
             proc_macro_deps = depset([]),
             aliases = {},

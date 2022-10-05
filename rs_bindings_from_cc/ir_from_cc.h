@@ -38,6 +38,8 @@ static constexpr absl::string_view kInstantiationsNamespaceName =
 //   `//test:testing_target`. Headers from `virtual_headers_contents` are not
 //   added automatically.
 // * `args`: additional command line arguments for Clang
+// * `extra_rs_srcs`: A list of paths for additional rust files to include into
+//   the crate. This is done via `#[path="..."] mod <...>; pub use <...>::*;`.
 // * `extra_instantiations`: names of full C++ class template specializations
 // to instantiate and generate bindings from.
 //
@@ -49,6 +51,7 @@ absl::StatusOr<IR> IrFromCc(
         virtual_headers_contents = {},
     absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets =
         {},
+    absl::Span<const std::string> extra_rs_srcs = {},
     absl::Span<const absl::string_view> args = {},
     absl::Span<const std::string> extra_instantiations = {});
 

@@ -2330,6 +2330,18 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
             GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
         }
         Item::Namespace(namespace) => generate_namespace(db, namespace)?,
+        Item::UseMod(use_mod) => {
+            let UseMod {path, mod_name, ..} = &**use_mod;
+            let mod_name = make_rs_ident(&mod_name.identifier);
+                GeneratedItem {
+                item: quote! {
+                    #[path = #path]
+                    mod #mod_name;
+                    pub use #mod_name::*;
+                },
+                ..Default::default()
+            }
+        }
     };
 
     Ok(generated_item)

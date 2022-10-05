@@ -30,13 +30,16 @@ class Cmdline {
       std::string rustfmt_exe_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str,
-      std::vector<std::string> rust_sources, std::string instantiations_out) {
+      std::vector<std::string> extra_rs_sources,
+      std::vector<std::string> srcs_to_scan_for_instantiations,
+      std::string instantiations_out) {
     return CreateFromArgs(
         std::move(cc_out), std::move(rs_out), std::move(ir_out),
         std::move(namespaces_out), std::move(crubit_support_path),
         std::move(rustfmt_exe_path), std::move(rustfmt_config_path), do_nothing,
         std::move(public_headers), std::move(targets_and_headers_str),
-        std::move(rust_sources), std::move(instantiations_out));
+        std::move(extra_rs_sources), std::move(srcs_to_scan_for_instantiations),
+        std::move(instantiations_out));
   }
 
   Cmdline(const Cmdline&) = delete;
@@ -58,7 +61,13 @@ class Cmdline {
     return public_headers_;
   }
 
-  const std::vector<std::string>& rust_sources() const { return rust_sources_; }
+  const std::vector<std::string>& extra_rs_srcs() const {
+    return extra_rs_srcs_;
+  }
+
+  const std::vector<std::string>& srcs_to_scan_for_instantiations() const {
+    return srcs_to_scan_for_instantiations_;
+  }
 
   const BazelLabel& current_target() const { return current_target_; }
 
@@ -76,7 +85,9 @@ class Cmdline {
       std::string rustfmt_exe_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str,
-      std::vector<std::string> rust_sources, std::string instantiations_out);
+      std::vector<std::string> extra_rs_sources,
+      std::vector<std::string> srcs_to_scan_for_instantiations,
+      std::string instantiations_out);
 
   absl::StatusOr<BazelLabel> FindHeader(const HeaderName& header) const;
 
@@ -92,8 +103,10 @@ class Cmdline {
   std::vector<HeaderName> public_headers_;
   absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets_;
 
+  std::vector<std::string> extra_rs_srcs_;
+
+  std::vector<std::string> srcs_to_scan_for_instantiations_;
   std::string instantiations_out_;
-  std::vector<std::string> rust_sources_;
 
   std::string namespaces_out_;
 };

@@ -50,7 +50,10 @@ ABSL_FLAG(std::string, targets_and_headers, std::string(),
           "  },\n"
           "...\n"
           "]");
-ABSL_FLAG(std::vector<std::string>, rust_sources, std::vector<std::string>(),
+ABSL_FLAG(std::vector<std::string>, extra_rs_srcs, std::vector<std::string>(),
+          "Additional Rust source files to include into the crate.");
+ABSL_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations,
+          std::vector<std::string>(),
           "[template instantiation mode only] all Rust source files of a crate "
           "for which we are instantiating templates.");
 ABSL_FLAG(std::string, instantiations_out, "",
@@ -87,7 +90,8 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
       absl::GetFlag(FLAGS_rustfmt_config_path), absl::GetFlag(FLAGS_do_nothing),
       absl::GetFlag(FLAGS_public_headers),
       absl::GetFlag(FLAGS_targets_and_headers),
-      absl::GetFlag(FLAGS_rust_sources),
+      absl::GetFlag(FLAGS_extra_rs_srcs),
+      absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
       absl::GetFlag(FLAGS_instantiations_out));
 }
 
@@ -96,7 +100,8 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     std::string namespaces_out, std::string crubit_support_path,
     std::string rustfmt_exe_path, std::string rustfmt_config_path,
     bool do_nothing, std::vector<std::string> public_headers,
-    std::string targets_and_headers_str, std::vector<std::string> rust_sources,
+    std::string targets_and_headers_str, std::vector<std::string> extra_rs_srcs,
+    std::vector<std::string> srcs_to_scan_for_instantiations,
     std::string instantiations_out) {
   Cmdline cmdline;
 
@@ -134,13 +139,16 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
                  std::back_inserter(cmdline.public_headers_),
                  [](const std::string& s) { return HeaderName(s); });
 
-  if (rust_sources.empty() != instantiations_out.empty()) {
+  cmdline.extra_rs_srcs_ = std::move(extra_rs_srcs);
+
+  if (srcs_to_scan_for_instantiations.empty() != instantiations_out.empty()) {
     return absl::InvalidArgumentError(
         "please specify both --rust_sources and --instantiations_out when "
         "requesting a template instantiation mode");
   }
   cmdline.instantiations_out_ = std::move(instantiations_out);
-  cmdline.rust_sources_ = std::move(rust_sources);
+  cmdline.srcs_to_scan_for_instantiations_ =
+      std::move(srcs_to_scan_for_instantiations);
 
   if (targets_and_headers_str.empty()) {
     return absl::InvalidArgumentError("please specify --targets_and_headers");

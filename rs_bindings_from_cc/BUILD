@@ -549,6 +549,7 @@ filegroup(
 bindings_for_toolchain_headers(
     name = "cc_std",
     hdrs = ":toolchain_headers",
+    extra_rs_srcs = ["//rs_bindings_from_cc/support/extra_rs_srcs_for_cc_std"],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = ["//visibility:public"],

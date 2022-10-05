@@ -526,6 +526,13 @@ pub struct Namespace {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
+pub struct UseMod {
+    pub path: Rc<str>,
+    pub mod_name: Identifier,
+    pub id: ItemId,
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub enum Item {
     Func(Rc<Func>),
     IncompleteRecord(Rc<IncompleteRecord>),
@@ -535,6 +542,7 @@ pub enum Item {
     UnsupportedItem(Rc<UnsupportedItem>),
     Comment(Rc<Comment>),
     Namespace(Rc<Namespace>),
+    UseMod(Rc<UseMod>),
 }
 
 impl Item {
@@ -548,6 +556,7 @@ impl Item {
             Item::UnsupportedItem(unsupported) => unsupported.id,
             Item::Comment(comment) => comment.id,
             Item::Namespace(namespace) => namespace.id,
+            Item::UseMod(use_mod) => use_mod.id,
         }
     }
     pub fn enclosing_namespace_id(&self) -> Option<ItemId> {
@@ -560,6 +569,7 @@ impl Item {
             Item::TypeAlias(type_alias) => type_alias.enclosing_namespace_id,
             Item::Comment(_) => None,
             Item::UnsupportedItem(_) => None,
+            Item::UseMod(_) => None,
         }
     }
 }

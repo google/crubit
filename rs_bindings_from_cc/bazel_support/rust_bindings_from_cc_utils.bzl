@@ -26,6 +26,7 @@ def generate_and_compile_bindings(
         header_includes,
         action_inputs,
         targets_and_headers,
+        extra_rs_srcs,
         deps_for_cc_file,
         deps_for_rs_file,
         extra_cc_compilation_action_inputs = []):
@@ -40,6 +41,7 @@ def generate_and_compile_bindings(
       action_inputs: A depset of inputs to the bindings generating action.
       targets_and_headers: A depset of strings, each one representing mapping of target to " +
                           "its headers in json format.
+      extra_rs_srcs: list[file]: Additional source files for the Rust crate.
       deps_for_cc_file: list[CcInfo]: CcInfos needed by the generated C++ source file.
       deps_for_rs_file: list[DepVariantInfo]: DepVariantInfos needed by the generated Rust source file.
       extra_cc_compilation_action_inputs: A list of input files for the C++ compilation action.
@@ -67,7 +69,15 @@ def generate_and_compile_bindings(
         header_includes = header_includes,
         action_inputs = action_inputs,
         targets_and_headers = targets_and_headers,
+        extra_rs_srcs = extra_rs_srcs,
     )
+
+    # Relocate the rs files so that they can be read by rustc using relative paths.
+    extra_rs_srcs_relocated = []
+    for file in extra_rs_srcs:
+        new_file = ctx.actions.declare_file(file.path, sibling = rs_output)
+        ctx.actions.symlink(output = new_file, target_file = file)
+        extra_rs_srcs_relocated.append(new_file)
 
     # Compile the "_rust_api_impl.cc" file
     cc_info = compile_cc(
@@ -80,11 +90,12 @@ def generate_and_compile_bindings(
         extra_cc_compilation_action_inputs,
     )
 
-    # Compile the "_rust_api.rs" file
+    # Compile the "_rust_api.rs" file together with extra_rs_srcs.
     dep_variant_info = compile_rust(
         ctx,
         attr,
         rs_output,
+        extra_rs_srcs_relocated,
         deps_for_rs_file,
     )
 

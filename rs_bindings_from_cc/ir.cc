@@ -286,6 +286,18 @@ llvm::json::Value MemberFuncMetadata::ToJson() const {
   };
 }
 
+llvm::json::Value UseMod::ToJson() const {
+  llvm::json::Object use_mod{
+      {"path", path},
+      {"mod_name", mod_name},
+      {"id", id},
+  };
+
+  return llvm::json::Object{
+      {"UseMod", std::move(use_mod)},
+  };
+}
+
 llvm::json::Value Func::ToJson() const {
   llvm::json::Object func{
       {"name", name},
@@ -529,6 +541,7 @@ llvm::json::Value IR::ToJson() const {
   for (const auto& item : items) {
     std::visit([&](auto&& item) { json_items.push_back(item.ToJson()); }, item);
   }
+  CHECK_EQ(json_items.size(), items.size());
 
   std::vector<llvm::json::Value> top_level_ids;
   top_level_ids.reserve(top_level_item_ids.size());

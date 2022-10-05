@@ -40,7 +40,8 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
-          /* rust_sources= */ {},
+          /* extra_rs_srcs= */ {},
+          /* srcs_to_scan_for_instantiations= */ {},
           /* instantiations_out= */ ""));
 
   ASSERT_OK_AND_ASSIGN(
@@ -68,7 +69,8 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
-          /* rust_sources= */ {},
+          /* extra_rs_srcs= */ {},
+          /* srcs_to_scan_for_instantiations= */ {},
           /* instantiations_out= */ ""));
 
   ASSERT_OK_AND_ASSIGN(
@@ -96,7 +98,9 @@ GetInstantiationsFor(absl::string_view header_content,
           /* do_nothing= */ false,
           /* public_headers= */
           {"a.h"}, std::string(kTargetsAndHeaders),
-          /* rust_sources= */ {a_rs_path}, "instantiations_out"));
+          /* extra_rs_srcs= */ {},
+          /* srcs_to_scan_for_instantiations= */ {a_rs_path},
+          "instantiations_out"));
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
@@ -261,7 +265,9 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
           "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
-          /* rust_sources= */ {}, /* instantiations_out= */ ""));
+          /* extra_rs_srcs= */ {},
+          /* srcs_to_scan_for_instantiations= */ {},
+          /* instantiations_out= */ ""));
   ASSERT_OK_AND_ASSIGN(BindingsAndMetadata result,
                        GenerateBindingsAndMetadata(
                            cmdline, DefaultClangArgs(),
