@@ -23,6 +23,23 @@ rust_test(
     crate = ":arc_anyhow",
 )
 
+rust_library(
+    name = "code_gen_utils",
+    srcs = ["code_gen_utils.rs"],
+    deps = [
+        "@crate_index//:proc-macro2",
+    ],
+)
+
+rust_test(
+    name = "code_gen_utils_test",
+    crate = ":code_gen_utils",
+    deps = [
+        ":token_stream_matchers",
+        "@crate_index//:quote",
+    ],
+)
+
 cc_library(
     name = "file_io",
     srcs = ["file_io.cc"],

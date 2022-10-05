@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{anyhow, bail, ensure, Context, Result};
+use code_gen_utils::format_cc_ident;
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -2461,11 +2462,6 @@ fn make_rs_ident(ident: &str) -> Ident {
         Ok(_) => format_ident!("{}", ident),
         Err(_) => format_ident!("r#{}", ident),
     }
-}
-
-/// Formats a C++ identifier. Does not escape C++ keywords.
-fn format_cc_ident(ident: &str) -> TokenStream {
-    ident.parse().unwrap()
 }
 
 /// Returns Some(crate_ident) if this is an imported crate.

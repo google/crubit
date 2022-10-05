@@ -385,6 +385,7 @@ rust_library(
     deps = [
         ":ir",
         "//common:arc_anyhow",
+        "//common:code_gen_utils",
         "//common:ffi_types",
         "//common:token_stream_printer",
         "@crate_index//:itertools",
