@@ -555,6 +555,12 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
     // error messages for those decls, so we're visiting.
     ImportDeclsFromDeclContext(record_decl);
   }
+  if (auto* specialization_decl =
+          llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+    // Store `specialization_decl`s so that they will get included in
+    // IR::top_level_item_ids.
+    class_template_instantiations_.insert(specialization_decl);
+  }
   return result;
 }
 
@@ -715,16 +721,11 @@ absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(
         type_string, import_status.message()));
   }
 
-  // Store `specialization_decl`s so that they will get included in
-  // IR::top_level_item_ids.
-  class_template_instantiations_.insert(specialization_decl);
-
   return ConvertTypeDecl(specialization_decl);
 }
 
-absl::StatusOr<MappedType> Importer::ConvertTypeDecl(
-    const clang::TypeDecl* decl) const {
-  if (!HasBeenAlreadySuccessfullyImported(decl)) {
+absl::StatusOr<MappedType> Importer::ConvertTypeDecl(clang::TypeDecl* decl) {
+  if (!EnsureSuccessfullyImported(decl)) {
     return absl::NotFoundError(absl::Substitute(
         "No generated bindings found for '$0'", decl->getNameAsString()));
   }

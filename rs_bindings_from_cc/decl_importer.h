@@ -163,6 +163,11 @@ class ImportContext {
   virtual bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const = 0;
 
+  // Returns whether the `decl` will be successfully imported. If it hasn't been
+  // imported yet, attempts to import it now, calling
+  // MarkAsSuccessfullyImported.
+  virtual bool EnsureSuccessfullyImported(clang::TypeDecl* decl) = 0;
+
   Invocation& invocation_;
   clang::ASTContext& ctx_;
   clang::Sema& sema_;

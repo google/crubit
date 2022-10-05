@@ -108,6 +108,11 @@ __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2f
   crubit::construct_at(__this);
 }
 extern "C" void
+__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::TemplateWithTwoParams<int, int>* __this) {
+  crubit::construct_at(__this);
+}
+extern "C" void
 __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
     struct test_namespace_bindings::TemplateWithTwoParams<
         test_namespace_bindings::TemplateWithTwoParams<int, int>, int>* __this,
@@ -120,6 +125,13 @@ extern "C" void
 __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
     struct test_namespace_bindings::TemplateWithTwoParams<int, float>* __this,
     struct test_namespace_bindings::TemplateWithTwoParams<int, float>*
+        __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" void
+__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
+    struct test_namespace_bindings::TemplateWithTwoParams<int, int>* __this,
+    struct test_namespace_bindings::TemplateWithTwoParams<int, int>*
         __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
@@ -263,6 +275,21 @@ static_assert(
         value2,
         struct test_namespace_bindings::TemplateWithTwoParams<int, float>) ==
     4);
+
+static_assert(
+    sizeof(struct test_namespace_bindings::TemplateWithTwoParams<int, int>) ==
+    8);
+static_assert(
+    alignof(struct test_namespace_bindings::TemplateWithTwoParams<int, int>) ==
+    4);
+static_assert(
+    CRUBIT_OFFSET_OF(
+        value1,
+        struct test_namespace_bindings::TemplateWithTwoParams<int, int>) == 0);
+static_assert(
+    CRUBIT_OFFSET_OF(
+        value2,
+        struct test_namespace_bindings::TemplateWithTwoParams<int, int>) == 4);
 
 static_assert(sizeof(struct test_namespace_bindings::MyStruct<char>) == 1);
 static_assert(alignof(struct test_namespace_bindings::MyStruct<char>) == 1);

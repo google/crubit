@@ -120,6 +120,10 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (record_decl->isInjectedClassName()) {
     return std::nullopt;
   }
+
+  if (record_decl->isImplicit()) {
+    return std::nullopt;
+  }
   if (decl_context->isRecord()) {
     return ictx_.ImportUnsupportedItem(record_decl,
                                        "Nested classes are not supported yet");
@@ -127,6 +131,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   if (clang::isa<clang::ClassTemplatePartialSpecializationDecl>(record_decl)) {
     return ictx_.ImportUnsupportedItem(
         record_decl, "Partially-specialized class templates are not supported");
+  }
+  if (record_decl->isDependentContext()) {
+    // We can't pass this to getASTRecordLayout() or it'll segfault.
+    // TODO(jeanpierreda): investigate what we can do to support dependent records?
+    // All I know is that I saw other code calling getASTRecordLayout() do the
+    // same check. But getASTRecordLayout() itself doesn't actually document
+    // this.
+    return ictx_.ImportUnsupportedItem(record_decl,
+                                       "Dependent records are not supported");
   }
   if (record_decl->isInvalidDecl()) {
     return std::nullopt;

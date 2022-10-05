@@ -421,11 +421,9 @@ impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
 }
 
 #[derive(Clone, Copy)]
-#[repr(C, align(4))]
+#[repr(C)]
 pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE {
-    /// Reason for representing this field as a blob of bytes:
-    /// Unsupported type 'struct test_namespace_bindings::TemplateWithTwoParams<int, int>': Unsupported type 'struct test_namespace_bindings::TemplateWithTwoParams<int, int>': No generated bindings found for 'TemplateWithTwoParams'
-    pub(crate) value1: [::std::mem::MaybeUninit<u8>; 8],
+    pub value1: crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
     pub value2: i32,
 }
 forward_declare::unsafe_define!(
@@ -528,6 +526,59 @@ impl<'b>
 
 // rs_bindings_from_cc/test/golden/templates.h;l=37
 // Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, float>::operator=':
+// operator= for Unpin types is not yet supported.
+
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
+    pub value1: i32,
+    pub value2: i32,
+}
+forward_declare::unsafe_define!(
+    forward_declare::symbol!("test_namespace_bindings::TemplateWithTwoParams<int, int>"),
+    crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
+);
+
+impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE {
+    #[inline(always)]
+    fn default() -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp);
+            tmp.assume_init()
+        }
+    }
+}
+
+impl<'b>
+    From<
+        ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        >,
+    > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
+{
+    #[inline(always)]
+    fn from(
+        __param_0: ::ctor::RvalueReference<
+            'b,
+            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        >,
+    ) -> Self {
+        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
+            tmp.assume_init()
+        }
+    }
+}
+
+// rs_bindings_from_cc/test/golden/templates.h;l=37
+// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, int>::operator=':
+// operator= for Unpin types is not yet supported.
+
+// rs_bindings_from_cc/test/golden/templates.h;l=37
+// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, int>::operator=':
 // operator= for Unpin types is not yet supported.
 
 /// Explicit class template specialization with definition should be imported
@@ -1027,6 +1078,25 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            >,
+        );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut ::std::mem::MaybeUninit<
+                crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            >,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            >,
+        );
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1334,6 +1404,44 @@ const _: () = assert!(
 const _: () = assert!(
     memoffset::offset_of!(
         crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+        value2
+    ) == 4
+);
+
+const _: () = assert!(
+    ::std::mem::size_of::<
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+    >() == 8
+);
+const _: () = assert!(
+    ::std::mem::align_of::<
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+    >() == 4
+);
+const _: () = {
+    static_assertions::assert_impl_all!(
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Clone
+    );
+};
+const _: () = {
+    static_assertions::assert_impl_all!(
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Copy
+    );
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE: Drop
+    );
+};
+const _: () = assert!(
+    memoffset::offset_of!(
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        value1
+    ) == 0
+);
+const _: () = assert!(
+    memoffset::offset_of!(
+        crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
         value2
     ) == 4
 );

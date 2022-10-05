@@ -12,13 +12,17 @@ namespace crubit {
 
 std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     clang::TypedefNameDecl* typedef_name_decl) {
-  const clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
+  clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
   llvm::Optional<ItemId> enclosing_record_id = llvm::None;
   if (decl_context) {
     if (decl_context->isFunctionOrMethod()) {
       return std::nullopt;
     }
     if (auto* record_decl = llvm::dyn_cast<clang::RecordDecl>(decl_context)) {
+      if (!ictx_.EnsureSuccessfullyImported(record_decl)) {
+        return ictx_.ImportUnsupportedItem(typedef_name_decl,
+                                           "Couldn't import the parent");
+      }
       enclosing_record_id = GenerateItemId(record_decl);
     }
   }

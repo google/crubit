@@ -501,6 +501,7 @@ LIBCXX_HEADERS = [
     "scoped_allocator",
     "stack",
     "stdexcept",
+    "streambuf",
     "string",
     "string_view",
     "system_error",

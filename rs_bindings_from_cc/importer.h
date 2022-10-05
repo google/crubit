@@ -87,6 +87,12 @@ class Importer final : public ImportContext {
   void MarkAsSuccessfullyImported(const clang::TypeDecl* decl) override;
   bool HasBeenAlreadySuccessfullyImported(
       const clang::TypeDecl* decl) const override;
+  bool EnsureSuccessfullyImported(clang::TypeDecl* decl) override {
+    // First, return early so that we avoid re-entrant imports.
+    if (HasBeenAlreadySuccessfullyImported(decl)) return true;
+    (void)GetDeclItem(decl->getCanonicalDecl());
+    return HasBeenAlreadySuccessfullyImported(decl);
+  }
 
  private:
   class SourceOrderKey;
@@ -115,7 +121,7 @@ class Importer final : public ImportContext {
       const clang::Type* type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,
       bool nullable);
-  absl::StatusOr<MappedType> ConvertTypeDecl(const clang::TypeDecl* decl) const;
+  absl::StatusOr<MappedType> ConvertTypeDecl(clang::TypeDecl* decl);
 
   // Converts `type` into a MappedType, after first importing the Record behind
   // the template instantiation.
