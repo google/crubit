@@ -100,8 +100,31 @@ class TransferStmtVisitor
   const DiagnosticReporter& diag_reporter_;
 };
 
+void GenerateConstraintsForAssignmentNonRecursive(
+    const ObjectSet& old_pointees, const ObjectSet& new_pointees,
+    bool is_in_invariant_context, LifetimeConstraints& constraints) {
+  // The new pointees must always outlive the old pointees.
+  for (const Object* old : old_pointees) {
+    for (const Object* newp : new_pointees) {
+      constraints.AddOutlivesConstraint(old->GetLifetime(),
+                                        newp->GetLifetime());
+    }
+  }
+
+  // If we are in an invariant context, we need to insert constraints in the
+  // opposite direction too (i.e. we need equality).
+  if (is_in_invariant_context) {
+    for (const Object* old : old_pointees) {
+      for (const Object* newp : new_pointees) {
+        constraints.AddOutlivesConstraint(newp->GetLifetime(),
+                                          old->GetLifetime());
+      }
+    }
+  }
+}
+
 // TODO(veluca): this is quadratic.
-void GenerateConstraintsForAssignmentImpl(
+void GenerateConstraintsForAssignmentRecursive(
     const ObjectSet& pointers, const ObjectSet& new_pointees,
     clang::QualType pointer_type, const ObjectRepository& object_repository,
     const PointsToMap& points_to_map, bool is_in_invariant_context,
@@ -131,24 +154,8 @@ void GenerateConstraintsForAssignmentImpl(
 
   ObjectSet old_pointees = points_to_map.GetPointerPointsToSet(pointers);
 
-  // The new pointees must always outlive the old pointees.
-  for (const Object* old : old_pointees) {
-    for (const Object* newp : new_pointees) {
-      constraints.AddOutlivesConstraint(old->GetLifetime(),
-                                        newp->GetLifetime());
-    }
-  }
-
-  // If we are in an invariant context, we need to insert constraints in the
-  // opposite direction too (i.e. we need equality).
-  if (is_in_invariant_context) {
-    for (const Object* old : old_pointees) {
-      for (const Object* newp : new_pointees) {
-        constraints.AddOutlivesConstraint(newp->GetLifetime(),
-                                          old->GetLifetime());
-      }
-    }
-  }
+  GenerateConstraintsForAssignmentNonRecursive(
+      old_pointees, new_pointees, is_in_invariant_context, constraints);
 
   // See https://doc.rust-lang.org/nomicon/subtyping.html for an explanation of
   // variance; here in particular, we use the fact that the pointee of a pointer
@@ -194,7 +201,7 @@ void GenerateConstraintsForAssignmentImpl(
         }
       }
     } else {
-      GenerateConstraintsForAssignmentImpl(
+      GenerateConstraintsForAssignmentRecursive(
           call.old_pointees,
           points_to_map.GetPointerPointsToSet(call.new_pointees), call.type,
           object_repository, points_to_map, is_in_invariant_context,
@@ -211,7 +218,7 @@ void GenerateConstraintsForAssignment(const ObjectSet& pointers,
                                       LifetimeConstraints& constraints) {
   llvm::DenseSet<std::pair<const Object*, const Object*>> seen_pairs;
   // Outer-most pointers are never invariant.
-  GenerateConstraintsForAssignmentImpl(
+  GenerateConstraintsForAssignmentRecursive(
       pointers, new_pointees, pointer_type, object_repository, points_to_map,
       /*is_in_invariant_context=*/false, constraints, seen_pairs);
 }
