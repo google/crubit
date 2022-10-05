@@ -8,7 +8,6 @@ use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::BufReader;
-use token_stream_printer::tokens_to_string;
 
 pub fn to_private_struct_path(input: TokenStream) -> Result<TokenStream, syn::Error> {
     validate_user_input(&input)?;
@@ -38,9 +37,22 @@ fn get_instantiation_struct_name(
     input: TokenStream,
     instantiations: HashMap<String, String>,
 ) -> Result<TokenStream, syn::Error> {
-    let instantiation_name = tokens_to_string(input.clone()).map_err(|err| {
-        make_syn_error(format!("Couldn't format the instantiation name {:?}: {}", &input, err))
-    })?;
+    // In theory `TokenStream` -> `instantiation_name` translation could go through
+    // `token_stream_printer::tokens_to_string`.  This route is not used because:
+    // - The dependencies it would bring would run into b/216638047
+    // - Extra functionality from that route is not needed (e.g. no need for
+    //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special
+    //   handling of `TokenTree::Group`).
+    //
+    // TODO(lukasza, hlopko): In the future, extra canonicalization might be
+    // considered, so that `std::vector<int>`, and `std::vector<(int)>`, and
+    // `std::vector<int32_t>` are treated as equivalent.
+    //
+    // TODO(lukasza, hlopko): More explicitly ensure that the same canonicalization
+    // (e.g. TokenStream->String transformation) is used here and in
+    // `rs_bindings_from_cc/collect_instantiations.rs`.
+    let instantiation_name = input.to_string();
+
     match instantiations.get(&instantiation_name) {
         Some(concrete_struct_name) => {
             let ident = syn::parse_str::<syn::Ident>(concrete_struct_name)?;
@@ -127,9 +139,9 @@ mod tests {
     #[test]
     fn test_successful_expansion() {
         let expanded = get_instantiation_struct_name(
-            quote! {std::vector<bool>},
+            quote!{ std::vector<bool> },
             hashmap! {
-                "std::vector<bool>".to_string() => "__std_vector__bool__".to_string(),
+                quote!{ std::vector<bool> }.to_string() => "__std_vector__bool__".to_string(),
             },
         )
         .unwrap();

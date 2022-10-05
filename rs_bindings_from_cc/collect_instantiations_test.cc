@@ -28,7 +28,7 @@ TEST(CollectInstantiationsTest, ReturnInstantiationsFromRustTest) {
   std::string path =
       WriteFileForCurrentTest("a.rs", "cc_template!(std::vector<bool>);");
   EXPECT_THAT(CollectInstantiations({std::move(path)}),
-              IsOkAndHolds(ElementsAre(StrEq("std::vector<bool>"))));
+              IsOkAndHolds(ElementsAre(StrEq("std :: vector < bool >"))));
 }
 
 }  // namespace

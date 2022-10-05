@@ -12,7 +12,6 @@ use std::fs;
 use std::panic::catch_unwind;
 use std::path::PathBuf;
 use std::process;
-use token_stream_printer::tokens_to_string;
 
 /// Parses given files and returns a Json list with all  C++ class
 /// template instantiations requested by calls to the `cc_template!` macro.
@@ -53,14 +52,14 @@ fn collect_instantiations_impl(filenames: Vec<PathBuf>) -> Result<Vec<String>> {
             .with_context(|| format!("Couldn't read '{}'", filename.display()))?;
         let token_stream = syn::parse_str(&content)
             .with_context(|| format!("Couldn't parse the file '{}'", filename.display()))?;
-        find_cc_template_calls(token_stream, &mut result)?;
+        find_cc_template_calls(token_stream, &mut result);
     }
     let mut result_vec = result.into_iter().collect::<Vec<_>>();
     result_vec.sort();
     Ok(result_vec)
 }
 
-fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) -> Result<()> {
+fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) {
     let mut iter = input.into_iter();
     while let Some(next) = iter.next() {
         // 3 token trees starting at the current 'next' ('cc_template', '!', 'group with
@@ -68,14 +67,29 @@ fn find_cc_template_calls(input: TokenStream, results: &mut HashSet<String>) -> 
         let macro_tokens = std::iter::once(next.clone()).chain(iter.clone().take(2)).collect();
         if let Ok(m) = syn::parse2::<syn::Macro>(macro_tokens) {
             if m.path.is_ident("cc_template") {
-                results.insert(tokens_to_string(m.tokens)?);
+                // In theory `TokenStream` -> `instantiation_name` translation could go through
+                // `token_stream_printer::tokens_to_string`.  This route is not used because:
+                // - The dependencies it would bring would run into b/216638047
+                // - Extra functionality from that route is not needed (e.g. no need for
+                //   `__COMMENT__`-aware or `__SPACE__`-aware processing, nor for special
+                //   handling of `TokenTree::Group`).
+                //
+                // TODO(lukasza, hlopko): In the future, extra canonicalization might be
+                // considered, so that `std::vector<int>`, and `std::vector<(int)>`, and
+                // `std::vector<int32_t>` are treated as equivalent.
+                //
+                // TODO(lukasza, hlopko): More explicitly ensure that the same canonicalization
+                // (e.g. TokenStream->String transformation) is used here and in
+                // `cc_template/cc_template_impl.rs`.
+                let instantiation_name = m.tokens.to_string();
+
+                results.insert(instantiation_name);
             }
         }
         if let TokenTree::Group(group) = next {
-            find_cc_template_calls(group.stream(), results)?;
+            find_cc_template_calls(group.stream(), results);
         }
     }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -124,7 +138,7 @@ mod tests {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template!(MyTemplate<int>) })
                 .unwrap();
-        assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
+        assert_eq!(result, vec!["MyTemplate < int >".to_string()]);
     }
 
     #[test]
@@ -132,7 +146,7 @@ mod tests {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template![MyTemplate<int>] })
                 .unwrap();
-        assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
+        assert_eq!(result, vec!["MyTemplate < int >".to_string()]);
     }
 
     #[test]
@@ -140,7 +154,7 @@ mod tests {
         let result =
             write_file_and_collect_instantiations(quote! { cc_template!{MyTemplate<int>} })
                 .unwrap();
-        assert_eq!(result, vec!["MyTemplate<int>".to_string()]);
+        assert_eq!(result, vec!["MyTemplate < int >".to_string()]);
     }
 
     #[test]
@@ -154,9 +168,9 @@ mod tests {
         assert_eq!(
             result,
             vec![
-                "MyTemplate<int>".to_string(),
-                "MyTemplate<long>".to_string(),
-                "MyTemplate<short>".to_string(),
+                "MyTemplate < int >".to_string(),
+                "MyTemplate < long >".to_string(),
+                "MyTemplate < short >".to_string(),
             ]
         );
     }
@@ -173,9 +187,9 @@ mod tests {
         assert_eq!(
             result,
             vec![
-                "MyTemplate<42>".to_string(),
-                "std::unique_ptr<absl::Time>".to_string(),
-                "std::vector<Foo>".to_string(),
+                "MyTemplate < 42 >".to_string(),
+                "std :: unique_ptr < absl :: Time >".to_string(),
+                "std :: vector < Foo >".to_string(),
             ]
         );
     }
@@ -189,7 +203,7 @@ mod tests {
             }
         })
         .unwrap();
-        assert_eq!(result, vec!["std::vector<Foo>".to_string(),]);
+        assert_eq!(result, vec!["std :: vector < Foo >".to_string(),]);
     }
 
     fn collect_instantiations_from_json(json: &str) -> String {
@@ -207,7 +221,7 @@ mod tests {
         );
         assert_eq!(
             collect_instantiations_from_json(&format!("[\"{}\"]", filename.display())),
-            "[\"std::vector<bool>\",\"std::vector<int>\"]"
+            "[\"std :: vector < bool >\",\"std :: vector < int >\"]"
         );
     }
 }

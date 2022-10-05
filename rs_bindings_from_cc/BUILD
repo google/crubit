@@ -587,7 +587,6 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "//common:ffi_types",
-        "//common:token_stream_printer",
         "@crate_index//:proc-macro2",
         "@crate_index//:serde_json",
         "@crate_index//:syn",
