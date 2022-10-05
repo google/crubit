@@ -2331,9 +2331,9 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
         }
         Item::Namespace(namespace) => generate_namespace(db, namespace)?,
         Item::UseMod(use_mod) => {
-            let UseMod {path, mod_name, ..} = &**use_mod;
+            let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);
-                GeneratedItem {
+            GeneratedItem {
                 item: quote! {
                     #[path = #path]
                     mod #mod_name;
@@ -3307,9 +3307,20 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
         if can_skip_cc_thunk(db, func) {
             continue;
         }
-        if db.generate_func(func.clone()).unwrap_or_default().is_none() {
-            // No function was generated that will call this thunk.
-            continue;
+        match db.generate_func(func.clone()).unwrap_or_default() {
+            None => {
+                // No function was generated that will call this thunk.
+                continue;
+            }
+            Some(generated) => {
+                let (_, _, function_id) = &*generated;
+                // TODO(jeanpierreda): this should be moved into can_skip_cc_thunk, but that'd be
+                // cyclic right now, because overloaded_funcs calls generate_func calls
+                // can_skip_cc_thunk. We probably need to break generate_func apart.
+                if db.overloaded_funcs().contains(function_id) {
+                    continue;
+                }
+            }
         }
 
         let thunk_ident = thunk_ident(func);
@@ -6348,11 +6359,11 @@ mod tests {
         // single parameter.
         let ir = ir_from_cc(
             r#" #pragma clang lifetime_elision
-                void f();
-                void f(int i);
+                void f() {}
+                void f(int i) {}
                 struct S1 final {
-                  void f();
-                  void f(int i);
+                  void f() {}
+                  void f(int i) {}
                 };
                 struct S2 final {
                   void f();
@@ -6366,7 +6377,7 @@ mod tests {
                 namespace bar { void not_overloaded(); }
             "#,
         )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         let rs_api_str = tokens_to_string(rs_api.clone())?;
 
         // Cannot overload free functions.
@@ -6377,6 +6388,9 @@ mod tests {
         // Cannot overload member functions.
         assert!(rs_api_str.contains("Error while generating bindings for item 'S1::f'"));
         assert_rs_not_matches!(rs_api, quote! {pub fn f(... S1 ...)});
+
+        // And thunks aren't generated for either.
+        assert_cc_not_matches!(rs_api_impl, quote! {f});
 
         // But we can import member functions that have the same name as a free
         // function.
