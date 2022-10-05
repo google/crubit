@@ -63,7 +63,7 @@ pub mod internal {
     pub use proc_macro2::TokenStream;
     use quote::quote;
     pub use token_stream_printer::{
-        rs_tokens_to_formatted_string, rs_tokens_to_formatted_string_for_tests, tokens_to_string,
+        rs_tokens_to_formatted_string, rs_tokens_to_formatted_string_for_tests,
     };
 
     pub fn match_ir(ir: &IR, pattern: &TokenStream) -> Result<()> {

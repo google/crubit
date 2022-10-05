@@ -36,7 +36,7 @@ use std::path::Path;
 
 use bindings::GeneratedBindings;
 use cmdline::Cmdline;
-use token_stream_printer::tokens_to_string;
+use token_stream_printer::cc_tokens_to_formatted_string;
 
 /// This mostly wraps and simplifies a subset of APIs from the `rustc_driver`
 /// module.
@@ -157,7 +157,7 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
     let bindings = GeneratedBindings::generate(tcx);
-    write_file(&cmdline.h_out, tokens_to_string(bindings.h_body)?.as_str())
+    write_file(&cmdline.h_out, cc_tokens_to_formatted_string(bindings.h_body)?.as_str())
 }
 
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
@@ -329,9 +329,8 @@ mod tests {
                 "// Automatically @generated C++ bindings for the following Rust crate:\n\
                  // test_crate\n\
                  \n\
-                 // Error while generating bindings for `public_function` \
-                         defined at {rs_input_path}:1:2: 1:26: \
-                         Nothing works yet!\n"
+                 // Error while generating bindings for `public_function` defined at\n\
+                 // {rs_input_path}:1:2: 1:26: Nothing works yet!\n"
             )
         );
         Ok(())

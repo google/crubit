@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{bail, Result};
+use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
 use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
@@ -67,7 +68,7 @@ impl RustfmtConfig {
     }
 }
 
-/// Like `tokens_to_string` but also runs the result through rustfmt.
+/// Like `tokens_to_string` but also runs the result through `rustfmt`.
 pub fn rs_tokens_to_formatted_string(
     tokens: TokenStream,
     config: &RustfmtConfig,
@@ -80,6 +81,22 @@ pub fn rs_tokens_to_formatted_string(
 /// should support custom `rustfmt.toml`.
 pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<String> {
     rs_tokens_to_formatted_string(input, &RustfmtConfig::for_testing())
+}
+
+extern "C" {
+    fn Crubit_ClangFormat(cc_source_text: FfiU8Slice) -> FfiU8SliceBox;
+}
+
+/// Like `tokens_to_string` but also runs the result through `clang::format`.
+pub fn cc_tokens_to_formatted_string(tokens: TokenStream) -> Result<String> {
+    let mut raw_string: String = tokens_to_string(tokens)?;
+    raw_string.push('\0');
+    let formatted_string: String = {
+        let input = FfiU8Slice::from_slice(raw_string.as_bytes());
+        let output = unsafe { Crubit_ClangFormat(input) };
+        String::from_utf8(FfiU8SliceBox::into_boxed_slice(output).to_vec())?
+    };
+    Ok(formatted_string)
 }
 
 /// Produces source code out of the token stream.
@@ -98,7 +115,7 @@ pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<Str
 ///   placeholder `__SPACE__`.
 /// * `TokenStream` cannot encode comments, so we use the placeholder
 ///   `__COMMENT__`, followed by a string literal.
-pub fn tokens_to_string(tokens: TokenStream) -> Result<String> {
+fn tokens_to_string(tokens: TokenStream) -> Result<String> {
     let mut result = String::new();
     tokens_to_string_impl(&mut result, tokens)?;
     Ok(result)
@@ -332,5 +349,38 @@ mod tests {
         assert_eq!(tokens_to_string(quote! {(a __COMMENT__ "b")})?, "(a // b\n)");
         assert_eq!(tokens_to_string(quote! {[__HASH_TOKEN__ a]})?, "[#a]");
         Ok(())
+    }
+
+    #[test]
+    fn test_rs_tokens_to_formatted_string() {
+        let input = quote! {
+            fn foo() {}
+            fn bar() {}
+        };
+        let output = rs_tokens_to_formatted_string_for_tests(input).unwrap();
+        assert_eq!(
+            output,
+            r#"fn foo() {}
+fn bar() {}
+"#
+        );
+    }
+
+    #[test]
+    fn test_cc_tokens_to_formatted_string() {
+        let input = quote! {
+            namespace ns {
+            void foo() {}
+            void bar() {}
+            }
+        };
+        let output = cc_tokens_to_formatted_string(input).unwrap();
+        assert_eq!(
+            output,
+            r#"namespace ns {
+void foo() {}
+void bar() {}
+}  // namespace ns"#
+        );
     }
 }

@@ -18,7 +18,9 @@ use std::panic::catch_unwind;
 use std::process;
 use std::ptr;
 use std::rc::Rc;
-use token_stream_printer::{rs_tokens_to_formatted_string, tokens_to_string, RustfmtConfig};
+use token_stream_printer::{
+    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
+};
 
 /// FFI equivalent of `Bindings`.
 #[repr(C)]
@@ -151,7 +153,7 @@ fn generate_bindings(
         target = ir.current_target().0,
         code = rs_api,
     );
-    let rs_api_impl = tokens_to_string(rs_api_impl)?;
+    let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl)?;
 
     Ok(Bindings { rs_api, rs_api_impl })
 }
@@ -3541,7 +3543,7 @@ mod tests {
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
-    use token_stream_printer::{rs_tokens_to_formatted_string_for_tests, tokens_to_string};
+    use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
     fn generate_bindings_tokens(ir: Rc<IR>) -> Result<BindingsTokens> {
         super::generate_bindings_tokens(ir, "crubit/rs_bindings_support")
@@ -4041,11 +4043,12 @@ mod tests {
 
     #[test]
     fn test_record_static_methods_qualify_call_in_thunk() -> Result<()> {
-        let ir = ir_from_cc(&tokens_to_string(quote! {
+        let ir = ir_from_cc(
+            r#"
             struct SomeStruct {
                 static inline int some_func() { return 42; }
-            };
-        })?)?;
+            }; "#,
+        )?;
 
         assert_cc_matches!(
             generate_bindings_tokens(ir)?.rs_api_impl,
@@ -4060,11 +4063,12 @@ mod tests {
 
     #[test]
     fn test_record_instance_methods_deref_this_in_thunk() -> Result<()> {
-        let ir = ir_from_cc(&tokens_to_string(quote! {
+        let ir = ir_from_cc(
+            r#"
             struct SomeStruct {
                 inline int some_func(int arg) const { return 42 + arg; }
-            };
-        })?)?;
+            }; "#,
+        )?;
 
         assert_cc_matches!(
             generate_bindings_tokens(ir)?.rs_api_impl,
@@ -4425,9 +4429,7 @@ mod tests {
 
     #[test]
     fn test_ptr_func() -> Result<()> {
-        let ir = ir_from_cc(&tokens_to_string(quote! {
-            inline int* Deref(int*const* p);
-        })?)?;
+        let ir = ir_from_cc(r#" inline int* Deref(int*const* p); "#)?;
 
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
@@ -4470,9 +4472,7 @@ mod tests {
         // ('"const char" is not a valid Ident').
         // It's therefore important that f() is inline so that we need to
         // generate a thunk for it (where we then process the CcType).
-        let ir = ir_from_cc(&tokens_to_string(quote! {
-            inline void f(const char *str);
-        })?)?;
+        let ir = ir_from_cc(r#" inline void f(const char *str); "#)?;
 
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
         assert_rs_matches!(
@@ -5991,10 +5991,13 @@ mod tests {
         // After this CL, this scenario will result in an explicit error.
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl From});
-        let rs_api_str = tokens_to_string(rs_api)?;
-        assert!(rs_api_str.contains(
-            "// The lifetime of `__this` is unexpectedly also used by another parameter"
-        ));
+        assert_rs_matches!(rs_api, {
+            let txt = "google3/ir_from_cc_virtual_header.h;l=34\n\
+                           Error while generating bindings for item 'Foo::Foo':\n\
+                           The lifetime of `__this` is \
+                               unexpectedly also used by another parameter: Lifetime(\"a\")";
+            quote! { __COMMENT__ #txt }
+        });
         Ok(())
     }
 
@@ -6391,15 +6394,23 @@ mod tests {
             "#,
         )?;
         let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
-        let rs_api_str = tokens_to_string(rs_api.clone())?;
 
         // Cannot overload free functions.
-        assert!(rs_api_str.contains("Error while generating bindings for item 'f'"));
+        assert_cc_matches!(rs_api, {
+            let txt = "google3/ir_from_cc_virtual_header.h;l=4\n\
+                           Error while generating bindings for item 'f':\n\
+                           Cannot generate bindings for overloaded function";
+            quote! { __COMMENT__ #txt }
+        });
         assert_rs_not_matches!(rs_api, quote! {pub fn f()});
         assert_rs_not_matches!(rs_api, quote! {pub fn f(i: i32)});
 
-        // Cannot overload member functions.
-        assert!(rs_api_str.contains("Error while generating bindings for item 'S1::f'"));
+        assert_cc_matches!(rs_api, {
+            let txt = "google3/ir_from_cc_virtual_header.h;l=7\n\
+                           Error while generating bindings for item 'S1::f':\n\
+                           Cannot generate bindings for overloaded function";
+            quote! { __COMMENT__ #txt }
+        });
         assert_rs_not_matches!(rs_api, quote! {pub fn f(... S1 ...)});
 
         // And thunks aren't generated for either.
@@ -6492,32 +6503,32 @@ mod tests {
             // Validity of the next few tests is verified via
             // `assert_[not_]impl_all!` static assertions above.
             Test { cc: "int", lifetimes: true, rs: "i32", is_copy: true },
-            Test { cc: "const int&", lifetimes: true, rs: "&'a i32", is_copy: true },
-            Test { cc: "int&", lifetimes: true, rs: "&'a mut i32", is_copy: false },
-            Test { cc: "const int*", lifetimes: true, rs: "Option<&'a i32>", is_copy: true },
-            Test { cc: "int*", lifetimes: true, rs: "Option<&'a mut i32>", is_copy: false },
-            Test { cc: "const int*", lifetimes: false, rs: "*const i32", is_copy: true },
-            Test { cc: "int*", lifetimes: false, rs: "*mut i32", is_copy: true },
+            Test { cc: "const int&", lifetimes: true, rs: "& 'a i32", is_copy: true },
+            Test { cc: "int&", lifetimes: true, rs: "& 'a mut i32", is_copy: false },
+            Test { cc: "const int*", lifetimes: true, rs: "Option < & 'a i32 >", is_copy: true },
+            Test { cc: "int*", lifetimes: true, rs: "Option < & 'a mut i32 >", is_copy: false },
+            Test { cc: "const int*", lifetimes: false, rs: "* const i32", is_copy: true },
+            Test { cc: "int*", lifetimes: false, rs: "* mut i32", is_copy: true },
             // Tests below have been thought-through and verified "manually".
             // TrivialStruct is expected to derive Copy.
             Test {
                 cc: "TrivialStruct",
                 lifetimes: true,
-                rs: "crate::TrivialStruct",
+                rs: "crate :: TrivialStruct",
                 is_copy: true,
             },
             Test {
                 cc: "UserDefinedCopyConstructor",
                 lifetimes: true,
-                rs: "crate::UserDefinedCopyConstructor",
+                rs: "crate :: UserDefinedCopyConstructor",
                 is_copy: false,
             },
-            Test { cc: "IntAlias", lifetimes: true, rs: "crate::IntAlias", is_copy: true },
-            Test { cc: "TrivialAlias", lifetimes: true, rs: "crate::TrivialAlias", is_copy: true },
+            Test { cc: "IntAlias", lifetimes: true, rs: "crate :: IntAlias", is_copy: true },
+            Test { cc: "TrivialAlias", lifetimes: true, rs: "crate :: TrivialAlias", is_copy: true },
             Test {
                 cc: "NonTrivialAlias",
                 lifetimes: true,
-                rs: "crate::NonTrivialAlias",
+                rs: "crate :: NonTrivialAlias",
                 is_copy: false,
             },
         ];
@@ -6533,7 +6544,7 @@ mod tests {
             let f = retrieve_func(&ir, "func");
             let t = db.rs_type_kind(f.params[0].type_.rs_type.clone())?;
 
-            let fmt = tokens_to_string(t.to_token_stream())?;
+            let fmt = t.to_token_stream().to_string();
             assert_eq!(test.rs, fmt, "Testing: {}", test_name);
 
             assert_eq!(test.is_copy, t.implements_copy(), "Testing: {}", test_name);

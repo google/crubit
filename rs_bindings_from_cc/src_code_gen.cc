@@ -9,8 +9,6 @@
 #include "common/ffi_types.h"
 #include "common/status_macros.h"
 #include "rs_bindings_from_cc/ir.h"
-#include "clang/Format/Format.h"
-#include "llvm/Support/Error.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 
@@ -37,20 +35,7 @@ static absl::StatusOr<Bindings> MakeBindingsFromFfiBindings(
   const FfiU8SliceBox& rs_api_impl = ffi_bindings.rs_api_impl;
 
   bindings.rs_api = std::string(rs_api.ptr, rs_api.size);
-
-  std::string impl{rs_api_impl.ptr, rs_api_impl.size};
-  llvm::Expected<std::string> maybe_formatted =
-      clang::tooling::applyAllReplacements(
-          impl,
-          clang::format::reformat(
-              clang::format::getGoogleStyle(clang::format::FormatStyle::LK_Cpp),
-              impl, clang::tooling::Range(0, impl.size()), "<stdin>"));
-  if (llvm::Error error = maybe_formatted.takeError()) {
-    return absl::InternalError(absl::StrCat("Failed to format rs_api_impl: ",
-                                            toString(std::move(error))));
-  }
-  bindings.rs_api_impl = *maybe_formatted;
-
+  bindings.rs_api_impl = std::string(rs_api_impl.ptr, rs_api_impl.size);
   return bindings;
 }
 
