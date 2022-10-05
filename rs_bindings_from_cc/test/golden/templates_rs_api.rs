@@ -193,6 +193,116 @@ pub mod forward_declared_template {
 
 // namespace forward_declared_template
 
+pub mod private_classes {
+    #[::ctor::recursively_pinned]
+    #[repr(C)]
+    pub struct HasPrivateType {
+        __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+    }
+    forward_declare::unsafe_define!(
+        forward_declare::symbol!("HasPrivateType"),
+        crate::private_classes::HasPrivateType
+    );
+
+    impl<'b> ::ctor::CtorNew<&'b crate::private_classes::HasPrivateType> for HasPrivateType {
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+        #[inline(always)]
+        fn ctor_new(args: &'b crate::private_classes::HasPrivateType) -> Self::CtorType {
+            let __param_0 = args;
+            unsafe {
+                ::ctor::FnCtor::new(
+                    move |dest: ::std::pin::Pin<
+                        &mut ::std::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
+                    >| {
+                        crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_(
+                            ::std::pin::Pin::into_inner_unchecked(dest),
+                            __param_0,
+                        );
+                    },
+                )
+            }
+        }
+    }
+    impl<'b> ::ctor::CtorNew<(&'b crate::private_classes::HasPrivateType,)> for HasPrivateType {
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+        #[inline(always)]
+        fn ctor_new(args: (&'b crate::private_classes::HasPrivateType,)) -> Self::CtorType {
+            let (arg,) = args;
+            <Self as ::ctor::CtorNew<&'b crate::private_classes::HasPrivateType>>::ctor_new(arg)
+        }
+    }
+
+    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>>
+        for HasPrivateType
+    {
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+        #[inline(always)]
+        fn ctor_new(
+            args: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
+        ) -> Self::CtorType {
+            let __param_0 = args;
+            unsafe {
+                ::ctor::FnCtor::new(
+                    move |dest: ::std::pin::Pin<
+                        &mut ::std::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
+                    >| {
+                        crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_(
+                            ::std::pin::Pin::into_inner_unchecked(dest),
+                            __param_0,
+                        );
+                    },
+                )
+            }
+        }
+    }
+    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,)>
+        for HasPrivateType
+    {
+        type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+        #[inline(always)]
+        fn ctor_new(
+            args: (::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,),
+        ) -> Self::CtorType {
+            let (arg,) = args;
+            <Self as ::ctor::CtorNew<
+                ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
+            >>::ctor_new(arg)
+        }
+    }
+
+    impl<'b> ::ctor::Assign<&'b crate::private_classes::HasPrivateType> for HasPrivateType {
+        #[inline(always)]
+        fn assign<'a>(
+            self: ::std::pin::Pin<&'a mut Self>,
+            __param_0: &'b crate::private_classes::HasPrivateType,
+        ) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeaSERKS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
+
+    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>>
+        for HasPrivateType
+    {
+        #[inline(always)]
+        fn assign<'a>(
+            self: ::std::pin::Pin<&'a mut Self>,
+            __param_0: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
+        ) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeaSEOS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
+}
+
+// namespace private_classes
+
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
 
 #[derive(Clone, Copy)]
@@ -966,6 +1076,22 @@ mod detail {
         >(
             i: Option<::std::pin::Pin<&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIiE>>,
         );
+        pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
+            __param_0: &'b crate::private_classes::HasPrivateType,
+        );
+        pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_<'a, 'b>(
+            __this: &'a mut ::std::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
+            __param_0: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
+        );
+        pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeaSERKS0_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::private_classes::HasPrivateType>,
+            __param_0: &'b crate::private_classes::HasPrivateType,
+        ) -> ::std::pin::Pin<&'a mut crate::private_classes::HasPrivateType>;
+        pub(crate) fn __rust_thunk___ZN15private_classes14HasPrivateTypeaSEOS0_<'a, 'b>(
+            __this: ::std::pin::Pin<&'a mut crate::private_classes::HasPrivateType>,
+            __param_0: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
+        ) -> ::std::pin::Pin<&'a mut crate::private_classes::HasPrivateType>;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1236,6 +1362,15 @@ const _: () = {
 };
 const _: () = {
     static_assertions::assert_not_impl_any!(crate::test_namespace_bindings::TemplateParam: Drop);
+};
+
+const _: () = assert!(::std::mem::size_of::<crate::private_classes::HasPrivateType>() == 1);
+const _: () = assert!(::std::mem::align_of::<crate::private_classes::HasPrivateType>() == 1);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType: Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::private_classes::HasPrivateType: Drop);
 };
 
 const _: () = assert!(

@@ -7431,6 +7431,30 @@ mod tests {
     }
 
     #[test]
+    fn test_private_struct_not_present() -> Result<()> {
+        let ir = ir_from_cc(&with_lifetime_macros(
+            r#"#pragma clang lifetime_elision
+            template <typename T> class MyTemplate {};
+            class HasPrivateType {
+             private:
+              struct PrivateType {
+                using Foo = MyTemplate<PrivateType>;
+                Foo* get();
+              };
+             protected:
+              HasPrivateType(MyTemplate<PrivateType> x) {}
+            };"#,
+        ))?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+
+        assert_rs_not_matches!(
+            rs_api,
+            quote! { __CcTemplateInst10MyTemplateIN14HasPrivateType11PrivateTypeEE }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_implicit_template_specializations_are_sorted_by_mangled_name() -> Result<()> {
         let bindings = generate_bindings_tokens(ir_from_cc(
             r#"

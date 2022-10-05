@@ -46,10 +46,6 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer)
 // Error while generating bindings for item 'Outer::operator=':
 // Parameter #0 is not supported: Unsupported type 'class Outer &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=19
-// Error while generating bindings for item 'Outer::Inner':
-// Nested classes are not supported yet
-
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_PRIVATE_METHOD_H_
 
 const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());

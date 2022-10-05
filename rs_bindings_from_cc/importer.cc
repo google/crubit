@@ -564,7 +564,34 @@ std::optional<IR::Item> Importer::GetDeclItem(clang::Decl* decl) {
   return result;
 }
 
+/// Returns true if a decl is inside a private section, or is inside a
+/// RecordDecl which is IsTransitivelyInPrivate.
+bool IsTransitivelyInPrivate(clang::Decl* decl_to_check) {
+  while (true) {
+    auto* parent =
+        llvm::dyn_cast<clang::CXXRecordDecl>(decl_to_check->getDeclContext());
+    if (parent == nullptr) {
+      return false;
+    }
+    switch (decl_to_check->getAccess()) {
+      case clang::AccessSpecifier::AS_public:
+        break;
+      case clang::AccessSpecifier::AS_none:
+        if (!parent->isClass()) {
+          break;
+        }
+        [[fallthrough]];
+      case clang::AccessSpecifier::AS_private:
+      case clang::AccessSpecifier::AS_protected:
+        return true;
+    }
+
+    decl_to_check = parent;
+  }
+}
+
 std::optional<IR::Item> Importer::ImportDecl(clang::Decl* decl) {
+  if (IsTransitivelyInPrivate(decl)) return std::nullopt;
   std::optional<IR::Item> result;
   for (auto& importer : decl_importers_) {
     if (importer->CanImport(decl)) {

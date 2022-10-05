@@ -217,6 +217,28 @@ __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEE9GetPolicyEv
   return template_template_params::MyTemplate<
       template_template_params::Policy>::GetPolicy();
 }
+extern "C" void __rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_(
+    class private_classes::HasPrivateType* __this,
+    const class private_classes::HasPrivateType* __param_0) {
+  crubit::construct_at(__this, *__param_0);
+}
+extern "C" void __rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_(
+    class private_classes::HasPrivateType* __this,
+    class private_classes::HasPrivateType* __param_0) {
+  crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" class private_classes::HasPrivateType*
+__rust_thunk___ZN15private_classes14HasPrivateTypeaSERKS0_(
+    class private_classes::HasPrivateType* __this,
+    const class private_classes::HasPrivateType* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" class private_classes::HasPrivateType*
+__rust_thunk___ZN15private_classes14HasPrivateTypeaSEOS0_(
+    class private_classes::HasPrivateType* __this,
+    class private_classes::HasPrivateType* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 
 static_assert(sizeof(struct DifferentScope) == 1);
 static_assert(alignof(struct DifferentScope) == 1);
@@ -311,5 +333,8 @@ static_assert(sizeof(class template_template_params::MyTemplate<
                      template_template_params::Policy>) == 1);
 static_assert(alignof(class template_template_params::MyTemplate<
                       template_template_params::Policy>) == 1);
+
+static_assert(sizeof(class private_classes::HasPrivateType) == 1);
+static_assert(alignof(class private_classes::HasPrivateType) == 1);
 
 #pragma clang diagnostic pop

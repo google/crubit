@@ -126,4 +126,18 @@ using TypeAliasToForwardDeclaredTemplate = ForwardDeclaredTemplate<int>;
 
 }  // namespace forward_declared_template
 
+namespace private_classes {
+
+class HasPrivateType {
+ private:
+  struct PrivateType {
+    using Foo = test_namespace_bindings::MyTemplate<PrivateType>;
+    Foo* get();
+  };
+
+ protected:
+  HasPrivateType(test_namespace_bindings::MyTemplate<PrivateType> x) {}
+};
+}  // namespace private_classes
+
 #endif  // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_H_
