@@ -27,6 +27,7 @@ rust_library(
     name = "code_gen_utils",
     srcs = ["code_gen_utils.rs"],
     deps = [
+        "@crate_index//:anyhow",
         "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
     ],

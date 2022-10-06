@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+use anyhow::{anyhow, ensure, Result};
 use once_cell::sync::Lazy;
 use proc_macro2::TokenStream;
 use std::collections::HashSet;
@@ -13,17 +14,23 @@ use std::collections::HashSet;
 // - `NamespaceQualifier`
 
 /// Formats a C++ identifier. Panics when `ident` is a C++ reserved keyword.
-pub fn format_cc_ident(ident: &str) -> TokenStream {
+pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
     // C++ doesn't have an equivalent of
     // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
-    // we panic when `ident` is a C++ reserved keyword.
-    assert!(
+    // an error is returned when `ident` is a C++ reserved keyword.
+    ensure!(
         !RESERVED_CC_KEYWORDS.contains(ident),
-        "The following reserved keyword can't be used as a C++ identifier: {}",
+        "`{}` is a C++ reserved keyword and \
+        can't be used as a C++ identifier in the generated bindings",
         ident
     );
 
-    ident.parse().unwrap()
+    ident.parse().map_err(
+        // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
+        // (required for `anyhow::Error` to implement `From<LexError>`) and
+        // therefore we can't just use `?`.
+        |lex_error| anyhow!("Can't format `{ident}` as a C++ identifier: {lex_error}"),
+    )
 }
 
 static RESERVED_CC_KEYWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
@@ -139,17 +146,77 @@ pub mod tests {
 
     #[test]
     fn test_format_cc_ident_basic() {
-        assert_cc_matches!(format_cc_ident("foo"), quote! { foo });
+        assert_cc_matches!(
+            format_cc_ident("foo").expect("No errors expected in this test"),
+            quote! { foo }
+        );
     }
 
     #[test]
     fn test_format_cc_ident_reserved_rust_keyword() {
-        assert_cc_matches!(format_cc_ident("impl"), quote! { impl });
+        assert_cc_matches!(
+            format_cc_ident("impl").expect("No errors expected in this test"),
+            quote! { impl }
+        );
     }
 
     #[test]
-    #[should_panic(expected = "can't be used as a C++ identifier: reinterpret_cast")]
     fn test_format_cc_ident_reserved_cc_keyword() {
-        format_cc_ident("reinterpret_cast");
+        let err = format_cc_ident("reinterpret_cast").expect_err("This test expects an error");
+        let msg = err.to_string();
+        assert!(msg.contains("`reinterpret_cast`"));
+        assert!(msg.contains("C++ reserved keyword"));
+    }
+
+    #[test]
+    fn test_format_cc_ident_unfinished_group() {
+        let err = format_cc_ident("(foo") // No closing `)`.
+            .expect_err("This test expects an error");
+        let msg = err.to_string();
+        assert!(msg.contains("Can't format `(foo` as a C++ identifier"));
+        assert!(msg.contains("cannot parse"));
+    }
+
+    #[test]
+    fn test_format_cc_ident_unqualified_identifiers() {
+        // https://en.cppreference.com/w/cpp/language/identifiers#Unqualified_identifiers
+
+        // These may appear in `IR::Func::name`.
+        assert_cc_matches!(
+            format_cc_ident("operator==").expect("No errors expected in this test"),
+            quote! { operator== }
+        );
+        assert_cc_matches!(
+            format_cc_ident("operator new").expect("No errors expected in this test"),
+            quote! { operator new }
+        );
+
+        // This may appear in `IR::Record::cc_name` (although in practice these will
+        // be namespace-qualified most of the time).
+        assert_cc_matches!(
+            format_cc_ident("MyTemplate<int>").expect("No errors expected in this test"),
+            quote! { MyTemplate<int> }
+        );
+
+        // These forms of unqualified identifiers are not used by Crubit in practice,
+        assert_cc_matches!(
+            format_cc_ident("~MyClass").expect("No errors expected in this test"),
+            quote! { ~MyClass }
+        );
+        assert_cc_matches!(
+            format_cc_ident(r#" operator "" _km "#).expect("No errors expected in this test"),
+            quote! { operator "" _km }
+        );
+    }
+
+    #[test]
+    fn test_format_cc_ident_qualified_identifiers() {
+        // https://en.cppreference.com/w/cpp/language/identifiers#Qualified_identifiers
+
+        // This may appear in `IR::Record::cc_name`.
+        assert_cc_matches!(
+            format_cc_ident("std::vector<int>").expect("No errors expected in this test"),
+            quote! { std::vector<int> }
+        );
     }
 }
