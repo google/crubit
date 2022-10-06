@@ -6,6 +6,7 @@
 // //rs_bindings_from_cc/test/golden:friend_functions_cc
 #![rustfmt::skip]
 #![feature(custom_inner_attributes)]
+#![allow(stable_features)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]

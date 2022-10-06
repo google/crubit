@@ -6,6 +6,7 @@
 // //rs_bindings_from_cc/test/golden:types_cc
 #![rustfmt::skip]
 #![feature(custom_inner_attributes, negative_impls)]
+#![allow(stable_features)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]

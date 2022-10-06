@@ -2430,7 +2430,8 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
         quote! {}
     } else {
         quote! {
-            #![feature( #(#features),* )]
+            #![feature( #(#features),* )]  __NEWLINE__
+            #![allow(stable_features)]
         }
     };
 
