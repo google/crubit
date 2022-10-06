@@ -3136,8 +3136,11 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
                     if !ty.type_args.is_empty() {
                         bail!("Type not yet supported: {:?}", ty);
                     }
-                    let idents = cc_type_name.split_whitespace().map(format_cc_ident);
-                    Ok(quote! {#( #idents )* #const_fragment})
+                    // Not using `code_gen_utils::format_cc_ident`, because
+                    // `cc_type_name` may be a C++ reserved keyword (e.g.
+                    // `int`).
+                    let cc_ident: TokenStream = cc_type_name.parse().unwrap();
+                    Ok(quote!{ #cc_ident #const_fragment })
                 }
                 Some(abi) => match ty.type_args.split_last() {
                     None => bail!("funcValue type without a return type: {:?}", ty),
