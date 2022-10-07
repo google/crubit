@@ -3145,7 +3145,7 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
                     // `cc_type_name` may be a C++ reserved keyword (e.g.
                     // `int`).
                     let cc_ident: TokenStream = cc_type_name.parse().unwrap();
-                    Ok(quote!{ #cc_ident #const_fragment })
+                    Ok(quote! { #cc_ident #const_fragment })
                 }
                 Some(abi) => match ty.type_args.split_last() {
                     None => bail!("funcValue type without a return type: {:?}", ty),
@@ -4347,9 +4347,9 @@ mod tests {
                #[repr(C, align(4))]
                pub struct StructWithUnnamedMembers {
                    pub first_field: i32,
-                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
+                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field1: [::std::mem::MaybeUninit<u8>; 8],
-                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
+                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field2: [::std::mem::MaybeUninit<u8>; 4],
                    pub last_field: i32,
                }
@@ -6532,7 +6532,12 @@ mod tests {
                 is_copy: false,
             },
             Test { cc: "IntAlias", lifetimes: true, rs: "crate :: IntAlias", is_copy: true },
-            Test { cc: "TrivialAlias", lifetimes: true, rs: "crate :: TrivialAlias", is_copy: true },
+            Test {
+                cc: "TrivialAlias",
+                lifetimes: true,
+                rs: "crate :: TrivialAlias",
+                is_copy: true,
+            },
             Test {
                 cc: "NonTrivialAlias",
                 lifetimes: true,
