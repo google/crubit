@@ -31,6 +31,7 @@ rust_binary(
         "notap",
     ],
     deps = [
+        "//common:code_gen_utils",
         "//common:rust_allocator_shims",
         "//common:token_stream_printer",
         "@crate_index//:anyhow",

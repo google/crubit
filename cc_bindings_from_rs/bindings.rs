@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{bail, Result};
+use code_gen_utils::format_cc_ident;
 use proc_macro2::TokenStream;
 use quote::quote;
 use rustc_interface::Queries;
@@ -28,8 +29,14 @@ impl GeneratedBindings {
         };
 
         let h_body = {
-            let main_content = format_crate(tcx);
-            quote! { #top_comment #main_content }
+            let crate_content = format_crate(tcx).unwrap_or_else(|err| {
+                let txt = format!("Failed to generate bindings for the crate: {}", err);
+                quote! { __COMMENT__ #txt }
+            });
+            quote! {
+                #top_comment
+                #crate_content
+            }
         };
 
         Self { h_body }
@@ -62,10 +69,12 @@ fn format_unsupported_def(
     let span = tcx.sess().source_map().span_to_embeddable_string(tcx.def_span(local_def_id));
     let name = tcx.def_path_str(local_def_id.to_def_id());
     let msg = format!("Error while generating bindings for `{name}` defined at {span}: {err_msg}");
-    quote! { __COMMENT__ #msg }
+    quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ }
 }
 
-fn format_crate(tcx: TyCtxt) -> TokenStream {
+fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
+    let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
+
     // TODO(lukasza): We probably shouldn't be using `exported_symbols` as the main
     // entry point for finding Rust definitions that need to be wrapping in C++
     // bindings.  For example, it _seems_ that things like `type` aliases or
@@ -100,7 +109,12 @@ fn format_crate(tcx: TyCtxt) -> TokenStream {
             }
             ExportedSymbol::DropGlue(_) | ExportedSymbol::NoDefId(_) => None,
         });
-    quote! { #( #snippets )* }
+
+    Ok(quote! {
+        namespace #crate_name {
+            #( #snippets )*
+        }
+    })
 }
 
 #[cfg(test)]
@@ -177,15 +191,20 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_top_comment() {
+    fn test_generated_bindings_top_level_items() {
         let test_src = "pub fn public_function() {}";
         test_generated_bindings(test_src, |bindings| {
-            let expected_comment_txt = "Automatically @generated C++ bindings for the following Rust crate:\n\
+            let expected_comment_txt =
+                "Automatically @generated C++ bindings for the following Rust crate:\n\
                  rust_out";
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
                     __COMMENT__ #expected_comment_txt
+                    ...
+                    namespace rust_out {
+                        ...
+                    }
                 }
             );
         })
