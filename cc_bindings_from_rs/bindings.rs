@@ -33,8 +33,11 @@ impl GeneratedBindings {
                 let txt = format!("Failed to generate bindings for the crate: {}", err);
                 quote! { __COMMENT__ #txt }
             });
+            // TODO(b/251445877): Replace `#pragma once` with include guards.
             quote! {
                 #top_comment
+                __HASH_TOKEN__ pragma once __NEWLINE__
+                __NEWLINE__
                 #crate_content
             }
         };
@@ -201,6 +204,8 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     __COMMENT__ #expected_comment_txt
+                    ...
+                    __HASH_TOKEN__ pragma once
                     ...
                     namespace rust_out {
                         ...

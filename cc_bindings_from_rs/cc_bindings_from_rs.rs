@@ -329,6 +329,8 @@ mod tests {
 r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
+#pragma once
+
 namespace test_crate {{
 
 // Error while generating bindings for `public_function` defined at
