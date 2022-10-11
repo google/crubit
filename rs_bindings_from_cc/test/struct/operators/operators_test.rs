@@ -28,6 +28,22 @@ mod tests {
         assert_impl_all!(TestStruct2: PartialEq<TestStruct1>);
         assert_not_impl_any!(TestStruct1: PartialEq<TestStruct2>);
     }
+    #[test]
+    fn test_lt_member_func_same_operands() {
+        let s1 = TestStruct2 { i: 1001 };
+        let s2 = TestStruct2 { i: 2002 };
+        let s3 = TestStruct2 { i: 3000 };
+        assert!(s1 < s2);
+        assert!(s1 >= s3);
+    }
+
+    #[test]
+    fn test_lt_member_func_different_operands() {
+        // PartialOrd is only implemented if the operands of operator< are of the same
+        // type.
+        assert_not_impl_any!(TestStruct2: PartialOrd<TestStruct1>);
+        assert_not_impl_any!(TestStruct1: PartialOrd<TestStruct2>);
+    }
 
     #[test]
     fn test_non_operator_method_name() {
@@ -65,6 +81,22 @@ mod tests {
 
         // assert_not_impl_any!(OperandForFreeFuncInDifferentNamespace:
         // PartialEq);
+    }
+
+    #[test]
+    fn test_lt_out_of_line_definition() {
+        let s1 = OperandForOutOfLineDefinition { i: 1001 };
+        let s2 = OperandForOutOfLineDefinition { i: 2002 };
+        let s3 = OperandForOutOfLineDefinition { i: 3000 };
+        assert!(s1 < s2);
+        assert!(s1 >= s3);
+    }
+
+    #[test]
+    fn test_lt_free_func() {
+        let s1 = OperandForFreeFunc { i: 1001 };
+        let s2 = OperandForFreeFunc { i: 2002 };
+        assert!(s1 < s2);
     }
 
     #[test]

@@ -9,8 +9,17 @@ bool OperandForOutOfLineDefinition::operator==(
   return (i % 10) == (other.i % 10);
 }
 
+bool OperandForOutOfLineDefinition::operator<(
+    const OperandForOutOfLineDefinition& other) const {
+  return (i % 10) < (other.i % 10);
+}
+
 bool operator==(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs) {
   return (lhs.i % 10) == (rhs.i % 10);
+}
+
+bool operator<(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs) {
+  return (lhs.i % 10) < (rhs.i % 10);
 }
 
 namespace test_namespace_bindings {

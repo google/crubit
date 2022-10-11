@@ -26,6 +26,19 @@ struct TestStruct2 final {
     return (i % 10) == (other.i % 10);
   }
 
+  // Comparison with the same struct.  Should generate:
+  // impl PartialOrd for TestStruct2
+  // `PartialOrd<TestStruct2>` also ok.
+  inline bool operator<(const TestStruct2& other) const {
+    return (i % 10) < (other.i % 10);
+  }
+
+  // Comparison with another struct.  Shouldn't generate anything since the
+  // operands are not of the same type.
+  inline bool operator<(const TestStruct1& other) const {
+    return (i % 10) < (other.i % 10);
+  }
+
   // Test that method names starting with "operator" are not confused with real
   // operator names (e.g. accidentally treating "operator1" as an unrecognized /
   // unsupported operator).
@@ -40,6 +53,11 @@ struct OperandForOutOfLineDefinition final {
   // Non-`inline` definition.  Should generate:
   // impl PartialEq for TestStructForOutOfLineDefinition
   bool operator==(const OperandForOutOfLineDefinition& other) const;
+
+  // Non-`inline` definition.  Should generate:
+  // impl PartialOrd for TestStructForOutOfLineDefinition
+  bool operator<(const OperandForOutOfLineDefinition& other) const;
+
   int i;
 };
 
@@ -52,6 +70,10 @@ struct OperandForFreeFunc final {
 // Non-member function. Should generate:
 // impl PartialEq for TestStructForFreeFunc.
 bool operator==(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs);
+
+// Non-member function. Should generate:
+// impl PartialOrd for TestStructForFreeFunc.
+bool operator<(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs);
 
 //////////////////////////////////////////////////////////////////////
 

@@ -92,6 +92,9 @@ trait BindingsGenerator {
     ) -> Result<Option<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
+
+    // TODO(b/236687702): convert the get_binding function into a query once
+    // ImplKind implements Eq.
 }
 
 #[salsa::database(BindingsGeneratorStorage)]
@@ -372,6 +375,10 @@ enum TraitName {
     /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
     /// types.
     UnpinConstructor { name: TokenStream, params: Vec<RsTypeKind> },
+    /// The PartialEq trait.
+    PartialEq { params: Vec<RsTypeKind> },
+    /// The PartialOrd trait.
+    PartialOrd { params: Vec<RsTypeKind> },
     /// Any other trait, e.g. Eq.
     Other { name: TokenStream, params: Vec<RsTypeKind>, is_unsafe_fn: bool },
 }
@@ -382,6 +389,8 @@ impl TraitName {
         match self {
             Self::CtorNew(params)
             | Self::UnpinConstructor { params, .. }
+            | Self::PartialEq { params }
+            | Self::PartialOrd { params }
             | Self::Other { params, .. } => params.iter(),
         }
     }
@@ -398,6 +407,14 @@ impl ToTokens for TraitName {
             Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
                 let params = format_generic_params(params);
                 quote! {#name #params}.to_tokens(tokens)
+            }
+            Self::PartialEq { params } => {
+                let params = format_generic_params(params);
+                quote! {PartialEq #params}.to_tokens(tokens)
+            }
+            Self::PartialOrd { params } => {
+                let params = format_generic_params(params);
+                quote! {PartialOrd #params}.to_tokens(tokens)
             }
             Self::CtorNew(arg_types) => {
                 let arg_types = format_tuple_except_singleton(arg_types);
@@ -667,11 +684,7 @@ fn api_func_shape(
                     RsTypeKind::Record { record: lhs_record, .. } => {
                         func_name = make_rs_ident("eq");
                         impl_kind = ImplKind::new_trait(
-                            TraitName::Other {
-                                name: quote! {PartialEq},
-                                params: vec![(**rhs).clone()],
-                                is_unsafe_fn: false,
-                            },
+                            TraitName::PartialEq { params: vec![(**rhs).clone()] },
                             lhs_record,
                             &ir,
                             /* format_first_param_as_self= */ true,
@@ -683,6 +696,62 @@ fn api_func_shape(
                 },
                 _ => {
                     bail!("operator== where operands are not const references",);
+                }
+            };
+        }
+        UnqualifiedIdentifier::Operator(op) if op.name == "<=>" => {
+            bail!("Three-way comparison operator not yet supported (b/219827738)");
+        }
+        UnqualifiedIdentifier::Operator(op) if op.name == "<" => {
+            assert_eq!(
+                param_types.len(),
+                2,
+                "Unexpected number of parameters in operator<: {func:?}"
+            );
+            match (&param_types[0], &param_types[1]) {
+                (
+                    RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
+                    RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
+                ) => match (&**lhs, &**rhs) {
+                    (
+                        RsTypeKind::Record { record: lhs_record, .. },
+                        RsTypeKind::Record { record: rhs_record, .. },
+                    ) => {
+                        if lhs_record != rhs_record {
+                            bail!("operator< where lhs and rhs are not the same type.");
+                        }
+                        // PartialOrd requires PartialEq, so we need to make sure operator== is
+                        // implemented for this Record type.
+                        match get_binding(
+                            db,
+                            UnqualifiedIdentifier::Operator(Operator { name: "==".to_string() }),
+                            param_types,
+                        ) {
+                            Some((
+                                _,
+                                ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. },
+                            )) => {
+                                func_name = make_rs_ident("lt");
+                                impl_kind = ImplKind::new_trait(
+                                    TraitName::PartialOrd { params: vec![(**rhs).clone()] },
+                                    lhs_record,
+                                    &ir,
+                                    /* format_first_param_as_self= */
+                                    true,
+                                )?;
+                            }
+                            _ => bail!("operator< where operator== is missing."),
+                        }
+                    }
+                    (RsTypeKind::Record { .. }, _) => {
+                        bail!("operator< where lhs and rhs are not the same type.");
+                    }
+                    _ => {
+                        bail!("operator< where lhs doesn't refer to a record.",);
+                    }
+                },
+                _ => {
+                    bail!("operator< where operands are not const references.",);
                 }
             };
         }
@@ -966,6 +1035,35 @@ fn api_func_shape(
     Ok(Some((func_name, impl_kind)))
 }
 
+/// Returns the generated bindings for a function with the given name and param
+/// types. If none exists, returns None.
+fn get_binding(
+    db: &dyn BindingsGenerator,
+    expected_function_name: UnqualifiedIdentifier,
+    expected_param_types: &[RsTypeKind],
+) -> Option<(Ident, ImplKind)> {
+    return db
+        .ir()
+        // TODO(jeanpierreda): make this O(1) using a hash table lookup.
+        .functions()
+        .filter(|function| {
+            function.name == expected_function_name
+                && generate_func(db, (*function).clone()).ok().flatten().is_some()
+        })
+        .find_map(|function| {
+            let mut function_param_types = function
+                .params
+                .iter()
+                .map(|param| db.rs_type_kind(param.type_.rs_type.clone()))
+                .collect::<Result<Vec<_>>>()
+                .ok()?;
+            if !function_param_types.iter().eq(expected_param_types) {
+                return None;
+            }
+            api_func_shape(db, function, &mut function_param_types).ok().flatten()
+        });
+}
+
 /// Mutates the provided parameters so that nontrivial by-value parameters are,
 /// instead, materialized in the caller and passed by rvalue reference.
 fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
@@ -1215,6 +1313,22 @@ fn generate_func(
                 };
                 quote! {
                     type #name = #quoted_return_type;
+                }
+            } else if let TraitName::PartialOrd { params: _ } = trait_name {
+                quote! {
+                    #[inline(always)]
+                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                        if self == other {
+                            return Some(core::cmp::Ordering::Equal);
+                        }
+                        if self < other {
+                            return Some(core::cmp::Ordering::Less);
+                        }
+                        if other < self {
+                            return Some(core::cmp::Ordering::Greater);
+                        }
+                        None
+                    }
                 }
             } else {
                 quote! {}
@@ -6176,6 +6290,99 @@ mod tests {
     }
 
     #[test]
+    fn test_impl_lt_for_member_function() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                inline bool operator==(const SomeStruct& other) const {
+                    return i == other.i;
+                }
+                inline bool operator<(const SomeStruct& other) const {
+                    return i < other.i;
+                }
+                int i;
+            };"#,
+        )?;
+        let BindingsTokens { rs_api, rs_api_impl } = generate_bindings_tokens(ir)?;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialOrd<crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                        if self == other {
+                            return Some(core::cmp::Ordering::Equal);
+                        }
+                        if self < other {
+                            return Some(core::cmp::Ordering::Less);
+                        }
+                        if other < self {
+                            return Some(core::cmp::Ordering::Greater);
+                        }
+                        None
+                    }
+                    #[inline(always)]
+                    fn lt<'a, 'b>(&'a self, other: &'b crate::SomeStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___ZNK10SomeStructltERKS_(self, other) }
+                    }
+                }
+            }
+        );
+        assert_cc_matches!(
+            rs_api_impl,
+            quote! {
+                extern "C" bool __rust_thunk___ZNK10SomeStructltERKS_(
+                        const struct SomeStruct* __this, const struct SomeStruct* other) {
+                    return __this->operator<(*other);
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_lt_for_free_function() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                inline bool operator==(const SomeStruct& other) const {
+                    return i == other.i;
+                }
+                int i;
+            };
+            bool operator<(const SomeStruct& lhs, const SomeStruct& rhs) {
+                return lhs.i < rhs.i;
+            }"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialOrd<crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                        if self == other {
+                            return Some(core::cmp::Ordering::Equal);
+                        }
+                        if self < other {
+                            return Some(core::cmp::Ordering::Less);
+                        }
+                        if other < self {
+                            return Some(core::cmp::Ordering::Greater);
+                        }
+                        None
+                    }
+                    #[inline(always)]
+                    fn lt<'a, 'b>(&'a self, rhs: &'b crate::SomeStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___ZltRK10SomeStructS1_(self, rhs) }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_assign() -> Result<()> {
         let ir = ir_from_cc(
             r#"
@@ -6276,6 +6483,78 @@ mod tests {
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl PartialEq});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_lt_different_operands() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct1 final {
+                int i;
+            };
+            struct SomeStruct2 final {
+                inline bool operator==(const SomeStruct1& other) const {
+                    return i == other.i;
+                }
+                inline bool operator<(const SomeStruct1& other) const {
+                    return i < other.i;
+                };
+                int i;
+            };"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {impl PartialOrd});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_lt_non_const_member_function() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                inline bool operator==(const SomeStruct& other) const {
+                    return i == other.i;
+                }
+                int i;
+                bool operator<(const SomeStruct& other) /* no `const` here */;
+            };"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {impl PartialOrd});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_lt_rhs_by_value() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                inline bool operator==(const SomeStruct& other) const {
+                    return i == other.i;
+                }
+                int i;
+                bool operator<(SomeStruct other) const;
+            };"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {impl PartialOrd});
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_lt_missing_eq_impl() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final {
+                inline bool operator<(const SomeStruct& other) const {
+                    return i < other.i;
+                }
+                int i;
+            };"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_not_matches!(rs_api, quote! {impl PartialOrd});
         Ok(())
     }
 
