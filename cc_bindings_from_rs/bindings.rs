@@ -122,9 +122,14 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
 
 #[cfg(test)]
 pub mod tests {
-    use super::GeneratedBindings;
+    use super::{format_def, GeneratedBindings};
 
+    use anyhow::Result;
+    use itertools::Itertools;
+    use proc_macro2::TokenStream;
     use quote::quote;
+    use rustc_middle::ty::TyCtxt;
+    use rustc_span::def_id::LocalDefId;
     use std::path::PathBuf;
 
     use token_stream_matchers::{assert_cc_matches, assert_cc_not_matches};
@@ -139,13 +144,13 @@ pub mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
     fn test_infra_panic_when_test_input_contains_syntax_errors() {
         run_compiler("syntax error here", |_tcx| ())
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
     fn test_infra_panic_when_test_input_triggers_analysis_errors() {
         run_compiler("#![feature(no_such_feature)]", |_tcx| ())
     }
@@ -156,10 +161,41 @@ pub mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "No items named `missing_name`.\n\
+                               Instead found:\n`bar`,\n`foo`,\n`m1`,\n`m2`,\n`std`")]
+    fn test_find_def_id_by_name_panic_when_no_item_with_matching_name() {
+        let test_src = r#"
+                pub extern "C" fn foo() {}
+
+                pub mod m1 {
+                    pub fn bar() {}
+                }
+                pub mod m2 {
+                    pub fn bar() {}
+                }
+            "#;
+        run_compiler(test_src, |tcx| find_def_id_by_name(tcx, "missing_name"));
+    }
+
+    #[test]
+    #[should_panic(expected = "More than one item named `some_name`")]
+    fn test_find_def_id_by_name_panic_when_multiple_items_with_matching_name() {
+        let test_src = r#"
+                pub mod m1 {
+                    pub fn some_name() {}
+                }
+                pub mod m2 {
+                    pub fn some_name() {}
+                }
+            "#;
+        run_compiler(test_src, |tcx| find_def_id_by_name(tcx, "some_name"));
+    }
+
+    #[test]
     fn test_generated_bindings_fn_success() {
         // This test covers only a single example of a function that should get a C++
-        // binding. Additional coverage of functions items will be provided by
-        // future, `format_def`-focused tests.
+        // binding. Additional coverage of how items are formatted is provided by
+        // `test_format_def_...` tests.
         let test_src = r#"
                 pub extern "C" fn public_function() {
                     println!("foo");
@@ -217,10 +253,10 @@ pub mod tests {
 
     #[test]
     fn test_generated_bindings_unsupported_item() {
-        // This test verifies how `Err` from `format_def` is formatted as a C++ comment.
+        // This test verifies how `Err` from `format_def` is formatted as a C++ comment
+        // (in `format_crate` and `format_unsupported_def`).
         // - This test covers only a single example of an unsupported item.  Additional
-        //   coverage of unsupported items will be provided by future,
-        //   `format_def`-focused tests.
+        //   coverage is provided by `test_format_def_unsupported_...` tests.
         // - This test somewhat arbitrarily chooses an example of an unsupported item
         //   (i.e. if `async fn` becomes supported by `cc_bindings_from_rs` in the
         //   future, then the test will have to be modified to use another `test_src`
@@ -242,19 +278,85 @@ pub mod tests {
         })
     }
 
-    fn test_generated_bindings<F, T>(source: &str, f: F) -> T
+    #[test]
+    fn test_format_def_unsupported_fn_extern_c_no_params_no_return_type() {
+        let test_src = r#"
+                pub extern "C" fn public_function() {}
+            "#;
+        test_format_def(test_src, "public_function", |result| {
+            // TODO(lukasza): Fix test expectations once this becomes supported (in early Q4
+            // 2022).
+            let err = result.expect_err("Test expects an error here").to_string();
+            assert_eq!(err, "Nothing works yet!");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_async() {
+        let test_src = r#"
+                pub async fn public_function() {}
+            "#;
+        test_format_def(test_src, "public_function", |result| {
+            let err = result.expect_err("Test expects an error here").to_string();
+            assert_eq!(err, "Nothing works yet!");
+        });
+    }
+
+    /// Tests invoking `format_def` on the item with the specified `name` from
+    /// the given Rust `source`.  Returns the result of calling
+    /// `test_function` with `format_def`'s result as an argument.
+    /// (`test_function` should typically `assert!` that it got the expected
+    /// result from `format_def`.)
+    fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
+    where
+        F: FnOnce(Result<TokenStream>) -> T + Send,
+        T: Send,
+    {
+        run_compiler(source, |tcx| {
+            let def_id = find_def_id_by_name(tcx, name);
+            test_function(format_def(tcx, def_id))
+        })
+    }
+
+    /// Finds the definition id of a Rust item with the specified `name`.
+    /// Panics if no such item is found, or if there is more than one match.
+    fn find_def_id_by_name(tcx: TyCtxt, name: &str) -> LocalDefId {
+        let hir_items = || tcx.hir().items().map(|item_id| tcx.hir().item(item_id));
+        let items_with_matching_name =
+            hir_items().filter(|item| item.ident.name.as_str() == name).collect_vec();
+        match items_with_matching_name.as_slice() {
+            &[] => {
+                let found_names = hir_items()
+                    .map(|item| item.ident.name.as_str())
+                    .filter(|s| !s.is_empty())
+                    .sorted()
+                    .dedup()
+                    .map(|name| format!("`{name}`"))
+                    .collect_vec();
+                panic!("No items named `{}`.\nInstead found:\n{}", name, found_names.join(",\n"));
+            }
+            &[item] => item.def_id.def_id,
+            _ => panic!("More than one item named `{name}`"),
+        }
+    }
+
+    /// Tests invoking `GeneratedBindings::generate` on the given Rust `source`.
+    /// Returns the result of calling `test_function` with the generated
+    /// bindings as an argument. (`test_function` should typically `assert!`
+    /// that it got the expected `GeneratedBindings`.)
+    fn test_generated_bindings<F, T>(source: &str, test_function: F) -> T
     where
         F: FnOnce(GeneratedBindings) -> T + Send,
         T: Send,
     {
-        run_compiler(source, |tcx| f(GeneratedBindings::generate(tcx)))
+        run_compiler(source, |tcx| test_function(GeneratedBindings::generate(tcx)))
     }
 
-    /// Compiles Rust `source` then calls `f` on the `TyCtxt` representation
-    /// of the compiled `source`.
+    /// Invokes the Rust compiler on the given Rust `source` and then calls `f`
+    /// on the `TyCtxt` representation of the compiled `source`.
     fn run_compiler<F, T>(source: impl Into<String>, f: F) -> T
     where
-        F: for<'tcx> FnOnce(rustc_middle::ty::TyCtxt<'tcx>) -> T + Send,
+        F: for<'tcx> FnOnce(TyCtxt<'tcx>) -> T + Send,
         T: Send,
     {
         use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
