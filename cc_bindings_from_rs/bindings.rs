@@ -146,18 +146,45 @@ pub mod tests {
     #[test]
     #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
     fn test_infra_panic_when_test_input_contains_syntax_errors() {
-        run_compiler("syntax error here", |_tcx| ())
+        run_compiler("syntax error here", |_tcx| panic!("This part shouldn't execute"))
     }
 
     #[test]
     #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
     fn test_infra_panic_when_test_input_triggers_analysis_errors() {
-        run_compiler("#![feature(no_such_feature)]", |_tcx| ())
+        run_compiler("#![feature(no_such_feature)]", |_tcx| panic!("This part shouldn't execute"))
+    }
+
+    #[test]
+    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
+    fn test_infra_panic_when_test_input_triggers_warnings() {
+        run_compiler("pub fn foo(unused_parameter: i32) {}", |_tcx| {
+            panic!("This part shouldn't execute")
+        })
     }
 
     #[test]
     fn test_infra_nightly_features_ok_in_test_input() {
-        run_compiler("#![feature(yeet_expr)]", |_tcx| ())
+        // This test arbitrarily picks `yeet_expr` as an example of a feature that
+        // hasn't yet been stabilized.
+        let test_src = r#"
+                // This test is supposed to test that *nightly* features are ok
+                // in the test input.  The `forbid` directive below helps to
+                // ensure that we'll realize in the future when the `yeet_expr`
+                // feature gets stabilized, making it not quite fitting for use
+                // in this test.
+                #![forbid(stable_features)]
+
+                #![feature(yeet_expr)]
+            "#;
+        run_compiler(test_src, |_tcx| ())
+    }
+
+    #[test]
+    fn test_infra_stabilized_features_ok_in_test_input() {
+        // This test arbitrarily picks `const_ptr_offset_from` as an example of a
+        // feature that has been already stabilized.
+        run_compiler("#![feature(const_ptr_offset_from)]", |_tcx| ())
     }
 
     #[test]
@@ -219,6 +246,7 @@ pub mod tests {
     #[test]
     fn test_generated_bindings_fn_non_pub() {
         let test_src = r#"
+                #![allow(dead_code)]
                 extern "C" fn private_function() {
                     println!("foo");
                 }
@@ -375,6 +403,10 @@ pub mod tests {
             output_types,
             edition: rustc_span::edition::Edition::Edition2021,
             unstable_features: rustc_feature::UnstableFeatures::Allow,
+            lint_opts: vec![
+                ("warnings".to_string(), rustc_lint_defs::Level::Deny),
+                ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
+            ],
             ..Default::default()
         };
 
@@ -399,25 +431,32 @@ pub mod tests {
             registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
         };
 
-        use rustc_interface::interface::Result;
-        let result: Result<Result<T>> =
-            rustc_interface::interface::run_compiler(config, |compiler| {
-                compiler.enter(|queries| {
-                    super::enter_tcx(queries, |tcx| {
-                        // Explicitly check the result of `analysis` stage to detect compilation
-                        // errors that the earlier stages might miss.  This helps ensure that the
-                        // test inputs are valid Rust (even if `f` wouldn't
-                        // have triggered full analysis).
-                        tcx.analysis(())?;
+        rustc_interface::interface::run_compiler(config, |compiler| {
+            compiler.enter(|queries| {
+                use rustc_interface::interface::Result;
+                let result: Result<Result<()>> = super::enter_tcx(queries, |tcx| {
+                    // Explicitly force full `analysis` stage to detect compilation
+                    // errors that the earlier stages might miss.  This helps ensure that the
+                    // test inputs are valid Rust (even if `f` wouldn't
+                    // have triggered full analysis).
+                    tcx.analysis(())
+                });
 
-                        Ok(f(tcx))
-                    })
-                })
-            });
-        // Flatten the outer and inner results into a single result.  (outer result
-        // comes from `enter_tcx`; inner result comes from `analysis`).
-        let result: Result<T> = result.and_then(|result| result);
+                // Flatten the outer and inner results into a single result.  (outer result
+                // comes from `enter_tcx`; inner result comes from `analysis`).
+                //
+                // TODO(lukasza): Use `Result::flatten` API when it gets stabilized.  See also
+                // https://github.com/rust-lang/rust/issues/70142
+                let result: Result<()> = result.and_then(|result| result);
 
-        result.expect("Test inputs shouldn't cause compilation errors")
+                // `analysis` might succeed even if there are some lint / warning errors.
+                // Detecting these requires explicitly checking `compile_status`.
+                let result: Result<()> = result.and_then(|()| compiler.session().compile_status());
+
+                // Run the provided callback.
+                let result: Result<T> = result.and_then(|()| super::enter_tcx(queries, f));
+                result.expect("Test inputs shouldn't cause compilation errors")
+            })
+        })
     }
 }
