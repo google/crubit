@@ -89,9 +89,10 @@ mod tests {
     fn test_help() {
         // This test has multiple purposes:
         // - Direct/obvious purpose: testing that `--help` works
-        // - Double-checking the overall shape of our cmdline "API" (i.e. verification
-        //   that the way we use `clap` attributes results in the desired cmdline
-        //   "API").
+        // - Double-checking the overall shape of our cmdline "API" (i.e. verification that the way
+        //   we use `clap` attributes results in the desired cmdline "API"). This is a good enough
+        //   coverage to avoid having flag-specifc tests (e.g. avoiding hypothetical
+        //   `test_h_out_missing_flag`, `test_h_out_missing_arg`, `test_h_out_duplicated`).
         // - Exhaustively checking runtime asserts (assumming that tests run in a debug
         //   build; other tests also trigger these asserts).  See also:
         //     - https://github.com/clap-rs/clap/issues/2740#issuecomment-907240414

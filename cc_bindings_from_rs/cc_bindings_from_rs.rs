@@ -54,7 +54,7 @@ mod bindings_driver {
     /// simplified API:
     /// - Takes a `callback` that will be invoked from within Rust compiler,
     ///   after parsing and analysis are done,
-    /// - Compilation will stop after parsing, analysis, and the `callback are
+    /// - Compilation will stop after parsing, analysis, and the `callback` are
     ///   done,
     /// - Returns the combined results from the Rust compiler *and* the
     ///   `callback`.
@@ -87,28 +87,31 @@ mod bindings_driver {
             Self { args, callback_or_result: Either::Left(callback) }
         }
 
-        /// Runs Rust compiler and then passes the `TyCtxt` of the
-        /// parsed+analyzed Rust crate into `bindings_main::main`.
-        /// Returns the combined results from Rust compiler *and*
-        /// `bindings_main::main`.
+        /// Runs Rust compiler, and then invokes the stored callback (with
+        /// `TyCtxt` of the parsed+analyzed Rust crate as the callback's
+        /// argument), and then finally returns the combined results
+        /// from Rust compiler *and* the callback.
         fn run(mut self) -> anyhow::Result<R> {
             // Rust compiler unwinds with a special sentinel value to abort compilation on
             // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
             // translate them into a Result, and 2) resume and propagate other panics.
-            let rustc_result = rustc_driver::catch_fatal_errors(|| {
+            use rustc_interface::interface::Result;
+            let rustc_result: Result<Result<()>> = rustc_driver::catch_fatal_errors(|| {
                 rustc_driver::RunCompiler::new(self.args, &mut self).run()
             });
 
-            // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. get the Result
-            // from `RunCompiler::run` rather than the Result from
-            // `catch_fatal_errors`).
-            let rustc_result = rustc_result.and_then(|result| result);
+            // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. combine the
+            // result from `RunCompiler::run` and `catch_fatal_errors`).
+            //
+            // TODO(lukasza): Use `Result::flatten` API when it gets stabilized.  See also
+            // https://github.com/rust-lang/rust/issues/70142
+            let rustc_result: Result<()> = rustc_result.and_then(|result| result);
 
             // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
             // use `?` because the trait `std::error::Error` is not implemented for
             // `ErrorGuaranteed` which is required by the impl of
             // `From<ErrorGuaranteed>` for `anyhow::Error`.)
-            let rustc_result = rustc_result.map_err(|_err| {
+            let rustc_result: anyhow::Result<()> = rustc_result.map_err(|_err| {
                 // We can ignore `_err` because it has no payload / because this type has only
                 // one valid/possible value.
                 anyhow::format_err!("Errors reported by Rust compiler.")
@@ -182,14 +185,19 @@ fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
 // 3) `clap` --help path (verify *zero* exit code;  the error message is
 //    already verified in unit tests under `cmdline.rs`)
 //
-// 4) other error path (verify non-zero exit code + error output)
+// 4) other error path (verify non-zero exit code + error output).  For
+//    example try `--h_out ../..` and verify if the whole error chain is
+//    emitted to stderr (the "Error when writing to ../.." part and the "Is
+//    a directory (os error 21)" part).
 fn main() -> anyhow::Result<()> {
     rustc_driver::init_env_logger("CRUBIT_LOG");
 
     // TODO: Investigate if we should install a signal handler here.  See also how
     // compiler/rustc_driver/src/lib.rs calls `signal_handler::install()`.
 
-    rustc_driver::install_ice_hook();
+    // TODO(lukasza): Provide Crubit-specific panic hook message (we shouldn't use
+    // `rustc_driver::install_ice_hook` because it's message asks to file bugs at
+    // https://github.com/rust-lang/rust/issues/new.
 
     // `std::env::args()` will panic if any of the cmdline arguments are not valid
     // Unicode.  This seems okay.
@@ -352,7 +360,7 @@ namespace test_crate {{
             .run()
             .expect_err("--unrecognized_crubit_flag should trigger an error");
 
-        let msg = err.to_string();
+        let msg = format!("{err:#}");
         assert!(
             msg.contains("Found argument '--unrecognized-crubit-flag' which wasn't expected"),
             "msg = {}",
@@ -369,7 +377,7 @@ namespace test_crate {{
             .run()
             .expect_err("--unrecognized-rustc-flag should trigger an error");
 
-        let msg = err.to_string();
+        let msg = format!("{err:#}");
         assert_eq!("Errors reported by Rust compiler.", msg);
         Ok(())
     }
@@ -377,14 +385,14 @@ namespace test_crate {{
     #[test]
     fn test_invalid_h_out_path() -> anyhow::Result<()> {
         // Tests not only the specific problem of an invalid `--h-out` argument, but
-        // also tests that errors from `bindings_main::main` are propagated.
+        // also tests that errors from `run_with_tcx` are propagated.
         let err = TestArgs::default_args()?
             .with_h_path("../..")
             .run()
             .expect_err("Unwriteable --h-out should trigger an error");
 
-        let msg = err.to_string();
-        assert_eq!("Error when writing to ../..", msg);
+        let msg = format!("{err:#}");
+        assert_eq!("Error when writing to ../..: Is a directory (os error 21)", msg);
         Ok(())
     }
 
