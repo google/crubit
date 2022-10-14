@@ -2914,7 +2914,7 @@ fn test_unnamed_enum_unsupported() {
         ir,
         quote! {
             UnsupportedItem {
-                name: "(anonymous)",
+                name: "(unnamed enum at ./ir_from_cc_virtual_header.h:3:1)",
                 message: "Unnamed enums are not supported yet" ...
             }
         }
