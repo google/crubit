@@ -82,6 +82,11 @@ absl::Status Main(absl::Span<char* const> args) {
         crubit::NamespacesAsJson(bindings_and_metadata.namespaces)));
   }
 
+  if (!cmdline.error_report_out().empty()) {
+    CRUBIT_RETURN_IF_ERROR(SetFileContents(cmdline.error_report_out(),
+                                           bindings_and_metadata.error_report));
+  }
+
   return absl::OkStatus();
 }
 

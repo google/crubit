@@ -164,3 +164,9 @@ bool_flag(
 deps_for_bindings(
     name = "empty_deps",
 )
+
+bool_flag(
+    name = "generate_error_report",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)

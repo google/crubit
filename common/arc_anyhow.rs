@@ -54,6 +54,13 @@ impl Error {
     {
         self.into_anyhow().context(context).into()
     }
+
+    pub fn downcast_ref<E>(&self) -> Option<&E>
+    where
+        E: Display + Debug + Send + Sync + 'static,
+    {
+        self.0.downcast_ref()
+    }
 }
 
 impl PartialEq for Error {

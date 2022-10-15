@@ -59,7 +59,7 @@ def generate_and_compile_bindings(
         unsupported_features = ctx.disabled_features + ["module_maps"],
     )
 
-    cc_output, rs_output, namespaces_output = generate_bindings(
+    cc_output, rs_output, namespaces_output, error_report_output = generate_bindings(
         ctx = ctx,
         attr = attr,
         cc_toolchain = cc_toolchain,
@@ -111,7 +111,7 @@ def generate_and_compile_bindings(
             rust_file = rs_output,
             namespaces_file = namespaces_output,
         ),
-        OutputGroupInfo(out = depset([cc_output, rs_output, namespaces_output])),
+        OutputGroupInfo(out = depset([x for x in [cc_output, rs_output, namespaces_output, error_report_output] if x != None])),
     ]
 
 bindings_attrs = {
@@ -157,5 +157,8 @@ bindings_attrs = {
     ),
     "_builtin_hdrs": attr.label(
         default = "//rs_bindings_from_cc:builtin_headers",
+    ),
+    "_generate_error_report": attr.label(
+        default = "//rs_bindings_from_cc/bazel_support:generate_error_report",
     ),
 }

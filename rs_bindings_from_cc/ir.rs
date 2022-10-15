@@ -6,13 +6,15 @@
 //! `rs_bindings_from_cc/ir.h` for more
 //! information.
 
-use arc_anyhow::{anyhow, bail, Context, Result};
+use arc_anyhow::{anyhow, bail, Context, Error, Result};
+use once_cell::unsync::OnceCell;
 use proc_macro2::{Literal, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use serde::Deserialize;
 use std::collections::hash_map::{Entry, HashMap};
 use std::convert::TryFrom;
-use std::fmt;
+use std::fmt::{self, Debug, Formatter};
+use std::hash::{Hash, Hasher};
 use std::io::Read;
 use std::rc::Rc;
 
@@ -499,12 +501,60 @@ pub struct SourceLoc {
     pub column: u64,
 }
 
+/// A wrapper type that does not contribute to equality or hashing. All
+/// instances are equal.
+#[derive(Clone, Copy, Default)]
+struct IgnoredField<T>(T);
+
+impl<T> Debug for IgnoredField<T> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "_")
+    }
+}
+
+impl<T> PartialEq for IgnoredField<T> {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl<T> Eq for IgnoredField<T> {}
+
+impl<T> Hash for IgnoredField<T> {
+    fn hash<H: Hasher>(&self, _state: &mut H) {}
+}
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct UnsupportedItem {
     pub name: String,
-    pub message: String,
+    message: String,
     pub source_loc: SourceLoc,
     pub id: ItemId,
+    #[serde(skip)]
+    cause: IgnoredField<OnceCell<Error>>,
+}
+
+impl UnsupportedItem {
+    pub fn new_with_message(
+        name: String,
+        message: String,
+        source_loc: SourceLoc,
+        id: ItemId,
+    ) -> Self {
+        Self { name, message, source_loc, id, cause: Default::default() }
+    }
+
+    pub fn new_with_cause(name: String, cause: Error, source_loc: SourceLoc, id: ItemId) -> Self {
+        Self { name, message: cause.to_string(), source_loc, id, cause: IgnoredField(cause.into()) }
+    }
+
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+
+    pub fn cause(&self) -> &Error {
+        self.cause.0.get_or_init(|| anyhow!(self.message.clone()))
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
@@ -581,7 +631,7 @@ impl From<Func> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<Func> {
-    type Error = arc_anyhow::Error;
+    type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Func(f) = value { Ok(f) } else { bail!("Not a Func: {:#?}", value) }
     }
@@ -594,7 +644,7 @@ impl From<Record> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<Record> {
-    type Error = arc_anyhow::Error;
+    type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Record(r) = value { Ok(r) } else { bail!("Not a Record: {:#?}", value) }
     }
@@ -607,7 +657,7 @@ impl From<UnsupportedItem> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<UnsupportedItem> {
-    type Error = arc_anyhow::Error;
+    type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::UnsupportedItem(u) = value {
             Ok(u)
@@ -624,7 +674,7 @@ impl From<Comment> for Item {
 }
 
 impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
-    type Error = arc_anyhow::Error;
+    type Error = Error;
     fn try_from(value: &'a Item) -> Result<Self, Self::Error> {
         if let Item::Comment(c) = value { Ok(c) } else { bail!("Not a Comment: {:#?}", value) }
     }
@@ -709,7 +759,7 @@ impl IR {
 
     pub fn item_for_type<T>(&self, ty: &T) -> Result<&Item>
     where
-        T: TypeWithDeclId + std::fmt::Debug,
+        T: TypeWithDeclId + Debug,
     {
         if let Some(decl_id) = ty.decl_id() {
             self.find_untyped_decl(decl_id)

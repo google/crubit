@@ -42,7 +42,8 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ ""));
+          /* instantiations_out= */ "",
+          /* error_report_out= */ ""));
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
@@ -52,6 +53,7 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
 
   ASSERT_EQ(result.ir.used_headers.size(), 1);
   ASSERT_EQ(result.ir.used_headers.front().IncludePath(), "a.h");
+  ASSERT_EQ(result.error_report, "");
 
   // Check that IR items have the proper owning target set.
   auto item = result.ir.get_items_if<Namespace>().front();
@@ -71,7 +73,8 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ ""));
+          /* instantiations_out= */ "",
+          /* error_report_out= */ ""));
 
   ASSERT_OK_AND_ASSIGN(
       BindingsAndMetadata result,
@@ -100,7 +103,7 @@ GetInstantiationsFor(absl::string_view header_content,
           {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {a_rs_path},
-          "instantiations_out"));
+          "instantiations_out", /* error_report_out= */ ""));
 
   CRUBIT_ASSIGN_OR_RETURN(
       BindingsAndMetadata result,
@@ -267,7 +270,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ ""));
+          /* instantiations_out= */ "", /* error_report_out= */ ""));
   ASSERT_OK_AND_ASSIGN(BindingsAndMetadata result,
                        GenerateBindingsAndMetadata(
                            cmdline, DefaultClangArgs(),

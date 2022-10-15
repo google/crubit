@@ -63,6 +63,8 @@ ABSL_FLAG(std::string, instantiations_out, "",
 ABSL_FLAG(std::string, namespaces_out, "",
           "(optional) output path for the JSON file containing the target's"
           "namespace hierarchy.");
+ABSL_FLAG(std::string, error_report_out, "",
+          "(optional) output path for the JSON error report");
 
 namespace crubit {
 
@@ -92,7 +94,8 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
       absl::GetFlag(FLAGS_targets_and_headers),
       absl::GetFlag(FLAGS_extra_rs_srcs),
       absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
-      absl::GetFlag(FLAGS_instantiations_out));
+      absl::GetFlag(FLAGS_instantiations_out),
+      absl::GetFlag(FLAGS_error_report_out));
 }
 
 absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
@@ -102,7 +105,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     bool do_nothing, std::vector<std::string> public_headers,
     std::string targets_and_headers_str, std::vector<std::string> extra_rs_srcs,
     std::vector<std::string> srcs_to_scan_for_instantiations,
-    std::string instantiations_out) {
+    std::string instantiations_out, std::string error_report_out) {
   Cmdline cmdline;
 
   if (rs_out.empty()) {
@@ -149,6 +152,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
   cmdline.instantiations_out_ = std::move(instantiations_out);
   cmdline.srcs_to_scan_for_instantiations_ =
       std::move(srcs_to_scan_for_instantiations);
+  cmdline.error_report_out_ = std::move(error_report_out);
 
   if (targets_and_headers_str.empty()) {
     return absl::InvalidArgumentError("please specify --targets_and_headers");

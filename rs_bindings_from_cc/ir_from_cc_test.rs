@@ -2903,7 +2903,7 @@ fn test_c_style_struct_with_typedef_and_aligned_attr() {
 #[test]
 fn test_volatile_is_unsupported() {
     let ir = ir_from_cc("volatile int* foo();").unwrap();
-    let f = ir.unsupported_items().find(|i| i.message.contains("volatile")).unwrap();
+    let f = ir.unsupported_items().find(|i| i.message().contains("volatile")).unwrap();
     assert_eq!("foo", f.name);
 }
 

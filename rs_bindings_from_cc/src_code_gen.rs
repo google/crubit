@@ -2,7 +2,8 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use arc_anyhow::{anyhow, bail, ensure, Context, Result};
+use arc_anyhow::{Context, Result};
+use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErrors};
 use ffi_types::*;
 use ir::*;
 use itertools::Itertools;
@@ -26,6 +27,7 @@ use token_stream_printer::{
 pub struct FfiBindings {
     rs_api: FfiU8SliceBox,
     rs_api_impl: FfiU8SliceBox,
+    error_report: FfiU8SliceBox,
 }
 
 /// Deserializes IR from `json` and generates bindings source code.
@@ -57,6 +59,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
     crubit_support_path: FfiU8Slice,
     rustfmt_exe_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
+    generate_error_report: bool,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
     let crubit_support_path: &str = std::str::from_utf8(crubit_support_path.as_slice()).unwrap();
@@ -66,13 +69,30 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         std::str::from_utf8(rustfmt_config_path.as_slice()).unwrap().into();
     catch_unwind(|| {
         // It is ok to abort here.
-        let Bindings { rs_api, rs_api_impl } =
-            generate_bindings(json, crubit_support_path, &rustfmt_exe_path, &rustfmt_config_path)
-                .unwrap();
+        let mut error_report;
+        let mut ignore_errors;
+        let errors: &mut dyn ErrorReporting = if generate_error_report {
+            error_report = ErrorReport::new();
+            &mut error_report
+        } else {
+            ignore_errors = IgnoreErrors;
+            &mut ignore_errors
+        };
+        let Bindings { rs_api, rs_api_impl } = generate_bindings(
+            json,
+            crubit_support_path,
+            &rustfmt_exe_path,
+            &rustfmt_config_path,
+            errors,
+        )
+        .unwrap();
         FfiBindings {
             rs_api: FfiU8SliceBox::from_boxed_slice(rs_api.into_bytes().into_boxed_slice()),
             rs_api_impl: FfiU8SliceBox::from_boxed_slice(
                 rs_api_impl.into_bytes().into_boxed_slice(),
+            ),
+            error_report: FfiU8SliceBox::from_boxed_slice(
+                errors.serialize_to_vec().unwrap().into_boxed_slice(),
             ),
         }
     })
@@ -126,11 +146,12 @@ fn generate_bindings(
     crubit_support_path: &str,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
+    errors: &mut dyn ErrorReporting,
 ) -> Result<Bindings> {
     let ir = Rc::new(deserialize_ir(json)?);
 
     let BindingsTokens { rs_api, rs_api_impl } =
-        generate_bindings_tokens(ir.clone(), crubit_support_path)?;
+        generate_bindings_tokens(ir.clone(), crubit_support_path, errors)?;
     let rs_api = {
         let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
         rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
@@ -348,22 +369,22 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
 }
 
 fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<UnsupportedItem> {
-    Ok(UnsupportedItem {
-        name: cxx_function_name(func, ir)?,
-        message: message.to_string(),
-        source_loc: func.source_loc.clone(),
-        id: func.id,
-    })
+    Ok(UnsupportedItem::new_with_message(
+        cxx_function_name(func, ir)?,
+        message.to_string(),
+        func.source_loc.clone(),
+        func.id,
+    ))
 }
 
 fn make_unsupported_nested_type_alias(type_alias: &TypeAlias) -> Result<UnsupportedItem> {
-    Ok(UnsupportedItem {
+    Ok(UnsupportedItem::new_with_message(
         // TODO(jeanpierreda): It would be nice to include the enclosing record name here too.
-        name: type_alias.identifier.identifier.to_string(),
-        message: "Typedefs nested in classes are not supported yet".to_string(),
-        source_loc: type_alias.source_loc.clone(),
-        id: type_alias.id,
-    })
+        type_alias.identifier.identifier.to_string(),
+        "Typedefs nested in classes are not supported yet".to_string(),
+        type_alias.source_loc.clone(),
+        type_alias.id,
+    ))
 }
 
 /// The name of a one-function trait, with extra entries for
@@ -1249,7 +1270,11 @@ fn generate_func(
             *trait_generic_params = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(lifetime) { Some(quote! {#lifetime}) } else { None }
+                    if trait_lifetimes.contains(lifetime) {
+                        Some(quote! {#lifetime})
+                    } else {
+                        None
+                    }
                 })
                 .collect();
         } else {
@@ -1789,7 +1814,11 @@ fn bit_padding(padding_size_in_bits: usize) -> TokenStream {
 
 /// Generates Rust source code for a given `Record` and associated assertions as
 /// a tuple.
-fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> {
+fn generate_record(
+    db: &Database,
+    record: &Rc<Record>,
+    errors: &mut dyn ErrorReporting,
+) -> Result<GeneratedItem> {
     let ir = db.ir();
     let ident = make_rs_ident(&record.rs_name);
     let namespace_qualifier = NamespaceQualifier::new(record.id, &ir)?.format_for_rs();
@@ -2075,7 +2104,7 @@ fn generate_record(db: &Database, record: &Rc<Record>) -> Result<GeneratedItem> 
             let item = ir.find_decl(*id).with_context(|| {
                 format!("Failed to look up `record.child_item_ids` for {:?}", record)
             })?;
-            generate_item(db, item)
+            generate_item(db, item, errors)
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -2249,7 +2278,12 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<TokenStr
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
-fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
+fn generate_unsupported(
+    item: &UnsupportedItem,
+    errors: &mut dyn ErrorReporting,
+) -> Result<TokenStream> {
+    errors.insert(item.cause());
+
     let location = if item.source_loc.filename.is_empty() {
         "<unknown location>".to_string()
     } else {
@@ -2261,7 +2295,9 @@ fn generate_unsupported(item: &UnsupportedItem) -> Result<TokenStream> {
     };
     let message = format!(
         "{}\nError while generating bindings for item '{}':\n{}",
-        &location, &item.name, &item.message
+        &location,
+        &item.name,
+        item.message()
     );
     Ok(quote! { __COMMENT__ #message })
 }
@@ -2272,7 +2308,11 @@ fn generate_comment(comment: &Comment) -> Result<TokenStream> {
     Ok(quote! { __COMMENT__ #text })
 }
 
-fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedItem> {
+fn generate_namespace(
+    db: &Database,
+    namespace: &Namespace,
+    errors: &mut dyn ErrorReporting,
+) -> Result<GeneratedItem> {
     let ir = db.ir();
     let mut items = vec![];
     let mut thunks = vec![];
@@ -2285,7 +2325,7 @@ fn generate_namespace(db: &Database, namespace: &Namespace) -> Result<GeneratedI
         let item = ir.find_decl(*item_id).with_context(|| {
             format!("Failed to look up namespace.child_item_ids for {:?}", namespace)
         })?;
-        let generated = generate_item(db, item)?;
+        let generated = generate_item(db, item, errors)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -2361,13 +2401,20 @@ struct GeneratedItem {
     has_record: bool,
 }
 
-fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
+fn generate_item(
+    db: &Database,
+    item: &Item,
+    errors: &mut dyn ErrorReporting,
+) -> Result<GeneratedItem> {
     let ir = db.ir();
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
         Item::Func(func) => match db.generate_func(func.clone()) {
             Err(e) => GeneratedItem {
-                item: generate_unsupported(&make_unsupported_fn(func, &ir, format!("{e}"))?)?,
+                item: generate_unsupported(
+                    &make_unsupported_fn(func, &ir, format!("{e}"))?,
+                    errors,
+                )?,
                 ..Default::default()
             },
             Ok(None) => GeneratedItem::default(),
@@ -2375,11 +2422,14 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
                 let (api_func, thunk, function_id) = &*f;
                 if overloaded_funcs.contains(function_id) {
                     GeneratedItem {
-                        item: generate_unsupported(&make_unsupported_fn(
-                            func,
-                            &ir,
-                            "Cannot generate bindings for overloaded function",
-                        )?)?,
+                        item: generate_unsupported(
+                            &make_unsupported_fn(
+                                func,
+                                &ir,
+                                "Cannot generate bindings for overloaded function",
+                            )?,
+                            errors,
+                        )?,
                         ..Default::default()
                     }
                 } else {
@@ -2412,7 +2462,7 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
             {
                 GeneratedItem::default()
             } else {
-                generate_record(db, record)?
+                generate_record(db, record, errors)?
             }
         }
         Item::Enum(enum_) => {
@@ -2432,7 +2482,10 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
             } else if type_alias.enclosing_record_id.is_some() {
                 // TODO(b/200067824): support nested type aliases.
                 GeneratedItem {
-                    item: generate_unsupported(&make_unsupported_nested_type_alias(type_alias)?)?,
+                    item: generate_unsupported(
+                        &make_unsupported_nested_type_alias(type_alias)?,
+                        errors,
+                    )?,
                     ..Default::default()
                 }
             } else {
@@ -2440,12 +2493,12 @@ fn generate_item(db: &Database, item: &Item) -> Result<GeneratedItem> {
             }
         }
         Item::UnsupportedItem(unsupported) => {
-            GeneratedItem { item: generate_unsupported(unsupported)?, ..Default::default() }
+            GeneratedItem { item: generate_unsupported(unsupported, errors)?, ..Default::default() }
         }
         Item::Comment(comment) => {
             GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
         }
-        Item::Namespace(namespace) => generate_namespace(db, namespace)?,
+        Item::Namespace(namespace) => generate_namespace(db, namespace, errors)?,
         Item::UseMod(use_mod) => {
             let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);
@@ -2482,7 +2535,11 @@ fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
 
 // Returns the Rust code implementing bindings, plus any auxiliary C++ code
 // needed to support it.
-fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<BindingsTokens> {
+fn generate_bindings_tokens(
+    ir: Rc<IR>,
+    crubit_support_path: &str,
+    errors: &mut dyn ErrorReporting,
+) -> Result<BindingsTokens> {
     let mut db = Database::default();
     db.set_ir(ir.clone());
 
@@ -2511,7 +2568,7 @@ fn generate_bindings_tokens(ir: Rc<IR>, crubit_support_path: &str) -> Result<Bin
     for top_level_item_id in ir.top_level_item_ids() {
         let item =
             ir.find_decl(*top_level_item_id).context("Failed to look up ir.top_level_item_ids")?;
-        let generated = generate_item(&db, item)?;
+        let generated = generate_item(&db, item, errors)?;
         items.push(generated.item);
         if !generated.thunks.is_empty() {
             thunks.push(generated.thunks);
@@ -3668,7 +3725,7 @@ mod tests {
     use token_stream_printer::rs_tokens_to_formatted_string_for_tests;
 
     fn generate_bindings_tokens(ir: Rc<IR>) -> Result<BindingsTokens> {
-        super::generate_bindings_tokens(ir, "crubit/rs_bindings_support")
+        super::generate_bindings_tokens(ir, "crubit/rs_bindings_support", &mut IgnoreErrors)
     }
 
     fn db_from_cc(cc_src: &str) -> Result<Database> {

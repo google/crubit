@@ -33,7 +33,8 @@ absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
       std::move(targets_and_headers),
       /* extra_rs_srcs= */ {},
       /* srcs_to_scan_for_instantiations= */ {},
-      /*instantiations_out=*/"");
+      /* instantiations_out= */ "",
+      /* error_report_out= */ "");
 }
 
 }  // namespace
@@ -46,7 +47,8 @@ TEST(CmdlineTest, BasicCorrectInput) {
           "rustfmt_exe_path", "rustfmt_config_path",
           /* do_nothing= */ false, {"h1"},
           R"([{"t": "t1", "h": ["h1", "h2"]}])", {"extra_file.rs"},
-          {"scan_for_instantiations.rs"}, "instantiations_out"));
+          {"scan_for_instantiations.rs"}, "instantiations_out",
+          "error_report_out"));
   EXPECT_EQ(cmdline.cc_out(), "cc_out");
   EXPECT_EQ(cmdline.rs_out(), "rs_out");
   EXPECT_EQ(cmdline.ir_out(), "ir_out");
@@ -55,6 +57,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
   EXPECT_EQ(cmdline.rustfmt_exe_path(), "rustfmt_exe_path");
   EXPECT_EQ(cmdline.rustfmt_config_path(), "rustfmt_config_path");
   EXPECT_EQ(cmdline.instantiations_out(), "instantiations_out");
+  EXPECT_EQ(cmdline.error_report_out(), "error_report_out");
   EXPECT_EQ(cmdline.do_nothing(), false);
   EXPECT_EQ(cmdline.current_target().value(), "t1");
   EXPECT_THAT(cmdline.public_headers(), ElementsAre(HeaderName("h1")));
@@ -205,7 +208,7 @@ TEST(CmdlineTest, InstantiationsOutEmpty) {
           "rustfmt_exe_path", "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {}, {"lib.rs"},
-          /* instantiations_out= */ "")),
+          /* instantiations_out= */ "", "error_report_out")),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
@@ -223,7 +226,8 @@ TEST(CmdlineTest, RustSourcesEmpty) {
           "rustfmt_exe_path", "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
-          /* srcs_to_scan_for_instantiations= */ {}, "instantiations_out"),
+          /* srcs_to_scan_for_instantiations= */ {}, "instantiations_out",
+          "error_report_out"),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
           HasSubstr(
@@ -242,7 +246,7 @@ TEST(CmdlineTest, CcOutEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ ""),
+          /* instantiations_out= */ "", "error_report_out"),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --cc_out")));
 }
@@ -258,7 +262,7 @@ TEST(CmdlineTest, RsOutEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ ""),
+          /* instantiations_out= */ "", "error_report_out"),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --rs_out")));
 }
@@ -273,7 +277,7 @@ TEST(CmdlineTest, IrOutEmpty) {
       /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
       /* extra_rs_srcs= */ {},
       /* srcs_to_scan_for_instantiations= */ {},
-      /* instantiations_out= */ ""));
+      /* instantiations_out= */ "", "error_report_out"));
 }
 
 TEST(CmdlineTest, RustfmtExePathEmpty) {
@@ -287,7 +291,7 @@ TEST(CmdlineTest, RustfmtExePathEmpty) {
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
-          /* instantiations_out= */ ""),
+          /* instantiations_out= */ "", "error_report_out"),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("please specify --rustfmt_exe_path")));
 }

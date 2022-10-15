@@ -73,10 +73,12 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
                  cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
                  clang_args_view, requested_instantiations));
 
-  CRUBIT_ASSIGN_OR_RETURN(Bindings bindings,
-                          GenerateBindings(ir, cmdline.crubit_support_path(),
-                                           cmdline.rustfmt_exe_path(),
-                                           cmdline.rustfmt_config_path()));
+  bool generate_error_report = !cmdline.error_report_out().empty();
+  CRUBIT_ASSIGN_OR_RETURN(
+      Bindings bindings,
+      GenerateBindings(ir, cmdline.crubit_support_path(),
+                       cmdline.rustfmt_exe_path(),
+                       cmdline.rustfmt_config_path(), generate_error_report));
 
   absl::flat_hash_map<std::string, std::string> instantiations;
   std::optional<const Namespace*> ns =
@@ -97,6 +99,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       .rs_api_impl = bindings.rs_api_impl,
       .namespaces = std::move(top_level_namespaces),
       .instantiations = std::move(instantiations),
+      .error_report = bindings.error_report,
   };
 }
 

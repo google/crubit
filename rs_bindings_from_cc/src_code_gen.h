@@ -19,12 +19,16 @@ struct Bindings {
   std::string rs_api;
   // C++ source code.
   std::string rs_api_impl;
+  // Optional JSON error report.
+  std::string error_report;
 };
 
 // Generates bindings from the given `IR`.
-absl::StatusOr<Bindings> GenerateBindings(
-    const IR& ir, absl::string_view crubit_support_path,
-    absl::string_view rustfmt_exe_path, absl::string_view rustfmt_config_path);
+absl::StatusOr<Bindings> GenerateBindings(const IR& ir,
+                                          absl::string_view crubit_support_path,
+                                          absl::string_view rustfmt_exe_path,
+                                          absl::string_view rustfmt_config_path,
+                                          bool generate_error_report);
 
 }  // namespace crubit
 

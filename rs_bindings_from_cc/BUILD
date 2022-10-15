@@ -290,6 +290,7 @@ rust_library(
     deps = [
         "//common:arc_anyhow",
         "@crate_index//:itertools",
+        "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
         "@crate_index//:serde",
@@ -382,6 +383,7 @@ rust_library(
     name = "src_code_gen_impl",
     srcs = ["src_code_gen.rs"],
     deps = [
+        ":error_report",
         ":ir",
         "//common:arc_anyhow",
         "//common:code_gen_utils",
@@ -408,6 +410,25 @@ rust_test(
         "//common:rust_allocator_shims",
         "//common:token_stream_matchers",
         "@crate_index//:static_assertions",
+    ],
+)
+
+rust_library(
+    name = "error_report",
+    srcs = ["error_report.rs"],
+    deps = [
+        "//common:arc_anyhow",
+        "@crate_index//:anyhow",
+        "@crate_index//:serde",
+        "@crate_index//:serde_json",
+    ],
+)
+
+rust_test(
+    name = "error_report_test",
+    crate = ":error_report",
+    deps = [
+        "@crate_index//:serde_json",
     ],
 )
 

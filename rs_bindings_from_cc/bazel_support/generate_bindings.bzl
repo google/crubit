@@ -9,6 +9,7 @@ not be used yet.
 """
 
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
+load("@bazel_skylib//rules:common_settings.bzl", "BuildSettingInfo")
 
 def _get_hdrs_command_line(hdrs):
     return ["--public_headers=" + ",".join([x.path for x in hdrs])]
@@ -43,11 +44,34 @@ def generate_bindings(
       extra_rs_srcs: A list of extra source files to add.
 
     Returns:
-      tuple(cc_output, rs_output): The generated source files.
+      tuple(cc_output, rs_output, namespaces_output, error_report_output): The generated source files.
     """
     cc_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_impl.cc")
     rs_output = ctx.actions.declare_file(ctx.label.name + "_rust_api.rs")
     namespaces_output = ctx.actions.declare_file(ctx.label.name + "_namespaces.json")
+    error_report_output = None
+
+    rs_bindings_from_cc_flags = [
+        "--stderrthreshold=2",
+        "--rs_out",
+        rs_output.path,
+        "--cc_out",
+        cc_output.path,
+        "--namespaces_out",
+        namespaces_output.path,
+        "--crubit_support_path",
+        "rs_bindings_from_cc/support",
+        "--rustfmt_exe_path",
+        "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt",
+        "--rustfmt_config_path",
+        "nowhere/rustfmt.toml",
+    ]
+    if ctx.attr._generate_error_report[BuildSettingInfo].value:
+        error_report_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_error_report.json")
+        rs_bindings_from_cc_flags += [
+            "--error_report_out",
+            error_report_output.path,
+        ]
 
     variables = cc_common.create_compile_variables(
         feature_configuration = feature_configuration,
@@ -73,21 +97,7 @@ def generate_bindings(
         preprocessor_defines = compilation_context.defines,
         variables_extension = {
             "rs_bindings_from_cc_tool": ctx.executable._generator.path,
-            "rs_bindings_from_cc_flags": [
-                "--stderrthreshold=2",
-                "--rs_out",
-                rs_output.path,
-                "--cc_out",
-                cc_output.path,
-                "--namespaces_out",
-                namespaces_output.path,
-                "--crubit_support_path",
-                "rs_bindings_from_cc/support",
-                "--rustfmt_exe_path",
-                "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt",
-                "--rustfmt_config_path",
-                "nowhere/rustfmt.toml",
-            ] + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs),
+            "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs),
             "targets_and_headers": targets_and_headers,
         },
     )
@@ -109,7 +119,7 @@ def generate_bindings(
             ] + ctx.files._rustfmt_cfg + extra_rs_srcs,
             transitive = [action_inputs],
         ),
-        additional_outputs = [rs_output, namespaces_output],
+        additional_outputs = [x for x in [rs_output, namespaces_output, error_report_output] if x != None],
         variables = variables,
     )
-    return (cc_output, rs_output, namespaces_output)
+    return (cc_output, rs_output, namespaces_output, error_report_output)
