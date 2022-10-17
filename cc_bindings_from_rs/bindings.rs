@@ -10,7 +10,7 @@ use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
-use rustc_middle::ty::{Ty, TyCtxt};
+use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Ident;
 use rustc_target::spec::abi::Abi;
@@ -63,11 +63,76 @@ where
 }
 
 fn format_ty(ty: Ty) -> Result<TokenStream> {
-    if ty.is_unit() {
-        Ok(quote! { void })
-    } else {
-        bail!("The following Rust type is not supported yet: {}", ty)
-    }
+    Ok(match ty.kind() {
+        ty::TyKind::Tuple(types) => {
+            if types.len() == 0 {
+                quote! { void }
+            } else {
+                // TODO(b/254097223): Add support for tuples.
+                bail!("Tuples are not supported yet: {} (b/254097223)", ty);
+            }
+        }
+        ty::TyKind::Bool => quote! { bool },
+        ty::TyKind::Float(ty::FloatTy::F32) => quote! { float },
+        ty::TyKind::Float(ty::FloatTy::F64) => quote! { double },
+
+        ty::TyKind::Char
+        | ty::TyKind::Int(
+            ty::IntTy::Isize | ty::IntTy::I8 | ty::IntTy::I16 | ty::IntTy::I32 | ty::IntTy::I64,
+        )
+        | ty::TyKind::Uint(
+            ty::UintTy::Usize
+            | ty::UintTy::U8
+            | ty::UintTy::U16
+            | ty::UintTy::U32
+            | ty::UintTy::U64,
+        ) => {
+            // TODO(b/254094545): Add support for returning TokenStream *and* include paths.
+            bail!("No support yet for `#include`ing C++ equivalent of `{ty}` (b/254094545)")
+        }
+
+        ty::TyKind::Int(ty::IntTy::I128) | ty::TyKind::Uint(ty::UintTy::U128) => {
+            // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
+            // or to `absl::in128`.
+            bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
+        }
+
+        ty::TyKind::Adt(..)
+        | ty::TyKind::Foreign(..)
+        | ty::TyKind::Str
+        | ty::TyKind::Array(..)
+        | ty::TyKind::Slice(..)
+        | ty::TyKind::RawPtr(..)
+        | ty::TyKind::Ref(..)
+        | ty::TyKind::FnPtr(..)
+        | ty::TyKind::Dynamic(..)
+        | ty::TyKind::Generator(..)
+        | ty::TyKind::GeneratorWitness(..)
+        | ty::TyKind::Never
+        | ty::TyKind::Projection(..)
+        | ty::TyKind::Opaque(..)
+        | ty::TyKind::Param(..)
+        | ty::TyKind::Bound(..)
+        | ty::TyKind::Placeholder(..) => {
+            bail!("The following Rust type is not supported yet: {ty}")
+        }
+        ty::TyKind::Closure(..)
+        | ty::TyKind::FnDef(..)
+        | ty::TyKind::Infer(..)
+        | ty::TyKind::Error(..) => {
+            // `Closure` types are assumed to never appear in a public API of a crate (only
+            // function-body-local variables/values should be able to have a closure type).
+            //
+            // `FnDef` is assumed to never appear in a public API of a crate - this seems to
+            // be an internal, compiler-only type similar to `Closure` (e.g.
+            // based on the statement from https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/ty/enum.TyKind.html#variant.FnDef
+            // that "each function has a unique type"
+            //
+            // `Infer` and `Error` types should be impossible at the time when Crubit's code
+            // runs (after the "analysis" phase of the Rust compiler).
+            panic!("Unexpected TyKind: {:?}", ty.kind());
+        }
+    })
 }
 
 /// Formats a function with the given `def_id` and `fn_name`.
@@ -207,7 +272,7 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
                     format_unsupported_def(tcx, local_id, anyhow!("Generics are not supported yet."))
                 })
             }
-            ExportedSymbol::DropGlue(_) | ExportedSymbol::NoDefId(_) => None,
+            ExportedSymbol::DropGlue(..) | ExportedSymbol::NoDefId(..) => None,
         });
 
     Ok(quote! {
@@ -219,13 +284,13 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
 
 #[cfg(test)]
 pub mod tests {
-    use super::{format_def, GeneratedBindings};
+    use super::{format_def, format_ty, GeneratedBindings};
 
     use anyhow::Result;
     use itertools::Itertools;
     use proc_macro2::TokenStream;
     use quote::quote;
-    use rustc_middle::ty::TyCtxt;
+    use rustc_middle::ty::{Ty, TyCtxt};
     use rustc_span::def_id::LocalDefId;
     use std::path::PathBuf;
 
@@ -498,15 +563,15 @@ pub mod tests {
         // TODO(b/254096006): Consider preserving `type` aliases when generating
         // bindings.
         let test_src = r#"
-                type MyTypeAlias = ();
+                type MyTypeAlias = f64;
 
-                pub extern "C" fn type_aliased_return() -> MyTypeAlias {}
+                pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
         test_format_def(test_src, "type_aliased_return", |result| {
             assert_cc_matches!(
                 result.expect("Test expects success here"),
                 quote! {
-                    extern "C" void type_aliased_return();
+                    extern "C" double type_aliased_return();
                 }
             );
         });
@@ -643,6 +708,131 @@ pub mod tests {
             let err = result.expect_err("Test expects an error here");
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: struct");
         });
+    }
+
+    #[test]
+    fn test_format_ty_successes() {
+        // Test coverage for cases where `format_ty` returns an `Ok(...)`.
+        let testcases = [
+            // ( <Rust type>, <expected C++ type> )
+            ("bool", "bool"),  // TyKind::Bool
+            ("f32", "float"),  // TyKind::Float(ty::FloatTy::F32)
+            ("f64", "double"), // TyKind::Float(ty::FloatTy::F64)
+            // The unit type is a special (zero-length) kind of TyKind::Tuple
+            ("()", "void"),
+            // Extra parens/sugar are expected to be ignored:
+            ("(bool)", "bool"),
+        ];
+        test_format_ty(&testcases, |desc, ty, expected| {
+            let actual = format_ty(ty).unwrap().to_string();
+            let expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual, expected, "{desc}");
+        });
+    }
+
+    #[test]
+    fn test_format_ty_failures() {
+        // This test provides coverage for cases where `format_ty` returns an
+        // `Err(...)`.
+        //
+        // TODO(lukasza): Add test coverage for:
+        // - TyKind::Adt (structs, unions, enums, etc.)
+        // - TyKind::Bound
+        // - TyKind::Dynamic (`dyn Eq`)
+        // - TyKind::Foreign (`extern type T`)
+        // - https://doc.rust-lang.org/beta/unstable-book/language-features/generators.html:
+        //   TyKind::Generator, TyKind::GeneratorWitness
+        // - TyKind::Param
+        // - TyKind::Placeholder
+        // - TyKind::Projection
+        //
+        // It seems okay to have no test coverage for now for the following types (which
+        // should never be encountered when generating bindings and where
+        // `format_ty` should panic):
+        // - TyKind::Closure
+        // - TyKind::Error
+        // - TyKind::FnDef
+        // - TyKind::Infer */
+        let testcases = [
+            // ( <Rust type>, <expected error message> )
+            ("!", "The following Rust type is not supported yet: !"), // TyKind::Never
+            (
+                "(i32, i32)", // TyKind::Tuple
+                "Tuples are not supported yet: (i32, i32) (b/254097223)",
+            ),
+            (
+                "char", // TyKind::Char
+                "No support yet for `#include`ing C++ equivalent of `char` (b/254094545)",
+            ),
+            (
+                "i32", // TyKind::Int
+                "No support yet for `#include`ing C++ equivalent of `i32` (b/254094545)",
+            ),
+            (
+                "u32", // TyKind::UInt
+                "No support yet for `#include`ing C++ equivalent of `u32` (b/254094545)",
+            ),
+            (
+                "*const i32", // TyKind::Ptr
+                "The following Rust type is not supported yet: *const i32",
+            ),
+            (
+                "&'static i32", // TyKind::Ref
+                "The following Rust type is not supported yet: &'static i32",
+            ),
+            (
+                "[i32; 42]", // TyKind::Array
+                "The following Rust type is not supported yet: [i32; 42]",
+            ),
+            (
+                "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
+                "The following Rust type is not supported yet: &'static [i32]",
+            ),
+            (
+                "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
+                "The following Rust type is not supported yet: &'static str",
+            ),
+            (
+                "impl Eq", // TyKind::Opaque
+                "The following Rust type is not supported yet: impl std::cmp::Eq",
+            ),
+            (
+                "fn(i32) -> i32", // TyKind::FnPtr
+                "The following Rust type is not supported yet: fn(i32) -> i32",
+            ),
+            // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
+            // or to `absl::in128`.
+            ("i128", "C++ doesn't have a standard equivalent of `i128` (b/254094650)"),
+            ("u128", "C++ doesn't have a standard equivalent of `u128` (b/254094650)"),
+        ];
+        test_format_ty(&testcases, |desc, ty, expected_err| {
+            let anyhow_err = format_ty(ty).unwrap_err();
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
+        });
+    }
+
+    fn test_format_ty<TestFn, Expectation>(testcases: &[(&str, Expectation)], test_fn: TestFn)
+    where
+        TestFn: Fn(/* testcase_description: */ &str, Ty, &Expectation) -> () + Sync,
+        Expectation: Sync,
+    {
+        for (index, (input, expected)) in testcases.into_iter().enumerate() {
+            let desc = format!("test #{index}: test input: `{input}`");
+            let input = {
+                let ty_tokens: TokenStream = input.parse().unwrap();
+                let input = quote! {
+                    #![allow(unused_parens)]
+                    pub fn test_function() -> #ty_tokens { panic!("") }
+                };
+                input.to_string()
+            };
+            run_compiler(input, |tcx| {
+                let def_id = find_def_id_by_name(tcx, "test_function");
+                let ty = tcx.fn_sig(def_id.to_def_id()).no_bound_vars().unwrap().output();
+                test_fn(&desc, ty, expected);
+            });
+        }
     }
 
     /// Tests invoking `format_def` on the item with the specified `name` from
