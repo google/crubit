@@ -20,8 +20,7 @@ pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
     // an error is returned when `ident` is a C++ reserved keyword.
     ensure!(
         !RESERVED_CC_KEYWORDS.contains(ident),
-        "`{}` is a C++ reserved keyword and \
-        can't be used as a C++ identifier in the generated bindings",
+        "`{}` is a C++ reserved keyword and can't be used as a C++ identifier",
         ident
     );
 

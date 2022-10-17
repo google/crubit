@@ -2,16 +2,18 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use code_gen_utils::format_cc_ident;
 use proc_macro2::TokenStream;
 use quote::quote;
+use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
-use rustc_middle::ty::TyCtxt;
+use rustc_middle::ty::{Ty, TyCtxt};
 use rustc_span::def_id::{LocalDefId, LOCAL_CRATE};
-use std::fmt::Display;
+use rustc_span::symbol::Ident;
+use rustc_target::spec::abi::Abi;
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
@@ -60,21 +62,115 @@ where
     Ok(query_context.peek_mut().enter(f))
 }
 
-fn format_def(_tcx: TyCtxt, _def_id: LocalDefId) -> Result<TokenStream> {
-    bail!("Nothing works yet!")
+fn format_ty(ty: Ty) -> Result<TokenStream> {
+    if ty.is_unit() {
+        Ok(quote! { void })
+    } else {
+        bail!("The following Rust type is not supported yet: {}", ty)
+    }
 }
 
+/// Formats a function with the given `def_id` and `fn_name`.
+///
+/// Will panic if `def_id` is invalid or doesn't identify a function.
+fn format_fn(tcx: TyCtxt, def_id: LocalDefId, fn_name: &Ident) -> Result<TokenStream> {
+    let sig = tcx
+        .fn_sig(def_id.to_def_id())
+        .no_bound_vars()
+        .expect("Caller (e.g. `format_def`) should verify no unbound generic vars");
+
+    if sig.c_variadic {
+        // TODO(b/254097223): Add support for variadic functions.
+        bail!("C variadic functions are not supported (b/254097223)");
+    }
+    if sig.inputs().len() != 0 {
+        // TODO(lukasza): Add support for function parameters.
+        bail!("Function parameters are not supported yet");
+    }
+
+    match sig.unsafety {
+        Unsafety::Normal => (),
+        Unsafety::Unsafe => {
+            // TODO(b/254095482): Figure out how to handle `unsafe` functions.
+            bail!("Bindings for `unsafe` functions are not fully designed yet (b/254095482)");
+        }
+    }
+
+    let need_thunk = match sig.abi {
+        // Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
+        // "escapes" a "C" ABI function leads to Undefined Behavior.  This is unfortunate,
+        // but Crubit's `panics_and_exceptions.md` documents that `-Cpanic=abort` is the
+        // only supported configuration.
+        //
+        // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
+        // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
+        Abi::C { unwind: false } => false,
+
+        // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a new "C-unwind" ABI
+        // may be used by Rust functions that want to safely propagate Rust panics through
+        // frames that may belong to another language.
+        Abi::C { unwind: true } => false,
+
+        // In all other cases, C++ needs to call into a Rust thunk that wraps the original function
+        // in a "C" ABI.
+        _ => true,
+    };
+    if need_thunk {
+        // TODO(b/254097223): Add support for Rust thunks.
+        bail!(
+            "Functions that require Rust thunks (e.g. non-`extern \"C\"`) are not supported yet \
+               (b/254097223)"
+        );
+    }
+
+    let ret_type = format_ty(sig.output()).context("Error formatting function return type")?;
+    let fn_name = format_cc_ident(fn_name.as_str()).context("Error formatting function name")?;
+
+    Ok(quote! {
+        extern "C" #ret_type #fn_name ();
+    })
+}
+
+/// Formats a Rust item idenfied by `def_id`.
+///
+/// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
+/// item).
+fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
+    match tcx.hir().get_by_def_id(def_id) {
+        Node::Item(item) => match item {
+            Item { ident, kind: ItemKind::Fn(_hir_fn_sig, generics, _body), .. } => {
+                if generics.params.len() == 0 {
+                    format_fn(tcx, def_id, &ident)
+                } else {
+                    bail!(
+                        "Generic functions (lifetime-generic or type-generic) are not supported yet"
+                    )
+                }
+            }
+            Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
+        },
+        _unsupported_node => bail!("Unsupported rustc_hir::hir::Node"),
+    }
+}
+
+/// Formats a C++ comment explaining why no bindings have been generated for
+/// `local_def_id`.
 fn format_unsupported_def(
     tcx: TyCtxt,
     local_def_id: LocalDefId,
-    err_msg: impl Display,
+    err: anyhow::Error,
 ) -> TokenStream {
     let span = tcx.sess().source_map().span_to_embeddable_string(tcx.def_span(local_def_id));
     let name = tcx.def_path_str(local_def_id.to_def_id());
-    let msg = format!("Error while generating bindings for `{name}` defined at {span}: {err_msg}");
+
+    // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
+    // says: To print causes as well [...], use the alternate selector “{:#}”.
+    let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
     quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ }
 }
 
+/// Formats all public items from the Rust crate being compiled (aka the
+/// `LOCAL_CRATE`).
 fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
     let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
@@ -82,7 +178,8 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
     // entry point for finding Rust definitions that need to be wrapping in C++
     // bindings.  For example, it _seems_ that things like `type` aliases or
     // `struct`s (without an `impl`) won't be visible to a linker and therefore
-    // won't have exported symbols.
+    // won't have exported symbols.  Additionally, walking Rust's modules top-down
+    // might result in easier translation into C++ namespaces.
     let snippets =
         tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(move |(symbol, _)| match symbol {
             ExportedSymbol::NonGeneric(def_id) => {
@@ -107,7 +204,7 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
                 // crate.  One specific example (covered via `async fn` in one of the tests) is
                 // `DefId(2:14250 ~ core[ef75]::future::from_generator)`.
                 def_id.as_local().map(|local_id| {
-                    format_unsupported_def(tcx, local_id, "Generics are not supported yet.")
+                    format_unsupported_def(tcx, local_id, anyhow!("Generics are not supported yet."))
                 })
             }
             ExportedSymbol::DropGlue(_) | ExportedSymbol::NoDefId(_) => None,
@@ -229,15 +326,10 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            // TODO(lukasza): Fix test expectations once this becomes supported (in early Q4
-            // 2022).
-            let expected_comment_txt = "Error while generating bindings for `public_function` \
-                                        defined at <crubit_unittests.rs>:2:17: 2:52: \
-                                        Nothing works yet!";
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
-                    __COMMENT__ #expected_comment_txt
+                    extern "C" void public_function();
                 }
             );
         });
@@ -285,18 +377,19 @@ pub mod tests {
         // (in `format_crate` and `format_unsupported_def`).
         // - This test covers only a single example of an unsupported item.  Additional
         //   coverage is provided by `test_format_def_unsupported_...` tests.
-        // - This test somewhat arbitrarily chooses an example of an unsupported item
-        //   (i.e. if `async fn` becomes supported by `cc_bindings_from_rs` in the
-        //   future, then the test will have to be modified to use another `test_src`
-        //   input).
+        // - This test somewhat arbitrarily chooses an example of an unsupported item,
+        //   trying to pick one that 1) will never be supported (b/254104998 has some extra
+        //   notes about APIs named after reserved C++ keywords) and 2) tests that the
+        //   full error chain is included in the message.
         let test_src = r#"
-                pub async fn public_function() {}
+                pub extern "C" fn reinterpret_cast() {}
             "#;
-
         test_generated_bindings(test_src, |bindings| {
-            let expected_comment_txt = "Error while generating bindings for `public_function` \
-                                        defined at <crubit_unittests.rs>:2:17: 2:47: \
-                                        Nothing works yet!";
+            let expected_comment_txt = "Error generating bindings for `reinterpret_cast` \
+                 defined at <crubit_unittests.rs>:2:17: 2:53: \
+                 Error formatting function name: \
+                 `reinterpret_cast` is a C++ reserved keyword \
+                 and can't be used as a C++ identifier";
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -307,26 +400,248 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_extern_c_no_params_no_return_type() {
+    fn test_format_def_fn_extern_c_no_params_no_return_type() {
         let test_src = r#"
                 pub extern "C" fn public_function() {}
             "#;
         test_format_def(test_src, "public_function", |result| {
-            // TODO(lukasza): Fix test expectations once this becomes supported (in early Q4
-            // 2022).
-            let err = result.expect_err("Test expects an error here").to_string();
-            assert_eq!(err, "Nothing works yet!");
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void public_function();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_extern_c_no_params_unit_return_type() {
+        // This test is very similar to the
+        // `test_format_def_fn_extern_c_no_params_no_return_type` above, except
+        // that the return type is explicitly spelled out.  There is no difference in
+        // `ty::FnSig` so our code behaves exactly the same, but the test has been
+        // planned based on earlier, hir-focused approach and having this extra
+        // test coverage shouldn't hurt. (`hir::FnSig` and `hir::FnRetTy` _do_
+        // see a difference between the two tests).
+        let test_src = r#"
+                pub extern "C" fn explicit_unit_return_type() -> () {}
+            "#;
+        test_format_def(test_src, "explicit_unit_return_type", |result| {
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void explicit_unit_return_type();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_unsafe() {
+        // This tests how bindings for an `unsafe fn` are generated.
+        let test_src = r#"
+                pub unsafe extern "C" fn foo() {}
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Bindings for `unsafe` functions \
+                             are not fully designed yet (b/254095482)"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_const() {
+        // This tests how bindings for an `const fn` are generated.
+        //
+        // Right now the `const` qualifier is ignored, but one can imagine that in the
+        // (very) long-term future such functions (including their bodies) could
+        // be translated into C++ `consteval` functions.
+        let test_src = r#"
+                pub const fn foo(i: i32) -> i32 { i * 42 }
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            // TODO(lukasza): Update test expectations below once `const fn` example from
+            // the testcase doesn't just error out (and is instead supported as
+            // a non-`consteval` binding).
+            // TODO(b/254095787): Update test expectations below once `const fn` from Rust
+            // is translated into a `consteval` C++ function.
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Function parameters are not supported yet",);
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_with_c_unwind_abi() {
+        // See also https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html
+        let test_src = r#"
+                #![feature(c_unwind)]
+                pub extern "C-unwind" fn may_throw() {}
+            "#;
+        test_format_def(test_src, "may_throw", |result| {
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void may_throw();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_with_type_aliased_return_type() {
+        // Type aliases disappear at the `rustc_middle::ty::Ty` level and therefore in
+        // the short-term the generated bindings also ignore type aliases.
+        //
+        // TODO(b/254096006): Consider preserving `type` aliases when generating
+        // bindings.
+        let test_src = r#"
+                type MyTypeAlias = ();
+
+                pub extern "C" fn type_aliased_return() -> MyTypeAlias {}
+            "#;
+        test_format_def(test_src, "type_aliased_return", |result| {
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void type_aliased_return();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_name_is_reserved_cpp_keyword() {
+        let test_src = r#"
+                pub extern "C" fn reinterpret_cast() -> () {}
+            "#;
+        test_format_def(test_src, "reinterpret_cast", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Error formatting function name: \
+                       `reinterpret_cast` is a C++ reserved keyword \
+                       and can't be used as a C++ identifier"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_ret_type() {
+        let test_src = r#"
+                pub extern "C" fn foo() -> *const i32 { std::ptr::null() }
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Error formatting function return type: \
+                       The following Rust type is not supported yet: *const i32"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_with_late_bound_lifetimes() {
+        let test_src = r#"
+                pub fn foo(arg: &i32) -> &i32 { arg }
+
+                // Lifetime inference translates the above into:
+                //     pub fn foo<'a>(arg: &'a i32) -> &'a i32 { ... }
+                // leaving 'a lifetime late-bound (it is bound with a lifetime
+                // taken from each of the callsites).  In other words, we can't
+                // just call `no_bound_vars` on this `FnSig`'s `Binder`.
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Generic functions (lifetime-generic or type-generic) are not supported yet"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_generic_fn() {
+        let test_src = r#"
+                use std::default::Default;
+                use std::fmt::Display;
+                pub fn generic_function<T: Default + Display>() {
+                    println!("{}", T::default());
+                }
+            "#;
+        test_format_def(test_src, "generic_function", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Generic functions (lifetime-generic or type-generic) are not supported yet"
+            );
         });
     }
 
     #[test]
     fn test_format_def_unsupported_fn_async() {
         let test_src = r#"
-                pub async fn public_function() {}
+                pub async fn async_function() {}
             "#;
-        test_format_def(test_src, "public_function", |result| {
-            let err = result.expect_err("Test expects an error here").to_string();
-            assert_eq!(err, "Nothing works yet!");
+        test_format_def(test_src, "async_function", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Functions that require Rust thunks (e.g. non-`extern \"C\"`) \
+                 are not supported yet (b/254097223)"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_non_c_abi() {
+        let test_src = r#"
+                pub fn default_rust_abi_function() {}
+            "#;
+        test_format_def(test_src, "default_rust_abi_function", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Functions that require Rust thunks \
+                       (e.g. non-`extern \"C\"`) are not supported yet (b/254097223)"
+            );
+        })
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_variadic() {
+        let test_src = r#"
+                #![feature(c_variadic)]
+                pub unsafe extern "C" fn variadic_function(_fmt: *const u8, ...) {}
+            "#;
+        test_format_def(test_src, "variadic_function", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "C variadic functions are not supported (b/254097223)");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_params() {
+        let test_src = r#"
+                pub unsafe extern "C" fn fn_with_params(_i: i32) {}
+            "#;
+        test_format_def(test_src, "fn_with_params", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Function parameters are not supported yet");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_hir_item_kind() {
+        let test_src = r#"
+                pub struct SomeStruct(i32);
+            "#;
+        test_format_def(test_src, "SomeStruct", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: struct");
         });
     }
 
@@ -337,12 +652,18 @@ pub mod tests {
     /// result from `format_def`.)
     fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<TokenStream>) -> T + Send,
+        F: FnOnce(Result<TokenStream, String>) -> T + Send,
         T: Send,
     {
         run_compiler(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
-            test_function(format_def(tcx, def_id))
+            let result = format_def(tcx, def_id);
+
+            // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
+            // To print causes as well [...], use the alternate selector “{:#}”.
+            let result = result.map_err(|anyhow_err| format!("{anyhow_err:#}"));
+
+            test_function(result)
         })
     }
 

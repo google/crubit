@@ -16,6 +16,7 @@ extern crate rustc_lint_defs;
 extern crate rustc_middle;
 extern crate rustc_session;
 extern crate rustc_span;
+extern crate rustc_target;
 
 // TODO(lukasza): Make `bindings` and `cmdline` separate crates (once we move to
 // Bazel).  This hasn't been done that yet, because:
@@ -240,7 +241,7 @@ mod tests {
     #[derive(Debug)]
     struct TestResult {
         h_path: PathBuf,
-        rs_input_path: PathBuf,
+        // TODO(b/254097223): Cover out_rs_impl_path once Rust thunks are generated.
     }
 
     impl TestArgs {
@@ -297,7 +298,7 @@ mod tests {
             let rs_input_path = self.tempdir.path().join("test_crate.rs");
             std::fs::write(
                 &rs_input_path,
-                r#" pub fn public_function() {
+                r#" pub extern "C" fn public_function() {
                         private_function()
                     }
 
@@ -320,7 +321,7 @@ mod tests {
 
             run_with_cmdline_args(&args)?;
 
-            Ok(TestResult { h_path, rs_input_path })
+            Ok(TestResult { h_path })
         }
     }
 
@@ -331,22 +332,16 @@ mod tests {
 
         assert!(test_result.h_path.exists());
         let h_body = std::fs::read_to_string(&test_result.h_path)?;
-        let rs_input_path = test_result.rs_input_path.display().to_string();
         assert_eq!(
             h_body,
-            format!(
 r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
 #pragma once
 
-namespace test_crate {{
-
-// Error while generating bindings for `public_function` defined at
-// {rs_input_path}:1:2: 1:26: Nothing works yet!
-
-}}"#
-            )
+namespace test_crate {
+extern "C" void public_function();
+}"#
         );
         Ok(())
     }
