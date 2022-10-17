@@ -739,7 +739,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
   // First case: template argument. We just attach the
   // template argument's lifetimes to the leaf ObjectLifetimes.
   if (auto targ = type->getAs<clang::SubstTemplateTypeParmType>()) {
-    const clang::TemplateTypeParmType* type_parm = targ->getReplacedParameter();
+    const clang::TemplateTypeParmDecl* type_parm = targ->getReplacedParameter();
     const std::optional<ValueLifetimes>& arg_lifetimes =
         value_lifetimes_.GetTemplateArgumentLifetimes(type_parm->getDepth(),
                                                       type_parm->getIndex());
@@ -776,7 +776,7 @@ ObjectLifetimes ObjectLifetimes::GetObjectLifetimesForTypeInContext(
           if (auto templ_arg =
                   clang::dyn_cast<clang::SubstTemplateTypeParmType>(
                       arg.getAsType())) {
-            const clang::TemplateTypeParmType* type_parm =
+            const clang::TemplateTypeParmDecl* type_parm =
                 templ_arg->getReplacedParameter();
             // Template parameter packs get the index of the *pack*, not the
             // index of the type inside the pack itself. As they must appear
