@@ -44,6 +44,7 @@ use token_stream_printer::cc_tokens_to_formatted_string;
 /// module.
 mod bindings_driver {
 
+    use anyhow::anyhow;
     use either::Either;
     use rustc_interface::interface::Compiler;
     use rustc_interface::Queries;
@@ -118,9 +119,14 @@ mod bindings_driver {
                 anyhow::format_err!("Errors reported by Rust compiler.")
             });
 
-            // Return either `rustc_result` or `self.callback_result`.
+            // Return either `rustc_result` or `self.callback_result` or a new error.
             rustc_result.and_then(|()| {
-                self.callback_or_result.right_or_else(|_| panic!("The callback should have been called by now"))
+                self.callback_or_result.right_or_else(|_left| {
+                    // When rustc cmdline arguments (i.e. `self.args`) are empty (or contain
+                    // `--help`) then the `after_analysis` callback won't be invoked.  Handle
+                    // this case by emitting an explicit error at the Crubit level.
+                    Err(anyhow!("The Rust compiler had no crate to compile and analyze"))
+                })
             })
         }
     }
@@ -374,6 +380,21 @@ extern "C" void public_function();
 
         let msg = format!("{err:#}");
         assert_eq!("Errors reported by Rust compiler.", msg);
+        Ok(())
+    }
+
+    #[test]
+    fn test_rustc_help() -> anyhow::Result<()> {
+        // Tests that we gracefully handle scenarios where `rustc` doesn't compile
+        // anything (e.g. when there are no rustc cmdline arguments, or when
+        // `--help` is present).
+        let err = TestArgs::default_args()?
+            .with_extra_rustc_args(["--help"])
+            .run()
+            .expect_err("--help passed to rustc should trigger Crubit-level error");
+
+        let msg = format!("{err:#}");
+        assert_eq!("The Rust compiler had no crate to compile and analyze", msg);
         Ok(())
     }
 
