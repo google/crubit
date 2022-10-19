@@ -167,7 +167,7 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
-    let bindings = GeneratedBindings::generate(tcx);
+    let bindings = GeneratedBindings::generate(tcx)?;
     write_file(&cmdline.h_out, cc_tokens_to_formatted_string(bindings.h_body)?.as_str())
 }
 
@@ -238,7 +238,13 @@ mod tests {
     struct TestArgs {
         h_path: Option<String>,
         extra_crubit_args: Vec<String>,
+
+        /// Arg for the following `rustc` flag: `--codegen=panic=<arg>`.
+        panic_mechanism: String,
+
+        /// Other `rustc` flags.
         extra_rustc_args: Vec<String>,
+
         tempdir: TempDir,
     }
 
@@ -255,6 +261,7 @@ mod tests {
             Ok(Self {
                 h_path: None,
                 extra_crubit_args: vec![],
+                panic_mechanism: "abort".to_string(),
                 extra_rustc_args: vec![],
                 tempdir: tempdir()?,
             })
@@ -264,6 +271,13 @@ mod tests {
         /// `self`-managed temporary directory.
         fn with_h_path(mut self, h_path: &str) -> Self {
             self.h_path = Some(h_path.to_string());
+            self
+        }
+
+        /// Replaces the default `--codegen=panic=abort` with the specified
+        /// `panic_mechanism`.
+        fn with_panic_mechanism(mut self, panic_mechanism: &str) -> Self {
+            self.panic_mechanism = panic_mechanism.to_string();
             self
         }
 
@@ -319,6 +333,7 @@ mod tests {
             args.extend(self.extra_crubit_args.iter().cloned());
             args.extend([
                 "--".to_string(),
+                format!("--codegen=panic={}", &self.panic_mechanism),
                 "--crate-type=lib".to_string(),
                 format!("--sysroot={}", get_sysroot_for_testing().display()),
                 rs_input_path.display().to_string(),
@@ -395,6 +410,19 @@ extern "C" void public_function();
 
         let msg = format!("{err:#}");
         assert_eq!("The Rust compiler had no crate to compile and analyze", msg);
+        Ok(())
+    }
+
+    #[test]
+    fn test_rustc_unsupported_panic_mechanism() -> anyhow::Result<()> {
+        // Tests that `panic=unwind` results in an error.
+        let err = TestArgs::default_args()?
+            .with_panic_mechanism("unwind")
+            .run()
+            .expect_err("panic=unwind should trigger an error");
+
+        let msg = format!("{err:#}");
+        assert_eq!("No support for panic=unwind strategy (b/254049425)", msg);
         Ok(())
     }
 

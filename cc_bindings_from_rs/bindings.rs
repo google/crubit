@@ -14,13 +14,19 @@ use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-
 use rustc_span::def_id::{LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Ident;
 use rustc_target::spec::abi::Abi;
+use rustc_target::spec::PanicStrategy;
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
 }
 
 impl GeneratedBindings {
-    pub fn generate(tcx: TyCtxt) -> Self {
+    pub fn generate(tcx: TyCtxt) -> Result<Self> {
+        match tcx.sess().panic_strategy() {
+            PanicStrategy::Unwind => bail!("No support for panic=unwind strategy (b/254049425)"),
+            PanicStrategy::Abort => (),
+        };
+
         let top_comment = {
             let crate_name = tcx.crate_name(LOCAL_CRATE);
             let txt = format!(
@@ -44,7 +50,7 @@ impl GeneratedBindings {
             }
         };
 
-        Self { h_body }
+        Ok(Self { h_body })
     }
 }
 
@@ -391,6 +397,7 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -409,6 +416,8 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
+
             // Non-public functions should not be present in the generated bindings.
             assert_cc_not_matches!(bindings.h_body, quote! { private_function });
         });
@@ -418,6 +427,7 @@ pub mod tests {
     fn test_generated_bindings_top_level_items() {
         let test_src = "pub fn public_function() {}";
         test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
             let expected_comment_txt =
                 "Automatically @generated C++ bindings for the following Rust crate:\n\
                  rust_out";
@@ -450,6 +460,7 @@ pub mod tests {
                 pub extern "C" fn reinterpret_cast() {}
             "#;
         test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
             let expected_comment_txt = "Error generating bindings for `reinterpret_cast` \
                  defined at <crubit_unittests.rs>:2:17: 2:53: \
                  Error formatting function name: \
@@ -885,7 +896,7 @@ pub mod tests {
     /// that it got the expected `GeneratedBindings`.)
     fn test_generated_bindings<F, T>(source: &str, test_function: F) -> T
     where
-        F: FnOnce(GeneratedBindings) -> T + Send,
+        F: FnOnce(Result<GeneratedBindings>) -> T + Send,
         T: Send,
     {
         run_compiler(source, |tcx| test_function(GeneratedBindings::generate(tcx)))
@@ -898,7 +909,9 @@ pub mod tests {
         F: for<'tcx> FnOnce(TyCtxt<'tcx>) -> T + Send,
         T: Send,
     {
-        use rustc_session::config::{CrateType, Input, Options, OutputType, OutputTypes};
+        use rustc_session::config::{
+            CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes,
+        };
 
         const TEST_FILENAME: &str = "crubit_unittests.rs";
 
@@ -918,6 +931,10 @@ pub mod tests {
                 ("warnings".to_string(), rustc_lint_defs::Level::Deny),
                 ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
             ],
+            cg: CodegenOptions {
+                panic: Some(rustc_target::spec::PanicStrategy::Abort),
+                ..Default::default()
+            },
             ..Default::default()
         };
 
