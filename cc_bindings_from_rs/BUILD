@@ -46,6 +46,7 @@ rust_binary(
 sh_binary(
     name = "cc_bindings_from_rs_legacy_toolchain_runner",
     srcs = ["cc_bindings_from_rs_legacy_toolchain_runner.sh"],
+    bash_version = "system",
     data = [
         ":cc_bindings_from_rs",
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:rustc_driver_libs",
@@ -84,4 +85,14 @@ sh_test(
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:stdlibs_generated",
     ],
     env = {"LEGACY_TOOLCHAIN_RUST_TEST": "cc_bindings_from_rs_test"},
+)
+
+sh_test(
+    name = "cc_bindings_from_rs_sh_test",
+    srcs = ["cc_bindings_from_rs_sh_test.sh"],
+    data = [":cc_bindings_from_rs_legacy_toolchain_runner.sar"],
+    deps = [
+        "//util/shell/gbash",
+        "//util/shell/gbash:unit",
+    ],
 )

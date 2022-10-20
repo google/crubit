@@ -181,21 +181,6 @@ fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
     })
 }
 
-// TODO(lukasza): Add end-to-end shell tests that invoke our executable
-// and verify:
-//
-// 1) the happy path (verify zero exit code + contents of the generated .h)
-//
-// 2) `clap` error path (verify non-zero exit code + error output
-//    [not sure if *colored* output can be verified])
-//
-// 3) `clap` --help path (verify *zero* exit code;  the error message is
-//    already verified in unit tests under `cmdline.rs`)
-//
-// 4) other error path (verify non-zero exit code + error output).  For
-//    example try `--h_out ../..` and verify if the whole error chain is
-//    emitted to stderr (the "Error when writing to ../.." part and the "Is
-//    a directory (os error 21)" part).
 fn main() -> anyhow::Result<()> {
     rustc_driver::init_env_logger("CRUBIT_LOG");
 
