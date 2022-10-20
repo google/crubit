@@ -23,6 +23,7 @@ function delete_all_test_outputs() {
 function test::happy_path() {
   local RS_INPUT_PATH="${TEST_TMPDIR}/crate_name.rs"
   echo >"$RS_INPUT_PATH" "
+      #[no_mangle]
       pub extern \"C\" fn public_function() {
           private_function()
       }
@@ -96,11 +97,7 @@ function test::unrecognized_crubit_flag() {
 function test::invalid_h_out() {
   local RS_INPUT_PATH="${TEST_TMPDIR}/crate_name.rs"
   echo >"$RS_INPUT_PATH" "
-      pub extern \"C\" fn public_function() {
-          private_function()
-      }
-
-      fn private_function() {}
+      pub fn public_function() {}
   "
 
   # Test what happens when the `--h-out` argument below is invalid.  This

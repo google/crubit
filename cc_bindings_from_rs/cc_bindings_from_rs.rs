@@ -303,7 +303,8 @@ mod tests {
             let rs_input_path = self.tempdir.path().join("test_crate.rs");
             std::fs::write(
                 &rs_input_path,
-                r#" pub extern "C" fn public_function() {
+                r#" #[no_mangle]
+                    pub extern "C" fn public_function() {
                         private_function()
                     }
 
