@@ -957,6 +957,17 @@ pub mod tests {
         // `Mir`, etc. would also trigger code gen).
         let output_types = OutputTypes::new(&[(OutputType::Bitcode, None /* PathBuf */)]);
 
+        // Ensure that Rust compiler's output is associated with the test being run
+        // (instead of haphazardly being interleaved with random output from
+        // the test harness or other tests). This is done by forwarding all the
+        // diagnostic writes to `eprint!`, so that they can be captured by the
+        // test harness (unlike directly writing to `std::io::stdout()` or
+        // `std::io::stderr()`; see also doc-hidden `std::io::set_output_capture` and
+        // the `cargo test --nocapture` flag).
+        let diagnostic_output = rustc_session::DiagnosticOutput::Raw(Box::new(
+            string_callback_writer::StringCallbackWriter::new(|s| eprint!("{s}")),
+        ));
+
         let opts = Options {
             crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
             maybe_sysroot: Some(get_sysroot_for_testing()),
@@ -986,7 +997,7 @@ pub mod tests {
             output_file: None,
             output_dir: None,
             file_loader: None,
-            diagnostic_output: rustc_session::DiagnosticOutput::Default,
+            diagnostic_output,
             lint_caps: Default::default(),
             parse_sess_created: None,
             register_lints: None,
@@ -1022,5 +1033,162 @@ pub mod tests {
                 result.expect("Test inputs shouldn't cause compilation errors")
             })
         })
+    }
+
+    mod string_callback_writer {
+        use std::io::Write;
+
+        /// `StringCallbackWriter` provides an implementation of the
+        /// `std::io::Write` trait that decodes the written bytes as
+        /// strings, and forwards them to the provided callback.
+        pub struct StringCallbackWriter<F: FnMut(&str)> {
+            callback: F,
+            buf: Vec<u8>,
+        }
+
+        impl<F: FnMut(&str)> StringCallbackWriter<F> {
+            pub fn new(callback: F) -> Self {
+                Self { callback, buf: Vec::new() }
+            }
+
+            fn drain_buf_into_callback(&mut self) {
+                if self.buf.len() == 0 {
+                    return;
+                }
+                loop {
+                    match std::str::from_utf8(self.buf.as_slice()) {
+                        Ok(s) => {
+                            (self.callback)(s);
+                            self.buf.clear();
+                            break;
+                        }
+                        Err(err) => {
+                            let pos = err.valid_up_to();
+                            if pos == 0 {
+                                if self.buf.len() < 4 {
+                                    // Up to 3 first bytes might still turn out to be a start of a
+                                    // valid UTF-8 character - let's wait for more bytes.
+                                    break;
+                                } else {
+                                    // Otherwise, there is some invalid UTF-8 at the start of the
+                                    // buffer.  Try to recover by chopping off the invalid bytes
+                                    // one-at-a-time.
+                                    //
+                                    // Vec::remove is O(n) so overall this may take O(n^2) time
+                                    // which is a bit undesirable, but this should never happen in
+                                    // practice + this code is only used for test support.
+                                    (self.callback)("�");
+                                    self.buf.remove(0);
+                                    continue; // Retry.
+                                }
+                            } else {
+                                let s = std::str::from_utf8(&self.buf[..pos])
+                                    .expect("`valid_up_to` should ensure success here");
+                                (self.callback)(s);
+                                self.buf.drain(0..pos);
+
+                                // Retry in case a valid UTF-8 is still present later in the buffer.
+                                continue;
+                            }
+                        }
+                    }
+                }
+                assert!(self.buf.len() < 4);
+            }
+        }
+
+        impl<F: FnMut(&str)> Write for StringCallbackWriter<F> {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                let written_bytes = self.buf.write(buf)?;
+                self.drain_buf_into_callback();
+                Ok(written_bytes)
+            }
+
+            fn flush(&mut self) -> std::io::Result<()> {
+                // Not calling `self.buf.flush()` because it is a no-op for `Vec<u8>`.
+                self.drain_buf_into_callback();
+                Ok(())
+            }
+        }
+
+        mod test {
+            use super::StringCallbackWriter;
+
+            use itertools::{chain, Itertools};
+            use std::cell::{Ref, RefCell};
+            use std::io::Write;
+            use std::iter::once;
+            use std::rc::Rc;
+
+            struct StringCallbackWriterTestHelper {
+                output: Rc<RefCell<Vec<String>>>,
+                writer: Box<dyn Write>,
+            }
+
+            impl StringCallbackWriterTestHelper {
+                fn new() -> Self {
+                    let buf = Rc::new(RefCell::new(Vec::new()));
+                    Self {
+                        output: buf.clone(),
+                        writer: Box::new(StringCallbackWriter::new(move |s| {
+                            buf.borrow_mut().push(s.to_string())
+                        })),
+                    }
+                }
+
+                fn output(&self) -> Ref<'_, Vec<String>> {
+                    self.output.borrow()
+                }
+            }
+
+            #[test]
+            fn test_valid_utf8() {
+                let mut test = StringCallbackWriterTestHelper::new();
+
+                write!(&mut test.writer, "foo").unwrap();
+                write!(&mut test.writer, "bar").unwrap();
+
+                assert_eq!(2, test.output().len());
+                assert_eq!("foo", &test.output()[0]);
+                assert_eq!("bar", &test.output()[1]);
+            }
+
+            #[test]
+            fn test_multibyte_character_broken_across_writes() {
+                let mut test = StringCallbackWriterTestHelper::new();
+
+                // UTF-8 byte/hex encoding:
+                // - Crab character / U+1F980: f0 9f a6 80
+                // - Exclamation mark / U+0021: 21
+
+                // 2 first writes are incomplete - they shouldn't trigger the callback.
+                test.writer.write(&[0xf0]).unwrap();
+                assert_eq!(0, test.output().len());
+                test.writer.write(&[0x9f, 0xa6]).unwrap();
+                assert_eq!(0, test.output().len());
+
+                // The next write completes the utf8 character.
+                test.writer.write(&[0x80, 0x21]).unwrap();
+                assert_eq!(1, test.output().len());
+                assert_eq!("🦀!", &test.output()[0]);
+            }
+
+            #[test]
+            fn test_invalid_utf8() {
+                let mut test = StringCallbackWriterTestHelper::new();
+
+                let input = chain!(
+                    "foo".as_bytes().into_iter().copied(),
+                    once(0xff), // This byte can never appear in UTF-8.
+                    "bar".as_bytes().into_iter().copied(),
+                );
+                test.writer.write(input.collect_vec().as_slice()).unwrap();
+
+                assert_eq!(3, test.output().len());
+                assert_eq!("foo", &test.output()[0]);
+                assert_eq!("�", &test.output()[1]);
+                assert_eq!("bar", &test.output()[2]);
+            }
+        }
     }
 }
