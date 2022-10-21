@@ -18,16 +18,7 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 
-// TODO(lukasza): Make `bindings` and `cmdline` separate crates (once we move to
-// Bazel).  This hasn't been done that yet, because:
-// * Today it would require replicating `rustc_driver`-related `BUILD` hacks
-//   into additional targets.  And since this particular problem will go away on
-//   its own in Q4 2022 or Q1 2023, maybe for now we can ignore having
-//   multi-source-file crate?
-// * To avoid the ickyness above, one may want to start by making `cmdline.rs`
-//   `rustc_driver`-agnostic first (switching `@herefile` to a `clap`-based,
-//   manually coded behavior).  But this refactoring feels a bit arbitrary and
-//   needs more discussion (maybe we want to keep `@file` support from rustc?).
+// TODO(b/254679226): `bindings` and `cmdline` should be separate crates.
 mod bindings;
 mod cmdline;
 
@@ -187,7 +178,7 @@ fn main() -> anyhow::Result<()> {
     // TODO: Investigate if we should install a signal handler here.  See also how
     // compiler/rustc_driver/src/lib.rs calls `signal_handler::install()`.
 
-    // TODO(lukasza): Provide Crubit-specific panic hook message (we shouldn't use
+    // TODO(b/254689400): Provide Crubit-specific panic hook message (we shouldn't use
     // `rustc_driver::install_ice_hook` because it's message asks to file bugs at
     // https://github.com/rust-lang/rust/issues/new.
 

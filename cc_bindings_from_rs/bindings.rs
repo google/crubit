@@ -73,8 +73,8 @@ fn format_ty(ty: Ty) -> Result<TokenStream> {
             if types.len() == 0 {
                 quote! { void }
             } else {
-                // TODO(b/254097223): Add support for tuples.
-                bail!("Tuples are not supported yet: {} (b/254097223)", ty);
+                // TODO(b/254099023): Add support for tuples.
+                bail!("Tuples are not supported yet: {} (b/254099023)", ty);
             }
         }
         ty::TyKind::Bool => quote! { bool },
@@ -248,8 +248,6 @@ fn format_unsupported_def(
 /// Formats all public items from the Rust crate being compiled (aka the
 /// `LOCAL_CRATE`).
 fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
-    let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
-
     // TODO(lukasza): We probably shouldn't be using `exported_symbols` as the main
     // entry point for finding Rust definitions that need to be wrapping in C++
     // bindings.  For example, it _seems_ that things like `type` aliases or
@@ -286,6 +284,10 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
             ExportedSymbol::DropGlue(..) | ExportedSymbol::NoDefId(..) => None,
         });
 
+    // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
+    // top-level namespace is okay (e.g. investigate if this name is globally
+    // unique + ergonomic).
+    let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
     Ok(quote! {
         namespace #crate_name {
             #( #snippets )*
@@ -726,6 +728,7 @@ pub mod tests {
                 pub unsafe extern "C" fn variadic_function(_fmt: *const u8, ...) {}
             "#;
         test_format_def(test_src, "variadic_function", |result| {
+            // TODO(b/254097223): Add support for variadic functions.
             let err = result.expect_err("Test expects an error here");
             assert_eq!(err, "C variadic functions are not supported (b/254097223)");
         });
@@ -802,7 +805,7 @@ pub mod tests {
             ("!", "The following Rust type is not supported yet: !"), // TyKind::Never
             (
                 "(i32, i32)", // TyKind::Tuple
-                "Tuples are not supported yet: (i32, i32) (b/254097223)",
+                "Tuples are not supported yet: (i32, i32) (b/254099023)",
             ),
             (
                 "char", // TyKind::Char

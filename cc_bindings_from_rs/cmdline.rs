@@ -29,6 +29,9 @@ impl Cmdline {
         let exe_name = args[0].clone();
 
         // Ensure that `@file` expansion also covers *our* args.
+        //
+        // TODO(b/254688847): Decide whether to replace this with a `clap`-declared,
+        // `--help`-exposed `--flagfile <path>`.
         let args = rustc_driver::args::arg_expand_all(args);
 
         // Parse `args` using the parser `derive`d by the `clap` crate.
