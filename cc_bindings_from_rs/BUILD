@@ -52,6 +52,7 @@ sh_binary(
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:rustc_driver_libs",
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:stdlibs_generated",
     ],
+    visibility = ["//:__subpackages__"],
     deps = ["//util/shell/gbash"],
 )
 
