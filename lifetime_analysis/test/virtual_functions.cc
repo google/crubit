@@ -177,8 +177,8 @@ struct Derived : public Base {
 };
   )"),
               LifetimesContain({
-                  {"Base::f", "b: (static, a)"},
-                  {"Derived::f", "b: (static, a)"},
+                  {"Base::f", "c: (a, b)"},
+                  {"Derived::f", "c: (a, b)"},
               }));
 }
 

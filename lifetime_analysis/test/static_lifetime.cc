@@ -48,24 +48,13 @@ TEST_F(LifetimeAnalysisTest, MaybeReturnStaticConst) {
 }
 
 TEST_F(LifetimeAnalysisTest, StaticPointerOutParam) {
-  // TODO(mboehme): The lifetimes inferred here are overly restrictive. The
-  // function doesn't require the input that is passed in to have static
-  // lifetime, so it shouldn't enforce this condition on the caller. The
-  // lifetimes should be (a, b), and this would still allow the caller to
-  // substitute `static for a if desired.
-  // The root of the issue is that when we see a static lifetime in a points-to
-  // set, we don't know whether that means that
-  // - The pointer happens to point to something with static lifetime, but
-  //   nothing is depending on that, or
-  // - The pointer is required to point to something with static lifetime.
-
   EXPECT_THAT(GetLifetimes(R"(
     void f(int** p) {
       static int i = 42;
       *p = &i;
     }
   )"),
-              LifetimesAre({{"f", "(static, a)"}}));
+              LifetimesAre({{"f", "(a, b)"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, MaybeReturnStaticStruct) {

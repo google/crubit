@@ -189,22 +189,28 @@ TEST_F(LifetimeAnalysisTest, StructValue) {
 }
 
 TEST_F(LifetimeAnalysisTest, StructMultiplePtrsSameLifetime) {
+  // TODO(veluca): here, we correctly deduce *once f gets called* that something
+  // fishy is going on, namely, that `s.a` could be pointing to a local
+  // variable. However, we should already know this from the initialization of
+  // `s`.
   EXPECT_THAT(GetLifetimes(R"(
     struct [[clang::annotate("lifetime_params", "a")]] S {
-      [[clang::annotate("member_lifetimes", "a", "a", "a")]]
-      int*** a;
       [[clang::annotate("member_lifetimes", "a", "a")]]
-      int** b;
+      int** a;
+      [[clang::annotate("member_lifetimes", "a")]]
+      int* b;
     };
     void f(S& s) {
-      **s.a = *s.b;
+      *s.a = s.b;
     }
-    void target(int** a, int* b) {
+    void target(int* a, int b) {
        S s{&a, &b};
        f(s);
     }
   )"),
-              LifetimesContain({{"target", "(a, b), a"}}));
+              LifetimesContain({{"target",
+                                 "ERROR: function returns reference to a local "
+                                 "through parameter 'a'"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructNonLocalPtr) {
@@ -528,8 +534,6 @@ TEST_F(LifetimeAnalysisTest, StructConstructorInitializers) {
 }
 
 TEST_F(LifetimeAnalysisTest, StructConstructorStaticPtr) {
-  // TODO(veluca): this is overly restrictive in the same way as
-  // StaticPointerOutParam.
   EXPECT_THAT(GetLifetimes(R"(
     static int x;
     struct [[clang::annotate("lifetime_params", "a")]] S {
@@ -538,12 +542,10 @@ TEST_F(LifetimeAnalysisTest, StructConstructorStaticPtr) {
       int* a = nullptr;
     };
   )"),
-              LifetimesAre({{"S::S", "(static, a):"}}));
+              LifetimesAre({{"S::S", "(a, b):"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructConstructorStaticPtrInitializer) {
-  // TODO(veluca): this is overly restrictive in the same way as
-  // StaticPointerOutParam.
   EXPECT_THAT(GetLifetimes(R"(
     static int x;
     struct [[clang::annotate("lifetime_params", "a")]] S {
@@ -552,12 +554,10 @@ TEST_F(LifetimeAnalysisTest, StructConstructorStaticPtrInitializer) {
       int* a = nullptr;
     };
   )"),
-              LifetimesAre({{"S::S", "(static, a):"}}));
+              LifetimesAre({{"S::S", "(a, b):"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructConstructorStaticPtrMemberInitializer) {
-  // TODO(veluca): this is overly restrictive in the same way as
-  // StaticPointerOutParam.
   EXPECT_THAT(GetLifetimes(R"(
     static int x;
     struct [[clang::annotate("lifetime_params", "a")]] S {
@@ -566,7 +566,7 @@ TEST_F(LifetimeAnalysisTest, StructConstructorStaticPtrMemberInitializer) {
       int* a = &x;
     };
   )"),
-              LifetimesAre({{"S::S", "(static, a):"}}));
+              LifetimesAre({{"S::S", "(a, b):"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructMemberFreeFunction) {
@@ -582,7 +582,7 @@ TEST_F(LifetimeAnalysisTest, StructMemberFreeFunction) {
       a.a = &x;
     }
   )"),
-              LifetimesAre({{"S::f", "(static, a):"}, {"f", "(static, a)"}}));
+              LifetimesAre({{"S::f", "(a, b):"}, {"f", "(a, b)"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, ReturnFieldFromTemporaryStructConstructor) {

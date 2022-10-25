@@ -54,7 +54,7 @@ TEST_F(LifetimeAnalysisTest, SimpleFnStaticOutParam) {
       return p;
     }
   )"),
-              LifetimesAre({{"f", "(static, a)"}, {"target", "-> static"}}));
+              LifetimesAre({{"f", "(a, b)"}, {"target", "-> static"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, SimpleFnIdentityArg1) {
