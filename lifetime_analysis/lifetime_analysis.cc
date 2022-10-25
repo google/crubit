@@ -286,31 +286,50 @@ void TransferInitializer(const Object* dest, clang::QualType type,
 
 namespace {
 
-void SetPointerPointsToSetRespectingTypes(const Object* pointer,
-                                          const ObjectSet& points_to,
-                                          PointsToMap& points_to_map,
-                                          clang::ASTContext& ast_context) {
+void SetPointerPointsToSetRespectingTypes(
+    const Object* pointer, const ObjectSet& points_to,
+    PointsToMap& points_to_map, clang::ASTContext& ast_context,
+    LifetimeConstraints& constraints,
+    const ObjectRepository& object_repository) {
   assert(pointer->Type()->isPointerType() ||
          pointer->Type()->isReferenceType());
+
+  ObjectSet original_points_to_set =
+      points_to_map.GetPointerPointsToSet(pointer);
 
   ObjectSet points_to_filtered;
 
   for (auto object : points_to) {
     if (MayPointTo(pointer->Type(), object->Type(), ast_context)) {
       points_to_filtered.Add(object);
+      // To handle flow-sensitiveness, we don't generate any constraints when
+      // replacing the points-to-set of a variable that is single-valued.
+      // TODO(veluca): explicitly splitting between "object values before an
+      // expression" and "object values after an expression" will likely make
+      // this whole kind of reasoning clearer and less error-prone.
+      if (object_repository.GetObjectValueType(pointer) !=
+          ObjectRepository::ObjectValueType::kSingleValued) {
+        // Descending in callees is handled at a higher level.
+        GenerateConstraintsForAssignmentNonRecursive(
+            original_points_to_set, {object},
+            /*is_in_invariant_context=*/
+            !PointeeType(pointer->Type()).isConstQualified(), constraints);
+      }
     }
   }
 
   points_to_map.SetPointerPointsToSet(pointer, points_to_filtered);
 }
 
-void SetAllPointersPointsToSetRespectingTypes(const ObjectSet& pointers,
-                                              const ObjectSet& points_to,
-                                              PointsToMap& points_to_map,
-                                              clang::ASTContext& ast_context) {
+void SetAllPointersPointsToSetRespectingTypes(
+    const ObjectSet& pointers, const ObjectSet& points_to,
+    PointsToMap& points_to_map, clang::ASTContext& ast_context,
+    LifetimeConstraints& constraints,
+    const ObjectRepository& object_repository) {
   for (auto pointer : pointers) {
     SetPointerPointsToSetRespectingTypes(pointer, points_to, points_to_map,
-                                         ast_context);
+                                         ast_context, constraints,
+                                         object_repository);
   }
 }
 
@@ -408,8 +427,9 @@ void PropagateLifetimesToPointees(
           points_to.Add(
               object_repository_.CreateStaticObject(PointeeType(type)));
         }
-        SetAllPointersPointsToSetRespectingTypes(objects, points_to,
-                                                 points_to_map_, ast_context_);
+        SetAllPointersPointsToSetRespectingTypes(
+            objects, points_to, points_to_map_, ast_context_, constraints_,
+            object_repository_);
         if (!kUseConstraintBasedAnalysis) {
           // This assertion may fail to be true when visiting the return value
           // object, if its objects were created recursively.
@@ -418,9 +438,8 @@ void PropagateLifetimesToPointees(
           assert(points_to_map_.GetPointerPointsToSet(objects).Contains(
               points_to_original));
         }
-        GenerateConstraintsForAssignment(
-            objects, points_to_map_.GetPointerPointsToSet(objects), type,
-            object_repository_, points_to_map_, constraints_);
+        // We can't simply call GenerateConstraintsForAssignment here, as the
+        // points_to_map_ has been modified already.
       }
       // Return the original points-to set, not the modified one. The original
       // points-to set is sufficient because it captures the arguments that
