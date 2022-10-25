@@ -14,8 +14,13 @@ using namespace functions;
 
 using testing::DoubleEq;
 
-TEST(FunctionsTest, get_42_as_f64_via_no_mangle_extern_c) {
+TEST(FunctionsTest, Get42AsFloat64ViaNoMangleExternC) {
   EXPECT_THAT(get_42_as_f64_via_no_mangle_extern_c(), DoubleEq(42.0));
+}
+
+TEST(FunctionsTest, AddFloat64ViaNoMangleExternC) {
+  EXPECT_THAT(add_f64_via_no_mangle_extern_c(12.0, 34.0),
+              DoubleEq(12.0 + 34.0));
 }
 
 }  // namespace

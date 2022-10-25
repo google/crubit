@@ -4,6 +4,7 @@
 
 use anyhow::{anyhow, bail, Context, Result};
 use code_gen_utils::format_cc_ident;
+use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
 use rustc_hir::{Item, ItemKind, Node, Unsafety};
@@ -11,7 +12,7 @@ use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::middle::exported_symbols::ExportedSymbol;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
-use rustc_span::def_id::{LocalDefId, LOCAL_CRATE};
+use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 
@@ -67,11 +68,24 @@ where
     Ok(query_context.peek_mut().enter(f))
 }
 
+fn format_ret_ty(ty: Ty) -> Result<TokenStream> {
+    match ty.kind() {
+        ty::TyKind::Never => Ok(quote! { void }), // `!`
+        ty::TyKind::Tuple(types) if types.len() == 0 => Ok(quote! { void }), // `()`
+        _ => format_ty(ty),
+    }
+}
+
 fn format_ty(ty: Ty) -> Result<TokenStream> {
     Ok(match ty.kind() {
+        ty::TyKind::Never => {
+            // TODO(b/254507801): Maybe translate into `crubit::Never`?
+            bail!("The never type `!` is only supported as a return type (b/254507801)");
+        },
         ty::TyKind::Tuple(types) => {
             if types.len() == 0 {
-                quote! { void }
+                // TODO(b/254507801): Maybe translate into `crubit::Unit`?
+                bail!("The unit type `()` / `void` is only supported as a return type");
             } else {
                 // TODO(b/254099023): Add support for tuples.
                 bail!("Tuples are not supported yet: {} (b/254099023)", ty);
@@ -113,7 +127,6 @@ fn format_ty(ty: Ty) -> Result<TokenStream> {
         | ty::TyKind::Dynamic(..)
         | ty::TyKind::Generator(..)
         | ty::TyKind::GeneratorWitness(..)
-        | ty::TyKind::Never
         | ty::TyKind::Projection(..)
         | ty::TyKind::Opaque(..)
         | ty::TyKind::Param(..)
@@ -148,26 +161,24 @@ fn format_ty(ty: Ty) -> Result<TokenStream> {
 /// - has generic parameters (any kind - lifetime parameters, type parameters,
 ///   or const parameters).
 fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
-    let item_name = tcx.item_name(def_id.to_def_id());
+    let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
+
+    let item_name = tcx.item_name(def_id);
     let symbol_name = {
         // Call to `mono` is ok - doc comment requires no generic parameters (although
         // lifetime parameters would have been okay).
-        let instance = ty::Instance::mono(tcx, def_id.to_def_id());
+        let instance = ty::Instance::mono(tcx, def_id);
         tcx.symbol_name(instance)
     };
 
     let sig = tcx
-        .fn_sig(def_id.to_def_id())
+        .fn_sig(def_id)
         .no_bound_vars()
         .expect("Doc comment points out there should be no generic parameters");
 
     if sig.c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
         bail!("C variadic functions are not supported (b/254097223)");
-    }
-    if sig.inputs().len() != 0 {
-        // TODO(lukasza): Add support for function parameters.
-        bail!("Function parameters are not supported yet");
     }
 
     match sig.unsafety {
@@ -200,10 +211,30 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
         bail!("Mangled or renamed symbols are not supported yet");
     }
 
-    let ret_type = format_ty(sig.output()).context("Error formatting function return type")?;
+    let ret_type = format_ret_ty(sig.output()).context("Error formatting function return type")?;
     let fn_name = format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
+    let arg_names = tcx
+        .fn_arg_names(def_id)
+        .iter()
+        .enumerate()
+        .map(|(index, ident)| {
+            format_cc_ident(ident.as_str())
+                .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{index}")).unwrap())
+        })
+        .collect_vec();
+    let arg_types = sig
+        .inputs()
+        .iter()
+        .enumerate()
+        .map(|(index, ty)| {
+            format_ty(*ty)
+                .with_context(|| format!("Error formatting the type of parameter #{index}"))
+        })
+        .collect::<Result<Vec<_>>>()?;
     Ok(quote! {
-        extern "C" #ret_type #fn_name ();
+        extern "C" #ret_type #fn_name (
+                #( #arg_types #arg_names ),*
+            );
     })
 }
 
@@ -297,7 +328,7 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
 
 #[cfg(test)]
 pub mod tests {
-    use super::{format_def, format_ty, GeneratedBindings};
+    use super::{format_def, format_ret_ty, format_ty, GeneratedBindings};
 
     use anyhow::Result;
     use itertools::Itertools;
@@ -523,6 +554,28 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_def_fn_never_return_type() {
+        let test_src = r#"
+                #[no_mangle]
+                pub extern "C" fn never_returning_function() -> ! {
+                    panic!("This function panics and therefore never returns");
+                }
+            "#;
+        test_format_def(test_src, "never_returning_function", |result| {
+            // TODO(b/254507801): The function should be annotated with the `[[noreturn]]`
+            // attribute.
+            // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
+            // details).
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void never_returning_function();
+                }
+            );
+        })
+    }
+
+    #[test]
     fn test_format_def_fn_mangling() {
         let test_src = r#"
                 pub extern "C" fn public_function() {}
@@ -580,7 +633,7 @@ pub mod tests {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Function parameters are not supported yet",);
+            assert_eq!(err, "Non-C ABI is not supported yet (b/254097223)");
         });
     }
 
@@ -735,14 +788,84 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_params() {
+    fn test_format_def_fn_params() {
+        let test_src = r#"
+                #[allow(unused_variables)]
+                #[no_mangle]
+                pub extern "C" fn foo(b: bool, f: f64) {}
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void foo(bool b, double f);
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_param_name_reserved_keyword() {
+        let test_src = r#"
+                #[allow(unused_variables)]
+                #[no_mangle]
+                pub extern "C" fn some_function(reinterpret_cast: f64) {}
+            "#;
+        test_format_def(test_src, "some_function", |result| {
+            assert_cc_matches!(
+                result.expect("Test expects success here"),
+                quote! {
+                    extern "C" void some_function(double __param_0);
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_param_type() {
         let test_src = r#"
                 #[no_mangle]
-                pub extern "C" fn fn_with_params(_i: i32) {}
+                pub extern "C" fn fn_with_params(_param: *const i32) {}
             "#;
         test_format_def(test_src, "fn_with_params", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Function parameters are not supported yet");
+            assert_eq!(err, "Error formatting the type of parameter #0: \
+                             The following Rust type is not supported yet: \
+                             *const i32");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_param_type_unit() {
+        let test_src = r#"
+                #[no_mangle]
+                pub fn fn_with_params(_param: ()) {}
+            "#;
+        test_format_def(test_src, "fn_with_params", |result| {
+            // TODO(b/254097223): Change the expectations once Rust-ABI functions are
+            // supported. Note that the test cannot use `extern "C"` in the
+            // meantime, because `()` is not FFI-safe (i.e. Rust won't allow
+            // using it with `extern "C"`).
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Non-C ABI is not supported yet (b/254097223)");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_fn_param_type_never() {
+        let test_src = r#"
+                #![feature(never_type)]
+
+                #[no_mangle]
+                pub extern "C" fn fn_with_params(_param: !) {}
+            "#;
+        test_format_def(test_src, "fn_with_params", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Error formatting the type of parameter #0: \
+                 The never type `!` is only supported as a return type (b/254507801)"
+            );
         });
     }
 
@@ -758,6 +881,26 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_ret_ty_successes() {
+        // Test coverage for cases where `format_ret_ty` returns an `Ok(...)`.
+        // Additional testcases are covered by `test_format_ty_successes`
+        // (because `format_ret_ty` delegates most cases to `format_ty`).
+        let testcases = [
+            // ( <Rust type>, <expected C++ type> )
+            ("bool", "bool"), // TyKind::Bool
+            ("()", "void"),
+            // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
+            // details).
+            ("!", "void"),
+        ];
+        test_ty(&testcases, |desc, ty, expected| {
+            let actual = format_ret_ty(ty).unwrap().to_string();
+            let expected = expected.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual, expected, "{desc}");
+        });
+    }
+
+    #[test]
     fn test_format_ty_successes() {
         // Test coverage for cases where `format_ty` returns an `Ok(...)`.
         let testcases = [
@@ -765,12 +908,10 @@ pub mod tests {
             ("bool", "bool"),  // TyKind::Bool
             ("f32", "float"),  // TyKind::Float(ty::FloatTy::F32)
             ("f64", "double"), // TyKind::Float(ty::FloatTy::F64)
-            // The unit type is a special (zero-length) kind of TyKind::Tuple
-            ("()", "void"),
             // Extra parens/sugar are expected to be ignored:
             ("(bool)", "bool"),
         ];
-        test_format_ty(&testcases, |desc, ty, expected| {
+        test_ty(&testcases, |desc, ty, expected| {
             let actual = format_ty(ty).unwrap().to_string();
             let expected = expected.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual, expected, "{desc}");
@@ -802,9 +943,18 @@ pub mod tests {
         // - TyKind::Infer */
         let testcases = [
             // ( <Rust type>, <expected error message> )
-            ("!", "The following Rust type is not supported yet: !"), // TyKind::Never
             (
-                "(i32, i32)", // TyKind::Tuple
+                "()", // Empty TyKind::Tuple
+                "The unit type `()` / `void` is only supported as a return type"
+            ),
+            (
+                // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
+                // details).
+                "!", // TyKind::Never
+                "The never type `!` is only supported as a return type (b/254507801)"
+            ),
+            (
+                "(i32, i32)", // Non-empty TyKind::Tuple
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
             ),
             (
@@ -852,14 +1002,14 @@ pub mod tests {
             ("i128", "C++ doesn't have a standard equivalent of `i128` (b/254094650)"),
             ("u128", "C++ doesn't have a standard equivalent of `u128` (b/254094650)"),
         ];
-        test_format_ty(&testcases, |desc, ty, expected_err| {
+        test_ty(&testcases, |desc, ty, expected_err| {
             let anyhow_err = format_ty(ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
     }
 
-    fn test_format_ty<TestFn, Expectation>(testcases: &[(&str, Expectation)], test_fn: TestFn)
+    fn test_ty<TestFn, Expectation>(testcases: &[(&str, Expectation)], test_fn: TestFn)
     where
         TestFn: Fn(/* testcase_description: */ &str, Ty, &Expectation) -> () + Sync,
         Expectation: Sync,
