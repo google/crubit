@@ -1136,7 +1136,6 @@ pub mod tests {
             output_file: None,
             output_dir: None,
             file_loader: None,
-            diagnostic_output: rustc_session::DiagnosticOutput::Default,
             lint_caps: Default::default(),
             parse_sess_created: None,
             register_lints: None,
