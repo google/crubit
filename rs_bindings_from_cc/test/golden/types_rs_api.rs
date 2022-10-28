@@ -104,6 +104,9 @@ pub struct FieldTypeTestStruct {
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut i32,
+    pub void_ptr_field: *mut ::std::os::raw::c_void,
+    pub const_void_ptr_field: *const ::std::os::raw::c_void,
+    pub void_double_ptr_field: *mut *mut ::std::os::raw::c_void,
     pub struct_field: crate::SomeStruct,
     pub struct_ptr_field: *mut crate::SomeStruct,
     pub const_struct_ptr_field: *const crate::SomeStruct,
@@ -162,6 +165,14 @@ impl From<Color> for u32 {
 pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
 {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
+}
+
+#[inline(always)]
+pub unsafe fn FunctionWithVoidPointers(
+    __param_0: *mut ::std::os::raw::c_void,
+    __param_1: *const ::std::os::raw::c_void,
+) -> *mut ::std::os::raw::c_void {
+    crate::detail::__rust_thunk___Z24FunctionWithVoidPointersPvPKv(__param_0, __param_1)
 }
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
@@ -276,6 +287,10 @@ mod detail {
         pub(crate) fn __rust_thunk___Z21VoidReturningFunctionv();
         pub(crate) fn __rust_thunk___Z32FunctionPointerReturningFunctionv()
         -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>;
+        pub(crate) fn __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
+            __param_0: *mut ::std::os::raw::c_void,
+            __param_1: *const ::std::os::raw::c_void,
+        ) -> *mut ::std::os::raw::c_void;
     }
 }
 
@@ -293,7 +308,7 @@ const _: () = {
     static_assertions::assert_not_impl_any!(crate::SomeStruct: Drop);
 };
 
-const _: () = assert!(::std::mem::size_of::<crate::FieldTypeTestStruct>() == 288);
+const _: () = assert!(::std::mem::size_of::<crate::FieldTypeTestStruct>() == 312);
 const _: () = assert!(::std::mem::align_of::<crate::FieldTypeTestStruct>() == 8);
 const _: () = {
     static_assertions::assert_impl_all!(crate::FieldTypeTestStruct: Clone);
@@ -355,15 +370,20 @@ const _: () =
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, float_field) == 216);
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, double_field) == 224);
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, ptr_field) == 232);
-const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, struct_field) == 240);
-const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) == 248);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, void_ptr_field) == 240);
 const _: () =
-    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) == 256);
-const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) == 264);
+    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, const_void_ptr_field) == 248);
 const _: () =
-    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 272);
+    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, void_double_ptr_field) == 256);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, struct_field) == 264);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, struct_ptr_field) == 272);
 const _: () =
-    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) == 280);
+    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, const_struct_ptr_field) == 280);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, struct_ref_field) == 288);
+const _: () =
+    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, const_struct_ref_field) == 296);
+const _: () =
+    assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, forward_declared_ptr_field) == 304);
 
 const _: () = assert!(
     ::std::mem::size_of::<crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE>() == 1

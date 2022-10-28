@@ -3046,7 +3046,9 @@ impl ToTokens for RsTypeKind {
                     }
                 }
             }
-            RsTypeKind::Unit => quote! {()},
+            // This doesn't affect void in function return values, as those are special-cased to be
+            // omitted.
+            RsTypeKind::Unit => quote!{::std::os::raw::c_void},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
                 let generic_params = format_generic_params(type_args.iter());
@@ -6853,6 +6855,24 @@ mod tests {
             Test { cc: "int*", lifetimes: true, rs: "Option < & 'a mut i32 >", is_copy: false },
             Test { cc: "const int*", lifetimes: false, rs: "* const i32", is_copy: true },
             Test { cc: "int*", lifetimes: false, rs: "* mut i32", is_copy: true },
+            Test {
+                cc: "void*",
+                lifetimes: false,
+                rs: "* mut :: std :: os :: raw :: c_void",
+                is_copy: true,
+            },
+            Test {
+                cc: "const void*",
+                lifetimes: false,
+                rs: "* const :: std :: os :: raw :: c_void",
+                is_copy: true,
+            },
+            Test {
+                cc: "void* const*",
+                lifetimes: false,
+                rs: "* const * mut :: std :: os :: raw :: c_void",
+                is_copy: true,
+            },
             // Tests below have been thought-through and verified "manually".
             // TrivialStruct is expected to derive Copy.
             Test {

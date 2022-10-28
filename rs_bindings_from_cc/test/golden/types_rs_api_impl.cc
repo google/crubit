@@ -29,6 +29,10 @@ extern "C" crubit::type_identity_t<int&(int const&, int*)>*
 __rust_thunk___Z32FunctionPointerReturningFunctionv() {
   return FunctionPointerReturningFunction();
 }
+extern "C" void* __rust_thunk___Z24FunctionWithVoidPointersPvPKv(
+    void* __param_0, void const* __param_1) {
+  return FunctionWithVoidPointers(__param_0, __param_1);
+}
 
 static_assert(sizeof(struct std::integral_constant<bool, false>) == 1);
 static_assert(alignof(struct std::integral_constant<bool, false>) == 1);
@@ -39,7 +43,7 @@ static_assert(alignof(struct std::integral_constant<bool, true>) == 1);
 static_assert(sizeof(struct SomeStruct) == 1);
 static_assert(alignof(struct SomeStruct) == 1);
 
-static_assert(sizeof(struct FieldTypeTestStruct) == 288);
+static_assert(sizeof(struct FieldTypeTestStruct) == 312);
 static_assert(alignof(struct FieldTypeTestStruct) == 8);
 static_assert(CRUBIT_OFFSET_OF(bool_field, struct FieldTypeTestStruct) == 0);
 static_assert(CRUBIT_OFFSET_OF(char_field, struct FieldTypeTestStruct) == 1);
@@ -125,17 +129,23 @@ static_assert(CRUBIT_OFFSET_OF(float_field, struct FieldTypeTestStruct) == 216);
 static_assert(CRUBIT_OFFSET_OF(double_field, struct FieldTypeTestStruct) ==
               224);
 static_assert(CRUBIT_OFFSET_OF(ptr_field, struct FieldTypeTestStruct) == 232);
-static_assert(CRUBIT_OFFSET_OF(struct_field, struct FieldTypeTestStruct) ==
+static_assert(CRUBIT_OFFSET_OF(void_ptr_field, struct FieldTypeTestStruct) ==
               240);
-static_assert(CRUBIT_OFFSET_OF(struct_ptr_field, struct FieldTypeTestStruct) ==
-              248);
-static_assert(CRUBIT_OFFSET_OF(const_struct_ptr_field,
+static_assert(CRUBIT_OFFSET_OF(const_void_ptr_field,
+                               struct FieldTypeTestStruct) == 248);
+static_assert(CRUBIT_OFFSET_OF(void_double_ptr_field,
                                struct FieldTypeTestStruct) == 256);
-static_assert(CRUBIT_OFFSET_OF(struct_ref_field, struct FieldTypeTestStruct) ==
+static_assert(CRUBIT_OFFSET_OF(struct_field, struct FieldTypeTestStruct) ==
               264);
-static_assert(CRUBIT_OFFSET_OF(const_struct_ref_field,
-                               struct FieldTypeTestStruct) == 272);
-static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
+static_assert(CRUBIT_OFFSET_OF(struct_ptr_field, struct FieldTypeTestStruct) ==
+              272);
+static_assert(CRUBIT_OFFSET_OF(const_struct_ptr_field,
                                struct FieldTypeTestStruct) == 280);
+static_assert(CRUBIT_OFFSET_OF(struct_ref_field, struct FieldTypeTestStruct) ==
+              288);
+static_assert(CRUBIT_OFFSET_OF(const_struct_ref_field,
+                               struct FieldTypeTestStruct) == 296);
+static_assert(CRUBIT_OFFSET_OF(forward_declared_ptr_field,
+                               struct FieldTypeTestStruct) == 304);
 
 #pragma clang diagnostic pop

@@ -70,6 +70,9 @@ struct FieldTypeTestStruct final {
   double double_field;
 
   int* ptr_field;
+  void* void_ptr_field;
+  const void* const_void_ptr_field;
+  void** void_double_ptr_field;
 
   SomeStruct struct_field;
   SomeStruct* struct_ptr_field;
@@ -94,5 +97,7 @@ enum Color : unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };
 inline int& (*FunctionPointerReturningFunction())(const int&, int*) {
   return nullptr;
 }
+
+inline void* FunctionWithVoidPointers(void*, const void*) { return nullptr; }
 
 #endif  // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
