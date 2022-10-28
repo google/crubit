@@ -2,6 +2,9 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+// Automatically @generated Rust bindings for the following C++ target:
+// //rs_bindings_from_cc/test/golden:user_of_base_class_cc
+
 #include <cstddef>
 #include <memory>
 

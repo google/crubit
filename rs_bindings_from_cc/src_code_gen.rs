@@ -156,27 +156,41 @@ fn generate_bindings(
         let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
         rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
     };
+    let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl)?;
 
-    // The code is formatted with a non-default rustfmt configuration. Prevent
-    // downstream workflows from reformatting with a different configuration by
-    // marking the output with `@generated`. See also
-    // https://rust-lang.github.io/rustfmt/?version=v1.4.38&search=#format_generated_files
-    //
-    // TODO(lukasza): It would be nice to include "by $argv[0]"" in the
-    // @generated comment below.  OTOH, `std::env::current_exe()` in our
-    // current build environment returns a guid-like path... :-/
-    //
+    // Add top-level comments that help identify where the generated bindings came
+    // from.
+    let top_level_comment = {
+        // The "@generated" marker is an informal convention for identifying
+        // automatically generated code.  This marker is recognized by `rustfmt`
+        // (see the `format_generated_files` option [1]) and some other tools.
+        // For more info see https://generated.at/.
+        //
+        // [1]
+        // https://rust-lang.github.io/rustfmt/?version=v1.4.38&search=#format_generated_files
+        //
+        // TODO(b/255784681): It would be nice to include "by $argv[0]"" in the
+        // @generated comment below.  OTOH, `std::env::current_exe()` in our
+        // current build environment returns a guid-like path... :-/
+        //
+        // TODO(b/255784681): Consider including cmdline arguments.
+        let target = &ir.current_target().0;
+        format!(
+            "// Automatically @generated Rust bindings for the following C++ target:\n\
+            // {target}\n"
+        )
+    };
     // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
     // be needed when `@generated` comment/keyword is present...
     let rs_api = format!(
-        "// Automatically @generated Rust bindings for C++ target\n\
-        // {target}\n\
+        "{top_level_comment}\n\
         #![rustfmt::skip]\n\
-        {code}",
-        target = ir.current_target().0,
-        code = rs_api,
+        {rs_api}"
     );
-    let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl)?;
+    let rs_api_impl = format!(
+        "{top_level_comment}\n\
+        {rs_api_impl}"
+    );
 
     Ok(Bindings { rs_api, rs_api_impl })
 }
