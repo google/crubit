@@ -5,8 +5,7 @@
 // Automatically @generated Rust bindings for the following C++ target:
 // //rs_bindings_from_cc/test/golden:typedefs_cc
 
-#![rustfmt::skip]
-#![feature(custom_inner_attributes, negative_impls, type_alias_impl_trait)]
+#![feature(negative_impls, type_alias_impl_trait)]
 #![allow(stable_features)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]

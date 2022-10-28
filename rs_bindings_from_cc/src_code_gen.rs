@@ -180,17 +180,8 @@ fn generate_bindings(
             // {target}\n"
         )
     };
-    // TODO(lukasza): Try to remove `#![rustfmt:skip]` - in theory it shouldn't
-    // be needed when `@generated` comment/keyword is present...
-    let rs_api = format!(
-        "{top_level_comment}\n\
-        #![rustfmt::skip]\n\
-        {rs_api}"
-    );
-    let rs_api_impl = format!(
-        "{top_level_comment}\n\
-        {rs_api_impl}"
-    );
+    let rs_api = format!("{top_level_comment}\n{rs_api}");
+    let rs_api_impl = format!("{top_level_comment}\n{rs_api_impl}");
 
     Ok(Bindings { rs_api, rs_api_impl })
 }
@@ -2575,9 +2566,6 @@ fn generate_bindings_tokens(
     // having uses. See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
     let mut has_record = false;
     let mut features = BTreeSet::new();
-
-    // For #![rustfmt::skip].
-    features.insert(make_rs_ident("custom_inner_attributes"));
 
     for top_level_item_id in ir.top_level_item_ids() {
         let item =
