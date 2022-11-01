@@ -102,7 +102,7 @@ fn make_ir(flat_ir: FlatIR) -> Result<IR> {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct HeaderName {
-    pub name: String,
+    pub name: Rc<str>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy, Deserialize)]
@@ -897,7 +897,7 @@ mod tests {
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = FlatIR {
-            used_headers: vec![HeaderName { name: "foo/bar.h".to_string() }],
+            used_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
             top_level_item_ids: vec![],
             items: vec![],

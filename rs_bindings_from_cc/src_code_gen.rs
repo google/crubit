@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{Context, Result};
+use code_gen_utils::{format_cc_includes, CcInclude};
 use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErrors};
 use ffi_types::*;
 use ir::*;
@@ -3679,25 +3680,29 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
         .map(|record| cc_struct_layout_assertion(record, &ir))
         .collect::<Result<Vec<_>>>()?;
 
-    let mut standard_headers = <BTreeSet<Ident>>::new();
-    standard_headers.insert(format_ident!("memory")); // ubiquitous.
+    let mut internal_includes = BTreeSet::new();
+    internal_includes.insert(CcInclude::memory()); // ubiquitous.
     if ir.records().next().is_some() {
-        standard_headers.insert(format_ident!("cstddef"));
+        internal_includes.insert(CcInclude::cstddef());
     };
-
-    let mut includes = vec!["cxx20_backports.h", "offsetof.h"]
-        .into_iter()
-        .map(|hdr| format!("{}/{}", crubit_support_path, hdr))
-        .collect_vec();
+    for crubit_header in ["cxx20_backports.h", "offsetof.h"] {
+        internal_includes.insert(CcInclude::user_header(
+            format!("{crubit_support_path}/{crubit_header}").into(),
+        ));
+    }
+    let internal_includes = format_cc_includes(&internal_includes);
 
     // In order to generate C++ thunk in all the cases Clang needs to be able to
-    // access declarations from public headers of the C++ library.
-    includes.extend(ir.used_headers().map(|hdr| hdr.name.clone()));
+    // access declarations from public headers of the C++ library.  We don't
+    // process these includes via `format_cc_includes` to preserve their
+    // original order (some libraries require certain headers to be included
+    // first - e.g. `config.h`).
+    let ir_includes =
+        ir.used_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
 
     Ok(quote! {
-        #( __HASH_TOKEN__ include <#standard_headers> __NEWLINE__)*
-        __NEWLINE__
-        #( __HASH_TOKEN__ include #includes __NEWLINE__)* __NEWLINE__
+        #internal_includes
+        #( #ir_includes )* __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
         // Disable Clang thread-safety-analysis warnings that would otherwise
         // complain about thunks that call mutex locking functions in an unpaired way.

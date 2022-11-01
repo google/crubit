@@ -30,6 +30,7 @@ rust_library(
         "@crate_index//:anyhow",
         "@crate_index//:once_cell",
         "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
     ],
 )
 
@@ -38,7 +39,7 @@ rust_test(
     crate = ":code_gen_utils",
     deps = [
         ":token_stream_matchers",
-        "@crate_index//:quote",
+        ":token_stream_printer",
     ],
 )
 
