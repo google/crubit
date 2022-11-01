@@ -37,7 +37,7 @@ pub const TESTING_TARGET: &str = "//test:testing_target";
 pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
     make_ir_from_parts(
         items.into_iter().collect_vec(),
-        /* used_headers= */ vec![],
+        /* public_headers= */ vec![],
         /* current_target= */ TESTING_TARGET.into(),
         /* top_level_item_ids= */ vec![],
     )

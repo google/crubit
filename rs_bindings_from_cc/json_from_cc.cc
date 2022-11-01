@@ -22,7 +22,7 @@ static constexpr absl::string_view kDependencyHeaderName =
     "test/dependency_header.h";
 // LINT.ThenChange(//depot/rs_bindings_from_cc/ir_testing.rs)
 
-// This is intended to be called from Rust.
+// This is intended to be called from Rust tests.
 extern "C" FfiU8SliceBox json_from_cc_dependency(
     FfiU8Slice header_source, FfiU8Slice dependency_header_source) {
   absl::StatusOr<IR> ir = IrFromCc(

@@ -17,20 +17,20 @@ namespace crubit {
 // Top-level parameters as well as return value of an importer invocation.
 class Invocation {
  public:
-  Invocation(BazelLabel target, absl::Span<const HeaderName> entry_headers,
+  Invocation(BazelLabel target, absl::Span<const HeaderName> public_headers,
              const absl::flat_hash_map<const HeaderName, const BazelLabel>&
                  header_targets)
       : target_(target),
-        entry_headers_(entry_headers),
+        public_headers_(public_headers),
         lifetime_context_(std::make_shared<
                           clang::tidy::lifetimes::LifetimeAnnotationContext>()),
         header_targets_(header_targets) {
     // Caller should verify that the inputs are non-empty.
-    CHECK(!entry_headers_.empty());
+    CHECK(!public_headers_.empty());
     CHECK(!header_targets_.empty());
 
-    ir_.used_headers.insert(ir_.used_headers.end(), entry_headers_.begin(),
-                            entry_headers.end());
+    ir_.public_headers.insert(ir_.public_headers.end(), public_headers_.begin(),
+                              public_headers.end());
     ir_.current_target = target_;
   }
 
@@ -44,9 +44,9 @@ class Invocation {
   // The main target from which we are importing.
   const BazelLabel target_;
 
-  // The headers from which the import starts (a collection of
-  // paths in the format suitable for a google3-relative quote include).
-  const absl::Span<const HeaderName> entry_headers_;
+  // The headers from which the import starts.  See the doc comment of
+  // `IR::public_headers` and `HeaderName` for more details.
+  const absl::Span<const HeaderName> public_headers_;
 
   const std::shared_ptr<clang::tidy::lifetimes::LifetimeAnnotationContext>
       lifetime_context_;

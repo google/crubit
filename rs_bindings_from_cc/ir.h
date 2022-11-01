@@ -783,9 +783,13 @@ struct IR {
     return filtered_items;
   }
 
-  // Collection of public headers that were used to construct the AST this `IR`
-  // is generated from.
-  std::vector<HeaderName> used_headers;
+  // Collection of public headers that were used to construct the AST this `IR`.
+  //
+  // In production, these come from the `--public_headers` cmdline flag.
+  // Note that the order of the headers might be significant and needs to be
+  // preserved.
+  std::vector<HeaderName> public_headers;
+
   BazelLabel current_target;
 
   using Item = std::variant<Func, Record, IncompleteRecord, Enum, TypeAlias,

@@ -31,38 +31,42 @@ static constexpr absl::string_view kVirtualInputPath =
     "ir_from_cc_virtual_input.cc";
 
 absl::StatusOr<IR> IrFromCc(
-    const absl::string_view extra_source_code, const BazelLabel current_target,
+    const absl::string_view extra_source_code_for_testing,
+    const BazelLabel current_target,
     absl::Span<const HeaderName> public_headers,
     absl::flat_hash_map<const HeaderName, const std::string>
-        virtual_headers_contents,
+        virtual_headers_contents_for_testing,
     absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets,
     absl::Span<const std::string> extra_rs_srcs,
-    absl::Span<const absl::string_view> args,
+    absl::Span<const absl::string_view> clang_args,
     absl::Span<const std::string> extra_instantiations) {
   // Caller should verify that the inputs are not empty.
-  CHECK(!extra_source_code.empty() || !public_headers.empty() ||
+  CHECK(!extra_source_code_for_testing.empty() || !public_headers.empty() ||
         !extra_instantiations.empty());
-  CHECK(!extra_source_code.empty() || !headers_to_targets.empty() ||
+  CHECK(!extra_source_code_for_testing.empty() || !headers_to_targets.empty() ||
         !extra_instantiations.empty());
 
-  std::vector<HeaderName> entrypoint_headers(public_headers.begin(),
-                                             public_headers.end());
   clang::tooling::FileContentMappings file_contents;
 
-  for (auto const& name_and_content : virtual_headers_contents) {
+  for (auto const& name_and_content : virtual_headers_contents_for_testing) {
     file_contents.push_back({std::string(name_and_content.first.IncludePath()),
                              name_and_content.second});
   }
-  if (!extra_source_code.empty()) {
-    file_contents.push_back(
-        {std::string(kVirtualHeaderPath), std::string(extra_source_code)});
+
+  // Tests may inject `extra_source_code_for_testing` - it needs to be appended
+  // to `public_headers` and exposed via `file_contents` virtual file system.
+  std::vector<HeaderName> augmented_public_headers(public_headers.begin(),
+                                                   public_headers.end());
+  if (!extra_source_code_for_testing.empty()) {
+    file_contents.push_back({std::string(kVirtualHeaderPath),
+                             std::string(extra_source_code_for_testing)});
     HeaderName header_name = HeaderName(std::string(kVirtualHeaderPath));
-    entrypoint_headers.push_back(header_name);
+    augmented_public_headers.push_back(header_name);
     headers_to_targets.insert({header_name, current_target});
   }
 
   std::string virtual_input_file_content;
-  for (const HeaderName& header_name : entrypoint_headers) {
+  for (const HeaderName& header_name : augmented_public_headers) {
     absl::SubstituteAndAppend(&virtual_input_file_content, "#include \"$0\"\n",
                               header_name.IncludePath());
   }
@@ -83,9 +87,11 @@ absl::StatusOr<IR> IrFromCc(
       "-std=gnu++17",
       // Parse non-doc comments that are used as documention
       "-fparse-all-comments"};
-  args_as_strings.insert(args_as_strings.end(), args.begin(), args.end());
+  args_as_strings.insert(args_as_strings.end(), clang_args.begin(),
+                         clang_args.end());
 
-  Invocation invocation(current_target, entrypoint_headers, headers_to_targets);
+  Invocation invocation(current_target, augmented_public_headers,
+                        headers_to_targets);
   if (!clang::tooling::runToolOnCodeWithArgs(
           std::make_unique<FrontendAction>(invocation),
           virtual_input_file_content, args_as_strings, kVirtualInputPath,

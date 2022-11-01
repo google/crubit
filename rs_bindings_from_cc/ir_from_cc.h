@@ -24,35 +24,37 @@ static constexpr absl::string_view kInstantiationsNamespaceName =
 // Parses C++ source code into IR.
 //
 // Parameters:
-// * `extra_source_code`: C++ source code to be written into a virtual header
-//   and included in binding generation. Intended for testing only.
+// * `extra_source_code_for_testing`: C++ source code to be written into a
+//   virtual header and included in binding generation. Intended for testing
+//   only.
 // * `current_target`: full label of the target for which we generate bindings.
 //   If not specified `//test:testing_target` is used.
 // * `public_headers`: names of headers from which we build the Clang AST. If
-//   `extra_source_code` is specified its header will be added automatically.
-// * `virtual_headers_contents`: names and contents of virtual headers that
-//   will be created in the virtual filesystem. These headers have to be
-//   manually added to `public_headers` if needed.
+//   `extra_source_code_for_testing` is specified its header will be added
+//   automatically.
+// * `virtual_headers_contents_for_testing`: names and contents of virtual
+//   headers that will be created in the virtual filesystem. These headers have
+//   to be manually added to `public_headers` if needed.
 // * `headers_to_targets`: mapping of headers to the label of the owning target.
 //   If `extra_source_code` is specified it's added automatically under
-//   `//test:testing_target`. Headers from `virtual_headers_contents` are not
-//   added automatically.
-// * `args`: additional command line arguments for Clang
+//   `//test:testing_target`. Headers from
+//   `virtual_headers_contents_for_testing` are not added automatically.
+// * `clang_args`: additional command line arguments for Clang
 // * `extra_rs_srcs`: A list of paths for additional rust files to include into
 //   the crate. This is done via `#[path="..."] mod <...>; pub use <...>::*;`.
 // * `extra_instantiations`: names of full C++ class template specializations
 // to instantiate and generate bindings from.
 //
 absl::StatusOr<IR> IrFromCc(
-    absl::string_view extra_source_code,
+    absl::string_view extra_source_code_for_testing,
     BazelLabel current_target = BazelLabel{"//test:testing_target"},
     absl::Span<const HeaderName> public_headers = {},
     absl::flat_hash_map<const HeaderName, const std::string>
-        virtual_headers_contents = {},
+        virtual_headers_contents_for_testing = {},
     absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets =
         {},
     absl::Span<const std::string> extra_rs_srcs = {},
-    absl::Span<const absl::string_view> args = {},
+    absl::Span<const absl::string_view> clang_args = {},
     absl::Span<const std::string> extra_instantiations = {});
 
 }  // namespace crubit

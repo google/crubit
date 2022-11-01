@@ -338,6 +338,7 @@ cc_library(
 
 cc_library(
     name = "json_from_cc",
+    testonly = 1,
     srcs = ["json_from_cc.cc"],
     deps = [
         ":bazel_types",

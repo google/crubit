@@ -3698,10 +3698,12 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
     // original order (some libraries require certain headers to be included
     // first - e.g. `config.h`).
     let ir_includes =
-        ir.used_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
+        ir.public_headers().map(|hdr| CcInclude::user_header(hdr.name.clone())).collect_vec();
 
     Ok(quote! {
         #internal_includes
+        __NEWLINE__
+        __COMMENT__ "Public headers of the C++ library being wrapped."
         #( #ir_includes )* __NEWLINE__
         __HASH_TOKEN__ pragma clang diagnostic push __NEWLINE__
         // Disable Clang thread-safety-analysis warnings that would otherwise

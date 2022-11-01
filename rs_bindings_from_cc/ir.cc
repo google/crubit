@@ -550,7 +550,7 @@ llvm::json::Value IR::ToJson() const {
   }
 
   return llvm::json::Object{
-      {"used_headers", used_headers},
+      {"public_headers", public_headers},
       {"current_target", current_target},
       {"items", std::move(json_items)},
       {"top_level_item_ids", std::move(top_level_ids)},

@@ -51,8 +51,8 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
                                   /* virtual_headers_contents= */
                                   {{HeaderName("a.h"), "namespace ns{}"}}));
 
-  ASSERT_EQ(result.ir.used_headers.size(), 1);
-  ASSERT_EQ(result.ir.used_headers.front().IncludePath(), "a.h");
+  ASSERT_EQ(result.ir.public_headers.size(), 1);
+  ASSERT_EQ(result.ir.public_headers.front().IncludePath(), "a.h");
   ASSERT_EQ(result.error_report, "");
 
   // Check that IR items have the proper owning target set.

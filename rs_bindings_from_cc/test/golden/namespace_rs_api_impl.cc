@@ -10,6 +10,8 @@
 
 #include "rs_bindings_from_cc/support/cxx20_backports.h"
 #include "rs_bindings_from_cc/support/offsetof.h"
+
+// Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/namespace.h"
 
 #pragma clang diagnostic push

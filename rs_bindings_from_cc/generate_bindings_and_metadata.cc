@@ -57,7 +57,7 @@ std::vector<const Record*> FindInstantiationsInNamespace(const IR& ir,
 absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
     Cmdline& cmdline, std::vector<std::string> clang_args,
     absl::flat_hash_map<const HeaderName, const std::string>
-        virtual_headers_contents) {
+        virtual_headers_contents_for_testing) {
   std::vector<absl::string_view> clang_args_view;
   clang_args_view.insert(clang_args_view.end(), clang_args.begin(),
                          clang_args.end());
@@ -67,11 +67,12 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
       CollectInstantiations(cmdline.srcs_to_scan_for_instantiations()));
 
   CRUBIT_ASSIGN_OR_RETURN(
-      IR ir, IrFromCc(
-                 /* extra_source_code= */ "", cmdline.current_target(),
-                 cmdline.public_headers(), virtual_headers_contents,
-                 cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
-                 clang_args_view, requested_instantiations));
+      IR ir,
+      IrFromCc(
+          /* extra_source_code_for_testing= */ "", cmdline.current_target(),
+          cmdline.public_headers(), virtual_headers_contents_for_testing,
+          cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
+          clang_args_view, requested_instantiations));
 
   bool generate_error_report = !cmdline.error_report_out().empty();
   CRUBIT_ASSIGN_OR_RETURN(

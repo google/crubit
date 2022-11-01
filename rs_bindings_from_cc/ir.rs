@@ -28,11 +28,11 @@ pub fn deserialize_ir<R: Read>(reader: R) -> Result<IR> {
 /// any mock values.
 pub fn make_ir_from_parts(
     items: Vec<Item>,
-    used_headers: Vec<HeaderName>,
+    public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
     top_level_item_ids: Vec<ItemId>,
 ) -> Result<IR> {
-    make_ir(FlatIR { used_headers, current_target, items, top_level_item_ids })
+    make_ir(FlatIR { public_headers, current_target, items, top_level_item_ids })
 }
 
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
@@ -684,7 +684,7 @@ impl<'a> TryFrom<&'a Item> for &'a Rc<Comment> {
 #[serde(rename(deserialize = "IR"))]
 struct FlatIR {
     #[serde(default)]
-    used_headers: Vec<HeaderName>,
+    public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
     #[serde(default)]
     items: Vec<Item>,
@@ -718,8 +718,8 @@ impl IR {
         self.flat_ir.items.iter_mut()
     }
 
-    pub fn used_headers(&self) -> impl Iterator<Item = &HeaderName> {
-        self.flat_ir.used_headers.iter()
+    pub fn public_headers(&self) -> impl Iterator<Item = &HeaderName> {
+        self.flat_ir.public_headers.iter()
     }
 
     pub fn functions(&self) -> impl Iterator<Item = &Rc<Func>> {
@@ -891,13 +891,13 @@ mod tests {
     fn test_used_headers() {
         let input = r#"
         {
-            "used_headers": [{ "name": "foo/bar.h" }],
+            "public_headers": [{ "name": "foo/bar.h" }],
             "current_target": "//foo:bar"
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
         let expected = FlatIR {
-            used_headers: vec![HeaderName { name: "foo/bar.h".into() }],
+            public_headers: vec![HeaderName { name: "foo/bar.h".into() }],
             current_target: "//foo:bar".into(),
             top_level_item_ids: vec![],
             items: vec![],
