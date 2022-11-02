@@ -49,6 +49,13 @@ impl CcInclude {
         Self::SystemHeader("cstddef")
     }
 
+    /// Creates a `CcInclude` that represents `#include <cstdint>` and provides
+    /// C++ types like `std::int16_t` or `std::uint32_t`.  See also
+    /// https://en.cppreference.com/w/cpp/header/cstdint
+    pub fn cstdint() -> Self {
+        Self::SystemHeader("cstdint")
+    }
+
     /// Creates a `CcInclude` that represents `#include <memory>`.
     /// See also https://en.cppreference.com/w/cpp/header/memory
     pub fn memory() -> Self {

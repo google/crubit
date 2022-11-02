@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{anyhow, bail, Context, Result};
-use code_gen_utils::format_cc_ident;
+use code_gen_utils::{format_cc_ident, format_cc_includes, CcInclude};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -15,6 +15,7 @@ use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
+use std::collections::BTreeSet;
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
@@ -68,15 +69,45 @@ where
     Ok(query_context.peek_mut().enter(f))
 }
 
-fn format_ret_ty(ty: Ty) -> Result<TokenStream> {
+#[derive(Debug)]
+struct CcSnippet {
+    snippet: TokenStream,
+
+    /// Set of `#include`s that the `snippet` depends on.  For example if
+    /// `snippet` expands to `std::int32_t`, then `includes` need to cover
+    /// the `cstdint`.
+    includes: BTreeSet<CcInclude>,
+}
+
+impl CcSnippet {
+    /// Consumes `self` and returns the main `snippet`, while preserving
+    /// `includes` into the `external_includes` out parameter.
+    fn into_tokens(mut self, external_includes: &mut BTreeSet<CcInclude>) -> TokenStream {
+        external_includes.append(&mut self.includes);
+        self.snippet
+    }
+}
+
+fn format_ret_ty(ty: Ty) -> Result<CcSnippet> {
+    let void = Ok(CcSnippet { snippet: quote! { void }, includes: BTreeSet::new() });
     match ty.kind() {
-        ty::TyKind::Never => Ok(quote! { void }), // `!`
-        ty::TyKind::Tuple(types) if types.len() == 0 => Ok(quote! { void }), // `()`
+        ty::TyKind::Never => void,  // `!`
+        ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
         _ => format_ty(ty),
     }
 }
 
-fn format_ty(ty: Ty) -> Result<TokenStream> {
+/// Formats `ty` into a `CcSnippet` that represents how the type should be
+/// spelled in a C++ declaration of an `extern "C"` function.
+fn format_ty(ty: Ty) -> Result<CcSnippet> {
+    fn cstdint(snippet: TokenStream) -> CcSnippet {
+        let mut includes = BTreeSet::new();
+        includes.insert(CcInclude::cstdint());
+        CcSnippet { snippet, includes }
+    }
+    fn keyword(snippet: TokenStream) -> CcSnippet {
+        CcSnippet { snippet, includes: BTreeSet::new() }
+    }
     Ok(match ty.kind() {
         ty::TyKind::Never => {
             // TODO(b/254507801): Maybe translate into `crubit::Never`?
@@ -91,26 +122,63 @@ fn format_ty(ty: Ty) -> Result<TokenStream> {
                 bail!("Tuples are not supported yet: {} (b/254099023)", ty);
             }
         }
-        ty::TyKind::Bool => quote! { bool },
-        ty::TyKind::Float(ty::FloatTy::F32) => quote! { float },
-        ty::TyKind::Float(ty::FloatTy::F64) => quote! { double },
 
-        ty::TyKind::Char
-        | ty::TyKind::Int(
-            ty::IntTy::Isize | ty::IntTy::I8 | ty::IntTy::I16 | ty::IntTy::I32 | ty::IntTy::I64,
-        )
-        | ty::TyKind::Uint(
-            ty::UintTy::Usize
-            | ty::UintTy::U8
-            | ty::UintTy::U16
-            | ty::UintTy::U32
-            | ty::UintTy::U64,
-        ) => {
-            // TODO(b/254094545): Add support for returning TokenStream *and* include paths.
-            bail!("No support yet for `#include`ing C++ equivalent of `{ty}` (b/254094545)")
-        }
+        ty::TyKind::Bool => keyword(quote! { bool }),
+
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-floating-point-types
+        // documents that "When the platforms' "math.h" header defines the __STDC_IEC_559__ macro,
+        // Rust's floating-point types are safe to use directly in C FFI where the appropriate C
+        // types are expected (f32 for float, f64 for double)."
+        //
+        // TODO(b/255768062): Generated bindings should explicitly check `__STDC_IEC_559__`
+        ty::TyKind::Float(ty::FloatTy::F32) => keyword(quote! { float }),
+        ty::TyKind::Float(ty::FloatTy::F64) => keyword(quote! { double }),
+
+        ty::TyKind::Char => {
+            // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char
+            // documents that "Rust char is 32-bit wide and represents an unicode scalar value".
+            //
+            // We don't map Rust's `char` to C++ `char32_t` because
+            // - It may be wider than 32 bits -
+            //   https://en.cppreference.com/w/c/string/multibyte/char32_t says that "char32_t is
+            //   an unsigned integer type used for 32-bit wide characters and is the same type as
+            //   uint_least32_t. uint_least32_t is the smallest unsigned integer type with width
+            //   of at least 32 bits"
+            // - It is problematic on MacOS - https://github.com/eqrion/cbindgen/issues/423
+            //   points out that `uchar.h` is missing on that platform.
+            cstdint(quote!{ std::uint32_t })
+        },
+
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
+        // documents that "Rust's signed and unsigned fixed-width integer types {i,u}{8,16,32,64}
+        // have the same layout the C fixed-width integer types from the <stdint.h> header
+        // {u,}int{8,16,32,64}_t. These fixed-width integer types are therefore safe to use
+        // directly in C FFI where the corresponding C fixed-width integer types are expected.
+        //
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#layout-compatibility-with-c-native-integer-types
+        // documents that "Rust does not support C platforms on which the C native integer type are
+        // not compatible with any of Rust's fixed-width integer type (e.g. because of
+        // padding-bits, lack of 2's complement, etc.)."
+        ty::TyKind::Int(ty::IntTy::I8) => cstdint(quote!{ std::int8_t }),
+        ty::TyKind::Int(ty::IntTy::I16) => cstdint(quote!{ std::int16_t }),
+        ty::TyKind::Int(ty::IntTy::I32) => cstdint(quote!{ std::int32_t }),
+        ty::TyKind::Int(ty::IntTy::I64) => cstdint(quote!{ std::int64_t }),
+        ty::TyKind::Uint(ty::UintTy::U8) => cstdint(quote!{ std::uint8_t }),
+        ty::TyKind::Uint(ty::UintTy::U16) => cstdint(quote!{ std::uint16_t }),
+        ty::TyKind::Uint(ty::UintTy::U32) => cstdint(quote!{ std::uint32_t }),
+        ty::TyKind::Uint(ty::UintTy::U64) => cstdint(quote!{ std::uint64_t }),
+
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
+        // documents that "The isize and usize types are [...] layout compatible with C's uintptr_t
+        // and intptr_t types.".
+        ty::TyKind::Int(ty::IntTy::Isize) => cstdint(quote!{ std::intptr_t }),
+        ty::TyKind::Uint(ty::UintTy::Usize) => cstdint(quote!{ std::uintptr_t }),
 
         ty::TyKind::Int(ty::IntTy::I128) | ty::TyKind::Uint(ty::UintTy::U128) => {
+            // Note that "the alignment of Rust's {i,u}128 is unspecified and allowed to
+            // change" according to
+            // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-integer-types
+            //
             // TODO(b/254094650): Consider mapping this to Clang's (and GCC's) `__int128`
             // or to `absl::in128`.
             bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
@@ -160,7 +228,7 @@ fn format_ty(ty: Ty) -> Result<TokenStream> {
 /// - doesn't identify a function,
 /// - has generic parameters (any kind - lifetime parameters, type parameters,
 ///   or const parameters).
-fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
+fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
     let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     let item_name = tcx.item_name(def_id);
@@ -211,7 +279,10 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
         bail!("Mangled or renamed symbols are not supported yet");
     }
 
-    let ret_type = format_ret_ty(sig.output()).context("Error formatting function return type")?;
+    let mut includes = BTreeSet::new();
+    let ret_type = format_ret_ty(sig.output())
+        .context("Error formatting function return type")?
+        .into_tokens(&mut includes);
     let fn_name = format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
     let arg_names = tcx
         .fn_arg_names(def_id)
@@ -226,15 +297,19 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
         .inputs()
         .iter()
         .enumerate()
-        .map(|(index, ty)| {
+        .map(|(index, ty)| Ok(
             format_ty(*ty)
-                .with_context(|| format!("Error formatting the type of parameter #{index}"))
-        })
+                .with_context(|| format!("Error formatting the type of parameter #{index}"))?
+                .into_tokens(&mut includes)
+        ))
         .collect::<Result<Vec<_>>>()?;
-    Ok(quote! {
-        extern "C" #ret_type #fn_name (
-                #( #arg_types #arg_names ),*
-            );
+    Ok(CcSnippet {
+        snippet: quote! {
+            extern "C" #ret_type #fn_name (
+                    #( #arg_types #arg_names ),*
+                );
+        },
+        includes,
     })
 }
 
@@ -242,7 +317,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
 /// item).
-fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<TokenStream> {
+fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
     match tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
             Item { kind: ItemKind::Fn(_hir_fn_sig, generics, _body), .. } => {
@@ -285,8 +360,9 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
     // `struct`s (without an `impl`) won't be visible to a linker and therefore
     // won't have exported symbols.  Additionally, walking Rust's modules top-down
     // might result in easier translation into C++ namespaces.
+    let mut includes = BTreeSet::new();
     let snippets =
-        tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(move |(symbol, _)| match symbol {
+        tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(|(symbol, _)| match symbol {
             ExportedSymbol::NonGeneric(def_id) => {
                 // It seems that non-generic exported symbols should all be defined in the
                 // `LOCAL_CRATE`.  Furthermore, `def_id` seems to be a `LocalDefId`.  OTOH, it
@@ -297,7 +373,7 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
                 let local_id = def_id.expect_local();
 
                 Some(match format_def(tcx, local_id) {
-                    Ok(snippet) => snippet,
+                    Ok(snippet) => snippet.into_tokens(&mut includes),
                     Err(err) => format_unsupported_def(tcx, local_id, err),
                 })
             }
@@ -313,13 +389,16 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
                 })
             }
             ExportedSymbol::DropGlue(..) | ExportedSymbol::NoDefId(..) => None,
-        });
+        })
+    .collect_vec();
 
     // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
     // top-level namespace is okay (e.g. investigate if this name is globally
     // unique + ergonomic).
     let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
+    let includes = format_cc_includes(&includes);
     Ok(quote! {
+        #includes __NEWLINE__
         namespace #crate_name {
             #( #snippets )*
         }
@@ -328,9 +407,10 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
 
 #[cfg(test)]
 pub mod tests {
-    use super::{format_def, format_ret_ty, format_ty, GeneratedBindings};
+    use super::{format_def, format_ret_ty, format_ty, CcSnippet, GeneratedBindings};
 
     use anyhow::Result;
+    use code_gen_utils::{format_cc_ident, format_cc_includes};
     use itertools::Itertools;
     use proc_macro2::TokenStream;
     use quote::quote;
@@ -447,6 +527,33 @@ pub mod tests {
     }
 
     #[test]
+    fn test_generated_bindings_fn_with_includes() {
+        let test_src = r#"
+                #[no_mangle]
+                pub extern "C" fn public_function(i: i32, d: isize, u: u64) {
+                    dbg!(i);
+                    dbg!(d);
+                    dbg!(u);
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    __HASH_TOKEN__ include <cstdint> ...
+                    namespace ... {
+                        extern "C" void public_function(
+                            std::int32_t i,
+                            std::intptr_t d,
+                            std::uint64_t u);
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
     fn test_generated_bindings_fn_non_pub() {
         let test_src = r#"
                 #![allow(dead_code)]
@@ -522,8 +629,10 @@ pub mod tests {
                 pub extern "C" fn public_function() {}
             "#;
         test_format_def(test_src, "public_function", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" void public_function();
                 }
@@ -544,8 +653,10 @@ pub mod tests {
                 pub extern "C" fn explicit_unit_return_type() -> () {}
             "#;
         test_format_def(test_src, "explicit_unit_return_type", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" void explicit_unit_return_type();
                 }
@@ -566,8 +677,10 @@ pub mod tests {
             // attribute.
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" void never_returning_function();
                 }
@@ -647,8 +760,10 @@ pub mod tests {
                 pub extern "C-unwind" fn may_throw() {}
             "#;
         test_format_def(test_src, "may_throw", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" void may_throw();
                 }
@@ -670,8 +785,10 @@ pub mod tests {
                 pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
         test_format_def(test_src, "type_aliased_return", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" double type_aliased_return();
                 }
@@ -795,8 +912,10 @@ pub mod tests {
                 pub extern "C" fn foo(b: bool, f: f64) {}
             "#;
         test_format_def(test_src, "foo", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" void foo(bool b, double f);
                 }
@@ -812,8 +931,10 @@ pub mod tests {
                 pub extern "C" fn some_function(reinterpret_cast: f64) {}
             "#;
         test_format_def(test_src, "some_function", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
             assert_cc_matches!(
-                result.expect("Test expects success here"),
+                result.snippet,
                 quote! {
                     extern "C" void some_function(double __param_0);
                 }
@@ -894,7 +1015,11 @@ pub mod tests {
             ("!", "void"),
         ];
         test_ty(&testcases, |desc, ty, expected| {
-            let actual = format_ret_ty(ty).unwrap().to_string();
+            let actual = {
+                let cc_snippet = format_ret_ty(ty).unwrap();
+                assert!(cc_snippet.includes.is_empty());
+                cc_snippet.snippet.to_string()
+            };
             let expected = expected.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual, expected, "{desc}");
         });
@@ -903,18 +1028,49 @@ pub mod tests {
     #[test]
     fn test_format_ty_successes() {
         // Test coverage for cases where `format_ty` returns an `Ok(...)`.
+        //
+        // Using `std::int8_t` (instead of `::std::int8_t`) has been an explicit decision.  The
+        // "Google C++ Style Guide" suggests to "avoid nested namespaces that match well-known
+        // top-level namespaces" and "in particular, [...] not create any nested std namespaces.".
+        // It seems desirable if the generated bindings conform to this aspect of the style guide,
+        // because it makes things easier for *users* of these bindings.
         let testcases = [
-            // ( <Rust type>, <expected C++ type> )
-            ("bool", "bool"),  // TyKind::Bool
-            ("f32", "float"),  // TyKind::Float(ty::FloatTy::F32)
-            ("f64", "double"), // TyKind::Float(ty::FloatTy::F64)
+            // ( <Rust type>, (<expected C++ type>, <expected #include>) )
+            ("bool", ("bool", "")),
+            ("f32", ("float", "")),
+            ("f64", ("double", "")),
+            ("i8", ("std::int8_t", "cstdint")),
+            ("i16", ("std::int16_t", "cstdint")),
+            ("i32", ("std::int32_t", "cstdint")),
+            ("i64", ("std::int64_t", "cstdint")),
+            ("isize", ("std::intptr_t", "cstdint")),
+            ("u8", ("std::uint8_t", "cstdint")),
+            ("u16", ("std::uint16_t", "cstdint")),
+            ("u32", ("std::uint32_t", "cstdint")),
+            ("u64", ("std::uint64_t", "cstdint")),
+            ("usize", ("std::uintptr_t", "cstdint")),
+            ("char", ("std::uint32_t", "cstdint")),
             // Extra parens/sugar are expected to be ignored:
-            ("(bool)", "bool"),
+            ("(bool)", ("bool", "")),
         ];
-        test_ty(&testcases, |desc, ty, expected| {
-            let actual = format_ty(ty).unwrap().to_string();
-            let expected = expected.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(actual, expected, "{desc}");
+        test_ty(&testcases, |desc, ty, (expected_snippet, expected_include)| {
+            let (actual_snippet, actual_includes) = {
+                let cc_snippet = format_ty(ty).unwrap();
+                (cc_snippet.snippet.to_string(), cc_snippet.includes)
+            };
+
+            let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual_snippet, expected_snippet, "{desc}");
+
+            if expected_include.is_empty() {
+                assert!(actual_includes.is_empty());
+            } else {
+                let expected_header = format_cc_ident(expected_include).unwrap();
+                assert_cc_matches!(
+                    format_cc_includes(&actual_includes),
+                    quote! { include <#expected_header> }
+                );
+            }
         });
     }
 
@@ -956,18 +1112,6 @@ pub mod tests {
             (
                 "(i32, i32)", // Non-empty TyKind::Tuple
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
-            ),
-            (
-                "char", // TyKind::Char
-                "No support yet for `#include`ing C++ equivalent of `char` (b/254094545)",
-            ),
-            (
-                "i32", // TyKind::Int
-                "No support yet for `#include`ing C++ equivalent of `i32` (b/254094545)",
-            ),
-            (
-                "u32", // TyKind::UInt
-                "No support yet for `#include`ing C++ equivalent of `u32` (b/254094545)",
             ),
             (
                 "*const i32", // TyKind::Ptr
@@ -1039,7 +1183,7 @@ pub mod tests {
     /// result from `format_def`.)
     fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<TokenStream, String>) -> T + Send,
+        F: FnOnce(Result<CcSnippet, String>) -> T + Send,
         T: Send,
     {
         run_compiler(source, |tcx| {

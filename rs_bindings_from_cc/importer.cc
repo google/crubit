@@ -845,9 +845,13 @@ absl::StatusOr<MappedType> Importer::ConvertType(
         return MappedType::Simple("bool", "bool");
         break;
       case clang::BuiltinType::Float:
+        // TODO(b/255768062): Generated bindings should explicitly check if
+        // `math.h` defines the `__STDC_IEC_559__` macro.
         return MappedType::Simple("f32", "float");
         break;
       case clang::BuiltinType::Double:
+        // TODO(b/255768062): Generated bindings should explicitly check if
+        // `math.h` defines the `__STDC_IEC_559__` macro.
         return MappedType::Simple("f64", "double");
         break;
       case clang::BuiltinType::Void:

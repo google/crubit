@@ -23,5 +23,9 @@ TEST(FunctionsTest, AddFloat64ViaNoMangleExternC) {
               DoubleEq(12.0 + 34.0));
 }
 
+TEST(FunctionsTest, AddInt32ViaNoMangleExternC) {
+  EXPECT_EQ(12 + 34, add_i32_via_no_mangle_extern_c(12, 34));
+}
+
 }  // namespace
 }  // namespace crubit
