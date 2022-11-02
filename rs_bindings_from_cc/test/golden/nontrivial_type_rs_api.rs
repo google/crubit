@@ -799,7 +799,7 @@ impl<'other> ::ctor::Assign<::ctor::RvalueReference<'other, crate::Nontrivial>>
 
 // rs_bindings_from_cc/test/golden/nontrivial_type.h;l=102
 // Error while generating bindings for item 'NontrivialByValue::operator==':
-// operator== where operands are not const references
+// operator== where lhs operand is not record nor const reference to record
 
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]

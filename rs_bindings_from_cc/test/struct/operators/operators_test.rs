@@ -68,6 +68,34 @@ mod tests {
     }
 
     #[test]
+    fn test_eq_by_ref() {
+        let s1 = OperandByRef { i: 1005 };
+        let s2 = OperandByRef { i: 2005 };
+        assert!(s1 == s2);
+    }
+
+    #[test]
+    fn test_eq_by_value() {
+        let s1 = OperandByValue { i: 1005 };
+        let s2 = OperandByValue { i: 2005 };
+        assert!(s1 == s2);
+    }
+
+    #[test]
+    fn test_eq_by_ref_and_value() {
+        let s1 = OperandByRefAndValue { i: 1005 };
+        let s2 = OperandByRefAndValue { i: 2005 };
+        assert!(s1 == s2);
+    }
+
+    #[test]
+    fn test_eq_by_value_and_ref() {
+        let s1 = OperandByValueAndRef { i: 1005 };
+        let s2 = OperandByValueAndRef { i: 2005 };
+        assert!(s1 == s2);
+    }
+
+    #[test]
     fn test_eq_free_func_different_namespace() {
         // We probably should try to mimic "argument-dependent lookup" (ADL) and
         // only generate bindings for PartialEq if `operator==` free function is
@@ -96,6 +124,34 @@ mod tests {
     fn test_lt_free_func() {
         let s1 = OperandForFreeFunc { i: 1001 };
         let s2 = OperandForFreeFunc { i: 2002 };
+        assert!(s1 < s2);
+    }
+
+    #[test]
+    fn test_lt_by_ref() {
+        let s1 = OperandByRef { i: 1001 };
+        let s2 = OperandByRef { i: 2002 };
+        assert!(s1 < s2);
+    }
+
+    #[test]
+    fn test_lt_by_value() {
+        let s1 = OperandByValue { i: 1001 };
+        let s2 = OperandByValue { i: 2002 };
+        assert!(s1 < s2);
+    }
+
+    #[test]
+    fn test_lt_by_ref_and_value() {
+        let s1 = OperandByRefAndValue { i: 1001 };
+        let s2 = OperandByRefAndValue { i: 2002 };
+        assert!(s1 < s2);
+    }
+
+    #[test]
+    fn test_lt_by_value_and_ref() {
+        let s1 = OperandByValueAndRef { i: 1001 };
+        let s2 = OperandByValueAndRef { i: 2002 };
         assert!(s1 < s2);
     }
 

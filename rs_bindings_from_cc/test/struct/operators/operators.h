@@ -77,6 +77,62 @@ bool operator<(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs);
 
 //////////////////////////////////////////////////////////////////////
 
+struct OperandByRef final {
+  int i;
+};
+
+// Non-member function. Should generate:
+// impl PartialEq for OperandByRef.
+bool operator==(const OperandByRef& lhs, const OperandByRef& rhs);
+
+// Non-member function. Should generate:
+// impl PartialOrd for OperandByRef.
+bool operator<(const OperandByRef& lhs, const OperandByRef& rhs);
+
+//////////////////////////////////////////////////////////////////////
+
+struct OperandByValue final {
+  int i;
+};
+
+// Non-member function. Should generate:
+// impl PartialEq for OperandByValue.
+bool operator==(OperandByValue lhs, OperandByValue rhs);
+
+// Non-member function. Should generate:
+// impl PartialOrd for OperandByValue.
+bool operator<(OperandByValue lhs, OperandByValue rhs);
+
+//////////////////////////////////////////////////////////////////////
+
+struct OperandByRefAndValue final {
+  int i;
+};
+
+// Non-member function. Should generate:
+// impl PartialEq for OperandByRefAndValue.
+bool operator==(const OperandByRefAndValue& lhs, OperandByRefAndValue rhs);
+
+// Non-member function. Should generate:
+// impl PartialOrd for OperandByRefAndValue.
+bool operator<(const OperandByRefAndValue& lhs, OperandByRefAndValue rhs);
+
+//////////////////////////////////////////////////////////////////////
+
+struct OperandByValueAndRef final {
+  int i;
+};
+
+// Non-member function. Should generate:
+// impl PartialEq for OperandByValueAndRef.
+bool operator==(OperandByValueAndRef lhs, const OperandByValueAndRef& rhs);
+
+// Non-member function. Should generate:
+// impl PartialOrd for OperandByValueAndRef.
+bool operator<(OperandByValueAndRef lhs, const OperandByValueAndRef& rhs);
+
+//////////////////////////////////////////////////////////////////////
+
 struct OperandForFreeFuncInDifferentNamespace final {
   int i;
 };

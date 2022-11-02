@@ -114,6 +114,8 @@ trait BindingsGenerator {
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 
+    fn is_record_clonable(&self, record: Rc<Record>) -> bool;
+
     // TODO(b/236687702): convert the get_binding function into a query once
     // ImplKind implements Eq.
 }
@@ -432,15 +434,15 @@ impl ToTokens for TraitName {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
-                let params = format_generic_params(params);
+                let params = format_generic_params(/* lifetimes= */ &[], params);
                 quote! {#name #params}.to_tokens(tokens)
             }
             Self::PartialEq { params } => {
-                let params = format_generic_params(params);
+                let params = format_generic_params(/* lifetimes= */ &[], params);
                 quote! {PartialEq #params}.to_tokens(tokens)
             }
             Self::PartialOrd { params } => {
-                let params = format_generic_params(params);
+                let params = format_generic_params(/* lifetimes= */ &[], params);
                 quote! {PartialOrd #params}.to_tokens(tokens)
             }
             Self::CtorNew(arg_types) => {
@@ -494,6 +496,13 @@ enum ImplKind {
         /// For example, this is `Output` on
         /// [`Add`](https://doc.rust-lang.org/std/ops/trait.Add.html).
         associated_return_type: Option<Ident>,
+
+        /// Whether args should always be const references in Rust, even if they
+        /// are by value in C++.
+        ///
+        /// For example, the traits for == and < only accept const reference
+        /// parameters, but C++ allows values.
+        force_const_reference_params: bool,
     },
 }
 impl ImplKind {
@@ -502,6 +511,7 @@ impl ImplKind {
         record: &Record,
         ir: &IR,
         format_first_param_as_self: bool,
+        force_const_reference_params: bool,
     ) -> Result<Self> {
         Ok(ImplKind::Trait {
             trait_name,
@@ -512,6 +522,7 @@ impl ImplKind {
             format_first_param_as_self,
             drop_return: false,
             associated_return_type: None,
+            force_const_reference_params,
         })
     }
     fn format_first_param_as_self(&self) -> bool {
@@ -703,28 +714,44 @@ fn api_func_shape(
                 2,
                 "Unexpected number of parameters in operator==: {func:?}"
             );
-            match (&param_types[0], &param_types[1]) {
-                (
-                    RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
-                    RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
-                ) => match &**lhs {
-                    RsTypeKind::Record { record: lhs_record, .. } => {
-                        func_name = make_rs_ident("eq");
-                        impl_kind = ImplKind::new_trait(
-                            TraitName::PartialEq { params: vec![(**rhs).clone()] },
-                            lhs_record,
-                            &ir,
-                            /* format_first_param_as_self= */ true,
-                        )?;
+            let lhs_record = match &param_types[0] {
+                RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. } => {
+                    if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
+                        lhs_record
+                    } else {
+                        bail!(
+                            "operator== where lhs param is reference that doesn't refer to a record",
+                        );
                     }
-                    _ => {
-                        bail!("operator== where lhs doesn't refer to a record",);
-                    }
-                },
-                _ => {
-                    bail!("operator== where operands are not const references",);
                 }
+                RsTypeKind::Record { record: lhs_record, .. } => lhs_record,
+                _ => bail!(
+                    "operator== where lhs operand is not record nor const reference to record"
+                ),
             };
+            let params = match &param_types[1] {
+                RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. } => {
+                    if let RsTypeKind::Record { .. } = &**rhs {
+                        vec![(**rhs).clone()]
+                    } else {
+                        bail!(
+                            "operator== where rhs param is reference that doesn't refer to a record",
+                        );
+                    }
+                }
+                record @ RsTypeKind::Record { .. } => vec![record.clone()],
+                _ => bail!(
+                    "operator== where rhs operand is not record nor const reference to record"
+                ),
+            };
+            func_name = make_rs_ident("eq");
+            impl_kind = ImplKind::new_trait(
+                TraitName::PartialEq { params },
+                lhs_record,
+                &ir,
+                /* format_first_param_as_self= */ true,
+                /* force_const_reference_params= */ true,
+            )?;
         }
         UnqualifiedIdentifier::Operator(op) if op.name == "<=>" => {
             bail!("Three-way comparison operator not yet supported (b/219827738)");
@@ -735,52 +762,68 @@ fn api_func_shape(
                 2,
                 "Unexpected number of parameters in operator<: {func:?}"
             );
-            match (&param_types[0], &param_types[1]) {
-                (
-                    RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. },
-                    RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. },
-                ) => match (&**lhs, &**rhs) {
-                    (
-                        RsTypeKind::Record { record: lhs_record, .. },
-                        RsTypeKind::Record { record: rhs_record, .. },
-                    ) => {
-                        if lhs_record != rhs_record {
-                            bail!("operator< where lhs and rhs are not the same type.");
-                        }
-                        // PartialOrd requires PartialEq, so we need to make sure operator== is
-                        // implemented for this Record type.
-                        match get_binding(
-                            db,
-                            UnqualifiedIdentifier::Operator(Operator { name: "==".to_string() }),
-                            param_types,
-                        ) {
-                            Some((
-                                _,
-                                ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. },
-                            )) => {
-                                func_name = make_rs_ident("lt");
-                                impl_kind = ImplKind::new_trait(
-                                    TraitName::PartialOrd { params: vec![(**rhs).clone()] },
-                                    lhs_record,
-                                    &ir,
-                                    /* format_first_param_as_self= */
-                                    true,
-                                )?;
-                            }
-                            _ => bail!("operator< where operator== is missing."),
-                        }
+            let lhs_record = match &param_types[0] {
+                RsTypeKind::Reference { referent: lhs, mutability: Mutability::Const, .. } => {
+                    if let RsTypeKind::Record { record: lhs_record, .. } = &**lhs {
+                        lhs_record
+                    } else {
+                        bail!(
+                            "operator== where lhs param is reference that doesn't refer to a record",
+                        );
                     }
-                    (RsTypeKind::Record { .. }, _) => {
-                        bail!("operator< where lhs and rhs are not the same type.");
-                    }
-                    _ => {
-                        bail!("operator< where lhs doesn't refer to a record.",);
-                    }
-                },
+                }
+                RsTypeKind::Record { record: lhs_record, .. } => lhs_record,
                 _ => {
-                    bail!("operator< where operands are not const references.",);
+                    bail!("operator< where lhs operand is not record nor const reference to record")
                 }
             };
+            let (rhs_record, params) = match &param_types[1] {
+                RsTypeKind::Reference { referent: rhs, mutability: Mutability::Const, .. } => {
+                    if let RsTypeKind::Record { record: rhs_record, .. } = &**rhs {
+                        (rhs_record, vec![(**rhs).clone()])
+                    } else {
+                        bail!(
+                            "operator== where rhs param is reference that doesn't refer to a record",
+                        );
+                    }
+                }
+                record @ RsTypeKind::Record { record: rhs_record, .. } => {
+                    (rhs_record, vec![record.clone()])
+                }
+                _ => {
+                    bail!("operator< where rhs operand is not record nor const reference to record")
+                }
+            };
+            // Even though Rust and C++ allow operator< to be implemented on different
+            // types, we don't generate bindings for them at this moment. The
+            // issue is that our canonical implementation of partial_cmp relies
+            // on transitivity. This would require checking that both lt(&T1,
+            // &T2) and lt(&T2, &T1) are implemented. In other words, both lt
+            // implementations would need to query for the existence of the other, which
+            // would create a cyclic dependency.
+            if lhs_record != rhs_record {
+                bail!("operator< where lhs and rhs are not the same type.");
+            }
+            // PartialOrd requires PartialEq, so we need to make sure operator== is
+            // implemented for this Record type.
+            match get_binding(
+                db,
+                UnqualifiedIdentifier::Operator(Operator { name: "==".to_string() }),
+                param_types,
+            ) {
+                Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {
+                    func_name = make_rs_ident("lt");
+                    impl_kind = ImplKind::new_trait(
+                        TraitName::PartialOrd { params },
+                        lhs_record,
+                        &ir,
+                        /* format_first_param_as_self= */
+                        true,
+                        /* force_const_reference_params= */ true,
+                    )?;
+                }
+                _ => bail!("operator< where operator== is missing."),
+            }
         }
         UnqualifiedIdentifier::Operator(op) if op.name == "=" => {
             assert_eq!(
@@ -809,6 +852,7 @@ fn api_func_shape(
                     format_first_param_as_self: true,
                     drop_return: true,
                     associated_return_type: None,
+                    force_const_reference_params: false,
                 }
             };
             func_name = make_rs_ident("assign");
@@ -853,6 +897,7 @@ fn api_func_shape(
                     format_first_param_as_self: true,
                     drop_return: false,
                     associated_return_type: Some(make_rs_ident("Output")),
+                    force_const_reference_params: false,
                 };
                 func_name = make_rs_ident(method_name);
             }
@@ -899,6 +944,7 @@ fn api_func_shape(
                     format_first_param_as_self: true,
                     drop_return: true,
                     associated_return_type: None,
+                    force_const_reference_params: false,
                 };
                 func_name = make_rs_ident(method_name);
             }
@@ -947,6 +993,8 @@ fn api_func_shape(
                     record,
                     &ir,
                     /* format_first_param_as_self= */ true,
+                    /* force_const_reference_params= */
+                    false,
                 )?;
                 func_name = make_rs_ident("drop");
             } else {
@@ -960,6 +1008,7 @@ fn api_func_shape(
                     record,
                     &ir,
                     /* format_first_param_as_self= */ true,
+                    /* force_const_reference_params= */ false,
                 )?;
                 func_name = make_rs_ident("pinned_drop");
             }
@@ -1003,6 +1052,7 @@ fn api_func_shape(
                             format_first_param_as_self: false,
                             drop_return: false,
                             associated_return_type: Some(make_rs_ident("CtorType")),
+                            force_const_reference_params: false,
                         };
                     }
                 }
@@ -1015,6 +1065,7 @@ fn api_func_shape(
                             record,
                             &ir,
                             /* format_first_param_as_self= */ false,
+                            /* force_const_reference_params= */ false,
                         )?;
                         func_name = make_rs_ident("default");
                     }
@@ -1032,6 +1083,7 @@ fn api_func_shape(
                                     record,
                                     &ir,
                                     /* format_first_param_as_self= */ true,
+                                    /* force_const_reference_params= */ false,
                                 )?;
                                 func_name = make_rs_ident("clone");
                             }
@@ -1045,6 +1097,8 @@ fn api_func_shape(
                                 record,
                                 &ir,
                                 /* format_first_param_as_self= */ false,
+                                /* force_const_reference_params= */
+                                false,
                             )?;
                             func_name = make_rs_ident("from");
                         } else {
@@ -1069,8 +1123,7 @@ fn get_binding(
     expected_function_name: UnqualifiedIdentifier,
     expected_param_types: &[RsTypeKind],
 ) -> Option<(Ident, ImplKind)> {
-    return db
-        .ir()
+    db.ir()
         // TODO(jeanpierreda): make this O(1) using a hash table lookup.
         .functions()
         .filter(|function| {
@@ -1088,7 +1141,42 @@ fn get_binding(
                 return None;
             }
             api_func_shape(db, function, &mut function_param_types).ok().flatten()
-        });
+        })
+}
+
+/// Returns whether the given record either implements or derives the Clone
+/// trait.
+fn is_record_clonable(db: &dyn BindingsGenerator, record: Rc<Record>) -> bool {
+    if !record.is_unpin() {
+        return false;
+    }
+    should_derive_clone(&record)
+        || db
+            .ir()
+            // TODO(jeanpierreda): make this O(1) using a hash table lookup.
+            .functions()
+            .filter(|function| {
+                function.name == UnqualifiedIdentifier::Constructor
+                // __this is always the first parameter of constructors
+                && function.params.len() == 2
+            })
+            .any(|function| {
+                let mut function_param_types = function
+                    .params
+                    .iter()
+                    .map(|param| db.rs_type_kind(param.type_.rs_type.clone()))
+                    .collect::<Result<Vec<_>>>()
+                    .ok()
+                    .unwrap_or_default();
+                if function.params.len() != 2 || !function_param_types[1].is_shared_ref_to(&record)
+                {
+                    return false;
+                }
+                api_func_shape(db, function, &mut function_param_types)
+                    .ok()
+                    .flatten()
+                    .map_or(false, |(func_name, _)| func_name == *"clone")
+            })
 }
 
 /// Mutates the provided parameters so that nontrivial by-value parameters are,
@@ -1164,6 +1252,47 @@ fn generate_func(
         func.params.iter().map(|p| make_rs_ident(&p.identifier.identifier)).collect_vec();
     let thunk = generate_func_thunk(db, &func, &param_idents, &param_types, &return_type)?;
 
+    // If the Rust trait require a function to take the params by const reference
+    // and the thunk takes some of its params by value then we should add a const
+    // reference around these Rust func params and clone the records when calling
+    // the thunk. Since some params might require cloning while others don't, we
+    // need to store this information for each param.
+    let (mut param_types, clone_suffixes) = if let ImplKind::Trait {
+        force_const_reference_params: true,
+        ..
+    } = impl_kind
+    {
+        let mut clone_suffixes = Vec::with_capacity(param_types.len());
+        (
+            param_types
+                .into_iter()
+                .map(|param_type|
+                    {if let RsTypeKind::Record { record: param_record, .. } = &param_type {
+                        if !is_record_clonable(db, param_record.clone()) {
+                            bail!(
+                                "function requires const ref params in Rust but C++ takes non-cloneable record {:?} by value {:?}",
+                                param_record,
+                                func,
+                            );
+                        }
+                        clone_suffixes.push(quote!{.clone()});
+                        Ok(RsTypeKind::Reference {
+                            referent: Rc::new(param_type.clone()),
+                            mutability: Mutability::Const,
+                            lifetime: Lifetime::new("_"),
+                        })
+                    } else {
+                        clone_suffixes.push(quote!{});
+                        Ok(param_type)
+                    }})
+                .collect::<Result<Vec<_>>>()?,
+            clone_suffixes,
+        )
+    } else {
+        let param_len = param_types.len();
+        (param_types, vec![quote! {}; param_len])
+    };
+
     let BindingsSignature {
         lifetimes,
         params: api_params,
@@ -1210,7 +1339,7 @@ fn generate_func(
                 //
                 // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
                 let mut body = if return_type.is_unpin() {
-                    quote! { crate::detail::#thunk_ident( #( #thunk_args ),* ) }
+                    quote! { crate::detail::#thunk_ident( #( #thunk_args #clone_suffixes ),* ) }
                 } else {
                     quote! {
                         ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<#return_type>>| {
@@ -1272,19 +1401,16 @@ fn generate_func(
                 trait_name.lifetimes().chain(first_param_lifetimes.into_iter().flatten()).collect();
             fn_generic_params = format_generic_params(
                 lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(lifetime)),
+                std::iter::empty::<syn::Ident>(),
             );
             *trait_generic_params = lifetimes
                 .iter()
                 .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(lifetime) {
-                        Some(quote! {#lifetime})
-                    } else {
-                        None
-                    }
+                    if trait_lifetimes.contains(lifetime) { Some(quote! {#lifetime}) } else { None }
                 })
                 .collect();
         } else {
-            fn_generic_params = format_generic_params(lifetimes);
+            fn_generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
         }
 
         let function_return_type = match &impl_kind {
@@ -1345,10 +1471,11 @@ fn generate_func(
                 quote! {
                     type #name = #quoted_return_type;
                 }
-            } else if let TraitName::PartialOrd { params: _ } = trait_name {
+            } else if let TraitName::PartialOrd { ref params } = trait_name {
+                let param = params.get(0).ok_or_else(|| anyhow!("No parameter to PartialOrd"))?;
                 quote! {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: & #param) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -1366,7 +1493,8 @@ fn generate_func(
             };
 
             let extra_items;
-            let trait_generic_params = format_generic_params(trait_generic_params);
+            let trait_generic_params =
+                format_generic_params(/* lifetimes= */ &[], trait_generic_params);
             match &trait_name {
                 TraitName::CtorNew(params) => {
                     if let [single_param] = params.as_slice() {
@@ -1641,7 +1769,7 @@ fn generate_func_thunk(
 
     let thunk_ident = thunk_ident(&func);
 
-    let generic_params = format_generic_params(lifetimes);
+    let generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
     let param_idents = out_param_ident.as_ref().into_iter().chain(param_idents);
     let param_types = out_param.into_iter().chain(param_types.map(|t| {
         if !t.is_unpin() {
@@ -1670,12 +1798,16 @@ fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
     }
 }
 
-fn format_generic_params<T: ToTokens>(params: impl IntoIterator<Item = T>) -> TokenStream {
-    let mut params = params.into_iter().peekable();
-    if params.peek().is_none() {
+fn format_generic_params<'a, T: ToTokens>(
+    lifetimes: impl IntoIterator<Item = &'a Lifetime>,
+    types: impl IntoIterator<Item = T>,
+) -> TokenStream {
+    let mut lifetimes = lifetimes.into_iter().filter(|lifetime| &*lifetime.0 != "_").peekable();
+    let mut types = types.into_iter().peekable();
+    if lifetimes.peek().is_none() && types.peek().is_none() {
         quote! {}
     } else {
-        quote! { < #( #params ),* > }
+        quote! { < #( #lifetimes ),* #( #types ),*> }
     }
 }
 
@@ -3054,7 +3186,8 @@ impl ToTokens for RsTypeKind {
             RsTypeKind::Unit => quote!{::std::os::raw::c_void},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
-                let generic_params = format_generic_params(type_args.iter());
+                let generic_params =
+                    format_generic_params(/* lifetimes= */ &[], type_args.iter());
                 quote! {#ident #generic_params}
             }
         }
@@ -6358,6 +6491,55 @@ mod tests {
     }
 
     #[test]
+    fn test_impl_eq_for_free_function_different_types() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final { int i; };
+            struct SomeOtherStruct final { int i; };
+            bool operator==(const SomeStruct& lhs, const SomeOtherStruct& rhs) {
+                return lhs.i == rhs.i;
+            }"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialEq<crate::SomeOtherStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeOtherStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructRK15SomeOtherStruct(self, rhs) }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_eq_for_free_function_by_value() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final { int i; };
+            bool operator==(SomeStruct lhs, SomeStruct rhs) {
+                return lhs.i == rhs.i;
+            }"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialEq<crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn eq(& self, rhs: & crate::SomeStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___Zeq10SomeStructS_(self.clone(), rhs.clone()) }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
     fn test_impl_lt_for_member_function() -> Result<()> {
         let ir = ir_from_cc(
             r#"#pragma clang lifetime_elision
@@ -6377,7 +6559,7 @@ mod tests {
             quote! {
                 impl PartialOrd<crate::SomeStruct> for SomeStruct {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: &crate::SomeStruct) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -6428,7 +6610,7 @@ mod tests {
             quote! {
                 impl PartialOrd<crate::SomeStruct> for SomeStruct {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: &crate::SomeStruct) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -6443,6 +6625,46 @@ mod tests {
                     #[inline(always)]
                     fn lt<'a, 'b>(&'a self, rhs: &'b crate::SomeStruct) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZltRK10SomeStructS1_(self, rhs) }
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_impl_lt_for_free_function_by_value() -> Result<()> {
+        let ir = ir_from_cc(
+            r#"#pragma clang lifetime_elision
+            struct SomeStruct final { int i; };
+            bool operator==(SomeStruct lhs, SomeStruct rhs) {
+                return lhs.i == rhs.i;
+            }
+            bool operator<(SomeStruct lhs, SomeStruct rhs) {
+                return lhs.i < rhs.i;
+            }"#,
+        )?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                impl PartialOrd<crate::SomeStruct> for SomeStruct {
+                    #[inline(always)]
+                    fn partial_cmp(&self, other: &crate::SomeStruct) -> Option<core::cmp::Ordering> {
+                        if self == other {
+                            return Some(core::cmp::Ordering::Equal);
+                        }
+                        if self < other {
+                            return Some(core::cmp::Ordering::Less);
+                        }
+                        if other < self {
+                            return Some(core::cmp::Ordering::Greater);
+                        }
+                        None
+                    }
+                    #[inline(always)]
+                    fn lt(& self, rhs: & crate::SomeStruct) -> bool {
+                        unsafe { crate::detail::__rust_thunk___Zlt10SomeStructS_(self.clone(), rhs.clone()) }
                     }
                 }
             }
@@ -6534,19 +6756,6 @@ mod tests {
             r#"#pragma clang lifetime_elision
             struct SomeStruct final {
                 bool operator==(const SomeStruct& other) /* no `const` here */;
-            };"#,
-        )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        assert_rs_not_matches!(rs_api, quote! {impl PartialEq});
-        Ok(())
-    }
-
-    #[test]
-    fn test_impl_eq_rhs_by_value() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"#pragma clang lifetime_elision
-            struct SomeStruct final {
-                bool operator==(SomeStruct other) const;
             };"#,
         )?;
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
@@ -6700,15 +6909,22 @@ mod tests {
 
     #[test]
     fn test_format_generic_params() -> Result<()> {
-        assert_rs_matches!(format_generic_params(std::iter::empty::<syn::Ident>()), quote! {});
+        assert_rs_matches!(
+            format_generic_params(/* lifetimes= */ &[], std::iter::empty::<syn::Ident>()),
+            quote! {}
+        );
 
         let idents = ["T1", "T2"].iter().map(|s| make_rs_ident(s));
-        assert_rs_matches!(format_generic_params(idents), quote! { < T1, T2 > });
+        assert_rs_matches!(
+            format_generic_params(/* lifetimes= */ &[], idents),
+            quote! { < T1, T2 > }
+        );
 
-        let lifetimes = ["a", "b"]
-            .iter()
-            .map(|s| syn::Lifetime::new(&format!("'{}", s), proc_macro2::Span::call_site()));
-        assert_rs_matches!(format_generic_params(lifetimes), quote! { < 'a, 'b > });
+        let lifetimes = ["a", "b", "_"].iter().map(|s| Lifetime::new(s)).collect::<Vec<_>>();
+        assert_rs_matches!(
+            format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>()),
+            quote! { < 'a, 'b > }
+        );
 
         Ok(())
     }

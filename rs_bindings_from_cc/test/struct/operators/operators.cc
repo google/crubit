@@ -22,6 +22,38 @@ bool operator<(const OperandForFreeFunc& lhs, const OperandForFreeFunc& rhs) {
   return (lhs.i % 10) < (rhs.i % 10);
 }
 
+bool operator==(const OperandByRef& lhs, const OperandByRef& rhs) {
+  return (lhs.i % 10) == (rhs.i % 10);
+}
+
+bool operator<(const OperandByRef& lhs, const OperandByRef& rhs) {
+  return (lhs.i % 10) < (rhs.i % 10);
+}
+
+bool operator==(OperandByValue lhs, OperandByValue rhs) {
+  return (lhs.i % 10) == (rhs.i % 10);
+}
+
+bool operator<(OperandByValue lhs, OperandByValue rhs) {
+  return (lhs.i % 10) < (rhs.i % 10);
+}
+
+bool operator==(const OperandByRefAndValue& lhs, OperandByRefAndValue rhs) {
+  return (lhs.i % 10) == (rhs.i % 10);
+}
+
+bool operator<(const OperandByRefAndValue& lhs, OperandByRefAndValue rhs) {
+  return (lhs.i % 10) < (rhs.i % 10);
+}
+
+bool operator==(OperandByValueAndRef lhs, const OperandByValueAndRef& rhs) {
+  return (lhs.i % 10) == (rhs.i % 10);
+}
+
+bool operator<(OperandByValueAndRef lhs, const OperandByValueAndRef& rhs) {
+  return (lhs.i % 10) < (rhs.i % 10);
+}
+
 namespace test_namespace_bindings {
 
 // bool operator==(const OperandForFreeFuncInDifferentNamespace& lhs,
