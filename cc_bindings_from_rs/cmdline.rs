@@ -124,7 +124,7 @@ OPTIONS:
         let tmpfile = tmpdir.path().join("herefile");
         std::fs::write(
             &tmpfile,
-            &["--h-out=foo.h", "--", "test.rs", "--crate-type=lib"].join("\n"),
+            ["--h-out=foo.h", "--", "test.rs", "--crate-type=lib"].join("\n"),
         )?;
 
         let flag_file_arg = format!("@{}", tmpfile.display());

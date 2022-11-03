@@ -39,7 +39,7 @@ impl GeneratedBindings {
 
         let h_body = {
             let crate_content = format_crate(tcx).unwrap_or_else(|err| {
-                let txt = format!("Failed to generate bindings for the crate: {}", err);
+                let txt = format!("Failed to generate bindings for the crate: {err}");
                 quote! { __COMMENT__ #txt }
             });
             // TODO(b/251445877): Replace `#pragma once` with include guards.
@@ -321,7 +321,7 @@ fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
     match tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
             Item { kind: ItemKind::Fn(_hir_fn_sig, generics, _body), .. } => {
-                if generics.params.len() == 0 {
+                if generics.params.is_empty() {
                     format_fn(tcx, def_id)
                 } else {
                     bail!(
@@ -1155,10 +1155,10 @@ pub mod tests {
 
     fn test_ty<TestFn, Expectation>(testcases: &[(&str, Expectation)], test_fn: TestFn)
     where
-        TestFn: Fn(/* testcase_description: */ &str, Ty, &Expectation) -> () + Sync,
+        TestFn: Fn(/* testcase_description: */ &str, Ty, &Expectation) + Sync,
         Expectation: Sync,
     {
-        for (index, (input, expected)) in testcases.into_iter().enumerate() {
+        for (index, (input, expected)) in testcases.iter().enumerate() {
             let desc = format!("test #{index}: test input: `{input}`");
             let input = {
                 let ty_tokens: TokenStream = input.parse().unwrap();
@@ -1204,18 +1204,18 @@ pub mod tests {
         let hir_items = || tcx.hir().items().map(|item_id| tcx.hir().item(item_id));
         let items_with_matching_name =
             hir_items().filter(|item| item.ident.name.as_str() == name).collect_vec();
-        match items_with_matching_name.as_slice() {
-            &[] => {
+        match *items_with_matching_name.as_slice() {
+            [] => {
                 let found_names = hir_items()
                     .map(|item| item.ident.name.as_str())
                     .filter(|s| !s.is_empty())
                     .sorted()
                     .dedup()
                     .map(|name| format!("`{name}`"))
-                    .collect_vec();
-                panic!("No items named `{}`.\nInstead found:\n{}", name, found_names.join(",\n"));
+                    .join(",\n");
+                panic!("No items named `{name}`.\nInstead found:\n{found_names}");
             }
-            &[item] => item.def_id.def_id,
+            [item] => item.def_id.def_id,
             _ => panic!("More than one item named `{name}`"),
         }
     }

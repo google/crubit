@@ -122,7 +122,7 @@ mod bindings_driver {
         }
     }
 
-    impl<'a, F, R> rustc_driver::Callbacks for AfterAnalysisCallback<'_, F, R>
+    impl<'a, F, R> rustc_driver::Callbacks for AfterAnalysisCallback<'a, F, R>
     where
         F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
         R: Send,
