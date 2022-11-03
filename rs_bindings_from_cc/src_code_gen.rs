@@ -3338,7 +3338,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                 match name.strip_prefix("#funcPtr ") {
                     None => RsTypeKind::Other { name: name.into(), type_args: Rc::from(type_args) },
                     Some(abi) => {
-                        // TODO(b/217419782): Consider enforcing `'static` lifetime.
+                        // TODO(b/254858027): Consider enforcing `'static` lifetime.
                         ensure!(!type_args.is_empty(), "No return type in fn type: {:?}", ty);
                         RsTypeKind::FuncPtr {
                             abi: abi.into(),

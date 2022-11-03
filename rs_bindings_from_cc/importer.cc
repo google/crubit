@@ -477,7 +477,7 @@ void Importer::Import(clang::TranslationUnitDecl* translation_unit_decl) {
   invocation_.ir_.top_level_item_ids =
       GetItemIdsInSourceOrder(translation_unit_decl);
 
-  // TODO(b/222001243): Consider placing the generated template instantiations
+  // TODO(b/257302656): Consider placing the generated template instantiations
   // into a separate namespace (maybe `crubit::instantiated_templates` ?).
   llvm::copy(GetOrderedItemIdsOfTemplateInstantiations(),
              std::back_inserter(invocation_.ir_.top_level_item_ids));

@@ -22,9 +22,7 @@ alias(
     actual = "//cc_bindings_from_rs:cc_bindings_from_rs_legacy_toolchain_runner.sar",
 )
 
-# TODO): Author a reusable "macro" [1] that automates writing
-# the `genrule` here, the `cc_library` below, and the `alias` above.
-# [1] https://bazel.build/extending/macros
+# TODO(b/257283134): Replace `genrule` with a custom `rule`.
 genrule(
     name = "functions_cc_api_genrule",
     testonly = 1,
