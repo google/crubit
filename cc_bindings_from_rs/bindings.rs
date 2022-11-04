@@ -16,6 +16,8 @@ use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 use std::collections::BTreeSet;
+use std::iter::Sum;
+use std::ops::{Add, AddAssign};
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
@@ -221,6 +223,67 @@ fn format_ty(ty: Ty) -> Result<CcSnippet> {
     })
 }
 
+#[derive(Debug)]
+struct BindingsSnippet {
+    /// `#include`s that go at the top of the generated `..._cc_api.h` file.
+    includes: BTreeSet<CcInclude>,
+
+    /// Public API of the bindings in the generated `..._cc_api.h` file.
+    api: TokenStream,
+
+    /// Internal implementation details for `..._cc_api.h` file (e.g.
+    /// declarations of Rust thunks, `static_assert`s about `struct` layout,
+    /// etc.).
+    internals: Option<TokenStream>,
+    // TODO(b/254097223): Add `impl_: Option<TokenStream>` to carry Rust thunks.
+}
+
+impl BindingsSnippet {
+    fn new() -> Self {
+        Self { includes: BTreeSet::new(), api: quote! {}, internals: None }
+    }
+}
+
+impl AddAssign for BindingsSnippet {
+    fn add_assign(&mut self, rhs: Self) {
+        let Self { includes: mut rhs_includes, api: rhs_api, internals: rhs_internals } = rhs;
+
+        self.includes.append(&mut rhs_includes);
+        self.api.extend(rhs_api);
+
+        fn concat_optional_tokens(
+            lhs: Option<TokenStream>,
+            rhs: Option<TokenStream>,
+        ) -> Option<TokenStream> {
+            match (lhs, rhs) {
+                (None, None) => None,
+                (Some(lhs), None) => Some(lhs),
+                (None, Some(rhs)) => Some(rhs),
+                (Some(mut lhs), Some(rhs)) => {
+                    lhs.extend(rhs);
+                    Some(lhs)
+                }
+            }
+        }
+        self.internals = concat_optional_tokens(self.internals.take(), rhs_internals);
+    }
+}
+
+impl Add for BindingsSnippet {
+    type Output = BindingsSnippet;
+
+    fn add(mut self, rhs: Self) -> Self {
+        self += rhs;
+        self
+    }
+}
+
+impl Sum for BindingsSnippet {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(BindingsSnippet::new(), Add::add)
+    }
+}
+
 /// Formats a function with the given `def_id`.
 ///
 /// Will panic if `def_id`
@@ -228,7 +291,7 @@ fn format_ty(ty: Ty) -> Result<CcSnippet> {
 /// - doesn't identify a function,
 /// - has generic parameters (any kind - lifetime parameters, type parameters,
 ///   or const parameters).
-fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
+fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     let item_name = tcx.item_name(def_id);
@@ -275,9 +338,6 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
         // TODO(b/254097223): Add support for Rust thunks.
         _ => bail!("Non-C ABI is not supported yet (b/254097223)"),
     };
-    if item_name.as_str() != symbol_name.name {
-        bail!("Mangled or renamed symbols are not supported yet");
-    }
 
     let mut includes = BTreeSet::new();
     let ret_type = format_ret_ty(sig.output())
@@ -303,21 +363,38 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
                 .into_tokens(&mut includes)
         ))
         .collect::<Result<Vec<_>>>()?;
-    Ok(CcSnippet {
-        snippet: quote! {
+    let api: TokenStream;
+    let internals: Option<TokenStream>;
+    if item_name.as_str() == symbol_name.name {
+        api = quote! {
             extern "C" #ret_type #fn_name (
                     #( #arg_types #arg_names ),*
-                );
-        },
-        includes,
-    })
+            );
+        };
+        internals = None;
+    } else {
+        let exported_name =
+            format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+        api = quote! {
+            inline #ret_type #fn_name (
+                    #( #arg_types #arg_names ),* ) {
+                return :: __crubit_internal :: #exported_name( #( #arg_names ),* );
+            }
+        };
+        internals = Some(quote! {
+            extern "C" #ret_type #exported_name (
+                    #( #arg_types #arg_names ),*
+            );
+        });
+    };
+    Ok(BindingsSnippet { includes, api, internals })
 }
 
 /// Formats a Rust item idenfied by `def_id`.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
 /// item).
-fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<CcSnippet> {
+fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     match tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
             Item { kind: ItemKind::Fn(_hir_fn_sig, generics, _body), .. } => {
@@ -341,14 +418,16 @@ fn format_unsupported_def(
     tcx: TyCtxt,
     local_def_id: LocalDefId,
     err: anyhow::Error,
-) -> TokenStream {
+) -> BindingsSnippet {
     let span = tcx.sess().source_map().span_to_embeddable_string(tcx.def_span(local_def_id));
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
     // says: To print causes as well [...], use the alternate selector “{:#}”.
     let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
-    quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ }
+    let comment = quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ };
+
+    BindingsSnippet { api: comment, ..BindingsSnippet::new() }
 }
 
 /// Formats all public items from the Rust crate being compiled (aka the
@@ -360,8 +439,7 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
     // `struct`s (without an `impl`) won't be visible to a linker and therefore
     // won't have exported symbols.  Additionally, walking Rust's modules top-down
     // might result in easier translation into C++ namespaces.
-    let mut includes = BTreeSet::new();
-    let snippets =
+    let snippets: BindingsSnippet =
         tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(|(symbol, _)| match symbol {
             ExportedSymbol::NonGeneric(def_id) => {
                 // It seems that non-generic exported symbols should all be defined in the
@@ -372,10 +450,8 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
                 // extra unit tests against out code).
                 let local_id = def_id.expect_local();
 
-                Some(match format_def(tcx, local_id) {
-                    Ok(snippet) => snippet.into_tokens(&mut includes),
-                    Err(err) => format_unsupported_def(tcx, local_id, err),
-                })
+                Some(format_def(tcx, local_id).unwrap_or_else(|err|
+                    format_unsupported_def(tcx, local_id, err)))
             }
             ExportedSymbol::Generic(def_id, _substs) => {
                 // Ignore non-local defs.  Map local defs to an unsupported comment.
@@ -390,24 +466,42 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
             }
             ExportedSymbol::DropGlue(..) | ExportedSymbol::NoDefId(..) => None,
         })
-    .collect_vec();
+    .sum();
 
-    // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
-    // top-level namespace is okay (e.g. investigate if this name is globally
-    // unique + ergonomic).
-    let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
-    let includes = format_cc_includes(&includes);
+    let includes = format_cc_includes(&snippets.includes);
+    let api = {
+        // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
+        // top-level namespace is okay (e.g. investigate if this name is globally
+        // unique + ergonomic).
+        let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
+        let api_body = &snippets.api;
+        quote! {
+            namespace #crate_name {
+                #api_body
+            }
+        }
+    };
+    let internals = {
+        match snippets.internals {
+            None => quote! {},
+            Some(details_body) => quote! {
+                namespace __crubit_internal {
+                    #details_body
+                }
+                __NEWLINE__
+            },
+        }
+    };
     Ok(quote! {
         #includes __NEWLINE__
-        namespace #crate_name {
-            #( #snippets )*
-        }
+        #internals
+        #api
     })
 }
 
 #[cfg(test)]
 pub mod tests {
-    use super::{format_def, format_ret_ty, format_ty, CcSnippet, GeneratedBindings};
+    use super::{format_def, format_ret_ty, format_ty, BindingsSnippet, GeneratedBindings};
 
     use anyhow::Result;
     use code_gen_utils::{format_cc_ident, format_cc_includes};
@@ -505,7 +599,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_fn_success() {
+    fn test_generated_bindings_fn_extern_c() {
         // This test covers only a single example of a function that should get a C++
         // binding. Additional coverage of how items are formatted is provided by
         // `test_format_def_...` tests.
@@ -527,7 +621,33 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_fn_with_includes() {
+    fn test_generated_bindings_fn_export_name() {
+        // Coverage of how `BindingsSnippet::internals` are propagated when there are no
+        // `BindingsSnippet::impl` (e.g. no Rust thunks are needed).
+        let test_src = r#"
+                #[export_name = "export_name"]
+                pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" double export_name(double x, double y);
+                    }
+                    namespace rust_out {
+                        inline double public_function(double x, double y) {
+                            return ::__crubit_internal::export_name(x, y);
+                        }
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_generated_bindings_includes() {
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn public_function(i: i32, d: isize, u: u64) {
@@ -631,8 +751,9 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" void public_function();
                 }
@@ -655,8 +776,9 @@ pub mod tests {
         test_format_def(test_src, "explicit_unit_return_type", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" void explicit_unit_return_type();
                 }
@@ -679,8 +801,9 @@ pub mod tests {
             // details).
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" void never_returning_function();
                 }
@@ -690,25 +813,56 @@ pub mod tests {
 
     #[test]
     fn test_format_def_fn_mangling() {
+        // This test checks that bindings can be generated for `extern "C"` functions
+        // that do *not* have `#[no_mangle]` attribute.  The test elides away
+        // the mangled name in the `assert_cc_matches` checks below, but
+        // end-to-end test coverage is provided by `test/functions`.
         let test_src = r#"
-                pub extern "C" fn public_function() {}
+                pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_def(test_src, "public_function", |result| {
-            let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Mangled or renamed symbols are not supported yet");
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
+            assert_cc_matches!(
+                result.api,
+                quote! {
+                    inline double public_function(double x, double y) {
+                        return ...(x, y);
+                    }
+                }
+            );
+            assert_cc_matches!(
+                result.internals.expect("This test expects separate extern-C decl"),
+                quote! {
+                    extern "C" double ...(double x, double y);
+                }
+            );
         });
     }
 
     #[test]
     fn test_format_def_fn_export_name() {
         let test_src = r#"
-                #[export_name = "exported_function"]
-                #[no_mangle]
-                pub extern "C" fn public_function() {}
+                #[export_name = "export_name"]
+                pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_def(test_src, "public_function", |result| {
-            let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Mangled or renamed symbols are not supported yet");
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
+            assert_cc_matches!(
+                result.api,
+                quote! {
+                    inline double public_function(double x, double y) {
+                        return ::__crubit_internal::export_name(x, y);
+                    }
+                }
+            );
+            assert_cc_matches!(
+                result.internals.expect("This test expects separate extern-C decl"),
+                quote! {
+                    extern "C" double export_name(double x, double y);
+                }
+            );
         });
     }
 
@@ -762,8 +916,9 @@ pub mod tests {
         test_format_def(test_src, "may_throw", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" void may_throw();
                 }
@@ -787,8 +942,9 @@ pub mod tests {
         test_format_def(test_src, "type_aliased_return", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" double type_aliased_return();
                 }
@@ -914,8 +1070,9 @@ pub mod tests {
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" void foo(bool b, double f);
                 }
@@ -933,8 +1090,9 @@ pub mod tests {
         test_format_def(test_src, "some_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.internals.is_none());
             assert_cc_matches!(
-                result.snippet,
+                result.api,
                 quote! {
                     extern "C" void some_function(double __param_0);
                 }
@@ -1183,7 +1341,7 @@ pub mod tests {
     /// result from `format_def`.)
     fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<CcSnippet, String>) -> T + Send,
+        F: FnOnce(Result<BindingsSnippet, String>) -> T + Send,
         T: Send,
     {
         run_compiler(source, |tcx| {
