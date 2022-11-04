@@ -1215,7 +1215,7 @@ pub mod tests {
                     .join(",\n");
                 panic!("No items named `{name}`.\nInstead found:\n{found_names}");
             }
-            [item] => item.def_id.def_id,
+            [item] => item.owner_id.def_id,
             _ => panic!("More than one item named `{name}`"),
         }
     }
