@@ -120,8 +120,6 @@ rust_library(
 rust_test(
     name = "token_stream_matchers_test",
     crate = ":token_stream_matchers",
-    data = [
-    ],
     deps = [
         "//common:rust_allocator_shims",
         "@crate_index//:quote",
@@ -144,12 +142,9 @@ rust_library(
 rust_test(
     name = "token_stream_printer_test",
     crate = ":token_stream_printer",
-    data = [
-        "//nowhere:rustfmt.toml",
-        "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
-    ],
     deps = [
         "@crate_index//:quote",
+        "@crate_index//:tempfile",
     ],
 )
 

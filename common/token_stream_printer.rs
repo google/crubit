@@ -5,9 +5,10 @@
 use anyhow::{bail, Result};
 use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
-use std::ffi::{OsStr, OsString};
+use std::ffi::OsString;
 use std::fmt::Write as _;
 use std::io::Write as _;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 // TODO(b/231320237): The `RustfmtConfig` struct should be replaced with
@@ -15,37 +16,38 @@ use std::process::{Command, Stdio};
 // (instead of invoking the `rustfmt` executable).
 pub struct RustfmtConfig {
     /// Path to the `rustfmt` executable.
-    exe_path: OsString,
+    exe_path: PathBuf,
 
     /// Cmdline arguments to be passed to the `rustfmt` executable.
     cmdline_args: Vec<OsString>,
 }
 
+const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
+    "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
+
 impl RustfmtConfig {
     /// Creates a config that will invoke `rustfmt` at the given
-    /// `rustfmt_exe_path`.  If `rustfmt_config_path` is a non-empty string,
-    /// then a `rustfmt.toml` file at that path will be used to configure
-    /// the formatting details;  otherwise a default formatting will be used.
-    pub fn new(rustfmt_exe_path: &OsStr, rustfmt_config_path: &OsStr) -> Self {
+    /// `rustfmt_exe_path`.  If `rustfmt_config_path` is specified, then a
+    /// `rustfmt.toml` file at that path will be used to configure the
+    /// formatting details;  otherwise a default formatting will be used.
+    pub fn new(rustfmt_exe_path: &Path, rustfmt_config_path: Option<&Path>) -> Self {
         Self {
-            exe_path: rustfmt_exe_path.into(),
-            cmdline_args: if rustfmt_config_path.is_empty() {
-                Self::default_cmdline_args()
-            } else {
-                Self::cmdline_args_with_custom_config_path(rustfmt_config_path)
+            exe_path: rustfmt_exe_path.to_path_buf(),
+            cmdline_args: match rustfmt_config_path {
+                None => Self::default_cmdline_args(),
+                Some(path) => Self::cmdline_args_with_custom_config_path(path),
             },
         }
     }
 
     fn for_testing() -> Self {
         Self {
-            exe_path: "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"
-                .into(),
+            exe_path: PathBuf::from(RUSTFMT_EXE_PATH_FOR_TESTING),
             cmdline_args: Self::default_cmdline_args(),
         }
     }
 
-    fn cmdline_args_with_custom_config_path(rustfmt_config_path: &OsStr) -> Vec<OsString> {
+    fn cmdline_args_with_custom_config_path(rustfmt_config_path: &Path) -> Vec<OsString> {
         let mut config_path_arg: OsString = "--config-path=".into();
         config_path_arg.push(rustfmt_config_path);
         Self::append_config_overrides(vec![config_path_arg])
@@ -223,6 +225,7 @@ mod tests {
 
     use super::Result;
     use quote::quote;
+    use tempfile::tempdir;
 
     #[test]
     fn test_simple_token_stream() -> Result<()> {
@@ -352,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rs_tokens_to_formatted_string() {
+    fn test_rs_tokens_to_formatted_string_for_tests() {
         let input = quote! {
             fn foo() {}
             fn bar() {}
@@ -364,6 +367,56 @@ mod tests {
 fn bar() {}
 "#
         );
+    }
+
+    #[test]
+    fn test_rs_tokens_to_formatted_string() {
+        let cfg = RustfmtConfig::new(Path::new(RUSTFMT_EXE_PATH_FOR_TESTING), None);
+        let input = quote! {
+            fn bar() {}
+            fn foo(x: i32, y: i32) -> i32 { x + y }
+        };
+        let output = rs_tokens_to_formatted_string(input, &cfg).unwrap();
+        assert_eq!(
+            output,
+            r#"fn bar() {}
+fn foo(x: i32, y: i32) -> i32 {
+    x + y
+}
+"#
+        );
+    }
+
+    #[test]
+    fn test_rs_tokens_to_formatted_string_with_custom_rustfmt_toml() -> Result<()> {
+        let tmpdir = tempdir()?;
+        let rustfmt_toml_path = tmpdir.path().join("rustfmt-for-tests.toml");
+        std::fs::write(
+            &rustfmt_toml_path,
+            r#" edition = "2021"
+                version = "Two"
+                fn_args_layout="Vertical" "#,
+        )?;
+        let cfg =
+            RustfmtConfig::new(Path::new(RUSTFMT_EXE_PATH_FOR_TESTING), Some(&rustfmt_toml_path));
+        let input = quote! {
+            fn bar() {}
+            fn foo(x: i32, y: i32) -> i32 { x + y }
+        };
+
+        let output = rs_tokens_to_formatted_string(input, &cfg).unwrap();
+        assert_eq!(
+            output,
+            r#"fn bar() {}
+fn foo(
+    x: i32,
+    y: i32,
+) -> i32 {
+    x + y
+}
+"#
+        );
+        Ok(())
     }
 
     #[test]

@@ -104,6 +104,8 @@ cc_library(
 cc_test(
     name = "generate_bindings_and_metadata_test",
     srcs = ["generate_bindings_and_metadata_test.cc"],
+    data = [
+    ],
     deps = [
         ":cc_ir",
         ":cmdline",
@@ -403,8 +405,6 @@ rust_library(
 rust_test(
     name = "src_code_gen_impl_test",
     crate = ":src_code_gen_impl",
-    data = [
-    ],
     deps = [
         ":ir_matchers",
         ":ir_testing",
@@ -467,8 +467,6 @@ rust_library(
 rust_test(
     name = "ir_matchers_test",
     crate = ":ir_matchers",
-    data = [
-    ],
     deps = [
         "//common:rust_allocator_shims",
     ],

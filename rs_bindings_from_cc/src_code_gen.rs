@@ -16,6 +16,7 @@ use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
 use std::iter::{self, Iterator};
 use std::panic::catch_unwind;
+use std::path::Path;
 use std::process;
 use std::ptr;
 use std::rc::Rc;
@@ -156,6 +157,12 @@ fn generate_bindings(
     let BindingsTokens { rs_api, rs_api_impl } =
         generate_bindings_tokens(ir.clone(), crubit_support_path, errors)?;
     let rs_api = {
+        let rustfmt_exe_path = Path::new(rustfmt_exe_path);
+        let rustfmt_config_path = if rustfmt_config_path.is_empty() {
+            None
+        } else {
+            Some(Path::new(rustfmt_config_path))
+        };
         let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
         rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
     };
