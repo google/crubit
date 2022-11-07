@@ -5,6 +5,7 @@
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 
 #include "absl/log/check.h"
+#include "rs_bindings_from_cc/known_types_map.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 

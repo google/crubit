@@ -152,6 +152,17 @@ cc_test(
 )
 
 cc_library(
+    name = "known_types_map",
+    srcs = ["known_types_map.cc"],
+    hdrs = ["known_types_map.h"],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/strings",
+    ],
+)
+
+cc_library(
     name = "cmdline",
     srcs = ["cmdline.cc"],
     hdrs = ["cmdline.h"],
@@ -226,6 +237,7 @@ cc_library(
         ":bazel_types",
         ":cc_ir",
         ":decl_importer",
+        ":known_types_map",
         "//common:status_macros",
         "//lifetime_annotations:type_lifetimes",
         "//rs_bindings_from_cc/importers:class_template",

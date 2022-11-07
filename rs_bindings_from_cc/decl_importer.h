@@ -59,11 +59,6 @@ class Invocation {
       header_targets_;
 };
 
-// Converts primitive types like `std::usize` or `int64_t` into their Rust
-// equivalents.
-std::optional<absl::string_view> MapKnownCcTypeToRsType(
-    absl::string_view cc_type);
-
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to
 // interface with the global state of the importer.
 class ImportContext {
