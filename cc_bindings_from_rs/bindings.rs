@@ -1101,6 +1101,33 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_def_fn_export_name_with_anonymous_parameter_names() {
+        let test_src = r#"
+                #[export_name = "export_name"]
+                pub extern "C" fn public_function(_: f64, _: f64) {}
+            "#;
+        test_format_def(test_src, "public_function", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
+            assert_cc_matches!(
+                result.api,
+                quote! {
+                    inline void public_function(double __param_0, double __param_1) {
+                        return ::__crubit_internal::export_name(__param_0, __param_1);
+                    }
+                }
+            );
+            assert_cc_matches!(
+                result.internals.expect("This test expects separate extern-C decl"),
+                quote! {
+                    extern "C" void export_name(double __param_0, double __param_1);
+                }
+            );
+        });
+    }
+
+
+    #[test]
     fn test_format_def_unsupported_fn_param_type() {
         let test_src = r#"
                 #[no_mangle]

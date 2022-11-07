@@ -17,6 +17,8 @@ use std::rc::Rc;
 
 /// Formats a C++ identifier. Panics when `ident` is a C++ reserved keyword.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
+    ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
+
     // C++ doesn't have an equivalent of
     // https://doc.rust-lang.org/rust-by-example/compatibility/raw_identifiers.html and therefore
     // an error is returned when `ident` is a C++ reserved keyword.
@@ -276,6 +278,13 @@ pub mod tests {
             format_cc_ident(r#" operator "" _km "#).expect("No errors expected in this test"),
             quote! { operator "" _km }
         );
+    }
+
+    #[test]
+    fn test_format_cc_ident_empty() {
+        let err = format_cc_ident("").expect_err("This test expects an error");
+        let msg = err.to_string();
+        assert_eq!(msg, "Empty string is not a valid C++ identifier");
     }
 
     #[test]
