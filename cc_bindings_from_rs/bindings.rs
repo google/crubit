@@ -1246,7 +1246,7 @@ pub mod tests {
             // details).
             ("!", "void"),
         ];
-        test_ty(&testcases, |desc, ty, expected| {
+        test_ty(&testcases, quote! {}, |desc, ty, expected| {
             let actual = {
                 let cc_snippet = format_ret_ty(ty).unwrap();
                 assert!(cc_snippet.includes.is_empty());
@@ -1285,7 +1285,10 @@ pub mod tests {
             // Extra parens/sugar are expected to be ignored:
             ("(bool)", ("bool", "")),
         ];
-        test_ty(&testcases, |desc, ty, (expected_snippet, expected_include)| {
+        let preamble = quote! {
+            #![allow(unused_parens)]
+        };
+        test_ty(&testcases, preamble, |desc, ty, (expected_snippet, expected_include)| {
             let (actual_snippet, actual_includes) = {
                 let cc_snippet = format_ty(ty).unwrap();
                 (cc_snippet.snippet.to_string(), cc_snippet.includes)
@@ -1312,7 +1315,6 @@ pub mod tests {
         // `Err(...)`.
         //
         // TODO(lukasza): Add test coverage for:
-        // - TyKind::Adt (structs, unions, enums, etc.)
         // - TyKind::Bound
         // - TyKind::Dynamic (`dyn Eq`)
         // - TyKind::Foreign (`extern type T`)
@@ -1377,16 +1379,36 @@ pub mod tests {
             // or to `absl::in128`.
             ("i128", "C++ doesn't have a standard equivalent of `i128` (b/254094650)"),
             ("u128", "C++ doesn't have a standard equivalent of `u128` (b/254094650)"),
+            ("SomeStruct", "The following Rust type is not supported yet: SomeStruct"),
+            ("SomeEnum", "The following Rust type is not supported yet: SomeEnum"),
+            ("SomeUnion", "The following Rust type is not supported yet: SomeUnion"),
         ];
-        test_ty(&testcases, |desc, ty, expected_err| {
+        let preamble = quote! {
+            pub struct SomeStruct {
+                pub x: i32,
+                pub y: i32,
+            }
+            pub enum SomeEnum {
+                Cartesian{x: f64, y: f64},
+                Polar{angle: f64, dist: f64},
+            }
+            pub union SomeUnion {
+                pub x: i32,
+                pub y: i32,
+            }
+        };
+        test_ty(&testcases, preamble, |desc, ty, expected_err| {
             let anyhow_err = format_ty(ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
     }
 
-    fn test_ty<TestFn, Expectation>(testcases: &[(&str, Expectation)], test_fn: TestFn)
-    where
+    fn test_ty<TestFn, Expectation>(
+        testcases: &[(&str, Expectation)],
+        preamble: TokenStream,
+        test_fn: TestFn,
+    ) where
         TestFn: Fn(/* testcase_description: */ &str, Ty, &Expectation) + Sync,
         Expectation: Sync,
     {
@@ -1395,7 +1417,7 @@ pub mod tests {
             let input = {
                 let ty_tokens: TokenStream = input.parse().unwrap();
                 let input = quote! {
-                    #![allow(unused_parens)]
+                    #preamble
                     pub fn test_function() -> #ty_tokens { panic!("") }
                 };
                 input.to_string()
