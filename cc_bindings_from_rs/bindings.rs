@@ -289,8 +289,8 @@ impl Sum for BindingsSnippet {
 /// Will panic if `def_id`
 /// - is invalid
 /// - doesn't identify a function,
-/// - has generic parameters (any kind - lifetime parameters, type parameters,
-///   or const parameters).
+/// - has generic parameters of any kind - lifetime parameters (see also b/258235219), type
+///   parameters, or const parameters.
 fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
 
@@ -397,14 +397,18 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
 fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     match tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
-            Item { kind: ItemKind::Fn(_hir_fn_sig, generics, _body), .. } => {
-                if generics.params.is_empty() {
-                    format_fn(tcx, def_id)
-                } else {
-                    bail!(
-                        "Generic functions (lifetime-generic or type-generic) are not supported yet"
-                    )
-                }
+            Item { kind: ItemKind::Fn(_, generics, _) |
+                         ItemKind::Struct(_, generics) |
+                         ItemKind::Enum(_, generics) |
+                         ItemKind::Union(_, generics),
+                   .. } if !generics.params.is_empty() => {
+                // TODO(b/258235219): Supporting function parameter types (or return types) that
+                // are references requires adding support for generic lifetime parameters.  The
+                // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
+                bail!("Generics (even lifetime generics) are not supported yet");
+            },
+            Item { kind: ItemKind::Fn(..), .. } => {
+                format_fn(tcx, def_id)
             }
             Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
         },
@@ -987,6 +991,7 @@ pub mod tests {
 
     #[test]
     fn test_format_def_unsupported_fn_with_late_bound_lifetimes() {
+        // TODO(b/258235219): Expect success after adding support for references.
         let test_src = r#"
                 pub fn foo(arg: &i32) -> &i32 { arg }
 
@@ -1000,7 +1005,7 @@ pub mod tests {
             let err = result.expect_err("Test expects an error here");
             assert_eq!(
                 err,
-                "Generic functions (lifetime-generic or type-generic) are not supported yet"
+                "Generics (even lifetime generics) are not supported yet"
             );
         });
     }
@@ -1018,8 +1023,50 @@ pub mod tests {
             let err = result.expect_err("Test expects an error here");
             assert_eq!(
                 err,
-                "Generic functions (lifetime-generic or type-generic) are not supported yet"
+                "Generics (even lifetime generics) are not supported yet"
             );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_generic_struct() {
+        let test_src = r#"
+                pub struct Point<T> {
+                    pub x: T,
+                    pub y: T,
+                }
+            "#;
+        test_format_def(test_src, "Point", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Generics (even lifetime generics) are not supported yet");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_generic_enum() {
+        let test_src = r#"
+                pub enum Point<T> {
+                    Cartesian{x: T, y: T},
+                    Polar{angle: T, dist: T},
+                }
+            "#;
+        test_format_def(test_src, "Point", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Generics (even lifetime generics) are not supported yet");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_generic_union() {
+        let test_src = r#"
+                pub union SomeUnion<T> {
+                    pub x: std::mem::ManuallyDrop<T>,
+                    pub y: i32,
+                }
+            "#;
+        test_format_def(test_src, "SomeUnion", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Generics (even lifetime generics) are not supported yet");
         });
     }
 
