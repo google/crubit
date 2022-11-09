@@ -30,14 +30,14 @@ class PointerNullabilityDiagnoser {
   ///
   /// TODO(b/233582219): Extend diagnosis to return more information, e.g. the
   /// type of violation.
-  llvm::Optional<const Stmt*> diagnose(const CFGElement* Elt, ASTContext& Ctx,
-                                       const dataflow::Environment& Env) {
+  llvm::Optional<CFGElement> diagnose(const CFGElement* Elt, ASTContext& Ctx,
+                                      const dataflow::Environment& Env) {
     return Diagnoser(*Elt, Ctx, Env);
   }
 
  private:
   dataflow::CFGMatchSwitch<const dataflow::Environment,
-                           llvm::Optional<const Stmt*>>
+                           llvm::Optional<CFGElement>>
       Diagnoser;
 };
 

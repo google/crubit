@@ -29,7 +29,7 @@ using ::testing::ContainerEq;
 using ::testing::Test;
 
 void checkDiagnostics(llvm::StringRef SourceCode) {
-  std::vector<const Stmt *> Diagnostics;
+  std::vector<CFGElement> Diagnostics;
   PointerNullabilityDiagnoser Diagnoser;
   ASSERT_THAT_ERROR(
       checkDataflow<PointerNullabilityAnalysis>(
@@ -58,9 +58,17 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
               ExpectedLines.insert(Line);
             }
             auto &SrcMgr = AnalysisData.ASTCtx.getSourceManager();
-            for (auto *Stmt : Diagnostics) {
-              ActualLines.insert(
-                  SrcMgr.getPresumedLineNumber(Stmt->getBeginLoc()));
+            for (auto Element : Diagnostics) {
+              if (Optional<CFGStmt> stmt = Element.getAs<CFGStmt>()) {
+                ActualLines.insert(SrcMgr.getPresumedLineNumber(
+                    stmt->getStmt()->getBeginLoc()));
+              } else if (Optional<CFGInitializer> init =
+                             Element.getAs<CFGInitializer>()) {
+                ActualLines.insert(SrcMgr.getPresumedLineNumber(
+                    init->getInitializer()->getSourceLocation()));
+              } else {
+                ADD_FAILURE() << "this code should not be reached";
+              }
             }
             EXPECT_THAT(ActualLines, ContainerEq(ExpectedLines));
           }),

@@ -41,20 +41,20 @@ bool isIncompatibleAssignment(QualType DeclaredType, const Expr* E,
          isNullableOrUntracked(E, Env);
 }
 
-llvm::Optional<const Stmt*> diagnoseDereference(const UnaryOperator* UnaryOp,
-                                                const MatchFinder::MatchResult&,
-                                                const Environment& Env) {
+llvm::Optional<CFGElement> diagnoseDereference(const UnaryOperator* UnaryOp,
+                                               const MatchFinder::MatchResult&,
+                                               const Environment& Env) {
   if (isNullableOrUntracked(UnaryOp->getSubExpr(), Env)) {
-    return UnaryOp;
+    return llvm::Optional<CFGElement>(CFGStmt(UnaryOp));
   }
   return llvm::None;
 }
 
-llvm::Optional<const Stmt*> diagnoseArrow(
-    const MemberExpr* MemberExpr, const MatchFinder::MatchResult& Result,
-    const Environment& Env) {
+llvm::Optional<CFGElement> diagnoseArrow(const MemberExpr* MemberExpr,
+                                         const MatchFinder::MatchResult& Result,
+                                         const Environment& Env) {
   if (isNullableOrUntracked(MemberExpr->getBase(), Env)) {
-    return MemberExpr;
+    return llvm::Optional<CFGElement>(CFGStmt(MemberExpr));
   }
   return llvm::None;
 }
@@ -78,7 +78,7 @@ bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
 // TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
 // a function returned from another function), or when the callee cannot be
 // interpreted as a function type (e.g. a pointer to a function pointer).
-llvm::Optional<const Stmt*> diagnoseCallExpr(
+llvm::Optional<CFGElement> diagnoseCallExpr(
     const CallExpr* CE, const MatchFinder::MatchResult& Result,
     const Environment& Env) {
   auto* Callee = CE->getCalleeDecl();
@@ -96,11 +96,11 @@ llvm::Optional<const Stmt*> diagnoseCallExpr(
   }
 
   return isIncompatibleArgumentList(ParamTypes, Args, Env, *Result.Context)
-             ? llvm::Optional<const Stmt*>(CE)
+             ? llvm::Optional<CFGElement>(CFGStmt(CE))
              : llvm::None;
 }
 
-llvm::Optional<const Stmt*> diagnoseConstructExpr(
+llvm::Optional<CFGElement> diagnoseConstructExpr(
     const CXXConstructExpr* CE, const MatchFinder::MatchResult& Result,
     const Environment& Env) {
   auto ConstructorParamTypes = CE->getConstructor()
@@ -110,11 +110,11 @@ llvm::Optional<const Stmt*> diagnoseConstructExpr(
   ArrayRef<const Expr*> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
   return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs, Env,
                                     *Result.Context)
-             ? llvm::Optional<const Stmt*>(CE)
+             ? llvm::Optional<CFGElement>(CFGStmt(CE))
              : llvm::None;
 }
 
-llvm::Optional<const Stmt*> diagnoseReturn(
+llvm::Optional<CFGElement> diagnoseReturn(
     const ReturnStmt* RS, const MatchFinder::MatchResult& Result,
     const Environment& Env) {
   auto ReturnType = cast<FunctionDecl>(Env.getDeclCtx())->getReturnType();
@@ -124,11 +124,11 @@ llvm::Optional<const Stmt*> diagnoseReturn(
   assert(ReturnExpr->getType()->isPointerType());
 
   return isIncompatibleAssignment(ReturnType, ReturnExpr, Env, *Result.Context)
-             ? llvm::Optional<const Stmt*>(RS)
+             ? llvm::Optional<CFGElement>(CFGStmt(RS))
              : llvm::None;
 }
 
-llvm::Optional<const Stmt*> diagnoseMemberInitializer(
+llvm::Optional<CFGElement> diagnoseMemberInitializer(
     const CXXCtorInitializer* CI, const MatchFinder::MatchResult& Result,
     const Environment& Env) {
   assert(CI->isAnyMemberInitializer());
@@ -139,19 +139,12 @@ llvm::Optional<const Stmt*> diagnoseMemberInitializer(
   auto MemberInitExpr = CI->getInit();
   return isIncompatibleAssignment(MemberType, MemberInitExpr, Env,
                                   *Result.Context)
-             // TODO(b/233582219): CtorInitializer is not compatible with the
-             // return type as it is not a Stmt. Therefore, we currently return
-             // the expression in the initializer. The return type should be
-             // modified to work over different AST nodes. For example,
-             // returning a SourceLocation or creating a Diagnostic base class
-             // that will contain more information about the violation and store
-             // the relevant AST nodes.
-             ? llvm::Optional<const Stmt*>(MemberInitExpr)
+             ? llvm::Optional<CFGElement>(CFGInitializer(CI))
              : llvm::None;
 }
 
 auto buildDiagnoser() {
-  return CFGMatchSwitchBuilder<const Environment, llvm::Optional<const Stmt*>>()
+  return CFGMatchSwitchBuilder<const Environment, llvm::Optional<CFGElement>>()
       // (*)
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       // (->)
