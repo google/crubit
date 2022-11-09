@@ -2864,6 +2864,46 @@ impl ToTokens for Lifetime {
     }
 }
 
+/// Qualified path from the root of the crate to the module containing the type.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CratePath {
+    idents: Vec<String>,
+}
+
+impl CratePath {
+    fn new(namespace_qualifier: &NamespaceQualifier, crate_ident: Option<Ident>) -> CratePath {
+        let namespace_qualifiers = &namespace_qualifier.0;
+        let crate_ident = match crate_ident {
+            Some(ci) => ci.to_string(),
+            None => "crate".to_string(),
+        };
+        let idents =
+            std::iter::once(crate_ident).chain(namespace_qualifiers.iter().cloned()).collect();
+        CratePath { idents }
+    }
+}
+
+impl ToTokens for CratePath {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        use quote::TokenStreamExt;
+        for (i, ident) in self.idents.iter().enumerate() {
+            if i > 0 {
+                // Double colon `::`
+                tokens.append(proc_macro2::Punct::new(':', proc_macro2::Spacing::Joint));
+                tokens.append(proc_macro2::Punct::new(':', proc_macro2::Spacing::Alone));
+                tokens.append(make_rs_ident(ident))
+            } else {
+                tokens.append(if ident == "crate" {
+                    // leading token `crate` should be interpreted as a keyword, not escaped.
+                    format_ident!("{}", ident)
+                } else {
+                    make_rs_ident(ident)
+                })
+            }
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum RsTypeKind {
     Pointer {
@@ -2888,27 +2928,17 @@ enum RsTypeKind {
     /// An incomplete record type.
     IncompleteRecord {
         incomplete_record: Rc<IncompleteRecord>,
-
-        /// The imported crate this comes from, or None if the current crate.
-        crate_ident: Option<Ident>,
-        /// The namespace qualifier for this record.
-        namespace_qualifier: Rc<NamespaceQualifier>,
+        crate_path: Rc<CratePath>,
     },
     /// A complete record type.
     Record {
         record: Rc<Record>,
-        /// The namespace qualifier for this record.
-        namespace_qualifier: Rc<NamespaceQualifier>,
-        /// The imported crate this comes from, or None if the current crate.
-        crate_ident: Option<Ident>,
+        crate_path: Rc<CratePath>,
     },
     TypeAlias {
         type_alias: Rc<TypeAlias>,
         underlying_type: Rc<RsTypeKind>,
-        /// The namespace qualifier for this alias.
-        namespace_qualifier: Rc<NamespaceQualifier>,
-        /// The imported crate this comes from, or None if the current crate.
-        crate_ident: Option<Ident>,
+        crate_path: Rc<CratePath>,
     },
     Unit,
     Other {
@@ -2919,9 +2949,11 @@ enum RsTypeKind {
 
 impl RsTypeKind {
     pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
-        let namespace_qualifier = Rc::new(NamespaceQualifier::new(record.id, ir)?);
-        let crate_ident = rs_imported_crate_name(&record.owning_target, ir);
-        Ok(RsTypeKind::Record { record, namespace_qualifier, crate_ident })
+        let crate_path = Rc::new(CratePath::new(
+            &NamespaceQualifier::new(record.id, ir)?,
+            rs_imported_crate_name(&record.owning_target, ir),
+        ));
+        Ok(RsTypeKind::Record { record, crate_path })
     }
 
     /// Returns true if the type is known to be `Unpin`, false otherwise.
@@ -3150,43 +3182,18 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::IncompleteRecord {
                 incomplete_record,
-                namespace_qualifier,
-                crate_ident,
+                crate_path
             } => {
                 let record_ident = make_rs_ident(&incomplete_record.rs_name);
-                let namespace_qualifier = namespace_qualifier.format_for_rs();
-                match crate_ident {
-                    Some(ci) => {
-                        quote! { #ci #namespace_qualifier #record_ident }
-                    }
-                    None => {
-                        quote! { crate:: #namespace_qualifier #record_ident }
-                    }
-                }
+                quote! { #crate_path :: #record_ident }
             }
-            RsTypeKind::Record { record, namespace_qualifier, crate_ident } => {
+            RsTypeKind::Record { record, crate_path } => {
                 let ident = make_rs_ident(&record.rs_name);
-                let namespace_qualifier = namespace_qualifier.format_for_rs();
-                match crate_ident {
-                    Some(ci) => {
-                        quote! { #ci:: #namespace_qualifier #ident }
-                    }
-                    None => {
-                        quote! { crate:: #namespace_qualifier #ident }
-                    }
-                }
+                quote! { #crate_path :: #ident }
             }
-            RsTypeKind::TypeAlias { type_alias, namespace_qualifier, crate_ident, .. } => {
+            RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {
                 let ident = make_rs_ident(&type_alias.identifier.identifier);
-                let namespace_qualifier = namespace_qualifier.format_for_rs();
-                match crate_ident {
-                    Some(ci) => {
-                        quote! { #ci:: #namespace_qualifier #ident }
-                    }
-                    None => {
-                        quote! { crate:: #namespace_qualifier #ident }
-                    }
-                }
+                quote! { #crate_path :: #ident }
             }
             // This doesn't affect void in function return values, as those are special-cased to be
             // omitted.
@@ -3280,11 +3287,11 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             match ir.item_for_type(&ty)? {
                 Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                     incomplete_record: incomplete_record.clone(),
-                    namespace_qualifier: Rc::new(NamespaceQualifier::new(
+                   crate_path: Rc::new(CratePath::new(&NamespaceQualifier::new(
                         incomplete_record.id,
                         &ir,
-                    )?),
-                    crate_ident: rs_imported_crate_name(&incomplete_record.owning_target, &ir),
+                    )?,
+                    rs_imported_crate_name(&incomplete_record.owning_target, &ir)))
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => {
@@ -3295,11 +3302,11 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     } else {
                         RsTypeKind::TypeAlias {
                             type_alias: type_alias.clone(),
-                            namespace_qualifier: Rc::new(NamespaceQualifier::new(
+                           crate_path: Rc::new(CratePath::new(&NamespaceQualifier::new(
                                 type_alias.id,
                                 &ir,
-                            )?),
-                            crate_ident: rs_imported_crate_name(&type_alias.owning_target, &ir),
+                            )?,
+                            rs_imported_crate_name(&type_alias.owning_target, &ir))),
                             underlying_type: Rc::new(
                                 db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
                             ),
