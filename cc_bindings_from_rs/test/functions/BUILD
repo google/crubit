@@ -5,6 +5,10 @@ load(
     "@rules_rust//rust:defs.bzl",
     "rust_library",
 )
+load(
+    "//cc_bindings_from_rs/bazel_support:cc_bindings_from_rust_rule.bzl",
+    "cc_bindings_from_rust",
+)
 
 licenses(["notice"])
 
@@ -17,37 +21,10 @@ rust_library(
     ],
 )
 
-alias(
-    name = "cc_bindings_from_rs_tool",
-    actual = "//cc_bindings_from_rs:cc_bindings_from_rs_legacy_toolchain_runner.sar",
-)
-
-# TODO(b/257283134): Replace `genrule` with a custom `rule`.
-genrule(
-    name = "functions_cc_api_genrule",
-    testonly = 1,
-    srcs = ["functions.rs"],
-
-    # TODO(b/254097223): Also cover `functions_cc_api_impl.rs`
-    # (wrapping it in a `rust_library` that `functions_cc_api` depends on).
-    outs = ["functions_cc_api.h"],
-    cmd = """
-        $(location :cc_bindings_from_rs_tool) \
-            "--h-out=$@" \
-            -- \
-            $(SRCS) \
-            --crate-type=lib \
-            --codegen=panic=abort \
-    """,
-    message = "Running cc_bindings_from_rs",
-    tools = [":cc_bindings_from_rs_tool"],
-)
-
-cc_library(
+cc_bindings_from_rust(
     name = "functions_cc_api",
     testonly = 1,
-    hdrs = [":functions_cc_api.h"],
-    deps = [":functions"],
+    crate = ":functions",
 )
 
 cc_test(
