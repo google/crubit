@@ -32,11 +32,13 @@ def _tests():
     rust_library(
         name = "rusty_lib",
         srcs = ["lib.rs"],
+        tags = ["manual"],
     )
 
     cc_bindings_from_rust(
         name = "rusty_lib_bindings",
         crate = ":rusty_lib",
+        tags = ["manual"],
     )
 
     header_generation_test(
