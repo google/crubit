@@ -15,14 +15,15 @@ load(
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 
 def _generate_bindings(ctx, basename, crate_root, rustc_args):
-    # TODO(b/254097223): Also cover `rs_out_file = ... + "_cc_api_impl.rs"`.
     h_out_file = ctx.actions.declare_file(basename + "_cc_api.h")
+    rs_out_file = ctx.actions.declare_file(basename + "_cc_api_impl.rs")
 
     crubit_args = ctx.actions.args()
     crubit_args.add("--h-out", h_out_file)
+    crubit_args.add("--rs-out", rs_out_file)
 
     ctx.actions.run(
-        outputs = [h_out_file],
+        outputs = [h_out_file, rs_out_file],
         inputs = [crate_root],
         executable = ctx.executable._cc_bindings_from_rs_tool,
         mnemonic = "CcBindingsFromRust",
@@ -30,14 +31,15 @@ def _generate_bindings(ctx, basename, crate_root, rustc_args):
         arguments = [crubit_args, "--", rustc_args],
     )
 
-    return h_out_file
+    return (h_out_file, rs_out_file)
 
 def _cc_bindings_from_rust_rule_impl(ctx):
     basename = ctx.attr.crate.label.name
+
     crate_root = ctx.attr.crate[CrateInfo].root
 
     # TODO(b/258449205): Extract `rustc_args` from the target `crate` (instead
-    # of figuring out the `crate_root` and hard-coding `--crate-type`,
+    # of figouring out the `crate_root` and hard-coding `--crate-type`,
     # `panic=abort`, etc.).  It seems that `BuildInfo` from
     # @rules_rust//rust/private/providers.bzl is not
     # exposed publicly?
@@ -46,7 +48,9 @@ def _cc_bindings_from_rust_rule_impl(ctx):
     rustc_args.add("--crate-type", "lib")
     rustc_args.add("--codegen", "panic=abort")
 
-    h_out_file = _generate_bindings(ctx, basename, crate_root, rustc_args)
+    # TODO(b/254097223): Retrieve `rs_out_file`, compile it, and include it in
+    # the `linking_context`.
+    (h_out_file, _) = _generate_bindings(ctx, basename, crate_root, rustc_args)
 
     cc_toolchain = find_cpp_toolchain(ctx)
     feature_configuration = cc_common.configure_features(

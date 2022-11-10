@@ -21,6 +21,7 @@ use std::ops::{Add, AddAssign};
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
+    pub rs_body: TokenStream,
 }
 
 impl GeneratedBindings {
@@ -53,7 +54,13 @@ impl GeneratedBindings {
             }
         };
 
-        Ok(Self { h_body })
+        let rs_body = quote! {
+            #top_comment
+
+            // TODO(b/254097223): Include Rust thunks here.
+        };
+
+        Ok(Self { h_body, rs_body })
     }
 }
 
@@ -516,7 +523,7 @@ pub mod tests {
     use rustc_span::def_id::LocalDefId;
     use std::path::PathBuf;
 
-    use token_stream_matchers::{assert_cc_matches, assert_cc_not_matches};
+    use token_stream_matchers::{assert_cc_matches, assert_cc_not_matches, assert_rs_not_matches};
 
     pub fn get_sysroot_for_testing() -> PathBuf {
         let runfiles = runfiles::Runfiles::create().unwrap();
@@ -621,6 +628,7 @@ pub mod tests {
                     extern "C" void public_function();
                 }
             );
+            // TODO(b/254097223): Verify Rust thunks here (once they actually get generated).
         });
     }
 
@@ -690,6 +698,7 @@ pub mod tests {
 
             // Non-public functions should not be present in the generated bindings.
             assert_cc_not_matches!(bindings.h_body, quote! { private_function });
+            assert_rs_not_matches!(bindings.rs_body, quote! { private_function });
         });
     }
 
@@ -711,6 +720,12 @@ pub mod tests {
                     namespace rust_out {
                         ...
                     }
+                }
+            );
+            assert_cc_matches!(
+                bindings.rs_body,
+                quote! {
+                    __COMMENT__ #expected_comment_txt
                 }
             );
         })

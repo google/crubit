@@ -14,6 +14,10 @@ pub struct Cmdline {
     #[clap(long, value_parser, value_name = "FILE")]
     pub h_out: PathBuf,
 
+    /// Output path for Rust implementation of the bindings.
+    #[clap(long, value_parser, value_name = "FILE")]
+    pub rs_out: PathBuf,
+
     /// Command line arguments of the Rust compiler.
     #[clap(last = true, value_parser)]
     pub rustc_args: Vec<String>,
@@ -67,15 +71,17 @@ mod tests {
     }
 
     #[test]
-    fn test_h_out_happy_path() {
-        let cmdline = new_cmdline(["--h-out=foo.h"]).expect("This is a happy path");
+    fn test_happy_path() {
+        let cmdline =
+            new_cmdline(["--h-out=foo.h", "--rs-out=foo_impl.rs"]).expect("This is a happy path");
         assert_eq!(Path::new("foo.h"), cmdline.h_out);
+        assert_eq!(Path::new("foo_impl.rs"), cmdline.rs_out);
     }
 
     #[test]
     fn test_rustc_args_happy_path() {
         // Note that this test would fail without the `--` separator.
-        let cmdline = new_cmdline(["--h-out=foo.h", "--", "test.rs", "--crate-type=lib"])
+        let cmdline = new_cmdline(["--h-out=foo.h", "--rs-out=foo_impl.rs", "--", "test.rs", "--crate-type=lib"])
             .expect("This is a happy path");
         let rustc_args = &cmdline.rustc_args;
         assert!(
@@ -100,20 +106,26 @@ mod tests {
         //   build; other tests also trigger these asserts).  See also:
         //     - https://github.com/clap-rs/clap/issues/2740#issuecomment-907240414
         //     - `clap::builder::App::debug_assert`
+        //
+        // To regenerate `expected_msg` do the following steps:
+        // - Run `bazel run :cc_bindings_from_rs_legacy_toolchain_runner -- --help`
+        // - Copy&paste the output of the command below
+        // - Replace the 2nd `cc_bindings_from_rs` with `cc_bindings_from_rs_unittest_executable`
         let anyhow_err = new_cmdline(["--help"]).expect_err("--help should trigger an error");
         let clap_err = anyhow_err.downcast::<clap::Error>().expect("Expecting `clap` error");
         let expected_msg = r#"cc_bindings_from_rs 
 Generates C++ bindings for a Rust crate
 
 USAGE:
-    cc_bindings_from_rs_unittest_executable --h-out <FILE> [-- <RUSTC_ARGS>...]
+    cc_bindings_from_rs_unittest_executable --h-out <FILE> --rs-out <FILE> [-- <RUSTC_ARGS>...]
 
 ARGS:
     <RUSTC_ARGS>...    Command line arguments of the Rust compiler
 
 OPTIONS:
-        --h-out <FILE>    Output path for C++ header file with bindings
-    -h, --help            Print help information
+        --h-out <FILE>     Output path for C++ header file with bindings
+    -h, --help             Print help information
+        --rs-out <FILE>    Output path for Rust implementation of the bindings
 "#;
         assert_eq!(expected_msg, clap_err.to_string());
     }
@@ -124,12 +136,13 @@ OPTIONS:
         let tmpfile = tmpdir.path().join("herefile");
         std::fs::write(
             &tmpfile,
-            ["--h-out=foo.h", "--", "test.rs", "--crate-type=lib"].join("\n"),
+            ["--h-out=foo.h", "--rs-out=foo_impl.rs", "--", "test.rs", "--crate-type=lib"].join("\n"),
         )?;
 
         let flag_file_arg = format!("@{}", tmpfile.display());
         let cmdline = new_cmdline([flag_file_arg.as_str()]).expect("No errors expected");
         assert_eq!(Path::new("foo.h"), cmdline.h_out);
+        assert_eq!(Path::new("foo_impl.rs"), cmdline.rs_out);
         let rustc_args = &cmdline.rustc_args;
         assert!(
             itertools::equal(

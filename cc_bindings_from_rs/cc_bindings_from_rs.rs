@@ -159,7 +159,16 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
     let bindings = GeneratedBindings::generate(tcx)?;
-    write_file(&cmdline.h_out, cc_tokens_to_formatted_string(bindings.h_body)?.as_str())
+    write_file(&cmdline.h_out, cc_tokens_to_formatted_string(bindings.h_body)?.as_str())?;
+
+    // TODO(b/254097223): Format `bindings.rs_body` via
+    // `rs_tokens_to_formatted_string`.  (This requires accepting a
+    // mandatory`--rustfmt-exe-path` and an optional `--rustfmt-config-path`
+    // as cmdline args).  `bindings.rs_body` is mostly empty now so using
+    // `cc_tokens_to_formatted_string` doesn't hurt that much in the short term.
+    write_file(&cmdline.rs_out, cc_tokens_to_formatted_string(bindings.rs_body)?.as_str())?;
+
+    Ok(())
 }
 
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
@@ -229,7 +238,7 @@ mod tests {
     #[derive(Debug)]
     struct TestResult {
         h_path: PathBuf,
-        // TODO(b/254097223): Cover out_rs_impl_path once Rust thunks are generated.
+        rs_path: PathBuf,
     }
 
     impl TestArgs {
@@ -290,6 +299,7 @@ mod tests {
                 None => self.tempdir.path().join("test_crate_cc_api.h"),
                 Some(s) => PathBuf::from(s),
             };
+            let rs_path = self.tempdir.path().join("test_crate_cc_api_impl.rs");
 
             let rs_input_path = self.tempdir.path().join("test_crate.rs");
             std::fs::write(
@@ -306,6 +316,7 @@ mod tests {
             let mut args = vec![
                 "cc_bindings_from_rs_unittest_executable".to_string(),
                 format!("--h-out={}", h_path.display()),
+                format!("--rs-out={}", rs_path.display()),
             ];
             args.extend(self.extra_crubit_args.iter().cloned());
             args.extend([
@@ -319,7 +330,7 @@ mod tests {
 
             run_with_cmdline_args(&args)?;
 
-            Ok(TestResult { h_path })
+            Ok(TestResult { h_path, rs_path })
         }
     }
 
@@ -340,6 +351,15 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 namespace test_crate {
 extern "C" void public_function();
 }"#
+        );
+
+        assert!(test_result.rs_path.exists());
+        let rs_body = std::fs::read_to_string(&test_result.rs_path)?;
+        assert_eq!(
+            rs_body,
+            r#"// Automatically @generated C++ bindings for the following Rust crate:
+// test_crate
+"#
         );
         Ok(())
     }

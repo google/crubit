@@ -15,8 +15,9 @@ readonly CC_BINDINGS_FROM_RS="${RUNFILES}/cc_bindings_from_rs/cc_bindings_from_r
 readonly STDERR_PATH="${TEST_TMPDIR}/stderr.txt"
 readonly STDOUT_PATH="${TEST_TMPDIR}/stdout.txt"
 readonly H_OUT_PATH="${TEST_TMPDIR}/cc_api.h"
+readonly RS_OUT_PATH="${TEST_TMPDIR}/cc_api_impl.rs"
 function delete_all_test_outputs() {
-  rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH"
+  rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH"
 }
 
 # This tests a simple happy, errors-free code path.
@@ -35,6 +36,7 @@ function test::happy_path() {
   EXPECT_SUCCEED \
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=$H_OUT_PATH\" \
+        \"--rs-out=$RS_OUT_PATH\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
@@ -53,6 +55,14 @@ function test::happy_path() {
     "grep 'extern \"C\" void public_function();' \
         \"$H_OUT_PATH\" >/dev/null" \
     "The emitted .h file should contain C++ bindings"
+
+  EXPECT_FILE_NOT_EMPTY "${RS_OUT_PATH}"
+  EXPECT_SUCCEED \
+    "grep 'Automatically @generated C++ bindings for the following Rust crate:' \
+        \"$H_OUT_PATH\" >/dev/null" \
+    "The emitted .h file should contain a header comment"
+  # TODO(b/254097223): Cover the contents of the generated `.rs` file once they
+  # actually contain Rust thunks.
 }
 
 # This tests that `main` special-cases errors received from the `clap` crate.
@@ -107,6 +117,7 @@ function test::invalid_h_out() {
   EXPECT_FAIL \
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --h-out=../.. \
+        --rs-out=blah \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
