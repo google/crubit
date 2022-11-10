@@ -2,15 +2,14 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use code_gen_utils::{format_cc_ident, format_cc_includes, CcInclude};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
-use rustc_hir::{Item, ItemKind, Node, Unsafety};
+use rustc_hir::{Item, ItemId, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
-use rustc_middle::middle::exported_symbols::ExportedSymbol;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_target::spec::abi::Abi;
@@ -441,43 +440,23 @@ fn format_unsupported_def(
     BindingsSnippet { api: comment, ..BindingsSnippet::new() }
 }
 
-/// Formats all public items from the Rust crate being compiled (aka the
-/// `LOCAL_CRATE`).
+/// Formats all public items from the Rust crate being compiled.
 fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
-    // TODO(lukasza): We probably shouldn't be using `exported_symbols` as the main
-    // entry point for finding Rust definitions that need to be wrapping in C++
-    // bindings.  For example, it _seems_ that things like `type` aliases or
-    // `struct`s (without an `impl`) won't be visible to a linker and therefore
-    // won't have exported symbols.  Additionally, walking Rust's modules top-down
-    // might result in easier translation into C++ namespaces.
-    let snippets: BindingsSnippet =
-        tcx.exported_symbols(LOCAL_CRATE).iter().filter_map(|(symbol, _)| match symbol {
-            ExportedSymbol::NonGeneric(def_id) => {
-                // It seems that non-generic exported symbols should all be defined in the
-                // `LOCAL_CRATE`.  Furthermore, `def_id` seems to be a `LocalDefId`.  OTOH, it
-                // isn't clear why `ExportedSymbol::NonGeneric` holds a `DefId` rather than a
-                // `LocalDefId`.  For now, we assert `expect_local` below (and if it fails, then
-                // hopefully it will help us understand these things better and maybe add
-                // extra unit tests against out code).
-                let local_id = def_id.expect_local();
-
-                Some(format_def(tcx, local_id).unwrap_or_else(|err|
-                    format_unsupported_def(tcx, local_id, err)))
+    let snippets: BindingsSnippet = tcx
+        .hir()
+        .items()
+        .filter_map(|item_id| {
+            let def_id: LocalDefId = item_id.owner_id.def_id;
+            if !tcx.local_visibility(def_id).is_public() {
+                None
+            } else {
+                Some(
+                    format_def(tcx, def_id)
+                        .unwrap_or_else(|err| format_unsupported_def(tcx, def_id, err)),
+                )
             }
-            ExportedSymbol::Generic(def_id, _substs) => {
-                // Ignore non-local defs.  Map local defs to an unsupported comment.
-                //
-                // We are guessing that a non-local `def_id` can happen when the `LOCAL_CRATE`
-                // exports a monomorphization/specialization of a generic defined in a different
-                // crate.  One specific example (covered via `async fn` in one of the tests) is
-                // `DefId(2:14250 ~ core[ef75]::future::from_generator)`.
-                def_id.as_local().map(|local_id| {
-                    format_unsupported_def(tcx, local_id, anyhow!("Generics are not supported yet."))
-                })
-            }
-            ExportedSymbol::DropGlue(..) | ExportedSymbol::NoDefId(..) => None,
         })
-    .sum();
+        .sum();
 
     let includes = format_cc_includes(&snippets.includes);
     let api = {
