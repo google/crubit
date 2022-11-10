@@ -13,7 +13,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Testing/Support/Error.h"
-#include "third_party/llvm/llvm-project/llvm/utils/unittest/googletest/include/gtest/gtest.h"
+#include "third_party/llvm/llvm-project/third-party/unittest/googletest/include/gtest/gtest.h"
 
 namespace clang {
 namespace tidy {
