@@ -301,10 +301,6 @@ class ObjectRepository::VarDeclVisitor
   void PropagateInitializedObject(const clang::Expr* expr,
                                   const Object* object) {
     // TODO(danakj): Use StmtVisitor to implement this method.
-    // copybara:begin_strip
-    // Context and hints:
-    // http://cl/414017975/depot/lifetime_analysis/var_decl_objects.cc?version=s3#324
-    // copybara:end_strip
 
     // Terminating expressions. Expressions that don't initialize a record
     // object can not be such, and their existence is unexpected as we should
