@@ -29,7 +29,7 @@ dataflow::PointerValue* getPointerValueFromExpr(
 /// Returns the properties representing the nullness information of a pointer.
 ///
 /// The first boolean indicates if the pointer's nullability is known.
-/// The second boolean indicates if the pointer's value is not null.
+/// The second boolean indicates if the pointer's value is null.
 std::pair<dataflow::AtomicBoolValue&, dataflow::AtomicBoolValue&>
 getPointerNullState(const dataflow::PointerValue& PointerVal,
                     const dataflow::Environment& Env);
