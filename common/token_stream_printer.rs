@@ -22,7 +22,7 @@ pub struct RustfmtConfig {
     cmdline_args: Vec<OsString>,
 }
 
-const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
+pub const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
     "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
 
 impl RustfmtConfig {

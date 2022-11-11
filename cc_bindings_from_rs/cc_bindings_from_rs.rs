@@ -29,7 +29,9 @@ use std::path::Path;
 
 use bindings::GeneratedBindings;
 use cmdline::Cmdline;
-use token_stream_printer::cc_tokens_to_formatted_string;
+use token_stream_printer::{
+    cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
+};
 
 /// This mostly wraps and simplifies a subset of APIs from the `rustc_driver`
 /// module.
@@ -159,14 +161,18 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
     let bindings = GeneratedBindings::generate(tcx)?;
-    write_file(&cmdline.h_out, cc_tokens_to_formatted_string(bindings.h_body)?.as_str())?;
 
-    // TODO(b/254097223): Format `bindings.rs_body` via
-    // `rs_tokens_to_formatted_string`.  (This requires accepting a
-    // mandatory`--rustfmt-exe-path` and an optional `--rustfmt-config-path`
-    // as cmdline args).  `bindings.rs_body` is mostly empty now so using
-    // `cc_tokens_to_formatted_string` doesn't hurt that much in the short term.
-    write_file(&cmdline.rs_out, cc_tokens_to_formatted_string(bindings.rs_body)?.as_str())?;
+    {
+        let h_body = cc_tokens_to_formatted_string(bindings.h_body)?;
+        write_file(&cmdline.h_out, &h_body)?;
+    }
+
+    {
+        let rustfmt_config =
+            RustfmtConfig::new(&cmdline.rustfmt_exe_path, cmdline.rustfmt_config_path.as_deref());
+        let rs_body = rs_tokens_to_formatted_string(bindings.rs_body, &rustfmt_config)?;
+        write_file(&cmdline.rs_out, &rs_body)?;
+    }
 
     Ok(())
 }
@@ -217,6 +223,7 @@ mod tests {
     use itertools::Itertools;
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
+    use token_stream_printer::RUSTFMT_EXE_PATH_FOR_TESTING;
 
     /// Test data builder (see also
     /// https://testing.googleblog.com/2018/02/testing-on-toilet-cleanly-create-test.html).
@@ -317,6 +324,7 @@ mod tests {
                 "cc_bindings_from_rs_unittest_executable".to_string(),
                 format!("--h-out={}", h_path.display()),
                 format!("--rs-out={}", rs_path.display()),
+                format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH_FOR_TESTING}"),
             ];
             args.extend(self.extra_crubit_args.iter().cloned());
             args.extend([

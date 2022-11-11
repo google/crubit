@@ -20,6 +20,8 @@ function delete_all_test_outputs() {
   rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH"
 }
 
+readonly DEFAULT_RUSTFMT_EXE_PATH="third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"
+
 # This tests a simple happy, errors-free code path.
 function test::happy_path() {
   local RS_INPUT_PATH="${TEST_TMPDIR}/crate_name.rs"
@@ -35,8 +37,9 @@ function test::happy_path() {
   delete_all_test_outputs
   EXPECT_SUCCEED \
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
-        \"--h-out=$H_OUT_PATH\" \
-        \"--rs-out=$RS_OUT_PATH\" \
+        \"--h-out=${H_OUT_PATH}\" \
+        \"--rs-out=${RS_OUT_PATH}\" \
+        \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \
@@ -118,6 +121,7 @@ function test::invalid_h_out() {
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --h-out=../.. \
         --rs-out=blah \
+        \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
         -- \
         \"$RS_INPUT_PATH\" \
         --crate-type=lib \

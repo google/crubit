@@ -21,10 +21,12 @@ def _generate_bindings(ctx, basename, crate_root, rustc_args):
     crubit_args = ctx.actions.args()
     crubit_args.add("--h-out", h_out_file)
     crubit_args.add("--rs-out", rs_out_file)
+    crubit_args.add("--rustfmt-exe-path", ctx.file._rustfmt)
+    crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
 
     ctx.actions.run(
         outputs = [h_out_file, rs_out_file],
-        inputs = [crate_root],
+        inputs = [crate_root, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
         executable = ctx.executable._cc_bindings_from_rs_tool,
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
@@ -97,6 +99,16 @@ cc_bindings_from_rust = rule(
         ),
         "_cc_toolchain": attr.label(
             default = "@bazel_tools//tools/cpp:current_cc_toolchain",
+        ),
+        "_rustfmt": attr.label(
+            default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
+            executable = True,
+            allow_single_file = True,
+            cfg = "exec",
+        ),
+        "_rustfmt_cfg": attr.label(
+            default = "//nowhere:rustfmt.toml",
+            allow_single_file = True,
         ),
     },
     fragments = ["cpp"],

@@ -91,7 +91,9 @@ sh_test(
 sh_test(
     name = "cc_bindings_from_rs_sh_test",
     srcs = ["cc_bindings_from_rs_sh_test.sh"],
-    data = [":cc_bindings_from_rs_legacy_toolchain_runner.sar"],
+    data = [
+        ":cc_bindings_from_rs_legacy_toolchain_runner.sar",
+    ],
     deps = [
         "//util/shell/gbash",
         "//util/shell/gbash:unit",
