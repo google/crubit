@@ -37,39 +37,39 @@ getPointerNullState(const dataflow::PointerValue& PointerVal,
 /// Sets the nullness properties on `PointerVal` if not already initialised.
 ///
 /// The boolean properties may be constrained by specifying `KnownConstraint`
-/// and `NotNullConstraint`. Otherwise, the properties are set to freshly
+/// and `NullConstraint`. Otherwise, the properties are set to freshly
 /// created atomic booleans.
 void initPointerNullState(dataflow::PointerValue& PointerVal,
                           dataflow::Environment& Env,
                           dataflow::BoolValue* KnownConstraint = nullptr,
-                          dataflow::BoolValue* NotNullConstraint = nullptr);
+                          dataflow::BoolValue* NullConstraint = nullptr);
 
 /// Sets the nullness properties on `PointerVal` representing a nullptr if not
 /// already initialised.
 ///
-/// `Known` is constrained to true, `NotNull` is constrained to false.
+/// `Known` is constrained to true, `Null` is constrained to true.
 inline void initNullPointer(dataflow::PointerValue& PointerVal,
                             dataflow::Environment& Env) {
   initPointerNullState(PointerVal, Env,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(true),
-                       /*NotNullConstraint=*/&Env.getBoolLiteralValue(false));
+                       /*NullConstraint=*/&Env.getBoolLiteralValue(true));
 }
 
 /// Sets the nullness properties on `PointerVal` representing a pointer that is
 /// not null if not already initialised.
 ///
-/// `Known` is constrained to true, `NotNull` is constrained to true.
+/// `Known` is constrained to true, `Null` is constrained to false.
 inline void initNotNullPointer(dataflow::PointerValue& PointerVal,
                                dataflow::Environment& Env) {
   initPointerNullState(PointerVal, Env,
                        /*KnownConstraint=*/&Env.getBoolLiteralValue(true),
-                       /*NotNullConstraint=*/&Env.getBoolLiteralValue(true));
+                       /*NullConstraint=*/&Env.getBoolLiteralValue(false));
 }
 
 /// Sets the nullness properties on `PointerVal` representing a pointer that is
 /// nullable if not already initialised.
 ///
-/// `Known` is constrained to true, `NotNull` is unconstrained.
+/// `Known` is constrained to true, `Null` is unconstrained.
 inline void initNullablePointer(dataflow::PointerValue& PointerVal,
                                 dataflow::Environment& Env) {
   initPointerNullState(PointerVal, Env,
@@ -79,7 +79,7 @@ inline void initNullablePointer(dataflow::PointerValue& PointerVal,
 /// Sets the nullness properties on `PointerVal` representing a pointer with
 /// unknown nullability if not already initialised.
 ///
-/// `Known` is constrained to false, `NotNull` is unconstrained.
+/// `Known` is constrained to false, `Null` is unconstrained.
 inline void initUnknownPointer(dataflow::PointerValue& PointerVal,
                                dataflow::Environment& Env) {
   initPointerNullState(PointerVal, Env,

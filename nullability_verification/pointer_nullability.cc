@@ -19,9 +19,9 @@ using dataflow::SkipPast;
 
 /// The nullness information of a pointer is represented by two properties
 /// which indicate if a pointer's nullability (i.e., if the pointer can hold
-/// null) is `Known` and if the pointer's value is `NotNull`.
+/// null) is `Known` and if the pointer's value is `Null`.
 constexpr llvm::StringLiteral kKnown = "is_known";
-constexpr llvm::StringLiteral kNotNull = "is_notnull";
+constexpr llvm::StringLiteral kNull = "is_null";
 
 NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx) {
   return Type->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
@@ -36,9 +36,8 @@ PointerValue* getPointerValueFromExpr(const Expr* PointerExpr,
 std::pair<AtomicBoolValue&, AtomicBoolValue&> getPointerNullState(
     const PointerValue& PointerVal, const Environment& Env) {
   auto& PointerKnown = *cast<AtomicBoolValue>(PointerVal.getProperty(kKnown));
-  auto& PointerNotNull =
-      *cast<AtomicBoolValue>(PointerVal.getProperty(kNotNull));
-  return {PointerKnown, PointerNotNull};
+  auto& PointerNull = *cast<AtomicBoolValue>(PointerVal.getProperty(kNull));
+  return {PointerKnown, PointerNull};
 }
 
 void initPointerBoolProperty(PointerValue& PointerVal, llvm::StringRef Name,
@@ -51,15 +50,15 @@ void initPointerBoolProperty(PointerValue& PointerVal, llvm::StringRef Name,
 
 void initPointerNullState(PointerValue& PointerVal, Environment& Env,
                           BoolValue* KnownConstraint,
-                          BoolValue* NotNullConstraint) {
+                          BoolValue* NullConstraint) {
   initPointerBoolProperty(PointerVal, kKnown, KnownConstraint, Env);
-  initPointerBoolProperty(PointerVal, kNotNull, NotNullConstraint, Env);
+  initPointerBoolProperty(PointerVal, kNull, NullConstraint, Env);
 }
 
 bool isNullable(const PointerValue& PointerVal, const Environment& Env) {
-  auto [PointerKnown, PointerNotNull] = getPointerNullState(PointerVal, Env);
+  auto [PointerKnown, PointerNull] = getPointerNullState(PointerVal, Env);
   auto& PointerNotKnownNull =
-      Env.makeNot(Env.makeAnd(PointerKnown, Env.makeNot(PointerNotNull)));
+      Env.makeNot(Env.makeAnd(PointerKnown, PointerNull));
   return !Env.flowConditionImplies(PointerNotKnownNull);
 }
 

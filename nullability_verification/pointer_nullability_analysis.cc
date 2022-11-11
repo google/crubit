@@ -103,14 +103,14 @@ void transferNullCheckComparison(const BinaryOperator* BinaryOp,
 
   if (!LHS || !RHS) return;
 
-  auto [LHSKnown, LHSNotNull] = getPointerNullState(*LHS, State.Env);
-  auto [RHSKnown, RHSNotNull] = getPointerNullState(*RHS, State.Env);
-  auto& LHSKnownNotNull = State.Env.makeAnd(LHSKnown, LHSNotNull);
-  auto& RHSKnownNotNull = State.Env.makeAnd(RHSKnown, RHSNotNull);
-  auto& LHSKnownNull =
-      State.Env.makeAnd(LHSKnown, State.Env.makeNot(LHSNotNull));
-  auto& RHSKnownNull =
-      State.Env.makeAnd(RHSKnown, State.Env.makeNot(RHSNotNull));
+  auto [LHSKnown, LHSNull] = getPointerNullState(*LHS, State.Env);
+  auto [RHSKnown, RHSNull] = getPointerNullState(*RHS, State.Env);
+  auto& LHSKnownNotNull =
+      State.Env.makeAnd(LHSKnown, State.Env.makeNot(LHSNull));
+  auto& RHSKnownNotNull =
+      State.Env.makeAnd(RHSKnown, State.Env.makeNot(RHSNull));
+  auto& LHSKnownNull = State.Env.makeAnd(LHSKnown, LHSNull);
+  auto& RHSKnownNull = State.Env.makeAnd(RHSKnown, RHSNull);
 
   // nullptr == nullptr
   State.Env.addToFlowCondition(State.Env.makeImplication(
@@ -130,10 +130,10 @@ void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
       getPointerValueFromExpr(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
 
-  auto [PointerKnown, PointerNotNull] =
+  auto [PointerKnown, PointerNull] =
       getPointerNullState(*PointerVal, State.Env);
   auto& CastExprLoc = State.Env.createStorageLocation(*CastExpr);
-  State.Env.setValue(CastExprLoc, PointerNotNull);
+  State.Env.setValue(CastExprLoc, State.Env.makeNot(PointerNull));
   State.Env.setStorageLocation(*CastExpr, CastExprLoc);
 }
 
@@ -226,14 +226,13 @@ bool PointerNullabilityAnalysis::merge(QualType Type, const Value& Val1,
     return false;
   }
 
-  auto [Known1, NotNull1] = getPointerNullState(cast<PointerValue>(Val1), Env1);
-  auto [Known2, NotNull2] = getPointerNullState(cast<PointerValue>(Val2), Env2);
+  auto [Known1, Null1] = getPointerNullState(cast<PointerValue>(Val1), Env1);
+  auto [Known2, Null2] = getPointerNullState(cast<PointerValue>(Val2), Env2);
 
   auto& Known = mergeBoolValues(Known1, Env1, Known2, Env2, MergedEnv);
-  auto& NotNull = mergeBoolValues(NotNull1, Env1, NotNull2, Env2, MergedEnv);
+  auto& Null = mergeBoolValues(Null1, Env1, Null2, Env2, MergedEnv);
 
-  initPointerNullState(cast<PointerValue>(MergedVal), MergedEnv, &Known,
-                       &NotNull);
+  initPointerNullState(cast<PointerValue>(MergedVal), MergedEnv, &Known, &Null);
 
   return true;
 }
