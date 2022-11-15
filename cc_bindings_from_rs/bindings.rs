@@ -229,6 +229,61 @@ fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
     })
 }
 
+/// Formats `ty` for Rust (e.g. to be used as a type of a parameter in a Rust
+/// thunk inside `..._cc_api_impl.rs`).
+#[allow(dead_code)] // TODO(b/254097223): Use from `format_fn`.
+fn format_ty_for_rs(ty: Ty) -> Result<TokenStream> {
+    Ok(match ty.kind() {
+        ty::TyKind::Bool
+        | ty::TyKind::Float(_)
+        | ty::TyKind::Char
+        | ty::TyKind::Int(_)
+        | ty::TyKind::Uint(_)
+        | ty::TyKind::Never => ty
+            .to_string()
+            .parse()
+            .expect("rustc_middle::ty::Ty::to_string() should produce no parsing errors"),
+        ty::TyKind::Tuple(types) => {
+            if types.len() == 0 {
+                quote! { () }
+            } else {
+                // TODO(b/254099023): Add support for tuples.
+                bail!("Tuples are not supported yet: {} (b/254099023)", ty);
+            }
+        }
+
+        // TODO(b/258232820): Add support for ADT / `struct` bindings.  Note that we can't simply
+        // use ty.to_string().parse().expect(...) everywhere - `ty` comes from the target crate but
+        // the result is used in the `..._cc_api_impl.rs` crate and therefore `SomeStruct` needs to
+        // be formatted as `target_crate::SomeStruct`.
+        ty::TyKind::Adt(..)
+        | ty::TyKind::Foreign(..)
+        | ty::TyKind::Str
+        | ty::TyKind::Array(..)
+        | ty::TyKind::Slice(..)
+        | ty::TyKind::RawPtr(..)
+        | ty::TyKind::Ref(..)
+        | ty::TyKind::FnPtr(..)
+        | ty::TyKind::Dynamic(..)
+        | ty::TyKind::Generator(..)
+        | ty::TyKind::GeneratorWitness(..)
+        | ty::TyKind::Projection(..)
+        | ty::TyKind::Opaque(..)
+        | ty::TyKind::Param(..)
+        | ty::TyKind::Bound(..)
+        | ty::TyKind::Placeholder(..) => {
+            bail!("The following Rust type is not supported yet: {ty}")
+        }
+        ty::TyKind::Closure(..)
+        | ty::TyKind::FnDef(..)
+        | ty::TyKind::Infer(..)
+        | ty::TyKind::Error(..) => {
+            // See the comment inside the similar fallback branch in `format_ty_for_cc`.
+            panic!("Unexpected TyKind: {:?}", ty.kind());
+        }
+    })
+}
+
 #[derive(Debug)]
 struct BindingsSnippet {
     /// `#include`s that go at the top of the generated `..._cc_api.h` file.
@@ -492,7 +547,8 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
 #[cfg(test)]
 pub mod tests {
     use super::{
-        format_def, format_ret_ty_for_cc, format_ty_for_cc, BindingsSnippet, GeneratedBindings,
+        format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs, BindingsSnippet,
+        GeneratedBindings,
     };
 
     use anyhow::Result;
@@ -1310,7 +1366,7 @@ pub mod tests {
         // This test provides coverage for cases where `format_ty_for_cc` returns an
         // `Err(...)`.
         //
-        // TODO(lukasza): Add test coverage for:
+        // TODO(lukasza): Add test coverage (here and in the "for_rs" flavours) for:
         // - TyKind::Bound
         // - TyKind::Dynamic (`dyn Eq`)
         // - TyKind::Foreign (`extern type T`)
@@ -1395,6 +1451,101 @@ pub mod tests {
         };
         test_ty(&testcases, preamble, |desc, ty, expected_err| {
             let anyhow_err = format_ty_for_cc(ty).unwrap_err();
+            let actual_err = format!("{anyhow_err:#}");
+            assert_eq!(&actual_err, *expected_err, "{desc}");
+        });
+    }
+
+    #[test]
+    fn test_format_ty_for_rs_successes() {
+        // Test coverage for cases where `format_ty_for_rs` returns an `Ok(...)`.
+        let testcases = [
+            // ( <Rust type>, <expected Rust spelling for ..._cc_api_impl.rs> )
+            ("bool", "bool"),
+            ("f32", "f32"),
+            ("f64", "f64"),
+            ("i8", "i8"),
+            ("i16", "i16"),
+            ("i32", "i32"),
+            ("i64", "i64"),
+            ("i128", "i128"),
+            ("isize", "isize"),
+            ("u8", "u8"),
+            ("u16", "u16"),
+            ("u32", "u32"),
+            ("u64", "u64"),
+            ("u128", "u128"),
+            ("usize", "usize"),
+            ("char", "char"),
+            ("!", "!"),
+            ("()", "()"),
+        ];
+        let preamble = quote! {};
+        test_ty(&testcases, preamble, |desc, ty, expected_snippet| {
+            let actual_snippet = format_ty_for_rs(ty).unwrap().to_string();
+            let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual_snippet, expected_snippet, "{desc}");
+        });
+    }
+
+    #[test]
+    fn test_format_ty_for_rs_failures() {
+        // This test provides coverage for cases where `format_ty_for_rs` returns an
+        // `Err(...)`.
+        let testcases = [
+            // ( <Rust type>, <expected error message> )
+            (
+                "(i32, i32)", // Non-empty TyKind::Tuple
+                "Tuples are not supported yet: (i32, i32) (b/254099023)",
+            ),
+            (
+                "*const i32", // TyKind::Ptr
+                "The following Rust type is not supported yet: *const i32",
+            ),
+            (
+                "&'static i32", // TyKind::Ref
+                "The following Rust type is not supported yet: &'static i32",
+            ),
+            (
+                "[i32; 42]", // TyKind::Array
+                "The following Rust type is not supported yet: [i32; 42]",
+            ),
+            (
+                "&'static [i32]", // TyKind::Slice (nested underneath TyKind::Ref)
+                "The following Rust type is not supported yet: &'static [i32]",
+            ),
+            (
+                "&'static str", // TyKind::Str (nested underneath TyKind::Ref)
+                "The following Rust type is not supported yet: &'static str",
+            ),
+            (
+                "impl Eq", // TyKind::Opaque
+                "The following Rust type is not supported yet: impl std::cmp::Eq",
+            ),
+            (
+                "fn(i32) -> i32", // TyKind::FnPtr
+                "The following Rust type is not supported yet: fn(i32) -> i32",
+            ),
+            ("SomeStruct", "The following Rust type is not supported yet: SomeStruct"),
+            ("SomeEnum", "The following Rust type is not supported yet: SomeEnum"),
+            ("SomeUnion", "The following Rust type is not supported yet: SomeUnion"),
+        ];
+        let preamble = quote! {
+            pub struct SomeStruct {
+                pub x: i32,
+                pub y: i32,
+            }
+            pub enum SomeEnum {
+                Cartesian{x: f64, y: f64},
+                Polar{angle: f64, dist: f64},
+            }
+            pub union SomeUnion {
+                pub x: i32,
+                pub y: i32,
+            }
+        };
+        test_ty(&testcases, preamble, |desc, ty, expected_err| {
+            let anyhow_err = format_ty_for_rs(ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
