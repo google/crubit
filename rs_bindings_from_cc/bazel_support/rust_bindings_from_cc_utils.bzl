@@ -143,6 +143,9 @@ bindings_attrs = {
         default = "//nowhere:rustfmt.toml",
         allow_single_file = True,
     ),
+    # TODO(hlopko): Either 1) remove the unneeded `_error_format` and
+    # `_extra_rustc_flags` attributes below *or* 2) actually start using them
+    # (both for `rs_bindings_from_cc` and for `cc_bindings_from_rs`).
     "_error_format": attr.label(
         default = "@rules_rust//:error_format",
     ),
