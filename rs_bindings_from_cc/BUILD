@@ -309,7 +309,6 @@ rust_library(
         "@crate_index//:quote",
         "@crate_index//:serde",
         "@crate_index//:serde_json",
-        "@crate_index//:syn",
     ],
 )
 

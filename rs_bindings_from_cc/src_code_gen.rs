@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use arc_anyhow::{Context, Result};
-use code_gen_utils::{format_cc_includes, CcInclude};
+use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude};
 use error_report::{anyhow, bail, ensure, ErrorReport, ErrorReporting, IgnoreErrors};
 use ffi_types::*;
 use ir::*;
@@ -2764,19 +2764,6 @@ fn generate_bindings_tokens(
         },
         rs_api_impl: quote! {#(#thunk_impls  __NEWLINE__ __NEWLINE__ )*},
     })
-}
-
-/// Makes an 'Ident' to be used in the Rust source code. Escapes Rust keywords.
-fn make_rs_ident(ident: &str) -> Ident {
-    // TODO(https://github.com/dtolnay/syn/pull/1098): Remove the hardcoded list once syn recognizes
-    // 2018 and 2021 keywords.
-    if ["async", "await", "try", "dyn"].contains(&ident) {
-        return format_ident!("r#{}", ident);
-    }
-    match syn::parse_str::<syn::Ident>(ident) {
-        Ok(_) => format_ident!("{}", ident),
-        Err(_) => format_ident!("r#{}", ident),
-    }
 }
 
 /// Formats a C++ identifier.  Panics if `ident` is a C++ reserved keyword.

@@ -4,8 +4,8 @@
 
 use anyhow::{anyhow, ensure, Result};
 use once_cell::sync::Lazy;
-use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
 use std::rc::Rc;
 
@@ -15,7 +15,8 @@ use std::rc::Rc;
 // - `make_rs_ident`
 // - `NamespaceQualifier`
 
-/// Formats a C++ identifier. Panics when `ident` is a C++ reserved keyword.
+/// Formats a C++ identifier. Returns an error when `ident` is a C++ reserved
+/// keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
     ensure!(!ident.is_empty(), "Empty string is not a valid C++ identifier");
 
@@ -34,6 +35,20 @@ pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
         // therefore we can't just use `?`.
         |lex_error| anyhow!("Can't format `{ident}` as a C++ identifier: {lex_error}"),
     )
+}
+
+/// Makes an 'Ident' to be used in the Rust source code. Escapes Rust keywords.
+/// Panics if `ident` is empty or is otherwise an invalid identifier.
+pub fn make_rs_ident(ident: &str) -> Ident {
+    // TODO(https://github.com/dtolnay/syn/pull/1098): Remove the hardcoded list once syn recognizes
+    // 2018 and 2021 keywords.
+    if ["async", "await", "try", "dyn"].contains(&ident) {
+        return format_ident!("r#{}", ident);
+    }
+    match syn::parse_str::<syn::Ident>(ident) {
+        Ok(_) => format_ident!("{}", ident),
+        Err(_) => format_ident!("r#{}", ident),
+    }
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
@@ -212,7 +227,7 @@ static RESERVED_CC_KEYWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
 pub mod tests {
     use super::*;
     use quote::quote;
-    use token_stream_matchers::assert_cc_matches;
+    use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
     use token_stream_printer::cc_tokens_to_formatted_string;
 
     #[test]
@@ -296,6 +311,36 @@ pub mod tests {
             format_cc_ident("std::vector<int>").expect("No errors expected in this test"),
             quote! { std::vector<int> }
         );
+    }
+
+    #[test]
+    fn test_make_rs_ident_basic() {
+        let id = make_rs_ident("foo");
+        assert_rs_matches!(quote! { #id }, quote! { foo });
+    }
+
+    #[test]
+    fn test_make_rs_ident_reserved_cc_keyword() {
+        let id = make_rs_ident("reinterpret_cast");
+        assert_rs_matches!(quote! { #id }, quote! { reinterpret_cast });
+    }
+
+    #[test]
+    fn test_make_rs_ident_reserved_rust_keyword() {
+        let id = make_rs_ident("impl");
+        assert_rs_matches!(quote! { #id }, quote! { r#impl });
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_make_rs_ident_unfinished_group() {
+        make_rs_ident("(foo"); // No closing `)`.
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_make_rs_ident_empty() {
+        make_rs_ident("");
     }
 
     #[test]
