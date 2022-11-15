@@ -1437,6 +1437,65 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   )");
 }
 
+TEST(PointerNullabilityTest, MemberFunctionOfClassTemplateInstantiation) {
+  checkDiagnostics(R"cc(
+    template <typename T0>
+    struct Struct1Arg {
+      T0 getT();
+      T0 *getUnknownTPtr();
+      T0 *_Nullable getNullableTPtr();
+      T0 *_Nonnull getNonnullTPtr();
+    };
+    void target(Struct1Arg<int *_Nullable> &xs) {
+      *xs.getT();  // [[unsafe]]
+      *xs.getUnknownTPtr();
+      // **xs.getUnknownTPtr();  // false-negative
+      *xs.getNullableTPtr();  // [[unsafe]]
+      // **xs.getNullableTPtr();  // false-negative
+      *xs.getNonnullTPtr();
+      // **xs.getNonnullTPtr();  // false-negative
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    template <typename T0>
+    struct Struct1Arg {
+      T0 getT();
+      T0 *getUnknownTPtr();
+      T0 *_Nullable getNullableTPtr();
+      T0 *_Nonnull getNonnullTPtr();
+    };
+    void target(Struct1Arg<int *_Nonnull> &xs) {
+      *xs.getT();
+      *xs.getUnknownTPtr();
+      // **xs.getUnknownTPtr();
+      *xs.getNullableTPtr();  // [[unsafe]]
+      // **xs.getNullableTPtr();
+      *xs.getNonnullTPtr();
+      // **xs.getNonnullTPtr();
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    template <typename T0>
+    struct Struct1Arg {
+      T0 getT();
+      T0 *getUnknownTPtr();
+      T0 *_Nullable getNullableTPtr();
+      T0 *_Nonnull getNonnullTPtr();
+    };
+    void target(Struct1Arg<int *> &xs) {
+      *xs.getT();
+      *xs.getUnknownTPtr();
+      // **xs.getUnknownTPtr();
+      *xs.getNullableTPtr();  // [[unsafe]]
+      // **xs.getNullableTPtr();
+      *xs.getNonnullTPtr();
+      // **xs.getNonnullTPtr();
+    }
+  )cc");
+}
+
 TEST(PointerNullabilityTest, CallExprParamAssignment) {
   // free function with single param
   checkDiagnostics(R"(

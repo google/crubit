@@ -38,10 +38,65 @@ using dataflow::Value;
 
 namespace {
 
-void initPointerFromAnnotations(PointerValue& PointerVal, QualType Type,
+NullabilityKind getNullabilityFromTemplatedExpression(const Expr* E) {
+  // Stores the nullability of each template argument.
+  std::vector<NullabilityKind> NullabilityVector = {};
+  const TemplateTypeParmDecl* ReplacedParameter = nullptr;
+
+  // If the expression is a member function call on an object whose type
+  // is a class template instantiation, propagate the sugar from template
+  // arguments to the member function return type.
+  //
+  // TODO: Handle more expression shapes.
+  if (auto MemberCall = dyn_cast<CXXMemberCallExpr>(E)) {
+    Expr* Object = MemberCall->getImplicitObjectArgument();
+    if (auto Member = dyn_cast<MemberExpr>(MemberCall->getCallee())) {
+      if (auto Method = dyn_cast<CXXMethodDecl>(Member->getMemberDecl())) {
+        if (auto TST = Object->getType()->getAs<TemplateSpecializationType>()) {
+          for (TemplateArgument TA : TST->template_arguments()) {
+            NullabilityKind ArgumentNullability = NullabilityKind::Unspecified;
+            if (TA.getKind() == TemplateArgument::Type) {
+              if (auto AT = TA.getAsType()->getAs<AttributedType>()) {
+                ArgumentNullability = AT->getImmediateNullability().value_or(
+                    NullabilityKind::Unspecified);
+              }
+            }
+            NullabilityVector.push_back(ArgumentNullability);
+          }
+        }
+
+        // Save the replaced template parameter.
+        // TODO: Handle cases where the template argument is nested inside the
+        // return type (e.g. vector<map<T**, T>>).
+        if (auto SubstTemplate =
+                Method->getReturnType()->getAs<SubstTemplateTypeParmType>()) {
+          ReplacedParameter = SubstTemplate->getReplacedParameter();
+        }
+      }
+    }
+  }
+
+  NullabilityKind Nullability = NullabilityKind::Unspecified;
+  if (ReplacedParameter && ReplacedParameter->getDepth() == 0) {
+    Nullability = NullabilityVector[ReplacedParameter->getIndex()];
+  }
+  return Nullability;
+}
+
+NullabilityKind getPointerNullability(const Expr* E, ASTContext& Ctx) {
+  QualType ExprType = E->getType();
+  NullabilityKind Nullability =
+      ExprType->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
+  if (Nullability == NullabilityKind::Unspecified) {
+    // Try to get nullability from the expression itself.
+    Nullability = getNullabilityFromTemplatedExpression(E);
+  }
+  return Nullability;
+}
+
+void initPointerFromAnnotations(PointerValue& PointerVal, const Expr* E,
                                 Environment& Env, ASTContext& Ctx) {
-  auto Nullability =
-      Type->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
+  NullabilityKind Nullability = getPointerNullability(E, Ctx);
   switch (Nullability) {
     case NullabilityKind::NonNull:
       initNotNullPointer(PointerVal, Env);
@@ -74,7 +129,7 @@ void transferPointer(const Expr* PointerExpr,
                      const MatchFinder::MatchResult& Result,
                      TransferState<NoopLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
-    initPointerFromAnnotations(*PointerVal, PointerExpr->getType(), State.Env,
+    initPointerFromAnnotations(*PointerVal, PointerExpr, State.Env,
                                *Result.Context);
   }
 }
@@ -86,7 +141,7 @@ void transferNullCheckComparison(const BinaryOperator* BinaryOp,
                                  const MatchFinder::MatchResult& result,
                                  TransferState<NoopLattice>& State) {
   // Boolean representing the comparison between the two pointer values,
-  // automatically created by the dataflow framework
+  // automatically created by the dataflow framework.
   auto& PointerComparison =
       *cast<BoolValue>(State.Env.getValue(*BinaryOp, SkipPast::None));
 
@@ -150,23 +205,22 @@ void transferCallExpr(const CallExpr* CallExpr,
     State.Env.setValue(CallExprLoc, *PointerVal);
     State.Env.setStorageLocation(*CallExpr, CallExprLoc);
   }
-  initPointerFromAnnotations(*PointerVal, ReturnType, State.Env,
-                             *Result.Context);
+  initPointerFromAnnotations(*PointerVal, CallExpr, State.Env, *Result.Context);
 }
 
 auto buildTransferer() {
   return CFGMatchSwitchBuilder<TransferState<NoopLattice>>()
-      // Handles initialization of the null states of pointers
+      // Handles initialization of the null states of pointers.
       .CaseOfCFGStmt<Expr>(isPointerVariableReference(), transferPointer)
       .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferNotNullPointer)
       .CaseOfCFGStmt<Expr>(isAddrOf(), transferNotNullPointer)
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferNullPointer)
       .CaseOfCFGStmt<MemberExpr>(isMemberOfPointerType(), transferPointer)
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferCallExpr)
-      // Handles comparison between 2 pointers
+      // Handles comparison between 2 pointers.
       .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),
                                      transferNullCheckComparison)
-      // Handles checking of pointer as boolean
+      // Handles checking of pointer as boolean.
       .CaseOfCFGStmt<Expr>(isImplicitCastPointerToBool(),
                            transferNullCheckImplicitCastPtrToBool)
       .Build();
@@ -205,8 +259,8 @@ BoolValue& mergeBoolValues(BoolValue& Bool1, const Environment& Env1,
     MergedEnv.addToFlowCondition(MergedEnv.makeNot(MergedBool));
   } else {
     // TODO(b/233582219): Flow conditions are not necessarily mutually
-    // exclusive, a fix is in order: https://reviews.llvm.org/D130270, update
-    // this section when the patch is commited
+    // exclusive, a fix is in order: https://reviews.llvm.org/D130270. Update
+    // this section when the patch is commited.
     auto& FC1 = Env1.getFlowConditionToken();
     auto& FC2 = Env2.getFlowConditionToken();
     MergedEnv.addToFlowCondition(MergedEnv.makeOr(
