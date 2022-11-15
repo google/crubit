@@ -7,7 +7,7 @@ use code_gen_utils::{format_cc_ident, format_cc_includes, CcInclude};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
 use quote::quote;
-use rustc_hir::{Item, ItemId, ItemKind, Node, Unsafety};
+use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
