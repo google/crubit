@@ -96,18 +96,18 @@ impl CcSnippet {
     }
 }
 
-fn format_ret_ty(ty: Ty) -> Result<CcSnippet> {
+fn format_ret_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
     let void = Ok(CcSnippet { snippet: quote! { void }, includes: BTreeSet::new() });
     match ty.kind() {
         ty::TyKind::Never => void,  // `!`
         ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
-        _ => format_ty(ty),
+        _ => format_ty_for_cc(ty),
     }
 }
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of an `extern "C"` function.
-fn format_ty(ty: Ty) -> Result<CcSnippet> {
+fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
     fn cstdint(snippet: TokenStream) -> CcSnippet {
         let mut includes = BTreeSet::new();
         includes.insert(CcInclude::cstdint());
@@ -295,8 +295,8 @@ impl Sum for BindingsSnippet {
 /// Will panic if `def_id`
 /// - is invalid
 /// - doesn't identify a function,
-/// - has generic parameters of any kind - lifetime parameters (see also b/258235219), type
-///   parameters, or const parameters.
+/// - has generic parameters of any kind - lifetime parameters (see also
+///   b/258235219), type parameters, or const parameters.
 fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
 
@@ -346,7 +346,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     };
 
     let mut includes = BTreeSet::new();
-    let ret_type = format_ret_ty(sig.output())
+    let ret_type = format_ret_ty_for_cc(sig.output())
         .context("Error formatting function return type")?
         .into_tokens(&mut includes);
     let fn_name = format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
@@ -364,7 +364,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
         .iter()
         .enumerate()
         .map(|(index, ty)| Ok(
-            format_ty(*ty)
+            format_ty_for_cc(*ty)
                 .with_context(|| format!("Error formatting the type of parameter #{index}"))?
                 .into_tokens(&mut includes)
         ))
@@ -491,7 +491,9 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
 
 #[cfg(test)]
 pub mod tests {
-    use super::{format_def, format_ret_ty, format_ty, BindingsSnippet, GeneratedBindings};
+    use super::{
+        format_def, format_ret_ty_for_cc, format_ty_for_cc, BindingsSnippet, GeneratedBindings,
+    };
 
     use anyhow::Result;
     use code_gen_utils::{format_cc_ident, format_cc_includes};
@@ -1228,10 +1230,10 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_ret_ty_successes() {
-        // Test coverage for cases where `format_ret_ty` returns an `Ok(...)`.
-        // Additional testcases are covered by `test_format_ty_successes`
-        // (because `format_ret_ty` delegates most cases to `format_ty`).
+    fn test_format_ret_ty_for_cc_successes() {
+        // Test coverage for cases where `format_ret_ty_for_cc` returns an `Ok(...)`.
+        // Additional testcases are covered by `test_format_ty_for_cc_successes`
+        // (because `format_ret_ty_for_cc` delegates most cases to `format_ty_for_cc`).
         let testcases = [
             // ( <Rust type>, <expected C++ type> )
             ("bool", "bool"), // TyKind::Bool
@@ -1242,7 +1244,7 @@ pub mod tests {
         ];
         test_ty(&testcases, quote! {}, |desc, ty, expected| {
             let actual = {
-                let cc_snippet = format_ret_ty(ty).unwrap();
+                let cc_snippet = format_ret_ty_for_cc(ty).unwrap();
                 assert!(cc_snippet.includes.is_empty());
                 cc_snippet.snippet.to_string()
             };
@@ -1252,8 +1254,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_ty_successes() {
-        // Test coverage for cases where `format_ty` returns an `Ok(...)`.
+    fn test_format_ty_for_cc_successes() {
+        // Test coverage for cases where `format_ty_for_cc` returns an `Ok(...)`.
         //
         // Using `std::int8_t` (instead of `::std::int8_t`) has been an explicit decision.  The
         // "Google C++ Style Guide" suggests to "avoid nested namespaces that match well-known
@@ -1284,7 +1286,7 @@ pub mod tests {
         };
         test_ty(&testcases, preamble, |desc, ty, (expected_snippet, expected_include)| {
             let (actual_snippet, actual_includes) = {
-                let cc_snippet = format_ty(ty).unwrap();
+                let cc_snippet = format_ty_for_cc(ty).unwrap();
                 (cc_snippet.snippet.to_string(), cc_snippet.includes)
             };
 
@@ -1304,8 +1306,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_ty_failures() {
-        // This test provides coverage for cases where `format_ty` returns an
+    fn test_format_ty_for_cc_failures() {
+        // This test provides coverage for cases where `format_ty_for_cc` returns an
         // `Err(...)`.
         //
         // TODO(lukasza): Add test coverage for:
@@ -1320,7 +1322,7 @@ pub mod tests {
         //
         // It seems okay to have no test coverage for now for the following types (which
         // should never be encountered when generating bindings and where
-        // `format_ty` should panic):
+        // `format_ty_for_cc` should panic):
         // - TyKind::Closure
         // - TyKind::Error
         // - TyKind::FnDef
@@ -1392,7 +1394,7 @@ pub mod tests {
             }
         };
         test_ty(&testcases, preamble, |desc, ty, expected_err| {
-            let anyhow_err = format_ty(ty).unwrap_err();
+            let anyhow_err = format_ty_for_cc(ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
