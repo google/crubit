@@ -40,6 +40,7 @@ pub fn make_ir_from_items(items: impl IntoIterator<Item = Item>) -> Result<IR> {
         /* public_headers= */ vec![],
         /* current_target= */ TESTING_TARGET.into(),
         /* top_level_item_ids= */ vec![],
+        /* crate_root_path= */ None,
     )
 }
 

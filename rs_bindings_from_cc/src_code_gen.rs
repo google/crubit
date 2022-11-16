@@ -1232,6 +1232,7 @@ fn generate_func(
     func: Rc<Func>,
 ) -> Result<Option<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
     let ir = db.ir();
+    let crate_root_path = crate_root_path_tokens(&ir);
     let mut features = BTreeSet::new();
     let mut param_types = func
         .params
@@ -1334,7 +1335,7 @@ fn generate_func(
                 quote! {
                     let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
                     unsafe {
-                        crate::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
+                        #crate_root_path::detail::#thunk_ident( &mut tmp #( , #thunk_args )* );
                         tmp.assume_init()
                     }
                 }
@@ -1346,11 +1347,11 @@ fn generate_func(
                 //
                 // TODO(jeanpierreda): separately handle non-Unpin and non-trivial types.
                 let mut body = if return_type.is_unpin() {
-                    quote! { crate::detail::#thunk_ident( #( #thunk_args #clone_suffixes ),* ) }
+                    quote! { #crate_root_path::detail::#thunk_ident( #( #thunk_args #clone_suffixes ),* ) }
                 } else {
                     quote! {
                         ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<#return_type>>| {
-                            crate::detail::#thunk_ident(::std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
+                            #crate_root_path::detail::#thunk_ident(::std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
                         })
                     }
                 };
@@ -1965,10 +1966,11 @@ fn generate_record(
     errors: &mut dyn ErrorReporting,
 ) -> Result<GeneratedItem> {
     let ir = db.ir();
+    let crate_root_path = crate_root_path_tokens(&ir);
     let ident = make_rs_ident(&record.rs_name);
     let namespace_qualifier = NamespaceQualifier::new(record.id, &ir)?.format_for_rs();
     let qualified_ident = {
-        quote! { crate:: #namespace_qualifier #ident }
+        quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
     let doc_comment = generate_doc_comment(&record.doc_comment);
 
@@ -2858,14 +2860,20 @@ pub struct CratePath {
 }
 
 impl CratePath {
-    fn new(namespace_qualifier: &NamespaceQualifier, crate_ident: Option<Ident>) -> CratePath {
+    fn new(
+        ir: &IR,
+        namespace_qualifier: &NamespaceQualifier,
+        crate_ident: Option<Ident>,
+    ) -> CratePath {
         let namespace_qualifiers = &namespace_qualifier.0;
         let crate_ident = match crate_ident {
             Some(ci) => ci.to_string(),
             None => "crate".to_string(),
         };
-        let idents =
-            std::iter::once(crate_ident).chain(namespace_qualifiers.iter().cloned()).collect();
+        let idents = std::iter::once(crate_ident)
+            .chain(ir.crate_root_path().into_iter().map(ToOwned::to_owned))
+            .chain(namespace_qualifiers.iter().cloned())
+            .collect();
         CratePath { idents }
     }
 }
@@ -2937,6 +2945,7 @@ enum RsTypeKind {
 impl RsTypeKind {
     pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
         let crate_path = Rc::new(CratePath::new(
+            ir,
             &NamespaceQualifier::new(record.id, ir)?,
             rs_imported_crate_name(&record.owning_target, ir),
         ));
@@ -3167,10 +3176,7 @@ impl ToTokens for RsTypeKind {
                 let return_frag = return_type.format_as_return_type_fragment();
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
-            RsTypeKind::IncompleteRecord {
-                incomplete_record,
-                crate_path
-            } => {
+            RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
                 let record_ident = make_rs_ident(&incomplete_record.rs_name);
                 quote! { #crate_path :: #record_ident }
             }
@@ -3274,11 +3280,11 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
             match ir.item_for_type(&ty)? {
                 Item::IncompleteRecord(incomplete_record) => RsTypeKind::IncompleteRecord {
                     incomplete_record: incomplete_record.clone(),
-                   crate_path: Rc::new(CratePath::new(&NamespaceQualifier::new(
-                        incomplete_record.id,
+                    crate_path: Rc::new(CratePath::new(
                         &ir,
-                    )?,
-                    rs_imported_crate_name(&incomplete_record.owning_target, &ir)))
+                        &NamespaceQualifier::new(incomplete_record.id, &ir)?,
+                        rs_imported_crate_name(&incomplete_record.owning_target, &ir),
+                    )),
                 },
                 Item::Record(record) => RsTypeKind::new_record(record.clone(), &ir)?,
                 Item::TypeAlias(type_alias) => {
@@ -3289,11 +3295,11 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     } else {
                         RsTypeKind::TypeAlias {
                             type_alias: type_alias.clone(),
-                           crate_path: Rc::new(CratePath::new(&NamespaceQualifier::new(
-                                type_alias.id,
+                            crate_path: Rc::new(CratePath::new(
                                 &ir,
-                            )?,
-                            rs_imported_crate_name(&type_alias.owning_target, &ir))),
+                                &NamespaceQualifier::new(type_alias.id, &ir)?,
+                                rs_imported_crate_name(&type_alias.owning_target, &ir),
+                            )),
                             underlying_type: Rc::new(
                                 db.rs_type_kind(type_alias.underlying_type.rs_type.clone())?,
                             ),
@@ -3569,6 +3575,15 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
     })
 }
 
+fn crate_root_path_tokens(ir: &IR) -> TokenStream {
+    if let Some(crate_root_path) = ir.crate_root_path() {
+        let crate_root_path = make_rs_ident(crate_root_path);
+        quote! {crate::#crate_root_path}
+    } else {
+        quote! {crate}
+    }
+}
+
 /// Returns the implementation of base class conversions, for converting a type
 /// to its unambiguous public base classes.
 fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> {
@@ -3600,8 +3615,9 @@ fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> 
             thunks.push(quote! {
                 pub fn #cast_fn_name (from: *const #derived_name) -> *const #base_name;
             });
+            let crate_root_path = crate_root_path_tokens(ir);
             body = quote! {
-                crate::detail::#cast_fn_name(derived)
+                #crate_root_path::detail::#cast_fn_name(derived)
             };
         }
         impls.push(quote! {

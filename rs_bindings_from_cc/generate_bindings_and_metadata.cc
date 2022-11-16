@@ -74,6 +74,10 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
           cmdline.headers_to_targets(), cmdline.extra_rs_srcs(),
           clang_args_view, requested_instantiations));
 
+  if (!cmdline.instantiations_out().empty()) {
+    ir.crate_root_path_ = "__cc_template_instantiations_rs_api";
+  }
+
   bool generate_error_report = !cmdline.error_report_out().empty();
   CRUBIT_ASSIGN_OR_RETURN(
       Bindings bindings,

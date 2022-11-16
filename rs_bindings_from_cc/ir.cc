@@ -549,12 +549,16 @@ llvm::json::Value IR::ToJson() const {
     top_level_ids.push_back(id.value());
   }
 
-  return llvm::json::Object{
+  llvm::json::Object result{
       {"public_headers", public_headers},
       {"current_target", current_target},
       {"items", std::move(json_items)},
       {"top_level_item_ids", std::move(top_level_ids)},
   };
+  if (!crate_root_path_.empty()) {
+    result["crate_root_path"] = crate_root_path_;
+  }
+  return std::move(result);
 }
 
 std::string ItemToString(const IR::Item& item) {

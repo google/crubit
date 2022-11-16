@@ -43,8 +43,6 @@ absl::StatusOr<IR> IrFromCc(
   // Caller should verify that the inputs are not empty.
   CHECK(!extra_source_code_for_testing.empty() || !public_headers.empty() ||
         !extra_instantiations.empty());
-  CHECK(!extra_source_code_for_testing.empty() || !headers_to_targets.empty() ||
-        !extra_instantiations.empty());
 
   clang::tooling::FileContentMappings file_contents;
 

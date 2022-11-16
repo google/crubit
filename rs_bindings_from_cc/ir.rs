@@ -31,8 +31,9 @@ pub fn make_ir_from_parts(
     public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
     top_level_item_ids: Vec<ItemId>,
+    crate_root_path: Option<String>,
 ) -> Result<IR> {
-    make_ir(FlatIR { public_headers, current_target, items, top_level_item_ids })
+    make_ir(FlatIR { public_headers, current_target, items, top_level_item_ids, crate_root_path })
 }
 
 fn make_ir(flat_ir: FlatIR) -> Result<IR> {
@@ -690,6 +691,8 @@ struct FlatIR {
     items: Vec<Item>,
     #[serde(default)]
     top_level_item_ids: Vec<ItemId>,
+    #[serde(default)]
+    crate_root_path: Option<String>,
 }
 
 /// Struct providing the necessary information about the API of a C++ target to
@@ -863,6 +866,10 @@ impl IR {
             Ok(None)
         }
     }
+
+    pub fn crate_root_path(&self) -> Option<&str> {
+        self.flat_ir.crate_root_path.as_deref()
+    }
 }
 
 #[cfg(test)]
@@ -901,7 +908,27 @@ mod tests {
             current_target: "//foo:bar".into(),
             top_level_item_ids: vec![],
             items: vec![],
+            crate_root_path: None,
         };
         assert_eq!(ir.flat_ir, expected);
+    }
+
+    #[test]
+    fn test_empty_crate_root_path() {
+        let input = "{ \"current_target\": \"//foo:bar\" }";
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        assert_eq!(ir.crate_root_path(), None);
+    }
+
+    #[test]
+    fn test_crate_root_path() {
+        let input = r#"
+        {
+            "crate_root_path": "__cc_template_instantiations_rs_api",
+            "current_target": "//foo:bar"
+        }
+        "#;
+        let ir = deserialize_ir(input.as_bytes()).unwrap();
+        assert_eq!(ir.crate_root_path(), Some("__cc_template_instantiations_rs_api"));
     }
 }

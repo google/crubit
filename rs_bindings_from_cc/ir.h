@@ -796,6 +796,19 @@ struct IR {
                             UnsupportedItem, Comment, Namespace, UseMod>;
   std::vector<Item> items;
   std::vector<ItemId> top_level_item_ids;
+  // Empty string signals that the bindings should be generated in the crate
+  // root. This is the default state.
+  //
+  // Non-empty value represents the name of the first-level submodule inside of
+  // which bindings should be generated. This is how we generate bindings for
+  // class template instantiations - we put all generated bindings into a hidden
+  // module of the user crate so everything can be compiled in one rustc
+  // invocation (this enables us to access types introduced in the user crate
+  // for template instantiations in the future).
+  //
+  // TODO(hlopko): Replace empty strings with std::optional<std::string>
+  // throughout the codebase
+  std::string crate_root_path_;
 };
 
 inline std::string IrToJson(const IR& ir) {
