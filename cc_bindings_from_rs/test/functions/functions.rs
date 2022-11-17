@@ -31,6 +31,14 @@ pub extern "C" fn add_i32_via_extern_c_with_mangling(x: i32, y: i32) -> i32 {
     x + y
 }
 
+pub fn add_i32_via_rust_abi(x: i32, y: i32) -> i32 {
+    x + y
+}
+
+pub fn add_i32_via_rust_abi_with_duplicated_param_names(x: i32, y: i32, _: i32, _: i32) -> i32 {
+    x + y
+}
+
 static G_I32: Mutex<i32> = Mutex::new(0);
 
 // Presence of the API below tests how bindings handle functions returning

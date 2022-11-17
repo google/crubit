@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{bail, Context, Result};
-use code_gen_utils::{format_cc_ident, format_cc_includes, CcInclude};
+use code_gen_utils::{format_cc_ident, format_cc_includes, make_rs_ident, CcInclude};
 use itertools::Itertools;
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
@@ -39,24 +39,25 @@ impl GeneratedBindings {
             quote! { __COMMENT__ #txt __NEWLINE__ }
         };
 
-        let h_body = {
-            let crate_content = format_crate(tcx).unwrap_or_else(|err| {
-                let txt = format!("Failed to generate bindings for the crate: {err}");
-                quote! { __COMMENT__ #txt }
-            });
+        let Self { h_body, rs_body } = format_crate(tcx).unwrap_or_else(|err| {
+            let txt = format!("Failed to generate bindings for the crate: {err}");
+            let src = quote! { __COMMENT__ #txt };
+            Self { h_body: src.clone(), rs_body: src }
+        });
+
+        let h_body = quote! {
+            #top_comment
+
             // TODO(b/251445877): Replace `#pragma once` with include guards.
-            quote! {
-                #top_comment
-                __HASH_TOKEN__ pragma once __NEWLINE__
-                __NEWLINE__
-                #crate_content
-            }
+            __HASH_TOKEN__ pragma once __NEWLINE__
+            __NEWLINE__
+
+            #h_body
         };
 
         let rs_body = quote! {
             #top_comment
-
-            // TODO(b/254097223): Include Rust thunks here.
+            #rs_body
         };
 
         Ok(Self { h_body, rs_body })
@@ -231,7 +232,6 @@ fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
 
 /// Formats `ty` for Rust (e.g. to be used as a type of a parameter in a Rust
 /// thunk inside `..._cc_api_impl.rs`).
-#[allow(dead_code)] // TODO(b/254097223): Use from `format_fn`.
 fn format_ty_for_rs(ty: Ty) -> Result<TokenStream> {
     Ok(match ty.kind() {
         ty::TyKind::Bool
@@ -293,21 +293,30 @@ struct BindingsSnippet {
     api: TokenStream,
 
     /// Internal implementation details for `..._cc_api.h` file (e.g.
-    /// declarations of Rust thunks, `static_assert`s about `struct` layout,
-    /// etc.).
-    internals: Option<TokenStream>,
-    // TODO(b/254097223): Add `impl_: Option<TokenStream>` to carry Rust thunks.
+    /// declarations of Rust thunks).
+    cc_impl: Option<TokenStream>,
+
+    /// Rust implementation of the bindings:
+    /// - Definitions of FFI-friendly `extern "C"` thunks that C++ can call
+    ///   into.
+    /// - Static / `const` assrtions about layout of Rust structs
+    rs_impl: Option<TokenStream>,
 }
 
 impl BindingsSnippet {
     fn new() -> Self {
-        Self { includes: BTreeSet::new(), api: quote! {}, internals: None }
+        Self { includes: BTreeSet::new(), api: quote! {}, cc_impl: None, rs_impl: None }
     }
 }
 
 impl AddAssign for BindingsSnippet {
     fn add_assign(&mut self, rhs: Self) {
-        let Self { includes: mut rhs_includes, api: rhs_api, internals: rhs_internals } = rhs;
+        let Self {
+            includes: mut rhs_includes,
+            api: rhs_api,
+            cc_impl: rhs_cc_impl,
+            rs_impl: rhs_rs_impl,
+        } = rhs;
 
         self.includes.append(&mut rhs_includes);
         self.api.extend(rhs_api);
@@ -326,7 +335,8 @@ impl AddAssign for BindingsSnippet {
                 }
             }
         }
-        self.internals = concat_optional_tokens(self.internals.take(), rhs_internals);
+        self.cc_impl = concat_optional_tokens(self.cc_impl.take(), rhs_cc_impl);
+        self.rs_impl = concat_optional_tokens(self.rs_impl.take(), rhs_rs_impl);
     }
 }
 
@@ -356,7 +366,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     let item_name = tcx.item_name(def_id);
-    let symbol_name = {
+    let mut symbol_name = {
         // Call to `mono` is ok - doc comment requires no generic parameters (although
         // lifetime parameters would have been okay).
         let instance = ty::Instance::mono(tcx, def_id);
@@ -381,6 +391,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
         }
     }
 
+    let needs_thunk: bool;
     match sig.abi {
         // "C" ABI is okay: Before https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust
         // panic that "escapes" a "C" ABI function leads to Undefined Behavior.  This is
@@ -389,66 +400,110 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
         //
         // After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a Rust panic that
         // tries to "escape" a "C" ABI function will terminate the program.  This is okay.
-        Abi::C { unwind: false } => (),
+        Abi::C { unwind: false } => {
+            needs_thunk = false;
+        },
 
         // "C-unwind" ABI is okay: After https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html a
         // new "C-unwind" ABI may be used by Rust functions that want to safely propagate Rust
         // panics through frames that may belong to another language.
-        Abi::C { unwind: true } => (),
+        Abi::C { unwind: true } => {
+            needs_thunk = false;
+        },
 
-        // TODO(b/254097223): Add support for Rust thunks.
-        _ => bail!("Non-C ABI is not supported yet (b/254097223)"),
+        // All other ABIs trigger thunk generation.  This covers Rust ABI functions, but
+        // also ABIs that theoretically are understood both by C++ and Rust (e.g. see
+        // `format_cc_call_conv_as_clang_attribute` in `rs_bindings_from_cc/src_code_gen.rs`).
+        _ => {
+            let thunk_name = format!("__crubit_thunk_{}", symbol_name.name);
+            symbol_name = ty::SymbolName::new(tcx, &thunk_name);
+            needs_thunk = true;
+        },
     };
 
     let mut includes = BTreeSet::new();
-    let ret_type = format_ret_ty_for_cc(sig.output())
-        .context("Error formatting function return type")?
-        .into_tokens(&mut includes);
-    let fn_name = format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
-    let arg_names = tcx
-        .fn_arg_names(def_id)
-        .iter()
-        .enumerate()
-        .map(|(index, ident)| {
-            format_cc_ident(ident.as_str())
-                .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{index}")).unwrap())
-        })
-        .collect_vec();
-    let arg_types = sig
-        .inputs()
-        .iter()
-        .enumerate()
-        .map(|(index, ty)| Ok(
-            format_ty_for_cc(*ty)
-                .with_context(|| format!("Error formatting the type of parameter #{index}"))?
-                .into_tokens(&mut includes)
-        ))
-        .collect::<Result<Vec<_>>>()?;
     let api: TokenStream;
-    let internals: Option<TokenStream>;
-    if item_name.as_str() == symbol_name.name {
-        api = quote! {
-            extern "C" #ret_type #fn_name (
-                    #( #arg_types #arg_names ),*
-            );
-        };
-        internals = None;
+    let cc_impl: Option<TokenStream>;
+    {
+        let ret_type = format_ret_ty_for_cc(sig.output())
+            .context("Error formatting function return type")?
+            .into_tokens(&mut includes);
+        let fn_name =
+            format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
+        let arg_names = tcx
+            .fn_arg_names(def_id)
+            .iter()
+            .enumerate()
+            .map(|(index, ident)| {
+                format_cc_ident(ident.as_str())
+                    .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{index}")).unwrap())
+            })
+            .collect_vec();
+        let arg_types = sig
+            .inputs()
+            .iter()
+            .enumerate()
+            .map(|(index, ty)| {
+                Ok(format_ty_for_cc(*ty)
+                    .with_context(|| format!("Error formatting the type of parameter #{index}"))?
+                    .into_tokens(&mut includes))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        if item_name.as_str() == symbol_name.name {
+            api = quote! {
+                extern "C" #ret_type #fn_name (
+                        #( #arg_types #arg_names ),*
+                );
+            };
+            cc_impl = None;
+        } else {
+            let exported_name =
+                format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+            api = quote! {
+                inline #ret_type #fn_name (
+                        #( #arg_types #arg_names ),* ) {
+                    return :: __crubit_internal :: #exported_name( #( #arg_names ),* );
+                }
+            };
+            cc_impl = Some(quote! {
+                extern "C" #ret_type #exported_name (
+                        #( #arg_types #arg_names ),*
+                );
+            });
+        }
+    }
+
+    let rs_impl = if !needs_thunk {
+        None
     } else {
-        let exported_name =
-            format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
-        api = quote! {
-            inline #ret_type #fn_name (
-                    #( #arg_types #arg_names ),* ) {
-                return :: __crubit_internal :: #exported_name( #( #arg_names ),* );
+        let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
+        let fn_name = make_rs_ident(item_name.as_str());
+        let exported_name = make_rs_ident(symbol_name.name);
+        let ret_type = format_ty_for_rs(sig.output())?;
+        let arg_names = tcx
+            .fn_arg_names(def_id)
+            .iter()
+            .enumerate()
+            .map(|(index, ident)| {
+                if ident.as_str().is_empty() {
+                    format_ident!("__param_{index}")
+                } else {
+                    make_rs_ident(ident.as_str())
+                }
+            })
+            .collect_vec();
+        let arg_types =
+            sig.inputs().iter().copied().map(format_ty_for_rs).collect::<Result<Vec<_>>>()?;
+        Some({
+            quote! {
+                #[no_mangle]
+                extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
+                    #crate_name :: #fn_name( #( #arg_names ),* )
+                }
             }
-        };
-        internals = Some(quote! {
-            extern "C" #ret_type #exported_name (
-                    #( #arg_types #arg_names ),*
-            );
-        });
+        })
     };
-    Ok(BindingsSnippet { includes, api, internals })
+    Ok(BindingsSnippet { includes, api, cc_impl, rs_impl })
 }
 
 /// Formats a Rust item idenfied by `def_id`.
@@ -496,7 +551,7 @@ fn format_unsupported_def(
 }
 
 /// Formats all public items from the Rust crate being compiled.
-fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
+fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
     let snippets: BindingsSnippet = tcx
         .hir()
         .items()
@@ -526,8 +581,8 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
             }
         }
     };
-    let internals = {
-        match snippets.internals {
+    let cc_impl = {
+        match snippets.cc_impl {
             None => quote! {},
             Some(details_body) => quote! {
                 namespace __crubit_internal {
@@ -537,11 +592,13 @@ fn format_crate(tcx: TyCtxt) -> Result<TokenStream> {
             },
         }
     };
-    Ok(quote! {
+    let h_body = quote! {
         #includes __NEWLINE__
-        #internals
+        #cc_impl
         #api
-    })
+    };
+    let rs_body = snippets.rs_impl.unwrap_or_else(|| quote! {});
+    Ok(GeneratedBindings { h_body, rs_body })
 }
 
 #[cfg(test)]
@@ -560,7 +617,9 @@ pub mod tests {
     use rustc_span::def_id::LocalDefId;
     use std::path::PathBuf;
 
-    use token_stream_matchers::{assert_cc_matches, assert_cc_not_matches, assert_rs_not_matches};
+    use token_stream_matchers::{
+        assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
+    };
 
     pub fn get_sysroot_for_testing() -> PathBuf {
         let runfiles = runfiles::Runfiles::create().unwrap();
@@ -671,8 +730,8 @@ pub mod tests {
 
     #[test]
     fn test_generated_bindings_fn_export_name() {
-        // Coverage of how `BindingsSnippet::internals` are propagated when there are no
-        // `BindingsSnippet::impl` (e.g. no Rust thunks are needed).
+        // Coverage of how `BindingsSnippet::cc_impl` are propagated when there are no
+        // `BindingsSnippet::rs_impl` (e.g. no Rust thunks are needed).
         let test_src = r#"
                 #[export_name = "export_name"]
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
@@ -807,7 +866,8 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -832,7 +892,8 @@ pub mod tests {
         test_format_def(test_src, "explicit_unit_return_type", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -857,7 +918,8 @@ pub mod tests {
             // details).
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -879,6 +941,7 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -888,7 +951,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                result.internals.expect("This test expects separate extern-C decl"),
+                result.cc_impl.expect("This test expects separate extern-C decl"),
                 quote! {
                     extern "C" double ...(double x, double y);
                 }
@@ -905,6 +968,7 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -914,7 +978,7 @@ pub mod tests {
                 }
             );
             assert_cc_matches!(
-                result.internals.expect("This test expects separate extern-C decl"),
+                result.cc_impl.expect("This test expects separate extern-C decl"),
                 quote! {
                     extern "C" double export_name(double x, double y);
                 }
@@ -950,13 +1014,37 @@ pub mod tests {
                 pub const fn foo(i: i32) -> i32 { i * 42 }
             "#;
         test_format_def(test_src, "foo", |result| {
-            // TODO(lukasza): Update test expectations below once `const fn` example from
-            // the testcase doesn't just error out (and is instead supported as
-            // a non-`consteval` binding).
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
-            let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Non-C ABI is not supported yet (b/254097223)");
+            let result = result.expect("Test expects success here");
+            assert!(!result.includes.is_empty());
+            assert!(result.cc_impl.is_some());
+            let thunk_name = quote!{ __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3foo };
+            assert_cc_matches!(
+                result.cc_impl.unwrap(),
+                quote! {
+                    extern "C" std::int32_t #thunk_name( std::int32_t i);
+                }
+            );
+            assert_cc_matches!(
+                result.api,
+                quote! {
+                    inline std::int32_t foo(std::int32_t i) {
+                        return ::__crubit_internal::#thunk_name(i);
+                    }
+                }
+            );
+            assert!(result.rs_impl.is_some());
+            assert_rs_matches!(
+                result.rs_impl.unwrap(),
+                quote! {
+                    #[no_mangle]
+                    extern "C"
+                    fn #thunk_name(i: i32) -> i32 {
+                        rust_out::foo(i)
+                    }
+                }
+            );
         });
     }
 
@@ -972,7 +1060,8 @@ pub mod tests {
         test_format_def(test_src, "may_throw", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -998,7 +1087,8 @@ pub mod tests {
         test_format_def(test_src, "type_aliased_return", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -1129,19 +1219,101 @@ pub mod tests {
             "#;
         test_format_def(test_src, "async_function", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Non-C ABI is not supported yet (b/254097223)");
+            assert_eq!(err, "Error formatting function return type: \
+                             The following Rust type is not supported yet: \
+                             impl std::future::Future<Output = ()>");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_non_c_abi() {
+    fn test_format_def_fn_rust_abi() {
         let test_src = r#"
-                pub fn default_rust_abi_function() {}
+                pub fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
-        test_format_def(test_src, "default_rust_abi_function", |result| {
-            let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Non-C ABI is not supported yet (b/254097223)");
-        })
+        test_format_def(test_src, "add", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
+            assert!(result.cc_impl.is_some());
+            let thunk_name = quote! { __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3add };
+            assert_cc_matches!(
+                result.cc_impl.unwrap(),
+                quote! {
+                    extern "C" double #thunk_name(double x, double y);
+                }
+            );
+            assert_cc_matches!(
+                result.api,
+                quote! {
+                    inline double add(double x, double y) {
+                        return ::__crubit_internal::#thunk_name(x, y);
+                    }
+                }
+            );
+            assert!(result.rs_impl.is_some());
+            assert_rs_matches!(
+                result.rs_impl.unwrap(),
+                quote! {
+                    #[no_mangle]
+                    extern "C"
+                    fn #thunk_name(x: f64, y: f64) -> f64 {
+                        rust_out::add(x, y)
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_vectorcall_abi() {
+        // This tests a function call that is not a C-ABI, and is not the default Rust
+        // ABI.  It can't use "stdcall", because it is not supported on the
+        // targets where Crubit's tests run.  So, it ended up using
+        // "vectorcall".
+        //
+        // This test almost entirely replicates `test_format_def_fn_rust_abi`, except
+        // for the `extern "vectorcall"` part in the `test_src` test input.
+        //
+        // This test verifies the current behavior that gives reasonable and functional
+        // FFI bindings.  OTOH, in the future we may decide to avoid having the
+        // extra thunk for cases where the given non-C-ABI function call
+        // convention is supported by both C++ and Rust
+        // (see also `format_cc_call_conv_as_clang_attribute` in
+        // `rs_bindings_from_cc/src_code_gen.rs`)
+        let test_src = r#"
+                #![feature(abi_vectorcall)]
+                pub extern "vectorcall" fn add(x: f64, y: f64) -> f64 { x * y }
+            "#;
+        test_format_def(test_src, "add", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.includes.is_empty());
+            assert!(result.cc_impl.is_some());
+            let thunk_name = quote! { __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3add };
+            assert_cc_matches!(
+                result.cc_impl.unwrap(),
+                quote! {
+                    extern "C" double #thunk_name(double x, double y);
+                }
+            );
+            assert_cc_matches!(
+                result.api,
+                quote! {
+                    inline double add(double x, double y) {
+                        return ::__crubit_internal::#thunk_name(x, y);
+                    }
+                }
+            );
+            assert!(result.rs_impl.is_some());
+            assert_rs_matches!(
+                result.rs_impl.unwrap(),
+                quote! {
+                    #[no_mangle]
+                    extern "C"
+                    fn #thunk_name(x: f64, y: f64) -> f64 {
+                        rust_out::add(x, y)
+                    }
+                }
+            );
+        });
     }
 
     #[test]
@@ -1169,7 +1341,8 @@ pub mod tests {
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -1189,7 +1362,8 @@ pub mod tests {
         test_format_def(test_src, "some_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
-            assert!(result.internals.is_none());
+            assert!(result.cc_impl.is_none());
+            assert!(result.rs_impl.is_none());
             assert_cc_matches!(
                 result.api,
                 quote! {
@@ -1200,31 +1374,43 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_export_name_with_anonymous_parameter_names() {
+    fn test_format_def_fn_with_multiple_anonymous_parameter_names() {
         let test_src = r#"
-                #[export_name = "export_name"]
-                pub extern "C" fn public_function(_: f64, _: f64) {}
+                pub fn foo(_: f64, _: f64) {}
             "#;
-        test_format_def(test_src, "public_function", |result| {
+        test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.includes.is_empty());
+            assert!(result.cc_impl.is_some());
             assert_cc_matches!(
-                result.api,
+                result.cc_impl.unwrap(),
                 quote! {
-                    inline void public_function(double __param_0, double __param_1) {
-                        return ::__crubit_internal::export_name(__param_0, __param_1);
-                    }
+                    extern "C" void ...(
+                        double __param_0, double __param_1);
                 }
             );
             assert_cc_matches!(
-                result.internals.expect("This test expects separate extern-C decl"),
+                result.api,
                 quote! {
-                    extern "C" void export_name(double __param_0, double __param_1);
+                    inline void foo(double __param_0, double __param_1) {
+                        return ::__crubit_internal
+                               ::...(
+                                   __param_0, __param_1);
+                    }
+                }
+            );
+            assert!(result.rs_impl.is_some());
+            assert_rs_matches!(
+                result.rs_impl.unwrap(),
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
+                        rust_out::foo(__param_0, __param_1)
+                    }
                 }
             );
         });
     }
-
 
     #[test]
     fn test_format_def_unsupported_fn_param_type() {
@@ -1247,12 +1433,9 @@ pub mod tests {
                 pub fn fn_with_params(_param: ()) {}
             "#;
         test_format_def(test_src, "fn_with_params", |result| {
-            // TODO(b/254097223): Change the expectations once Rust-ABI functions are
-            // supported. Note that the test cannot use `extern "C"` in the
-            // meantime, because `()` is not FFI-safe (i.e. Rust won't allow
-            // using it with `extern "C"`).
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Non-C ABI is not supported yet (b/254097223)");
+            assert_eq!(err, "Error formatting the type of parameter #0: \
+                             The unit type `()` / `void` is only supported as a return type");
         });
     }
 
@@ -1642,6 +1825,7 @@ pub mod tests {
     {
         use rustc_session::config::{
             CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes,
+            SymbolManglingVersion,
         };
 
         const TEST_FILENAME: &str = "crubit_unittests.rs";
@@ -1663,7 +1847,17 @@ pub mod tests {
                 ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
             ],
             cg: CodegenOptions {
+                // As pointed out in `panics_and_exceptions.md` the tool only supports `-C
+                // panic=abort` and therefore we explicitly opt into this config for tests.
                 panic: Some(rustc_target::spec::PanicStrategy::Abort),
+                // To simplify how unit tests are authored we force a specific mangling algorithm -
+                // this way the tests can hardcode mangled-name-depdendent expectations (e.g. names
+                // of thunks expected in test output).  The value below has been chosen based on
+                // <internal link>/llvm-coverage-instrumentation.html#rust-symbol-mangling which
+                // points out that `v0` mangling can be used to "ensure consistent and reversible
+                // name mangling" in situations when "mangled names must be consistent across
+                // compilations".
+                symbol_mangling_version: Some(SymbolManglingVersion::V0),
                 ..Default::default()
             },
             ..Default::default()

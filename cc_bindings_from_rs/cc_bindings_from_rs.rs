@@ -311,8 +311,7 @@ mod tests {
             let rs_input_path = self.tempdir.path().join("test_crate.rs");
             std::fs::write(
                 &rs_input_path,
-                r#" #[no_mangle]
-                    pub extern "C" fn public_function() {
+                r#" pub fn public_function() {
                         private_function()
                     }
 
@@ -330,6 +329,9 @@ mod tests {
             args.extend([
                 "--".to_string(),
                 format!("--codegen=panic={}", &self.panic_mechanism),
+                // See comments about `SymbolManglingVersion::V0`in `test::run_compiler` in
+                // `bindings.rs` for rationale behind using `symbol-mangling-version=v0`.
+                "--codegen=symbol-mangling-version=v0".to_string(),
                 "--crate-type=lib".to_string(),
                 format!("--sysroot={}", get_sysroot_for_testing().display()),
                 rs_input_path.display().to_string(),
@@ -356,9 +358,16 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 
 #pragma once
 
+namespace __crubit_internal {
+extern "C" void
+__crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function();
+}
 namespace test_crate {
-extern "C" void public_function();
-}"#
+inline void public_function() {
+  return ::__crubit_internal::
+      __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function();
+}
+}  // namespace test_crate"#
         );
 
         assert!(test_result.rs_path.exists());
@@ -367,6 +376,11 @@ extern "C" void public_function();
             rs_body,
             r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
+
+#[no_mangle]
+extern "C" fn __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function() -> () {
+    test_crate::public_function()
+}
 "#
         );
         Ok(())

@@ -32,7 +32,7 @@ TEST(FunctionsTest, AddInt32ViaExternCWithExportName) {
 }
 
 TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
-  // TODO(b/254097223): Uncomment the test assertion below after ensuring that
+  // TODO(b/258449205): Uncomment the test assertion below after ensuring that
   // the `genrule` in `test/functions/BUILD` invokes `cc_bindings_from_rs` with
   // the same rustc cmdline flags as when `rustc` is used to build
   // `functions.rs` for `rust_library`.  Otherwise, the mangled name will be
@@ -40,6 +40,15 @@ TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
   // _ZN9functions34add_i32_via_extern_c_with_mangling17h9cf06f3d70bfe03aE vs
   // _ZN9functions34add_i32_via_extern_c_with_mangling17hc48a5cd0f6e44291E
   // EXPECT_EQ(12 + 34, add_i32_via_extern_c_with_mangling(12, 34));
+}
+
+TEST(FunctionsTest, AddInt32ViaRustAbi) {
+  EXPECT_EQ(12 + 34, add_i32_via_rust_abi(12, 34));
+}
+
+TEST(FunctionsTest, AddInt32ViaRustAbiWithDuplicatedParamNames) {
+  EXPECT_EQ(12 + 34,
+            add_i32_via_rust_abi_with_duplicated_param_names(12, 34, 56, 78));
 }
 
 TEST(FunctionsTest, VoidReturningFunctionWithExportName) {
