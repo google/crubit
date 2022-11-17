@@ -1438,6 +1438,7 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
 }
 
 TEST(PointerNullabilityTest, MemberFunctionOfClassTemplateInstantiation) {
+  // Struct with one argument initialised as _Nullable.
   checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
@@ -1457,6 +1458,7 @@ TEST(PointerNullabilityTest, MemberFunctionOfClassTemplateInstantiation) {
     }
   )cc");
 
+  // Struct with one argument initialised as _Nonnull.
   checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
@@ -1476,6 +1478,7 @@ TEST(PointerNullabilityTest, MemberFunctionOfClassTemplateInstantiation) {
     }
   )cc");
 
+  // Struct with one argument initialised without annotation.
   checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
@@ -1492,6 +1495,78 @@ TEST(PointerNullabilityTest, MemberFunctionOfClassTemplateInstantiation) {
       // **xs.getNullableTPtr();
       *xs.getNonnullTPtr();
       // **xs.getNonnullTPtr();
+    }
+  )cc");
+
+  // Struct with multiple arguments.
+  checkDiagnostics(R"cc(
+    template <typename T0, typename T1, typename T2>
+    struct Struct3Arg {
+      T0 getT0();
+      T1 getT1();
+      T2 getT2();
+    };
+    void target(Struct3Arg<int *, int *_Nonnull, int *_Nullable> &x) {
+      *x.getT0();
+      *x.getT1();
+      *x.getT2();  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct with multiple arguments and methods whose return types are pointers
+  // to those arguments.
+  checkDiagnostics(R"cc(
+    template <typename T0, typename T1, typename T2>
+    struct Struct3Arg {
+      T0 *getUnknownT0Ptr();
+      T1 *_Nullable getNullableT1Ptr();
+      T2 *_Nonnull getNonnullT2Ptr();
+    };
+    void target(Struct3Arg<int *, int *_Nonnull, int *_Nullable> &x) {
+      *x.getUnknownT0Ptr();
+      // **x.getUnknownT0Ptr();
+      *x.getNullableT1Ptr();  // [[unsafe]]
+      // **x.getNullableT1Ptr();
+      *x.getNonnullT2Ptr();
+      // **x.getNonnullT2Ptr();  // false-negative
+    }
+  )cc");
+
+  // Struct with int template parameters and with type as first argument.
+  checkDiagnostics(R"cc(
+    template <typename T0, int I1, int I2>
+    struct Struct3ArgWithInt {
+      T0 getT0();
+    };
+    void target(Struct3ArgWithInt<int *_Nullable, 0, 1> &x) {
+      *x.getT0();  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct with int template parameters and with type as second argument.
+  checkDiagnostics(R"cc(
+    template <int I0, typename T1, int I2>
+    struct Struct3ArgWithInt {
+      T1 getT1();
+    };
+    void target(Struct3ArgWithInt<0, int *_Nullable, 1> &x) {
+      *x.getT1();  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct with interleaved int and type template parameters.
+  checkDiagnostics(R"cc(
+    template <int I0, typename T1, int I2, typename T3, int I4, typename T5>
+    struct Struct6ArgWithInt {
+      T1 getT1();
+      T3 getT3();
+      T5 getT5();
+    };
+    void target(
+        Struct6ArgWithInt<0, int *_Nullable, 1, int *_Nullable, 2, int *> &x) {
+      *x.getT1();  // [[unsafe]]
+      *x.getT3();  // [[unsafe]]
+      *x.getT5();
     }
   )cc");
 }
