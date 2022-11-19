@@ -287,7 +287,7 @@ fn format_ty_for_rs(ty: Ty) -> Result<TokenStream> {
 #[derive(Debug, Default)]
 struct MixedSnippet {
     cc: CcSnippet,
-    rs: Option<TokenStream>,
+    rs: TokenStream,
 }
 
 impl AddAssign for MixedSnippet {
@@ -296,22 +296,7 @@ impl AddAssign for MixedSnippet {
 
         self.cc.includes.append(&mut rhs_cc.includes);
         self.cc.snippet.extend(rhs_cc.snippet);
-
-        fn concat_optional_tokens(
-            lhs: Option<TokenStream>,
-            rhs: Option<TokenStream>,
-        ) -> Option<TokenStream> {
-            match (lhs, rhs) {
-                (None, None) => None,
-                (Some(lhs), None) => Some(lhs),
-                (None, Some(rhs)) => Some(rhs),
-                (Some(mut lhs), Some(rhs)) => {
-                    lhs.extend(rhs);
-                    Some(lhs)
-                }
-            }
-        }
-        self.rs = concat_optional_tokens(self.rs.take(), rhs_rs);
+        self.rs.extend(rhs_rs);
     }
 }
 
@@ -446,7 +431,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
     };
 
     let rs_snippet = if !needs_thunk {
-        None
+        quote! {}
     } else {
         let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
         let fn_name = make_rs_ident(item_name.as_str());
@@ -466,14 +451,12 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
             .collect_vec();
         let arg_types =
             sig.inputs().iter().copied().map(format_ty_for_rs).collect::<Result<Vec<_>>>()?;
-        Some({
-            quote! {
-                #[no_mangle]
-                extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
-                    #crate_name :: #fn_name( #( #arg_names ),* )
-                }
+        quote! {
+            #[no_mangle]
+            extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
+                #crate_name :: #fn_name( #( #arg_names ),* )
             }
-        })
+        }
     };
     Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_snippet })
 }
@@ -519,7 +502,7 @@ fn format_unsupported_def(
     let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
     let comment = quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ };
 
-    MixedSnippet { cc: CcSnippet { snippet: comment, ..Default::default() }, rs: None }
+    MixedSnippet { cc: CcSnippet { snippet: comment, ..Default::default() }, ..Default::default() }
 }
 
 /// Formats all public items from the Rust crate being compiled.
@@ -555,8 +538,7 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
             }
         }
     };
-    let rs_body = rs.unwrap_or_else(|| quote! {});
-    Ok(GeneratedBindings { h_body, rs_body })
+    Ok(GeneratedBindings { h_body, rs_body: rs })
 }
 
 #[cfg(test)]
@@ -824,7 +806,7 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -849,7 +831,7 @@ pub mod tests {
         test_format_def(test_src, "explicit_unit_return_type", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -874,7 +856,7 @@ pub mod tests {
             // details).
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -896,7 +878,7 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -920,7 +902,7 @@ pub mod tests {
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -979,9 +961,8 @@ pub mod tests {
                     }
                 }
             );
-            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs.unwrap(),
+                result.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -1005,7 +986,7 @@ pub mod tests {
         test_format_def(test_src, "may_throw", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -1031,7 +1012,7 @@ pub mod tests {
         test_format_def(test_src, "type_aliased_return", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -1188,9 +1169,8 @@ pub mod tests {
                     }
                 }
             );
-            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs.unwrap(),
+                result.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -1237,9 +1217,8 @@ pub mod tests {
                     }
                 }
             );
-            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs.unwrap(),
+                result.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -1276,7 +1255,7 @@ pub mod tests {
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -1296,7 +1275,7 @@ pub mod tests {
         test_format_def(test_src, "some_function", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            assert!(result.rs.is_none());
+            assert!(result.rs.is_empty());
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
@@ -1328,9 +1307,8 @@ pub mod tests {
                     }
                 }
             );
-            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs.unwrap(),
+                result.rs,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
