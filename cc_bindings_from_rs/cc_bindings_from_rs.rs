@@ -358,13 +358,13 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 
 #pragma once
 
+namespace test_crate {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function();
 }
-namespace test_crate {
 inline void public_function() {
-  return ::__crubit_internal::
+  return __crubit_internal::
       __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function();
 }
 }  // namespace test_crate"#

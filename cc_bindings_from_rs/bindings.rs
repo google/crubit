@@ -78,7 +78,7 @@ where
     Ok(query_context.peek_mut().enter(f))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct CcSnippet {
     snippet: TokenStream,
 
@@ -284,42 +284,18 @@ fn format_ty_for_rs(ty: Ty) -> Result<TokenStream> {
     })
 }
 
-#[derive(Debug)]
-struct BindingsSnippet {
-    /// `#include`s that go at the top of the generated `..._cc_api.h` file.
-    includes: BTreeSet<CcInclude>,
-
-    /// Public API of the bindings in the generated `..._cc_api.h` file.
-    api: TokenStream,
-
-    /// Internal implementation details for `..._cc_api.h` file (e.g.
-    /// declarations of Rust thunks).
-    cc_impl: Option<TokenStream>,
-
-    /// Rust implementation of the bindings:
-    /// - Definitions of FFI-friendly `extern "C"` thunks that C++ can call
-    ///   into.
-    /// - Static / `const` assrtions about layout of Rust structs
-    rs_impl: Option<TokenStream>,
+#[derive(Debug, Default)]
+struct MixedSnippet {
+    cc: CcSnippet,
+    rs: Option<TokenStream>,
 }
 
-impl BindingsSnippet {
-    fn new() -> Self {
-        Self { includes: BTreeSet::new(), api: quote! {}, cc_impl: None, rs_impl: None }
-    }
-}
-
-impl AddAssign for BindingsSnippet {
+impl AddAssign for MixedSnippet {
     fn add_assign(&mut self, rhs: Self) {
-        let Self {
-            includes: mut rhs_includes,
-            api: rhs_api,
-            cc_impl: rhs_cc_impl,
-            rs_impl: rhs_rs_impl,
-        } = rhs;
+        let Self { cc: mut rhs_cc, rs: rhs_rs } = rhs;
 
-        self.includes.append(&mut rhs_includes);
-        self.api.extend(rhs_api);
+        self.cc.includes.append(&mut rhs_cc.includes);
+        self.cc.snippet.extend(rhs_cc.snippet);
 
         fn concat_optional_tokens(
             lhs: Option<TokenStream>,
@@ -335,13 +311,12 @@ impl AddAssign for BindingsSnippet {
                 }
             }
         }
-        self.cc_impl = concat_optional_tokens(self.cc_impl.take(), rhs_cc_impl);
-        self.rs_impl = concat_optional_tokens(self.rs_impl.take(), rhs_rs_impl);
+        self.rs = concat_optional_tokens(self.rs.take(), rhs_rs);
     }
 }
 
-impl Add for BindingsSnippet {
-    type Output = BindingsSnippet;
+impl Add for MixedSnippet {
+    type Output = MixedSnippet;
 
     fn add(mut self, rhs: Self) -> Self {
         self += rhs;
@@ -349,9 +324,9 @@ impl Add for BindingsSnippet {
     }
 }
 
-impl Sum for BindingsSnippet {
+impl Sum for MixedSnippet {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(BindingsSnippet::new(), Add::add)
+        iter.fold(Default::default(), Add::add)
     }
 }
 
@@ -362,7 +337,7 @@ impl Sum for BindingsSnippet {
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
 ///   b/258235219), type parameters, or const parameters.
-fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
+fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
     let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     let item_name = tcx.item_name(def_id);
@@ -422,9 +397,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
     };
 
     let mut includes = BTreeSet::new();
-    let api: TokenStream;
-    let cc_impl: Option<TokenStream>;
-    {
+    let cc_snippet = {
         let ret_type = format_ret_ty_for_cc(sig.output())
             .context("Error formatting function return type")?
             .into_tokens(&mut includes);
@@ -450,30 +423,29 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
             })
             .collect::<Result<Vec<_>>>()?;
         if item_name.as_str() == symbol_name.name {
-            api = quote! {
+            quote! {
                 extern "C" #ret_type #fn_name (
                         #( #arg_types #arg_names ),*
                 );
-            };
-            cc_impl = None;
+            }
         } else {
             let exported_name =
                 format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
-            api = quote! {
+            quote! {
+                namespace __crubit_internal {
+                    extern "C" #ret_type #exported_name (
+                            #( #arg_types #arg_names ),*
+                    );
+                }  // namespace __crubit_internal
                 inline #ret_type #fn_name (
                         #( #arg_types #arg_names ),* ) {
-                    return :: __crubit_internal :: #exported_name( #( #arg_names ),* );
+                    return __crubit_internal :: #exported_name( #( #arg_names ),* );
                 }
-            };
-            cc_impl = Some(quote! {
-                extern "C" #ret_type #exported_name (
-                        #( #arg_types #arg_names ),*
-                );
-            });
+            }
         }
-    }
+    };
 
-    let rs_impl = if !needs_thunk {
+    let rs_snippet = if !needs_thunk {
         None
     } else {
         let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
@@ -503,14 +475,14 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
             }
         })
     };
-    Ok(BindingsSnippet { includes, api, cc_impl, rs_impl })
+    Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_snippet })
 }
 
 /// Formats a Rust item idenfied by `def_id`.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
 /// item).
-fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<BindingsSnippet> {
+fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
     match tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
             Item { kind: ItemKind::Fn(_, generics, _) |
@@ -538,7 +510,7 @@ fn format_unsupported_def(
     tcx: TyCtxt,
     local_def_id: LocalDefId,
     err: anyhow::Error,
-) -> BindingsSnippet {
+) -> MixedSnippet {
     let span = tcx.sess().source_map().span_to_embeddable_string(tcx.def_span(local_def_id));
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
@@ -547,12 +519,12 @@ fn format_unsupported_def(
     let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
     let comment = quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ };
 
-    BindingsSnippet { api: comment, ..BindingsSnippet::new() }
+    MixedSnippet { cc: CcSnippet { snippet: comment, ..Default::default() }, rs: None }
 }
 
 /// Formats all public items from the Rust crate being compiled.
 fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
-    let snippets: BindingsSnippet = tcx
+    let MixedSnippet{ cc, rs } = tcx
         .hir()
         .items()
         .filter_map(|item_id| {
@@ -568,44 +540,30 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         })
         .sum();
 
-    let includes = format_cc_includes(&snippets.includes);
-    let api = {
+    let h_body = {
         // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
         // top-level namespace is okay (e.g. investigate if this name is globally
         // unique + ergonomic).
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
-        let api_body = &snippets.api;
+
+        let CcSnippet { includes, snippet } = cc;
+        let includes = format_cc_includes(&includes);
         quote! {
+            #includes __NEWLINE__
             namespace #crate_name {
-                #api_body
+                #snippet
             }
         }
     };
-    let cc_impl = {
-        match snippets.cc_impl {
-            None => quote! {},
-            Some(details_body) => quote! {
-                namespace __crubit_internal {
-                    #details_body
-                }
-                __NEWLINE__
-            },
-        }
-    };
-    let h_body = quote! {
-        #includes __NEWLINE__
-        #cc_impl
-        #api
-    };
-    let rs_body = snippets.rs_impl.unwrap_or_else(|| quote! {});
+    let rs_body = rs.unwrap_or_else(|| quote! {});
     Ok(GeneratedBindings { h_body, rs_body })
 }
 
 #[cfg(test)]
 pub mod tests {
     use super::{
-        format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs, BindingsSnippet,
-        GeneratedBindings,
+        format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs, GeneratedBindings,
+        MixedSnippet,
     };
 
     use anyhow::Result;
@@ -730,8 +688,8 @@ pub mod tests {
 
     #[test]
     fn test_generated_bindings_fn_export_name() {
-        // Coverage of how `BindingsSnippet::cc_impl` are propagated when there are no
-        // `BindingsSnippet::rs_impl` (e.g. no Rust thunks are needed).
+        // Coverage of how `MixedSnippet::cc` are propagated when there is no
+        // `MixedSnippet::rs` (e.g. no Rust thunks are needed).
         let test_src = r#"
                 #[export_name = "export_name"]
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
@@ -741,12 +699,12 @@ pub mod tests {
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
-                    namespace __crubit_internal {
-                        extern "C" double export_name(double x, double y);
-                    }
                     namespace rust_out {
+                        namespace __crubit_internal {
+                            extern "C" double export_name(double x, double y);
+                        }
                         inline double public_function(double x, double y) {
-                            return ::__crubit_internal::export_name(x, y);
+                            return __crubit_internal::export_name(x, y);
                         }
                     }
                 }
@@ -865,11 +823,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" void public_function();
                 }
@@ -891,11 +848,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "explicit_unit_return_type", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" void explicit_unit_return_type();
                 }
@@ -917,11 +873,10 @@ pub mod tests {
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" void never_returning_function();
                 }
@@ -940,20 +895,17 @@ pub mod tests {
             "#;
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
+                    namespace __crubit_internal {
+                        extern "C" double ...(double x, double y);
+                    }
                     inline double public_function(double x, double y) {
                         return ...(x, y);
                     }
-                }
-            );
-            assert_cc_matches!(
-                result.cc_impl.expect("This test expects separate extern-C decl"),
-                quote! {
-                    extern "C" double ...(double x, double y);
                 }
             );
         });
@@ -967,20 +919,17 @@ pub mod tests {
             "#;
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
-                    inline double public_function(double x, double y) {
-                        return ::__crubit_internal::export_name(x, y);
+                    namespace __crubit_internal {
+                        extern "C" double export_name(double x, double y);
                     }
-                }
-            );
-            assert_cc_matches!(
-                result.cc_impl.expect("This test expects separate extern-C decl"),
-                quote! {
-                    extern "C" double export_name(double x, double y);
+                    inline double public_function(double x, double y) {
+                        return __crubit_internal::export_name(x, y);
+                    }
                 }
             );
         });
@@ -1017,26 +966,22 @@ pub mod tests {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
             let result = result.expect("Test expects success here");
-            assert!(!result.includes.is_empty());
-            assert!(result.cc_impl.is_some());
+            assert!(!result.cc.includes.is_empty());
             let thunk_name = quote!{ __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3foo };
             assert_cc_matches!(
-                result.cc_impl.unwrap(),
+                result.cc.snippet,
                 quote! {
-                    extern "C" std::int32_t #thunk_name( std::int32_t i);
-                }
-            );
-            assert_cc_matches!(
-                result.api,
-                quote! {
+                    namespace __crubit_internal {
+                        extern "C" std::int32_t #thunk_name( std::int32_t i);
+                    }
                     inline std::int32_t foo(std::int32_t i) {
-                        return ::__crubit_internal::#thunk_name(i);
+                        return __crubit_internal::#thunk_name(i);
                     }
                 }
             );
-            assert!(result.rs_impl.is_some());
+            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs_impl.unwrap(),
+                result.rs.unwrap(),
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -1059,11 +1004,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "may_throw", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" void may_throw();
                 }
@@ -1086,11 +1030,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "type_aliased_return", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" double type_aliased_return();
                 }
@@ -1232,26 +1175,22 @@ pub mod tests {
             "#;
         test_format_def(test_src, "add", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_some());
+            assert!(result.cc.includes.is_empty());
             let thunk_name = quote! { __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3add };
             assert_cc_matches!(
-                result.cc_impl.unwrap(),
+                result.cc.snippet,
                 quote! {
-                    extern "C" double #thunk_name(double x, double y);
-                }
-            );
-            assert_cc_matches!(
-                result.api,
-                quote! {
+                    namespace __crubit_internal {
+                        extern "C" double #thunk_name(double x, double y);
+                    }
                     inline double add(double x, double y) {
-                        return ::__crubit_internal::#thunk_name(x, y);
+                        return __crubit_internal::#thunk_name(x, y);
                     }
                 }
             );
-            assert!(result.rs_impl.is_some());
+            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs_impl.unwrap(),
+                result.rs.unwrap(),
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -1285,26 +1224,22 @@ pub mod tests {
             "#;
         test_format_def(test_src, "add", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_some());
+            assert!(result.cc.includes.is_empty());
             let thunk_name = quote! { __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3add };
             assert_cc_matches!(
-                result.cc_impl.unwrap(),
+                result.cc.snippet,
                 quote! {
-                    extern "C" double #thunk_name(double x, double y);
-                }
-            );
-            assert_cc_matches!(
-                result.api,
-                quote! {
+                    namespace __crubit_internal {
+                        extern "C" double #thunk_name(double x, double y);
+                    }
                     inline double add(double x, double y) {
-                        return ::__crubit_internal::#thunk_name(x, y);
+                        return __crubit_internal::#thunk_name(x, y);
                     }
                 }
             );
-            assert!(result.rs_impl.is_some());
+            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs_impl.unwrap(),
+                result.rs.unwrap(),
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -1340,11 +1275,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" void foo(bool b, double f);
                 }
@@ -1361,11 +1295,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "some_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_none());
-            assert!(result.rs_impl.is_none());
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_none());
             assert_cc_matches!(
-                result.api,
+                result.cc.snippet,
                 quote! {
                     extern "C" void some_function(double __param_0);
                 }
@@ -1380,28 +1313,24 @@ pub mod tests {
             "#;
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.includes.is_empty());
-            assert!(result.cc_impl.is_some());
+            assert!(result.cc.includes.is_empty());
             assert_cc_matches!(
-                result.cc_impl.unwrap(),
+                result.cc.snippet,
                 quote! {
-                    extern "C" void ...(
-                        double __param_0, double __param_1);
-                }
-            );
-            assert_cc_matches!(
-                result.api,
-                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void ...(
+                            double __param_0, double __param_1);
+                    }
                     inline void foo(double __param_0, double __param_1) {
-                        return ::__crubit_internal
+                        return __crubit_internal
                                ::...(
                                    __param_0, __param_1);
                     }
                 }
             );
-            assert!(result.rs_impl.is_some());
+            assert!(result.rs.is_some());
             assert_rs_matches!(
-                result.rs_impl.unwrap(),
+                result.rs.unwrap(),
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
@@ -1767,7 +1696,7 @@ pub mod tests {
     /// result from `format_def`.)
     fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<BindingsSnippet, String>) -> T + Send,
+        F: FnOnce(Result<MixedSnippet, String>) -> T + Send,
         T: Send,
     {
         run_compiler(source, |tcx| {
