@@ -1416,12 +1416,6 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   )");
 
   // function called in loop
-  //
-  // TODO(b/233582219): Fix false negative. The pointer is only null-checked and
-  // therefore safe to dereference on the first iteration of the loop. On
-  // subsequent iterations of the loop, the pointer dereference is unsafe due to
-  // the lack of null check. The diagnoser currently fails to catch the
-  // unsafe dereference as it only evaluates the statement once.
   checkDiagnostics(R"(
     int * _Nullable makeNullable();
     bool makeBool();
@@ -1431,7 +1425,7 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
         int *x = makeNullable();
         if (first && x == nullptr) return;
         first = false;
-        *x; // false-negative
+        *x;  // [[unsafe]]
       }
     }
   )");
