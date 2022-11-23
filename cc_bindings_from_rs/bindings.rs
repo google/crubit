@@ -2,16 +2,17 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use code_gen_utils::{format_cc_ident, format_cc_includes, make_rs_ident, CcInclude};
 use itertools::Itertools;
-use proc_macro2::TokenStream;
+use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 use std::collections::BTreeSet;
@@ -97,18 +98,18 @@ impl CcSnippet {
     }
 }
 
-fn format_ret_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
+fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
     let void = Ok(CcSnippet { snippet: quote! { void }, includes: BTreeSet::new() });
     match ty.kind() {
         ty::TyKind::Never => void,  // `!`
         ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
-        _ => format_ty_for_cc(ty),
+        _ => format_ty_for_cc(tcx, ty),
     }
 }
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of an `extern "C"` function.
-fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
+fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
     fn cstdint(snippet: TokenStream) -> CcSnippet {
         let mut includes = BTreeSet::new();
         includes.insert(CcInclude::cstdint());
@@ -148,11 +149,10 @@ fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
             // documents that "Rust char is 32-bit wide and represents an unicode scalar value".
             //
             // We don't map Rust's `char` to C++ `char32_t` because
-            // - It may be wider than 32 bits -
-            //   https://en.cppreference.com/w/c/string/multibyte/char32_t says that "char32_t is
-            //   an unsigned integer type used for 32-bit wide characters and is the same type as
-            //   uint_least32_t. uint_least32_t is the smallest unsigned integer type with width
-            //   of at least 32 bits"
+            // - It may be wider than 32 bits - <internal link>/c/string/multibyte/char32_t says that
+            //   "char32_t is an unsigned integer type used for 32-bit wide characters and is the
+            //   same type as uint_least32_t. uint_least32_t is the smallest unsigned integer type
+            //   with width of at least 32 bits"
             // - It is problematic on MacOS - https://github.com/eqrion/cbindgen/issues/423
             //   points out that `uchar.h` is missing on that platform.
             cstdint(quote!{ std::uint32_t })
@@ -193,8 +193,34 @@ fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
             bail!("C++ doesn't have a standard equivalent of `{ty}` (b/254094650)");
         }
 
-        ty::TyKind::Adt(..)
-        | ty::TyKind::Foreign(..)
+        ty::TyKind::Adt(adt, substs) => {
+            if substs.len() != 0 {
+                bail!("Generic types are not supported yet (b/259749095)");
+            }
+
+            // Verify if definition of `ty` can be succesfully imported and bail otherwise.
+            let def_id = adt.did();
+            format_adt_core(tcx, def_id)
+                .with_context(|| format!(
+                        "Failed to generate bindings for the definition of `{ty}`"))?;
+
+            let includes = if def_id.krate == LOCAL_CRATE {
+                BTreeSet::new()  // No extra `#include`s needed.
+            } else {
+                bail!("Cross-crate dependencies are not supported yet (b/258261328)");
+            };
+
+            // TODO(b/258265044): This should be a mod/namespace-qualified name.
+            // TODO(b/258261328): This should be crate-qualified / top-level-namespace-qualified
+            // once cross-crate dependencies are supported.
+            let name = format_cc_ident(tcx.item_name(def_id).as_str())
+                .context("Error formatting struct name")?;
+            CcSnippet {
+                snippet: quote!{ #name },
+                includes
+            }
+        },
+        ty::TyKind::Foreign(..)
         | ty::TyKind::Str
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
@@ -230,9 +256,12 @@ fn format_ty_for_cc(ty: Ty) -> Result<CcSnippet> {
     })
 }
 
-/// Formats `ty` for Rust (e.g. to be used as a type of a parameter in a Rust
-/// thunk inside `..._cc_api_impl.rs`).
-fn format_ty_for_rs(ty: Ty) -> Result<TokenStream> {
+/// Formats `ty` for Rust - to be used in `..._cc_api_impl.rs` (e.g. as a type
+/// of a parameter in a Rust thunk).  Because `..._cc_api_impl.rs` is a
+/// distinct, separate crate, the returned `TokenStream` uses crate-qualified
+/// names whenever necessary - for example: `target_crate::SomeStruct` rather
+/// than just `SomeStruct`.
+fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
     Ok(match ty.kind() {
         ty::TyKind::Bool
         | ty::TyKind::Float(_)
@@ -251,13 +280,13 @@ fn format_ty_for_rs(ty: Ty) -> Result<TokenStream> {
                 bail!("Tuples are not supported yet: {} (b/254099023)", ty);
             }
         }
-
-        // TODO(b/258232820): Add support for ADT / `struct` bindings.  Note that we can't simply
-        // use ty.to_string().parse().expect(...) everywhere - `ty` comes from the target crate but
-        // the result is used in the `..._cc_api_impl.rs` crate and therefore `SomeStruct` needs to
-        // be formatted as `target_crate::SomeStruct`.
-        ty::TyKind::Adt(..)
-        | ty::TyKind::Foreign(..)
+        ty::TyKind::Adt(adt, _substs) => {
+            let crate_name = make_rs_ident(tcx.crate_name(adt.did().krate).as_str());
+            let def_name = format_ident!("{ty}");
+            // TODO(b/258265044): This should be a mod/namespace-qualified name.
+            quote! { #crate_name :: #def_name }
+        }
+        ty::TyKind::Foreign(..)
         | ty::TyKind::Str
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
@@ -383,7 +412,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
 
     let mut includes = BTreeSet::new();
     let cc_snippet = {
-        let ret_type = format_ret_ty_for_cc(sig.output())
+        let ret_type = format_ret_ty_for_cc(tcx, sig.output())
             .context("Error formatting function return type")?
             .into_tokens(&mut includes);
         let fn_name =
@@ -402,7 +431,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
             .iter()
             .enumerate()
             .map(|(index, ty)| {
-                Ok(format_ty_for_cc(*ty)
+                Ok(format_ty_for_cc(tcx, *ty)
                     .with_context(|| format!("Error formatting the type of parameter #{index}"))?
                     .into_tokens(&mut includes))
             })
@@ -424,6 +453,9 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
                 }  // namespace __crubit_internal
                 inline #ret_type #fn_name (
                         #( #arg_types #arg_names ),* ) {
+                    // TODO(b/258232820): Support using `struct`s as an argument of a thunk.  The
+                    // code below won't compile as-is because it unnecessarily invokes a copy
+                    // constructor.  The generated code should go through `std::move(...)`.
                     return __crubit_internal :: #exported_name( #( #arg_names ),* );
                 }
             }
@@ -436,7 +468,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
         let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
         let fn_name = make_rs_ident(item_name.as_str());
         let exported_name = make_rs_ident(symbol_name.name);
-        let ret_type = format_ty_for_rs(sig.output())?;
+        let ret_type = format_ty_for_rs(tcx, sig.output())?;
         let arg_names = tcx
             .fn_arg_names(def_id)
             .iter()
@@ -449,8 +481,12 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
                 }
             })
             .collect_vec();
-        let arg_types =
-            sig.inputs().iter().copied().map(format_ty_for_rs).collect::<Result<Vec<_>>>()?;
+        let arg_types = sig
+            .inputs()
+            .iter()
+            .copied()
+            .map(|ty| format_ty_for_rs(tcx, ty))
+            .collect::<Result<Vec<_>>>()?;
         quote! {
             #[no_mangle]
             extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
@@ -459,6 +495,228 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
         }
     };
     Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_snippet })
+}
+
+/// Gets the layout of the algebraic data type (an ADT - a struct, an enum, or a
+/// union) represented by `def_id`.
+fn get_adt_layout<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Result<Layout<'tcx>> {
+    // TODO(b/259749095): Support non-empty set of generic parameters.  (One
+    // scenario where the `layout_of` call below returns an error is when it
+    // can't compute the layout for generic ADTs with unsubstituted types / with
+    // empty ParamEnv.)
+    let param_env = ty::ParamEnv::empty();
+
+    let ty = tcx.type_of(def_id);
+    let layout = tcx
+        .layout_of(param_env.and(ty))
+        // Have to use `.map_err` instead of `.with_context`, because `LayoutError` doesn't
+        // satisfy the `anyhow::context::ext::StdError` trait bound.
+        .map_err(|layout_err| {
+            let item_name = tcx.item_name(def_id);
+            anyhow!("Error computing the layout of #{item_name}: {layout_err}")
+        })?
+        .layout;
+    Ok(layout)
+}
+
+/// Represents bindings for the "core" part of an algebraic data type (an ADT -
+/// a struct, an enum, or a union) in a way that supports later injecting the
+/// other parts like so:
+///
+/// ```
+/// quote! {
+///     #header {
+///         #core
+///         #other_parts  // (e.g. struct fields)
+///     }
+/// }
+/// ```
+struct AdtCoreBindings {
+    /// `header` of the C++ declaration of the ADT.
+    /// Example: `struct alignas(4) SomeStruct final`
+    header: TokenStream,
+
+    /// `core` contains declarations of
+    /// - the default constructor
+    /// - the copy constructor
+    /// - the move constructor
+    /// - the copy assignment operator
+    /// - the move assignment operator
+    /// - the destructor
+    core: TokenStream,
+
+    /// Assertions that we want C++ to make about the ADT.
+    /// Example: `static_assert`s about the ADT size and alignment.
+    cc_assertions: TokenStream,
+
+    /// Assertions that we want Rust to make about the ADT.
+    /// Example: `const` evaluations of `assert`s about the ADT size and
+    /// alignment.
+    rs_assertions: TokenStream,
+}
+
+/// Formats the core of an algebraic data type (an ADT - a struct, an enum, or a
+/// union) represented by `def_id`.
+///
+/// The "core" means things that are necessary for a succesful binding (e.g.
+/// inability to generate a correct C++ destructor means that the ADT cannot
+/// have any bindings).  "core" excludes things that are A) infallible (e.g.
+/// struct or union fields which can always be translated into private, opaque
+/// blobs of bytes) or B) optional (e.g. a problematic instance method
+/// can just be ignored, unlike a problematic destructor).  The split between
+/// fallible "core" and non-fallible "rest" is motivated by the need to avoid
+/// cycles / infinite recursion (e.g. when processing fields that refer back to
+/// the struct type, possible with an indirection of a pointer).
+///
+/// `format_adt_core` is used both to 1) format bindings for the core of an ADT,
+/// and 2) check if formatting would have succeeded (e.g. when called from
+/// `format_ty`).  The 2nd case is needed for ADTs defined in any crate - this
+/// is why the `def_id` parameter is a DefId rather than LocalDefId.
+//
+// TODO(b/259724276): Memoize `format_adt_core` calls - either via `salsa`, or
+// (if it doesn't work) then falling back to manually authored caching code.
+fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
+    // TODO(b/259749095): Support non-empty set of generic parameters.
+    let param_env = ty::ParamEnv::empty();
+
+    let cc_name = {
+        let item_name = tcx.item_name(def_id);
+        format_cc_ident(item_name.as_str()).context("Error formatting item name")?
+    };
+
+    let ty = tcx.type_of(def_id);
+    if ty.needs_drop(tcx, param_env) {
+        // TODO(b/258251148): Support custom `Drop` impls.
+        bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+    }
+
+    let layout = get_adt_layout(tcx, def_id)?;
+    let alignment = {
+        // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
+        // is ignored), because 1) Rust's `std::mem::align_of` returns the
+        // ABI-mandated alignment and 2) the generated C++'s `alignas(...)`
+        // should specify the minimal/mandatory alignment.
+        let alignment = layout.align().abi.bytes();
+        Literal::u64_unsuffixed(alignment)
+    };
+    let size = {
+        let size = layout.size().bytes();
+        ensure!(size != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+        Literal::u64_unsuffixed(size)
+    };
+
+    let header = quote! { struct alignas(#alignment) #cc_name final };
+    let core = quote! {
+        public:
+            // TODO(b/258249980): If the wrapped type implements the `Default` trait, then we
+            // should call its `impl` from the default C++ constructor (instead of `delete`ing
+            // the default C++ constructor).
+            #cc_name() = delete;
+
+            // TODO(b/258249993): Provide `default` copy constructor and assignment operator if
+            // the wrapped type is `Copy` on Rust side.
+            // TODO(b/259741191): If the wrapped type implements the `Clone` trait, then we should
+            // *consider* calling `clone` from the copy constructor and `clone_from` from the copy
+            // assignment operator.
+            #cc_name(const #cc_name&) = delete;
+            #cc_name& operator=(const #cc_name&) = delete;
+
+            // The generated bindings have to follow Rust move semantics:
+            // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
+            //   that "Every type must be ready for it to be blindly memcopied to somewhere else
+            //   in memory")
+            // * The only valid operation on a moved-from non-`Copy` Rust struct is to assign to
+            //   it.
+            //
+            // The generated C++ bindings match the required semantics because they:
+            // * Generate trivial` C++ move constructor and move assignment operator. Per
+            //   <internal link>/cpp/language/move_constructor#Trivial_move_constructor: "A trivial move
+            //   constructor is a constructor that performs the same action as the trivial copy
+            //   constructor, that is, makes a copy of the object representation as if by
+            //   std::memmove."
+            // * Generate trivial C++ destructor. (Types that implement `Drop` trait or require
+            //   "drop glue" are not *yet* supported - this might eventually change as part of the
+            //   work tracked under b/258251148). Per
+            //   <internal link>/cpp/language/destructor#Trivial_destructor: "A trivial destructor is a
+            //   destructor that performs no action."
+            //
+            // In particular, note that the following C++ code and Rust code are exactly equivalent
+            // (except that in Rust, reuse of `y` is forbidden at compile time, whereas in C++,
+            // it's only prohibited by convention):
+            // * C++, assumming trivial move constructor and trivial destructor:
+            //   `auto x = std::move(y);`
+            // * Rust, assumming non-`Copy`, no custom `Drop` or drop glue:
+            //   `let x = y;`
+            //
+            // TODO(b/258251148): If the ADT provides a custom `Drop` impls or requires drop glue,
+            // then extra care should be taken to ensure the C++ destructor can handle the
+            // moved-from object in a way that meets Rust move semantics.  For example, the
+            // generated C++ move constructor might need to assign `Default::default()` to the
+            // moved-from object.
+            #cc_name(#cc_name&&) = default;
+            #cc_name& operator=(#cc_name&&) = default;
+
+            // TODO(b/258251148): Support custom `Drop` impls and drop glue.
+            ~#cc_name() = default;
+    };
+    let cc_assertions = quote! {
+        static_assert(
+            sizeof(#cc_name) == #size,
+            "Verify that struct layout didn't change since this header got generated");
+        static_assert(
+            alignof(#cc_name) == #alignment,
+            "Verify that struct layout didn't change since this header got generated");
+    };
+    let rs_assertions = {
+        let rs_type = format_ty_for_rs(tcx, ty)?;
+        quote! {
+            const _: () = assert!(::std::mem::size_of::<#rs_type>() == #size);
+            const _: () = assert!(::std::mem::align_of::<#rs_type>() == #alignment);
+        }
+    };
+    Ok(AdtCoreBindings { header, core, cc_assertions, rs_assertions })
+}
+
+/// Formats the data (e.g. the fields) of an algebraic data type (an ADT - a
+/// struct, an enum, or a union).
+///
+/// This function needs to remain infallible (see the doc comment of
+/// `format_adt_core`).
+fn format_adt_data(tcx: TyCtxt, def_id: LocalDefId) -> TokenStream {
+    let def_id = def_id.to_def_id(); // LocalDefId -> DefId conversion.
+    let size = get_adt_layout(tcx, def_id)
+        .expect("`format_adt_data` should only be called if `format_adt_core` succeeded")
+        .size()
+        .bytes();
+    let size = Literal::u64_unsuffixed(size);
+    quote! {
+        private:
+            // TODO(b/258233850): Emit individual fields.
+            unsigned char opaque_blob_of_bytes[#size];
+    }
+}
+
+/// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
+/// represented by `def_id`.
+///
+/// Will panic if `def_id`
+/// - is invalid
+/// - doesn't identify an ADT,
+fn format_adt(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
+    let AdtCoreBindings { header, core, cc_assertions, rs_assertions } =
+        format_adt_core(tcx, local_def_id.to_def_id())?;
+
+    let includes = BTreeSet::new();
+    let data = format_adt_data(tcx, local_def_id);
+    let cc_snippet = quote! {
+        #header {
+            #core
+            #data
+        };
+        #cc_assertions
+    };
+
+    Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_assertions })
 }
 
 /// Formats a Rust item idenfied by `def_id`.
@@ -476,11 +734,11 @@ fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
                 // TODO(b/258235219): Supporting function parameter types (or return types) that
                 // are references requires adding support for generic lifetime parameters.  The
                 // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
-                bail!("Generics (even lifetime generics) are not supported yet");
+                bail!("Generics are not supported yet (b/259749023 and b/259749095)");
             },
-            Item { kind: ItemKind::Fn(..), .. } => {
-                format_fn(tcx, def_id)
-            }
+            Item { kind: ItemKind::Fn(..), .. } => format_fn(tcx, def_id),
+            Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
+                format_adt(tcx, def_id),
             Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
         },
         _unsupported_node => bail!("Unsupported rustc_hir::hir::Node"),
@@ -646,10 +904,10 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_fn_extern_c() {
+    fn test_generated_bindings_fn_no_mangle_extern_c() {
         // This test covers only a single example of a function that should get a C++
         // binding. Additional coverage of how items are formatted is provided by
-        // `test_format_def_...` tests.
+        // `test_format_def_..._fn_...` tests.
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn public_function() {
@@ -695,6 +953,52 @@ pub mod tests {
     }
 
     #[test]
+    fn test_generated_bindings_struct() {
+        // This test covers only a single example of an ADT (struct/enum/union) that
+        // should get a C++ binding. Additional coverage of how items are
+        // formatted is provided by `test_format_def_..._struct_...`,
+        // `test_format_def_..._enum_...`, and `test_format_def_..._union_...`
+        // tests.
+        //
+        // We don't want to duplicate coverage already provided by
+        // `test_format_def_struct_with_fields`, but we do want to verify that
+        // * `format_crate` will actually find and process the struct
+        //   (`test_format_def_...` doesn't cover this aspect - it uses a test-only
+        //   `find_def_id_by_name` instead)
+        // * The overall shape of the bindings is present.
+        let test_src = r#"
+                pub struct Point {
+                    pub x: i32,
+                    pub y: i32,
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace rust_out {
+                        struct alignas(4) Point final {
+                            // No point replicating test coverage of
+                            // `test_format_def_struct_with_fields`.
+                            ...
+                        };
+                        static_assert(sizeof(Point) == 8, ...);
+                        static_assert(alignof(Point) == 4, ...);
+                    }  // namespace rust_out
+                }
+            );
+            assert_rs_matches!(
+                bindings.rs_body,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<rust_out::Point>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<rust_out::Point>() == 4);
+                }
+            );
+        });
+    }
+
+    #[test]
     fn test_generated_bindings_includes() {
         let test_src = r#"
                 #[no_mangle]
@@ -722,19 +1026,27 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_fn_non_pub() {
+    fn test_generated_bindings_non_pub_items() {
         let test_src = r#"
                 #![allow(dead_code)]
+
                 extern "C" fn private_function() {
                     println!("foo");
+                }
+
+                struct PrivateStruct {
+                    x: i32,
+                    y: i32,
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.expect("Test expects success");
 
-            // Non-public functions should not be present in the generated bindings.
+            // Non-public items should not be present in the generated bindings.
             assert_cc_not_matches!(bindings.h_body, quote! { private_function });
             assert_rs_not_matches!(bindings.rs_body, quote! { private_function });
+            assert_cc_not_matches!(bindings.h_body, quote! { PrivateStruct });
+            assert_rs_not_matches!(bindings.rs_body, quote! { PrivateStruct });
         });
     }
 
@@ -886,7 +1198,7 @@ pub mod tests {
                         extern "C" double ...(double x, double y);
                     }
                     inline double public_function(double x, double y) {
-                        return ...(x, y);
+                        return __crubit_internal::...(x, y);
                     }
                 }
             );
@@ -1069,10 +1381,7 @@ pub mod tests {
             "#;
         test_format_def(test_src, "foo", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(
-                err,
-                "Generics (even lifetime generics) are not supported yet"
-            );
+            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
@@ -1087,10 +1396,7 @@ pub mod tests {
             "#;
         test_format_def(test_src, "generic_function", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(
-                err,
-                "Generics (even lifetime generics) are not supported yet"
-            );
+            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
@@ -1104,7 +1410,7 @@ pub mod tests {
             "#;
         test_format_def(test_src, "Point", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Generics (even lifetime generics) are not supported yet");
+            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
@@ -1118,7 +1424,7 @@ pub mod tests {
             "#;
         test_format_def(test_src, "Point", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Generics (even lifetime generics) are not supported yet");
+            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
@@ -1132,7 +1438,7 @@ pub mod tests {
             "#;
         test_format_def(test_src, "SomeUnion", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Generics (even lifetime generics) are not supported yet");
+            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
@@ -1301,9 +1607,7 @@ pub mod tests {
                             double __param_0, double __param_1);
                     }
                     inline void foo(double __param_0, double __param_1) {
-                        return __crubit_internal
-                               ::...(
-                                   __param_0, __param_1);
+                        return __crubit_internal::...(__param_0, __param_1);
                     }
                 }
             );
@@ -1313,6 +1617,45 @@ pub mod tests {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
                         rust_out::foo(__param_0, __param_1)
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_with_destructuring_parameter_name() {
+        let test_src = r#"
+                pub struct S {
+                    pub f1: i32,
+                    pub f2: i32,
+                }
+
+                // This test mostly focuses on the weird parameter "name" below.
+                // See also
+                // https://doc.rust-lang.org/reference/items/functions.html#function-parameters
+                // which points out that function parameters are just irrefutable patterns.
+                pub fn func(S{f1, f2}: S) -> i32 { f1 + f2 }
+            "#;
+        test_format_def(test_src, "func", |result| {
+            let result = result.expect("Test expects success here");
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" std::int32_t ...(S __param_0);
+                    }
+                    inline std::int32_t func(S __param_0) {
+                        return __crubit_internal::...(__param_0);
+                    }
+                }
+            );
+            assert_rs_matches!(
+                result.rs,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...(__param_0: rust_out::S) -> i32 {
+                        rust_out::func(__param_0)
                     }
                 }
             );
@@ -1364,14 +1707,367 @@ pub mod tests {
         });
     }
 
+    /// This is a test for a regular struct - a struct with named fields.
+    /// https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as
+    /// `StructStruct` or "nominal struct type".
+    #[test]
+    fn test_format_def_struct_with_fields() {
+        let test_src = r#"
+                pub struct SomeStruct {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                const _: () = assert!(std::mem::size_of::<SomeStruct>() == 8);
+                const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
+            "#;
+        test_format_def(test_src, "SomeStruct", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    struct alignas(4) SomeStruct final {
+                        public:
+                            // In this test there is no `Default` implementation.
+                            SomeStruct() = delete;
+
+                            // In this test there is no `Copy` implementation / derive.
+                            SomeStruct(const SomeStruct&) = delete;
+                            SomeStruct& operator=(const SomeStruct&) = delete;
+
+                            // All Rust types are trivially-movable.
+                            SomeStruct(SomeStruct&&) = default;
+                            SomeStruct& operator=(SomeStruct&&) = default;
+
+                            // In this test there is no custom `Drop`, so C++ can also
+                            // just use the `default` destructor.
+                            ~SomeStruct() = default;
+                        private:
+                            unsigned char opaque_blob_of_bytes[8];
+                    };
+                    static_assert(sizeof(SomeStruct) == 8, ...);
+                    static_assert(alignof(SomeStruct) == 4, ...);
+                }
+            );
+            assert_rs_matches!(
+                result.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<rust_out::SomeStruct>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<rust_out::SomeStruct>() == 4);
+                }
+            );
+        });
+    }
+
+    /// This is a test for `TupleStruct` or "tuple struct" - for more details
+    /// please refer to https://doc.rust-lang.org/reference/items/structs.html
+    #[test]
+    fn test_format_def_struct_with_tuple() {
+        let test_src = r#"
+                pub struct TupleStruct(i32, i32);
+                const _: () = assert!(std::mem::size_of::<TupleStruct>() == 8);
+                const _: () = assert!(std::mem::align_of::<TupleStruct>() == 4);
+            "#;
+        test_format_def(test_src, "TupleStruct", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    struct alignas(4) TupleStruct final {
+                        public:
+                            // In this test there is no `Default` implementation.
+                            TupleStruct() = delete;
+
+                            // In this test there is no `Copy` implementation / derive.
+                            TupleStruct(const TupleStruct&) = delete;
+                            TupleStruct& operator=(const TupleStruct&) = delete;
+
+                            // All Rust types are trivially-movable.
+                            TupleStruct(TupleStruct&&) = default;
+                            TupleStruct& operator=(TupleStruct&&) = default;
+
+                            // In this test there is no custom `Drop`, so C++ can also
+                            // just use the `default` destructor.
+                            ~TupleStruct() = default;
+                        private:
+                            unsigned char opaque_blob_of_bytes[8];
+                    };
+                    static_assert(sizeof(TupleStruct) == 8, ...);
+                    static_assert(alignof(TupleStruct) == 4, ...);
+                }
+            );
+            assert_rs_matches!(
+                result.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<rust_out::TupleStruct>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<rust_out::TupleStruct>() == 4);
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_struct_with_name_that_is_reserved_keyword() {
+        let test_src = r#"
+                #[allow(non_camel_case_types)]
+                pub struct reinterpret_cast {
+                    pub x: i32,
+                    pub y: i32,
+                }
+            "#;
+        test_format_def(test_src, "reinterpret_cast", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(
+                err,
+                "Error formatting item name: \
+                             `reinterpret_cast` is a C++ reserved keyword \
+                             and can't be used as a C++ identifier"
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_struct_with_custom_drop_impl() {
+        let test_src = r#"
+                pub struct StructWithCustomDropImpl {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                impl Drop for StructWithCustomDropImpl {
+                    fn drop(&mut self) {}
+                }
+            "#;
+        test_format_def(test_src, "StructWithCustomDropImpl", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_struct_with_custom_drop_glue() {
+        let test_src = r#"
+                #![allow(dead_code)]
+
+                // `i32` is present to avoid hitting the ZST checks related to (b/258259459)
+                struct StructWithCustomDropImpl(i32);
+
+                impl Drop for StructWithCustomDropImpl {
+                    fn drop(&mut self) {
+                        println!("dropping!");
+                    }
+                }
+
+                pub struct StructRequiringCustomDropGlue {
+                    field: StructWithCustomDropImpl,
+                }
+            "#;
+        test_format_def(test_src, "StructRequiringCustomDropGlue", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
+        });
+    }
+
+    // This test covers how ZSTs (zero-sized-types) are handled.
+    // https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as a
+    // "unit-like struct".
+    #[test]
+    fn test_format_def_unsupported_struct_zero_sized_type() {
+        let test_src = r#"
+                pub struct ZeroSizedType1;
+                pub struct ZeroSizedType2();
+                pub struct ZeroSizedType3{}
+            "#;
+        for name in ["ZeroSizedType1", "ZeroSizedType2", "ZeroSizedType3"] {
+            test_format_def(test_src, name, |result| {
+                let err = result.expect_err("Test expects an error here");
+                assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+            });
+        }
+    }
+
+    /// This is a test for an enum that only has `EnumItemDiscriminant` items
+    /// (and doesn't have `EnumItemTuple` or `EnumItemStruct` items).  See
+    /// also https://doc.rust-lang.org/reference/items/enumerations.html
+    #[test]
+    fn test_format_def_enum_with_only_discriminant_items() {
+        let test_src = r#"
+                pub enum SomeEnum {
+                    Red,
+                    Green = 123,
+                    Blue,
+                }
+
+                const _: () = assert!(std::mem::size_of::<SomeEnum>() == 1);
+                const _: () = assert!(std::mem::align_of::<SomeEnum>() == 1);
+            "#;
+        test_format_def(test_src, "SomeEnum", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    struct alignas(1) SomeEnum final {
+                        public:
+                            // In this test there is no `Default` implementation.
+                            SomeEnum() = delete;
+
+                            // In this test there is no `Copy` implementation / derive.
+                            SomeEnum(const SomeEnum&) = delete;
+                            SomeEnum& operator=(const SomeEnum&) = delete;
+
+                            // All Rust types are trivially-movable.
+                            SomeEnum(SomeEnum&&) = default;
+                            SomeEnum& operator=(SomeEnum&&) = default;
+
+                            // In this test there is no custom `Drop`, so C++ can also
+                            // just use the `default` destructor.
+                            ~SomeEnum() = default;
+                        private:
+                            unsigned char opaque_blob_of_bytes[1];
+                    };
+                    static_assert(sizeof(SomeEnum) == 1, ...);
+                    static_assert(alignof(SomeEnum) == 1, ...);
+                }
+            );
+            assert_rs_matches!(
+                result.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<rust_out::SomeEnum>() == 1);
+                    const _: () = assert!(::std::mem::align_of::<rust_out::SomeEnum>() == 1);
+                }
+            );
+        });
+    }
+
+    /// This is a test for an enum that has `EnumItemTuple` and `EnumItemStruct`
+    /// items. See also https://doc.rust-lang.org/reference/items/enumerations.html
+    #[test]
+    fn test_format_def_enum_with_tuple_and_struct_items() {
+        let test_src = r#"
+                pub enum Point {
+                    Cartesian(f32, f32),
+                    Polar{ dist: f32, angle: f32 },
+                }
+
+                const _: () = assert!(std::mem::size_of::<Point>() == 12);
+                const _: () = assert!(std::mem::align_of::<Point>() == 4);
+            "#;
+        test_format_def(test_src, "Point", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    struct alignas(4) Point final {
+                        public:
+                            // In this test there is no `Default` implementation.
+                            Point() = delete;
+
+                            // In this test there is no `Copy` implementation / derive.
+                            Point(const Point&) = delete;
+                            Point& operator=(const Point&) = delete;
+
+                            // All Rust types are trivially-movable.
+                            Point(Point&&) = default;
+                            Point& operator=(Point&&) = default;
+
+                            // In this test there is no custom `Drop`, so C++ can also
+                            // just use the `default` destructor.
+                            ~Point() = default;
+                        private:
+                            unsigned char opaque_blob_of_bytes[12];
+                    };
+                    static_assert(sizeof(Point) == 12, ...);
+                    static_assert(alignof(Point) == 4, ...);
+                }
+            );
+            assert_rs_matches!(
+                result.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<rust_out::Point>() == 12);
+                    const _: () = assert!(::std::mem::align_of::<rust_out::Point>() == 4);
+                }
+            );
+        });
+    }
+
+    /// This test covers how zero-variant enums are handled.  See also
+    /// https://doc.rust-lang.org/reference/items/enumerations.html#zero-variant-enums
+    #[test]
+    fn test_format_def_unsupported_enum_zero_variants() {
+        let test_src = r#"
+                pub enum ZeroVariantEnum {}
+            "#;
+        test_format_def(test_src, "ZeroVariantEnum", |result| {
+            let err = result.expect_err("Test expects an error here");
+            assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+        });
+    }
+
+    /// This is a test for a `union`.  See also
+    /// https://doc.rust-lang.org/reference/items/unions.html
+    #[test]
+    fn test_format_def_union() {
+        let test_src = r#"
+                pub union SomeUnion {
+                    pub i: i32,
+                    pub f: f64,
+                }
+
+                const _: () = assert!(std::mem::size_of::<SomeUnion>() == 8);
+                const _: () = assert!(std::mem::align_of::<SomeUnion>() == 8);
+            "#;
+        test_format_def(test_src, "SomeUnion", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    struct alignas(8) SomeUnion final {
+                        public:
+                            // In this test there is no `Default` implementation.
+                            SomeUnion() = delete;
+
+                            // In this test there is no `Copy` implementation / derive.
+                            SomeUnion(const SomeUnion&) = delete;
+                            SomeUnion& operator=(const SomeUnion&) = delete;
+
+                            // All Rust types are trivially-movable.
+                            SomeUnion(SomeUnion&&) = default;
+                            SomeUnion& operator=(SomeUnion&&) = default;
+
+                            // In this test there is no custom `Drop`, so C++ can also
+                            // just use the `default` destructor.
+                            ~SomeUnion() = default;
+                        private:
+                            unsigned char opaque_blob_of_bytes[8];
+                    };
+                    static_assert(sizeof(SomeUnion) == 8, ...);
+                    static_assert(alignof(SomeUnion) == 8, ...);
+                }
+            );
+            assert_rs_matches!(
+                result.rs,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<rust_out::SomeUnion>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<rust_out::SomeUnion>() == 8);
+                }
+            );
+        });
+    }
+
     #[test]
     fn test_format_def_unsupported_hir_item_kind() {
         let test_src = r#"
-                pub struct SomeStruct(i32);
+                #[no_mangle]
+                pub static STATIC_VALUE: i32 = 42;
             "#;
-        test_format_def(test_src, "SomeStruct", |result| {
+        test_format_def(test_src, "STATIC_VALUE", |result| {
             let err = result.expect_err("Test expects an error here");
-            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: struct");
+            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: static item");
         });
     }
 
@@ -1388,9 +2084,9 @@ pub mod tests {
             // details).
             ("!", "void"),
         ];
-        test_ty(&testcases, quote! {}, |desc, ty, expected| {
+        test_ty(&testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
-                let cc_snippet = format_ret_ty_for_cc(ty).unwrap();
+                let cc_snippet = format_ret_ty_for_cc(tcx, ty).unwrap();
                 assert!(cc_snippet.includes.is_empty());
                 cc_snippet.snippet.to_string()
             };
@@ -1424,15 +2120,31 @@ pub mod tests {
             ("u64", ("std::uint64_t", "cstdint")),
             ("usize", ("std::uintptr_t", "cstdint")),
             ("char", ("std::uint32_t", "cstdint")),
+            ("SomeStruct", ("SomeStruct", "")),
+            ("SomeEnum", ("SomeEnum", "")),
+            ("SomeUnion", ("SomeUnion", "")),
             // Extra parens/sugar are expected to be ignored:
             ("(bool)", ("bool", "")),
         ];
         let preamble = quote! {
             #![allow(unused_parens)]
+
+            pub struct SomeStruct {
+                pub x: i32,
+                pub y: i32,
+            }
+            pub enum SomeEnum {
+                Cartesian{x: f64, y: f64},
+                Polar{angle: f64, dist: f64},
+            }
+            pub union SomeUnion {
+                pub x: i32,
+                pub y: i32,
+            }
         };
-        test_ty(&testcases, preamble, |desc, ty, (expected_snippet, expected_include)| {
+        test_ty(&testcases, preamble, |desc, tcx, ty, (expected_snippet, expected_include)| {
             let (actual_snippet, actual_includes) = {
-                let cc_snippet = format_ty_for_cc(ty).unwrap();
+                let cc_snippet = format_ty_for_cc(tcx, ty).unwrap();
                 (cc_snippet.snippet.to_string(), cc_snippet.includes)
             };
 
@@ -1521,26 +2233,57 @@ pub mod tests {
             // or to `absl::in128`.
             ("i128", "C++ doesn't have a standard equivalent of `i128` (b/254094650)"),
             ("u128", "C++ doesn't have a standard equivalent of `u128` (b/254094650)"),
-            ("SomeStruct", "The following Rust type is not supported yet: SomeStruct"),
-            ("SomeEnum", "The following Rust type is not supported yet: SomeEnum"),
-            ("SomeUnion", "The following Rust type is not supported yet: SomeUnion"),
+            (
+                "StructWithCustomDrop",
+                "Failed to generate bindings for the definition of `StructWithCustomDrop`: \
+                 `Drop` trait and \"drop glue\" are not supported yet (b/258251148)"
+            ),
+            (
+                "ConstGenericStruct<42>",
+                "Generic types are not supported yet (b/259749095)",
+            ),
+            (
+                "TypeGenericStruct<u8>",
+                "Generic types are not supported yet (b/259749095)",
+            ),
+            (
+                // This double-checks that TyKind::Adt(..., substs) are present
+                // even if the type parameter argument is not explicitly specified
+                // (here it comes from the default: `...Struct<T = u8>`).
+                "TypeGenericStruct",
+                "Generic types are not supported yet (b/259749095)",
+            ),
+            (
+                "LifetimeGenericStruct<'static>",
+                "Generic types are not supported yet (b/259749095)",
+            ),
         ];
         let preamble = quote! {
-            pub struct SomeStruct {
+            #![feature(never_type)]
+
+            pub struct StructWithCustomDrop {
                 pub x: i32,
                 pub y: i32,
             }
-            pub enum SomeEnum {
-                Cartesian{x: f64, y: f64},
-                Polar{angle: f64, dist: f64},
+
+            impl Drop for StructWithCustomDrop {
+                fn drop(&mut self) {}
             }
-            pub union SomeUnion {
-                pub x: i32,
-                pub y: i32,
+
+            pub struct ConstGenericStruct<const N: usize> {
+                pub arr: [u8; N],
+            }
+
+            pub struct TypeGenericStruct<T = u8> {
+                pub t: T,
+            }
+
+            pub struct LifetimeGenericStruct<'a> {
+                pub reference: &'a u8,
             }
         };
-        test_ty(&testcases, preamble, |desc, ty, expected_err| {
-            let anyhow_err = format_ty_for_cc(ty).unwrap_err();
+        test_ty(&testcases, preamble, |desc, tcx, ty, expected_err| {
+            let anyhow_err = format_ty_for_cc(tcx, ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
@@ -1569,10 +2312,28 @@ pub mod tests {
             ("char", "char"),
             ("!", "!"),
             ("()", "()"),
+            ("SomeStruct", "rust_out::SomeStruct"),
+            ("SomeEnum", "rust_out::SomeEnum"),
+            ("SomeUnion", "rust_out::SomeUnion"),
         ];
-        let preamble = quote! {};
-        test_ty(&testcases, preamble, |desc, ty, expected_snippet| {
-            let actual_snippet = format_ty_for_rs(ty).unwrap().to_string();
+        let preamble = quote! {
+            #![feature(never_type)]
+
+            pub struct SomeStruct {
+                pub x: i32,
+                pub y: i32,
+            }
+            pub enum SomeEnum {
+                Cartesian{x: f64, y: f64},
+                Polar{angle: f64, dist: f64},
+            }
+            pub union SomeUnion {
+                pub x: i32,
+                pub y: i32,
+            }
+        };
+        test_ty(&testcases, preamble, |desc, tcx, ty, expected_snippet| {
+            let actual_snippet = format_ty_for_rs(tcx, ty).unwrap().to_string();
             let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual_snippet, expected_snippet, "{desc}");
         });
@@ -1616,26 +2377,10 @@ pub mod tests {
                 "fn(i32) -> i32", // TyKind::FnPtr
                 "The following Rust type is not supported yet: fn(i32) -> i32",
             ),
-            ("SomeStruct", "The following Rust type is not supported yet: SomeStruct"),
-            ("SomeEnum", "The following Rust type is not supported yet: SomeEnum"),
-            ("SomeUnion", "The following Rust type is not supported yet: SomeUnion"),
         ];
-        let preamble = quote! {
-            pub struct SomeStruct {
-                pub x: i32,
-                pub y: i32,
-            }
-            pub enum SomeEnum {
-                Cartesian{x: f64, y: f64},
-                Polar{angle: f64, dist: f64},
-            }
-            pub union SomeUnion {
-                pub x: i32,
-                pub y: i32,
-            }
-        };
-        test_ty(&testcases, preamble, |desc, ty, expected_err| {
-            let anyhow_err = format_ty_for_rs(ty).unwrap_err();
+        let preamble = quote! {};
+        test_ty(&testcases, preamble, |desc, tcx, ty, expected_err| {
+            let anyhow_err = format_ty_for_rs(tcx, ty).unwrap_err();
             let actual_err = format!("{anyhow_err:#}");
             assert_eq!(&actual_err, *expected_err, "{desc}");
         });
@@ -1646,7 +2391,7 @@ pub mod tests {
         preamble: TokenStream,
         test_fn: TestFn,
     ) where
-        TestFn: Fn(/* testcase_description: */ &str, Ty, &Expectation) + Sync,
+        TestFn: Fn(/* testcase_description: */ &str, TyCtxt, Ty, &Expectation) + Sync,
         Expectation: Sync,
     {
         for (index, (input, expected)) in testcases.iter().enumerate() {
@@ -1662,7 +2407,7 @@ pub mod tests {
             run_compiler(input, |tcx| {
                 let def_id = find_def_id_by_name(tcx, "test_function");
                 let ty = tcx.fn_sig(def_id.to_def_id()).no_bound_vars().unwrap().output();
-                test_fn(&desc, ty, expected);
+                test_fn(&desc, tcx, ty, expected);
             });
         }
     }
