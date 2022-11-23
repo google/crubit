@@ -51,6 +51,29 @@ pub fn make_rs_ident(ident: &str) -> Ident {
     }
 }
 
+/// Representation of `foo::bar::baz::` where each component is either the name
+/// of a C++ namespace, or the name of a Rust module.
+#[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
+// TODO(b/258265044): Make the `Vec<String>` payload private + guarantee
+// additional invariants in an explicit, public `new` method.  This will help to
+// catch some error conditions early (e.g. an empty path component may trigger a
+// panic in `make_rs_ident`;  a reserved C++ keyword might trigger a late error
+// in `format_for_cc` / `format_cc_ident`).
+pub struct NamespaceQualifier(pub Vec<String>);
+
+impl NamespaceQualifier {
+    pub fn format_for_rs(&self) -> TokenStream {
+        let namespace_rs_idents = self.0.iter().map(|ns| make_rs_ident(ns));
+        quote! { #(#namespace_rs_idents::)* }
+    }
+
+    pub fn format_for_cc(&self) -> Result<TokenStream> {
+        let namespace_cc_idents =
+            self.0.iter().map(|ns| format_cc_ident(ns)).collect::<Result<Vec<_>>>()?;
+        Ok(quote! { #(#namespace_cc_idents::)* })
+    }
+}
+
 /// `CcInclude` represents a single `#include ...` directive in C++.
 #[derive(Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum CcInclude {
@@ -409,5 +432,47 @@ pub mod tests {
 #include "b.h"
 "#
         );
+    }
+
+    fn create_namespace_qualifier_for_tests(input: &[&str]) -> NamespaceQualifier {
+        NamespaceQualifier(input.into_iter().map(|s| s.to_string()).collect())
+    }
+
+    #[test]
+    fn test_namespace_qualifier_empty() {
+        let ns = create_namespace_qualifier_for_tests(&[]);
+        let actual_rs = ns.format_for_rs();
+        assert!(actual_rs.is_empty());
+        let actual_cc = ns.format_for_cc().unwrap();
+        assert!(actual_cc.is_empty());
+    }
+
+    #[test]
+    fn test_namespace_qualifier_basic() {
+        let ns = create_namespace_qualifier_for_tests(&["foo", "bar"]);
+        let actual_rs = ns.format_for_rs();
+        assert_rs_matches!(actual_rs, quote! { foo::bar:: });
+        let actual_cc = ns.format_for_cc().unwrap();
+        assert_cc_matches!(actual_cc, quote! { foo::bar:: });
+    }
+
+    #[test]
+    fn test_namespace_qualifier_reserved_cc_keyword() {
+        let ns = create_namespace_qualifier_for_tests(&["foo", "impl", "bar"]);
+        let actual_rs = ns.format_for_rs();
+        assert_rs_matches!(actual_rs, quote! { foo :: r#impl :: bar :: });
+        let actual_cc = ns.format_for_cc().unwrap();
+        assert_cc_matches!(actual_cc, quote! { foo::impl::bar:: });
+    }
+
+    #[test]
+    fn test_namespace_qualifier_reserved_rust_keyword() {
+        let ns = create_namespace_qualifier_for_tests(&["foo", "reinterpret_cast", "bar"]);
+        let actual_rs = ns.format_for_rs();
+        assert_rs_matches!(actual_rs, quote! { foo :: reinterpret_cast :: bar :: });
+        let cc_error = ns.format_for_cc().expect_err("This test expects an error");
+        let msg = cc_error.to_string();
+        assert!(msg.contains("`reinterpret_cast`"));
+        assert!(msg.contains("C++ reserved keyword"));
     }
 }
