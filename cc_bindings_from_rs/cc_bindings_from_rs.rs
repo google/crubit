@@ -377,6 +377,8 @@ inline void public_function() {
             r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
+#![allow(improper_ctypes_definitions)]
+
 #[no_mangle]
 extern "C" fn __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function() -> () {
     test_crate::public_function()

@@ -79,6 +79,13 @@ impl CcInclude {
         Self::SystemHeader("memory")
     }
 
+    /// Creates a `CcInclude` that represents `#include <utility>` and provides
+    /// C++ functions like `std::move` and C++ types like `std::tuple`.
+    /// See also https://en.cppreference.com/w/cpp/header/utility
+    pub fn utility() -> Self {
+        Self::SystemHeader("utility")
+    }
+
     /// Creates a user include: `#include "some/path/to/header.h"`.
     pub fn user_header(path: Rc<str>) -> Self {
         Self::UserHeader(path)

@@ -58,6 +58,27 @@ impl GeneratedBindings {
 
         let rs_body = quote! {
             #top_comment
+
+            // Rust warns about non-`#[repr(C)]` structs being used as parameter types or return
+            // type of `extern "C"` functions (such as thunks that might be present in `rs_body`).
+            // This warning makes sense, because in absence of a guaranteed / well-defined ABI
+            // for this structs, one can't author C/C++ definitions compatible with that ABI.
+            // Unless... the author is `cc_bindings_from_rs` invoked with exactly the same version
+            // and cmdline flags as `rustc`.  Given this, we just disable warnings like the one
+            // in the example below:
+            //
+            //   warning: `extern` fn uses type `DefaultReprPoint`, which is not FFI-safe
+            //   --> .../cc_bindings_from_rs/test/structs/structs_cc_api_impl.rs:25:6
+            //       |
+            //    25 | ) -> structs::DefaultReprPoint {
+            //       |      ^^^^^^^^^^^^^^^^^^^^^^^^^ not FFI-safe
+            //       |
+            //       = help: consider adding a `#[repr(C)]` or `#[repr(transparent)]` attribute...
+            //       = note: this struct has unspecified layout
+            //       = note: `#[warn(improper_ctypes_definitions)]` on by default
+            #![allow(improper_ctypes_definitions)] __NEWLINE__
+            __NEWLINE__
+
             #rs_body
         };
 
@@ -104,6 +125,23 @@ fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
         ty::TyKind::Never => void,  // `!`
         ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
         _ => format_ty_for_cc(tcx, ty),
+    }
+}
+
+/// Formats an argument of a thunk.  For example:
+/// - most primitive types are passed as-is - e.g. `123`
+/// - structs need to be moved: `std::move(value)`
+/// - in the future additional processing may be needed for other types (this is
+///   speculative so please take these examples with a grain of salt):
+///     - str: utf-8 verification
+///     - &T: calling into `crubit::MutRef::unsafe_get_ptr`
+fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream) -> CcSnippet {
+    let mut includes = BTreeSet::new();
+    if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
+        CcSnippet { includes, snippet: value }
+    } else {
+        includes.insert(CcInclude::utility());
+        CcSnippet { includes, snippet: quote! { std::move(#value) } }
     }
 }
 
@@ -445,6 +483,12 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
         } else {
             let exported_name =
                 format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+            let thunk_args = arg_names
+                .clone()
+                .into_iter()
+                .zip(sig.inputs().iter())
+                .map(|(arg, &ty)| format_cc_thunk_arg(tcx, ty, arg).into_tokens(&mut includes))
+                .collect_vec();
             quote! {
                 namespace __crubit_internal {
                     extern "C" #ret_type #exported_name (
@@ -453,10 +497,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
                 }  // namespace __crubit_internal
                 inline #ret_type #fn_name (
                         #( #arg_types #arg_names ),* ) {
-                    // TODO(b/258232820): Support using `struct`s as an argument of a thunk.  The
-                    // code below won't compile as-is because it unnecessarily invokes a copy
-                    // constructor.  The generated code should go through `std::move(...)`.
-                    return __crubit_internal :: #exported_name( #( #arg_names ),* );
+                    return __crubit_internal :: #exported_name( #( #thunk_args ),* );
                 }
             }
         }
@@ -802,8 +843,8 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
 #[cfg(test)]
 pub mod tests {
     use super::{
-        format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs, GeneratedBindings,
-        MixedSnippet,
+        format_cc_thunk_arg, format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs,
+        GeneratedBindings, MixedSnippet,
     };
 
     use anyhow::Result;
@@ -1646,7 +1687,7 @@ pub mod tests {
                         extern "C" std::int32_t ...(S __param_0);
                     }
                     inline std::int32_t func(S __param_0) {
-                        return __crubit_internal::...(__param_0);
+                        return __crubit_internal::...(std::move(__param_0));
                     }
                 }
             );
@@ -2386,12 +2427,51 @@ pub mod tests {
         });
     }
 
+    #[test]
+    fn test_format_cc_thunk_arg() {
+        let testcases = [
+            // ( <Rust type>, (<expected C++ type>, <expected #include>) )
+            ("i32", ("value", "")),
+            ("SomeStruct", ("std::move(value)", "utility")),
+        ];
+        let preamble = quote! {
+            pub struct SomeStruct {
+                pub x: i32,
+                pub y: i32,
+            }
+        };
+        test_ty(&testcases, preamble, |desc, tcx, ty, (expected_snippet, expected_include)| {
+            let (actual_snippet, actual_includes) = {
+                let cc_snippet = format_cc_thunk_arg(tcx, ty, quote! { value });
+                (cc_snippet.snippet.to_string(), cc_snippet.includes)
+            };
+
+            let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual_snippet, expected_snippet, "{desc}");
+
+            if expected_include.is_empty() {
+                assert!(actual_includes.is_empty());
+            } else {
+                let expected_header = format_cc_ident(expected_include).unwrap();
+                assert_cc_matches!(
+                    format_cc_includes(&actual_includes),
+                    quote! { include <#expected_header> }
+                );
+            }
+        });
+    }
+
     fn test_ty<TestFn, Expectation>(
         testcases: &[(&str, Expectation)],
         preamble: TokenStream,
         test_fn: TestFn,
     ) where
-        TestFn: Fn(/* testcase_description: */ &str, TyCtxt, Ty, &Expectation) + Sync,
+        TestFn: for<'tcx> Fn(
+                /* testcase_description: */ &str,
+                TyCtxt<'tcx>,
+                Ty<'tcx>,
+                &Expectation,
+            ) + Sync,
         Expectation: Sync,
     {
         for (index, (input, expected)) in testcases.iter().enumerate() {

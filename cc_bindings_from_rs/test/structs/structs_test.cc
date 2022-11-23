@@ -19,5 +19,10 @@ TEST(StructsTest, ReprCPointReturnedOrTakenByValue) {
   EXPECT_EQ(123, get_x_of_repr_c_point_via_free_function(std::move(p)));
 }
 
+TEST(StructsTest, DefaultReprPointReturnedOrTakenByValue) {
+  DefaultReprPoint p = create_default_repr_point_via_free_function(123, 456);
+  EXPECT_EQ(123, get_x_of_default_repr_point_via_free_function(std::move(p)));
+}
+
 }  // namespace
 }  // namespace crubit
