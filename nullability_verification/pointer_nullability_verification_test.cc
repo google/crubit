@@ -1431,7 +1431,82 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   )");
 }
 
-TEST(PointerNullabilityTest, MemberFunctionOfClassTemplateInstantiation) {
+TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
+  // Struct with 2 arguments with nullable second argument.
+  checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    struct Struct2Arg {
+      T0 arg0;
+      T1 arg1;
+    };
+    void target(Struct2Arg<int* _Nonnull, double* _Nullable> p) {
+      *p.arg0;
+      *p.arg1;  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct with 5 arguments with interleaved nullable/nonnull/unknown.
+  checkDiagnostics(R"cc(
+    template <typename T0, typename T1, typename T2, typename T3, typename T4>
+    struct Struct5Arg {
+      T0 arg0;
+      T1 arg1;
+      T2 arg2;
+      T3 arg3;
+      T4 arg4;
+    };
+    void target(Struct5Arg<int* _Nullable, double* _Nonnull, float*,
+                           double* _Nullable, int* _Nonnull>
+                    p) {
+      *p.arg0;  // [[unsafe]]
+      *p.arg1;
+      *p.arg2;
+      *p.arg3;  // [[unsafe]]
+      *p.arg4;
+    }
+  )cc");
+
+  // Struct with interleaved int and typename arguments.
+  checkDiagnostics(R"cc(
+    template <typename T0, int I1, typename T2, int T3, typename T4>
+    struct Struct5Arg {
+      T0 arg0;
+      T2 arg2;
+      T4 arg4;
+    };
+    void target(Struct5Arg<int* _Nullable, 0, float*, 1, int* _Nullable> p) {
+      *p.arg0;  // [[unsafe]]
+      *p.arg2;
+      *p.arg4;  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct template that uses another struct template in a member variable.
+  checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    struct Struct2Arg {
+      T0 arg0;
+      T1 arg1;
+    };
+
+    template <typename TN0, typename TN1>
+    struct Struct2ArgNested {
+      Struct2Arg<TN1, Struct2Arg<TN0, TN1>>* arg0;
+      Struct2Arg<TN1, Struct2Arg<TN0, TN1>>* _Nullable arg1;
+    };
+    void target(Struct2ArgNested<int* _Nonnull, double* _Nullable> p) {
+      *p.arg0;
+      *p.arg1;  // [[unsafe]]
+
+      // TODO: The following lines currently crash at getBaseType()
+      //*p.arg0->arg0; // false-positive
+      //*p.arg0->arg1.arg0;
+      //*p.arg0->arg1.arg1; // false-positive
+    }
+  )cc");
+}
+
+TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
   // Struct with one argument initialised as _Nullable.
   checkDiagnostics(R"cc(
     template <typename T0>
