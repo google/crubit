@@ -82,7 +82,7 @@ pub fn ir_from_cc_dependency(
 
 /// Creates an identifier
 pub fn ir_id(name: &str) -> Identifier {
-    Identifier { identifier: name.to_string() }
+    Identifier { identifier: name.into() }
 }
 
 /// Creates a simple `Item::Record` with a given name.

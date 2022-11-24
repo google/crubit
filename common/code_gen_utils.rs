@@ -59,7 +59,7 @@ pub fn make_rs_ident(ident: &str) -> Ident {
 // catch some error conditions early (e.g. an empty path component may trigger a
 // panic in `make_rs_ident`;  a reserved C++ keyword might trigger a late error
 // in `format_for_cc` / `format_cc_ident`).
-pub struct NamespaceQualifier(pub Vec<String>);
+pub struct NamespaceQualifier(pub Vec<Rc<str>>);
 
 impl NamespaceQualifier {
     pub fn format_for_rs(&self) -> TokenStream {
@@ -435,7 +435,7 @@ pub mod tests {
     }
 
     fn create_namespace_qualifier_for_tests(input: &[&str]) -> NamespaceQualifier {
-        NamespaceQualifier(input.into_iter().map(|s| s.to_string()).collect())
+        NamespaceQualifier(input.into_iter().map(|&s| s.into()).collect())
     }
 
     #[test]

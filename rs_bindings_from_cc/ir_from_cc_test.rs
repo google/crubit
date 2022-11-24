@@ -596,7 +596,7 @@ fn test_doc_comment_vs_tooling_directives() -> Result<()> {
         .functions()
         .map(|f| {
             if let UnqualifiedIdentifier::Identifier(id) = &f.name {
-                (id.identifier.as_str(), f.doc_comment.as_deref())
+                (id.identifier.as_ref(), f.doc_comment.as_deref())
             } else {
                 panic!("No constructors/destructors expected in this test.")
             }
@@ -1138,7 +1138,7 @@ fn test_implicit_specialization_items_are_deterministically_ordered() -> Result<
     let method_mangled_names = ir
         .functions()
         .filter_map(|f| match &f.name {
-            UnqualifiedIdentifier::Identifier(id) if id.identifier.as_str() == "MyMethod" => {
+            UnqualifiedIdentifier::Identifier(id) if id.identifier.as_ref() == "MyMethod" => {
                 Some(&f.mangled_name)
             }
             _ => None,
@@ -2382,7 +2382,7 @@ fn test_struct_forward_declaration_in_namespace() -> Result<()> {
 
     assert_eq!(1, ir.namespaces().count());
     let ns = ir.namespaces().next().unwrap();
-    assert_eq!("MyNamespace", ns.name.identifier);
+    assert_eq!("MyNamespace", ns.name.identifier.as_ref());
     assert_eq!(1, ns.child_item_ids.len());
 
     let ns_id = ns.id;
@@ -2494,7 +2494,8 @@ fn test_member_function_params() {
     .unwrap();
     let foo_func =
         ir.functions().find(|f| f.name == UnqualifiedIdentifier::Identifier(ir_id("Foo"))).unwrap();
-    let param_names: Vec<_> = foo_func.params.iter().map(|p| &p.identifier.identifier).collect();
+    let param_names: Vec<_> =
+        foo_func.params.iter().map(|p| p.identifier.identifier.as_ref()).collect();
     assert_eq!(param_names, vec!["__this", "x", "y"]);
 }
 

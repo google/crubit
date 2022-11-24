@@ -366,7 +366,7 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
     let record: Option<&str> = ir.record_for_member_func(func)?.map(|r| &*r.cc_name);
 
     let func_name = match &func.name {
-        UnqualifiedIdentifier::Identifier(id) => id.identifier.clone(),
+        UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
         UnqualifiedIdentifier::Operator(op) => op.cc_name(),
         UnqualifiedIdentifier::Destructor => {
             format!("~{}", record.expect("destructor must be associated with a record"))
@@ -1213,7 +1213,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
         *param = RsTypeKind::RvalueReference {
             referent: Rc::new(value),
             mutability: Mutability::Mut,
-            lifetime: new_lifetime_param(func_param.identifier.identifier.clone()),
+            lifetime: new_lifetime_param(func_param.identifier.identifier.to_string()),
         };
     }
 }
@@ -2857,7 +2857,7 @@ impl CratePath {
         };
         let idents = std::iter::once(crate_ident)
             .chain(ir.crate_root_path().into_iter().map(ToOwned::to_owned))
-            .chain(namespace_qualifiers.iter().cloned())
+            .chain(namespace_qualifiers.iter().map(|s| s.to_string()))
             .collect();
         CratePath { idents }
     }
@@ -6296,7 +6296,7 @@ mod tests {
             })
             .find(|f| {
                 matches!(&f.name, UnqualifiedIdentifier::Constructor)
-                    && f.params.get(1).map(|p| p.identifier.identifier == "i").unwrap_or_default()
+                    && f.params.get(1).map(|p| p.identifier.identifier.as_ref() == "i").unwrap_or_default()
             })
             .unwrap();
         {
@@ -7164,7 +7164,7 @@ mod tests {
         // const-ref + lifetimes in C++  ===>  shared-ref in Rust
         assert_eq!(foo_func.params.len(), 1);
         let foo_param = &foo_func.params[0];
-        assert_eq!(&foo_param.identifier.identifier, "foo_param");
+        assert_eq!(foo_param.identifier.identifier.as_ref(), "foo_param");
         let foo_type = db.rs_type_kind(foo_param.type_.rs_type.clone())?;
         assert!(foo_type.is_shared_ref_to(record));
         assert!(matches!(foo_type, RsTypeKind::Reference { mutability: Mutability::Const, .. }));
@@ -7172,7 +7172,7 @@ mod tests {
         // non-const-ref + lifetimes in C++  ===>  mutable-ref in Rust
         assert_eq!(bar_func.params.len(), 1);
         let bar_param = &bar_func.params[0];
-        assert_eq!(&bar_param.identifier.identifier, "bar_param");
+        assert_eq!(bar_param.identifier.identifier.as_ref(), "bar_param");
         let bar_type = db.rs_type_kind(bar_param.type_.rs_type.clone())?;
         assert!(!bar_type.is_shared_ref_to(record));
         assert!(matches!(bar_type, RsTypeKind::Reference { mutability: Mutability::Mut, .. }));
@@ -7193,7 +7193,7 @@ mod tests {
         // const-ref + *no* lifetimes in C++  ===>  const-pointer in Rust
         assert_eq!(foo_func.params.len(), 1);
         let foo_param = &foo_func.params[0];
-        assert_eq!(&foo_param.identifier.identifier, "foo_param");
+        assert_eq!(foo_param.identifier.identifier.as_ref(), "foo_param");
         let foo_type = db.rs_type_kind(foo_param.type_.rs_type.clone())?;
         assert!(!foo_type.is_shared_ref_to(record));
         assert!(matches!(foo_type, RsTypeKind::Pointer { mutability: Mutability::Const, .. }));

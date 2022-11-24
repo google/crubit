@@ -162,7 +162,7 @@ pub struct MappedType {
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Identifier {
-    pub identifier: String,
+    pub identifier: Rc<str>,
 }
 
 impl fmt::Debug for Identifier {
@@ -254,7 +254,7 @@ pub enum UnqualifiedIdentifier {
 impl UnqualifiedIdentifier {
     pub fn identifier_as_str(&self) -> Option<&str> {
         match self {
-            UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.identifier.as_str()),
+            UnqualifiedIdentifier::Identifier(identifier) => Some(identifier.identifier.as_ref()),
             _ => None,
         }
     }
@@ -878,7 +878,7 @@ mod tests {
 
     #[test]
     fn test_identifier_debug_print() {
-        assert_eq!(format!("{:?}", Identifier { identifier: "hello".to_string() }), "\"hello\"");
+        assert_eq!(format!("{:?}", Identifier { identifier: "hello".into() }), "\"hello\"");
     }
 
     #[test]
@@ -886,7 +886,7 @@ mod tests {
         assert_eq!(
             format!(
                 "{:?}",
-                UnqualifiedIdentifier::Identifier(Identifier { identifier: "hello".to_string() })
+                UnqualifiedIdentifier::Identifier(Identifier { identifier: "hello".into() })
             ),
             "\"hello\""
         );
