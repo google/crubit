@@ -218,20 +218,6 @@ QualType getBaseType(const Expr* E) {
   return QualType();
 }
 
-std::vector<NullabilityKind> getNullabilityAnnotations(
-    const Expr* E, ArrayRef<NullabilityKind> BaseNullabilityAnnotations,
-    QualType BaseType) {
-  if (auto ME = dyn_cast<MemberExpr>(E)) {
-    return substituteNullabilityAnnotationsInTemplate(
-        ME->getType(), BaseNullabilityAnnotations, BaseType);
-  } else if (auto MC = dyn_cast<CXXMemberCallExpr>(E)) {
-    return substituteNullabilityAnnotationsInTemplate(
-        MC->getType(), BaseNullabilityAnnotations, BaseType);
-  }
-  // TODO: Handle other expression shapes.
-  return std::vector<NullabilityKind>();
-}
-
 /// Given an expression E that refers to a member variable or a member function
 /// of a template specialization, construct the nullability vector
 /// of its base type and use it to compute the nullability of E. E's nullability
@@ -243,7 +229,8 @@ NullabilityKind getNullabilityFromTemplatedExpression(const Expr* E) {
       getBaseNullabilityAnnotations(E);
   QualType BaseType = getBaseType(E);
   std::vector<NullabilityKind> NullabilityAnnotations =
-      getNullabilityAnnotations(E, BaseNullabilityAnnotations, BaseType);
+      substituteNullabilityAnnotationsInTemplate(
+          E->getType(), BaseNullabilityAnnotations, BaseType);
   if (NullabilityAnnotations.empty()) {
     return NullabilityKind::Unspecified;
   }
