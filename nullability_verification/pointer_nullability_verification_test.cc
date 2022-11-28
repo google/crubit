@@ -1466,6 +1466,27 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
+  // Struct with 5 arguments with interleaved nullable/nonnull/unknown/const.
+  checkDiagnostics(R"cc(
+    template <typename T0, typename T1, typename T2, typename T3, typename T4>
+    struct Struct5Arg {
+      T0 arg0;
+      T1 arg1;
+      T2 arg2;
+      T3 arg3;
+      T4 arg4;
+    };
+    void target(Struct5Arg<int* _Nullable, double const* const _Nonnull, float*,
+                           double const* const _Nullable, int* _Nonnull>
+                    p) {
+      *p.arg0;  // [[unsafe]]
+      *p.arg1;
+      *p.arg2;
+      *p.arg3;  // [[unsafe]]
+      *p.arg4;
+    }
+  )cc");
+
   // Struct with interleaved int and typename arguments.
   checkDiagnostics(R"cc(
     template <typename T0, int I1, typename T2, int T3, typename T4>
@@ -1475,6 +1496,42 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
       T4 arg4;
     };
     void target(Struct5Arg<int* _Nullable, 0, float*, 1, int* _Nullable> p) {
+      *p.arg0;  // [[unsafe]]
+      *p.arg2;
+      *p.arg4;  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct with interleaved int and typename arguments where some arguments are
+  // const.
+  checkDiagnostics(R"cc(
+    template <typename T0, int I1, typename T2, int T3, typename T4>
+    struct Struct5Arg {
+      T0 arg0;
+      T2 arg2;
+      T4 arg4;
+    };
+    void target(Struct5Arg<int const* const _Nullable, 0, float const* const, 1,
+                           int* _Nullable>
+                    p) {
+      *p.arg0;  // [[unsafe]]
+      *p.arg2;
+      *p.arg4;  // [[unsafe]]
+    }
+  )cc");
+
+  // Struct with interleaved int and typename arguments where all type arguments
+  // are const
+  checkDiagnostics(R"cc(
+    template <typename T0, int I1, typename T2, int T3, typename T4>
+    struct Struct5Arg {
+      T0 arg0;
+      T2 arg2;
+      T4 arg4;
+    };
+    void target(Struct5Arg<int const* const _Nullable, 0, float const* const, 1,
+                           int const* const _Nullable>
+                    p) {
       *p.arg0;  // [[unsafe]]
       *p.arg2;
       *p.arg4;  // [[unsafe]]
