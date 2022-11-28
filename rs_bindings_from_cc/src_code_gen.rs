@@ -715,7 +715,7 @@ fn api_func_shape(
         {
             return Ok(None);
         }
-        UnqualifiedIdentifier::Operator(op) if op.name == "==" => {
+        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "==" => {
             assert_eq!(
                 param_types.len(),
                 2,
@@ -760,10 +760,10 @@ fn api_func_shape(
                 /* force_const_reference_params= */ true,
             )?;
         }
-        UnqualifiedIdentifier::Operator(op) if op.name == "<=>" => {
+        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "<=>" => {
             bail!("Three-way comparison operator not yet supported (b/219827738)");
         }
-        UnqualifiedIdentifier::Operator(op) if op.name == "<" => {
+        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "<" => {
             assert_eq!(
                 param_types.len(),
                 2,
@@ -815,7 +815,7 @@ fn api_func_shape(
             // implemented for this Record type.
             match get_binding(
                 db,
-                UnqualifiedIdentifier::Operator(Operator { name: "==".to_string() }),
+                UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
                 param_types,
             ) {
                 Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {
@@ -832,7 +832,7 @@ fn api_func_shape(
                 _ => bail!("operator< where operator== is missing."),
             }
         }
-        UnqualifiedIdentifier::Operator(op) if op.name == "=" => {
+        UnqualifiedIdentifier::Operator(op) if op.name.as_ref() == "=" => {
             assert_eq!(
                 param_types.len(),
                 2,
@@ -866,7 +866,7 @@ fn api_func_shape(
         }
         UnqualifiedIdentifier::Operator(op) => match op_meta
             .by_cc_name_and_params
-            .get(&(op.name.as_str(), param_types.len()))
+            .get(&(&op.name, param_types.len()))
         {
             Some(OperatorMetadataEntry {
                 trait_name,
@@ -3175,7 +3175,7 @@ impl ToTokens for RsTypeKind {
             }
             // This doesn't affect void in function return values, as those are special-cased to be
             // omitted.
-            RsTypeKind::Unit => quote!{::std::os::raw::c_void},
+            RsTypeKind::Unit => quote! {::std::os::raw::c_void},
             RsTypeKind::Other { name, type_args } => {
                 let ident = make_rs_ident(name);
                 let generic_params =
@@ -6296,7 +6296,10 @@ mod tests {
             })
             .find(|f| {
                 matches!(&f.name, UnqualifiedIdentifier::Constructor)
-                    && f.params.get(1).map(|p| p.identifier.identifier.as_ref() == "i").unwrap_or_default()
+                    && f.params
+                        .get(1)
+                        .map(|p| p.identifier.identifier.as_ref() == "i")
+                        .unwrap_or_default()
             })
             .unwrap();
         {

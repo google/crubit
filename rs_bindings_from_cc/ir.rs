@@ -189,7 +189,7 @@ impl ToTokens for IntegerConstant {
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Operator {
-    pub name: String,
+    pub name: Rc<str>,
 }
 
 impl Operator {
