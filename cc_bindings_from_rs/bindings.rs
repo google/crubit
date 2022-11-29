@@ -3,15 +3,19 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
-use code_gen_utils::{format_cc_ident, format_cc_includes, make_rs_ident, CcInclude};
+use code_gen_utils::{
+    format_cc_ident, format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier,
+};
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
+use rustc_hir::definitions::{DefPathData, DisambiguatedDefPathData};
 use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
+use rustc_span::symbol::Symbol;
 use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
@@ -116,6 +120,58 @@ impl CcSnippet {
     fn into_tokens(mut self, external_includes: &mut BTreeSet<CcInclude>) -> TokenStream {
         external_includes.append(&mut self.includes);
         self.snippet
+    }
+}
+
+/// Represents the fully qualified name of a Rust item (e.g. a `struct` or a
+/// function).
+struct FullyQualifiedName {
+    /// Name of the crate that defines the item.
+    /// For example, this would be `std` for `std::cmp::Ordering`.
+    krate: Symbol,
+
+    /// Path to the module where the item is located.
+    /// For example, this would be `cmp` for `std::cmp::Ordering`.
+    /// The path can contain multiple modules - e.g. `foo::bar::baz`.
+    mod_path: NamespaceQualifier,
+
+    /// Name of the item.
+    name: Symbol,
+}
+
+impl FullyQualifiedName {
+    fn new(tcx: TyCtxt, def_id: DefId) -> Self {
+        fn get_symbol(path_component: DisambiguatedDefPathData) -> Symbol {
+            match path_component.data {
+                DefPathData::TypeNs(symbol) | DefPathData::ValueNs(symbol) => symbol,
+                other_data => panic!("Unexpected `path_component`: {other_data}"),
+            }
+        }
+
+        let krate = tcx.crate_name(def_id.krate);
+
+        let mut full_path = tcx.def_path(def_id).data; // mod_path + name
+        let name = full_path.pop().expect("At least the item's name should be present");
+        let name = get_symbol(name);
+
+        let mod_path = full_path.into_iter().map(get_symbol).map(|s| s.as_str().into()).collect();
+        let mod_path = NamespaceQualifier(mod_path);
+
+        Self { krate, mod_path, name }
+    }
+
+    fn format_for_cc(&self) -> Result<TokenStream> {
+        let top_level_ns = format_cc_ident(self.krate.as_str())?;
+        let ns_path = self.mod_path.format_for_cc()?;
+        let name = format_cc_ident(self.name.as_str())?;
+        Ok(quote! { :: #top_level_ns :: #ns_path #name })
+    }
+
+    fn format_for_rs(&self) -> TokenStream {
+        let top_level_ns = make_rs_ident(self.krate.as_str());
+        let ns_path = self.mod_path.format_for_rs();
+        let name = make_rs_ident(self.name.as_str());
+        quote! { :: #top_level_ns :: #ns_path #name }
     }
 }
 
@@ -248,13 +304,8 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 bail!("Cross-crate dependencies are not supported yet (b/258261328)");
             };
 
-            // TODO(b/258265044): This should be a mod/namespace-qualified name.
-            // TODO(b/258261328): This should be crate-qualified / top-level-namespace-qualified
-            // once cross-crate dependencies are supported.
-            let name = format_cc_ident(tcx.item_name(def_id).as_str())
-                .context("Error formatting struct name")?;
             CcSnippet {
-                snippet: quote!{ #name },
+                snippet: FullyQualifiedName::new(tcx, def_id).format_for_cc()?,
                 includes
             }
         },
@@ -318,12 +369,13 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
                 bail!("Tuples are not supported yet: {} (b/254099023)", ty);
             }
         }
-        ty::TyKind::Adt(adt, _substs) => {
-            let crate_name = make_rs_ident(tcx.crate_name(adt.did().krate).as_str());
-            let def_name = format_ident!("{ty}");
-            // TODO(b/258265044): This should be a mod/namespace-qualified name.
-            quote! { #crate_name :: #def_name }
-        }
+        ty::TyKind::Adt(adt, substs) => {
+            if substs.len() != 0 {
+                bail!("Generic types are not supported yet (b/259749095)");
+            }
+
+            FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
+        },
         ty::TyKind::Foreign(..)
         | ty::TyKind::Str
         | ty::TyKind::Array(..)
@@ -531,7 +583,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
         quote! {
             #[no_mangle]
             extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
-                #crate_name :: #fn_name( #( #arg_names ),* )
+                :: #crate_name :: #fn_name( #( #arg_names ),* )
             }
         }
     };
@@ -1032,8 +1084,8 @@ pub mod tests {
             assert_rs_matches!(
                 bindings.rs_body,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<rust_out::Point>() == 8);
-                    const _: () = assert!(::std::mem::align_of::<rust_out::Point>() == 4);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
                 }
             );
         });
@@ -1320,7 +1372,7 @@ pub mod tests {
                     #[no_mangle]
                     extern "C"
                     fn #thunk_name(i: i32) -> i32 {
-                        rust_out::foo(i)
+                        ::rust_out::foo(i)
                     }
                 }
             );
@@ -1522,7 +1574,7 @@ pub mod tests {
                     #[no_mangle]
                     extern "C"
                     fn #thunk_name(x: f64, y: f64) -> f64 {
-                        rust_out::add(x, y)
+                        ::rust_out::add(x, y)
                     }
                 }
             );
@@ -1570,7 +1622,7 @@ pub mod tests {
                     #[no_mangle]
                     extern "C"
                     fn #thunk_name(x: f64, y: f64) -> f64 {
-                        rust_out::add(x, y)
+                        ::rust_out::add(x, y)
                     }
                 }
             );
@@ -1657,7 +1709,7 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
-                        rust_out::foo(__param_0, __param_1)
+                        ::rust_out::foo(__param_0, __param_1)
                     }
                 }
             );
@@ -1684,9 +1736,9 @@ pub mod tests {
                 result.cc.snippet,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t ...(S __param_0);
+                        extern "C" std::int32_t ...(::rust_out::S __param_0);
                     }
-                    inline std::int32_t func(S __param_0) {
+                    inline std::int32_t func(::rust_out::S __param_0) {
                         return __crubit_internal::...(std::move(__param_0));
                     }
                 }
@@ -1695,8 +1747,8 @@ pub mod tests {
                 result.rs,
                 quote! {
                     #[no_mangle]
-                    extern "C" fn ...(__param_0: rust_out::S) -> i32 {
-                        rust_out::func(__param_0)
+                    extern "C" fn ...(__param_0: ::rust_out::S) -> i32 {
+                        ::rust_out::func(__param_0)
                     }
                 }
             );
@@ -1794,8 +1846,8 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<rust_out::SomeStruct>() == 8);
-                    const _: () = assert!(::std::mem::align_of::<rust_out::SomeStruct>() == 4);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
                 }
             );
         });
@@ -1842,8 +1894,8 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<rust_out::TupleStruct>() == 8);
-                    const _: () = assert!(::std::mem::align_of::<rust_out::TupleStruct>() == 4);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
                 }
             );
         });
@@ -1976,8 +2028,8 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<rust_out::SomeEnum>() == 1);
-                    const _: () = assert!(::std::mem::align_of::<rust_out::SomeEnum>() == 1);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeEnum>() == 1);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeEnum>() == 1);
                 }
             );
         });
@@ -2028,8 +2080,8 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<rust_out::Point>() == 12);
-                    const _: () = assert!(::std::mem::align_of::<rust_out::Point>() == 4);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 12);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
                 }
             );
         });
@@ -2093,8 +2145,8 @@ pub mod tests {
             assert_rs_matches!(
                 result.rs,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<rust_out::SomeUnion>() == 8);
-                    const _: () = assert!(::std::mem::align_of::<rust_out::SomeUnion>() == 8);
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
                 }
             );
         });
@@ -2161,9 +2213,9 @@ pub mod tests {
             ("u64", ("std::uint64_t", "cstdint")),
             ("usize", ("std::uintptr_t", "cstdint")),
             ("char", ("std::uint32_t", "cstdint")),
-            ("SomeStruct", ("SomeStruct", "")),
-            ("SomeEnum", ("SomeEnum", "")),
-            ("SomeUnion", ("SomeUnion", "")),
+            ("SomeStruct", ("::rust_out::SomeStruct", "")),
+            ("SomeEnum", ("::rust_out::SomeEnum", "")),
+            ("SomeUnion", ("::rust_out::SomeUnion", "")),
             // Extra parens/sugar are expected to be ignored:
             ("(bool)", ("bool", "")),
         ];
@@ -2298,6 +2350,14 @@ pub mod tests {
                 "LifetimeGenericStruct<'static>",
                 "Generic types are not supported yet (b/259749095)",
             ),
+            (
+                "std::cmp::Ordering",
+                "Cross-crate dependencies are not supported yet (b/258261328)",
+            ),
+            (
+                "Option<i8>",
+                "Generic types are not supported yet (b/259749095)",
+            ),
         ];
         let preamble = quote! {
             #![feature(never_type)]
@@ -2353,9 +2413,10 @@ pub mod tests {
             ("char", "char"),
             ("!", "!"),
             ("()", "()"),
-            ("SomeStruct", "rust_out::SomeStruct"),
-            ("SomeEnum", "rust_out::SomeEnum"),
-            ("SomeUnion", "rust_out::SomeUnion"),
+            ("SomeStruct", "::rust_out::SomeStruct"),
+            ("SomeEnum", "::rust_out::SomeEnum"),
+            ("SomeUnion", "::rust_out::SomeUnion"),
+            ("std::cmp::Ordering", "::core::cmp::Ordering"),
         ];
         let preamble = quote! {
             #![feature(never_type)]
@@ -2417,6 +2478,10 @@ pub mod tests {
             (
                 "fn(i32) -> i32", // TyKind::FnPtr
                 "The following Rust type is not supported yet: fn(i32) -> i32",
+            ),
+            (
+                "Option<i8>", // TyKind::Adt - generic + different crate
+                "Generic types are not supported yet (b/259749095)",
             ),
         ];
         let preamble = quote! {};

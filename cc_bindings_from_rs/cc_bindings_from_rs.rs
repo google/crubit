@@ -381,7 +381,7 @@ inline void public_function() {
 
 #[no_mangle]
 extern "C" fn __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function() -> () {
-    test_crate::public_function()
+    ::test_crate::public_function()
 }
 "#
         );
