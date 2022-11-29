@@ -1,6 +1,12 @@
 # Verification for null safety
 
 cc_library(
+    name = "pointer_nullability_lattice",
+    hdrs = ["pointer_nullability_lattice.h"],
+    deps = ["@llvm-project//clang:analysis"],
+)
+
+cc_library(
     name = "pointer_nullability_matchers",
     srcs = ["pointer_nullability_matchers.cc"],
     hdrs = ["pointer_nullability_matchers.h"],
@@ -16,13 +22,13 @@ cc_library(
     hdrs = ["pointer_nullability_analysis.h"],
     deps = [
         ":pointer_nullability",
+        ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",
         "@llvm-project//clang:basic",
-        "@llvm-project//llvm:Support",
     ],
 )
 

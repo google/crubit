@@ -8,6 +8,7 @@
 
 #include "absl/log/check.h"
 #include "nullability_verification/pointer_nullability.h"
+#include "nullability_verification/pointer_nullability_lattice.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Expr.h"
@@ -18,7 +19,6 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
-#include "clang/Analysis/FlowSensitive/NoopLattice.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Specifiers.h"
@@ -31,7 +31,6 @@ using ast_matchers::MatchFinder;
 using dataflow::BoolValue;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
-using dataflow::NoopLattice;
 using dataflow::PointerValue;
 using dataflow::SkipPast;
 using dataflow::TransferState;
@@ -282,7 +281,7 @@ void initPointerFromAnnotations(PointerValue& PointerVal, const Expr* E,
 
 void transferNullPointer(const Expr* NullPointer,
                          const MatchFinder::MatchResult&,
-                         TransferState<NoopLattice>& State) {
+                         TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(NullPointer, State.Env)) {
     initNullPointer(*PointerVal, State.Env);
   }
@@ -290,7 +289,7 @@ void transferNullPointer(const Expr* NullPointer,
 
 void transferNotNullPointer(const Expr* NotNullPointer,
                             const MatchFinder::MatchResult&,
-                            TransferState<NoopLattice>& State) {
+                            TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(NotNullPointer, State.Env)) {
     initNotNullPointer(*PointerVal, State.Env);
   }
@@ -298,7 +297,7 @@ void transferNotNullPointer(const Expr* NotNullPointer,
 
 void transferPointer(const Expr* PointerExpr,
                      const MatchFinder::MatchResult& Result,
-                     TransferState<NoopLattice>& State) {
+                     TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
     initPointerFromAnnotations(*PointerVal, PointerExpr, State.Env,
                                *Result.Context);
@@ -308,9 +307,9 @@ void transferPointer(const Expr* PointerExpr,
 // TODO(b/233582219): Implement promotion of nullability knownness for initially
 // unknown pointers when there is evidence that it is nullable, for example
 // when the pointer is compared to nullptr, or casted to boolean.
-void transferNullCheckComparison(const BinaryOperator* BinaryOp,
-                                 const MatchFinder::MatchResult& result,
-                                 TransferState<NoopLattice>& State) {
+void transferNullCheckComparison(
+    const BinaryOperator* BinaryOp, const MatchFinder::MatchResult& result,
+    TransferState<PointerNullabilityLattice>& State) {
   // Boolean representing the comparison between the two pointer values,
   // automatically created by the dataflow framework.
   auto& PointerComparison =
@@ -349,9 +348,9 @@ void transferNullCheckComparison(const BinaryOperator* BinaryOp,
       State.Env.makeAnd(LHSKnownNotNull, RHSKnownNull), PointerNE));
 }
 
-void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
-                                            const MatchFinder::MatchResult&,
-                                            TransferState<NoopLattice>& State) {
+void transferNullCheckImplicitCastPtrToBool(
+    const Expr* CastExpr, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
   auto* PointerVal =
       getPointerValueFromExpr(CastExpr->IgnoreImplicit(), State.Env);
   if (!PointerVal) return;
@@ -365,7 +364,7 @@ void transferNullCheckImplicitCastPtrToBool(const Expr* CastExpr,
 
 void transferCallExpr(const CallExpr* CallExpr,
                       const MatchFinder::MatchResult& Result,
-                      TransferState<NoopLattice>& State) {
+                      TransferState<PointerNullabilityLattice>& State) {
   auto ReturnType = CallExpr->getType();
   if (!ReturnType->isAnyPointerType()) return;
 
@@ -380,7 +379,7 @@ void transferCallExpr(const CallExpr* CallExpr,
 }
 
 auto buildTransferer() {
-  return CFGMatchSwitchBuilder<TransferState<NoopLattice>>()
+  return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
       .CaseOfCFGStmt<Expr>(isPointerVariableReference(), transferPointer)
       .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferNotNullPointer)
@@ -399,13 +398,14 @@ auto buildTransferer() {
 }  // namespace
 
 PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext& Context)
-    : DataflowAnalysis<PointerNullabilityAnalysis, NoopLattice>(Context),
+    : DataflowAnalysis<PointerNullabilityAnalysis, PointerNullabilityLattice>(
+          Context),
       Transferer(buildTransferer()) {}
 
 void PointerNullabilityAnalysis::transfer(const CFGElement* Elt,
-                                          NoopLattice& Lattice,
+                                          PointerNullabilityLattice& Lattice,
                                           Environment& Env) {
-  TransferState<NoopLattice> State(Lattice, Env);
+  TransferState<PointerNullabilityLattice> State(Lattice, Env);
   Transferer(*Elt, getASTContext(), State);
 }
 
