@@ -91,8 +91,8 @@ pub fn ir_record(name: &str) -> Record {
     for item in ir.items() {
         if let Item::Record(record) = item {
             let mut record = (**record).clone();
-            record.rs_name = name.to_string();
-            record.cc_name = name.to_string();
+            record.rs_name = name.into();
+            record.cc_name = name.into();
             return record;
         }
     }
@@ -114,7 +114,7 @@ pub fn retrieve_func<'a>(ir: &'a IR, name: &str) -> &'a Func {
 /// Panics if no such record could be found.
 pub fn retrieve_record<'a>(ir: &'a IR, cc_name: &str) -> &'a Record {
     for record in ir.records() {
-        if &record.cc_name == cc_name {
+        if record.cc_name.as_ref() == cc_name {
             return record;
         }
     }

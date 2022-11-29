@@ -226,7 +226,7 @@ impl ToTokens for ItemId {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 #[serde(transparent)]
-pub struct BazelLabel(pub String);
+pub struct BazelLabel(pub Rc<str>);
 
 impl BazelLabel {
     pub fn target_name(&self) -> &str {
@@ -239,7 +239,7 @@ impl BazelLabel {
 
 impl<T: Into<String>> From<T> for BazelLabel {
     fn from(label: T) -> Self {
-        Self(label.into())
+        Self(label.into().into())
     }
 }
 
@@ -305,7 +305,7 @@ pub struct FuncParam {
 pub struct Func {
     pub name: UnqualifiedIdentifier,
     pub owning_target: BazelLabel,
-    pub mangled_name: String,
+    pub mangled_name: Rc<str>,
     pub doc_comment: Option<String>,
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
@@ -373,8 +373,8 @@ pub struct BaseClass {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct IncompleteRecord {
-    pub cc_name: String,
-    pub rs_name: String,
+    pub cc_name: Rc<str>,
+    pub rs_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub record_type: RecordType,
@@ -401,9 +401,9 @@ impl ToTokens for RecordType {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Record {
-    pub rs_name: String,
-    pub cc_name: String,
-    pub mangled_cc_name: String,
+    pub rs_name: Rc<str>,
+    pub cc_name: Rc<str>,
+    pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
     pub doc_comment: Option<String>,
@@ -497,7 +497,7 @@ pub struct TypeAlias {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct SourceLoc {
-    pub filename: String,
+    pub filename: Rc<str>,
     pub line: u64,
     pub column: u64,
 }
@@ -527,8 +527,8 @@ impl<T> Hash for IgnoredField<T> {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct UnsupportedItem {
-    pub name: String,
-    message: String,
+    pub name: Rc<str>,
+    message: Rc<str>,
     pub source_loc: SourceLoc,
     pub id: ItemId,
     #[serde(skip)]
@@ -536,31 +536,36 @@ pub struct UnsupportedItem {
 }
 
 impl UnsupportedItem {
-    pub fn new_with_message(
-        name: String,
-        message: String,
-        source_loc: SourceLoc,
-        id: ItemId,
-    ) -> Self {
-        Self { name, message, source_loc, id, cause: Default::default() }
+    pub fn new_with_message(name: &str, message: &str, source_loc: SourceLoc, id: ItemId) -> Self {
+        Self {
+            name: name.into(),
+            message: message.into(),
+            source_loc,
+            id,
+            cause: Default::default(),
+        }
     }
-
     pub fn new_with_cause(name: String, cause: Error, source_loc: SourceLoc, id: ItemId) -> Self {
-        Self { name, message: cause.to_string(), source_loc, id, cause: IgnoredField(cause.into()) }
+        Self {
+            name: name.into(),
+            message: cause.to_string().into(),
+            source_loc,
+            id,
+            cause: IgnoredField(cause.into()),
+        }
     }
-
     pub fn message(&self) -> &str {
-        &self.message
+        self.message.as_ref()
     }
 
     pub fn cause(&self) -> &Error {
-        self.cause.0.get_or_init(|| anyhow!(self.message.clone()))
+        self.cause.0.get_or_init(|| anyhow!(self.message.as_ref().to_owned()))
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Comment {
-    pub text: String,
+    pub text: Rc<str>,
     pub id: ItemId,
 }
 
@@ -814,7 +819,7 @@ impl IR {
         // Once we do have an actual target for the standard library, we may need to
         // query `self` to find out what it is, so we have a `self` parameter on this
         // method even though we currently don't use it.
-        target.0 == "//:virtual_clang_resource_dir_target"
+        target.0.as_ref() == "//:virtual_clang_resource_dir_target"
     }
 
     // Returns the standard Debug print string for the `flat_ir`. The reason why we

@@ -363,7 +363,7 @@ struct FunctionId {
 
 /// Returns the name of `func` in C++ syntax.
 fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
-    let record: Option<&str> = ir.record_for_member_func(func)?.map(|r| &*r.cc_name);
+    let record: Option<&str> = ir.record_for_member_func(func)?.map(|r| r.cc_name.as_ref());
 
     let func_name = match &func.name {
         UnqualifiedIdentifier::Identifier(id) => id.identifier.to_string(),
@@ -383,10 +383,10 @@ fn cxx_function_name(func: &Func, ir: &IR) -> Result<String> {
     }
 }
 
-fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<UnsupportedItem> {
+fn make_unsupported_fn(func: &Func, ir: &IR, message: &str) -> Result<UnsupportedItem> {
     Ok(UnsupportedItem::new_with_message(
-        cxx_function_name(func, ir)?,
-        message.to_string(),
+        cxx_function_name(func, ir)?.as_ref(),
+        message,
         func.source_loc.clone(),
         func.id,
     ))
@@ -395,8 +395,8 @@ fn make_unsupported_fn(func: &Func, ir: &IR, message: impl ToString) -> Result<U
 fn make_unsupported_nested_type_alias(type_alias: &TypeAlias) -> Result<UnsupportedItem> {
     Ok(UnsupportedItem::new_with_message(
         // TODO(jeanpierreda): It would be nice to include the enclosing record name here too.
-        type_alias.identifier.identifier.to_string(),
-        "Typedefs nested in classes are not supported yet".to_string(),
+        type_alias.identifier.identifier.as_ref(),
+        "Typedefs nested in classes are not supported yet",
         type_alias.source_loc.clone(),
         type_alias.id,
     ))
@@ -522,7 +522,7 @@ impl ImplKind {
     ) -> Result<Self> {
         Ok(ImplKind::Trait {
             trait_name,
-            record_name: make_rs_ident(&record.rs_name),
+            record_name: make_rs_ident(record.rs_name.as_ref()),
             record_qualifier: namespace_qualifier_of_item(record.id, ir)?,
             impl_for: ImplFor::T,
             trait_generic_params: vec![],
@@ -852,7 +852,7 @@ fn api_func_shape(
                         params: vec![rhs.clone()],
                         is_unsafe_fn: false,
                     },
-                    record_name: make_rs_ident(&record.rs_name),
+                    record_name: make_rs_ident(record.rs_name.as_ref()),
                     record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
                     impl_for: ImplFor::T,
                     trait_generic_params: vec![],
@@ -892,7 +892,7 @@ fn api_func_shape(
 
                 let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
-                    record_name: make_rs_ident(&record.rs_name),
+                    record_name: make_rs_ident(record.rs_name.as_ref()),
                     record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
                     trait_name: TraitName::Other {
                         name: quote! {::std::ops::#trait_name},
@@ -939,7 +939,7 @@ fn api_func_shape(
 
                 let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
-                    record_name: make_rs_ident(&record.rs_name),
+                    record_name: make_rs_ident(record.rs_name.as_ref()),
                     record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
                     trait_name: TraitName::Other {
                         name: quote! {::std::ops::#trait_name},
@@ -979,7 +979,7 @@ fn api_func_shape(
                         false
                     };
                     impl_kind = ImplKind::Struct {
-                        record_name: make_rs_ident(&record.rs_name),
+                        record_name: make_rs_ident(record.rs_name.as_ref()),
                         format_first_param_as_self,
                         is_unsafe: has_pointer_params,
                     };
@@ -1043,7 +1043,7 @@ fn api_func_shape(
 
             check_by_value(record)?;
             materialize_ctor_in_caller(func, param_types);
-            let record_name = make_rs_ident(&record.rs_name);
+            let record_name = make_rs_ident(record.rs_name.as_ref());
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
 
@@ -1740,7 +1740,7 @@ fn generate_func_thunk(
     return_type: &RsTypeKind,
 ) -> Result<TokenStream> {
     let thunk_attr = if can_skip_cc_thunk(db, func) {
-        let mangled_name = &func.mangled_name;
+        let mangled_name = func.mangled_name.as_ref();
         quote! {#[link_name = #mangled_name]}
     } else {
         quote! {}
@@ -1905,8 +1905,8 @@ fn namespace_qualifier_of_item(item_id: ItemId, ir: &IR) -> Result<NamespaceQual
 
 /// Generates Rust source code for a given incomplete record declaration.
 fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<TokenStream> {
-    let ident = make_rs_ident(&incomplete_record.rs_name);
-    let name = &incomplete_record.rs_name;
+    let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
+    let name = incomplete_record.rs_name.as_ref();
     Ok(quote! {
         forward_declare::forward_declare!(
             pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#name)
@@ -1952,7 +1952,7 @@ fn generate_record(
 ) -> Result<GeneratedItem> {
     let ir = db.ir();
     let crate_root_path = crate_root_path_tokens(&ir);
-    let ident = make_rs_ident(&record.rs_name);
+    let ident = make_rs_ident(record.rs_name.as_ref());
     let namespace_qualifier = namespace_qualifier_of_item(record.id, &ir)?.format_for_rs();
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
@@ -2021,7 +2021,7 @@ fn generate_record(
                     record.is_union() || prev_end <= offset,
                     "Unexpected offset+size for field {:?} in record {}",
                     prev_field,
-                    record.cc_name
+                    record.cc_name.as_ref()
                 );
             }
 
@@ -2223,7 +2223,7 @@ fn generate_record(
 
     // TODO(b/227442773): After namespace support is added, use the fully-namespaced
     // name.
-    let incomplete_symbol = &record.cc_name;
+    let incomplete_symbol = record.cc_name.as_ref();
     let incomplete_definition = quote! {
         forward_declare::unsafe_define!(forward_declare::symbol!(#incomplete_symbol), #qualified_ident);
     };
@@ -2332,11 +2332,14 @@ fn check_by_value(record: &Record) -> Result<()> {
     if record.destructor == SpecialMemberFunc::Unavailable {
         bail!(
             "Can't directly construct values of type `{}` as it has a non-public or deleted destructor",
-            record.cc_name
+            record.cc_name.as_ref()
         )
     }
     if record.is_abstract {
-        bail!("Can't directly construct values of type `{}`: it is abstract", record.cc_name);
+        bail!(
+            "Can't directly construct values of type `{}`: it is abstract",
+            record.cc_name.as_ref()
+        );
     }
     Ok(())
 }
@@ -2423,12 +2426,12 @@ fn generate_unsupported(
         // argument.
         // TODO(forster): Consider linking to the symbol instead of to the line number
         // to avoid wrong links while generated files have not caught up.
-        format!("google3/{};l={}", &item.source_loc.filename, &item.source_loc.line)
+        format!("google3/{};l={}", item.source_loc.filename.as_ref(), &item.source_loc.line)
     };
     let message = format!(
         "{}\nError while generating bindings for item '{}':\n{}",
         &location,
-        &item.name,
+        item.name.as_ref(),
         item.message()
     );
     Ok(quote! { __COMMENT__ #message })
@@ -2436,7 +2439,7 @@ fn generate_unsupported(
 
 /// Generates Rust source code for a given `Comment`.
 fn generate_comment(comment: &Comment) -> Result<TokenStream> {
-    let text = &comment.text;
+    let text = comment.text.as_ref();
     Ok(quote! { __COMMENT__ #text })
 }
 
@@ -2544,7 +2547,7 @@ fn generate_item(
         Item::Func(func) => match db.generate_func(func.clone()) {
             Err(e) => GeneratedItem {
                 item: generate_unsupported(
-                    &make_unsupported_fn(func, &ir, format!("{e}"))?,
+                    &make_unsupported_fn(func, &ir, format!("{e}").as_str())?,
                     errors,
                 )?,
                 ..Default::default()
@@ -3162,11 +3165,11 @@ impl ToTokens for RsTypeKind {
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
-                let record_ident = make_rs_ident(&incomplete_record.rs_name);
+                let record_ident = make_rs_ident(incomplete_record.rs_name.as_ref());
                 quote! { #crate_path :: #record_ident }
             }
             RsTypeKind::Record { record, crate_path } => {
-                let ident = make_rs_ident(&record.rs_name);
+                let ident = make_rs_ident(record.rs_name.as_ref());
                 quote! { #crate_path :: #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {
@@ -3352,7 +3355,7 @@ fn cc_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
 }
 
 fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStream> {
-    let ident = format_cc_ident(&record.cc_name);
+    let ident = format_cc_ident(record.cc_name.as_ref());
     let namespace_qualifier = namespace_qualifier_of_item(record.id, ir)?.format_for_cc()?;
     Ok(quote! { #namespace_qualifier #ident })
 }
@@ -3360,7 +3363,7 @@ fn cc_tagless_type_name_for_record(record: &Record, ir: &IR) -> Result<TokenStre
 fn cc_type_name_for_item(item: &ir::Item, ir: &IR) -> Result<TokenStream> {
     match item {
         Item::IncompleteRecord(incomplete_record) => {
-            let ident = format_cc_ident(&incomplete_record.cc_name);
+            let ident = format_cc_ident(incomplete_record.cc_name.as_ref());
             let namespace_qualifier =
                 namespace_qualifier_of_item(incomplete_record.id, ir)?.format_for_cc()?;
             let tag_kind = incomplete_record.record_type;
@@ -3485,7 +3488,7 @@ fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
     if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
         return Ok(quote! {});
     }
-    let record_ident = format_cc_ident(&record.cc_name);
+    let record_ident = format_cc_ident(record.cc_name.as_ref());
     let namespace_qualifier = namespace_qualifier_of_item(record.id, ir)?.format_for_cc()?;
     let cc_size = Literal::usize_unsuffixed(record.original_cc_size);
     let alignment = Literal::usize_unsuffixed(record.alignment);
@@ -3548,7 +3551,7 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
         return Ok(quote! {});
     }
 
-    let ident = make_rs_ident(&record.rs_name);
+    let ident = make_rs_ident(record.rs_name.as_ref());
     Ok(quote! {
         impl #ident {
             #(
@@ -3623,7 +3626,7 @@ fn cc_struct_upcast_impl(record: &Rc<Record>, ir: &IR) -> Result<GeneratedItem> 
 }
 
 fn thunk_ident(func: &Func) -> Ident {
-    format_ident!("__rust_thunk__{}", func.mangled_name)
+    format_ident!("__rust_thunk__{}", func.mangled_name.as_ref())
 }
 
 fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<TokenStream> {
@@ -3670,7 +3673,7 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
                             quote! { #fn_ident }
                         } else {
                             let record: &Rc<Record> = ir.find_decl(meta.record_id)?;
-                            let record_ident = format_cc_ident(&record.cc_name);
+                            let record_ident = format_cc_ident(record.cc_name.as_ref());
                             let namespace_qualifier =
                                 namespace_qualifier_of_item(record.id, &ir)?.format_for_cc()?;
                             quote! { #namespace_qualifier #record_ident :: #fn_ident }
