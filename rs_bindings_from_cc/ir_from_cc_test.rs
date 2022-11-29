@@ -545,8 +545,10 @@ fn test_doc_comment() -> Result<()> {
             struct MultilineOneStar {};
         "#,
     )?;
-    let comments: HashMap<_, _> =
-        ir.records().map(|r| (r.rs_name.as_ref(), r.doc_comment.as_ref().unwrap())).collect();
+    let comments: HashMap<_, _> = ir
+        .records()
+        .map(|r| (r.rs_name.as_ref(), r.doc_comment.as_ref().unwrap().as_ref()))
+        .collect();
 
     assert_eq!(comments["DocCommentSlashes"], "Doc comment\n\n * with three slashes");
     assert_eq!(comments["DocCommentBang"], "Doc comment\n\n * with slashes and bang");
@@ -708,8 +710,8 @@ fn test_type_conversion() -> Result<()> {
     let type_mapping: HashMap<_, _> = fields
         .map(|f| {
             (
-                f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_str(),
-                f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_str(),
+                f.type_.as_ref().unwrap().cc_type.name.as_ref().unwrap().as_ref(),
+                f.type_.as_ref().unwrap().rs_type.name.as_ref().unwrap().as_ref(),
             )
         })
         .collect();
@@ -2772,11 +2774,11 @@ fn test_elided_lifetimes() {
     assert_eq!(&*func.return_type.rs_type.lifetime_args, &[a_id]);
 
     assert_eq!(func.params[0].identifier, ir_id("__this"));
-    assert_eq!(func.params[0].type_.rs_type.name, Some("&mut".to_string()));
+    assert_eq!(func.params[0].type_.rs_type.name.as_deref(), Some("&mut"));
     assert_eq!(&*func.params[0].type_.rs_type.lifetime_args, &[a_id]);
 
     assert_eq!(func.params[1].identifier, ir_id("i"));
-    assert_eq!(func.params[1].type_.rs_type.name, Some("&mut".to_string()));
+    assert_eq!(func.params[1].type_.rs_type.name.as_deref(), Some("&mut"));
     assert_eq!(&*func.params[1].type_.rs_type.lifetime_args, &[b_id]);
 }
 
@@ -2797,7 +2799,7 @@ fn verify_elided_lifetimes_in_default_constructor(ir: &IR) {
     let t = &p.type_.rs_type;
     assert_eq!(t.lifetime_args.len(), 1);
     assert_eq!(t.lifetime_args[0], f.lifetime_params[0].id);
-    assert_eq!(t.name, Some("&mut".to_string()));
+    assert_eq!(t.name.as_deref(), Some("&mut"));
 }
 
 #[test]

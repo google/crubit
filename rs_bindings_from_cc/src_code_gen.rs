@@ -1794,12 +1794,12 @@ fn generate_func_thunk(
     })
 }
 
-fn generate_doc_comment(comment: &Option<String>) -> TokenStream {
+fn generate_doc_comment(comment: &Option<Rc<str>>) -> TokenStream {
     match comment {
         Some(text) => {
             // token_stream_printer (and rustfmt) don't put a space between /// and the doc
             // comment, let's add it here so our comments are pretty.
-            let doc = format!(" {}", text.replace('\n', "\n "));
+            let doc = format!(" {}", text.as_ref()).replace('\n', "\n ");
             quote! {#[doc=#doc]}
         }
         None => quote! {},
@@ -2074,11 +2074,11 @@ fn generate_record(
                 Err(msg) => {
                     let supplemental_text =
                         format!("Reason for representing this field as a blob of bytes:\n{}", msg);
-                    let new_text = match field.doc_comment.as_ref() {
+                    let new_text = match &field.doc_comment {
                         None => supplemental_text,
-                        Some(old_text) => format!("{}\n\n{}", old_text, supplemental_text),
+                        Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
                     };
-                    generate_doc_comment(&Some(new_text))
+                    generate_doc_comment(&Some(new_text.into()))
                 }
             };
             let access = if field.access == AccessSpecifier::Public
@@ -3423,7 +3423,7 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
         quote! {}
     };
     if let Some(ref name) = ty.name {
-        match name.as_str() {
+        match name.as_ref() {
             mut name @ ("*" | "&" | "&&") => {
                 if ty.type_args.len() != 1 {
                     bail!("Invalid pointer type (need exactly 1 type argument): {:?}", ty);

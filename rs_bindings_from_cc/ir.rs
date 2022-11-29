@@ -31,7 +31,7 @@ pub fn make_ir_from_parts(
     public_headers: Vec<HeaderName>,
     current_target: BazelLabel,
     top_level_item_ids: Vec<ItemId>,
-    crate_root_path: Option<String>,
+    crate_root_path: Option<Rc<str>>,
 ) -> Result<IR> {
     make_ir(FlatIR { public_headers, current_target, items, top_level_item_ids, crate_root_path })
 }
@@ -118,7 +118,7 @@ pub struct LifetimeName {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct RsType {
-    pub name: Option<String>,
+    pub name: Option<Rc<str>>,
     pub lifetime_args: Rc<[LifetimeId]>,
     pub type_args: Rc<[RsType]>,
     pub decl_id: Option<ItemId>,
@@ -132,7 +132,7 @@ impl RsType {
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct CcType {
-    pub name: Option<String>,
+    pub name: Option<Rc<str>>,
     pub is_const: bool,
     pub type_args: Vec<CcType>,
     pub decl_id: Option<ItemId>,
@@ -306,7 +306,7 @@ pub struct Func {
     pub name: UnqualifiedIdentifier,
     pub owning_target: BazelLabel,
     pub mangled_name: Rc<str>,
-    pub doc_comment: Option<String>,
+    pub doc_comment: Option<Rc<str>>,
     pub return_type: MappedType,
     pub params: Vec<FuncParam>,
     /// For tests and internal use only.
@@ -344,7 +344,7 @@ pub enum AccessSpecifier {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
 pub struct Field {
     pub identifier: Option<Identifier>,
-    pub doc_comment: Option<String>,
+    pub doc_comment: Option<Rc<str>>,
     #[serde(rename(deserialize = "type"))]
     pub type_: Result<MappedType, String>,
     pub access: AccessSpecifier,
@@ -406,7 +406,7 @@ pub struct Record {
     pub mangled_cc_name: Rc<str>,
     pub id: ItemId,
     pub owning_target: BazelLabel,
-    pub doc_comment: Option<String>,
+    pub doc_comment: Option<Rc<str>>,
     pub unambiguous_public_bases: Vec<BaseClass>,
     pub fields: Vec<Field>,
     pub lifetime_params: Vec<LifetimeName>,
@@ -488,7 +488,7 @@ pub struct TypeAlias {
     pub identifier: Identifier,
     pub id: ItemId,
     pub owning_target: BazelLabel,
-    pub doc_comment: Option<String>,
+    pub doc_comment: Option<Rc<str>>,
     pub underlying_type: MappedType,
     pub source_loc: SourceLoc,
     pub enclosing_record_id: Option<ItemId>,
@@ -697,7 +697,7 @@ struct FlatIR {
     #[serde(default)]
     top_level_item_ids: Vec<ItemId>,
     #[serde(default)]
-    crate_root_path: Option<String>,
+    crate_root_path: Option<Rc<str>>,
 }
 
 /// Struct providing the necessary information about the API of a C++ target to
