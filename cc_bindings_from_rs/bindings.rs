@@ -441,8 +441,8 @@ impl Sum for MixedSnippet {
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
 ///   b/258235219), type parameters, or const parameters.
-fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
-    let def_id: DefId = def_id.to_def_id(); // Convert LocalDefId to DefId.
+fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
+    let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     let item_name = tcx.item_name(def_id);
     let mut symbol_name = {
@@ -497,7 +497,26 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
             let thunk_name = format!("__crubit_thunk_{}", symbol_name.name);
             symbol_name = ty::SymbolName::new(tcx, &thunk_name);
             needs_thunk = true;
-        },
+        }
+    };
+
+    let doc_comment = {
+        let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
+        let doc_comment: String = tcx
+            .hir()
+            .attrs(hir_id)
+            .iter()
+            .filter_map(|attr| match &attr.doc_str() {
+                None => None,
+                Some(symbol) => Some(symbol.as_str().to_owned()),
+            })
+            .collect_vec()
+            .join("\n");
+        if doc_comment.is_empty() {
+            quote! {}
+        } else {
+            quote! { __NEWLINE__ __COMMENT__ #doc_comment }
+        }
     };
 
     let mut includes = BTreeSet::new();
@@ -528,6 +547,7 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
             .collect::<Result<Vec<_>>>()?;
         if item_name.as_str() == symbol_name.name {
             quote! {
+                #doc_comment
                 extern "C" #ret_type #fn_name (
                         #( #arg_types #arg_names ),*
                 );
@@ -546,7 +566,8 @@ fn format_fn(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
                     extern "C" #ret_type #exported_name (
                             #( #arg_types #arg_names ),*
                     );
-                }  // namespace __crubit_internal
+                }
+                #doc_comment
                 inline #ret_type #fn_name (
                         #( #arg_types #arg_names ),* ) {
                     return __crubit_internal :: #exported_name( #( #thunk_args ),* );
@@ -1422,6 +1443,87 @@ pub mod tests {
                 result.cc.snippet,
                 quote! {
                     extern "C" double type_aliased_return();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_with_doc_comment_with_unmangled_name() {
+        let test_src = r#"
+            /// Outer line doc.
+            /** Outer block doc that spans lines.
+             */
+            #[doc = "Doc comment via doc attribute."]
+            #[no_mangle]
+            pub extern "C" fn fn_with_doc_comment_with_unmangled_name() {}
+          "#;
+        test_format_def(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_empty());
+            let doc_comments = [
+                " Outer line doc.",
+                " Outer block doc that spans lines.",
+                "             ",
+                "Doc comment via doc attribute.",
+            ]
+            .join("\n");
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    __COMMENT__ #doc_comments
+                    extern "C" void fn_with_doc_comment_with_unmangled_name();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_with_inner_doc_comment_with_unmangled_name() {
+        let test_src = r#"
+            /// Outer doc comment.
+            #[no_mangle]
+            pub extern "C" fn fn_with_inner_doc_comment_with_unmangled_name() {
+                //! Inner doc comment.
+            }
+          "#;
+        test_format_def(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_empty());
+            let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n");
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    __COMMENT__ #doc_comments
+                    extern "C" void fn_with_inner_doc_comment_with_unmangled_name();
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_fn_with_doc_comment_with_mangled_name() {
+        let test_src = r#"
+                /// Doc comment of a function with mangled name.
+                pub extern "C" fn fn_with_doc_comment_with_mangled_name() {}
+            "#;
+        test_format_def(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
+            let result = result.expect("Test expects success here");
+            assert!(result.cc.includes.is_empty());
+            assert!(result.rs.is_empty());
+            let comment = " Doc comment of a function with mangled name.";
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    namespace __crubit_internal {
+                        extern "C" void ...();
+                    }
+                    __COMMENT__ #comment
+                    inline void fn_with_doc_comment_with_mangled_name() {
+                        return __crubit_internal::...();
+                    }
                 }
             );
         });
