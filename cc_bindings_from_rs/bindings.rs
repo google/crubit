@@ -837,7 +837,7 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
             Some(symbol) => Some(symbol.as_str().to_owned()),
         })
         .collect_vec()
-        .join("\n");
+        .join("\n\n");
     if doc_comment.is_empty() {
         quote! {}
     } else {
@@ -1475,8 +1475,10 @@ pub mod tests {
             assert!(result.rs.is_empty());
             let doc_comments = [
                 " Outer line doc.",
+                "",
                 " Outer block doc that spans lines.",
                 "             ",
+                "",
                 "Doc comment via doc attribute.",
             ]
             .join("\n");
@@ -1503,7 +1505,7 @@ pub mod tests {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
             assert!(result.rs.is_empty());
-            let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n");
+            let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n\n");
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
