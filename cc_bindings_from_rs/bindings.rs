@@ -19,7 +19,7 @@ use rustc_span::symbol::Symbol;
 use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashSet};
 use std::iter::Sum;
 use std::ops::{Add, AddAssign};
 
@@ -110,21 +110,42 @@ struct CcPrerequisites {
     /// `CcSnippet::tokens` expands to `std::int32_t`, then `includes`
     /// need to cover the `#include <cstdint>`.
     includes: BTreeSet<CcInclude>,
-    // TODO(b/260268230): Cover `definitions` that need to appear before a `CcSnippet`.
+
+    /// Set of local definitions that a `CcSnippet` depends on.  For example if
+    /// `CcSnippet::tokens` expands to `void foo(S s)` then the definition
+    /// of `S` should have appeared earlier - in this case `defs` will
+    /// include the `LocalDefId` corresponding to `S`.
+    defs: HashSet<LocalDefId>,
+
+    /// Set of forward declarations that a `CcSnippet` depends on.  For example
+    /// if `CcSnippet::tokens` expands to `void foo(S* s)` then a forward
+    /// declaration of `S` should have appeared earlier - in this case
+    /// `fwd_decls` will include the `LocalDefId` corresponding to `S`.
+    /// Note that in this particular example the *definition* of `S` does
+    /// *not* need to appear earlier (and therefore `defs` will *not*
+    /// contain `LocalDefId` corresponding to `S`).
+    // TODO(b/260729464): Implement forward declarations support.
+    _fwd_decls: (),
 }
 
 impl CcPrerequisites {
     #[cfg(test)]
     fn is_empty(&self) -> bool {
-        self.includes.is_empty()
-        // TODO(b/260268230): Cover `definitions`.
+        self.includes.is_empty() && self.defs.is_empty()
     }
 }
 
 impl AddAssign for CcPrerequisites {
     fn add_assign(&mut self, mut rhs: Self) {
+        // `BTreeSet::append` is used because it _seems_ to be more efficient than
+        // calling `extend`.  This is because `extend` takes an iterator
+        // (processing each `rhs` include one-at-a-time) while `append` steals
+        // the whole backing data store from `rhs.includes`. OTOH, this is a bit
+        // speculative, since the (expected / guessed) performance difference is
+        // not documented at https://doc.rust-lang.org/std/collections/struct.BTreeSet.html#method.append
         self.includes.append(&mut rhs.includes);
-        // TODO(b/260268230): Cover `definitions`.
+
+        self.defs.extend(rhs.defs);
     }
 }
 
@@ -319,9 +340,9 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 .with_context(|| format!(
                         "Failed to generate bindings for the definition of `{ty}`"))?;
 
-            let prereqs = if def_id.krate == LOCAL_CRATE {
-                // TODO(b/260268230): Add `def_id` to `prereqs.definitions`.
-                CcPrerequisites::default()
+            let mut prereqs = CcPrerequisites::default();
+            if def_id.krate == LOCAL_CRATE {
+                prereqs.defs.insert(def_id.expect_local());
             } else {
                 // TODO(b/258261328): Add `#include` of other crate's `..._cc_api.h`.
                 bail!("Cross-crate dependencies are not supported yet (b/258261328)");
@@ -332,13 +353,18 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 prereqs
             }
         },
-        ty::TyKind::Foreign(..)
-        | ty::TyKind::Str
+        // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an element type of an
+        // Array, a pointee type of a RawPtr, a referent of a Ref or Slice, a parameter type of an
+        // FnPtr, etc), one should also 1) propagate `CcPrerequisites::defs`, 2) cover
+        // `CcPrerequisites::defs` in `test_format_ty_for_cc...`.  For ptr/ref/slice it might be
+        // also desirable to separately track forward-declaration prerequisites.
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
         | ty::TyKind::RawPtr(..)
         | ty::TyKind::Ref(..)
         | ty::TyKind::FnPtr(..)
+        | ty::TyKind::Str
+        | ty::TyKind::Foreign(..)
         | ty::TyKind::Dynamic(..)
         | ty::TyKind::Generator(..)
         | ty::TyKind::GeneratorWitness(..)
@@ -941,7 +967,8 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         // unique + ergonomic).
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
-        let CcSnippet { prereqs: CcPrerequisites { includes }, tokens } = cc;
+        // TODO(b/260268230): Use `CcPrerequisites::defs` to reorder the bindings.
+        let CcSnippet { prereqs: CcPrerequisites { includes, .. }, tokens } = cc;
         let includes = format_cc_includes(&includes);
         quote! {
             #includes __NEWLINE__
@@ -1458,6 +1485,34 @@ pub mod tests {
                     extern "C" void may_throw();
                 }
             );
+        });
+    }
+
+    /// This test mainly verifies that `format_def` correctly propagates
+    /// `CcPrerequisites` of parameter types and return type.
+    #[test]
+    fn test_format_def_fn_with_cc_prerequisites() {
+        let test_src = r#"
+                pub struct S(i32);
+                pub fn foo(_i: i32) -> S { panic!("foo") }
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            let result = result.unwrap();
+
+            // Minimal coverage, just to double-check that the test setup works.
+            assert_cc_matches!(result.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
+
+            // Main checks: `CcPrerequisites::includes`.
+            assert_cc_matches!(
+                format_cc_includes(&result.cc.prereqs.includes),
+                quote! { include <cstdint> }
+            );
+            // Main checks: `CcPrerequisites::defs`.
+            //
+            // Verifying the actual def_id is tricky, becayse `test_format_def` doesn't
+            // expose `tcx` to the verification function (and therefore calling
+            // `find_def_id_by_name` is not easily possible).
+            assert_eq!(1, result.cc.prereqs.defs.len());
         });
     }
 
@@ -2436,26 +2491,26 @@ pub mod tests {
         // It seems desirable if the generated bindings conform to this aspect of the style guide,
         // because it makes things easier for *users* of these bindings.
         let testcases = [
-            // ( <Rust type>, (<expected C++ type>, <expected #include>) )
-            ("bool", ("bool", "")),
-            ("f32", ("float", "")),
-            ("f64", ("double", "")),
-            ("i8", ("std::int8_t", "cstdint")),
-            ("i16", ("std::int16_t", "cstdint")),
-            ("i32", ("std::int32_t", "cstdint")),
-            ("i64", ("std::int64_t", "cstdint")),
-            ("isize", ("std::intptr_t", "cstdint")),
-            ("u8", ("std::uint8_t", "cstdint")),
-            ("u16", ("std::uint16_t", "cstdint")),
-            ("u32", ("std::uint32_t", "cstdint")),
-            ("u64", ("std::uint64_t", "cstdint")),
-            ("usize", ("std::uintptr_t", "cstdint")),
-            ("char", ("std::uint32_t", "cstdint")),
-            ("SomeStruct", ("::rust_out::SomeStruct", "")),
-            ("SomeEnum", ("::rust_out::SomeEnum", "")),
-            ("SomeUnion", ("::rust_out::SomeUnion", "")),
+            // ( <Rust type>, (<expected C++ type>, <expected #include>, <expected prereq def>) )
+            ("bool", ("bool", "", "")),
+            ("f32", ("float", "", "")),
+            ("f64", ("double", "", "")),
+            ("i8", ("std::int8_t", "cstdint", "")),
+            ("i16", ("std::int16_t", "cstdint", "")),
+            ("i32", ("std::int32_t", "cstdint", "")),
+            ("i64", ("std::int64_t", "cstdint", "")),
+            ("isize", ("std::intptr_t", "cstdint", "")),
+            ("u8", ("std::uint8_t", "cstdint", "")),
+            ("u16", ("std::uint16_t", "cstdint", "")),
+            ("u32", ("std::uint32_t", "cstdint", "")),
+            ("u64", ("std::uint64_t", "cstdint", "")),
+            ("usize", ("std::uintptr_t", "cstdint", "")),
+            ("char", ("std::uint32_t", "cstdint", "")),
+            ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct")),
+            ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum")),
+            ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion")),
             // Extra parens/sugar are expected to be ignored:
-            ("(bool)", ("bool", "")),
+            ("(bool)", ("bool", "", "")),
         ];
         let preamble = quote! {
             #![allow(unused_parens)]
@@ -2473,14 +2528,17 @@ pub mod tests {
                 pub y: i32,
             }
         };
-        test_ty(&testcases, preamble, |desc, tcx, ty, (expected_snippet, expected_include)| {
-            let (actual_snippet, actual_includes) = {
-                let cc_snippet = format_ty_for_cc(tcx, ty).unwrap();
-                (cc_snippet.tokens.to_string(), cc_snippet.prereqs.includes)
+        test_ty(
+            &testcases,
+            preamble,
+            |desc, tcx, ty, (expected_tokens, expected_include, expected_prereq_def)| {
+                let (actual_tokens, actual_includes, actual_prereq_defs) = {
+                    let s = format_ty_for_cc(tcx, ty).unwrap();
+                    (s.tokens.to_string(), s.prereqs.includes, s.prereqs.defs)
             };
 
-            let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(actual_snippet, expected_snippet, "{desc}");
+                let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
+                assert_eq!(actual_tokens, expected_tokens, "{desc}");
 
             if expected_include.is_empty() {
                 assert!(actual_includes.is_empty());
@@ -2491,7 +2549,16 @@ pub mod tests {
                     quote! { include <#expected_header> }
                 );
             }
-        });
+
+                if expected_prereq_def.is_empty() {
+                    assert!(actual_prereq_defs.is_empty());
+                } else {
+                    let expected_def_id = find_def_id_by_name(tcx, expected_prereq_def);
+                    assert_eq!(1, actual_prereq_defs.len());
+                    assert_eq!(expected_def_id, actual_prereq_defs.into_iter().next().unwrap());
+                }
+            },
+        );
     }
 
     #[test]
@@ -2672,10 +2739,10 @@ pub mod tests {
                 pub y: i32,
             }
         };
-        test_ty(&testcases, preamble, |desc, tcx, ty, expected_snippet| {
-            let actual_snippet = format_ty_for_rs(tcx, ty).unwrap().to_string();
-            let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(actual_snippet, expected_snippet, "{desc}");
+        test_ty(&testcases, preamble, |desc, tcx, ty, expected_tokens| {
+            let actual_tokens = format_ty_for_rs(tcx, ty).unwrap().to_string();
+            let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual_tokens, expected_tokens, "{desc}");
         });
     }
 
@@ -2743,14 +2810,14 @@ pub mod tests {
                 pub y: i32,
             }
         };
-        test_ty(&testcases, preamble, |desc, tcx, ty, (expected_snippet, expected_include)| {
-            let (actual_snippet, actual_includes) = {
+        test_ty(&testcases, preamble, |desc, tcx, ty, (expected_tokens, expected_include)| {
+            let (actual_tokens, actual_includes) = {
                 let cc_snippet = format_cc_thunk_arg(tcx, ty, quote! { value });
                 (cc_snippet.tokens.to_string(), cc_snippet.prereqs.includes)
             };
 
-            let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
-            assert_eq!(actual_snippet, expected_snippet, "{desc}");
+            let expected_tokens = expected_tokens.parse::<TokenStream>().unwrap().to_string();
+            assert_eq!(actual_tokens, expected_tokens, "{desc}");
 
             if expected_include.is_empty() {
                 assert!(actual_includes.is_empty());
