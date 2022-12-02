@@ -1375,15 +1375,14 @@ pub mod tests {
             // is translated into a `consteval` C++ function.
             let result = result.expect("Test expects success here");
             assert!(!result.cc.includes.is_empty());
-            let thunk_name = quote!{ __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3foo };
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" std::int32_t #thunk_name( std::int32_t i);
+                        extern "C" std::int32_t ...( std::int32_t i);
                     }
                     inline std::int32_t foo(std::int32_t i) {
-                        return __crubit_internal::#thunk_name(i);
+                        return __crubit_internal::...(i);
                     }
                 }
             );
@@ -1392,7 +1391,7 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C"
-                    fn #thunk_name(i: i32) -> i32 {
+                    fn ...(i: i32) -> i32 {
                         ::rust_out::foo(i)
                     }
                 }
@@ -1658,15 +1657,14 @@ pub mod tests {
         test_format_def(test_src, "add", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            let thunk_name = quote! { __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3add };
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" double #thunk_name(double x, double y);
+                        extern "C" double ...(double x, double y);
                     }
                     inline double add(double x, double y) {
-                        return __crubit_internal::#thunk_name(x, y);
+                        return __crubit_internal::...(x, y);
                     }
                 }
             );
@@ -1675,7 +1673,7 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C"
-                    fn #thunk_name(x: f64, y: f64) -> f64 {
+                    fn ...(x: f64, y: f64) -> f64 {
                         ::rust_out::add(x, y)
                     }
                 }
@@ -1706,15 +1704,14 @@ pub mod tests {
         test_format_def(test_src, "add", |result| {
             let result = result.expect("Test expects success here");
             assert!(result.cc.includes.is_empty());
-            let thunk_name = quote! { __crubit_thunk__RNvCsgl0yn9Ytt4z_8rust_out3add };
             assert_cc_matches!(
                 result.cc.snippet,
                 quote! {
                     namespace __crubit_internal {
-                        extern "C" double #thunk_name(double x, double y);
+                        extern "C" double ...(double x, double y);
                     }
                     inline double add(double x, double y) {
-                        return __crubit_internal::#thunk_name(x, y);
+                        return __crubit_internal::...(x, y);
                     }
                 }
             );
@@ -1723,7 +1720,7 @@ pub mod tests {
                 quote! {
                     #[no_mangle]
                     extern "C"
-                    fn #thunk_name(x: f64, y: f64) -> f64 {
+                    fn ...(x: f64, y: f64) -> f64 {
                         ::rust_out::add(x, y)
                     }
                 }

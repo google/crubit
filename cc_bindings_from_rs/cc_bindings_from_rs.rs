@@ -360,12 +360,11 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 
 namespace test_crate {
 namespace __crubit_internal {
-extern "C" void
-__crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function();
+extern "C" void __crubit_thunk__RNvCsqz8GFuO9cP_10test_crate15public_function();
 }
 inline void public_function() {
   return __crubit_internal::
-      __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function();
+      __crubit_thunk__RNvCsqz8GFuO9cP_10test_crate15public_function();
 }
 }  // namespace test_crate"#
         );
@@ -380,7 +379,7 @@ inline void public_function() {
 #![allow(improper_ctypes_definitions)]
 
 #[no_mangle]
-extern "C" fn __crubit_thunk__RNvCslKXfKXPWofF_10test_crate15public_function() -> () {
+extern "C" fn __crubit_thunk__RNvCsqz8GFuO9cP_10test_crate15public_function() -> () {
     ::test_crate::public_function()
 }
 "#
