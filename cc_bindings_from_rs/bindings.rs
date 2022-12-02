@@ -105,21 +105,42 @@ where
 }
 
 #[derive(Debug, Default)]
-struct CcSnippet {
-    snippet: TokenStream,
-
-    /// Set of `#include`s that the `snippet` depends on.  For example if
-    /// `snippet` expands to `std::int32_t`, then `includes` need to cover
-    /// the `cstdint`.
+struct CcPrerequisites {
+    /// Set of `#include`s that a `CcSnippet` depends on.  For example if
+    /// `CcSnippet::tokens` expands to `std::int32_t`, then `includes`
+    /// need to cover the `#include <cstdint>`.
     includes: BTreeSet<CcInclude>,
+    // TODO(b/260268230): Cover `definitions` that need to appear before a `CcSnippet`.
+}
+
+impl CcPrerequisites {
+    #[cfg(test)]
+    fn is_empty(&self) -> bool {
+        self.includes.is_empty()
+        // TODO(b/260268230): Cover `definitions`.
+    }
+}
+
+impl AddAssign for CcPrerequisites {
+    fn add_assign(&mut self, mut rhs: Self) {
+        self.includes.append(&mut rhs.includes);
+        // TODO(b/260268230): Cover `definitions`.
+    }
+}
+
+#[derive(Debug, Default)]
+struct CcSnippet {
+    tokens: TokenStream,
+    prereqs: CcPrerequisites,
 }
 
 impl CcSnippet {
-    /// Consumes `self` and returns the main `snippet`, while preserving
-    /// `includes` into the `external_includes` out parameter.
-    fn into_tokens(mut self, external_includes: &mut BTreeSet<CcInclude>) -> TokenStream {
-        external_includes.append(&mut self.includes);
-        self.snippet
+    /// Consumes `self` and returns its `tokens`, while preserving
+    /// its `prereqs` into the `prereqs_accumulator` out parameter.
+    fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites) -> TokenStream {
+        let Self { tokens, prereqs } = self;
+        *prereqs_accumulator += prereqs;
+        tokens
     }
 }
 
@@ -176,7 +197,7 @@ impl FullyQualifiedName {
 }
 
 fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
-    let void = Ok(CcSnippet { snippet: quote! { void }, includes: BTreeSet::new() });
+    let void = Ok(CcSnippet { tokens: quote! { void }, ..Default::default() });
     match ty.kind() {
         ty::TyKind::Never => void,  // `!`
         ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
@@ -192,25 +213,25 @@ fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
 ///     - str: utf-8 verification
 ///     - &T: calling into `crubit::MutRef::unsafe_get_ptr`
 fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream) -> CcSnippet {
-    let mut includes = BTreeSet::new();
+    let mut prereqs = CcPrerequisites::default();
     if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
-        CcSnippet { includes, snippet: value }
+        CcSnippet { prereqs, tokens: value }
     } else {
-        includes.insert(CcInclude::utility());
-        CcSnippet { includes, snippet: quote! { std::move(#value) } }
+        prereqs.includes.insert(CcInclude::utility());
+        CcSnippet { prereqs, tokens: quote! { std::move(#value) } }
     }
 }
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of an `extern "C"` function.
 fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
-    fn cstdint(snippet: TokenStream) -> CcSnippet {
-        let mut includes = BTreeSet::new();
-        includes.insert(CcInclude::cstdint());
-        CcSnippet { snippet, includes }
+    fn cstdint(tokens: TokenStream) -> CcSnippet {
+        let mut prereqs = CcPrerequisites::default();
+        prereqs.includes.insert(CcInclude::cstdint());
+        CcSnippet { tokens, prereqs }
     }
-    fn keyword(snippet: TokenStream) -> CcSnippet {
-        CcSnippet { snippet, includes: BTreeSet::new() }
+    fn keyword(tokens: TokenStream) -> CcSnippet {
+        CcSnippet { tokens, ..Default::default() }
     }
     Ok(match ty.kind() {
         ty::TyKind::Never => {
@@ -298,15 +319,17 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 .with_context(|| format!(
                         "Failed to generate bindings for the definition of `{ty}`"))?;
 
-            let includes = if def_id.krate == LOCAL_CRATE {
-                BTreeSet::new()  // No extra `#include`s needed.
+            let prereqs = if def_id.krate == LOCAL_CRATE {
+                // TODO(b/260268230): Add `def_id` to `prereqs.definitions`.
+                CcPrerequisites::default()
             } else {
+                // TODO(b/258261328): Add `#include` of other crate's `..._cc_api.h`.
                 bail!("Cross-crate dependencies are not supported yet (b/258261328)");
             };
 
             CcSnippet {
-                snippet: FullyQualifiedName::new(tcx, def_id).format_for_cc()?,
-                includes
+                tokens: FullyQualifiedName::new(tcx, def_id).format_for_cc()?,
+                prereqs
             }
         },
         ty::TyKind::Foreign(..)
@@ -411,10 +434,11 @@ struct MixedSnippet {
 
 impl AddAssign for MixedSnippet {
     fn add_assign(&mut self, rhs: Self) {
-        let Self { cc: mut rhs_cc, rs: rhs_rs } = rhs;
+        let Self { cc: CcSnippet { tokens: rhs_cc_tokens, prereqs: rhs_cc_prereqs }, rs: rhs_rs } =
+            rhs;
 
-        self.cc.includes.append(&mut rhs_cc.includes);
-        self.cc.snippet.extend(rhs_cc.snippet);
+        self.cc.prereqs += rhs_cc_prereqs;
+        self.cc.tokens.extend(rhs_cc_tokens);
         self.rs.extend(rhs_rs);
     }
 }
@@ -509,11 +533,11 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
         }
     };
 
-    let mut includes = BTreeSet::new();
-    let cc_snippet = {
+    let mut cc_prereqs = CcPrerequisites::default();
+    let cc_tokens = {
         let ret_type = format_ret_ty_for_cc(tcx, sig.output())
             .context("Error formatting function return type")?
-            .into_tokens(&mut includes);
+            .into_tokens(&mut cc_prereqs);
         let fn_name =
             format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
         let arg_names = tcx
@@ -532,7 +556,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
             .map(|(index, ty)| {
                 Ok(format_ty_for_cc(tcx, *ty)
                     .with_context(|| format!("Error formatting the type of parameter #{index}"))?
-                    .into_tokens(&mut includes))
+                    .into_tokens(&mut cc_prereqs))
             })
             .collect::<Result<Vec<_>>>()?;
         if item_name.as_str() == symbol_name.name {
@@ -549,7 +573,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
                 .clone()
                 .into_iter()
                 .zip(sig.inputs().iter())
-                .map(|(arg, &ty)| format_cc_thunk_arg(tcx, ty, arg).into_tokens(&mut includes))
+                .map(|(arg, &ty)| format_cc_thunk_arg(tcx, ty, arg).into_tokens(&mut cc_prereqs))
                 .collect_vec();
             quote! {
                 namespace __crubit_internal {
@@ -566,7 +590,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
         }
     };
 
-    let rs_snippet = if !needs_thunk {
+    let rs_tokens = if !needs_thunk {
         quote! {}
     } else {
         let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
@@ -598,7 +622,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
             }
         }
     };
-    Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_snippet })
+    Ok(MixedSnippet { cc: CcSnippet { prereqs: cc_prereqs, tokens: cc_tokens }, rs: rs_tokens })
 }
 
 /// Gets the layout of the algebraic data type (an ADT - a struct, an enum, or a
@@ -810,19 +834,21 @@ fn format_adt(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
     let AdtCoreBindings { header, core, cc_assertions, rs_assertions } =
         format_adt_core(tcx, local_def_id.to_def_id())?;
 
-    let includes = BTreeSet::new();
     let data = format_adt_data(tcx, local_def_id);
     let doc_comment = format_doc_comment(tcx, local_def_id);
-    let cc_snippet = quote! {
-        __NEWLINE__ #doc_comment
-        #header {
-            #core
-            #data
-        };
-        #cc_assertions
+    let cc_snippet = CcSnippet {
+        tokens: quote! {
+            __NEWLINE__ #doc_comment
+            #header {
+                #core
+                #data
+            };
+            #cc_assertions
+        },
+        ..Default::default()
     };
 
-    Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_assertions })
+    Ok(MixedSnippet { cc: cc_snippet, rs: rs_assertions })
 }
 
 /// Formats the doc comment associated with the item identified by
@@ -888,7 +914,7 @@ fn format_unsupported_def(
     let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
     let comment = quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ };
 
-    MixedSnippet { cc: CcSnippet { snippet: comment, ..Default::default() }, ..Default::default() }
+    MixedSnippet { cc: CcSnippet { tokens: comment, ..Default::default() }, ..Default::default() }
 }
 
 /// Formats all public items from the Rust crate being compiled.
@@ -915,12 +941,12 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         // unique + ergonomic).
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
-        let CcSnippet { includes, snippet } = cc;
+        let CcSnippet { prereqs: CcPrerequisites { includes }, tokens } = cc;
         let includes = format_cc_includes(&includes);
         quote! {
             #includes __NEWLINE__
             namespace #crate_name {
-                #snippet
+                #tokens
             }
         }
     };
@@ -1245,10 +1271,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" void public_function();
                 }
@@ -1270,10 +1296,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "explicit_unit_return_type", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" void explicit_unit_return_type();
                 }
@@ -1295,10 +1321,10 @@ pub mod tests {
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" void never_returning_function();
                 }
@@ -1317,10 +1343,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -1341,10 +1367,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "public_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double export_name(double x, double y);
@@ -1388,9 +1414,9 @@ pub mod tests {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
             let result = result.expect("Test expects success here");
-            assert!(!result.cc.includes.is_empty());
+            assert!(!result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...( std::int32_t i);
@@ -1424,10 +1450,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "may_throw", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" void may_throw();
                 }
@@ -1450,10 +1476,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "type_aliased_return", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" double type_aliased_return();
                 }
@@ -1473,7 +1499,7 @@ pub mod tests {
           "#;
         test_format_def(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             let doc_comments = [
                 " Outer line doc.",
@@ -1485,7 +1511,7 @@ pub mod tests {
             ]
             .join("\n");
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     __COMMENT__ #doc_comments
                     extern "C" void fn_with_doc_comment_with_unmangled_name();
@@ -1505,11 +1531,11 @@ pub mod tests {
           "#;
         test_format_def(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n\n");
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     __COMMENT__ #doc_comments
                     extern "C" void fn_with_inner_doc_comment_with_unmangled_name();
@@ -1526,11 +1552,11 @@ pub mod tests {
             "#;
         test_format_def(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             let comment = " Doc comment of a function with mangled name.";
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...();
@@ -1672,9 +1698,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "add", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -1719,9 +1745,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "add", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -1768,10 +1794,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" void foo(bool b, double f);
                 }
@@ -1788,10 +1814,10 @@ pub mod tests {
             "#;
         test_format_def(test_src, "some_function", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     extern "C" void some_function(double __param_0);
                 }
@@ -1806,9 +1832,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "foo", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...(
@@ -1848,7 +1874,7 @@ pub mod tests {
         test_format_def(test_src, "func", |result| {
             let result = result.expect("Test expects success here");
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...(::rust_out::S __param_0);
@@ -1931,9 +1957,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "SomeStruct", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     struct alignas(4) SomeStruct final {
                         public:
@@ -1979,9 +2005,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "TupleStruct", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     struct alignas(4) TupleStruct final {
                         public:
@@ -2113,9 +2139,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "SomeEnum", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     struct alignas(1) SomeEnum final {
                         public:
@@ -2165,9 +2191,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "Point", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     struct alignas(4) Point final {
                         public:
@@ -2230,9 +2256,9 @@ pub mod tests {
             "#;
         test_format_def(test_src, "SomeUnion", |result| {
             let result = result.expect("Test expects success here");
-            assert!(result.cc.includes.is_empty());
+            assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     struct alignas(8) SomeUnion final {
                         public:
@@ -2281,7 +2307,7 @@ pub mod tests {
             let result = result.expect("Test expects success here");
             let comment = " Doc for some union.";
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeUnionWithDocs final {
@@ -2305,7 +2331,7 @@ pub mod tests {
             let result = result.expect("Test expects success here");
             let comment = " Doc for some enum. ";
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeEnumWithDocs final {
@@ -2330,7 +2356,7 @@ pub mod tests {
             let result = result.expect("Test expects success here");
             let comment = "Doc for some struct.";
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeStructWithDocs final {
@@ -2352,7 +2378,7 @@ pub mod tests {
             let result = result.expect("Test expects success here");
             let comment = " Doc for some tuple struct.";
             assert_cc_matches!(
-                result.cc.snippet,
+                result.cc.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeTupleStructWithDocs final {
@@ -2392,8 +2418,8 @@ pub mod tests {
         test_ty(&testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
                 let cc_snippet = format_ret_ty_for_cc(tcx, ty).unwrap();
-                assert!(cc_snippet.includes.is_empty());
-                cc_snippet.snippet.to_string()
+                assert!(cc_snippet.prereqs.is_empty());
+                cc_snippet.tokens.to_string()
             };
             let expected = expected.parse::<TokenStream>().unwrap().to_string();
             assert_eq!(actual, expected, "{desc}");
@@ -2450,7 +2476,7 @@ pub mod tests {
         test_ty(&testcases, preamble, |desc, tcx, ty, (expected_snippet, expected_include)| {
             let (actual_snippet, actual_includes) = {
                 let cc_snippet = format_ty_for_cc(tcx, ty).unwrap();
-                (cc_snippet.snippet.to_string(), cc_snippet.includes)
+                (cc_snippet.tokens.to_string(), cc_snippet.prereqs.includes)
             };
 
             let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
@@ -2720,7 +2746,7 @@ pub mod tests {
         test_ty(&testcases, preamble, |desc, tcx, ty, (expected_snippet, expected_include)| {
             let (actual_snippet, actual_includes) = {
                 let cc_snippet = format_cc_thunk_arg(tcx, ty, quote! { value });
-                (cc_snippet.snippet.to_string(), cc_snippet.includes)
+                (cc_snippet.tokens.to_string(), cc_snippet.prereqs.includes)
             };
 
             let expected_snippet = expected_snippet.parse::<TokenStream>().unwrap().to_string();
