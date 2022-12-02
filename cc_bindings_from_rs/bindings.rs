@@ -812,7 +812,9 @@ fn format_adt(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
 
     let includes = BTreeSet::new();
     let data = format_adt_data(tcx, local_def_id);
+    let doc_comment = format_doc_comment(tcx, local_def_id);
     let cc_snippet = quote! {
+        __NEWLINE__ #doc_comment
         #header {
             #core
             #data
@@ -2261,6 +2263,103 @@ pub mod tests {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
                 }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_doc_comments_union() {
+        let test_src = r#"
+            /// Doc for some union.
+            pub union SomeUnionWithDocs {
+                /// Doc for a field in a union.
+                pub i: i32,
+                pub f: f64
+            }
+        "#;
+        test_format_def(test_src, "SomeUnionWithDocs", |result| {
+            let result = result.expect("Test expects success here");
+            let comment = " Doc for some union.";
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    __COMMENT__ #comment
+                    struct ... SomeUnionWithDocs final {
+                        ...
+                    }
+                    ...
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_doc_comments_enum() {
+        let test_src = r#"
+            /** Doc for some enum. */
+            pub enum SomeEnumWithDocs {
+                Kind1(i32),
+            }
+        "#;
+        test_format_def(test_src, "SomeEnumWithDocs", |result| {
+            let result = result.expect("Test expects success here");
+            let comment = " Doc for some enum. ";
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    __COMMENT__ #comment
+                    struct ... SomeEnumWithDocs final {
+                        ...
+                    }
+                    ...
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_doc_comments_struct() {
+        let test_src = r#"
+            #![allow(dead_code)]
+            #[doc = "Doc for some struct."]
+            pub struct SomeStructWithDocs {
+                some_field : i32,
+            }
+        "#;
+        test_format_def(test_src, "SomeStructWithDocs", |result| {
+            let result = result.expect("Test expects success here");
+            let comment = "Doc for some struct.";
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    __COMMENT__ #comment
+                    struct ... SomeStructWithDocs final {
+                        ...
+                    }
+                    ...
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_doc_comments_tuple_struct() {
+        let test_src = r#"
+            /// Doc for some tuple struct.
+            pub struct SomeTupleStructWithDocs(i32);
+        "#;
+        test_format_def(test_src, "SomeTupleStructWithDocs", |result| {
+            let result = result.expect("Test expects success here");
+            let comment = " Doc for some tuple struct.";
+            assert_cc_matches!(
+                result.cc.snippet,
+                quote! {
+                    __COMMENT__ #comment
+                    struct ... SomeTupleStructWithDocs final {
+                        ...
+                    }
+                    ...
+                },
             );
         });
     }
