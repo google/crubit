@@ -434,9 +434,9 @@ impl Sum for MixedSnippet {
     }
 }
 
-/// Formats a function with the given `def_id`.
+/// Formats a function with the given `local_def_id`.
 ///
-/// Will panic if `def_id`
+/// Will panic if `local_def_id`
 /// - is invalid
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
@@ -501,21 +501,11 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
     };
 
     let doc_comment = {
-        let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
-        let doc_comment: String = tcx
-            .hir()
-            .attrs(hir_id)
-            .iter()
-            .filter_map(|attr| match &attr.doc_str() {
-                None => None,
-                Some(symbol) => Some(symbol.as_str().to_owned()),
-            })
-            .collect_vec()
-            .join("\n");
+        let doc_comment = format_doc_comment(tcx, local_def_id);
         if doc_comment.is_empty() {
-            quote! {}
+            quote!{}
         } else {
-            quote! { __NEWLINE__ __COMMENT__ #doc_comment }
+            quote! { __NEWLINE__ #doc_comment }
         }
     };
 
@@ -831,6 +821,28 @@ fn format_adt(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
     };
 
     Ok(MixedSnippet { cc: CcSnippet { includes, snippet: cc_snippet }, rs: rs_assertions })
+}
+
+/// Formats the doc comment associated with the item identified by
+/// `local_def_id`.
+/// If there is no associated doc comment, an empty `TokenStream` is returned.
+fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
+    let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
+    let doc_comment: String = tcx
+        .hir()
+        .attrs(hir_id)
+        .iter()
+        .filter_map(|attr| match &attr.doc_str() {
+            None => None,
+            Some(symbol) => Some(symbol.as_str().to_owned()),
+        })
+        .collect_vec()
+        .join("\n");
+    if doc_comment.is_empty() {
+        quote! {}
+    } else {
+        quote! { __COMMENT__ #doc_comment}
+    }
 }
 
 /// Formats a Rust item idenfied by `def_id`.
