@@ -1432,7 +1432,8 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
 }
 
 TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
-  // Struct with 2 arguments with nullable second argument.
+  // Class template specialization with 2 arguments with nullable second
+  // argument.
   checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
@@ -1445,7 +1446,8 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with 5 arguments with interleaved nullable/nonnull/unknown.
+  // Class template specialization with 5 arguments with interleaved
+  // nullable/nonnull/unknown.
   checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2, typename T3, typename T4>
     struct Struct5Arg {
@@ -1466,7 +1468,8 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with 5 arguments with interleaved nullable/nonnull/unknown/const.
+  // Class template specialization with 5 arguments with interleaved
+  // nullable/nonnull/unknown/const.
   checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2, typename T3, typename T4>
     struct Struct5Arg {
@@ -1487,7 +1490,7 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with interleaved int and typename arguments.
+  // Class template specialization with interleaved int and typename arguments.
   checkDiagnostics(R"cc(
     template <typename T0, int I1, typename T2, int T3, typename T4>
     struct Struct5Arg {
@@ -1502,8 +1505,8 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with interleaved int and typename arguments where some arguments are
-  // const.
+  // Class template specialization with interleaved int and typename arguments
+  // where some arguments are const.
   checkDiagnostics(R"cc(
     template <typename T0, int I1, typename T2, int T3, typename T4>
     struct Struct5Arg {
@@ -1520,8 +1523,8 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with interleaved int and typename arguments where all type arguments
-  // are const
+  // Class template specialization with interleaved int and typename arguments
+  // where all type arguments are const
   checkDiagnostics(R"cc(
     template <typename T0, int I1, typename T2, int T3, typename T4>
     struct Struct5Arg {
@@ -1538,7 +1541,8 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct template that uses another struct template in a member variable.
+  // Class template specialization that uses another class template
+  // specialization as a member variable.
   checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
@@ -1551,6 +1555,7 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
       Struct2Arg<TN1, Struct2Arg<TN0, TN1>>* arg0;
       Struct2Arg<TN1, Struct2Arg<TN0, TN1>>* _Nullable arg1;
     };
+
     void target(Struct2ArgNested<int* _Nonnull, double* _Nullable> p) {
       *p.arg0;
       *p.arg1;  // [[unsafe]]
@@ -1564,7 +1569,7 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
 }
 
 TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
-  // Struct with one argument initialised as _Nullable.
+  // Class template specialization with one argument initialised as _Nullable.
   checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
@@ -1584,7 +1589,7 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with one argument initialised as _Nonnull.
+  // Class template specialization with one argument initialised as _Nonnull.
   checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
@@ -1604,7 +1609,8 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with one argument initialised without annotation.
+  // Class template specialization with one argument initialised without
+  // annotation.
   checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
@@ -1624,7 +1630,7 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with multiple arguments.
+  // Class template specialization with multiple arguments.
   checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2>
     struct Struct3Arg {
@@ -1639,8 +1645,8 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with multiple arguments and methods whose return types are pointers
-  // to those arguments.
+  // Class template specialization with multiple arguments and methods whose
+  // return types are pointers to those arguments.
   checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2>
     struct Struct3Arg {
@@ -1658,7 +1664,8 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with int template parameters and with type as first argument.
+  // Class template specialization with int template parameters and with type as
+  // first argument.
   checkDiagnostics(R"cc(
     template <typename T0, int I1, int I2>
     struct Struct3ArgWithInt {
@@ -1669,7 +1676,8 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with int template parameters and with type as second argument.
+  // Class template specialization with int template parameters and with type as
+  // second argument.
   checkDiagnostics(R"cc(
     template <int I0, typename T1, int I2>
     struct Struct3ArgWithInt {
@@ -1680,7 +1688,8 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     }
   )cc");
 
-  // Struct with interleaved int and type template parameters.
+  // Class template specialization with interleaved int and type template
+  // parameters.
   checkDiagnostics(R"cc(
     template <int I0, typename T1, int I2, typename T3, int I4, typename T5>
     struct Struct6ArgWithInt {
