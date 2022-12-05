@@ -182,6 +182,7 @@ struct FullyQualifiedName {
 }
 
 impl FullyQualifiedName {
+    // TODO(b/259724276): This function's results should be memoized.
     fn new(tcx: TyCtxt, def_id: DefId) -> Self {
         fn get_symbol(path_component: DisambiguatedDefPathData) -> Symbol {
             match path_component.data {
@@ -245,6 +246,8 @@ fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
 /// spelled in a C++ declaration of an `extern "C"` function.
+//
+// TODO(b/259724276): This function's results should be memoized.
 fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
     fn cstdint(tokens: TokenStream) -> CcSnippet {
         let mut prereqs = CcPrerequisites::default();
@@ -399,6 +402,8 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
 /// distinct, separate crate, the returned `TokenStream` uses crate-qualified
 /// names whenever necessary - for example: `target_crate::SomeStruct` rather
 /// than just `SomeStruct`.
+//
+// TODO(b/259724276): This function's results should be memoized.
 fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
     Ok(match ty.kind() {
         ty::TyKind::Bool
@@ -727,8 +732,7 @@ struct AdtCoreBindings {
 /// `format_ty`).  The 2nd case is needed for ADTs defined in any crate - this
 /// is why the `def_id` parameter is a DefId rather than LocalDefId.
 //
-// TODO(b/259724276): Memoize `format_adt_core` calls - either via `salsa`, or
-// (if it doesn't work) then falling back to manually authored caching code.
+// TODO(b/259724276): This function's results should be memoized.
 fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     // TODO(b/259749095): Support non-empty set of generic parameters.
     let param_env = ty::ParamEnv::empty();
