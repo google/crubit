@@ -19,7 +19,7 @@ use rustc_span::symbol::Symbol;
 use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::Sum;
 use std::ops::{Add, AddAssign};
 
@@ -949,7 +949,7 @@ fn format_unsupported_def(
 
 /// Formats all public items from the Rust crate being compiled.
 fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
-    let MixedSnippet{ cc, rs } = tcx
+    let mut bindings: HashMap<LocalDefId, MixedSnippet> = tcx
         .hir()
         .items()
         .filter_map(|item_id| {
@@ -957,13 +957,39 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
             if !tcx.local_visibility(def_id).is_public() {
                 None
             } else {
-                Some(
-                    format_def(tcx, def_id)
-                        .unwrap_or_else(|err| format_unsupported_def(tcx, def_id, err)),
-                )
+                let snippet = format_def(tcx, def_id)
+                        .unwrap_or_else(|err| format_unsupported_def(tcx, def_id, err));
+                Some((def_id, snippet))
             }
         })
-        .sum();
+        .collect();
+
+    // Find the order of `bindings` that 1) meets the requirements of
+    // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
+    // `bindings` in the same order as the source order of the Rust APIs.
+    let toposort::TopoSortResult { ordered, failed } =
+        {
+            let nodes = bindings.keys().copied();
+            let deps =
+                bindings.iter().flat_map(|(def_id, snippet)| {
+                    let def_id = def_id.clone();
+                    snippet.cc.prereqs.defs.iter().copied().map(move |predecessor| {
+                        toposort::Dependency { predecessor, successor: def_id }
+                    })
+                });
+            let preferred_order =
+                |id1: &LocalDefId, id2: &LocalDefId| tcx.def_span(*id1).cmp(&tcx.def_span(*id2));
+            toposort::toposort(nodes, deps, preferred_order)
+        };
+
+    let MixedSnippet { cc, rs } = {
+        let ordered = ordered.into_iter().map(|def_id| bindings.remove(&def_id).unwrap());
+        let failed = failed.into_iter().map(|def_id| {
+            // TODO(b/260725687): Add test coverage for the error condition below.
+            format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle"))
+        });
+        ordered.chain(failed).sum()
+    };
 
     let h_body = {
         // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
@@ -971,7 +997,6 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         // unique + ergonomic).
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
-        // TODO(b/260268230): Use `CcPrerequisites::defs` to reorder the bindings.
         let CcSnippet { prereqs: CcPrerequisites { includes, .. }, tokens } = cc;
         let includes = format_cc_includes(&includes);
         quote! {
@@ -1205,6 +1230,50 @@ pub mod tests {
                             std::intptr_t d,
                             std::uint64_t u);
                     }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_generated_bindings_prereq_defs_require_different_order() {
+        let test_src = r#"
+                // In the generated bindings `f` needs to come *after* `S`.
+                pub fn f(s: S) -> bool { s.0 }
+                pub struct S(bool);
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace rust_out {
+                        struct ... S final {
+                            // No point replicating test coverage of
+                            // `test_format_def_struct_with_fields`.
+                            ...
+                        };
+                        static_assert(sizeof(S) == ..., ...);
+                        static_assert(alignof(S) == ..., ...);
+
+                        ...
+
+                        namespace __crubit_internal {
+                            extern "C" bool ...(::rust_out::S s);
+                        }
+                        inline bool f(::rust_out::S s) { ... }
+                    }  // namespace rust_out
+                }
+            );
+            assert_rs_matches!(
+                bindings.rs_body,
+                quote! {
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::S>() == ...);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::S>() == ...);
+                    ...
+                    #[no_mangle]
+                    extern "C"
+                    fn ...(s: ::rust_out::S) -> bool { ...  }
                 }
             );
         });

@@ -3,6 +3,7 @@
 load(
     "@rules_rust//rust:defs.bzl",
     "rust_binary",
+    "rust_library",
     "rust_test",
 )
 
@@ -31,6 +32,7 @@ rust_binary(
         "notap",
     ],
     deps = [
+        ":toposort",
         "//common:code_gen_utils",
         "//common:rust_allocator_shims",
         "//common:token_stream_printer",
@@ -98,4 +100,14 @@ sh_test(
         "//util/shell/gbash",
         "//util/shell/gbash:unit",
     ],
+)
+
+rust_library(
+    name = "toposort",
+    srcs = ["toposort.rs"],
+)
+
+rust_test(
+    name = "toposort_test",
+    crate = ":toposort",
 )
