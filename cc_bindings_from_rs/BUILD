@@ -74,6 +74,7 @@ rust_test(
     ],
     deps = [
         "//common:token_stream_matchers",
+        "@crate_index//:regex",
         "@crate_index//:tempfile",
         "@rules_rust//tools/runfiles",
     ],

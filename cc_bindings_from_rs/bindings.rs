@@ -1825,6 +1825,9 @@ pub mod tests {
                 pub fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
         test_format_def(test_src, "add", |result| {
+            // TODO(b/261074843): Re-add thunk name verification once we are using stable name
+            // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
+            // + manual review and tweaks.)
             let result = result.expect("Test expects success here");
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -3000,7 +3003,6 @@ pub mod tests {
     {
         use rustc_session::config::{
             CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes,
-            SymbolManglingVersion,
         };
 
         const TEST_FILENAME: &str = "crubit_unittests.rs";
@@ -3025,14 +3027,6 @@ pub mod tests {
                 // As pointed out in `panics_and_exceptions.md` the tool only supports `-C
                 // panic=abort` and therefore we explicitly opt into this config for tests.
                 panic: Some(rustc_target::spec::PanicStrategy::Abort),
-                // To simplify how unit tests are authored we force a specific mangling algorithm -
-                // this way the tests can hardcode mangled-name-depdendent expectations (e.g. names
-                // of thunks expected in test output).  The value below has been chosen based on
-                // <internal link>/llvm-coverage-instrumentation.html#rust-symbol-mangling which
-                // points out that `v0` mangling can be used to "ensure consistent and reversible
-                // name mangling" in situations when "mangled names must be consistent across
-                // compilations".
-                symbol_mangling_version: Some(SymbolManglingVersion::V0),
                 ..Default::default()
             },
             ..Default::default()

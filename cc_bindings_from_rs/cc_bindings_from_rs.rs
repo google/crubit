@@ -221,6 +221,7 @@ mod tests {
 
     use crate::bindings::tests::get_sysroot_for_testing;
     use itertools::Itertools;
+    use regex::{Regex, RegexBuilder};
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
     use token_stream_printer::RUSTFMT_EXE_PATH_FOR_TESTING;
@@ -329,9 +330,6 @@ mod tests {
             args.extend([
                 "--".to_string(),
                 format!("--codegen=panic={}", &self.panic_mechanism),
-                // See comments about `SymbolManglingVersion::V0`in `test::run_compiler` in
-                // `bindings.rs` for rationale behind using `symbol-mangling-version=v0`.
-                "--codegen=symbol-mangling-version=v0".to_string(),
                 "--crate-type=lib".to_string(),
                 format!("--sysroot={}", get_sysroot_for_testing().display()),
                 rs_input_path.display().to_string(),
@@ -344,6 +342,51 @@ mod tests {
         }
     }
 
+    // TODO(b/261074843): Go back to exact string matching (and hardcoding thunk
+    // names) once we are using stable name mangling (which may be coming in Q1
+    // 2023).  ("Go back" = more or less revert cl/492292910 + manual review and
+    // tweaks.)
+    fn assert_body_matches(actual: &str, expected: &str) {
+        fn build_regex(expected_body: &str) -> Regex {
+            let patt = regex::escape(expected_body);
+            let patt = format!("^{patt}"); // Not always matching $ enables prefix checks below.
+            let patt = patt.replace("ANY_IDENTIFIER_CHARACTERS", "[a-zA-Z0-9_]*");
+            RegexBuilder::new(&patt).multi_line(false).dot_matches_new_line(false).build().unwrap()
+        }
+        let is_whole_h_body_matching = {
+            match build_regex(expected).shortest_match(&actual) {
+                None => false,
+                Some(len) => len == actual.len(),
+            }
+        };
+        if !is_whole_h_body_matching {
+            let longest_matching_expectation_len = (0..=expected.len())
+                .rev() // Iterating from longest to shortest prefix
+                .filter(|&len| {
+                    expected
+                        .get(0..len) // Only valid UTF-8 boundaries
+                        .filter(|prefix| build_regex(prefix).is_match(&actual))
+                        .is_some()
+                })
+                .next() // Getting the first regex that matched
+                .unwrap(); // We must get a match at least for 0-length expected body
+            let longest_matching_regex =
+                build_regex(&expected[0..longest_matching_expectation_len]);
+            let len_of_longest_match = longest_matching_regex.shortest_match(&actual).unwrap(); // Again - we must get a match at least for 0-length expected body
+            let mut marked_body = actual.to_string();
+            marked_body.insert_str(len_of_longest_match, "!!!>>>");
+            let mut marked_pattern = expected.to_string();
+            marked_pattern.insert_str(longest_matching_expectation_len, "!!!>>>");
+            panic!(
+                "h_body didn't match expectations:\n\
+                    #### Actual body (first mismatch follows the \"!!!>>>\" marker):\n\
+                    {marked_body}\n\
+                    #### Mismatched pattern (mismatch follows the \"!!!>>>\" marker):\n\
+                    {marked_pattern}"
+            );
+        }
+    }
+
     #[test]
     fn test_happy_path() -> anyhow::Result<()> {
         let test_args = TestArgs::default_args()?;
@@ -351,38 +394,39 @@ mod tests {
 
         assert!(test_result.h_path.exists());
         let h_body = std::fs::read_to_string(&test_result.h_path)?;
-        assert_eq!(
-            h_body,
-r#"// Automatically @generated C++ bindings for the following Rust crate:
+        assert_body_matches(
+            &h_body,
+            r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
 #pragma once
 
 namespace test_crate {
 namespace __crubit_internal {
-extern "C" void __crubit_thunk__RNvCsqz8GFuO9cP_10test_crate15public_function();
+extern "C" void
+__crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
 inline void public_function() {
   return __crubit_internal::
-      __crubit_thunk__RNvCsqz8GFuO9cP_10test_crate15public_function();
+      __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
-}  // namespace test_crate"#
+}  // namespace test_crate"#,
         );
 
         assert!(test_result.rs_path.exists());
         let rs_body = std::fs::read_to_string(&test_result.rs_path)?;
-        assert_eq!(
-            rs_body,
+        assert_body_matches(
+            &rs_body,
             r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
 #![allow(improper_ctypes_definitions)]
 
 #[no_mangle]
-extern "C" fn __crubit_thunk__RNvCsqz8GFuO9cP_10test_crate15public_function() -> () {
+extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS() -> () {
     ::test_crate::public_function()
 }
-"#
+"#,
         );
         Ok(())
     }
