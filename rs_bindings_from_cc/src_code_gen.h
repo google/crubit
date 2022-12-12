@@ -24,11 +24,10 @@ struct Bindings {
 };
 
 // Generates bindings from the given `IR`.
-absl::StatusOr<Bindings> GenerateBindings(const IR& ir,
-                                          absl::string_view crubit_support_path,
-                                          absl::string_view rustfmt_exe_path,
-                                          absl::string_view rustfmt_config_path,
-                                          bool generate_error_report);
+absl::StatusOr<Bindings> GenerateBindings(
+    const IR& ir, absl::string_view crubit_support_path,
+    absl::string_view clang_format_exe_path, absl::string_view rustfmt_exe_path,
+    absl::string_view rustfmt_config_path, bool generate_error_report);
 
 }  // namespace crubit
 

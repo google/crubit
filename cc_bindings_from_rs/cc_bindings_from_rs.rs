@@ -163,7 +163,8 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
     let bindings = GeneratedBindings::generate(tcx)?;
 
     {
-        let h_body = cc_tokens_to_formatted_string(bindings.h_body)?;
+        let h_body =
+            cc_tokens_to_formatted_string(bindings.h_body, &cmdline.clang_format_exe_path)?;
         write_file(&cmdline.h_out, &h_body)?;
     }
 
@@ -179,7 +180,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
 
 /// Main entrypoint that (unlike `main`) doesn't do any intitializations that
 /// should only happen once for the binary (e.g. it doesn't call
-/// `install_ice_hook`) and therefore can be used from the tests module below.
+/// `init_env_logger`) and therefore can be used from the tests module below.
 fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
     let cmdline = Cmdline::new(args)?;
     bindings_driver::run_after_analysis_and_stop(&cmdline.rustc_args, |tcx| {
@@ -224,7 +225,7 @@ mod tests {
     use regex::{Regex, RegexBuilder};
     use std::path::PathBuf;
     use tempfile::{tempdir, TempDir};
-    use token_stream_printer::RUSTFMT_EXE_PATH_FOR_TESTING;
+    use token_stream_printer::{CLANG_FORMAT_EXE_PATH_FOR_TESTING, RUSTFMT_EXE_PATH_FOR_TESTING};
 
     /// Test data builder (see also
     /// https://testing.googleblog.com/2018/02/testing-on-toilet-cleanly-create-test.html).
@@ -324,6 +325,7 @@ mod tests {
                 "cc_bindings_from_rs_unittest_executable".to_string(),
                 format!("--h-out={}", h_path.display()),
                 format!("--rs-out={}", rs_path.display()),
+                format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH_FOR_TESTING}"),
                 format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH_FOR_TESTING}"),
             ];
             args.extend(self.extra_crubit_args.iter().cloned());

@@ -59,12 +59,15 @@ pub struct FfiBindings {
 pub unsafe extern "C" fn GenerateBindingsImpl(
     json: FfiU8Slice,
     crubit_support_path: FfiU8Slice,
+    clang_format_exe_path: FfiU8Slice,
     rustfmt_exe_path: FfiU8Slice,
     rustfmt_config_path: FfiU8Slice,
     generate_error_report: bool,
 ) -> FfiBindings {
     let json: &[u8] = json.as_slice();
     let crubit_support_path: &str = std::str::from_utf8(crubit_support_path.as_slice()).unwrap();
+    let clang_format_exe_path: OsString =
+        std::str::from_utf8(clang_format_exe_path.as_slice()).unwrap().into();
     let rustfmt_exe_path: OsString =
         std::str::from_utf8(rustfmt_exe_path.as_slice()).unwrap().into();
     let rustfmt_config_path: OsString =
@@ -83,6 +86,7 @@ pub unsafe extern "C" fn GenerateBindingsImpl(
         let Bindings { rs_api, rs_api_impl } = generate_bindings(
             json,
             crubit_support_path,
+            &clang_format_exe_path,
             &rustfmt_exe_path,
             &rustfmt_config_path,
             errors,
@@ -148,6 +152,7 @@ struct BindingsTokens {
 fn generate_bindings(
     json: &[u8],
     crubit_support_path: &str,
+    clang_format_exe_path: &OsStr,
     rustfmt_exe_path: &OsStr,
     rustfmt_config_path: &OsStr,
     errors: &mut dyn ErrorReporting,
@@ -166,7 +171,7 @@ fn generate_bindings(
         let rustfmt_config = RustfmtConfig::new(rustfmt_exe_path, rustfmt_config_path);
         rs_tokens_to_formatted_string(rs_api, &rustfmt_config)?
     };
-    let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl)?;
+    let rs_api_impl = cc_tokens_to_formatted_string(rs_api_impl, Path::new(clang_format_exe_path))?;
 
     // Add top-level comments that help identify where the generated bindings came
     // from.

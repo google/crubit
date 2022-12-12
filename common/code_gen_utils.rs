@@ -258,7 +258,7 @@ pub mod tests {
     use super::*;
     use quote::quote;
     use token_stream_matchers::{assert_cc_matches, assert_rs_matches};
-    use token_stream_printer::cc_tokens_to_formatted_string;
+    use token_stream_printer::cc_tokens_to_formatted_string_for_tests;
 
     #[test]
     fn test_format_cc_ident_basic() {
@@ -421,7 +421,8 @@ pub mod tests {
         .collect::<BTreeSet<_>>();
 
         let tokens = format_cc_includes(&includes);
-        let actual = cc_tokens_to_formatted_string(quote! { __NEWLINE__ #tokens }).unwrap();
+        let actual =
+            cc_tokens_to_formatted_string_for_tests(quote! { __NEWLINE__ #tokens }).unwrap();
         assert_eq!(
             actual,
             r#"

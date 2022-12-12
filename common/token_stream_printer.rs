@@ -3,9 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{bail, Result};
-use ffi_types::{FfiU8Slice, FfiU8SliceBox};
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
@@ -24,6 +23,9 @@ pub struct RustfmtConfig {
 
 pub const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
     "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
+
+pub const CLANG_FORMAT_EXE_PATH_FOR_TESTING: &str =
+    "third_party/crosstool/google3_users/clang-format";
 
 impl RustfmtConfig {
     /// Creates a config that will invoke `rustfmt` at the given
@@ -80,26 +82,28 @@ pub fn rs_tokens_to_formatted_string(
 
 /// Like `rs_tokens_to_formatted_string`, but always using a Crubit-internal,
 /// default rustfmt config.  This should only be called by tests - product code
-/// should support custom `rustfmt.toml`.
+/// should support custom `rustfmt.toml` and take the path to `rustfmt` binary
+/// as a cmdline argument.
 pub fn rs_tokens_to_formatted_string_for_tests(input: TokenStream) -> Result<String> {
     rs_tokens_to_formatted_string(input, &RustfmtConfig::for_testing())
 }
 
-extern "C" {
-    fn Crubit_ClangFormat(cc_source_text: FfiU8Slice) -> FfiU8SliceBox;
+/// Like `tokens_to_string` but also runs the result through `clang-format`.
+pub fn cc_tokens_to_formatted_string(
+    tokens: TokenStream,
+    clang_format_exe_path: &Path,
+) -> Result<String> {
+    clang_format(tokens_to_string(tokens)?, clang_format_exe_path)
 }
 
-/// Like `tokens_to_string` but also runs the result through `clang::format`.
-pub fn cc_tokens_to_formatted_string(tokens: TokenStream) -> Result<String> {
-    let mut raw_string: String = tokens_to_string(tokens)?;
-    raw_string.push('\0');
-    let formatted_string: String = {
-        let input = FfiU8Slice::from_slice(raw_string.as_bytes());
-        let output = unsafe { Crubit_ClangFormat(input) };
-        String::from_utf8(FfiU8SliceBox::into_boxed_slice(output).to_vec())?
-    };
-    Ok(formatted_string)
+/// Like `cc_tokens_to_formatted_string`, but always using a hardcoded path to
+/// where the `clang-format` binary is in Crubit's test environment.  This
+/// should only be called by tests - product code should take the path to the
+/// `clang-format` binary as a cmdline argument.
+pub fn cc_tokens_to_formatted_string_for_tests(tokens: TokenStream) -> Result<String> {
+    clang_format(tokens_to_string(tokens)?, Path::new(CLANG_FORMAT_EXE_PATH_FOR_TESTING))
 }
+
 
 /// Produces source code out of the token stream.
 ///
@@ -197,26 +201,49 @@ fn is_ident_or_literal(tt: &TokenTree) -> bool {
     }
 }
 
-fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
-    let mut child = Command::new(&config.exe_path)
-        .args(config.cmdline_args.iter())
+fn pipe_string_through_process<'a>(
+    input: String,
+    exe_name: &str,
+    exe_path: &Path,
+    args: impl IntoIterator<Item = &'a OsStr>,
+) -> Result<String> {
+    let mut child = Command::new(exe_path)
+        .args(args.into_iter())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .unwrap_or_else(|_| panic!("Failed to spawn rustfmt at {:?}", config.exe_path));
+        .unwrap_or_else(|_| panic!("Failed to spawn {exe_name} at {exe_path:?}"));
 
-    let mut stdin = child.stdin.take().expect("Failed to open rustfmt stdin");
+    let mut stdin = child.stdin.take().expect("Failed to open {exe_name} stdin");
     std::thread::spawn(move || {
-        stdin.write_all(input.as_bytes()).expect("Failed to write to rustfmt stdin");
+        stdin.write_all(input.as_bytes()).expect("Failed to write to {exe_name} stdin");
     });
-    let output = child.wait_with_output().expect("Failed to read rustfmt stdout");
+    let output = child.wait_with_output().expect("Failed to read {exe_name} stdout");
 
     if !output.status.success() {
-        bail!("rustfmt reported an error: {}", String::from_utf8_lossy(&output.stderr));
+        bail!("{exe_name} reported an error: {}", String::from_utf8_lossy(&output.stderr));
     }
 
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+fn rustfmt(input: String, config: &RustfmtConfig) -> Result<String> {
+    pipe_string_through_process(
+        input,
+        "rustfmt",
+        &config.exe_path,
+        config.cmdline_args.iter().map(OsString::as_os_str),
+    )
+}
+
+fn clang_format(input: String, clang_format_exe_path: &Path) -> Result<String> {
+    pipe_string_through_process(
+        input,
+        "clang-format",
+        clang_format_exe_path,
+        [OsStr::new("--style=google")],
+    )
 }
 
 #[cfg(test)]
@@ -420,14 +447,14 @@ fn foo(
     }
 
     #[test]
-    fn test_cc_tokens_to_formatted_string() {
+    fn test_cc_tokens_to_formatted_string_for_tests() {
         let input = quote! {
             namespace ns {
             void foo() {}
             void bar() {}
             }
         };
-        let output = cc_tokens_to_formatted_string(input).unwrap();
+        let output = cc_tokens_to_formatted_string_for_tests(input).unwrap();
         assert_eq!(
             output,
             r#"namespace ns {

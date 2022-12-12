@@ -46,12 +46,13 @@ def _generate_bindings(ctx, basename, inputs, rustc_args):
     crubit_args = ctx.actions.args()
     crubit_args.add("--h-out", h_out_file)
     crubit_args.add("--rs-out", rs_out_file)
+    crubit_args.add("--clang-format-exe-path", ctx.file._clang_format)
     crubit_args.add("--rustfmt-exe-path", ctx.file._rustfmt)
     crubit_args.add("--rustfmt-config-path", ctx.file._rustfmt_cfg)
 
     ctx.actions.run(
         outputs = [h_out_file, rs_out_file],
-        inputs = inputs + [ctx.file._rustfmt, ctx.file._rustfmt_cfg],
+        inputs = inputs + [ctx.file._clang_format, ctx.file._rustfmt, ctx.file._rustfmt_cfg],
         executable = ctx.executable._cc_bindings_from_rs_tool,
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
@@ -166,6 +167,12 @@ cc_bindings_from_rust = rule(
         ),
         "_cc_toolchain": attr.label(
             default = "@bazel_tools//tools/cpp:current_cc_toolchain",
+        ),
+        "_clang_format": attr.label(
+            default = "//third_party/crosstool/google3_users:stable_clang-format",
+            executable = True,
+            allow_single_file = True,
+            cfg = "exec",
         ),
         "_process_wrapper": attr.label(
             default = "@rules_rust//util/process_wrapper",

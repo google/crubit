@@ -61,10 +61,12 @@ def generate_bindings(
         namespaces_output.path,
         "--crubit_support_path",
         "rs_bindings_from_cc/support",
+        "--clang_format_exe_path",
+        ctx.file._clang_format.path,
         "--rustfmt_exe_path",
-        "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt",
+        ctx.file._rustfmt.path,
         "--rustfmt_config_path",
-        "nowhere/rustfmt.toml",
+        ctx.file._rustfmt_cfg.path,
     ]
     if ctx.attr._generate_error_report[BuildSettingInfo].value:
         error_report_output = ctx.actions.declare_file(ctx.label.name + "_rust_api_error_report.json")
@@ -114,6 +116,7 @@ def generate_bindings(
         grep_includes = ctx.file._grep_includes,
         additional_inputs = depset(
             direct = [
+                ctx.executable._clang_format,
                 ctx.executable._rustfmt,
                 ctx.executable._generator,
             ] + ctx.files._rustfmt_cfg + extra_rs_srcs,

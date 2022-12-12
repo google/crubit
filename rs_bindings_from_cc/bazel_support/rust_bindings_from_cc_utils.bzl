@@ -133,6 +133,12 @@ bindings_attrs = {
         default = Label("@bazel_tools//tools/cpp:grep-includes"),
         cfg = "exec",
     ),
+    "_clang_format": attr.label(
+        default = "//third_party/crosstool/google3_users:stable_clang-format",
+        executable = True,
+        allow_single_file = True,
+        cfg = "exec",
+    ),
     "_rustfmt": attr.label(
         default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
         executable = True,

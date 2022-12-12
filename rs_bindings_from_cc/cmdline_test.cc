@@ -27,7 +27,7 @@ absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
                                     const std::string& targets_and_headers) {
   return Cmdline::CreateForTesting(
       "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-      "rustfmt_exe_path", "rustfmt_config_path",
+      "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
 
       /*do_nothing=*/false, std::move(public_headers),
       std::move(targets_and_headers),
@@ -44,7 +44,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "rustfmt_exe_path", "rustfmt_config_path",
+          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
           /* do_nothing= */ false, {"h1"},
           R"([{"t": "t1", "h": ["h1", "h2"]}])", {"extra_file.rs"},
           {"scan_for_instantiations.rs"}, "instantiations_out",
@@ -54,6 +54,7 @@ TEST(CmdlineTest, BasicCorrectInput) {
   EXPECT_EQ(cmdline.ir_out(), "ir_out");
   EXPECT_EQ(cmdline.namespaces_out(), "namespaces_out");
   EXPECT_EQ(cmdline.crubit_support_path(), "crubit_support_path");
+  EXPECT_EQ(cmdline.clang_format_exe_path(), "clang_format_exe_path");
   EXPECT_EQ(cmdline.rustfmt_exe_path(), "rustfmt_exe_path");
   EXPECT_EQ(cmdline.rustfmt_config_path(), "rustfmt_config_path");
   EXPECT_EQ(cmdline.instantiations_out(), "instantiations_out");
@@ -205,7 +206,7 @@ TEST(CmdlineTest, InstantiationsOutEmpty) {
   ASSERT_THAT(
       (Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "rustfmt_exe_path", "rustfmt_config_path",
+          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {}, {"lib.rs"},
           /* instantiations_out= */ "", "error_report_out")),
@@ -223,7 +224,7 @@ TEST(CmdlineTest, RustSourcesEmpty) {
   ASSERT_THAT(
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "rustfmt_exe_path", "rustfmt_config_path",
+          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {}, "instantiations_out",
@@ -242,7 +243,8 @@ TEST(CmdlineTest, CcOutEmpty) {
   ASSERT_THAT(
       Cmdline::CreateForTesting(
           /* cc_out= */ "", "rs_out", "ir_out", "namespaces_out",
-          "crubit_support_path", "rustfmt_exe_path", "rustfmt_config_path",
+          "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+          "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
@@ -258,7 +260,8 @@ TEST(CmdlineTest, RsOutEmpty) {
   ASSERT_THAT(
       Cmdline::CreateForTesting(
           "cc_out", /* rs_out= */ "", "namespaces_out", "ir_out",
-          "crubit_support_path", "rustfmt_exe_path", "rustfmt_config_path",
+          "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+          "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {},
@@ -273,11 +276,29 @@ TEST(CmdlineTest, IrOutEmpty) {
   ])";
   ASSERT_OK(Cmdline::CreateForTesting(
       "cc_out", "rs_out", /* ir_out= */ "", "namespaces_out",
-      "crubit_support_path", "rustfmt_exe_path", "rustfmt_config_path",
+      "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+      "rustfmt_config_path",
       /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
       /* extra_rs_srcs= */ {},
       /* srcs_to_scan_for_instantiations= */ {},
       /* instantiations_out= */ "", "error_report_out"));
+}
+
+TEST(CmdlineTest, ClangFormatExePathEmpty) {
+  constexpr absl::string_view kTargetsAndHeaders = R"([
+    {"t": "target1", "h": ["a.h", "b.h"]}
+  ])";
+  ASSERT_THAT(
+      Cmdline::CreateForTesting(
+          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          /* clang_format_exe_path= */ "", "rustfmt_exe_path",
+          "rustfmt_config_path",
+          /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
+          /* extra_rs_srcs= */ {},
+          /* srcs_to_scan_for_instantiations= */ {},
+          /* instantiations_out= */ "", "error_report_out"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("please specify --clang_format_exe_path")));
 }
 
 TEST(CmdlineTest, RustfmtExePathEmpty) {
@@ -287,6 +308,7 @@ TEST(CmdlineTest, RustfmtExePathEmpty) {
   ASSERT_THAT(
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          "clang_format_exe_path",
           /* rustfmt_exe_path= */ "", "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},

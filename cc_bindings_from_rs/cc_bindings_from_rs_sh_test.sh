@@ -20,6 +20,7 @@ function delete_all_test_outputs() {
   rm -rf "$STDERR_PATH" "$STDOUT_PATH" "$H_OUT_PATH" "$RS_OUT_PATH"
 }
 
+readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
 readonly DEFAULT_RUSTFMT_EXE_PATH="third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"
 
 # This tests a simple happy, errors-free code path.
@@ -39,6 +40,7 @@ function test::happy_path() {
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
+        \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
         -- \
         \"$RS_INPUT_PATH\" \
@@ -84,7 +86,7 @@ function test::crubit_help() {
     "grep 'Generates C++ bindings for a Rust crate' \"$STDOUT_PATH\" >/dev/null" \
     "The help message should contain the introduction"
   EXPECT_SUCCEED \
-    "grep '\\--h-out <FILE>.*Output path for C++ header file with bindings' \
+    "grep 'Output path for C++ header file with bindings' \
             \"$STDOUT_PATH\" >/dev/null" \
     "The help message should contain flag-specific snippets"
 }
@@ -121,6 +123,7 @@ function test::invalid_h_out() {
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --h-out=../.. \
         --rs-out=blah \
+        \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
         -- \
         \"$RS_INPUT_PATH\" \

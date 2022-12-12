@@ -8,6 +8,7 @@ source gbash.sh || exit
 source module gbash_unit.sh
 
 readonly RS_BINDINGS_FROM_CC="${RUNFILES}/rs_bindings_from_cc/rs_bindings_from_cc"
+readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
 readonly DEFAULT_RUSTFMT_EXE_PATH="third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"
 
 function quote_escape() {
@@ -39,6 +40,15 @@ function test::cmd_line_api() {
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
       --crubit_support_path=test/crubit/support/path | \
+      grep 'please specify --clang_format_exe_path' > /dev/null" \
+    "generator should show help message for --clang_format_exe_path"
+
+  EXPECT_SUCCEED \
+    "\"${RS_BINDINGS_FROM_CC}\" \
+      --rs_out=\"${rs_out}\" \
+      --cc_out=\"${cc_out}\" 2>&1 \
+      --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" | \
       grep 'please specify --rustfmt_exe_path' > /dev/null" \
     "generator should show help message for --rustfmt_exe_path"
 
@@ -47,6 +57,7 @@ function test::cmd_line_api() {
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" | \
       grep 'please specify --public_headers' > /dev/null" \
     "generator should show help message for --public_headers"
@@ -59,6 +70,7 @@ function test::cmd_line_api() {
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" 2>&1 | \
       grep 'please specify --targets_and_headers' > /dev/null" \
@@ -75,6 +87,7 @@ EOT
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
@@ -98,6 +111,7 @@ EOT
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" \
@@ -129,6 +143,7 @@ EOT
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
@@ -158,6 +173,7 @@ EOT
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${header_1},${header_2}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\" 2>&1"
@@ -186,6 +202,7 @@ EOT
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\""
@@ -214,6 +231,7 @@ EOF
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --rustfmt_config_path=\"${rustfmt_config_path}\" \
       --public_headers=\"${hdr}\" \
@@ -252,6 +270,7 @@ EOT
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/specific/crubit/support/path \
+      --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" \
       --targets_and_headers=\"$(echo "${json}" | quote_escape)\""

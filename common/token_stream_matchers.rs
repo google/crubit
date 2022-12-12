@@ -41,9 +41,9 @@
 macro_rules! assert_cc_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::match_tokens(
-                                            &$input,
-                                            &$pattern,
-                                            &$crate::internal::cc_tokens_to_formatted_string)
+                                    &$input,
+                                    &$pattern,
+                                    &$crate::internal::cc_tokens_to_formatted_string_for_tests)
                     .expect("input unexpectedly didn't match the pattern");
     };
 }
@@ -69,9 +69,9 @@ macro_rules! assert_rs_matches {
 macro_rules! assert_cc_not_matches {
     ($input:expr, $pattern:expr $(,)*) => {
         $crate::internal::mismatch_tokens(
-                                               &$input,
-                                               &$pattern,
-                                               &$crate::internal::cc_tokens_to_formatted_string)
+                                   &$input,
+                                   &$pattern,
+                                   &$crate::internal::cc_tokens_to_formatted_string_for_tests)
                     .unwrap();
     };
 }
@@ -98,7 +98,7 @@ pub mod internal {
     use proc_macro2::TokenTree;
     use std::iter;
     pub use token_stream_printer::{
-        cc_tokens_to_formatted_string, rs_tokens_to_formatted_string,
+        cc_tokens_to_formatted_string_for_tests, rs_tokens_to_formatted_string,
         rs_tokens_to_formatted_string_for_tests,
     };
 
@@ -486,7 +486,7 @@ fn foo() {}
                 match_tokens(
                     &quote! {struct A { int a; int b; };},
                     &quote! {struct B},
-                    &cc_tokens_to_formatted_string
+                    &cc_tokens_to_formatted_string_for_tests
                 )
                 .expect_err("unexpected match")
             ),

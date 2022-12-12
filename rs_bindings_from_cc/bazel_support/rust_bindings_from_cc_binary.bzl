@@ -25,7 +25,11 @@ def _rust_bindings_from_cc_binary_impl(ctx):
         DefaultInfo(
             executable = output,
             runfiles = ctx.runfiles(
-                files = [ctx.file.binary, ctx.executable._rustfmt] + ctx.files._rustfmt_cfg,
+                files = [
+                    ctx.file.binary,
+                    ctx.executable._clang_format,
+                    ctx.executable._rustfmt,
+                ] + ctx.files._rustfmt_cfg,
             ),
         ),
     ]
@@ -41,6 +45,12 @@ rust_bindings_from_cc_binary = rule(
         ),
         "_allowlist_function_transition": attr.label(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        ),
+        "_clang_format": attr.label(
+            default = "//third_party/crosstool/google3_users:stable_clang-format",
+            executable = True,
+            allow_single_file = True,
+            cfg = "exec",
         ),
         "_rustfmt": attr.label(
             default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",

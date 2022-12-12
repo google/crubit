@@ -133,7 +133,6 @@ rust_library(
     data = [
     ],
     deps = [
-        ":token_stream_printer_impl",
         "//common:ffi_types",
         "@crate_index//:anyhow",
         "@crate_index//:proc-macro2",
@@ -146,30 +145,6 @@ rust_test(
     deps = [
         "@crate_index//:quote",
         "@crate_index//:tempfile",
-    ],
-)
-
-cc_library(
-    name = "token_stream_printer_impl",
-    srcs = ["token_stream_printer_impl.cc"],
-    hdrs = ["token_stream_printer_impl.h"],
-    deps = [
-        "//common:cc_ffi_types",
-        "@absl//absl/log",
-        "@absl//absl/log:check",
-        "@llvm-project//clang:format",
-        "@llvm-project//llvm:Support",
-    ],
-)
-
-cc_test(
-    name = "token_stream_printer_impl_test",
-    srcs = ["token_stream_printer_impl_test.cc"],
-    deps = [
-        ":token_stream_printer_impl",
-        "//common:cc_ffi_types",
-        "//common:rust_allocator_shims",
-        "@com_google_googletest//:gtest_main",
     ],
 )
 

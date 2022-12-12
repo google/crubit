@@ -12,7 +12,9 @@ The following example should work in the current dev environment:
 
 <!-- BEGIN GOOGLE-INTERNAL -->
 If you're a Googler, set `<path_of_rustfmt_executable>` to
- `"$(pwd)/../../unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"`.
+ `"$(pwd)/../../unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"`
+ and the `<path_of_clang_format_executable>` to
+ `"$(pwd)/../../crosstool/v18/stable/installs/llvm/bin/clang-format"`
 <!-- END GOOGLE-INTERNAL -->
 
 ```
@@ -27,6 +29,7 @@ $ cd crubit/cc_bindings_from_rs
 $ bazel run :cc_bindings_from_rs_legacy_toolchain_runner -- \
     --h-out=$HOME/scratch/test.h \
     --rs-out=$HOME/scratch/test_impl.rs \
+    --clang-format-exe-path=<path_of_clang_format_executable> -- \
     --rustfmt-exe-path=<path_of_rustfmt_executable> -- \
     $HOME/scratch/test.rs \
     --crate-type=lib \

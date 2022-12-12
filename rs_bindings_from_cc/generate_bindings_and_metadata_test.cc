@@ -28,6 +28,9 @@ using ::testing::StrEq;
 constexpr absl::string_view kDefaultRustfmtExePath =
     "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
 
+constexpr absl::string_view kDefaultClangFormatExePath =
+    "third_party/crosstool/google3_users/clang-format";
+
 TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
     {"t": "target1", "h": ["a.h"]}
@@ -37,6 +40,7 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -68,6 +72,7 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -97,6 +102,7 @@ GetInstantiationsFor(absl::string_view header_content,
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */
@@ -264,8 +270,8 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
       Cmdline cmdline,
       Cmdline::CreateForTesting(
           "cc_out", "rs_out", "ir_out", "namespaces_json",
-          "crubit_support_path", std::string(kDefaultRustfmtExePath),
-          "nowhere/rustfmt.toml",
+          "crubit_support_path", std::string(kDefaultClangFormatExePath),
+          std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
