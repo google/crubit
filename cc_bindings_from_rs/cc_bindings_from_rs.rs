@@ -406,11 +406,6 @@ mod tests {
 #pragma once
 
 namespace test_crate {
-
-// Error generating bindings for `public_module` defined at
-// /tmp/.ANY_IDENTIFIER_CHARACTERS/test_crate.rs:1:2: 1:23: Unsupported
-// rustc_hir::hir::ItemKind: module
-
 namespace public_module {
 namespace __crubit_internal {
 extern "C" void

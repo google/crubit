@@ -904,11 +904,16 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
     }
 }
 
-/// Formats a Rust item idenfied by `def_id`.
+/// Formats a Rust item idenfied by `def_id`.  Returns `None` if the definition
+/// can be ignored. Returns an `Err` is the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
 /// item).
-fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
+fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
+    if !tcx.local_visibility(def_id).is_public() {
+        return Ok(None);
+    }
+
     match tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
             Item { kind: ItemKind::Fn(_, generics, _) |
@@ -921,9 +926,10 @@ fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<MixedSnippet> {
                 // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
                 bail!("Generics are not supported yet (b/259749023 and b/259749095)");
             },
-            Item { kind: ItemKind::Fn(..), .. } => format_fn(tcx, def_id),
+            Item { kind: ItemKind::Fn(..), .. } => format_fn(tcx, def_id).map(Some),
             Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-                format_adt(tcx, def_id),
+                format_adt(tcx, def_id).map(Some),
+            Item { kind: ItemKind::Mod(_), .. } => Ok(None),
             Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
         },
         _unsupported_node => bail!("Unsupported rustc_hir::hir::Node"),
@@ -955,13 +961,9 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         .items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
-            if !tcx.local_visibility(def_id).is_public() {
-                None
-            } else {
-                let snippet = format_def(tcx, def_id)
-                        .unwrap_or_else(|err| format_unsupported_def(tcx, def_id, err));
-                Some((def_id, snippet))
-            }
+            format_def(tcx, def_id)
+                .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
+                .map(|snippet| (def_id, snippet))
         })
         .collect();
 
@@ -1309,9 +1311,6 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     namespace rust_out {
-                        ... // TODO(b/258265044): This `...` should be removed.
-                            // (there should be no unsupported-item comment
-                            // for the module item).
                         namespace some_module {
                             ...
                             inline void some_func() { ... }
@@ -1370,7 +1369,7 @@ pub mod tests {
             assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_pub_module });
 
             // TODO(b/258265044): The test expectations below are (temporarily) incorrect. A public
-            // function in a private module is effectively private - `format_crate` shouldn't
+            // function in a private module is effectively private - `format_def` shouldn't
             // just use `tcx.local_visibility`.
             assert_cc_matches!(bindings.h_body, quote! { private_module });
             assert_rs_matches!(bindings.rs_body, quote! { private_module });
@@ -1445,7 +1444,7 @@ pub mod tests {
                 pub extern "C" fn public_function() {}
             "#;
         test_format_def(test_src, "public_function", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1470,7 +1469,7 @@ pub mod tests {
                 pub extern "C" fn explicit_unit_return_type() -> () {}
             "#;
         test_format_def(test_src, "explicit_unit_return_type", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1495,7 +1494,7 @@ pub mod tests {
             // attribute.
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1517,7 +1516,7 @@ pub mod tests {
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_def(test_src, "public_function", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1541,7 +1540,7 @@ pub mod tests {
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_def(test_src, "public_function", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1588,7 +1587,7 @@ pub mod tests {
         test_format_def(test_src, "foo", |result| {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(!result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -1624,7 +1623,7 @@ pub mod tests {
                 pub extern "C-unwind" fn may_throw() {}
             "#;
         test_format_def(test_src, "may_throw", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1645,7 +1644,7 @@ pub mod tests {
                 pub fn foo(_i: i32) -> S { panic!("foo") }
             "#;
         test_format_def(test_src, "foo", |result| {
-            let result = result.unwrap();
+            let result = result.unwrap().unwrap();
 
             // Minimal coverage, just to double-check that the test setup works.
             assert_cc_matches!(result.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
@@ -1678,7 +1677,7 @@ pub mod tests {
                 pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
         test_format_def(test_src, "type_aliased_return", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -1701,7 +1700,7 @@ pub mod tests {
             pub extern "C" fn fn_with_doc_comment_with_unmangled_name() {}
           "#;
         test_format_def(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             let doc_comments = [
@@ -1733,7 +1732,7 @@ pub mod tests {
             }
           "#;
         test_format_def(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n\n");
@@ -1754,7 +1753,7 @@ pub mod tests {
                 pub extern "C" fn fn_with_doc_comment_with_mangled_name() {}
             "#;
         test_format_def(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             let comment = " Doc comment of a function with mangled name.";
@@ -1903,7 +1902,7 @@ pub mod tests {
             // TODO(b/261074843): Re-add thunk name verification once we are using stable name
             // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
             // + manual review and tweaks.)
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -1950,7 +1949,7 @@ pub mod tests {
                 pub extern "vectorcall" fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
         test_format_def(test_src, "add", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -1999,7 +1998,7 @@ pub mod tests {
                 pub extern "C" fn foo(b: bool, f: f64) {}
             "#;
         test_format_def(test_src, "foo", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -2019,7 +2018,7 @@ pub mod tests {
                 pub extern "C" fn some_function(reinterpret_cast: f64) {}
             "#;
         test_format_def(test_src, "some_function", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
             assert_cc_matches!(
@@ -2037,7 +2036,7 @@ pub mod tests {
                 pub fn foo(_: f64, _: f64) {}
             "#;
         test_format_def(test_src, "foo", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2078,7 +2077,7 @@ pub mod tests {
                 pub fn func(S{f1, f2}: S) -> i32 { f1 + f2 }
             "#;
         test_format_def(test_src, "func", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
@@ -2162,7 +2161,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
             "#;
         test_format_def(test_src, "SomeStruct", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2210,7 +2209,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<TupleStruct>() == 4);
             "#;
         test_format_def(test_src, "TupleStruct", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2344,7 +2343,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeEnum>() == 1);
             "#;
         test_format_def(test_src, "SomeEnum", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2396,7 +2395,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<Point>() == 4);
             "#;
         test_format_def(test_src, "Point", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2461,7 +2460,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeUnion>() == 8);
             "#;
         test_format_def(test_src, "SomeUnion", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2510,7 +2509,7 @@ pub mod tests {
             }
         "#;
         test_format_def(test_src, "SomeUnionWithDocs", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             let comment = " Doc for some union.";
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2534,7 +2533,7 @@ pub mod tests {
             }
         "#;
         test_format_def(test_src, "SomeEnumWithDocs", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             let comment = " Doc for some enum. ";
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2559,7 +2558,7 @@ pub mod tests {
             }
         "#;
         test_format_def(test_src, "SomeStructWithDocs", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             let comment = "Doc for some struct.";
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2581,7 +2580,7 @@ pub mod tests {
             pub struct SomeTupleStructWithDocs(i32);
         "#;
         test_format_def(test_src, "SomeTupleStructWithDocs", |result| {
-            let result = result.expect("Test expects success here");
+            let result = result.unwrap().unwrap();
             let comment = " Doc for some tuple struct.";
             assert_cc_matches!(
                 result.cc.tokens,
@@ -3020,7 +3019,7 @@ pub mod tests {
     /// result from `format_def`.)
     fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<MixedSnippet, String>) -> T + Send,
+        F: FnOnce(Result<Option<MixedSnippet>, String>) -> T + Send,
         T: Send,
     {
         run_compiler(source, |tcx| {
