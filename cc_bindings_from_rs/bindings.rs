@@ -995,10 +995,10 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         .group_by(|local_def_id| FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path)
         .into_iter()
         .map(|(mod_path, def_ids)| {
-            let MixedSnippet { rs, cc: CcSnippet { tokens, prereqs } } =
+            let mut snippet: MixedSnippet =
                 def_ids.map(|def_id| bindings.remove(&def_id).unwrap()).sum();
-            let tokens = mod_path.format_with_cc_body(tokens)?;
-            Ok(MixedSnippet { rs, cc: CcSnippet { tokens, prereqs } })
+            snippet.cc.tokens = mod_path.format_with_cc_body(snippet.cc.tokens)?;
+            Ok(snippet)
         })
         .collect::<Result<Vec<_>>>()?;
 
