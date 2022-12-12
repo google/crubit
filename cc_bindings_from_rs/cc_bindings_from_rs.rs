@@ -313,11 +313,13 @@ mod tests {
             let rs_input_path = self.tempdir.path().join("test_crate.rs");
             std::fs::write(
                 &rs_input_path,
-                r#" pub fn public_function() {
-                        private_function()
-                    }
+                r#" pub mod public_module {
+                        pub fn public_function() {
+                            private_function()
+                        }
 
-                    fn private_function() {}
+                        fn private_function() {}
+                    }
                 "#,
             )?;
 
@@ -380,7 +382,7 @@ mod tests {
             let mut marked_pattern = expected.to_string();
             marked_pattern.insert_str(longest_matching_expectation_len, "!!!>>>");
             panic!(
-                "h_body didn't match expectations:\n\
+                "Mismatched expectations:\n\
                     #### Actual body (first mismatch follows the \"!!!>>>\" marker):\n\
                     {marked_body}\n\
                     #### Mismatched pattern (mismatch follows the \"!!!>>>\" marker):\n\
@@ -404,6 +406,12 @@ mod tests {
 #pragma once
 
 namespace test_crate {
+
+// Error generating bindings for `public_module` defined at
+// /tmp/.ANY_IDENTIFIER_CHARACTERS/test_crate.rs:1:2: 1:23: Unsupported
+// rustc_hir::hir::ItemKind: module
+
+namespace public_module {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
@@ -412,6 +420,7 @@ inline void public_function() {
   return __crubit_internal::
       __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
+}  // namespace public_module
 }  // namespace test_crate"#,
         );
 
@@ -425,8 +434,9 @@ inline void public_function() {
 #![allow(improper_ctypes_definitions)]
 
 #[no_mangle]
-extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS() -> () {
-    ::test_crate::public_function()
+extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
+-> () {
+    ::test_crate::public_module::public_function()
 }
 "#,
         );

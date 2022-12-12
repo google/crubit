@@ -499,7 +499,6 @@ impl Sum for MixedSnippet {
 fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
-    let item_name = tcx.item_name(def_id);
     let mut symbol_name = {
         // Call to `mono` is ok - doc comment requires no generic parameters (although
         // lifetime parameters would have been okay).
@@ -564,13 +563,14 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
         }
     };
 
+    let FullyQualifiedName { mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
+
     let mut cc_prereqs = CcPrerequisites::default();
     let cc_tokens = {
         let ret_type = format_ret_ty_for_cc(tcx, sig.output())
             .context("Error formatting function return type")?
             .into_tokens(&mut cc_prereqs);
-        let fn_name =
-            format_cc_ident(item_name.as_str()).context("Error formatting function name")?;
+        let fn_name = format_cc_ident(name.as_str()).context("Error formatting function name")?;
         let arg_names = tcx
             .fn_arg_names(def_id)
             .iter()
@@ -590,7 +590,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
                     .into_tokens(&mut cc_prereqs))
             })
             .collect::<Result<Vec<_>>>()?;
-        if item_name.as_str() == symbol_name.name {
+        if name.as_str() == symbol_name.name {
             quote! {
                 #doc_comment
                 extern "C" #ret_type #fn_name (
@@ -625,7 +625,8 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
         quote! {}
     } else {
         let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
-        let fn_name = make_rs_ident(item_name.as_str());
+        let mod_path = mod_path.format_for_rs();
+        let fn_name = make_rs_ident(name.as_str());
         let exported_name = make_rs_ident(symbol_name.name);
         let ret_type = format_ty_for_rs(tcx, sig.output())?;
         let arg_names = tcx
@@ -649,7 +650,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
         quote! {
             #[no_mangle]
             extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
-                :: #crate_name :: #fn_name( #( #arg_names ),* )
+                :: #crate_name :: #mod_path #fn_name( #( #arg_names ),* )
             }
         }
     };
@@ -982,15 +983,31 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
             toposort::toposort(nodes, deps, preferred_order)
         };
 
-    let MixedSnippet { cc, rs } = {
-        let ordered = ordered.into_iter().map(|def_id| bindings.remove(&def_id).unwrap());
-        let failed = failed.into_iter().map(|def_id| {
-            // TODO(b/260725687): Add test coverage for the error condition below.
-            format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle"))
-        });
-        ordered.chain(failed).sum()
-    };
+    // Neighboring `ordered` items that belong to the same namespace should be put
+    // under a single `namespace foo::bar::baz { #items }`.  We don't just translate
+    // `mod foo` => `namespace foo` in a top-down fashion, because of the need to
+    // reorder the bindings of individual items (see `CcPrerequisites::defs`
+    // toposort above).
+    let ordered = ordered
+        .into_iter()
+        .group_by(|local_def_id| FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path)
+        .into_iter()
+        .map(|(mod_path, def_ids)| {
+            let MixedSnippet { rs, cc: CcSnippet { tokens, prereqs } } =
+                def_ids.map(|def_id| bindings.remove(&def_id).unwrap()).sum();
+            let tokens = mod_path.format_with_cc_body(tokens)?;
+            Ok(MixedSnippet { rs, cc: CcSnippet { tokens, prereqs } })
+        })
+        .collect::<Result<Vec<_>>>()?;
 
+    // Replace `failed` ids with unsupported-item comments.
+    let failed = failed.into_iter().map(|def_id| {
+        // TODO(b/260725687): Add test coverage for the error condition below.
+        format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle"))
+    });
+
+    // Generate top-level elements of the C++ header file.
+    let MixedSnippet { cc, rs } = ordered.into_iter().chain(failed).sum();
     let h_body = {
         // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
         // top-level namespace is okay (e.g. investigate if this name is globally
@@ -1280,6 +1297,43 @@ pub mod tests {
     }
 
     #[test]
+    fn test_generated_bindings_modules() {
+        let test_src = r#"
+                pub mod some_module {
+                    pub fn some_func() {}
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.expect("Test expects success");
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace rust_out {
+                        ... // TODO(b/258265044): This `...` should be removed.
+                            // (there should be no unsupported-item comment
+                            // for the module item).
+                        namespace some_module {
+                            ...
+                            inline void some_func() { ... }
+                            ...
+                        }  // namespace some_module
+                    }  // namespace rust_out
+                }
+            );
+            assert_rs_matches!(
+                bindings.rs_body,
+                quote! {
+                    #[no_mangle]
+                    extern "C"
+                    fn ...() -> () {
+                        ::rust_out::some_module::some_func()
+                    }
+                }
+            );
+        });
+    }
+
+    #[test]
     fn test_generated_bindings_non_pub_items() {
         let test_src = r#"
                 #![allow(dead_code)]
@@ -1292,6 +1346,15 @@ pub mod tests {
                     x: i32,
                     y: i32,
                 }
+
+                pub mod public_module {
+                    fn priv_func_in_pub_module() {}
+                }
+
+                mod private_module {
+                    pub fn pub_func_in_priv_module() { priv_func_in_priv_module() }
+                    fn priv_func_in_priv_module() {}
+                }
             "#;
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.expect("Test expects success");
@@ -1301,6 +1364,18 @@ pub mod tests {
             assert_rs_not_matches!(bindings.rs_body, quote! { private_function });
             assert_cc_not_matches!(bindings.h_body, quote! { PrivateStruct });
             assert_rs_not_matches!(bindings.rs_body, quote! { PrivateStruct });
+            assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_priv_module });
+            assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_priv_module });
+            assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_pub_module });
+            assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_pub_module });
+
+            // TODO(b/258265044): The test expectations below are (temporarily) incorrect. A public
+            // function in a private module is effectively private - `format_crate` shouldn't
+            // just use `tcx.local_visibility`.
+            assert_cc_matches!(bindings.h_body, quote! { private_module });
+            assert_rs_matches!(bindings.rs_body, quote! { private_module });
+            assert_cc_matches!(bindings.h_body, quote! { pub_func_in_priv_module });
+            assert_rs_matches!(bindings.rs_body, quote! { pub_func_in_priv_module });
         });
     }
 

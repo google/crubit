@@ -68,9 +68,25 @@ impl NamespaceQualifier {
     }
 
     pub fn format_for_cc(&self) -> Result<TokenStream> {
-        let namespace_cc_idents =
-            self.0.iter().map(|ns| format_cc_ident(ns)).collect::<Result<Vec<_>>>()?;
+        let namespace_cc_idents = self.cc_idents()?;
         Ok(quote! { #(#namespace_cc_idents::)* })
+    }
+
+    pub fn format_with_cc_body(&self, body: TokenStream) -> Result<TokenStream> {
+        if self.0.is_empty() {
+            Ok(body)
+        } else {
+            let namespace_cc_idents = self.cc_idents()?;
+            Ok(quote! {
+                namespace #(#namespace_cc_idents)::* {
+                    #body
+                }
+            })
+        }
+    }
+
+    fn cc_idents(&self) -> Result<Vec<TokenStream>> {
+        self.0.iter().map(|ns| format_cc_ident(ns)).collect()
     }
 }
 
@@ -475,5 +491,27 @@ pub mod tests {
         let msg = cc_error.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved keyword"));
+    }
+
+    #[test]
+    fn test_namespace_qualifier_format_with_cc_body_top_level_namespace() {
+        let ns = create_namespace_qualifier_for_tests(&[]);
+        assert_cc_matches!(
+            ns.format_with_cc_body(quote! { cc body goes here }).unwrap(),
+            quote! { cc body goes here },
+        );
+    }
+
+    #[test]
+    fn test_namespace_qualifier_format_with_cc_body_nested_namespace() {
+        let ns = create_namespace_qualifier_for_tests(&["foo", "bar", "baz"]);
+        assert_cc_matches!(
+            ns.format_with_cc_body(quote! { cc body goes here }).unwrap(),
+            quote! {
+                namespace foo::bar::baz {
+                    cc body goes here
+                }  // namespace foo::bar::baz
+            },
+        );
     }
 }
