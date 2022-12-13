@@ -910,7 +910,10 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
 /// item).
 fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
-    if !tcx.local_visibility(def_id).is_public() {
+    // TODO(b/262052635): When adding support for re-exports we may need to change
+    // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
+    // undesirable, because it would mean exposing items from a private module.)
+    if !tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(None);
     }
 
@@ -1367,14 +1370,10 @@ pub mod tests {
             assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_priv_module });
             assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_pub_module });
             assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_pub_module });
-
-            // TODO(b/258265044): The test expectations below are (temporarily) incorrect. A public
-            // function in a private module is effectively private - `format_def` shouldn't
-            // just use `tcx.local_visibility`.
-            assert_cc_matches!(bindings.h_body, quote! { private_module });
-            assert_rs_matches!(bindings.rs_body, quote! { private_module });
-            assert_cc_matches!(bindings.h_body, quote! { pub_func_in_priv_module });
-            assert_rs_matches!(bindings.rs_body, quote! { pub_func_in_priv_module });
+            assert_cc_not_matches!(bindings.h_body, quote! { private_module });
+            assert_rs_not_matches!(bindings.rs_body, quote! { private_module });
+            assert_cc_not_matches!(bindings.h_body, quote! { pub_func_in_priv_module });
+            assert_rs_not_matches!(bindings.rs_body, quote! { pub_func_in_priv_module });
         });
     }
 
