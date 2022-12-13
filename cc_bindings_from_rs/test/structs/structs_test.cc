@@ -11,17 +11,18 @@
 namespace crubit {
 namespace {
 
-// Import all the APIs from `structs_cc_api.h`
-using namespace structs;
-
 TEST(StructsTest, ReprCPointReturnedOrTakenByValue) {
-  ReprCPoint p = create_repr_c_point_via_free_function(123, 456);
-  EXPECT_EQ(123, get_x_of_repr_c_point_via_free_function(std::move(p)));
+  structs::ReprCPoint p =
+      structs::create_repr_c_point_via_free_function(123, 456);
+  EXPECT_EQ(123,
+            structs::get_x_of_repr_c_point_via_free_function(std::move(p)));
 }
 
 TEST(StructsTest, DefaultReprPointReturnedOrTakenByValue) {
-  DefaultReprPoint p = create_default_repr_point_via_free_function(123, 456);
-  EXPECT_EQ(123, get_x_of_default_repr_point_via_free_function(std::move(p)));
+  structs::DefaultReprPoint p =
+      structs::create_default_repr_point_via_free_function(123, 456);
+  EXPECT_EQ(123, structs::get_x_of_default_repr_point_via_free_function(
+                     std::move(p)));
 }
 
 }  // namespace

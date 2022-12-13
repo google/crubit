@@ -9,26 +9,24 @@
 namespace crubit {
 namespace {
 
-// Import all the APIs from `functions_cc_api.h`
-using namespace functions;
-
 using testing::DoubleEq;
 
 TEST(FunctionsTest, Get42AsFloat64ViaNoMangleExternC) {
-  EXPECT_THAT(get_42_as_f64_via_no_mangle_extern_c(), DoubleEq(42.0));
+  EXPECT_THAT(functions::get_42_as_f64_via_no_mangle_extern_c(),
+              DoubleEq(42.0));
 }
 
 TEST(FunctionsTest, AddFloat64ViaNoMangleExternC) {
-  EXPECT_THAT(add_f64_via_no_mangle_extern_c(12.0, 34.0),
+  EXPECT_THAT(functions::add_f64_via_no_mangle_extern_c(12.0, 34.0),
               DoubleEq(12.0 + 34.0));
 }
 
 TEST(FunctionsTest, AddInt32ViaNoMangleExternC) {
-  EXPECT_EQ(12 + 34, add_i32_via_no_mangle_extern_c(12, 34));
+  EXPECT_EQ(12 + 34, functions::add_i32_via_no_mangle_extern_c(12, 34));
 }
 
 TEST(FunctionsTest, AddInt32ViaExternCWithExportName) {
-  EXPECT_EQ(12 + 34, add_i32_via_extern_c_with_export_name(12, 34));
+  EXPECT_EQ(12 + 34, functions::add_i32_via_extern_c_with_export_name(12, 34));
 }
 
 TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
@@ -43,20 +41,21 @@ TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
 }
 
 TEST(FunctionsTest, AddInt32ViaRustAbi) {
-  EXPECT_EQ(12 + 34, add_i32_via_rust_abi(12, 34));
+  EXPECT_EQ(12 + 34, functions::add_i32_via_rust_abi(12, 34));
 }
 
 TEST(FunctionsTest, AddInt32ViaRustAbiWithDuplicatedParamNames) {
   EXPECT_EQ(12 + 34,
-            add_i32_via_rust_abi_with_duplicated_param_names(12, 34, 56, 78));
+            functions::add_i32_via_rust_abi_with_duplicated_param_names(
+                12, 34, 56, 78));
 }
 
 TEST(FunctionsTest, VoidReturningFunctionWithExportName) {
-  set_global_i32_via_extern_c_with_export_name(123);
-  EXPECT_EQ(123, get_global_i32_via_extern_c_with_export_name());
+  functions::set_global_i32_via_extern_c_with_export_name(123);
+  EXPECT_EQ(123, functions::get_global_i32_via_extern_c_with_export_name());
 
-  set_global_i32_via_extern_c_with_export_name(456);
-  EXPECT_EQ(456, get_global_i32_via_extern_c_with_export_name());
+  functions::set_global_i32_via_extern_c_with_export_name(456);
+  EXPECT_EQ(456, functions::get_global_i32_via_extern_c_with_export_name());
 }
 
 }  // namespace
