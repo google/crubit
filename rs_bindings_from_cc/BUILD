@@ -285,7 +285,6 @@ cc_library(
     name = "cc_ir",
     srcs = ["ir.cc"],
     hdrs = ["ir.h"],
-    visibility = ["//rs_bindings_from_cc:__subpackages__"],
     deps = [
         ":bazel_types",
         "//common:strong_int",
