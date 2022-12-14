@@ -23,6 +23,7 @@ namespace nullability {
 using ast_matchers::MatchFinder;
 using dataflow::CFGMatchSwitchBuilder;
 using dataflow::Environment;
+using dataflow::TransferStateForDiagnostics;
 
 namespace {
 
@@ -41,19 +42,19 @@ bool isIncompatibleAssignment(QualType DeclaredType, const Expr* E,
          isNullableOrUntracked(E, Env);
 }
 
-llvm::Optional<CFGElement> diagnoseDereference(const UnaryOperator* UnaryOp,
-                                               const MatchFinder::MatchResult&,
-                                               const Environment& Env) {
-  if (isNullableOrUntracked(UnaryOp->getSubExpr(), Env)) {
+llvm::Optional<CFGElement> diagnoseDereference(
+    const UnaryOperator* UnaryOp, const MatchFinder::MatchResult&,
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
+  if (isNullableOrUntracked(UnaryOp->getSubExpr(), State.Env)) {
     return llvm::Optional<CFGElement>(CFGStmt(UnaryOp));
   }
   return llvm::None;
 }
 
-llvm::Optional<CFGElement> diagnoseArrow(const MemberExpr* MemberExpr,
-                                         const MatchFinder::MatchResult& Result,
-                                         const Environment& Env) {
-  if (isNullableOrUntracked(MemberExpr->getBase(), Env)) {
+llvm::Optional<CFGElement> diagnoseArrow(
+    const MemberExpr* MemberExpr, const MatchFinder::MatchResult& Result,
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
+  if (isNullableOrUntracked(MemberExpr->getBase(), State.Env)) {
     return llvm::Optional<CFGElement>(CFGStmt(MemberExpr));
   }
   return llvm::None;
@@ -80,7 +81,7 @@ bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
 // interpreted as a function type (e.g. a pointer to a function pointer).
 llvm::Optional<CFGElement> diagnoseCallExpr(
     const CallExpr* CE, const MatchFinder::MatchResult& Result,
-    const Environment& Env) {
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto* Callee = CE->getCalleeDecl();
   if (!Callee) return llvm::None;
 
@@ -95,56 +96,60 @@ llvm::Optional<CFGElement> diagnoseCallExpr(
     Args = Args.drop_front();
   }
 
-  return isIncompatibleArgumentList(ParamTypes, Args, Env, *Result.Context)
+  return isIncompatibleArgumentList(ParamTypes, Args, State.Env,
+                                    *Result.Context)
              ? llvm::Optional<CFGElement>(CFGStmt(CE))
              : llvm::None;
 }
 
 llvm::Optional<CFGElement> diagnoseConstructExpr(
     const CXXConstructExpr* CE, const MatchFinder::MatchResult& Result,
-    const Environment& Env) {
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto ConstructorParamTypes = CE->getConstructor()
                                    ->getType()
                                    ->getAs<FunctionProtoType>()
                                    ->getParamTypes();
   ArrayRef<const Expr*> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
-  return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs, Env,
-                                    *Result.Context)
+  return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs,
+                                    State.Env, *Result.Context)
              ? llvm::Optional<CFGElement>(CFGStmt(CE))
              : llvm::None;
 }
 
 llvm::Optional<CFGElement> diagnoseReturn(
     const ReturnStmt* RS, const MatchFinder::MatchResult& Result,
-    const Environment& Env) {
-  auto ReturnType = cast<FunctionDecl>(Env.getDeclCtx())->getReturnType();
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
+  auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
   assert(ReturnType->isPointerType());
 
   auto* ReturnExpr = RS->getRetValue();
   assert(ReturnExpr->getType()->isPointerType());
 
-  return isIncompatibleAssignment(ReturnType, ReturnExpr, Env, *Result.Context)
+  return isIncompatibleAssignment(ReturnType, ReturnExpr, State.Env,
+                                  *Result.Context)
              ? llvm::Optional<CFGElement>(CFGStmt(RS))
              : llvm::None;
 }
 
 llvm::Optional<CFGElement> diagnoseMemberInitializer(
     const CXXCtorInitializer* CI, const MatchFinder::MatchResult& Result,
-    const Environment& Env) {
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   assert(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();
   if (!MemberType->isAnyPointerType()) {
     return llvm::None;
   }
   auto MemberInitExpr = CI->getInit();
-  return isIncompatibleAssignment(MemberType, MemberInitExpr, Env,
+  return isIncompatibleAssignment(MemberType, MemberInitExpr, State.Env,
                                   *Result.Context)
              ? llvm::Optional<CFGElement>(CFGInitializer(CI))
              : llvm::None;
 }
 
 auto buildDiagnoser() {
-  return CFGMatchSwitchBuilder<const Environment, llvm::Optional<CFGElement>>()
+  return CFGMatchSwitchBuilder<const dataflow::TransferStateForDiagnostics<
+                                   PointerNullabilityLattice>,
+                               llvm::Optional<CFGElement>>()
       // (*)
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       // (->)

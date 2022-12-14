@@ -38,6 +38,7 @@ cc_library(
     hdrs = ["pointer_nullability_diagnosis.h"],
     deps = [
         ":pointer_nullability",
+        ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",

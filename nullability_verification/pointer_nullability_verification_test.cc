@@ -21,6 +21,7 @@ namespace nullability {
 namespace {
 
 using dataflow::Environment;
+using dataflow::TransferStateForDiagnostics;
 using dataflow::TypeErasedDataflowAnalysisState;
 using dataflow::test::AnalysisInputs;
 using dataflow::test::AnalysisOutputs;
@@ -38,16 +39,15 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
               [](ASTContext &ASTCtx, Environment &) {
                 return PointerNullabilityAnalysis(ASTCtx);
               })
-              .withPostVisitCFG(
-                  [&Diagnostics, &Diagnoser](
-                      ASTContext &Ctx, const CFGElement &Elt,
-                      const TypeErasedDataflowAnalysisState &State) {
-                    auto EltDiagnostics =
-                        Diagnoser.diagnose(&Elt, Ctx, State.Env);
-                    if (EltDiagnostics.has_value()) {
-                      Diagnostics.push_back(EltDiagnostics.value());
-                    }
-                  })
+              .withPostVisitCFG([&Diagnostics, &Diagnoser](
+                                    ASTContext &Ctx, const CFGElement &Elt,
+                                    const TransferStateForDiagnostics<
+                                        PointerNullabilityLattice> &State) {
+                auto EltDiagnostics = Diagnoser.diagnose(&Elt, Ctx, State);
+                if (EltDiagnostics.has_value()) {
+                  Diagnostics.push_back(EltDiagnostics.value());
+                }
+              })
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
                                  "-Wno-unused-value", "-Wno-nonnull"}),
           [&Diagnostics](

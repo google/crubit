@@ -5,6 +5,7 @@
 #ifndef CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_DIAGNOSIS_H_
 #define CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_DIAGNOSIS_H_
 
+#include "nullability_verification/pointer_nullability_lattice.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Stmt.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
@@ -30,14 +31,17 @@ class PointerNullabilityDiagnoser {
   ///
   /// TODO(b/233582219): Extend diagnosis to return more information, e.g. the
   /// type of violation.
-  llvm::Optional<CFGElement> diagnose(const CFGElement* Elt, ASTContext& Ctx,
-                                      const dataflow::Environment& Env) {
-    return Diagnoser(*Elt, Ctx, Env);
+  llvm::Optional<CFGElement> diagnose(
+      const CFGElement* Elt, ASTContext& Ctx,
+      const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>&
+          State) {
+    return Diagnoser(*Elt, Ctx, State);
   }
 
  private:
-  dataflow::CFGMatchSwitch<const dataflow::Environment,
-                           llvm::Optional<CFGElement>>
+  dataflow::CFGMatchSwitch<
+      const dataflow::TransferStateForDiagnostics<PointerNullabilityLattice>,
+      llvm::Optional<CFGElement>>
       Diagnoser;
 };
 
