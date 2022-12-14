@@ -1431,6 +1431,71 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   )");
 }
 
+TEST(PointerNullabilityTest, DoubleDereference) {
+  checkDiagnostics(R"cc(
+    void target(int** p) {
+      *p;
+      **p;
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int** _Nonnull p) {
+      *p;
+      **p;
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int* _Nonnull* p) {
+      *p;
+      **p;
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int* _Nonnull* _Nonnull p) {
+      *p;
+      **p;
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int** _Nullable p) {
+      *p;   // [[unsafe]]
+      **p;  // [[unsafe]]
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int* _Nullable* p) {
+      *p;
+      **p;  // [[unsafe]]
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int* _Nullable* _Nullable p) {
+      *p;   // [[unsafe]]
+      **p;  // [[unsafe]]
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int* _Nullable* _Nonnull p) {
+      *p;
+      **p;  // [[unsafe]]
+    }
+  )cc");
+
+  checkDiagnostics(R"cc(
+    void target(int* _Nonnull* _Nullable p) {
+      *p;   // [[unsafe]]
+      **p;  // [[unsafe]]
+    }
+  )cc");
+}
+
 TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
   // Class template specialization with 2 arguments with nullable second
   // argument.
@@ -1561,9 +1626,9 @@ TEST(PointerNullabilityTest, MemberExpressionOfClassTemplateInstantiation) {
       *p.arg1;  // [[unsafe]]
 
       // TODO: The following lines currently crash at getBaseType()
-      //*p.arg0->arg0; // false-positive
-      //*p.arg0->arg1.arg0;
-      //*p.arg0->arg1.arg1; // false-positive
+      // *p.arg0->arg0; // false-positive
+      // *p.arg0->arg1.arg0;
+      // *p.arg0->arg1.arg1; // false-positive
     }
   )cc");
 }
@@ -1581,11 +1646,11 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     void target(Struct1Arg<int *_Nullable> &xs) {
       *xs.getT();  // [[unsafe]]
       *xs.getUnknownTPtr();
-      // **xs.getUnknownTPtr();  // false-negative
-      *xs.getNullableTPtr();  // [[unsafe]]
-      // **xs.getNullableTPtr();  // false-negative
+      **xs.getUnknownTPtr();   // false-negative
+      *xs.getNullableTPtr();   // [[unsafe]]
+      **xs.getNullableTPtr();  // [[unsafe]]
       *xs.getNonnullTPtr();
-      // **xs.getNonnullTPtr();  // false-negative
+      **xs.getNonnullTPtr();  // false-negative
     }
   )cc");
 
@@ -1601,11 +1666,11 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     void target(Struct1Arg<int *_Nonnull> &xs) {
       *xs.getT();
       *xs.getUnknownTPtr();
-      // **xs.getUnknownTPtr();
-      *xs.getNullableTPtr();  // [[unsafe]]
-      // **xs.getNullableTPtr();
+      **xs.getUnknownTPtr();
+      *xs.getNullableTPtr();   // [[unsafe]]
+      **xs.getNullableTPtr();  // [[unsafe]]
       *xs.getNonnullTPtr();
-      // **xs.getNonnullTPtr();
+      **xs.getNonnullTPtr();
     }
   )cc");
 
@@ -1622,11 +1687,11 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     void target(Struct1Arg<int *> &xs) {
       *xs.getT();
       *xs.getUnknownTPtr();
-      // **xs.getUnknownTPtr();
-      *xs.getNullableTPtr();  // [[unsafe]]
-      // **xs.getNullableTPtr();
+      **xs.getUnknownTPtr();
+      *xs.getNullableTPtr();   // [[unsafe]]
+      **xs.getNullableTPtr();  // [[unsafe]]
       *xs.getNonnullTPtr();
-      // **xs.getNonnullTPtr();
+      **xs.getNonnullTPtr();
     }
   )cc");
 
@@ -1656,11 +1721,11 @@ TEST(PointerNullabilityTest, MemberCallExpressionOfClassTemplateInstantiation) {
     };
     void target(Struct3Arg<int *, int *_Nonnull, int *_Nullable> &x) {
       *x.getUnknownT0Ptr();
-      // **x.getUnknownT0Ptr();
-      *x.getNullableT1Ptr();  // [[unsafe]]
-      // **x.getNullableT1Ptr();
+      **x.getUnknownT0Ptr();
+      *x.getNullableT1Ptr();   // [[unsafe]]
+      **x.getNullableT1Ptr();  // [[unsafe]]
       *x.getNonnullT2Ptr();
-      // **x.getNonnullT2Ptr();  // false-negative
+      **x.getNonnullT2Ptr();  // false-negative
     }
   )cc");
 

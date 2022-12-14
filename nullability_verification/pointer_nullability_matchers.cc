@@ -36,9 +36,6 @@ using ast_matchers::unaryOperator;
 using ast_matchers::internal::Matcher;
 
 Matcher<Stmt> isPointerExpr() { return expr(hasType(isAnyPointer())); }
-Matcher<Stmt> isPointerVariableReference() {
-  return declRefExpr(hasType(isAnyPointer()));
-}
 Matcher<Stmt> isNullPointerLiteral() {
   return implicitCastExpr(anyOf(hasCastKind(CK_NullToPointer),
                                 hasCastKind(CK_NullToMemberPointer)));

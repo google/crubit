@@ -11,7 +11,7 @@ namespace clang {
 namespace tidy {
 namespace nullability {
 
-ast_matchers::internal::Matcher<Stmt> isPointerVariableReference();
+ast_matchers::internal::Matcher<Stmt> isPointerExpr();
 ast_matchers::internal::Matcher<Stmt> isMemberOfPointerType();
 ast_matchers::internal::Matcher<Stmt> isPointerArrow();
 ast_matchers::internal::Matcher<Stmt> isCXXThisExpr();

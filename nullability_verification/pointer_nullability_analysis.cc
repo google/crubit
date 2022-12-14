@@ -287,6 +287,9 @@ NullabilityKind getNullabilityFromTemplatedExpression(const Expr* E) {
   std::vector<NullabilityKind> BaseNullabilityAnnotations =
       getBaseNullabilityAnnotations(E);
   QualType BaseType = getBaseType(E);
+  if (BaseType.isNull()) {
+    return NullabilityKind::Unspecified;
+  }
   std::vector<NullabilityKind> NullabilityAnnotations =
       substituteNullabilityAnnotationsInTemplate(
           E->getType(), BaseNullabilityAnnotations, BaseType);
@@ -425,12 +428,11 @@ void transferCallExpr(const CallExpr* CallExpr,
 auto buildTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
-      .CaseOfCFGStmt<Expr>(isPointerVariableReference(), transferPointer)
       .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferNotNullPointer)
       .CaseOfCFGStmt<Expr>(isAddrOf(), transferNotNullPointer)
       .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferNullPointer)
-      .CaseOfCFGStmt<MemberExpr>(isMemberOfPointerType(), transferPointer)
       .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferCallExpr)
+      .CaseOfCFGStmt<Expr>(isPointerExpr(), transferPointer)
       // Handles comparison between 2 pointers.
       .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),
                                      transferNullCheckComparison)
