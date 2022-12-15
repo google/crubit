@@ -973,20 +973,16 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
     // Find the order of `bindings` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
     // `bindings` in the same order as the source order of the Rust APIs.
-    let toposort::TopoSortResult { ordered, failed } =
-        {
-            let nodes = bindings.keys().copied();
-            let deps =
-                bindings.iter().flat_map(|(def_id, snippet)| {
-                    let def_id = def_id.clone();
-                    snippet.cc.prereqs.defs.iter().copied().map(move |predecessor| {
-                        toposort::Dependency { predecessor, successor: def_id }
-                    })
-                });
-            let preferred_order =
-                |id1: &LocalDefId, id2: &LocalDefId| tcx.def_span(*id1).cmp(&tcx.def_span(*id2));
-            toposort::toposort(nodes, deps, preferred_order)
-        };
+    let toposort::TopoSortResult { ordered, failed } = {
+        let nodes = bindings.keys().copied();
+        let deps = bindings.iter().flat_map(|(&successor, snippet)| {
+            let predecessors = snippet.cc.prereqs.defs.iter().copied();
+            predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
+        });
+        let preferred_order =
+            |id1: &LocalDefId, id2: &LocalDefId| tcx.def_span(*id1).cmp(&tcx.def_span(*id2));
+        toposort::toposort(nodes, deps, preferred_order)
+    };
 
     // Neighboring `ordered` items that belong to the same namespace should be put
     // under a single `namespace foo::bar::baz { #items }`.  We don't just translate
