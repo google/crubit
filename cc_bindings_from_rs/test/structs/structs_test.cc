@@ -12,17 +12,24 @@ namespace crubit {
 namespace {
 
 TEST(StructsTest, ReprCPointReturnedOrTakenByValue) {
-  structs::ReprCPoint p =
-      structs::create_repr_c_point_via_free_function(123, 456);
-  EXPECT_EQ(123,
-            structs::get_x_of_repr_c_point_via_free_function(std::move(p)));
+  structs::repr_c::Point p = structs::repr_c::create(123, 456);
+  EXPECT_EQ(123, structs::repr_c::get_x(std::move(p)));
 }
 
 TEST(StructsTest, DefaultReprPointReturnedOrTakenByValue) {
-  structs::DefaultReprPoint p =
-      structs::create_default_repr_point_via_free_function(123, 456);
-  EXPECT_EQ(123, structs::get_x_of_default_repr_point_via_free_function(
-                     std::move(p)));
+  structs::default_repr::Point p = structs::default_repr::create(123, 456);
+  EXPECT_EQ(123, structs::default_repr::get_x(std::move(p)));
+}
+
+TEST(StructsTest, ReorderingDefs) {
+  namespace m1 = structs::reordering_defs::m1;
+  namespace m2 = structs::reordering_defs::m2;
+
+  m1::S1 s1 = m2::create_s1();
+  EXPECT_EQ(456, m2::get_int_from_s1(std::move(s1)));
+
+  m2::S2 s2 = m1::create_s2();
+  EXPECT_EQ(123, m1::get_int_from_s2(std::move(s2)));
 }
 
 }  // namespace
