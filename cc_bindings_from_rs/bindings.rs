@@ -163,6 +163,18 @@ impl CcSnippet {
         *prereqs_accumulator += prereqs;
         tokens
     }
+
+    /// Creates a new CcSnippet (with no `CcPrerequisites`).
+    fn new(tokens: TokenStream) -> Self {
+        Self { tokens, ..Default::default() }
+    }
+
+    /// Creates a CcSnippet that depends on a single `CcInclude`.
+    fn with_include(tokens: TokenStream, include: CcInclude) -> Self {
+        let mut prereqs = CcPrerequisites::default();
+        prereqs.includes.insert(include);
+        Self { tokens, prereqs }
+    }
 }
 
 /// Represents the fully qualified name of a Rust item (e.g. a `struct` or a
@@ -219,7 +231,7 @@ impl FullyQualifiedName {
 }
 
 fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
-    let void = Ok(CcSnippet { tokens: quote! { void }, ..Default::default() });
+    let void = Ok(CcSnippet::new(quote! { void }));
     match ty.kind() {
         ty::TyKind::Never => void,  // `!`
         ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
@@ -235,12 +247,10 @@ fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
 ///     - str: utf-8 verification
 ///     - &T: calling into `crubit::MutRef::unsafe_get_ptr`
 fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream) -> CcSnippet {
-    let mut prereqs = CcPrerequisites::default();
     if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
-        CcSnippet { prereqs, tokens: value }
+        CcSnippet::new(value)
     } else {
-        prereqs.includes.insert(CcInclude::utility());
-        CcSnippet { prereqs, tokens: quote! { std::move(#value) } }
+        CcSnippet::with_include(quote! { std::move(#value) }, CcInclude::utility())
     }
 }
 
@@ -250,12 +260,10 @@ fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream
 // TODO(b/259724276): This function's results should be memoized.
 fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
     fn cstdint(tokens: TokenStream) -> CcSnippet {
-        let mut prereqs = CcPrerequisites::default();
-        prereqs.includes.insert(CcInclude::cstdint());
-        CcSnippet { tokens, prereqs }
+        CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
     fn keyword(tokens: TokenStream) -> CcSnippet {
-        CcSnippet { tokens, ..Default::default() }
+        CcSnippet::new(tokens)
     }
     Ok(match ty.kind() {
         ty::TyKind::Never => {
@@ -862,24 +870,21 @@ fn format_adt_data(tcx: TyCtxt, def_id: LocalDefId) -> TokenStream {
 /// - is invalid
 /// - doesn't identify an ADT,
 fn format_adt(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
-    let AdtCoreBindings { header, core, cc_assertions, rs_assertions } =
+    let AdtCoreBindings { header, core, cc_assertions, rs_assertions: rs} =
         format_adt_core(tcx, local_def_id.to_def_id())?;
 
     let data = format_adt_data(tcx, local_def_id);
     let doc_comment = format_doc_comment(tcx, local_def_id);
-    let cc_snippet = CcSnippet {
-        tokens: quote! {
-            __NEWLINE__ #doc_comment
-            #header {
-                #core
-                #data
-            };
-            #cc_assertions
-        },
-        ..Default::default()
-    };
+    let cc = CcSnippet::new(quote! {
+        __NEWLINE__ #doc_comment
+        #header {
+            #core
+            #data
+        };
+        #cc_assertions
+    });
 
-    Ok(MixedSnippet { cc: cc_snippet, rs: rs_assertions })
+    Ok(MixedSnippet { cc, rs })
 }
 
 /// Formats the doc comment associated with the item identified by
@@ -952,9 +957,9 @@ fn format_unsupported_def(
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
     // says: To print causes as well [...], use the alternate selector “{:#}”.
     let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
-    let comment = quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ };
+    let cc = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
 
-    MixedSnippet { cc: CcSnippet { tokens: comment, ..Default::default() }, ..Default::default() }
+    MixedSnippet { cc, rs: quote! {} }
 }
 
 /// Formats all public items from the Rust crate being compiled.
