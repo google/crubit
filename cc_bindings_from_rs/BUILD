@@ -14,10 +14,11 @@ licenses(["notice"])
 # * use `:cc_bindings_from_rs_legacy_toolchain_runner`
 # * use the new toolchain by passing
 #   `--extra_toolchains=//nowhere/llvm/rust:rust_x86_64` to Bazel.
-# TODO(hlopko): Remove legacy_toolchain support scripts once we roll out the bazel-built toolchain.
+# TODO(b/262583967): Remove legacy_toolchain support scripts once we roll out the bazel-built toolchain.
 rust_binary(
     name = "cc_bindings_from_rs",
     srcs = [
+        # TODO(b/254679226): These should be separate crates.
         "bindings.rs",
         "cc_bindings_from_rs.rs",
         "cmdline.rs",
@@ -25,7 +26,7 @@ rust_binary(
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
     experimental_use_cc_common_link = 0,
-    # TODO(hlopko): Remove once we roll out the bazel-built toolchain.
+    # TODO(b/262583967): Remove once we roll out the bazel-built toolchain.
     tags = [
         "manual",
         "nobuilder",
@@ -45,6 +46,7 @@ rust_binary(
     ],
 )
 
+# TODO(b/262583967): Remove once we statically link rustc_driver.
 sh_binary(
     name = "cc_bindings_from_rs_legacy_toolchain_runner",
     srcs = ["cc_bindings_from_rs_legacy_toolchain_runner.sh"],
@@ -80,6 +82,7 @@ rust_test(
     ],
 )
 
+# TODO(b/262583967): Remove once we statically link rustc_driver.
 sh_test(
     name = "cc_bindings_from_rs_legacy_toolchain_test",
     srcs = ["legacy_toolchain_test_wrapper.sh"],
@@ -95,6 +98,9 @@ sh_test(
     name = "cc_bindings_from_rs_sh_test",
     srcs = ["cc_bindings_from_rs_sh_test.sh"],
     data = [
+        # TODO(b/262583967): This should directly depend on the
+        # `cc_bindings_from_rs` binary (without the indirection of `.sar` or
+        # `sh_binary`).  This can be done once we statically link rustc_driver.
         ":cc_bindings_from_rs_legacy_toolchain_runner.sar",
     ],
     deps = [
