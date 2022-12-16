@@ -129,25 +129,28 @@ mod tests {
         );
     }
 
+    /// The `test_help` unit test below has multiple purposes:
+    /// - Direct/obvious purpose: testing that `--help` works
+    /// - Double-checking the overall shape of our cmdline "API" (i.e.
+    ///   verification that the way we use `clap` attributes results in the
+    ///   desired cmdline "API"). This is a good enough coverage to avoid having
+    ///   flag-specifc tests (e.g. avoiding hypothetical
+    ///   `test_h_out_missing_flag`, `test_h_out_missing_arg`,
+    ///   `test_h_out_duplicated`).
+    /// - Exhaustively checking runtime asserts (assumming that tests run in a
+    ///   debug build; other tests also trigger these asserts).  See also:
+    ///     - https://github.com/clap-rs/clap/issues/2740#issuecomment-907240414
+    ///     - `clap::builder::App::debug_assert`
+    ///
+    /// To regenerate `expected_msg` do the following steps:
+    /// - Run `bazel run :cc_bindings_from_rs_legacy_toolchain_runner -- --help`
+    /// - Copy&paste the output of the command below
+    /// - Replace the 2nd `cc_bindings_from_rs` with
+    ///   `cc_bindings_from_rs_unittest_executable`
     #[test]
     fn test_help() {
-        // This test has multiple purposes:
-        // - Direct/obvious purpose: testing that `--help` works
-        // - Double-checking the overall shape of our cmdline "API" (i.e. verification that the way
-        //   we use `clap` attributes results in the desired cmdline "API"). This is a good enough
-        //   coverage to avoid having flag-specifc tests (e.g. avoiding hypothetical
-        //   `test_h_out_missing_flag`, `test_h_out_missing_arg`, `test_h_out_duplicated`).
-        // - Exhaustively checking runtime asserts (assumming that tests run in a debug
-        //   build; other tests also trigger these asserts).  See also:
-        //     - https://github.com/clap-rs/clap/issues/2740#issuecomment-907240414
-        //     - `clap::builder::App::debug_assert`
-        //
-        // To regenerate `expected_msg` do the following steps:
-        // - Run `bazel run :cc_bindings_from_rs_legacy_toolchain_runner -- --help`
-        // - Copy&paste the output of the command below
-        // - Replace the 2nd `cc_bindings_from_rs` with `cc_bindings_from_rs_unittest_executable`
         let anyhow_err = new_cmdline(["--help"]).expect_err("--help should trigger an error");
-        let clap_err = anyhow_err.downcast::<clap::Error>().expect("Expecting `clap` error");
+        let clap_err = anyhow_err.downcast::<clap::Error>().unwrap();
         let expected_msg = r#"cc_bindings_from_rs 
 Generates C++ bindings for a Rust crate
 
@@ -206,7 +209,7 @@ OPTIONS:
         std::fs::write(&tmpfile, file_lines.as_slice().join("\n"))?;
 
         let flag_file_arg = format!("@{}", tmpfile.display());
-        let cmdline = new_cmdline([flag_file_arg.as_str()]).expect("No errors expected");
+        let cmdline = new_cmdline([flag_file_arg.as_str()]).unwrap();
         assert_eq!(Path::new("foo.h"), cmdline.h_out);
         assert_eq!(Path::new("foo_impl.rs"), cmdline.rs_out);
         let rustc_args = &cmdline.rustc_args;

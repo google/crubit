@@ -429,10 +429,11 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
+    /// `test_cmdline_error_propagation` tests that errors from `Cmdline::new` get
+    /// propagated. More detailed test coverage of various specific error types
+    /// can be found in tests in `cmdline.rs`.
     #[test]
     fn test_cmdline_error_propagation() -> anyhow::Result<()> {
-        // Tests that errors from `Cmdline::new` get propagated.  Broader coverage of
-        // various error types can be found in tests in `cmdline.rs`.
         let err = TestArgs::default_args()?
             .with_extra_crubit_args(&["--unrecognized-crubit-flag"])
             .run()
@@ -449,7 +450,6 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
 
     #[test]
     fn test_rustc_error_propagation() -> anyhow::Result<()> {
-        // Tests that `rustc` errors are propagated.
         let err = TestArgs::default_args()?
             .with_extra_rustc_args(&["--unrecognized-rustc-flag"])
             .run()
@@ -460,11 +460,11 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
+    /// `test_rustc_help` tests that we gracefully handle scenarios where `rustc`
+    /// doesn't compile anything (e.g. when there are no rustc cmdline
+    /// arguments, or when `--help` is present).
     #[test]
     fn test_rustc_help() -> anyhow::Result<()> {
-        // Tests that we gracefully handle scenarios where `rustc` doesn't compile
-        // anything (e.g. when there are no rustc cmdline arguments, or when
-        // `--help` is present).
         let err = TestArgs::default_args()?
             .with_extra_rustc_args(&["--help"])
             .run()
@@ -475,9 +475,10 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
+    /// `test_rustc_unsupported_panic_mechanism` tests that `panic=unwind` results
+    /// in an error.
     #[test]
     fn test_rustc_unsupported_panic_mechanism() -> anyhow::Result<()> {
-        // Tests that `panic=unwind` results in an error.
         let err = TestArgs::default_args()?
             .with_panic_mechanism("unwind")
             .run()
@@ -488,10 +489,11 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
+    /// `test_invalid_h_out_path` tests not only the specific problem of an invalid
+    /// `--h-out` argument, but also tests that errors from `run_with_tcx` are
+    /// propagated.
     #[test]
     fn test_invalid_h_out_path() -> anyhow::Result<()> {
-        // Tests not only the specific problem of an invalid `--h-out` argument, but
-        // also tests that errors from `run_with_tcx` are propagated.
         let err = TestArgs::default_args()?
             .with_h_path("../..")
             .run()
@@ -502,9 +504,10 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
+    /// `test_no_output_file` tests that we stop the compilation midway (i.e. that
+    /// we return `Stop` from `after_analysis`).
     #[test]
     fn test_no_output_file() -> anyhow::Result<()> {
-        // Tests that we stop the compilation midway.
         let tmpdir = tempdir()?;
         let out_path = tmpdir.path().join("unexpected_output.o");
         TestArgs::default_args()?

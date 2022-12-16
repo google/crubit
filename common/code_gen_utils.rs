@@ -279,7 +279,7 @@ pub mod tests {
     #[test]
     fn test_format_cc_ident_basic() {
         assert_cc_matches!(
-            format_cc_ident("foo").expect("No errors expected in this test"),
+            format_cc_ident("foo").unwrap(),
             quote! { foo }
         );
     }
@@ -287,14 +287,14 @@ pub mod tests {
     #[test]
     fn test_format_cc_ident_reserved_rust_keyword() {
         assert_cc_matches!(
-            format_cc_ident("impl").expect("No errors expected in this test"),
+            format_cc_ident("impl").unwrap(),
             quote! { impl }
         );
     }
 
     #[test]
     fn test_format_cc_ident_reserved_cc_keyword() {
-        let err = format_cc_ident("reinterpret_cast").expect_err("This test expects an error");
+        let err = format_cc_ident("reinterpret_cast").unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved keyword"));
@@ -303,7 +303,7 @@ pub mod tests {
     #[test]
     fn test_format_cc_ident_unfinished_group() {
         let err = format_cc_ident("(foo") // No closing `)`.
-            .expect_err("This test expects an error");
+            .unwrap_err();
         let msg = err.to_string();
         assert!(msg.contains("Can't format `(foo` as a C++ identifier"));
         assert!(msg.contains("cannot parse"));
@@ -315,35 +315,35 @@ pub mod tests {
 
         // These may appear in `IR::Func::name`.
         assert_cc_matches!(
-            format_cc_ident("operator==").expect("No errors expected in this test"),
+            format_cc_ident("operator==").unwrap(),
             quote! { operator== }
         );
         assert_cc_matches!(
-            format_cc_ident("operator new").expect("No errors expected in this test"),
+            format_cc_ident("operator new").unwrap(),
             quote! { operator new }
         );
 
         // This may appear in `IR::Record::cc_name` (although in practice these will
         // be namespace-qualified most of the time).
         assert_cc_matches!(
-            format_cc_ident("MyTemplate<int>").expect("No errors expected in this test"),
+            format_cc_ident("MyTemplate<int>").unwrap(),
             quote! { MyTemplate<int> }
         );
 
         // These forms of unqualified identifiers are not used by Crubit in practice,
         assert_cc_matches!(
-            format_cc_ident("~MyClass").expect("No errors expected in this test"),
+            format_cc_ident("~MyClass").unwrap(),
             quote! { ~MyClass }
         );
         assert_cc_matches!(
-            format_cc_ident(r#" operator "" _km "#).expect("No errors expected in this test"),
+            format_cc_ident(r#" operator "" _km "#).unwrap(),
             quote! { operator "" _km }
         );
     }
 
     #[test]
     fn test_format_cc_ident_empty() {
-        let err = format_cc_ident("").expect_err("This test expects an error");
+        let err = format_cc_ident("").unwrap_err();
         let msg = err.to_string();
         assert_eq!(msg, "Empty string is not a valid C++ identifier");
     }
@@ -354,7 +354,7 @@ pub mod tests {
 
         // This may appear in `IR::Record::cc_name`.
         assert_cc_matches!(
-            format_cc_ident("std::vector<int>").expect("No errors expected in this test"),
+            format_cc_ident("std::vector<int>").unwrap(),
             quote! { std::vector<int> }
         );
     }
@@ -487,7 +487,7 @@ pub mod tests {
         let ns = create_namespace_qualifier_for_tests(&["foo", "reinterpret_cast", "bar"]);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: reinterpret_cast :: bar :: });
-        let cc_error = ns.format_for_cc().expect_err("This test expects an error");
+        let cc_error = ns.format_for_cc().unwrap_err();
         let msg = cc_error.to_string();
         assert!(msg.contains("`reinterpret_cast`"));
         assert!(msg.contains("C++ reserved keyword"));

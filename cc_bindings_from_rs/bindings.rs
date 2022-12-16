@@ -1125,11 +1125,14 @@ pub mod tests {
         run_compiler(test_src, |tcx| find_def_id_by_name(tcx, "some_name"));
     }
 
+    /// This test covers only a single example of a function that should get a
+    /// C++ binding. The test focuses on verification that the output from
+    /// `format_fn` gets propagated all the way to `GenerateBindings::new`.
+    /// Additional coverage of how functions are formatted is provided
+    /// by `test_format_def_..._fn_...` tests (which work at the `format_fn`
+    /// level).
     #[test]
     fn test_generated_bindings_fn_no_mangle_extern_c() {
-        // This test covers only a single example of a function that should get a C++
-        // binding. Additional coverage of how items are formatted is provided by
-        // `test_format_def_..._fn_...` tests.
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn public_function() {
@@ -1137,27 +1140,30 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
                     extern "C" void public_function();
                 }
             );
-            // TODO(b/254097223): Verify Rust thunks here (once they actually get generated).
+
+            // No Rust thunks should be generated in this test scenario.
+            assert_rs_not_matches!(bindings.rs_body, quote!{ public_function });
         });
     }
 
+    /// `test_generated_bindings_fn_export_name` covers a scenario where
+    /// `MixedSnippet::cc` is present but `MixedSnippet::rs` is empty
+    /// (because no Rust thunks are needed).
     #[test]
     fn test_generated_bindings_fn_export_name() {
-        // Coverage of how `MixedSnippet::cc` are propagated when there is no
-        // `MixedSnippet::rs` (e.g. no Rust thunks are needed).
         let test_src = r#"
                 #[export_name = "export_name"]
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -1174,20 +1180,20 @@ pub mod tests {
         });
     }
 
+    /// The `test_generated_bindings_struct` test covers only a single example
+    /// of an ADT (struct/enum/union) that should get a C++ binding.
+    /// Additional coverage of how items are formatted is provided by
+    /// `test_format_def_..._struct_...`, `test_format_def_..._enum_...`,
+    /// and `test_format_def_..._union_...` tests.
+    ///
+    /// We don't want to duplicate coverage already provided by
+    /// `test_format_def_struct_with_fields`, but we do want to verify that
+    /// * `format_crate` will actually find and process the struct
+    ///   (`test_format_def_...` doesn't cover this aspect - it uses a test-only
+    ///   `find_def_id_by_name` instead)
+    /// * The actual shape of the bindings still looks okay at this level.
     #[test]
     fn test_generated_bindings_struct() {
-        // This test covers only a single example of an ADT (struct/enum/union) that
-        // should get a C++ binding. Additional coverage of how items are
-        // formatted is provided by `test_format_def_..._struct_...`,
-        // `test_format_def_..._enum_...`, and `test_format_def_..._union_...`
-        // tests.
-        //
-        // We don't want to duplicate coverage already provided by
-        // `test_format_def_struct_with_fields`, but we do want to verify that
-        // * `format_crate` will actually find and process the struct
-        //   (`test_format_def_...` doesn't cover this aspect - it uses a test-only
-        //   `find_def_id_by_name` instead)
-        // * The overall shape of the bindings is present.
         let test_src = r#"
                 pub struct Point {
                     pub x: i32,
@@ -1195,7 +1201,7 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -1231,7 +1237,7 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -1255,7 +1261,7 @@ pub mod tests {
                 pub struct S(bool);
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -1299,7 +1305,7 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             assert_cc_matches!(
                 bindings.h_body,
                 quote! {
@@ -1325,6 +1331,8 @@ pub mod tests {
         });
     }
 
+    /// `test_generated_bindings_non_pub_items` verifies that non-public items
+    /// are not present/propagated into the generated bindings.
     #[test]
     fn test_generated_bindings_non_pub_items() {
         let test_src = r#"
@@ -1349,9 +1357,7 @@ pub mod tests {
                 }
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
-
-            // Non-public items should not be present in the generated bindings.
+            let bindings = bindings.unwrap();
             assert_cc_not_matches!(bindings.h_body, quote! { private_function });
             assert_rs_not_matches!(bindings.rs_body, quote! { private_function });
             assert_cc_not_matches!(bindings.h_body, quote! { PrivateStruct });
@@ -1371,7 +1377,7 @@ pub mod tests {
     fn test_generated_bindings_top_level_items() {
         let test_src = "pub fn public_function() {}";
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             let expected_comment_txt =
                 "Automatically @generated C++ bindings for the following Rust crate:\n\
                  rust_out";
@@ -1396,22 +1402,24 @@ pub mod tests {
         })
     }
 
+    /// The `test_generated_bindings_unsupported_item` test verifies how `Err`
+    /// from `format_def` is formatted as a C++ comment (in `format_crate`
+    /// and `format_unsupported_def`):
+    /// - This test covers only a single example of an unsupported item.
+    ///   Additional coverage is provided by `test_format_def_unsupported_...`
+    ///   tests.
+    /// - This test somewhat arbitrarily chooses an example of an unsupported
+    ///   item, trying to pick one that 1) will never be supported (b/254104998
+    ///   has some extra notes about APIs named after reserved C++ keywords) and
+    ///   2) tests that the full error chain is included in the message.
     #[test]
     fn test_generated_bindings_unsupported_item() {
-        // This test verifies how `Err` from `format_def` is formatted as a C++ comment
-        // (in `format_crate` and `format_unsupported_def`).
-        // - This test covers only a single example of an unsupported item.  Additional
-        //   coverage is provided by `test_format_def_unsupported_...` tests.
-        // - This test somewhat arbitrarily chooses an example of an unsupported item,
-        //   trying to pick one that 1) will never be supported (b/254104998 has some extra
-        //   notes about APIs named after reserved C++ keywords) and 2) tests that the
-        //   full error chain is included in the message.
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn reinterpret_cast() {}
             "#;
         test_generated_bindings(test_src, |bindings| {
-            let bindings = bindings.expect("Test expects success");
+            let bindings = bindings.unwrap();
             let expected_comment_txt = "Error generating bindings for `reinterpret_cast` \
                  defined at <crubit_unittests.rs>:3:17: 3:53: \
                  Error formatting function name: \
@@ -1445,14 +1453,17 @@ pub mod tests {
         });
     }
 
+    /// The `test_format_def_fn_explicit_unit_return_type` test below is very
+    /// similar to the
+    /// `test_format_def_fn_extern_c_no_mangle_no_params_no_return_type` above,
+    /// except that the return type is explicitly spelled out.  There is no
+    /// difference in `ty::FnSig` so our code behaves exactly the same, but the
+    /// test has been planned based on earlier, hir-focused approach and having
+    /// this extra test coverage shouldn't hurt. (`hir::FnSig`
+    /// and `hir::FnRetTy` _would_ see a difference between the two tests, even
+    /// though there is no different in the current `bindings.rs` code).
     #[test]
     fn test_format_def_fn_explicit_unit_return_type() {
-        // This test is very similar to the
-        // `test_format_def_fn_extern_c_no_mangle_no_params_no_return_type` above, except that the
-        // return type is explicitly spelled out.  There is no difference in `ty::FnSig` so our
-        // code behaves exactly the same, but the test has been planned based on earlier,
-        // hir-focused approach and having this extra test coverage shouldn't hurt. (`hir::FnSig`
-        // and `hir::FnRetTy` _do_ see a difference between the two tests).
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn explicit_unit_return_type() -> () {}
@@ -1495,12 +1506,13 @@ pub mod tests {
         })
     }
 
+    /// `test_format_def_fn_mangling` checks that bindings can be generated for
+    /// `extern "C"` functions that do *not* have `#[no_mangle]` attribute.  The
+    /// test elides away the mangled name in the `assert_cc_matches` checks
+    /// below, but end-to-end test coverage should eventually be provided by
+    /// `test/functions` (see b/262904507).
     #[test]
     fn test_format_def_fn_mangling() {
-        // This test checks that bindings can be generated for `extern "C"` functions
-        // that do *not* have `#[no_mangle]` attribute.  The test elides away
-        // the mangled name in the `assert_cc_matches` checks below, but
-        // end-to-end test coverage is provided by `test/functions`.
         let test_src = r#"
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
@@ -1548,13 +1560,12 @@ pub mod tests {
 
     #[test]
     fn test_format_def_unsupported_fn_unsafe() {
-        // This tests how bindings for an `unsafe fn` are generated.
         let test_src = r#"
                 #[no_mangle]
                 pub unsafe extern "C" fn foo() {}
             "#;
         test_format_def(test_src, "foo", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(
                 err,
                 "Bindings for `unsafe` functions \
@@ -1563,13 +1574,14 @@ pub mod tests {
         });
     }
 
+    /// `test_format_def_fn_const` tests how bindings for an `const fn` are
+    /// generated.
+    ///
+    /// Right now the `const` qualifier is ignored, but one can imagine that in the
+    /// (very) long-term future such functions (including their bodies) could
+    /// be translated into C++ `consteval` functions.
     #[test]
     fn test_format_def_fn_const() {
-        // This tests how bindings for an `const fn` are generated.
-        //
-        // Right now the `const` qualifier is ignored, but one can imagine that in the
-        // (very) long-term future such functions (including their bodies) could
-        // be translated into C++ `consteval` functions.
         let test_src = r#"
                 pub const fn foo(i: i32) -> i32 { i * 42 }
             "#;
@@ -1768,7 +1780,7 @@ pub mod tests {
                 pub extern "C" fn reinterpret_cast() -> () {}
             "#;
         test_format_def(test_src, "reinterpret_cast", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(
                 err,
                 "Error formatting function name: \
@@ -1785,7 +1797,7 @@ pub mod tests {
                 pub extern "C" fn foo() -> *const i32 { std::ptr::null() }
             "#;
         test_format_def(test_src, "foo", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(
                 err,
                 "Error formatting function return type: \
@@ -1807,7 +1819,7 @@ pub mod tests {
                 // just call `no_bound_vars` on this `FnSig`'s `Binder`.
             "#;
         test_format_def(test_src, "foo", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
@@ -1822,7 +1834,7 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "generic_function", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
@@ -1836,7 +1848,7 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "Point", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
@@ -1850,7 +1862,7 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "Point", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
@@ -1864,7 +1876,7 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "SomeUnion", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
@@ -1875,7 +1887,7 @@ pub mod tests {
                 pub async fn async_function() {}
             "#;
         test_format_def(test_src, "async_function", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Error formatting function return type: \
                              The following Rust type is not supported yet: \
                              impl std::future::Future<Output = ()>");
@@ -1917,22 +1929,22 @@ pub mod tests {
         });
     }
 
+    /// `test_format_def_fn_rust_abi` tests a function call that is not a C-ABI, and
+    /// is not the default Rust ABI.  It can't use `"stdcall"`, because it is
+    /// not supported on the targets where Crubit's tests run.  So, it ended up
+    /// using `"vectorcall"`.
+    ///
+    /// This test almost entirely replicates `test_format_def_fn_rust_abi`, except
+    /// for the `extern "vectorcall"` part in the `test_src` test input.
+    ///
+    /// This test verifies the current behavior that gives reasonable and functional
+    /// FFI bindings.  OTOH, in the future we may decide to avoid having the
+    /// extra thunk for cases where the given non-C-ABI function call
+    /// convention is supported by both C++ and Rust
+    /// (see also `format_cc_call_conv_as_clang_attribute` in
+    /// `rs_bindings_from_cc/src_code_gen.rs`)
     #[test]
     fn test_format_def_fn_vectorcall_abi() {
-        // This tests a function call that is not a C-ABI, and is not the default Rust
-        // ABI.  It can't use "stdcall", because it is not supported on the
-        // targets where Crubit's tests run.  So, it ended up using
-        // "vectorcall".
-        //
-        // This test almost entirely replicates `test_format_def_fn_rust_abi`, except
-        // for the `extern "vectorcall"` part in the `test_src` test input.
-        //
-        // This test verifies the current behavior that gives reasonable and functional
-        // FFI bindings.  OTOH, in the future we may decide to avoid having the
-        // extra thunk for cases where the given non-C-ABI function call
-        // convention is supported by both C++ and Rust
-        // (see also `format_cc_call_conv_as_clang_attribute` in
-        // `rs_bindings_from_cc/src_code_gen.rs`)
         let test_src = r#"
                 #![feature(abi_vectorcall)]
                 pub extern "vectorcall" fn add(x: f64, y: f64) -> f64 { x * y }
@@ -1974,7 +1986,7 @@ pub mod tests {
             "#;
         test_format_def(test_src, "variadic_function", |result| {
             // TODO(b/254097223): Add support for variadic functions.
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "C variadic functions are not supported (b/254097223)");
         });
     }
@@ -2097,7 +2109,7 @@ pub mod tests {
                 pub extern "C" fn fn_with_params(_param: *const i32) {}
             "#;
         test_format_def(test_src, "fn_with_params", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Error formatting the type of parameter #0: \
                              The following Rust type is not supported yet: \
                              *const i32");
@@ -2111,7 +2123,7 @@ pub mod tests {
                 pub fn fn_with_params(_param: ()) {}
             "#;
         test_format_def(test_src, "fn_with_params", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Error formatting the type of parameter #0: \
                              `()` / `void` is only supported as a return type (b/254507801)");
         });
@@ -2126,7 +2138,7 @@ pub mod tests {
                 pub extern "C" fn fn_with_params(_param: !) {}
             "#;
         test_format_def(test_src, "fn_with_params", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(
                 err,
                 "Error formatting the type of parameter #0: \
@@ -2246,7 +2258,7 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "reinterpret_cast", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(
                 err,
                 "Error formatting item name: \
@@ -2269,7 +2281,7 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "StructWithCustomDropImpl", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
         });
     }
@@ -2293,14 +2305,14 @@ pub mod tests {
                 }
             "#;
         test_format_def(test_src, "StructRequiringCustomDropGlue", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
         });
     }
 
-    // This test covers how ZSTs (zero-sized-types) are handled.
-    // https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as a
-    // "unit-like struct".
+    /// This test covers how ZSTs (zero-sized-types) are handled.
+    /// https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as a
+    /// "unit-like struct".
     #[test]
     fn test_format_def_unsupported_struct_zero_sized_type() {
         let test_src = r#"
@@ -2310,7 +2322,7 @@ pub mod tests {
             "#;
         for name in ["ZeroSizedType1", "ZeroSizedType2", "ZeroSizedType3"] {
             test_format_def(test_src, name, |result| {
-                let err = result.expect_err("Test expects an error here");
+                let err = result.unwrap_err();
                 assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
             });
         }
@@ -2430,7 +2442,7 @@ pub mod tests {
                 pub enum ZeroVariantEnum {}
             "#;
         test_format_def(test_src, "ZeroVariantEnum", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
         });
     }
@@ -2591,16 +2603,17 @@ pub mod tests {
                 pub static STATIC_VALUE: i32 = 42;
             "#;
         test_format_def(test_src, "STATIC_VALUE", |result| {
-            let err = result.expect_err("Test expects an error here");
+            let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: static item");
         });
     }
 
+    /// `test_format_ret_ty_for_cc_successes` provides test coverage for cases where
+    /// `format_ret_ty_for_cc` returns an `Ok(...)`.  Additional testcases are
+    /// covered by `test_format_ty_for_cc_successes` (because
+    /// `format_ret_ty_for_cc` delegates most cases to `format_ty_for_cc`).
     #[test]
     fn test_format_ret_ty_for_cc_successes() {
-        // Test coverage for cases where `format_ret_ty_for_cc` returns an `Ok(...)`.
-        // Additional testcases are covered by `test_format_ty_for_cc_successes`
-        // (because `format_ret_ty_for_cc` delegates most cases to `format_ty_for_cc`).
         let testcases = [
             // ( <Rust type>, <expected C++ type> )
             ("bool", "bool"), // TyKind::Bool
@@ -2620,15 +2633,18 @@ pub mod tests {
         });
     }
 
+    /// `test_format_ty_for_cc_successes` provides test coverage for cases where
+    /// `format_ty_for_cc` returns an `Ok(...)`.
+    ///
+    /// Note that using `std::int8_t` (instead of `::std::int8_t`) has been an
+    /// explicit decision. The "Google C++ Style Guide" suggests to "avoid
+    /// nested namespaces that match well-known top-level namespaces" and "in
+    /// particular, [...] not create any nested std namespaces.".  It
+    /// seems desirable if the generated bindings conform to this aspect of the
+    /// style guide, because it makes things easier for *users* of these
+    /// bindings.
     #[test]
     fn test_format_ty_for_cc_successes() {
-        // Test coverage for cases where `format_ty_for_cc` returns an `Ok(...)`.
-        //
-        // Using `std::int8_t` (instead of `::std::int8_t`) has been an explicit decision.  The
-        // "Google C++ Style Guide" suggests to "avoid nested namespaces that match well-known
-        // top-level namespaces" and "in particular, [...] not create any nested std namespaces.".
-        // It seems desirable if the generated bindings conform to this aspect of the style guide,
-        // because it makes things easier for *users* of these bindings.
         let testcases = [
             // ( <Rust type>, (<expected C++ type>, <expected #include>, <expected prereq def>) )
             ("bool", ("bool", "", "")),
@@ -2700,28 +2716,28 @@ pub mod tests {
         );
     }
 
+    /// `test_format_ty_for_cc_failures` provides test coverage for cases where
+    /// `format_ty_for_cc` returns an `Err(...)`.
+    ///
+    /// It seems okay to have no test coverage for now for the following types
+    /// (which should never be encountered when generating bindings and where
+    /// `format_ty_for_cc` should panic):
+    /// - TyKind::Closure
+    /// - TyKind::Error
+    /// - TyKind::FnDef
+    /// - TyKind::Infer
+    ///
+    /// TODO(lukasza): Add test coverage (here and in the "for_rs" flavours) for:
+    /// - TyKind::Bound
+    /// - TyKind::Dynamic (`dyn Eq`)
+    /// - TyKind::Foreign (`extern type T`)
+    /// - https://doc.rust-lang.org/beta/unstable-book/language-features/generators.html:
+    ///   TyKind::Generator, TyKind::GeneratorWitness
+    /// - TyKind::Param
+    /// - TyKind::Placeholder
+    /// - TyKind::Projection
     #[test]
     fn test_format_ty_for_cc_failures() {
-        // This test provides coverage for cases where `format_ty_for_cc` returns an
-        // `Err(...)`.
-        //
-        // TODO(lukasza): Add test coverage (here and in the "for_rs" flavours) for:
-        // - TyKind::Bound
-        // - TyKind::Dynamic (`dyn Eq`)
-        // - TyKind::Foreign (`extern type T`)
-        // - https://doc.rust-lang.org/beta/unstable-book/language-features/generators.html:
-        //   TyKind::Generator, TyKind::GeneratorWitness
-        // - TyKind::Param
-        // - TyKind::Placeholder
-        // - TyKind::Projection
-        //
-        // It seems okay to have no test coverage for now for the following types (which
-        // should never be encountered when generating bindings and where
-        // `format_ty_for_cc` should panic):
-        // - TyKind::Closure
-        // - TyKind::Error
-        // - TyKind::FnDef
-        // - TyKind::Infer */
         let testcases = [
             // ( <Rust type>, <expected error message> )
             (

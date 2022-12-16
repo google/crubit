@@ -30,7 +30,7 @@ TEST(FunctionsTest, AddInt32ViaExternCWithExportName) {
 }
 
 TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
-  // TODO(b/258449205): Uncomment the test assertion below after ensuring that
+  // TODO(b/262904507): Uncomment the test assertion below after ensuring that
   // the `genrule` in `test/functions/BUILD` invokes `cc_bindings_from_rs` with
   // the same rustc cmdline flags as when `rustc` is used to build
   // `functions.rs` for `rust_library`.  Otherwise, the mangled name will be
