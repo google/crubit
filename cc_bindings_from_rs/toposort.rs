@@ -167,7 +167,8 @@ where
     // `ready` contains ids of nodes which have no remaining predecessors (and which
     // therefore are ready to be added to the `ordered` result of the
     // topological sort).  Using a BinaryHeap to store the `ready` nodes helps
-    // to extract them in the `preferred_order`.  (This is the `S` data structure from https://en.wikipedia.org/wiki/Topological_sorting#Kahn%27s_algorithm.)
+    // to extract them in the `preferred_order`.  (This is the `S` data structure from
+    // https://en.wikipedia.org/wiki/Topological_sorting#Kahn%27s_algorithm.)
     let mut ready: BinaryHeap<HeapNode<'_, NodeId, CmpFn>> = graph
         .iter()
         .filter(|(_, graph_node)| graph_node.count_of_predecessors == 0)
@@ -180,7 +181,7 @@ where
     while let Some(HeapNode { id: removed_id, .. }) = ready.pop() {
         let removed_graph_node = graph.remove(&removed_id).unwrap();
         for succ_id in removed_graph_node.successors.into_iter() {
-            let mut succ = graph.get_mut(&succ_id).unwrap();
+            let succ = graph.get_mut(&succ_id).unwrap();
             assert!(succ.count_of_predecessors > 0);
             succ.count_of_predecessors -= 1;
             if succ.count_of_predecessors == 0 {
@@ -223,6 +224,10 @@ struct GraphNode<NodeId> {
     successors: Vec<NodeId>,
 }
 
+// TODO(https://github.com/rust-lang/rust/issues/26925): It should be possible to
+// `#[derive(Default)]` here, but `derive` insists that `NodeId` has to
+// implement `Default` even though the default vector doesn't contain any
+// `NodeId`s.
 impl<NodeId> Default for GraphNode<NodeId> {
     fn default() -> Self {
         Self { count_of_predecessors: 0, successors: Vec::new() }
@@ -310,14 +315,14 @@ mod tests {
 
     #[test]
     fn test_toposort_deps_compatible_with_preferred_order() {
-        let (ordered, failed) = toposort(&[1, 2, 3, 4], &[(2, 3)]);
+        let (ordered, failed) = toposort(&[1, 4, 2, 3], &[(2, 3)]);
         assert_eq!(ordered, vec![1, 2, 3, 4]);
         assert_eq!(failed, vec![]);
     }
 
     #[test]
     fn test_toposort_deps_incompatible_with_preferred_order() {
-        let (ordered, failed) = toposort(&[1, 2, 3, 4], &[(3, 2)]);
+        let (ordered, failed) = toposort(&[1, 4, 2, 3], &[(3, 2)]);
         assert_eq!(ordered, vec![1, 3, 2, 4]);
         assert_eq!(failed, vec![]);
     }

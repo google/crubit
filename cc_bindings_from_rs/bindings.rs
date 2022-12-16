@@ -141,7 +141,8 @@ impl AddAssign for CcPrerequisites {
         // (processing each `rhs` include one-at-a-time) while `append` steals
         // the whole backing data store from `rhs.includes`. OTOH, this is a bit
         // speculative, since the (expected / guessed) performance difference is
-        // not documented at https://doc.rust-lang.org/std/collections/struct.BTreeSet.html#method.append
+        // not documented at
+        // https://doc.rust-lang.org/std/collections/struct.BTreeSet.html#method.append
         self.includes.append(&mut rhs.includes);
 
         self.defs.extend(rhs.defs);
@@ -156,7 +157,7 @@ struct CcSnippet {
 
 impl CcSnippet {
     /// Consumes `self` and returns its `tokens`, while preserving
-    /// its `prereqs` into the `prereqs_accumulator` out parameter.
+    /// its `prereqs` into `prereqs_accumulator`.
     fn into_tokens(self, prereqs_accumulator: &mut CcPrerequisites) -> TokenStream {
         let Self { tokens, prereqs } = self;
         *prereqs_accumulator += prereqs;
@@ -176,7 +177,7 @@ impl CcSnippet {
     }
 }
 
-/// Represents the fully qualified name of a Rust item (e.g. a `struct` or a
+/// Represents the fully qualified name of a Rust item (e.g. of a `struct` or a
 /// function).
 struct FullyQualifiedName {
     /// Name of the crate that defines the item.
@@ -185,10 +186,11 @@ struct FullyQualifiedName {
 
     /// Path to the module where the item is located.
     /// For example, this would be `cmp` for `std::cmp::Ordering`.
-    /// The path can contain multiple modules - e.g. `foo::bar::baz`.
+    /// The path may contain multiple modules - e.g. `foo::bar::baz`.
     mod_path: NamespaceQualifier,
 
     /// Name of the item.
+    /// For example, this would be `Ordering` for `std::cmp::Ordering`.
     name: Symbol,
 }
 
@@ -222,10 +224,10 @@ impl FullyQualifiedName {
     }
 
     fn format_for_rs(&self) -> TokenStream {
-        let top_level_ns = make_rs_ident(self.krate.as_str());
-        let ns_path = self.mod_path.format_for_rs();
+        let krate = make_rs_ident(self.krate.as_str());
+        let mod_path = self.mod_path.format_for_rs();
         let name = make_rs_ident(self.name.as_str());
-        quote! { :: #top_level_ns :: #ns_path #name }
+        quote! { :: #krate :: #mod_path #name }
     }
 }
 
@@ -243,8 +245,8 @@ fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
 /// - structs need to be moved: `std::move(value)`
 /// - in the future additional processing may be needed for other types (this is
 ///   speculative so please take these examples with a grain of salt):
-///     - str: utf-8 verification
-///     - &T: calling into `crubit::MutRef::unsafe_get_ptr`
+///     - `&str`: utf-8 verification (see b/262580415)
+///     - `&T`: calling into `crubit::MutRef::unsafe_get_ptr` (see b/258235219)
 fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream) -> CcSnippet {
     if ty.is_copy_modulo_regions(tcx, ty::ParamEnv::empty()) {
         CcSnippet::new(value)
@@ -254,7 +256,7 @@ fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream
 }
 
 /// Formats `ty` into a `CcSnippet` that represents how the type should be
-/// spelled in a C++ declaration of an `extern "C"` function.
+/// spelled in a C++ declaration of a function parameter or field.
 //
 // TODO(b/259724276): This function's results should be memoized.
 fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
@@ -272,7 +274,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
         ty::TyKind::Tuple(types) => {
             if types.len() == 0 {
                 // TODO(b/254507801): Maybe translate into `crubit::Unit`?
-                bail!("The unit type `()` / `void` is only supported as a return type");
+                bail!("`()` / `void` is only supported as a return type (b/254507801)");
             } else {
                 // TODO(b/254099023): Add support for tuples.
                 bail!("Tuples are not supported yet: {} (b/254099023)", ty);
@@ -340,9 +342,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
         }
 
         ty::TyKind::Adt(adt, substs) => {
-            if substs.len() != 0 {
-                bail!("Generic types are not supported yet (b/259749095)");
-            }
+            ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
 
             // Verify if definition of `ty` can be succesfully imported and bail otherwise.
             let def_id = adt.did();
@@ -363,11 +363,11 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 prereqs
             }
         },
-        // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an element type of an
-        // Array, a pointee type of a RawPtr, a referent of a Ref or Slice, a parameter type of an
-        // FnPtr, etc), one should also 1) propagate `CcPrerequisites::defs`, 2) cover
-        // `CcPrerequisites::defs` in `test_format_ty_for_cc...`.  For ptr/ref/slice it might be
-        // also desirable to separately track forward-declaration prerequisites.
+        // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
+        // element type of an Array, a pointee type of a RawPtr, a referent of a Ref or Slice, a
+        // parameter type of an FnPtr, etc), one should also 1) propagate `CcPrerequisites::defs`,
+        // 2) cover `CcPrerequisites::defs` in `test_format_ty_for_cc...`.  For ptr/ref/slice it
+        // might be also desirable to separately track forward-declaration prerequisites.
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
         | ty::TyKind::RawPtr(..)
@@ -431,10 +431,7 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
             }
         }
         ty::TyKind::Adt(adt, substs) => {
-            if substs.len() != 0 {
-                bail!("Generic types are not supported yet (b/259749095)");
-            }
-
+            ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
         },
         ty::TyKind::Foreign(..)
@@ -464,7 +461,9 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
     })
 }
 
-#[derive(Debug, Default)]
+/// A C++ snippet (e.g. function declaration for `..._cc_api.h`) and a Rust
+/// snippet (e.g. a thunk definition for `..._cc_api_impl.rs`).
+#[derive(Debug)]
 struct MixedSnippet {
     cc: CcSnippet,
     rs: TokenStream,
@@ -544,7 +543,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
         }
     };
 
-    let FullyQualifiedName { mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
+    let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
 
     let mut cc_prereqs = CcPrerequisites::default();
     let cc_tokens = {
@@ -605,7 +604,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
     let rs_tokens = if !needs_thunk {
         quote! {}
     } else {
-        let crate_name = make_rs_ident(tcx.crate_name(LOCAL_CRATE).as_str());
+        let crate_name = make_rs_ident(krate.as_str());
         let mod_path = mod_path.format_for_rs();
         let fn_name = make_rs_ident(name.as_str());
         let exported_name = make_rs_ident(symbol_name.name);
@@ -869,11 +868,7 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
         .hir()
         .attrs(hir_id)
         .iter()
-        .filter_map(|attr| match &attr.doc_str() {
-            None => None,
-            Some(symbol) => Some(symbol.as_str().to_owned()),
-        })
-        .collect_vec()
+        .filter_map(|attr| attr.doc_str())
         .join("\n\n");
     if doc_comment.is_empty() {
         quote! {}
@@ -2118,7 +2113,7 @@ pub mod tests {
         test_format_def(test_src, "fn_with_params", |result| {
             let err = result.expect_err("Test expects an error here");
             assert_eq!(err, "Error formatting the type of parameter #0: \
-                             The unit type `()` / `void` is only supported as a return type");
+                             `()` / `void` is only supported as a return type (b/254507801)");
         });
     }
 
@@ -2731,7 +2726,7 @@ pub mod tests {
             // ( <Rust type>, <expected error message> )
             (
                 "()", // Empty TyKind::Tuple
-                "The unit type `()` / `void` is only supported as a return type"
+                "`()` / `void` is only supported as a return type (b/254507801)"
             ),
             (
                 // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more

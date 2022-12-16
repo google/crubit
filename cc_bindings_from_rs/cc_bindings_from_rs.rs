@@ -33,8 +33,8 @@ use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
 
-/// This mostly wraps and simplifies a subset of APIs from the `rustc_driver`
-/// module.
+/// The `bindings_driver` module mostly wraps and simplifies a subset of APIs
+/// from the `rustc_driver` module.
 mod bindings_driver {
 
     use anyhow::anyhow;
@@ -109,7 +109,7 @@ mod bindings_driver {
             let rustc_result: anyhow::Result<()> = rustc_result.map_err(|_err| {
                 // We can ignore `_err` because it has no payload / because this type has only
                 // one valid/possible value.
-                anyhow::format_err!("Errors reported by Rust compiler.")
+                anyhow!("Errors reported by Rust compiler.")
             });
 
             // Return either `rustc_result` or `self.callback_result` or a new error.
@@ -160,18 +160,17 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
-    let bindings = GeneratedBindings::generate(tcx)?;
+    let GeneratedBindings { h_body, rs_body } = GeneratedBindings::generate(tcx)?;
 
     {
-        let h_body =
-            cc_tokens_to_formatted_string(bindings.h_body, &cmdline.clang_format_exe_path)?;
+        let h_body = cc_tokens_to_formatted_string(h_body, &cmdline.clang_format_exe_path)?;
         write_file(&cmdline.h_out, &h_body)?;
     }
 
     {
         let rustfmt_config =
             RustfmtConfig::new(&cmdline.rustfmt_exe_path, cmdline.rustfmt_config_path.as_deref());
-        let rs_body = rs_tokens_to_formatted_string(bindings.rs_body, &rustfmt_config)?;
+        let rs_body = rs_tokens_to_formatted_string(rs_body, &rustfmt_config)?;
         write_file(&cmdline.rs_out, &rs_body)?;
     }
 
@@ -278,22 +277,14 @@ mod tests {
         /// Appends `extra_rustc_args` at the end of the cmdline (i.e. as
         /// additional rustc args, in addition to `--sysroot`,
         /// `--crate-type=...`, etc.).
-        fn with_extra_rustc_args<T>(mut self, extra_rustc_args: T) -> Self
-        where
-            T: IntoIterator,
-            T::Item: Into<String>,
-        {
-            self.extra_rustc_args = extra_rustc_args.into_iter().map(|t| t.into()).collect_vec();
+        fn with_extra_rustc_args(mut self, extra_rustc_args: &[&str]) -> Self {
+            self.extra_rustc_args = extra_rustc_args.iter().map(|t| t.to_string()).collect_vec();
             self
         }
 
         /// Appends `extra_crubit_args` before the first `--`.
-        fn with_extra_crubit_args<T>(mut self, extra_crubit_args: T) -> Self
-        where
-            T: IntoIterator,
-            T::Item: Into<String>,
-        {
-            self.extra_crubit_args = extra_crubit_args.into_iter().map(|t| t.into()).collect_vec();
+        fn with_extra_crubit_args(mut self, extra_crubit_args: &[&str]) -> Self {
+            self.extra_crubit_args = extra_crubit_args.iter().map(|t| t.to_string()).collect_vec();
             self
         }
 
@@ -443,7 +434,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         // Tests that errors from `Cmdline::new` get propagated.  Broader coverage of
         // various error types can be found in tests in `cmdline.rs`.
         let err = TestArgs::default_args()?
-            .with_extra_crubit_args(["--unrecognized-crubit-flag"])
+            .with_extra_crubit_args(&["--unrecognized-crubit-flag"])
             .run()
             .expect_err("--unrecognized_crubit_flag should trigger an error");
 
@@ -460,7 +451,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
     fn test_rustc_error_propagation() -> anyhow::Result<()> {
         // Tests that `rustc` errors are propagated.
         let err = TestArgs::default_args()?
-            .with_extra_rustc_args(["--unrecognized-rustc-flag"])
+            .with_extra_rustc_args(&["--unrecognized-rustc-flag"])
             .run()
             .expect_err("--unrecognized-rustc-flag should trigger an error");
 
@@ -475,7 +466,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         // anything (e.g. when there are no rustc cmdline arguments, or when
         // `--help` is present).
         let err = TestArgs::default_args()?
-            .with_extra_rustc_args(["--help"])
+            .with_extra_rustc_args(&["--help"])
             .run()
             .expect_err("--help passed to rustc should trigger Crubit-level error");
 
@@ -517,7 +508,7 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         let tmpdir = tempdir()?;
         let out_path = tmpdir.path().join("unexpected_output.o");
         TestArgs::default_args()?
-            .with_extra_rustc_args(vec!["-o", &out_path.display().to_string()])
+            .with_extra_rustc_args(&["-o", &out_path.display().to_string()])
             .run()
             .expect("No rustc or Crubit errors are expected in this test");
 

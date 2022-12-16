@@ -97,8 +97,11 @@ mod tests {
 
         assert_eq!(Path::new("foo.h"), cmdline.h_out);
         assert_eq!(Path::new("foo_impl.rs"), cmdline.rs_out);
+        assert_eq!(Path::new("clang-format.exe"), cmdline.clang_format_exe_path);
         assert_eq!(Path::new("rustfmt.exe"), cmdline.rustfmt_exe_path);
         assert!(cmdline.rustfmt_config_path.is_none());
+        // Ignoring `rustc_args` in this test - they are covered in a separate
+        // test below: `test_rustc_args_happy_path`.
     }
 
     #[test]
