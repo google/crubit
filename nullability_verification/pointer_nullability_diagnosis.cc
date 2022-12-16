@@ -4,6 +4,8 @@
 
 #include "nullability_verification/pointer_nullability_diagnosis.h"
 
+#include <optional>
+
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"
@@ -48,7 +50,7 @@ llvm::Optional<CFGElement> diagnoseDereference(
   if (isNullableOrUntracked(UnaryOp->getSubExpr(), State.Env)) {
     return llvm::Optional<CFGElement>(CFGStmt(UnaryOp));
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 llvm::Optional<CFGElement> diagnoseArrow(
@@ -57,7 +59,7 @@ llvm::Optional<CFGElement> diagnoseArrow(
   if (isNullableOrUntracked(MemberExpr->getBase(), State.Env)) {
     return llvm::Optional<CFGElement>(CFGStmt(MemberExpr));
   }
-  return llvm::None;
+  return std::nullopt;
 }
 
 bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
@@ -83,10 +85,10 @@ llvm::Optional<CFGElement> diagnoseCallExpr(
     const CallExpr* CE, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto* Callee = CE->getCalleeDecl();
-  if (!Callee) return llvm::None;
+  if (!Callee) return std::nullopt;
 
   auto* CalleeType = Callee->getFunctionType();
-  if (!CalleeType) return llvm::None;
+  if (!CalleeType) return std::nullopt;
 
   auto ParamTypes = CalleeType->getAs<FunctionProtoType>()->getParamTypes();
   ArrayRef<const Expr*> Args(CE->getArgs(), CE->getNumArgs());
@@ -99,7 +101,7 @@ llvm::Optional<CFGElement> diagnoseCallExpr(
   return isIncompatibleArgumentList(ParamTypes, Args, State.Env,
                                     *Result.Context)
              ? llvm::Optional<CFGElement>(CFGStmt(CE))
-             : llvm::None;
+             : std::nullopt;
 }
 
 llvm::Optional<CFGElement> diagnoseConstructExpr(
@@ -113,7 +115,7 @@ llvm::Optional<CFGElement> diagnoseConstructExpr(
   return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs,
                                     State.Env, *Result.Context)
              ? llvm::Optional<CFGElement>(CFGStmt(CE))
-             : llvm::None;
+             : std::nullopt;
 }
 
 llvm::Optional<CFGElement> diagnoseReturn(
@@ -128,7 +130,7 @@ llvm::Optional<CFGElement> diagnoseReturn(
   return isIncompatibleAssignment(ReturnType, ReturnExpr, State.Env,
                                   *Result.Context)
              ? llvm::Optional<CFGElement>(CFGStmt(RS))
-             : llvm::None;
+             : std::nullopt;
 }
 
 llvm::Optional<CFGElement> diagnoseMemberInitializer(
@@ -137,13 +139,13 @@ llvm::Optional<CFGElement> diagnoseMemberInitializer(
   assert(CI->isAnyMemberInitializer());
   auto MemberType = CI->getAnyMember()->getType();
   if (!MemberType->isAnyPointerType()) {
-    return llvm::None;
+    return std::nullopt;
   }
   auto MemberInitExpr = CI->getInit();
   return isIncompatibleAssignment(MemberType, MemberInitExpr, State.Env,
                                   *Result.Context)
              ? llvm::Optional<CFGElement>(CFGInitializer(CI))
-             : llvm::None;
+             : std::nullopt;
 }
 
 auto buildDiagnoser() {

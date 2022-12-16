@@ -4,6 +4,8 @@
 
 #include "rs_bindings_from_cc/importers/typedef_name.h"
 
+#include <optional>
+
 #include "absl/log/check.h"
 #include "rs_bindings_from_cc/known_types_map.h"
 #include "clang/AST/ASTContext.h"
@@ -14,7 +16,7 @@ namespace crubit {
 std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     clang::TypedefNameDecl* typedef_name_decl) {
   clang::DeclContext* decl_context = typedef_name_decl->getDeclContext();
-  llvm::Optional<ItemId> enclosing_record_id = llvm::None;
+  llvm::Optional<ItemId> enclosing_record_id = std::nullopt;
   if (decl_context) {
     if (decl_context->isFunctionOrMethod()) {
       return std::nullopt;

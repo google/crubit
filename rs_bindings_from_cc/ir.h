@@ -108,20 +108,19 @@ inline ItemId GenerateItemId(const clang::RawComment* comment) {
   return ItemId(reinterpret_cast<uintptr_t>(comment));
 }
 
-// Returns the ID of the parent namespace, if such exists, and `llvm::None` for
-// top level decls.
-// We use this function to assign a parent namespace to all the IR items.
-// `llvm::Optional` is used because it integrates better with the `llvm::json`
-// library than `std::optional`.
+// Returns the ID of the parent namespace, if such exists, and `std::nullopt`
+// for top level decls. We use this function to assign a parent namespace to all
+// the IR items. `llvm::Optional` is used because it integrates better with the
+// `llvm::json` library than `std::optional`.
 inline llvm::Optional<ItemId> GetEnclosingNamespaceId(const clang::Decl* decl) {
   auto enclosing_namespace =
       decl->getDeclContext()->getEnclosingNamespaceContext();
-  if (enclosing_namespace->isTranslationUnit()) return llvm::None;
+  if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
 
   // Class template specializations are always emitted in the top-level
   // namespace.  See also Importer::GetOrderedItemIdsOfTemplateInstantiations.
   if (clang::isa<clang::ClassTemplateSpecializationDecl>(decl))
-    return llvm::None;
+    return std::nullopt;
 
   auto namespace_decl = clang::cast<clang::NamespaceDecl>(enclosing_namespace);
   return GenerateItemId(namespace_decl);

@@ -4,6 +4,8 @@
 
 #include "rs_bindings_from_cc/importers/cxx_record.h"
 
+#include <optional>
+
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
@@ -350,7 +352,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
               "Unnamed fields can't be annotated with [[no_unique_address]]");
     fields.push_back(
         {.identifier = field_name ? *std::move(field_name)
-                                  : llvm::Optional<Identifier>(llvm::None),
+                                  : llvm::Optional<Identifier>(std::nullopt),
          .doc_comment = ictx_.GetComment(field_decl),
          .type = std::move(type),
          .access = TranslateAccessSpecifier(access),
