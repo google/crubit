@@ -4,7 +4,8 @@
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use code_gen_utils::{
-    format_cc_ident, format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier,
+    format_cc_ident, format_cc_includes, format_namespace_bound_cc_tokens, make_rs_ident,
+    CcInclude, NamespaceQualifier,
 };
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
@@ -963,6 +964,7 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
     let mut ordered_cc = Vec::new();
     let mut rs_body = quote! {};
     for local_def_id in ordered_ids.into_iter() {
+        let mod_path = FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path;
         let MixedSnippet {
             rs: inner_rs,
             cc: CcSnippet {
@@ -974,7 +976,7 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
             }
         } = bindings.remove(&local_def_id).unwrap();
         includes.append(&mut inner_includes);
-        ordered_cc.push((local_def_id, cc_tokens));
+        ordered_cc.push((mod_path, cc_tokens));
         rs_body.extend(inner_rs);
     }
 
@@ -985,35 +987,17 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         // unique + ergonomic).
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
-        // Neighboring `cc` items that belong to the same namespace are put under a
-        // single `namespace foo::bar::baz { #items }`.  We don't just translate
-        // `mod foo` => `namespace foo` in a top-down fashion, because of the
-        // need to reorder the bindings of individual items (see
-        // `CcPrerequisites::defs` toposort above).
-        let ordered_cc = ordered_cc
-            .into_iter()
-            .group_by(|(local_def_id, _)| {
-                FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path
-            })
-            .into_iter()
-            .map(|(mod_path, items)| {
-                let tokens = items.into_iter().map(|(_, tokens)| tokens).collect();
-                mod_path.format_with_cc_body(tokens)
-            })
-            .collect::<Result<Vec<_>>>()?;
-
-        // Replace `failed` ids with unsupported-item comments.
+        let includes = format_cc_includes(&includes);
+        let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc)?;
         let failed_cc = failed_ids.into_iter().map(|def_id| {
             // TODO(b/260725687): Add test coverage for the error condition below.
             format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle")).cc.tokens
         });
-
-        let includes = format_cc_includes(&includes);
-        let cc = ordered_cc.into_iter().chain(failed_cc).collect::<TokenStream>();
         quote! {
             #includes __NEWLINE__
             namespace #crate_name {
-                #cc
+                #ordered_cc
+                #( #failed_cc )*
             }
         }
     };

@@ -72,7 +72,7 @@ impl NamespaceQualifier {
         Ok(quote! { #(#namespace_cc_idents::)* })
     }
 
-    pub fn format_with_cc_body(&self, body: TokenStream) -> Result<TokenStream> {
+    fn format_with_cc_body(&self, body: TokenStream) -> Result<TokenStream> {
         if self.0.is_empty() {
             Ok(body)
         } else {
@@ -88,6 +88,58 @@ impl NamespaceQualifier {
     fn cc_idents(&self) -> Result<Vec<TokenStream>> {
         self.0.iter().map(|ns| format_cc_ident(ns)).collect()
     }
+}
+
+/// `format_namespace_bound_cc_tokens` formats a sequence of namespace-bound
+/// snippets.  For example, `[(ns, tokens)]` will be formatted as:
+///
+///     ```
+///     namespace ns {
+///     #tokens
+///     }
+///     ```
+///
+/// `format_namespace_bound_cc_tokens` tries to give a nice-looking output - for
+/// example it combines consecutive items that belong to the same namespace,
+/// when given `[(ns, tokens1), (ns, tokens2)]` as input:
+///
+///     ```
+///     namespace ns {
+///     #tokens1
+///     #tokens2
+///     }
+///     ```
+///
+/// `format_namespace_bound_cc_tokens` also knows that top-level items (e.g.
+/// ones where `NamespaceQualifier` doesn't contain any namespace names) should
+/// be emitted at the top-level (not nesting them under a `namespace` keyword).
+/// For example, `[(toplevel_ns, tokens)]` will be formatted as just:
+///
+///     ```
+///     #tokens
+///     ```
+pub fn format_namespace_bound_cc_tokens(
+    iter: impl IntoIterator<Item = (NamespaceQualifier, TokenStream)>,
+) -> Result<TokenStream> {
+    let mut iter = iter.into_iter().peekable();
+    let mut tokens_in_curr_ns = Vec::with_capacity(iter.size_hint().0);
+    let mut result = TokenStream::default();
+    while let Some((curr_ns, tokens)) = iter.next() {
+        tokens_in_curr_ns.push(tokens);
+
+        // Flush `tokens_in_curr_ns` when at the end of the current namespace.
+        let next_ns = iter.peek().map(|(next_ns, _)| next_ns);
+        if next_ns != Some(&curr_ns) {
+            let tokens_in_curr_ns = tokens_in_curr_ns.drain(..);
+            result.extend(curr_ns.format_with_cc_body(quote! { #(#tokens_in_curr_ns)* })?);
+        }
+
+        // Separate namespaces with a single empty line.
+        if iter.peek().is_some() {
+            result.extend(quote! { __NEWLINE__ __NEWLINE__ });
+        }
+    }
+    Ok(result)
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
@@ -511,6 +563,46 @@ pub mod tests {
                 namespace foo::bar::baz {
                     cc body goes here
                 }  // namespace foo::bar::baz
+            },
+        );
+    }
+
+    #[test]
+    fn test_format_namespace_bound_cc_tokens() {
+        let top_level = create_namespace_qualifier_for_tests(&[]);
+        let m1 = create_namespace_qualifier_for_tests(&["m1"]);
+        let m2 = create_namespace_qualifier_for_tests(&["m2"]);
+        let input = vec![
+            (top_level.clone(), quote! { void f0a(); }),
+            (m1.clone(), quote! { void f1a(); }),
+            (m1.clone(), quote! { void f1b(); }),
+            (top_level.clone(), quote! { void f0b(); }),
+            (top_level.clone(), quote! { void f0c(); }),
+            (m2.clone(), quote! { void f2a(); }),
+            (m1.clone(), quote! { void f1c(); }),
+            (m1.clone(), quote! { void f1d(); }),
+        ];
+        assert_cc_matches!(
+            format_namespace_bound_cc_tokens(input).unwrap(),
+            quote! {
+                void f0a();
+
+                namespace m1 {
+                void f1a();
+                void f1b();
+                }  // namespace m1
+
+                void f0b();
+                void f0c();
+
+                namespace m2 {
+                void f2a();
+                }
+
+                namespace m1 {
+                void f1c();
+                void f1d();
+                }  // namespace m1
             },
         );
     }
