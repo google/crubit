@@ -20,8 +20,7 @@ use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::iter::Sum;
-use std::ops::{Add, AddAssign};
+use std::ops::AddAssign;
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
@@ -469,32 +468,6 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
 struct MixedSnippet {
     cc: CcSnippet,
     rs: TokenStream,
-}
-
-impl AddAssign for MixedSnippet {
-    fn add_assign(&mut self, rhs: Self) {
-        let Self { cc: CcSnippet { tokens: rhs_cc_tokens, prereqs: rhs_cc_prereqs }, rs: rhs_rs } =
-            rhs;
-
-        self.cc.prereqs += rhs_cc_prereqs;
-        self.cc.tokens.extend(rhs_cc_tokens);
-        self.rs.extend(rhs_rs);
-    }
-}
-
-impl Add for MixedSnippet {
-    type Output = MixedSnippet;
-
-    fn add(mut self, rhs: Self) -> Self {
-        self += rhs;
-        self
-    }
-}
-
-impl Sum for MixedSnippet {
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.fold(Default::default(), Add::add)
-    }
 }
 
 /// Formats a function with the given `local_def_id`.
@@ -978,7 +951,7 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
     // Find the order of `bindings` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
     // `bindings` in the same order as the source order of the Rust APIs.
-    let toposort::TopoSortResult { ordered, failed } = {
+    let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
         let nodes = bindings.keys().copied();
         let deps = bindings.iter().flat_map(|(&successor, snippet)| {
             let predecessors = snippet.cc.prereqs.defs.iter().copied();
@@ -989,47 +962,68 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         toposort::toposort(nodes, deps, preferred_order)
     };
 
-    // Neighboring `ordered` items that belong to the same namespace should be put
-    // under a single `namespace foo::bar::baz { #items }`.  We don't just translate
-    // `mod foo` => `namespace foo` in a top-down fashion, because of the need to
-    // reorder the bindings of individual items (see `CcPrerequisites::defs`
-    // toposort above).
-    let ordered = ordered
-        .into_iter()
-        .group_by(|local_def_id| FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path)
-        .into_iter()
-        .map(|(mod_path, def_ids)| {
-            let mut snippet: MixedSnippet =
-                def_ids.map(|def_id| bindings.remove(&def_id).unwrap()).sum();
-            snippet.cc.tokens = mod_path.format_with_cc_body(snippet.cc.tokens)?;
-            Ok(snippet)
-        })
-        .collect::<Result<Vec<_>>>()?;
-
-    // Replace `failed` ids with unsupported-item comments.
-    let failed = failed.into_iter().map(|def_id| {
-        // TODO(b/260725687): Add test coverage for the error condition below.
-        format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle"))
-    });
+    // Destructure/rebuild `bindings` (in the same order as `ordered_ids`) into
+    // `includes`, and into separate C++ snippets and Rust snippets.
+    let mut includes = BTreeSet::new();
+    let mut ordered_cc = Vec::new();
+    let mut rs_body = quote! {};
+    for local_def_id in ordered_ids.into_iter() {
+        let MixedSnippet {
+            rs: inner_rs,
+            cc: CcSnippet {
+                tokens: cc_tokens,
+                prereqs: CcPrerequisites {
+                    includes: mut inner_includes,
+                    .. // `defs` have already been utilized by `toposort` above
+                }
+            }
+        } = bindings.remove(&local_def_id).unwrap();
+        includes.append(&mut inner_includes);
+        ordered_cc.push((local_def_id, cc_tokens));
+        rs_body.extend(inner_rs);
+    }
 
     // Generate top-level elements of the C++ header file.
-    let MixedSnippet { cc, rs } = ordered.into_iter().chain(failed).sum();
     let h_body = {
         // TODO(b/254690602): Decide whether using `#crate_name` as the name of the
         // top-level namespace is okay (e.g. investigate if this name is globally
         // unique + ergonomic).
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
-        let CcSnippet { prereqs: CcPrerequisites { includes, .. }, tokens } = cc;
+        // Neighboring `cc` items that belong to the same namespace are put under a
+        // single `namespace foo::bar::baz { #items }`.  We don't just translate
+        // `mod foo` => `namespace foo` in a top-down fashion, because of the
+        // need to reorder the bindings of individual items (see
+        // `CcPrerequisites::defs` toposort above).
+        let ordered_cc = ordered_cc
+            .into_iter()
+            .group_by(|(local_def_id, _)| {
+                FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path
+            })
+            .into_iter()
+            .map(|(mod_path, items)| {
+                let tokens = items.into_iter().map(|(_, tokens)| tokens).collect();
+                mod_path.format_with_cc_body(tokens)
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        // Replace `failed` ids with unsupported-item comments.
+        let failed_cc = failed_ids.into_iter().map(|def_id| {
+            // TODO(b/260725687): Add test coverage for the error condition below.
+            format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle")).cc.tokens
+        });
+
         let includes = format_cc_includes(&includes);
+        let cc = ordered_cc.into_iter().chain(failed_cc).collect::<TokenStream>();
         quote! {
             #includes __NEWLINE__
             namespace #crate_name {
-                #tokens
+                #cc
             }
         }
     };
-    Ok(GeneratedBindings { h_body, rs_body: rs })
+
+    Ok(GeneratedBindings { h_body, rs_body })
 }
 
 #[cfg(test)]
