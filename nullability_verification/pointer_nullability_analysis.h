@@ -22,10 +22,16 @@ namespace nullability {
 class PointerNullabilityAnalysis
     : public dataflow::DataflowAnalysis<PointerNullabilityAnalysis,
                                         PointerNullabilityLattice> {
+ private:
+  absl::flat_hash_map<const Expr*, std::vector<NullabilityKind>>
+      ExprToNullability;
+
  public:
   explicit PointerNullabilityAnalysis(ASTContext& context);
 
-  static PointerNullabilityLattice initialElement() { return {}; }
+  PointerNullabilityLattice initialElement() {
+    return PointerNullabilityLattice(&ExprToNullability);
+  }
 
   void transfer(const CFGElement* Elt, PointerNullabilityLattice& Lattice,
                 dataflow::Environment& Env);
@@ -36,9 +42,13 @@ class PointerNullabilityAnalysis
              dataflow::Environment& MergedEnv) override;
 
  private:
-  // Applies transfer functions on statements
+  // Applies non-flow-sensitive transfer functions on statements
   dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
-      Transferer;
+      NonFlowSensitiveTransferer;
+
+  // Applies flow-sensitive transfer functions on statements
+  dataflow::CFGMatchSwitch<dataflow::TransferState<PointerNullabilityLattice>>
+      FlowSensitiveTransferer;
 };
 }  // namespace nullability
 }  // namespace tidy

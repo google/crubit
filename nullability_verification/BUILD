@@ -3,7 +3,10 @@
 cc_library(
     name = "pointer_nullability_lattice",
     hdrs = ["pointer_nullability_lattice.h"],
-    deps = ["@llvm-project//clang:analysis"],
+    deps = [
+        "@absl//absl/container:flat_hash_map",
+        "@llvm-project//clang:analysis",
+    ],
 )
 
 cc_library(

@@ -127,6 +127,18 @@ class CountPointersInTypeVisitor
       Visit(TA.getAsType());
     }
   }
+
+  void VisitRecordType(const RecordType* RT) {
+    if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+      for (auto& TA : CTSD->getTemplateArgs().asArray()) {
+        Visit(TA);
+      }
+    }
+  }
+
+  void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
+    Visit(TST->desugar());
+  }
 };
 
 unsigned countPointersInType(QualType T) {
@@ -164,13 +176,22 @@ ArrayRef<NullabilityKind> getNullabilityForTemplateParameter(
     ArrayRef<NullabilityKind> BaseNullabilityAnnotations, QualType BaseType) {
   unsigned PointerCount = 0;
   unsigned ArgIndex = STTPT->getIndex();
-  if (auto TST = BaseType->getAs<TemplateSpecializationType>()) {
-    for (auto TA : TST->template_arguments().take_front(ArgIndex)) {
-      PointerCount += countPointersInType(TA);
+  if (auto RT = BaseType->getAs<RecordType>()) {
+    if (auto CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+      auto TemplateArgs = CTSD->getTemplateArgs().asArray();
+      for (auto TA : TemplateArgs.take_front(ArgIndex)) {
+        PointerCount += countPointersInType(TA);
+      }
+      unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
+      if (BaseNullabilityAnnotations.size() < PointerCount + SliceSize) {
+        // TODO: Currently, BaseNullabilityAnnotations can be erroneously empty
+        // due to lack of expression coverage. Use the dataflow lattice to
+        // retrieve correct base type annotations. Then, remove this fallback.
+        return {};
+      } else {
+        return BaseNullabilityAnnotations.slice(PointerCount, SliceSize);
+      }
     }
-    unsigned SliceSize =
-        countPointersInType(TST->template_arguments()[ArgIndex]);
-    return BaseNullabilityAnnotations.slice(PointerCount, SliceSize);
   }
   return ArrayRef<NullabilityKind>();
 }
@@ -264,11 +285,11 @@ std::vector<NullabilityKind> getBaseNullabilityAnnotations(const Expr* E) {
 
 QualType getBaseType(const Expr* E) {
   if (auto ME = dyn_cast<MemberExpr>(E)) {
-    return getBaseType(ME->getBase());
+    return ME->getBase()->getType();
   } else if (auto MC = dyn_cast<CXXMemberCallExpr>(E)) {
-    return getBaseType(MC->getImplicitObjectArgument());
-  } else if (auto DRE = dyn_cast<DeclRefExpr>(E)) {
-    return DRE->getType();
+    return MC->getImplicitObjectArgument()->getType();
+  } else if (auto ICE = dyn_cast<ImplicitCastExpr>(E)) {
+    return ICE->getSubExpr()->getType();
   }
   // TODO: Handle other expression shapes and base types.
   else {
@@ -299,30 +320,45 @@ NullabilityKind getNullabilityFromTemplatedExpression(const Expr* E) {
   return NullabilityAnnotations[0];
 }
 
-NullabilityKind getPointerNullability(const Expr* E, ASTContext& Ctx) {
+NullabilityKind getPointerNullability(const Expr* E, ASTContext& Ctx,
+                                      PointerNullabilityAnalysis::Lattice& L) {
   QualType ExprType = E->getType();
-  NullabilityKind Nullability =
-      ExprType->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
-  if (Nullability == NullabilityKind::Unspecified) {
-    // If the type does not contain nullability information, try to gather it
-    // from the expression itself.
+  Optional<NullabilityKind> Nullability = ExprType->getNullability(Ctx);
+
+  // If the expression's type does not contain nullability information, it may
+  // be a template instantiation. Look up the nullability in the
+  // `ExprToNullability` map.
+  if (Nullability.value_or(NullabilityKind::Unspecified) ==
+      NullabilityKind::Unspecified) {
+    if (auto MaybeNullability = L.getExprNullability(E)) {
+      if (!MaybeNullability->empty()) {
+        // Return the nullability of the topmost pointer in the type.
+        Nullability = (*MaybeNullability)[0];
+      }
+    }
+  }
+  // TODO: Expand the dataflow analysis algorithm to propagate the nullability
+  // of more expression shapes (e.g., method calls), and then delete
+  // getNullabilityFromTemplatedExpression.
+  if (!Nullability.has_value()) {
     Nullability = getNullabilityFromTemplatedExpression(E);
   }
-  return Nullability;
+  return Nullability.value_or(NullabilityKind::Unspecified);
 }
 
 void initPointerFromAnnotations(PointerValue& PointerVal, const Expr* E,
-                                Environment& Env, ASTContext& Ctx) {
-  NullabilityKind Nullability = getPointerNullability(E, Ctx);
+                                TransferState<PointerNullabilityLattice>& State,
+                                ASTContext& Ctx) {
+  NullabilityKind Nullability = getPointerNullability(E, Ctx, State.Lattice);
   switch (Nullability) {
     case NullabilityKind::NonNull:
-      initNotNullPointer(PointerVal, Env);
+      initNotNullPointer(PointerVal, State.Env);
       break;
     case NullabilityKind::Nullable:
-      initNullablePointer(PointerVal, Env);
+      initNullablePointer(PointerVal, State.Env);
       break;
     default:
-      initUnknownPointer(PointerVal, Env);
+      initUnknownPointer(PointerVal, State.Env);
   }
 }
 
@@ -346,7 +382,7 @@ void transferPointer(const Expr* PointerExpr,
                      const MatchFinder::MatchResult& Result,
                      TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
-    initPointerFromAnnotations(*PointerVal, PointerExpr, State.Env,
+    initPointerFromAnnotations(*PointerVal, PointerExpr, State,
                                *Result.Context);
   }
 }
@@ -422,10 +458,51 @@ void transferCallExpr(const CallExpr* CallExpr,
     State.Env.setValue(CallExprLoc, *PointerVal);
     State.Env.setStorageLocation(*CallExpr, CallExprLoc);
   }
-  initPointerFromAnnotations(*PointerVal, CallExpr, State.Env, *Result.Context);
+  initPointerFromAnnotations(*PointerVal, CallExpr, State, *Result.Context);
 }
 
-auto buildTransferer() {
+void transferDeclRefExpr(const DeclRefExpr* DRE,
+                         const MatchFinder::MatchResult& MR,
+                         TransferState<PointerNullabilityLattice>& State) {
+  State.Lattice.insertExprNullabilityIfAbsent(
+      DRE, [&]() { return getNullabilityAnnotationsFromType(DRE->getType()); });
+  if (DRE->getType()->isPointerType()) {
+    transferPointer(DRE, MR, State);
+  }
+}
+
+void transferMemberExpr(const MemberExpr* ME,
+                        const MatchFinder::MatchResult& MR,
+                        TransferState<PointerNullabilityLattice>& State) {
+  State.Lattice.insertExprNullabilityIfAbsent(ME, [&]() {
+    auto BaseNullability = State.Lattice.getExprNullability(ME->getBase());
+    if (BaseNullability.has_value()) {
+      return substituteNullabilityAnnotationsInTemplate(
+          ME->getType(), *BaseNullability, ME->getBase()->getType());
+    } else {
+      // Since we process child nodes before parents, we should already have
+      // computed the base (child) nullability. However, this is not true in all
+      // test cases. So, we return unspecified nullability annotations.
+      // TODO: Fix this issue, add ._has_value() as a CHECK statement and remove
+      // else branch.
+      return std::vector<NullabilityKind>(countPointersInType(ME->getType()),
+                                          NullabilityKind::Unspecified);
+    }
+  });
+  if (ME->getType()->isPointerType()) {
+    transferPointer(ME, MR, State);
+  }
+}
+
+auto buildNonFlowSensitiveTransferer() {
+  return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
+      .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
+                                  transferDeclRefExpr)
+      .CaseOfCFGStmt<MemberExpr>(ast_matchers::memberExpr(), transferMemberExpr)
+      .Build();
+}
+
+auto buildFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
       .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferNotNullPointer)
@@ -446,13 +523,15 @@ auto buildTransferer() {
 PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext& Context)
     : DataflowAnalysis<PointerNullabilityAnalysis, PointerNullabilityLattice>(
           Context),
-      Transferer(buildTransferer()) {}
+      NonFlowSensitiveTransferer(buildNonFlowSensitiveTransferer()),
+      FlowSensitiveTransferer(buildFlowSensitiveTransferer()) {}
 
 void PointerNullabilityAnalysis::transfer(const CFGElement* Elt,
                                           PointerNullabilityLattice& Lattice,
                                           Environment& Env) {
   TransferState<PointerNullabilityLattice> State(Lattice, Env);
-  Transferer(*Elt, getASTContext(), State);
+  NonFlowSensitiveTransferer(*Elt, getASTContext(), State);
+  FlowSensitiveTransferer(*Elt, getASTContext(), State);
 }
 
 BoolValue& mergeBoolValues(BoolValue& Bool1, const Environment& Env1,
