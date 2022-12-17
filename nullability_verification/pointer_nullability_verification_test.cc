@@ -2040,9 +2040,9 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
     };
 
     void target(S<int> p) {
-      // *p.getTN2<0, int *, 1>(); // TODO: fix crash
-      // *p.getTN2<2147483647, int * _Nonnull, -2147483647>(); // TODO: fix
-      // crash *p.getTN2<4, int * _Nullable, 4>(); // TODO: fix crash
+      *p.getTN2<0, int *, 1>();
+      *p.getTN2<2147483647, int *_Nonnull, -2147483647>();
+      *p.getTN2<4, int *_Nullable, 4>();  // TODO: fix false negative.
     }
   )cc");
 }

@@ -182,6 +182,12 @@ ArrayRef<NullabilityKind> getNullabilityForTemplateParameter(
       for (auto TA : TemplateArgs.take_front(ArgIndex)) {
         PointerCount += countPointersInType(TA);
       }
+      // TODO: Correctly handle the indexing of nested templates (e.g.
+      // PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct), then
+      // remove this fallback.
+      if (TemplateArgs.size() <= ArgIndex) {
+        return {};
+      }
       unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
       if (BaseNullabilityAnnotations.size() < PointerCount + SliceSize) {
         // TODO: Currently, BaseNullabilityAnnotations can be erroneously empty
