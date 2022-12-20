@@ -22,7 +22,7 @@ load(
     "//rs_bindings_from_cc/bazel_support:compile_rust.bzl",
     "compile_rust",
 )
-load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
 
 def _generate_bindings(ctx, basename, inputs, rustc_args):
     """Invokes the `cc_bindings_from_rs` tool to generate C++ bindings for a Rust crate.
@@ -193,6 +193,6 @@ cc_bindings_from_rust = rule(
     },
     toolchains = [
         "@rules_rust//rust:toolchain",
-    ],
+    ] + use_cpp_toolchain(),
     fragments = ["cpp"],
 )
