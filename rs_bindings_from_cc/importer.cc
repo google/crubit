@@ -636,8 +636,7 @@ static bool ShouldKeepCommentLine(absl::string_view line) {
   return !patterns_to_ignore.match(line);
 }
 
-llvm::Optional<std::string> Importer::GetComment(
-    const clang::Decl* decl) const {
+std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   // This does currently not distinguish between different types of comments.
   // In general it is not possible in C++ to reliably only extract doc comments.
   // This is going to be a heuristic that needs to be tuned over time.

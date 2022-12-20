@@ -110,9 +110,8 @@ inline ItemId GenerateItemId(const clang::RawComment* comment) {
 
 // Returns the ID of the parent namespace, if such exists, and `std::nullopt`
 // for top level decls. We use this function to assign a parent namespace to all
-// the IR items. `llvm::Optional` is used because it integrates better with the
-// `llvm::json` library than `std::optional`.
-inline llvm::Optional<ItemId> GetEnclosingNamespaceId(const clang::Decl* decl) {
+// the IR items.
+inline std::optional<ItemId> GetEnclosingNamespaceId(const clang::Decl* decl) {
   auto enclosing_namespace =
       decl->getDeclContext()->getEnclosingNamespaceContext();
   if (enclosing_namespace->isTranslationUnit()) return std::nullopt;
@@ -163,9 +162,8 @@ struct CcType {
   std::string name;
 
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
-  // non-empty. `llvm::Optional` is used because it integrates better with
-  // `llvm::json` library than `std::optional`.
-  llvm::Optional<ItemId> decl_id;
+  // non-empty.
+  std::optional<ItemId> decl_id;
 
   // The C++ const-qualification for the type.
   //
@@ -202,9 +200,8 @@ struct RsType {
   std::string name;
 
   // Id of a decl that this type corresponds to. `nullopt` when `name` is
-  // non-empty. `llvm::Optional` is used because it integrates better with
-  // `llvm::json` library than `std::optional`.
-  llvm::Optional<ItemId> decl_id;
+  // non-empty.
+  std::optional<ItemId> decl_id;
 
   // Lifetime arguments for a generic type. Examples:
   //   *mut i32 has no lifetime arguments
@@ -424,10 +421,7 @@ struct MemberFuncMetadata {
   // Qualifiers for the instance method.
   //
   // If null, this is a static method.
-  //
-  // `llvm::Optional` is used because it integrates better with `llvm::json`
-  // library than `std::optional`.
-  llvm::Optional<InstanceMethodMetadata> instance_method_metadata;
+  std::optional<InstanceMethodMetadata> instance_method_metadata;
 };
 
 // Source code location
@@ -449,26 +443,26 @@ struct Func {
 
   UnqualifiedIdentifier name;
   BazelLabel owning_target;
-  llvm::Optional<std::string> doc_comment;
+  std::optional<std::string> doc_comment;
   std::string mangled_name;
   MappedType return_type;
   std::vector<FuncParam> params;
   std::vector<LifetimeName> lifetime_params;
   bool is_inline;
   // If null, this is not a member function.
-  llvm::Optional<MemberFuncMetadata> member_func_metadata;
+  std::optional<MemberFuncMetadata> member_func_metadata;
   bool has_c_calling_convention = true;
   bool is_member_or_descendant_of_class_template = false;
   SourceLoc source_loc;
   ItemId id;
-  llvm::Optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_namespace_id;
   // If present, this function should only generate top-level bindings if its
   // arguments refer to this enclosing record according to the ADL rules.
   //
   // This could in principle be resolved while generating the IR, but the richer
   // Rust type modeling in src_code_gen makes it much easier to do on the
   // consuming end.
-  llvm::Optional<ItemId> adl_enclosing_record;
+  std::optional<ItemId> adl_enclosing_record;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Func& f) {
@@ -491,9 +485,9 @@ struct Field {
   // Name of the field.  This may be missing for "unnamed members" - see:
   // - https://en.cppreference.com/w/c/language/struct
   // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
-  llvm::Optional<Identifier> identifier;
+  std::optional<Identifier> identifier;
 
-  llvm::Optional<std::string> doc_comment;
+  std::optional<std::string> doc_comment;
   absl::StatusOr<MappedType> type;
   AccessSpecifier access;
   uint64_t offset;            // Field offset in bits.
@@ -544,10 +538,7 @@ struct BaseClass {
   // The offset the base class subobject is located at. This is always nonempty
   // for nonvirtual inheritance, and always empty if a virtual base class is
   // anywhere in the inheritance chain.
-  //
-  // `llvm::Optional` is used because it integrates better with `llvm::json`
-  // library than `std::optional`.
-  llvm::Optional<int64_t> offset;
+  std::optional<int64_t> offset;
 };
 
 enum RecordType {
@@ -578,7 +569,7 @@ struct Record {
 
   ItemId id;
   BazelLabel owning_target;
-  llvm::Optional<std::string> doc_comment;
+  std::optional<std::string> doc_comment;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
   std::vector<LifetimeName> lifetime_params;
@@ -649,7 +640,7 @@ struct Record {
   bool is_explicit_class_template_instantiation_definition = false;
 
   std::vector<ItemId> child_item_ids;
-  llvm::Optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_namespace_id;
 };
 
 // A forward-declared record (e.g. `struct Foo;`)
@@ -660,7 +651,7 @@ struct IncompleteRecord {
   ItemId id;
   BazelLabel owning_target;
   RecordType record_type;
-  llvm::Optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_namespace_id;
 };
 
 struct Enumerator {
@@ -678,7 +669,7 @@ struct Enum {
   BazelLabel owning_target;
   MappedType underlying_type;
   std::vector<Enumerator> enumerators;
-  llvm::Optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_namespace_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const Record& r) {
@@ -692,11 +683,11 @@ struct TypeAlias {
   Identifier identifier;
   ItemId id;
   BazelLabel owning_target;
-  llvm::Optional<std::string> doc_comment;
+  std::optional<std::string> doc_comment;
   MappedType underlying_type;
   SourceLoc source_loc;
-  llvm::Optional<ItemId> enclosing_record_id;
-  llvm::Optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_record_id;
+  std::optional<ItemId> enclosing_namespace_id;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const TypeAlias& t) {
@@ -743,7 +734,7 @@ struct Namespace {
   ItemId canonical_namespace_id;
   BazelLabel owning_target;
   std::vector<ItemId> child_item_ids;
-  llvm::Optional<ItemId> enclosing_namespace_id;
+  std::optional<ItemId> enclosing_namespace_id;
   bool is_inline = false;
 };
 

@@ -165,7 +165,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   std::string rs_name, cc_name, preferred_cc_name;
-  llvm::Optional<std::string> doc_comment;
+  std::optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
   if (auto* specialization_decl =
           clang::dyn_cast<clang::ClassTemplateSpecializationDecl>(
@@ -352,7 +352,7 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
               "Unnamed fields can't be annotated with [[no_unique_address]]");
     fields.push_back(
         {.identifier = field_name ? *std::move(field_name)
-                                  : llvm::Optional<Identifier>(std::nullopt),
+                                  : std::optional<Identifier>(std::nullopt),
          .doc_comment = ictx_.GetComment(field_decl),
          .type = std::move(type),
          .access = TranslateAccessSpecifier(access),
@@ -423,7 +423,7 @@ std::vector<BaseClass> CXXRecordDeclImporter::GetUnambiguousPublicBases(
         continue;
       }
 
-      llvm::Optional<int64_t> offset = {0};
+      std::optional<int64_t> offset = {0};
       for (const clang::CXXBasePathElement& base_path_element : path) {
         if (base_path_element.Base->isVirtual()) {
           offset.reset();

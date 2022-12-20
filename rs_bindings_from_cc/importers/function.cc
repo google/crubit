@@ -4,6 +4,8 @@
 
 #include "rs_bindings_from_cc/importers/function.h"
 
+#include <optional>
+
 #include "absl/strings/substitute.h"
 #include "rs_bindings_from_cc/ast_util.h"
 #include "clang/Sema/Sema.h"
@@ -165,11 +167,10 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
                return l1.name < l2.name;
              });
 
-  llvm::Optional<MemberFuncMetadata> member_func_metadata;
+  std::optional<MemberFuncMetadata> member_func_metadata;
   if (auto* method_decl =
           clang::dyn_cast<clang::CXXMethodDecl>(function_decl)) {
-    llvm::Optional<MemberFuncMetadata::InstanceMethodMetadata>
-        instance_metadata;
+    std::optional<MemberFuncMetadata::InstanceMethodMetadata> instance_metadata;
     if (method_decl->isInstance()) {
       MemberFuncMetadata::ReferenceQualification reference;
       switch (method_decl->getRefQualifier()) {
@@ -212,7 +213,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   std::optional<UnqualifiedIdentifier> translated_name =
       ictx_.GetTranslatedName(function_decl);
 
-  llvm::Optional<std::string> doc_comment = ictx_.GetComment(function_decl);
+  std::optional<std::string> doc_comment = ictx_.GetComment(function_decl);
   if (!doc_comment.has_value() && is_member_or_descendant_of_class_template) {
     // Despite `is_member_or_descendant_of_class_template` check above, we are
     // not guaranteed that a `func_pattern` exists below.  For example, it may

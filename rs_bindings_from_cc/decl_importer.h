@@ -5,6 +5,8 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_DECL_IMPORTER_H_
 
+#include <optional>
+
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
@@ -125,7 +127,7 @@ class ImportContext {
       const clang::NamedDecl* named_decl) const = 0;
 
   // Gets the doc comment of the declaration.
-  virtual llvm::Optional<std::string> GetComment(
+  virtual std::optional<std::string> GetComment(
       const clang::Decl* decl) const = 0;
 
   // Converts a Clang source location to IR.
