@@ -9,12 +9,6 @@ use quote::{format_ident, quote, ToTokens};
 use std::collections::{BTreeSet, HashSet};
 use std::rc::Rc;
 
-// TODO(lukasza): Consider adding more items into `code_gen_utils` (this crate).
-// For example, the following items from `src_code_gen.rs` will be most likely
-// reused from `cc_bindings_from_rs`:
-// - `make_rs_ident`
-// - `NamespaceQualifier`
-
 /// Formats a C++ identifier. Returns an error when `ident` is a C++ reserved
 /// keyword or is an invalid identifier.
 pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
