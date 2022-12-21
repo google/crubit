@@ -24,7 +24,7 @@ constexpr llvm::StringLiteral kKnown = "is_known";
 constexpr llvm::StringLiteral kNull = "is_null";
 
 NullabilityKind getNullabilityKind(QualType Type, ASTContext& Ctx) {
-  return Type->getNullability(Ctx).value_or(NullabilityKind::Unspecified);
+  return Type->getNullability().value_or(NullabilityKind::Unspecified);
 }
 
 PointerValue* getPointerValueFromExpr(const Expr* PointerExpr,

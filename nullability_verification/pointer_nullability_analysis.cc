@@ -326,10 +326,10 @@ NullabilityKind getNullabilityFromTemplatedExpression(const Expr* E) {
   return NullabilityAnnotations[0];
 }
 
-NullabilityKind getPointerNullability(const Expr* E, ASTContext& Ctx,
+NullabilityKind getPointerNullability(const Expr* E,
                                       PointerNullabilityAnalysis::Lattice& L) {
   QualType ExprType = E->getType();
-  Optional<NullabilityKind> Nullability = ExprType->getNullability(Ctx);
+  Optional<NullabilityKind> Nullability = ExprType->getNullability();
 
   // If the expression's type does not contain nullability information, it may
   // be a template instantiation. Look up the nullability in the
@@ -352,10 +352,10 @@ NullabilityKind getPointerNullability(const Expr* E, ASTContext& Ctx,
   return Nullability.value_or(NullabilityKind::Unspecified);
 }
 
-void initPointerFromAnnotations(PointerValue& PointerVal, const Expr* E,
-                                TransferState<PointerNullabilityLattice>& State,
-                                ASTContext& Ctx) {
-  NullabilityKind Nullability = getPointerNullability(E, Ctx, State.Lattice);
+void initPointerFromAnnotations(
+    PointerValue& PointerVal, const Expr* E,
+    TransferState<PointerNullabilityLattice>& State) {
+  NullabilityKind Nullability = getPointerNullability(E, State.Lattice);
   switch (Nullability) {
     case NullabilityKind::NonNull:
       initNotNullPointer(PointerVal, State.Env);
@@ -388,8 +388,7 @@ void transferPointer(const Expr* PointerExpr,
                      const MatchFinder::MatchResult& Result,
                      TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
-    initPointerFromAnnotations(*PointerVal, PointerExpr, State,
-                               *Result.Context);
+    initPointerFromAnnotations(*PointerVal, PointerExpr, State);
   }
 }
 
@@ -464,7 +463,7 @@ void transferCallExpr(const CallExpr* CallExpr,
     State.Env.setValue(CallExprLoc, *PointerVal);
     State.Env.setStorageLocation(*CallExpr, CallExprLoc);
   }
-  initPointerFromAnnotations(*PointerVal, CallExpr, State, *Result.Context);
+  initPointerFromAnnotations(*PointerVal, CallExpr, State);
 }
 
 void transferDeclRefExpr(const DeclRefExpr* DRE,
