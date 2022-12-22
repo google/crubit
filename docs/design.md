@@ -1,9 +1,9 @@
 # High-level design of C++/Rust interop
 
-## Introduction
-
 This document describes the high-level design choices of Crubit, a C++/Rust
 Bidirectional Interop Tool.
+
+[TOC]
 
 ## C++/Rust interop goal
 
