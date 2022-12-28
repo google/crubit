@@ -89,8 +89,9 @@ FunctionLifetimesOrError GetBuiltinLifetimes(const clang::FunctionDecl* decl) {
     }
     // TODO(veluca): figure out variadic functions.
     default:
-      return FunctionAnalysisError(absl::StrCat(
-          "Unknown builtin: '", builtin_info.getName(builtin_id), "'"));
+      return FunctionAnalysisError(
+          ("Unknown builtin: '" + builtin_info.getName(builtin_id) + "'")
+              .str());
   }
 }
 
