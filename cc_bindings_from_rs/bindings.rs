@@ -379,8 +379,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
         | ty::TyKind::Dynamic(..)
         | ty::TyKind::Generator(..)
         | ty::TyKind::GeneratorWitness(..)
-        | ty::TyKind::Projection(..)
-        | ty::TyKind::Opaque(..)
+        | ty::TyKind::Alias(..)
         | ty::TyKind::Param(..)
         | ty::TyKind::Bound(..)
         | ty::TyKind::Placeholder(..) => {
@@ -445,8 +444,7 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
         | ty::TyKind::Dynamic(..)
         | ty::TyKind::Generator(..)
         | ty::TyKind::GeneratorWitness(..)
-        | ty::TyKind::Projection(..)
-        | ty::TyKind::Opaque(..)
+        | ty::TyKind::Alias(..)
         | ty::TyKind::Param(..)
         | ty::TyKind::Bound(..)
         | ty::TyKind::Placeholder(..) => {
@@ -2711,7 +2709,8 @@ pub mod tests {
     /// - TyKind::FnDef
     /// - TyKind::Infer
     ///
-    /// TODO(lukasza): Add test coverage (here and in the "for_rs" flavours) for:
+    /// TODO(lukasza): Add test coverage (here and in the "for_rs" flavours)
+    /// for:
     /// - TyKind::Bound
     /// - TyKind::Dynamic (`dyn Eq`)
     /// - TyKind::Foreign (`extern type T`)
@@ -2719,7 +2718,6 @@ pub mod tests {
     ///   TyKind::Generator, TyKind::GeneratorWitness
     /// - TyKind::Param
     /// - TyKind::Placeholder
-    /// - TyKind::Projection
     #[test]
     fn test_format_ty_for_cc_failures() {
         let testcases = [
@@ -2759,7 +2757,7 @@ pub mod tests {
                 "The following Rust type is not supported yet: &'static str",
             ),
             (
-                "impl Eq", // TyKind::Opaque
+                "impl Eq", // TyKind::Alias
                 "The following Rust type is not supported yet: impl std::cmp::Eq",
             ),
             (
@@ -2916,7 +2914,7 @@ pub mod tests {
                 "The following Rust type is not supported yet: &'static str",
             ),
             (
-                "impl Eq", // TyKind::Opaque
+                "impl Eq", // TyKind::Alias
                 "The following Rust type is not supported yet: impl std::cmp::Eq",
             ),
             (
