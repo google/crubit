@@ -25,31 +25,22 @@ std::string LifetimeLattice::ToString() const {
 }
 
 PointsToMap& LifetimeLattice::PointsTo() {
-  assert(!IsError());
   return std::get<0>(var_).first;
 }
 
 const PointsToMap& LifetimeLattice::PointsTo() const {
-  assert(!IsError());
   return std::get<0>(var_).first;
 }
 
 LifetimeConstraints& LifetimeLattice::Constraints() {
-  assert(!IsError());
   return std::get<0>(var_).second;
 }
 
 const LifetimeConstraints& LifetimeLattice::Constraints() const {
-  assert(!IsError());
   return std::get<0>(var_).second;
 }
 
 llvm::StringRef LifetimeLattice::Error() const {
-  assert(IsError());
-  if (!IsError()) {
-    llvm::report_fatal_error(
-        "Trying to access error on non-error LifetimeLattice");
-  }
   return std::get<std::string>(var_);
 }
 
