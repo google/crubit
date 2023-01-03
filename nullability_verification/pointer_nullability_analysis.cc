@@ -368,25 +368,25 @@ void initPointerFromAnnotations(
   }
 }
 
-void transferNullPointer(const Expr* NullPointer,
-                         const MatchFinder::MatchResult&,
-                         TransferState<PointerNullabilityLattice>& State) {
+void transferFlowSensitiveNullPointer(
+    const Expr* NullPointer, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(NullPointer, State.Env)) {
     initNullPointer(*PointerVal, State.Env);
   }
 }
 
-void transferNotNullPointer(const Expr* NotNullPointer,
-                            const MatchFinder::MatchResult&,
-                            TransferState<PointerNullabilityLattice>& State) {
+void transferFlowSensitiveNotNullPointer(
+    const Expr* NotNullPointer, const MatchFinder::MatchResult&,
+    TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(NotNullPointer, State.Env)) {
     initNotNullPointer(*PointerVal, State.Env);
   }
 }
 
-void transferPointer(const Expr* PointerExpr,
-                     const MatchFinder::MatchResult& Result,
-                     TransferState<PointerNullabilityLattice>& State) {
+void transferFlowSensitivePointer(
+    const Expr* PointerExpr, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   if (auto* PointerVal = getPointerValueFromExpr(PointerExpr, State.Env)) {
     initPointerFromAnnotations(*PointerVal, PointerExpr, State);
   }
@@ -395,7 +395,7 @@ void transferPointer(const Expr* PointerExpr,
 // TODO(b/233582219): Implement promotion of nullability knownness for initially
 // unknown pointers when there is evidence that it is nullable, for example
 // when the pointer is compared to nullptr, or casted to boolean.
-void transferNullCheckComparison(
+void transferFlowSensitiveNullCheckComparison(
     const BinaryOperator* BinaryOp, const MatchFinder::MatchResult& result,
     TransferState<PointerNullabilityLattice>& State) {
   // Boolean representing the comparison between the two pointer values,
@@ -436,7 +436,7 @@ void transferNullCheckComparison(
       State.Env.makeAnd(LHSKnownNotNull, RHSKnownNull), PointerNE));
 }
 
-void transferNullCheckImplicitCastPtrToBool(
+void transferFlowSensitiveNullCheckImplicitCastPtrToBool(
     const Expr* CastExpr, const MatchFinder::MatchResult&,
     TransferState<PointerNullabilityLattice>& State) {
   auto* PointerVal =
@@ -450,9 +450,9 @@ void transferNullCheckImplicitCastPtrToBool(
   State.Env.setStorageLocation(*CastExpr, CastExprLoc);
 }
 
-void transferCallExpr(const CallExpr* CallExpr,
-                      const MatchFinder::MatchResult& Result,
-                      TransferState<PointerNullabilityLattice>& State) {
+void transferFlowSensitiveCallExpr(
+    const CallExpr* CallExpr, const MatchFinder::MatchResult& Result,
+    TransferState<PointerNullabilityLattice>& State) {
   auto ReturnType = CallExpr->getType();
   if (!ReturnType->isAnyPointerType()) return;
 
@@ -466,19 +466,19 @@ void transferCallExpr(const CallExpr* CallExpr,
   initPointerFromAnnotations(*PointerVal, CallExpr, State);
 }
 
-void transferDeclRefExpr(const DeclRefExpr* DRE,
-                         const MatchFinder::MatchResult& MR,
-                         TransferState<PointerNullabilityLattice>& State) {
+void transferNonFlowSensitiveDeclRefExpr(
+    const DeclRefExpr* DRE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   State.Lattice.insertExprNullabilityIfAbsent(
       DRE, [&]() { return getNullabilityAnnotationsFromType(DRE->getType()); });
   if (DRE->getType()->isPointerType()) {
-    transferPointer(DRE, MR, State);
+    transferFlowSensitivePointer(DRE, MR, State);
   }
 }
 
-void transferMemberExpr(const MemberExpr* ME,
-                        const MatchFinder::MatchResult& MR,
-                        TransferState<PointerNullabilityLattice>& State) {
+void transferNonFlowSensitiveMemberExpr(
+    const MemberExpr* ME, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
   State.Lattice.insertExprNullabilityIfAbsent(ME, [&]() {
     auto BaseNullability = State.Lattice.getExprNullability(ME->getBase());
     if (BaseNullability.has_value()) {
@@ -495,32 +495,34 @@ void transferMemberExpr(const MemberExpr* ME,
     }
   });
   if (ME->getType()->isPointerType()) {
-    transferPointer(ME, MR, State);
+    transferFlowSensitivePointer(ME, MR, State);
   }
 }
 
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
-                                  transferDeclRefExpr)
-      .CaseOfCFGStmt<MemberExpr>(ast_matchers::memberExpr(), transferMemberExpr)
+                                  transferNonFlowSensitiveDeclRefExpr)
+      .CaseOfCFGStmt<MemberExpr>(ast_matchers::memberExpr(),
+                                 transferNonFlowSensitiveMemberExpr)
       .Build();
 }
 
 auto buildFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       // Handles initialization of the null states of pointers.
-      .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferNotNullPointer)
-      .CaseOfCFGStmt<Expr>(isAddrOf(), transferNotNullPointer)
-      .CaseOfCFGStmt<Expr>(isNullPointerLiteral(), transferNullPointer)
-      .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferCallExpr)
-      .CaseOfCFGStmt<Expr>(isPointerExpr(), transferPointer)
+      .CaseOfCFGStmt<Expr>(isCXXThisExpr(), transferFlowSensitiveNotNullPointer)
+      .CaseOfCFGStmt<Expr>(isAddrOf(), transferFlowSensitiveNotNullPointer)
+      .CaseOfCFGStmt<Expr>(isNullPointerLiteral(),
+                           transferFlowSensitiveNullPointer)
+      .CaseOfCFGStmt<CallExpr>(isCallExpr(), transferFlowSensitiveCallExpr)
+      .CaseOfCFGStmt<Expr>(isPointerExpr(), transferFlowSensitivePointer)
       // Handles comparison between 2 pointers.
       .CaseOfCFGStmt<BinaryOperator>(isPointerCheckBinOp(),
-                                     transferNullCheckComparison)
+                                     transferFlowSensitiveNullCheckComparison)
       // Handles checking of pointer as boolean.
       .CaseOfCFGStmt<Expr>(isImplicitCastPointerToBool(),
-                           transferNullCheckImplicitCastPtrToBool)
+                           transferFlowSensitiveNullCheckImplicitCastPtrToBool)
       .Build();
 }
 }  // namespace
