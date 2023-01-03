@@ -988,7 +988,7 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         let crate_name = format_cc_ident(tcx.crate_name(LOCAL_CRATE).as_str())?;
 
         let includes = format_cc_includes(&includes);
-        let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc)?;
+        let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc);
         let failed_cc = failed_ids.into_iter().map(|def_id| {
             // TODO(b/260725687): Add test coverage for the error condition below.
             format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle")).cc.tokens
@@ -1282,7 +1282,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_generated_bindings_modules() {
+    fn test_generated_bindings_module_basics() {
         let test_src = r#"
                 pub mod some_module {
                     pub fn some_func() {}
@@ -1310,6 +1310,50 @@ pub mod tests {
                     fn ...() -> () {
                         ::rust_out::some_module::some_func()
                     }
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_generated_bindings_module_name_is_cpp_reserved_keyword() {
+        let test_src = r#"
+                pub mod working_module {
+                    pub fn working_module_f1() {}
+                    pub fn working_module_f2() {}
+                }
+                pub mod reinterpret_cast {
+                    pub fn broken_module_f1() {}
+                    pub fn broken_module_f2() {}
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+
+            // Items in the broken module should be replaced with a comment explaining the
+            // problem.
+            let broken_module_msg = "Failed to format namespace name `reinterpret_cast`: \
+                                     `reinterpret_cast` is a C++ reserved keyword \
+                                     and can't be used as a C++ identifier";
+            assert_cc_not_matches!(bindings.h_body, quote! { namespace reinterpret_cast });
+            assert_cc_not_matches!(bindings.h_body, quote! { broken_module_f1 });
+            assert_cc_not_matches!(bindings.h_body, quote! { broken_module_f2 });
+
+            // Items in the other module should still go through.
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace rust_out {
+                        namespace working_module {
+                            ...
+                            inline void working_module_f1() { ... }
+                            ...
+                            inline void working_module_f2() { ... }
+                            ...
+                        }  // namespace some_module
+
+                        __COMMENT__ #broken_module_msg
+                    }  // namespace rust_out
                 }
             );
         });

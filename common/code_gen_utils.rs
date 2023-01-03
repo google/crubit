@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 use anyhow::{anyhow, ensure, Result};
+use itertools::Itertools;
 use once_cell::sync::Lazy;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote, ToTokens};
@@ -122,7 +123,7 @@ impl NamespaceQualifier {
 ///     ```
 pub fn format_namespace_bound_cc_tokens(
     iter: impl IntoIterator<Item = (NamespaceQualifier, TokenStream)>,
-) -> Result<TokenStream> {
+) -> TokenStream {
     let mut iter = iter.into_iter().peekable();
     let mut tokens_in_curr_ns = Vec::with_capacity(iter.size_hint().0);
     let mut result = TokenStream::default();
@@ -133,7 +134,14 @@ pub fn format_namespace_bound_cc_tokens(
         let next_ns = iter.peek().map(|(next_ns, _)| next_ns);
         if next_ns != Some(&curr_ns) {
             let tokens_in_curr_ns = tokens_in_curr_ns.drain(..);
-            result.extend(curr_ns.format_with_cc_body(quote! { #(#tokens_in_curr_ns)* })?);
+            let curr_ns = curr_ns
+                .format_with_cc_body(quote! { #(#tokens_in_curr_ns)* })
+                .unwrap_or_else(|err| {
+                    let name = curr_ns.0.iter().join("::");
+                    let err = format!("Failed to format namespace name `{name}`: {err}");
+                    quote!{ __COMMENT__ #err }
+                });
+            result.extend(curr_ns);
         }
 
         // Separate namespaces with a single empty line.
@@ -141,7 +149,7 @@ pub fn format_namespace_bound_cc_tokens(
             result.extend(quote! { __NEWLINE__ __NEWLINE__ });
         }
     }
-    Ok(result)
+    result
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
@@ -581,7 +589,7 @@ pub mod tests {
             (m1.clone(), quote! { void f1d(); }),
         ];
         assert_cc_matches!(
-            format_namespace_bound_cc_tokens(input).unwrap(),
+            format_namespace_bound_cc_tokens(input),
             quote! {
                 void f0a();
 
@@ -601,6 +609,32 @@ pub mod tests {
                 void f1c();
                 void f1d();
                 }  // namespace m1
+            },
+        );
+    }
+
+    #[test]
+    fn test_format_namespace_bound_cc_tokens_with_reserved_cpp_keywords() {
+        let working_module = NamespaceQualifier::new(["foo", "working_module", "bar"]);
+        let broken_module = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"]);
+        let input = vec![
+            (broken_module.clone(), quote! { void broken_module_f1(); }),
+            (broken_module.clone(), quote! { void broken_module_f2(); }),
+            (working_module.clone(), quote! { void working_module_f3(); }),
+            (working_module.clone(), quote! { void working_module_f4(); }),
+        ];
+        let broken_module_msg = "Failed to format namespace name `foo::reinterpret_cast::bar`: \
+                                 `reinterpret_cast` is a C++ reserved keyword \
+                                 and can't be used as a C++ identifier";
+        assert_cc_matches!(
+            format_namespace_bound_cc_tokens(input),
+            quote! {
+                __COMMENT__ #broken_module_msg
+
+                namespace foo::working_module::bar {
+                void working_module_f3();
+                void working_module_f4();
+                }  // namespace foo::working_module::bar
             },
         );
     }
