@@ -2856,23 +2856,27 @@ TEST(PointerNullabilityTest, ConstructExpr) {
   )");
 
   // Constructor call in a base initializer.
-  checkDiagnostics(R"(
+  checkDiagnostics(R"cc(
     struct TakeNonnull {
-      explicit TakeNonnull(int * _Nonnull);
+      explicit TakeNonnull(int* _Nonnull);
     };
-    struct target: TakeNonnull {
-      target(int * _Nullable ptr_nullable): TakeNonnull(ptr_nullable) {} // [[unsafe]]
+    struct target : TakeNonnull {
+      target(int* _Nullable ptr_nullable)  // Forced line break.
+          : TakeNonnull(ptr_nullable)      // [[unsafe]]
+      {}
     };
-  )");
+  )cc");
 
-  // Call to a delegating constructor
-  checkDiagnostics(R"(
-    int * _Nullable makeNullable();
+  // Call to a delegating constructor.
+  checkDiagnostics(R"cc(
+    int* _Nullable makeNullable();
     struct target {
-      target(int * _Nonnull);
-      target(): target(makeNullable()) {} // [[unsafe]]
+      target(int* _Nonnull);
+      target()                      // Forced line break.
+          : target(makeNullable())  // [[unsafe]]
+      {}
     };
-  )");
+  )cc");
 }
 
 TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
