@@ -22,6 +22,7 @@ use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::AddAssign;
+use std::rc::Rc;
 
 pub struct GeneratedBindings {
     pub h_body: TokenStream,
@@ -211,8 +212,9 @@ impl FullyQualifiedName {
         let name = full_path.pop().expect("At least the item's name should be present");
         let name = get_symbol(name);
 
-        let mod_path = full_path.into_iter().map(get_symbol).map(|s| s.as_str().into()).collect();
-        let mod_path = NamespaceQualifier(mod_path);
+        let mod_path = NamespaceQualifier::new(
+            full_path.into_iter().map(get_symbol).map(|s| Rc::<str>::from(s.as_str())),
+        );
 
         Self { krate, mod_path, name }
     }

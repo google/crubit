@@ -45,22 +45,30 @@ pub fn make_rs_ident(ident: &str) -> Ident {
     }
 }
 
-/// Representation of `foo::bar::baz::` where each component is either the name
+/// Representation of `foo::bar::baz` where each component is either the name
 /// of a C++ namespace, or the name of a Rust module.
 #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
-// TODO(b/258265044): Make the `Vec<String>` payload private + guarantee
-// additional invariants in an explicit, public `new` method.  This will help to
-// catch some error conditions early (e.g. an empty path component may trigger a
-// panic in `make_rs_ident`;  a reserved C++ keyword might trigger a late error
-// in `format_for_cc` / `format_cc_ident`).
-pub struct NamespaceQualifier(pub Vec<Rc<str>>);
+pub struct NamespaceQualifier(Vec<Rc<str>>);
 
 impl NamespaceQualifier {
+    /// Constructs a new `NamespaceQualifier` from a sequence of names.
+    pub fn new<T: Into<Rc<str>>>(iter: impl IntoIterator<Item = T>) -> Self {
+        // TODO(b/258265044): Catch most (all if possible) error conditions early.  For
+        // example:
+        // - Panic early if any strings are empty, or are not Rust identifiers
+        // - Report an error early if any strings are C++ reserved keywords
+        // This may make `format_for_cc`, `format_with_cc_body`, and
+        // `format_namespace_bound_cc_tokens` infallible.
+        Self(iter.into_iter().map(Into::into).collect())
+    }
+
+    /// Returns `foo::bar::baz::` (escaping Rust keywords as needed).
     pub fn format_for_rs(&self) -> TokenStream {
         let namespace_rs_idents = self.0.iter().map(|ns| make_rs_ident(ns));
         quote! { #(#namespace_rs_idents::)* }
     }
 
+    /// Returns `foo::bar::baz::` (reporting errors for C++ keywords).
     pub fn format_for_cc(&self) -> Result<TokenStream> {
         let namespace_cc_idents = self.cc_idents()?;
         Ok(quote! { #(#namespace_cc_idents::)* })
@@ -497,13 +505,9 @@ pub mod tests {
         );
     }
 
-    fn create_namespace_qualifier_for_tests(input: &[&str]) -> NamespaceQualifier {
-        NamespaceQualifier(input.into_iter().map(|&s| s.into()).collect())
-    }
-
     #[test]
     fn test_namespace_qualifier_empty() {
-        let ns = create_namespace_qualifier_for_tests(&[]);
+        let ns = NamespaceQualifier::new::<&str>([]);
         let actual_rs = ns.format_for_rs();
         assert!(actual_rs.is_empty());
         let actual_cc = ns.format_for_cc().unwrap();
@@ -512,7 +516,7 @@ pub mod tests {
 
     #[test]
     fn test_namespace_qualifier_basic() {
-        let ns = create_namespace_qualifier_for_tests(&["foo", "bar"]);
+        let ns = NamespaceQualifier::new(["foo", "bar"]);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo::bar:: });
         let actual_cc = ns.format_for_cc().unwrap();
@@ -521,7 +525,7 @@ pub mod tests {
 
     #[test]
     fn test_namespace_qualifier_reserved_cc_keyword() {
-        let ns = create_namespace_qualifier_for_tests(&["foo", "impl", "bar"]);
+        let ns = NamespaceQualifier::new(["foo", "impl", "bar"]);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: r#impl :: bar :: });
         let actual_cc = ns.format_for_cc().unwrap();
@@ -530,7 +534,7 @@ pub mod tests {
 
     #[test]
     fn test_namespace_qualifier_reserved_rust_keyword() {
-        let ns = create_namespace_qualifier_for_tests(&["foo", "reinterpret_cast", "bar"]);
+        let ns = NamespaceQualifier::new(["foo", "reinterpret_cast", "bar"]);
         let actual_rs = ns.format_for_rs();
         assert_rs_matches!(actual_rs, quote! { foo :: reinterpret_cast :: bar :: });
         let cc_error = ns.format_for_cc().unwrap_err();
@@ -541,7 +545,7 @@ pub mod tests {
 
     #[test]
     fn test_namespace_qualifier_format_with_cc_body_top_level_namespace() {
-        let ns = create_namespace_qualifier_for_tests(&[]);
+        let ns = NamespaceQualifier::new::<&str>([]);
         assert_cc_matches!(
             ns.format_with_cc_body(quote! { cc body goes here }).unwrap(),
             quote! { cc body goes here },
@@ -550,7 +554,7 @@ pub mod tests {
 
     #[test]
     fn test_namespace_qualifier_format_with_cc_body_nested_namespace() {
-        let ns = create_namespace_qualifier_for_tests(&["foo", "bar", "baz"]);
+        let ns = NamespaceQualifier::new(["foo", "bar", "baz"]);
         assert_cc_matches!(
             ns.format_with_cc_body(quote! { cc body goes here }).unwrap(),
             quote! {
@@ -563,10 +567,10 @@ pub mod tests {
 
     #[test]
     fn test_format_namespace_bound_cc_tokens() {
-        let top_level = create_namespace_qualifier_for_tests(&[]);
-        let m1 = create_namespace_qualifier_for_tests(&["m1"]);
-        let m2 = create_namespace_qualifier_for_tests(&["m2"]);
-        let input = vec![
+        let top_level = NamespaceQualifier::new::<&str>([]);
+        let m1 = NamespaceQualifier::new(["m1"]);
+        let m2 = NamespaceQualifier::new(["m2"]);
+        let input = [
             (top_level.clone(), quote! { void f0a(); }),
             (m1.clone(), quote! { void f1a(); }),
             (m1.clone(), quote! { void f1b(); }),

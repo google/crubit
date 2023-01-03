@@ -872,8 +872,8 @@ impl IR {
         }
     }
 
-    pub fn crate_root_path(&self) -> Option<&str> {
-        self.flat_ir.crate_root_path.as_deref()
+    pub fn crate_root_path(&self) -> Option<Rc<str>> {
+        self.flat_ir.crate_root_path.clone()
     }
 }
 
@@ -934,6 +934,6 @@ mod tests {
         }
         "#;
         let ir = deserialize_ir(input.as_bytes()).unwrap();
-        assert_eq!(ir.crate_root_path(), Some("__cc_template_instantiations_rs_api"));
+        assert_eq!(ir.crate_root_path().as_deref(), Some("__cc_template_instantiations_rs_api"));
     }
 }

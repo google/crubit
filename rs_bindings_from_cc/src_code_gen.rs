@@ -1905,7 +1905,7 @@ fn namespace_qualifier_of_item(item_id: ItemId, ir: &IR) -> Result<NamespaceQual
             }
         }
     }
-    Ok(NamespaceQualifier(namespaces.into_iter().rev().collect_vec()))
+    Ok(NamespaceQualifier::new(namespaces.into_iter().rev()))
 }
 
 /// Generates Rust source code for a given incomplete record declaration.
@@ -2849,46 +2849,33 @@ impl ToTokens for Lifetime {
 /// Qualified path from the root of the crate to the module containing the type.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CratePath {
-    idents: Vec<String>,
+    /// `Some("other_crate")` or `None` for paths within the current crate.
+    crate_ident: Option<Ident>,
+
+    crate_root_path: NamespaceQualifier,
+    namespace_qualifier: NamespaceQualifier,
 }
 
 impl CratePath {
     fn new(
         ir: &IR,
-        namespace_qualifier: &NamespaceQualifier,
+        namespace_qualifier: NamespaceQualifier,
         crate_ident: Option<Ident>,
     ) -> CratePath {
-        let namespace_qualifiers = &namespace_qualifier.0;
-        let crate_ident = match crate_ident {
-            Some(ci) => ci.to_string(),
-            None => "crate".to_string(),
-        };
-        let idents = std::iter::once(crate_ident)
-            .chain(ir.crate_root_path().into_iter().map(ToOwned::to_owned))
-            .chain(namespace_qualifiers.iter().map(|s| s.to_string()))
-            .collect();
-        CratePath { idents }
+        let crate_root_path = NamespaceQualifier::new(ir.crate_root_path());
+        CratePath { crate_ident, crate_root_path, namespace_qualifier }
     }
 }
 
 impl ToTokens for CratePath {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        use quote::TokenStreamExt;
-        for (i, ident) in self.idents.iter().enumerate() {
-            if i > 0 {
-                // Double colon `::`
-                tokens.append(proc_macro2::Punct::new(':', proc_macro2::Spacing::Joint));
-                tokens.append(proc_macro2::Punct::new(':', proc_macro2::Spacing::Alone));
-                tokens.append(make_rs_ident(ident))
-            } else {
-                tokens.append(if ident == "crate" {
-                    // leading token `crate` should be interpreted as a keyword, not escaped.
-                    format_ident!("{}", ident)
-                } else {
-                    make_rs_ident(ident)
-                })
-            }
-        }
+        let crate_ident = match self.crate_ident.as_ref() {
+            None => quote! { crate },
+            Some(ident) => quote! { #ident },
+        };
+        let crate_root_path = self.crate_root_path.format_for_rs();
+        let namespace_qualifier = self.namespace_qualifier.format_for_rs();
+        quote! { #crate_ident :: #crate_root_path #namespace_qualifier }.to_tokens(tokens)
     }
 }
 
@@ -2939,7 +2926,7 @@ impl RsTypeKind {
     pub fn new_record(record: Rc<Record>, ir: &IR) -> Result<Self> {
         let crate_path = Rc::new(CratePath::new(
             ir,
-            &namespace_qualifier_of_item(record.id, ir)?,
+            namespace_qualifier_of_item(record.id, ir)?,
             rs_imported_crate_name(&record.owning_target, ir),
         ));
         Ok(RsTypeKind::Record { record, crate_path })
@@ -3171,15 +3158,15 @@ impl ToTokens for RsTypeKind {
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
                 let record_ident = make_rs_ident(incomplete_record.rs_name.as_ref());
-                quote! { #crate_path :: #record_ident }
+                quote! { #crate_path #record_ident }
             }
             RsTypeKind::Record { record, crate_path } => {
                 let ident = make_rs_ident(record.rs_name.as_ref());
-                quote! { #crate_path :: #ident }
+                quote! { #crate_path #ident }
             }
             RsTypeKind::TypeAlias { type_alias, crate_path, .. } => {
                 let ident = make_rs_ident(&type_alias.identifier.identifier);
-                quote! { #crate_path :: #ident }
+                quote! { #crate_path #ident }
             }
             // This doesn't affect void in function return values, as those are special-cased to be
             // omitted.
@@ -3275,7 +3262,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                     incomplete_record: incomplete_record.clone(),
                     crate_path: Rc::new(CratePath::new(
                         &ir,
-                        &namespace_qualifier_of_item(incomplete_record.id, &ir)?,
+                        namespace_qualifier_of_item(incomplete_record.id, &ir)?,
                         rs_imported_crate_name(&incomplete_record.owning_target, &ir),
                     )),
                 },
@@ -3290,7 +3277,7 @@ fn rs_type_kind(db: &dyn BindingsGenerator, ty: ir::RsType) -> Result<RsTypeKind
                             type_alias: type_alias.clone(),
                             crate_path: Rc::new(CratePath::new(
                                 &ir,
-                                &namespace_qualifier_of_item(type_alias.id, &ir)?,
+                                namespace_qualifier_of_item(type_alias.id, &ir)?,
                                 rs_imported_crate_name(&type_alias.owning_target, &ir),
                             )),
                             underlying_type: Rc::new(
@@ -3569,11 +3556,9 @@ fn cc_struct_no_unique_address_impl(db: &Database, record: &Record) -> Result<To
 }
 
 fn crate_root_path_tokens(ir: &IR) -> TokenStream {
-    if let Some(crate_root_path) = ir.crate_root_path() {
-        let crate_root_path = make_rs_ident(crate_root_path);
-        quote! {crate::#crate_root_path}
-    } else {
-        quote! {crate}
+    match ir.crate_root_path().as_deref().map(make_rs_ident) {
+        None => quote! { crate },
+        Some(crate_root_path) => quote! { crate :: #crate_root_path },
     }
 }
 
