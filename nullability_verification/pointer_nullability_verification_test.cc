@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <set>
 #include <string>
 
 #include "nullability_verification/pointer_nullability_analysis.h"
@@ -54,7 +55,9 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
           [&Diagnostics, &Failed](
               const llvm::DenseMap<unsigned, std::string> &Annotations,
               const AnalysisOutputs &AnalysisData) {
-            llvm::DenseSet<unsigned> ExpectedLines, ActualLines;
+            // Note: use sorted sets for expected and actual lines to improve
+            // readability of the error output in case the test fails.
+            std::set<unsigned> ExpectedLines, ActualLines;
             for (const auto &[Line, _] : Annotations) {
               ExpectedLines.insert(Line);
             }
