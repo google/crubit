@@ -471,9 +471,6 @@ void transferNonFlowSensitiveDeclRefExpr(
     TransferState<PointerNullabilityLattice>& State) {
   State.Lattice.insertExprNullabilityIfAbsent(
       DRE, [&]() { return getNullabilityAnnotationsFromType(DRE->getType()); });
-  if (DRE->getType()->isPointerType()) {
-    transferFlowSensitivePointer(DRE, MR, State);
-  }
 }
 
 void transferNonFlowSensitiveMemberExpr(
@@ -494,9 +491,6 @@ void transferNonFlowSensitiveMemberExpr(
                                           NullabilityKind::Unspecified);
     }
   });
-  if (ME->getType()->isPointerType()) {
-    transferFlowSensitivePointer(ME, MR, State);
-  }
 }
 
 auto buildNonFlowSensitiveTransferer() {
