@@ -29,10 +29,11 @@ using dataflow::test::checkDataflow;
 using ::testing::ContainerEq;
 using ::testing::Test;
 
-void checkDiagnostics(llvm::StringRef SourceCode) {
+bool checkDiagnostics(llvm::StringRef SourceCode) {
   std::vector<CFGElement> Diagnostics;
   PointerNullabilityDiagnoser Diagnoser;
-  ASSERT_THAT_ERROR(
+  bool Failed = false;
+  EXPECT_THAT_ERROR(
       checkDataflow<PointerNullabilityAnalysis>(
           AnalysisInputs<PointerNullabilityAnalysis>(
               SourceCode, ast_matchers::hasName("target"),
@@ -50,7 +51,7 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
               })
               .withASTBuildArgs({"-fsyntax-only", "-std=c++17",
                                  "-Wno-unused-value", "-Wno-nonnull"}),
-          [&Diagnostics](
+          [&Diagnostics, &Failed](
               const llvm::DenseMap<unsigned, std::string> &Annotations,
               const AnalysisOutputs &AnalysisData) {
             llvm::DenseSet<unsigned> ExpectedLines, ActualLines;
@@ -71,102 +72,106 @@ void checkDiagnostics(llvm::StringRef SourceCode) {
               }
             }
             EXPECT_THAT(ActualLines, ContainerEq(ExpectedLines));
+            if (ActualLines != ExpectedLines) {
+              Failed = true;
+            }
           }),
       llvm::Succeeded());
+  return !Failed;
 }
 
 TEST(PointerNullabilityTest, NoPointerOperations) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() { 1 + 2; }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, DerefNullPtr) {
   // nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
       int *x = nullptr;
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // 0
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
       int *x = 0;
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, DerefAddrOf) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
       int i;
       int *x = &i;
       *x;
     }
-  )cc");
+  )cc"));
 
   // transitive
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target() {
       int i;
       int *x = &i;
       int *y = x;
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, DerefPtrAnnotatedNonNullWithoutACheck) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) { *x; }
-  )cc");
+  )cc"));
 
   // transitive
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull x) {
       int *y = x;
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, DerefPtrAnnotatedNullableWithoutACheck) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // transitive
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x) {
       int *y = x;
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, DerefUnknownPtrWithoutACheck) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) { *x; }
-  )cc");
+  )cc"));
 
   // transitive
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       int *y = x;
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 // TODO(b/233582219): Implement diagnosis of unreachable program points
 TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
   // x
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) {
       *x;
       if (x) {
@@ -176,10 +181,10 @@ TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
       }
       *x;
     }
-  )cc");
+  )cc"));
 
   // !x
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) {
       *x;
       if (!x) {
@@ -189,12 +194,12 @@ TEST(PointerNullabilityTest, NonNullPtrImplicitCastToBool) {
       }
       *x;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
   // x
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (x) {
@@ -204,10 +209,10 @@ TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // !x
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (!x) {
@@ -217,7 +222,7 @@ TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 // TODO(b/233582219): Fix false negatives. Casting the pointer to boolean is
@@ -226,7 +231,7 @@ TEST(PointerNullabilityTest, NullablePtrImplicitCastToBool) {
 // not null checked.
 TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
   // x
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       *x;  // false-negative
       if (x) {
@@ -236,10 +241,10 @@ TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
       }
       *x;  // false-negative
     }
-  )cc");
+  )cc"));
 
   // !x
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       *x;  // false-negative
       if (!x) {
@@ -249,12 +254,12 @@ TEST(PointerNullabilityTest, UnknownPtrImplicitCastToBool) {
       }
       *x;  // false-negative
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareNonNullPtrAndNonNullPtr) {
   // nonnull == nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x, int* _Nonnull y) {
       *x;
       *y;
@@ -268,10 +273,10 @@ TEST(PointerNullabilityTest, CompareNonNullPtrAndNonNullPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 
   // nonnull != nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x, int* _Nonnull y) {
       *x;
       *y;
@@ -285,12 +290,12 @@ TEST(PointerNullabilityTest, CompareNonNullPtrAndNonNullPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareNullablePtrAndNullablePtr) {
   // nullable == nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nullable y) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
@@ -304,10 +309,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNullablePtr) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // nullable != nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nullable y) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
@@ -321,12 +326,12 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNullablePtr) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareUnknownPtrAndUnknownPtr) {
   // unknown == unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x, int *y) {
       *x;
       *y;
@@ -340,10 +345,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndUnknownPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 
   // unknown != unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x, int *y) {
       *x;
       *y;
@@ -357,13 +362,13 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndUnknownPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 // TODO(b/233582219): Implement diagnosis of unreachable program points
 TEST(PointerNullabilityTest, CompareNonNullPtrAndNullPtr) {
   // nonnull == nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) {
       *x;
       if (x == nullptr) {
@@ -373,10 +378,10 @@ TEST(PointerNullabilityTest, CompareNonNullPtrAndNullPtr) {
       }
       *x;
     }
-  )cc");
+  )cc"));
 
   // nullptr == nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) {
       *x;
       if (nullptr == x) {
@@ -386,10 +391,10 @@ TEST(PointerNullabilityTest, CompareNonNullPtrAndNullPtr) {
       }
       *x;
     }
-  )cc");
+  )cc"));
 
   // nonnull != nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) {
       *x;
       if (x != nullptr) {
@@ -399,10 +404,10 @@ TEST(PointerNullabilityTest, CompareNonNullPtrAndNullPtr) {
       }
       *x;
     }
-  )cc");
+  )cc"));
 
   // nullptr != nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull x) {
       *x;
       if (nullptr != x) {
@@ -412,12 +417,12 @@ TEST(PointerNullabilityTest, CompareNonNullPtrAndNullPtr) {
       }
       *x;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
   // nullable == nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (x == nullptr) {
@@ -427,10 +432,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // nullptr == nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (nullptr == x) {
@@ -440,10 +445,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // nullable != nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (x != nullptr) {
@@ -453,10 +458,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // nullptr != nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x) {
       *x;  // [[unsafe]]
       if (nullptr != x) {
@@ -466,12 +471,12 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNullPtr) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
   // nullable == nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nonnull y) {
       *x;  // [[unsafe]]
       *y;
@@ -485,10 +490,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 
   // nonnull == nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nonnull y) {
       *x;  // [[unsafe]]
       *y;
@@ -502,10 +507,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 
   // nullable != nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nonnull y) {
       *x;  // [[unsafe]]
       *y;
@@ -519,10 +524,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 
   // nonnull != nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nonnull y) {
       *x;  // [[unsafe]]
       *y;
@@ -536,12 +541,12 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndNonNullPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
   // nullable == unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x, int *y) {
       *x;  // [[unsafe]]
       *y;
@@ -555,10 +560,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 
   // unknown == nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x, int *y) {
       *x;  // [[unsafe]]
       *y;
@@ -572,10 +577,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 
   // nullable != unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x, int *y) {
       *x;  // [[unsafe]]
       *y;
@@ -589,10 +594,10 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 
   // unknown != nullable
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x, int *y) {
       *x;  // [[unsafe]]
       *y;
@@ -606,7 +611,7 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
       *x;  // [[unsafe]]
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 // TODO(b/233582219): Fix false negatives. The pointer is compared to nullptr,
@@ -614,7 +619,7 @@ TEST(PointerNullabilityTest, CompareNullablePtrAndUnknownPtr) {
 // warnings where it fails or is not null checked.
 TEST(PointerNullabilityTest, CompareUnknownPtrAndNullPtr) {
   // unknown == nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       *x;  // false-negative
       if (x == nullptr) {
@@ -624,10 +629,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNullPtr) {
       }
       *x;  // false-negative
     }
-  )cc");
+  )cc"));
 
   // nullptr == unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       *x;  // false-negative
       if (nullptr == x) {
@@ -637,10 +642,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNullPtr) {
       }
       *x;  // false-negative
     }
-  )cc");
+  )cc"));
 
   // unknown != nullptr
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       *x;  // false-negative
       if (x != nullptr) {
@@ -650,10 +655,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNullPtr) {
       }
       *x;  // false-negative
     }
-  )cc");
+  )cc"));
 
   // nullptr != unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x) {
       *x;  // false-negative
       if (nullptr != x) {
@@ -663,12 +668,12 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNullPtr) {
       }
       *x;  // false-negative
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CompareUnknownPtrAndNonNullPtr) {
   // unknown == nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x, int *_Nonnull y) {
       *x;
       *y;
@@ -682,10 +687,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNonNullPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 
   // nonnull == unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x, int *_Nonnull y) {
       *x;
       *y;
@@ -699,10 +704,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNonNullPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 
   // unknown != nonnull
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x, int *_Nonnull y) {
       *x;
       *y;
@@ -716,10 +721,10 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNonNullPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 
   // nonnull != unknown
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *x, int *_Nonnull y) {
       *x;
       *y;
@@ -733,11 +738,11 @@ TEST(PointerNullabilityTest, CompareUnknownPtrAndNonNullPtr) {
       *x;
       *y;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, TransitiveNullCheck) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x) {
       int *y = x;
       *x;  // [[unsafe]]
@@ -748,9 +753,9 @@ TEST(PointerNullabilityTest, TransitiveNullCheck) {
       }
       *x;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable x) {
       int *y = x;
       *y;  // [[unsafe]]
@@ -761,12 +766,12 @@ TEST(PointerNullabilityTest, TransitiveNullCheck) {
       }
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, BinaryExpressions) {
   // x && y
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nullable y) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
@@ -780,10 +785,10 @@ TEST(PointerNullabilityTest, BinaryExpressions) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // x || y
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nullable y) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
@@ -797,10 +802,10 @@ TEST(PointerNullabilityTest, BinaryExpressions) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // !x && !y
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nullable y) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
@@ -814,10 +819,10 @@ TEST(PointerNullabilityTest, BinaryExpressions) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // !x || !y
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable x, int* _Nullable y) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
@@ -831,30 +836,30 @@ TEST(PointerNullabilityTest, BinaryExpressions) {
       *x;  // [[unsafe]]
       *y;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ArrowOperatorOnNonNullPtr) {
   // (->) member field
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *foo;
     };
     void target(Foo *_Nonnull foo) { foo->foo; }
-  )cc");
+  )cc"));
 
   // (->) member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *foo();
     };
     void target(Foo *_Nonnull foo) { foo->foo(); }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ArrowOperatorOnNullablePtr) {
   // (->) member field
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *foo;
     };
@@ -867,10 +872,10 @@ TEST(PointerNullabilityTest, ArrowOperatorOnNullablePtr) {
       }
       foo->foo;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // (->) member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *foo();
     };
@@ -883,66 +888,66 @@ TEST(PointerNullabilityTest, ArrowOperatorOnNullablePtr) {
       }
       foo->foo();  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ArrowOperatorOnUnknownPtr) {
   // (->) member field
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *foo;
     };
     void target(Foo *foo) { foo->foo; }
-  )cc");
+  )cc"));
 
   // (->) member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *foo();
     };
     void target(Foo *foo) { foo->foo(); }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ThisPointer) {
   // (->) implicit `this`
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       void foo();
       void target() { foo(); }
     };
-  )cc");
+  )cc"));
 
   // (->) explicit `this`
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       void foo();
       void target() { this->foo(); }
     };
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, NonNullFieldsOfPointerType) {
   // dereference field of pointer type
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo* _Nonnull ptr;
     };
     void target(Foo foo) { *foo.ptr; }
-  )cc");
+  )cc"));
 
   // dereference field of pointer type in member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo* _Nonnull ptr;
       void target() { *ptr; }
     };
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, NullableFieldsOfPointerType) {
   // dereference field of pointer type
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo* _Nullable ptr;
     };
@@ -955,10 +960,10 @@ TEST(PointerNullabilityTest, NullableFieldsOfPointerType) {
       }
       *foo.ptr;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // dereference field of pointer type in member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo* _Nullable ptr;
       void target() {
@@ -971,29 +976,29 @@ TEST(PointerNullabilityTest, NullableFieldsOfPointerType) {
         *ptr;  // [[unsafe]]
       }
     };
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, UnknownFieldsOfPointerType) {
   // dereference field of pointer type
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *ptr;
     };
     void target(Foo foo) { *foo.ptr; }
-  )cc");
+  )cc"));
 
   // dereference field of pointer type in member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       Foo *ptr;
       void target() { *ptr; }
     };
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullAndNonNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, bool b) {
       int *x = nullptr;
       *x;  // [[unsafe]]
@@ -1009,11 +1014,11 @@ TEST(PointerNullabilityTest, MergeNullAndNonNull) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullAndNullable) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, bool b) {
       int *x = nullptr;
       *x;  // [[unsafe]]
@@ -1029,11 +1034,11 @@ TEST(PointerNullabilityTest, MergeNullAndNullable) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullAndUnknown) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, bool b) {
       int *x = nullptr;
       *x;  // [[unsafe]]
@@ -1049,11 +1054,11 @@ TEST(PointerNullabilityTest, MergeNullAndUnknown) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNonNullAndNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, bool b) {
       int *x = y;
       *x;
@@ -1069,11 +1074,11 @@ TEST(PointerNullabilityTest, MergeNonNullAndNull) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNonNullAndNonNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, int *_Nonnull z, bool b) {
       int *x = y;
       *x;
@@ -1089,11 +1094,11 @@ TEST(PointerNullabilityTest, MergeNonNullAndNonNull) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNonNullAndNullable) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, int *_Nullable z, bool b) {
       int *x = y;
       *x;
@@ -1109,11 +1114,11 @@ TEST(PointerNullabilityTest, MergeNonNullAndNullable) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNonNullAndUnknown) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nonnull y, int *z, bool b) {
       int *x = y;
       *x;
@@ -1129,11 +1134,11 @@ TEST(PointerNullabilityTest, MergeNonNullAndUnknown) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullableAndNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, bool b) {
       int *x = y;
       *x;  // [[unsafe]]
@@ -1149,11 +1154,11 @@ TEST(PointerNullabilityTest, MergeNullableAndNull) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullableAndNonNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, int *_Nonnull z, bool b) {
       int *x = y;
       *x;  // [[unsafe]]
@@ -1169,11 +1174,11 @@ TEST(PointerNullabilityTest, MergeNullableAndNonNull) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullableAndNullable) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, int *_Nullable z, bool b) {
       int *x = y;
       *x;  // [[unsafe]]
@@ -1189,11 +1194,11 @@ TEST(PointerNullabilityTest, MergeNullableAndNullable) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeNullableAndUnknown) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *_Nullable y, int *z, bool b) {
       int *x = y;
       *x;  // [[unsafe]]
@@ -1209,11 +1214,11 @@ TEST(PointerNullabilityTest, MergeNullableAndUnknown) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeUnknownAndNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, bool b) {
       int *x = y;
       *x;
@@ -1229,11 +1234,11 @@ TEST(PointerNullabilityTest, MergeUnknownAndNull) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeUnknownAndNonNull) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, int *_Nonnull z, bool b) {
       int *x = y;
       *x;
@@ -1249,11 +1254,11 @@ TEST(PointerNullabilityTest, MergeUnknownAndNonNull) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeUnknownAndNullable) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, int *_Nullable z, bool b) {
       int *x = y;
       *x;
@@ -1269,11 +1274,11 @@ TEST(PointerNullabilityTest, MergeUnknownAndNullable) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int *y, int *z, bool b) {
       int *x = y;
       if (b) {
@@ -1288,12 +1293,12 @@ TEST(PointerNullabilityTest, MergeUnknownAndUnknown) {
         *x;
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
   // free function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull makeNonnull();
     int *_Nullable makeNullable();
     int *makeUnannotated();
@@ -1302,10 +1307,10 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *makeNullable();  // [[unsafe]]
       *makeUnannotated();
     }
-  )cc");
+  )cc"));
 
   // member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       int *_Nonnull makeNonnull();
       int *_Nullable makeNullable();
@@ -1316,10 +1321,10 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *foo.makeNullable();  // [[unsafe]]
       *foo.makeUnannotated();
     }
-  )cc");
+  )cc"));
 
   // overloaded operator call
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct MakeNonnull {
       int *_Nonnull operator()();
     };
@@ -1339,30 +1344,30 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       MakeUnannotated makeUnannotated;
       *makeUnannotated();
     }
-  )cc");
+  )cc"));
 
   // function pointer
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull (*makeNonnull)(),
                 int* _Nullable (*makeNullable)(), int* (*makeUnannotated)()) {
       *makeNonnull();
       *makeNullable();  // [[unsafe]]
       *makeUnannotated();
     }
-  )cc");
+  )cc"));
 
   // pointer to function pointer
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull (**makeNonnull)(),
                 int* _Nullable (**makeNullable)(), int* (**makeUnannotated)()) {
       *(*makeNonnull)();
       *(*makeNullable)();  // [[unsafe]]
       *(*makeUnannotated)();
     }
-  )cc");
+  )cc"));
 
   // function returning a function pointer which returns a pointer
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     typedef int* _Nonnull (*MakeNonnullT)();
     typedef int* _Nullable (*MakeNullableT)();
     typedef int* (*MakeUnannotatedT)();
@@ -1372,10 +1377,10 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *(*makeNullable)()();  // [[unsafe]]
       *(*makeUnannotated)()();
     }
-  )cc");
+  )cc"));
 
   // free function returns reference to pointer
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull &makeNonnull();
     int *_Nullable &makeNullable();
     int *&makeUnannotated();
@@ -1384,10 +1389,10 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
       *makeNullable();  // [[unsafe]]
       *makeUnannotated();
     }
-  )cc");
+  )cc"));
 
   // function called in loop
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nullable makeNullable();
     bool makeBool();
     void target() {
@@ -1399,72 +1404,72 @@ TEST(PointerNullabilityTest, CallExprWithPointerReturnType) {
         *x;  // [[unsafe]]
       }
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, DoubleDereference) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int** p) {
       *p;
       **p;
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int** _Nonnull p) {
       *p;
       **p;
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull* p) {
       *p;
       **p;
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull* _Nonnull p) {
       *p;
       **p;
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int** _Nullable p) {
       *p;   // [[unsafe]]
       **p;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable* p) {
       *p;
       **p;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable* _Nullable p) {
       *p;   // [[unsafe]]
       **p;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nullable* _Nonnull p) {
       *p;
       **p;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(int* _Nonnull* _Nullable p) {
       *p;   // [[unsafe]]
       **p;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 // TODO: Fix false negatives.
@@ -1474,7 +1479,7 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
   // template argument and nullability that is spelt inside the template. That
   // is, we should be able to accurately store nullabilities from different
   // sources in a single nullability vector.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
       T0 arg0;
@@ -1504,10 +1509,10 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       **p.getNullableTPtr();  // [[unsafe]]
       **p.getNonnullTPtr();   // TODO: fix false negative.
     }
-  )cc");
+  )cc"));
 
   // Class template specialization with one argument initialised as _Nonnull.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
       T0 arg0;
@@ -1538,11 +1543,11 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       **p.nullableTPtr;  // [[unsafe]]
       **p.nonnullTPtr;
     }
-  )cc");
+  )cc"));
 
   // Class template specialization with one argument initialised without
   // nullability annotation.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0>
     struct Struct1Arg {
       T0 arg0;
@@ -1573,11 +1578,11 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       **p.nullableTPtr;  // [[unsafe]]
       **p.nonnullTPtr;
     }
-  )cc");
+  )cc"));
 
   // Class template specialization with two arguments, whose second argument is
   // initialized as nullable.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
       T0 arg0;
@@ -1621,11 +1626,11 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       *p.getNullableT1Ptr();  // [[unsafe]]
       *p.getNonnullT1Ptr();
     }
-  )cc");
+  )cc"));
 
   // Class template specialization with 5 arguments with interleaved
   // nullable/nonnull/unknown.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2, typename T3, typename T4>
     struct Struct5Arg {
       T0 arg0;
@@ -1655,11 +1660,11 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       *p.getT3();  // [[unsafe]]
       *p.getT4();
     }
-  )cc");
+  )cc"));
 
   // Class template specialization with 5 arguments with interleaved
   // nullable/nonnull/unknown/const.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2, typename T3, typename T4>
     struct Struct5Arg {
       T0 arg0;
@@ -1689,11 +1694,11 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       *p.getT3();  // [[unsafe]]
       *p.getT4();
     }
-  )cc");
+  )cc"));
 
   // Class template specialization with interleaved int and type template
   // parameters.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <int I0, typename T1, int I2, typename T3, int I4, typename T5>
     struct Struct6ArgWithInt {
       T1 arg1;
@@ -1714,13 +1719,13 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       *x.getT3();  // [[unsafe]]
       *x.getT5();
     }
-  )cc");
+  )cc"));
 }
 
 // TODO: Fix false positives and false negatives.
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithStructsAsParameters) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
       int* unknown;
       int* _Nullable nullable;
@@ -1754,9 +1759,9 @@ TEST(PointerNullabilityTest,
       *p.getT0().getNullable();  // [[unsafe]]
       *p.getT0().getNonnull();
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct1UnknownArg {
       char* unknownChar;
 
@@ -1848,10 +1853,10 @@ TEST(PointerNullabilityTest,
       *p.getT3().getNullableUInt();  // [[unsafe]]
       *p.getT3().getNullableBool();  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // With const arguments and int template parameter.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct1UnknownArg {
       char* const constUnknownChar;
       char const* unknownConstChar;
@@ -1936,12 +1941,12 @@ TEST(PointerNullabilityTest,
       *p.getT3().getNonnullConstChar();
       *p.getT3().getConstNonnullConstChar();
     }
-  )cc");
+  )cc"));
 }
 
 // TODO: Fix false negatives.
 TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
       template <typename T0>
       T0 getT0();
@@ -1962,9 +1967,9 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
       *p.getT0<int *const _Nullable>();        // TODO: fix false negative.
       *p.getT0<int const *const _Nullable>();  // TODO: fix false negative.
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct S {
       template <int I0, typename T1, int I2>
       T1 getT1();
@@ -1975,11 +1980,11 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfConcreteStruct) {
       *p.getT1<2147483647, int *_Nonnull, -2147483647>();
       *p.getT1<4, int *_Nullable, 4>();  // TODO: fix false negative.
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0>
     struct S {
       template <typename TN1>
@@ -2001,9 +2006,9 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
       *p.getTN1<int *const _Nullable>();        // TODO: fix false negative.
       *p.getTN1<int const *const _Nullable>();  // TODO: fix false negative.
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0>
     struct S {
       template <int IN1, typename TN2, int IN3>
@@ -2015,14 +2020,14 @@ TEST(PointerNullabilityTest, MemberFunctionTemplateOfTemplateStruct) {
       *p.getTN2<2147483647, int *_Nonnull, -2147483647>();
       *p.getTN2<4, int *_Nullable, 4>();  // TODO: fix false negative.
     }
-  )cc");
+  )cc"));
 }
 
 // TODO: Fix false positives.
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithTemplateStructsAsParameters) {
   // Class template with another class template as parameter
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
       T0 arg0;
@@ -2043,10 +2048,10 @@ TEST(PointerNullabilityTest,
       *p.arg0->arg1.arg0;
       *p.arg0->arg1.arg1;
     }
-  )cc");
+  )cc"));
 
   // Class template with itself as parameter
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
       T0 arg0;
@@ -2058,9 +2063,9 @@ TEST(PointerNullabilityTest,
       *p.arg0.arg1;  // [[unsafe]]
       *p.arg1;
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1, typename T2, typename T3, typename T4>
     struct Struct5Arg {
       T0 arg0;
@@ -2089,9 +2094,9 @@ TEST(PointerNullabilityTest,
       *p.arg2;                 // [[unsafe]]
       *p.arg3;
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <int I0, typename T1, typename T2, typename T3, int I4,
               typename T5, typename T6>
     struct Struct7ArgWithInt {
@@ -2125,12 +2130,12 @@ TEST(PointerNullabilityTest,
       *p.arg3;                 // [[unsafe]]
       *p.arg5;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithPointersToStructsAsParameters) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
       int* unknown;
       int* _Nullable nullable;
@@ -2165,9 +2170,9 @@ TEST(PointerNullabilityTest,
       *p.getT0()->getNullable();  // [[unsafe]]
       *p.getT0()->getNonnull();
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
       int* unknown;
       int* _Nullable nullable;
@@ -2202,9 +2207,9 @@ TEST(PointerNullabilityTest,
       *p.getT0()->getNullable();  // [[unsafe]]
       *p.getT0()->getNonnull();   // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
       int* unknown;
       int* _Nullable nullable;
@@ -2239,9 +2244,9 @@ TEST(PointerNullabilityTest,
       *p.getT0()->getNullable();  // [[unsafe]]
       *p.getT0()->getNonnull();
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Struct3IntPtrs {
       int* unknown;
       int* _Nullable nullable;
@@ -2275,12 +2280,12 @@ TEST(PointerNullabilityTest,
       *p.getT1()->getNullable();  // [[unsafe]]
       *p.getT1()->getNonnull();
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest,
      ClassTemplateInstantiationWithPointersToTemplateStructsAsParameters) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
       T0 arg0;
@@ -2313,9 +2318,9 @@ TEST(PointerNullabilityTest,
       *p.getT0()->getT1();  // [[unsafe]]
       *p.getT1()->getT1();
     }
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     template <typename T0, typename T1>
     struct StructNonnullUnknown {
       T0 nonnull;
@@ -2480,12 +2485,12 @@ TEST(PointerNullabilityTest,
       *p.getUnknown()->getNullable()->getNonnull();   // TODO: fix false
                                                       // negative.
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CallExprParamAssignment) {
   // free function with single param
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void takeNonnull(int *_Nonnull);
     void takeNullable(int *_Nullable);
     void takeUnannotated(int *);
@@ -2506,10 +2511,10 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       takeUnannotated(ptr_nullable);
       takeUnannotated(ptr_unannotated);
     }
-  )cc");
+  )cc"));
 
   // overloaded operator with single param
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     // map<int * _Nonnull, int>
     struct MapWithNonnullKeys {
       int &operator[](int *_Nonnull key);
@@ -2542,18 +2547,18 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       unannotated_keys[ptr_nullable] = 42;
       unannotated_keys[ptr_unannotated] = 42;
     }
-  )cc");
+  )cc"));
 
   // free function with multiple params of mixed nullability
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void takeMixed(int *, int *_Nullable, int *_Nonnull);
     void target() {
       takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // overloaded operator with multiple params of mixed nullability
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct TakeMixed {
       void operator()(int *, int *_Nullable, int *_Nonnull);
     };
@@ -2561,10 +2566,10 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       TakeMixed takeMixed;
       takeMixed(nullptr, nullptr, nullptr);  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // member function
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct Foo {
       void takeNonnull(int *_Nonnull);
       void takeNullable(int *_Nullable);
@@ -2575,10 +2580,10 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       foo.takeNullable(nullptr);
       foo.takeUnannotated(nullptr);
     }
-  )cc");
+  )cc"));
 
   // function pointer
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(void (*takeNonnull)(int *_Nonnull),
                 void (*takeNullable)(int *_Nullable),
                 void (*takeUnannotated)(int *)) {
@@ -2586,13 +2591,13 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       takeNullable(nullptr);
       takeUnannotated(nullptr);
     }
-  )cc");
+  )cc"));
 
   // pointer to function pointer
   //
   // TODO(b/233582219): Fix false negative. Implement support for retrieving
   // parameter types from a pointer to function pointer.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void target(void (**takeNonnull)(int *_Nonnull),
                 void (**takeNullable)(int *_Nullable),
                 void (**takeUnannotated)(int *)) {
@@ -2600,13 +2605,13 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       (*takeNullable)(nullptr);
       (*takeUnannotated)(nullptr);
     }
-  )cc");
+  )cc"));
 
   // function returned from function
   //
   // TODO(b/233582219): Fix false negative. Implement support for retrieving
   // parameter types for functions returned by another function.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     typedef void (*takeNonnullF)(int *_Nonnull);
     typedef void (*takeNullableF)(int *_Nullable);
     typedef void (*takeUnannotatedF)(int *);
@@ -2616,7 +2621,7 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       (*takeNullable)()(nullptr);
       (*takeUnannotated)()(nullptr);
     }
-  )cc");
+  )cc"));
 
   // passing a reference to a nonnull pointer
   //
@@ -2629,7 +2634,7 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
   // (2) Assume in worst case the nonnull pointer becomes nullable after the
   // call - and warn at the dereference.
   // (3) Sacrifice soundness for reduction in noise, and skip the warning.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void takeNonnullRef(int *_Nonnull &);
     void takeNullableRef(int *_Nullable &);
     void takeUnannotatedRef(int *&);
@@ -2644,10 +2649,10 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       takeUnannotatedRef(ptr_nonnull);
       *ptr_nonnull;
     }
-  )cc");
+  )cc"));
 
   // passing a reference to a nullable pointer
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void takeNonnullRef(int *_Nonnull &);
     void takeNullableRef(int *_Nullable &);
     void takeUnannotatedRef(int *&);
@@ -2661,13 +2666,13 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       takeUnannotatedRef(ptr_nullable);
       *ptr_nullable;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // passing a reference to an unannotated pointer
   //
   // TODO(b/233582219): Fix false negative. The unannotated pointer should be
   // considered nullable if it has been used as a nullable pointer.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     void takeNonnullRef(int *_Nonnull &);
     void takeNullableRef(int *_Nullable &);
     void takeUnannotatedRef(int *&);
@@ -2681,82 +2686,82 @@ TEST(PointerNullabilityTest, CallExprParamAssignment) {
       takeUnannotatedRef(ptr_unannotated);
       *ptr_unannotated;
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ReturnStatements) {
   // nonnull return type
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull target() {
       return nullptr;  // [[unsafe]]
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull target(int* _Nonnull ptr_nonnull) {
       return ptr_nonnull;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull target(int* _Nullable ptr_nullable) {
       return ptr_nullable;  // [[unsafe]]
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull target(int *ptr_unannotated) {
       return ptr_unannotated;
     }
-  )cc");
+  )cc"));
 
   // nullable return type
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nullable target() { return nullptr; }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nullable target(int* _Nonnull ptr_nonnull) {
       return ptr_nonnull;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nullable target(int* _Nullable ptr_nullable) {
       return ptr_nullable;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nullable target(int *ptr_unannotated) {
       return ptr_unannotated;
     }
-  )cc");
+  )cc"));
 
   // unannotated return type
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* target() { return nullptr; }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* target(int* _Nonnull ptr_nonnull) {
       return ptr_nonnull;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* target(int* _Nullable ptr_nullable) {
       return ptr_nullable;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *target(int *ptr_unannotated) {
       return ptr_unannotated;
     }
-  )cc");
+  )cc"));
 
   // multiple return statements
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull target(bool b, int* _Nonnull ptr_nonnull) {
       if (b) {
         return nullptr;  // [[unsafe]]
       }
       return ptr_nonnull;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull target(int* _Nullable ptr_nullable,
                          int* _Nonnull ptr_nonnull) {
       if (ptr_nullable) {
@@ -2764,8 +2769,8 @@ TEST(PointerNullabilityTest, ReturnStatements) {
       }
       return ptr_nonnull;
     }
-  )cc");
-  checkDiagnostics(R"cc(
+  )cc"));
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull target(int* _Nullable ptr_nullable_1,
                          int* _Nullable ptr_nullable_2) {
       if (ptr_nullable_1) {
@@ -2773,10 +2778,10 @@ TEST(PointerNullabilityTest, ReturnStatements) {
       }
       return ptr_nullable_1;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 
   // return result of merging 2 pointer values
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull target(bool b, int i) {
       int *ptr;
       if (b) {
@@ -2786,12 +2791,12 @@ TEST(PointerNullabilityTest, ReturnStatements) {
       }
       return ptr;  // [[unsafe]]
     }
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ConstructExpr) {
   // Constructor call assigned to local variable.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct TakeNonnull {
       explicit TakeNonnull(int *_Nonnull) {}
     };
@@ -2817,10 +2822,10 @@ TEST(PointerNullabilityTest, ConstructExpr) {
       auto UN2 = TakeUnannotated(makeNullable());
       auto UN3 = TakeUnannotated(makeUnannotated());
     }
-  )cc");
+  )cc"));
 
   // Constructor call in a base initializer.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     struct TakeNonnull {
       explicit TakeNonnull(int* _Nonnull);
     };
@@ -2829,10 +2834,10 @@ TEST(PointerNullabilityTest, ConstructExpr) {
           : TakeNonnull(ptr_nullable)      // [[unsafe]]
       {}
     };
-  )cc");
+  )cc"));
 
   // Call to a delegating constructor.
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nullable makeNullable();
     struct target {
       target(int* _Nonnull);
@@ -2840,11 +2845,11 @@ TEST(PointerNullabilityTest, ConstructExpr) {
           : target(makeNullable())  // [[unsafe]]
       {}
     };
-  )cc");
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nullable makeNullable();
     struct target {
       int* _Nonnull ptr_nonnull;
@@ -2855,9 +2860,9 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
             ptr_nullable(makeNullable()),
             ptr_unannotated(makeNullable()) {}
     };
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int* _Nonnull makeNonnull();
     struct target {
       int* _Nonnull ptr_nonnull;
@@ -2868,9 +2873,9 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
             ptr_nullable(makeNonnull()),
             ptr_unannotated(makeNonnull()) {}
     };
-  )cc");
+  )cc"));
 
-  checkDiagnostics(R"cc(
+  EXPECT_TRUE(checkDiagnostics(R"cc(
     int *makeUnannotated();
     struct target {
       int *_Nonnull ptr_nonnull;
@@ -2881,7 +2886,7 @@ TEST(PointerNullabilityTest, ConstructorMemberInitializer) {
             ptr_nullable(makeUnannotated()),
             ptr_unannotated(makeUnannotated()) {}
     };
-  )cc");
+  )cc"));
 }
 
 }  // namespace
