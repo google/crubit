@@ -220,6 +220,11 @@ class SubstituteNullabilityAnnotationsInTemplateVisitor
 
   void Visit(QualType T) { TypeVisitor::Visit(T.getTypePtr()); }
 
+  void VisitFunctionProtoType(const FunctionProtoType* FPT) {
+    Visit(FPT->getReturnType());
+    // TODO: Visit arguments.
+  }
+
   void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* ST) {
     for (auto NK : getNullabilityForTemplateParameter(
              ST, BaseNullabilityAnnotations, BaseType)) {
@@ -274,58 +279,6 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInTemplate(
   return std::move(AnnotationVisitor).getNullabilityAnnotations();
 }
 
-/// Get nullability annotations of the base type. For example, in the member
-/// expression x.f or the member call x.getF(), x is the base object and its
-/// type is the base type.
-std::vector<NullabilityKind> getBaseNullabilityAnnotations(const Expr* E) {
-  if (auto ME = dyn_cast<MemberExpr>(E)) {
-    return getBaseNullabilityAnnotations(ME->getBase());
-  } else if (auto MC = dyn_cast<CXXMemberCallExpr>(E)) {
-    return getBaseNullabilityAnnotations(MC->getImplicitObjectArgument());
-  } else if (auto DRE = dyn_cast<DeclRefExpr>(E)) {
-    return getNullabilityAnnotationsFromType(DRE->getType());
-  }
-  // TODO: Handle other expression shapes.
-  return std::vector<NullabilityKind>();
-}
-
-QualType getBaseType(const Expr* E) {
-  if (auto ME = dyn_cast<MemberExpr>(E)) {
-    return ME->getBase()->getType();
-  } else if (auto MC = dyn_cast<CXXMemberCallExpr>(E)) {
-    return MC->getImplicitObjectArgument()->getType();
-  } else if (auto ICE = dyn_cast<ImplicitCastExpr>(E)) {
-    return ICE->getSubExpr()->getType();
-  }
-  // TODO: Handle other expression shapes and base types.
-  else {
-    llvm::dbgs() << "\nWe cannot get this base type yet...\n";
-  }
-  return QualType();
-}
-
-/// Given an expression E that refers to a member variable or a member function
-/// of a template specialization, construct the nullability vector
-/// of its base type and use it to compute the nullability of E. E's nullability
-/// will itself be a vector; this is to account for cases in which E is
-/// composed of more than one pointer. We return the first element of E's
-/// nullability vector (i.e., E's "outer" nullability).
-NullabilityKind getNullabilityFromTemplatedExpression(const Expr* E) {
-  std::vector<NullabilityKind> BaseNullabilityAnnotations =
-      getBaseNullabilityAnnotations(E);
-  QualType BaseType = getBaseType(E);
-  if (BaseType.isNull()) {
-    return NullabilityKind::Unspecified;
-  }
-  std::vector<NullabilityKind> NullabilityAnnotations =
-      substituteNullabilityAnnotationsInTemplate(
-          E->getType(), BaseNullabilityAnnotations, BaseType);
-  if (NullabilityAnnotations.empty()) {
-    return NullabilityKind::Unspecified;
-  }
-  return NullabilityAnnotations[0];
-}
-
 NullabilityKind getPointerNullability(const Expr* E,
                                       PointerNullabilityAnalysis::Lattice& L) {
   QualType ExprType = E->getType();
@@ -342,12 +295,6 @@ NullabilityKind getPointerNullability(const Expr* E,
         Nullability = (*MaybeNullability)[0];
       }
     }
-  }
-  // TODO: Expand the dataflow analysis algorithm to propagate the nullability
-  // of more expression shapes (e.g., method calls), and then delete
-  // getNullabilityFromTemplatedExpression.
-  if (!Nullability.has_value()) {
-    Nullability = getNullabilityFromTemplatedExpression(E);
   }
   return Nullability.value_or(NullabilityKind::Unspecified);
 }
@@ -479,15 +426,47 @@ void transferNonFlowSensitiveMemberExpr(
   State.Lattice.insertExprNullabilityIfAbsent(ME, [&]() {
     auto BaseNullability = State.Lattice.getExprNullability(ME->getBase());
     if (BaseNullability.has_value()) {
+      QualType MemberType = ME->getType();
+      // When a MemberExpr is a part of a member function call
+      // (a child of CXXMemberCallExpr), the MemberExpr models a
+      // partially-applied member function, which isn't a real C++ construct.
+      // The AST does not provide rich type information for such MemberExprs.
+      // Instead, the AST specifies a placeholder type, specifically
+      // BuiltinType::BoundMember. So we have to look at the type of the member
+      // function declaration.
+      if (ME->hasPlaceholderType(BuiltinType::BoundMember)) {
+        MemberType = ME->getMemberDecl()->getType();
+      }
       return substituteNullabilityAnnotationsInTemplate(
-          ME->getType(), *BaseNullability, ME->getBase()->getType());
+          MemberType, *BaseNullability, ME->getBase()->getType());
     } else {
       // Since we process child nodes before parents, we should already have
       // computed the base (child) nullability. However, this is not true in all
       // test cases. So, we return unspecified nullability annotations.
-      // TODO: Fix this issue, add ._has_value() as a CHECK statement and remove
-      // else branch.
+      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
+      // remove the else branch.
+      llvm::dbgs() << "Nullability of child node not found\n";
       return std::vector<NullabilityKind>(countPointersInType(ME->getType()),
+                                          NullabilityKind::Unspecified);
+    }
+  });
+}
+
+void transferNonFlowSensitiveMemberCallExpr(
+    const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  State.Lattice.insertExprNullabilityIfAbsent(MCE, [&]() {
+    auto BaseNullability = State.Lattice.getExprNullability(MCE->getCallee());
+    if (BaseNullability.has_value()) {
+      return BaseNullability->vec();
+    } else {
+      // Since we process child nodes before parents, we should already have
+      // computed the base (child) nullability. However, this is not true in all
+      // test cases. So, we return unspecified nullability annotations.
+      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
+      // remove the else branch.
+      llvm::dbgs() << "Nullability of child node not found\n";
+      return std::vector<NullabilityKind>(countPointersInType(MCE->getType()),
                                           NullabilityKind::Unspecified);
     }
   });
@@ -499,6 +478,8 @@ auto buildNonFlowSensitiveTransferer() {
                                   transferNonFlowSensitiveDeclRefExpr)
       .CaseOfCFGStmt<MemberExpr>(ast_matchers::memberExpr(),
                                  transferNonFlowSensitiveMemberExpr)
+      .CaseOfCFGStmt<CXXMemberCallExpr>(ast_matchers::cxxMemberCallExpr(),
+                                        transferNonFlowSensitiveMemberCallExpr)
       .Build();
 }
 

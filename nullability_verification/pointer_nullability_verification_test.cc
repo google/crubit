@@ -1712,10 +1712,10 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       *p.arg3;  // [[unsafe]]
       *p.arg4;
 
-      *p.getT0();  // TODO: fix false negative.
+      *p.getT0();  // [[unsafe]]
       *p.getT1();
       *p.getT2();
-      *p.getT3();  // TODO: fix false negative.
+      *p.getT3();  // [[unsafe]]
       *p.getT4();
     }
   )cc");
