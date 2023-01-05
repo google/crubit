@@ -472,9 +472,8 @@ enum ImplKind {
     /// Used for inherent methods for which we need an `impl SomeStruct { ... }`
     /// block.
     Struct {
-        /// For example, `SomeStruct`. Retrieved from
-        /// `func.member_func_metadata`.
-        record_name: Ident,
+        /// For example, `SomeStruct`.
+        record: Rc<Record>,
         is_unsafe: bool,
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
@@ -484,10 +483,7 @@ enum ImplKind {
     /// SomeStruct { ... }` block.
     Trait {
         /// For example, `SomeStruct`.
-        /// Note that `record_name` might *not* be from
-        /// `func.member_func_metadata`.
-        record_name: Ident,
-        record_qualifier: NamespaceQualifier,
+        record: Rc<Record>,
         /// For example, `quote!{ From<i32> }`.
         trait_name: TraitName,
         /// Reference style for the `impl` block and self parameters.
@@ -520,15 +516,13 @@ enum ImplKind {
 impl ImplKind {
     fn new_trait(
         trait_name: TraitName,
-        record: &Record,
-        ir: &IR,
+        record: Rc<Record>,
         format_first_param_as_self: bool,
         force_const_reference_params: bool,
     ) -> Result<Self> {
         Ok(ImplKind::Trait {
+            record,
             trait_name,
-            record_name: make_rs_ident(record.rs_name.as_ref()),
-            record_qualifier: namespace_qualifier_of_item(record.id, ir)?,
             impl_for: ImplFor::T,
             trait_generic_params: vec![],
             format_first_param_as_self,
@@ -759,8 +753,7 @@ fn api_func_shape(
             func_name = make_rs_ident("eq");
             impl_kind = ImplKind::new_trait(
                 TraitName::PartialEq { params },
-                lhs_record,
-                &ir,
+                lhs_record.clone(),
                 /* format_first_param_as_self= */ true,
                 /* force_const_reference_params= */ true,
             )?;
@@ -827,8 +820,7 @@ fn api_func_shape(
                     func_name = make_rs_ident("lt");
                     impl_kind = ImplKind::new_trait(
                         TraitName::PartialOrd { params },
-                        lhs_record,
-                        &ir,
+                        lhs_record.clone(),
                         /* format_first_param_as_self= */
                         true,
                         /* force_const_reference_params= */ true,
@@ -852,13 +844,12 @@ fn api_func_shape(
             let rhs = &param_types[1];
             impl_kind = {
                 ImplKind::Trait {
+                    record: record.clone(),
                     trait_name: TraitName::Other {
                         name: quote! {::ctor::Assign},
                         params: vec![rhs.clone()],
                         is_unsafe_fn: false,
                     },
-                    record_name: make_rs_ident(record.rs_name.as_ref()),
-                    record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
                     impl_for: ImplFor::T,
                     trait_generic_params: vec![],
                     format_first_param_as_self: true,
@@ -881,10 +872,10 @@ fn api_func_shape(
             }) => {
                 materialize_ctor_in_caller(func, param_types);
                 let (record, impl_for) = match &param_types[0] {
-                    RsTypeKind::Record { record, .. } => (&**record, ImplFor::T),
+                    RsTypeKind::Record { record, .. } => (record, ImplFor::T),
                     RsTypeKind::Reference { referent, .. } => (
                         match &**referent {
-                            RsTypeKind::Record { record, .. } => &**record,
+                            RsTypeKind::Record { record, .. } => record,
                             _ => bail!("Expected first parameter referent to be a record"),
                         },
                         ImplFor::RefT,
@@ -897,8 +888,7 @@ fn api_func_shape(
 
                 let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
-                    record_name: make_rs_ident(record.rs_name.as_ref()),
-                    record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
+                    record: record.clone(),
                     trait_name: TraitName::Other {
                         name: quote! {::std::ops::#trait_name},
                         params: param_types[1..].to_vec(),
@@ -929,7 +919,7 @@ fn api_func_shape(
                     }
                     RsTypeKind::Reference { referent, mutability: Mutability::Mut, .. } => {
                         match &**referent {
-                            RsTypeKind::Record { record, .. } => &**maybe_record.unwrap_or(record),
+                            RsTypeKind::Record { record, .. } => maybe_record.unwrap_or(record),
                             _ => bail!("Expected first parameter referent to be a record"),
                         }
                     }
@@ -944,8 +934,7 @@ fn api_func_shape(
 
                 let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
-                    record_name: make_rs_ident(record.rs_name.as_ref()),
-                    record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
+                    record: record.clone(),
                     trait_name: TraitName::Other {
                         name: quote! {::std::ops::#trait_name},
                         params: param_types[1..].to_vec(),
@@ -984,7 +973,7 @@ fn api_func_shape(
                         false
                     };
                     impl_kind = ImplKind::Struct {
-                        record_name: make_rs_ident(record.rs_name.as_ref()),
+                        record: record.clone(),
                         format_first_param_as_self,
                         is_unsafe: has_pointer_params,
                     };
@@ -1002,8 +991,7 @@ fn api_func_shape(
             if record.is_unpin() {
                 impl_kind = ImplKind::new_trait(
                     TraitName::Other { name: quote! {Drop}, params: vec![], is_unsafe_fn: false },
-                    record,
-                    &ir,
+                    record.clone(),
                     /* format_first_param_as_self= */ true,
                     /* force_const_reference_params= */
                     false,
@@ -1017,8 +1005,7 @@ fn api_func_shape(
                         params: vec![],
                         is_unsafe_fn: true,
                     },
-                    record,
-                    &ir,
+                    record.clone(),
                     /* format_first_param_as_self= */ true,
                     /* force_const_reference_params= */ false,
                 )?;
@@ -1048,7 +1035,6 @@ fn api_func_shape(
 
             check_by_value(record)?;
             materialize_ctor_in_caller(func, param_types);
-            let record_name = make_rs_ident(record.rs_name.as_ref());
             if !record.is_unpin() {
                 func_name = make_rs_ident("ctor_new");
 
@@ -1056,8 +1042,7 @@ fn api_func_shape(
                     [] => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     [_this, params @ ..] => {
                         impl_kind = ImplKind::Trait {
-                            record_name,
-                            record_qualifier: namespace_qualifier_of_item(record.id, &ir)?,
+                            record: record.clone(),
                             trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
                             impl_for: ImplFor::T,
                             trait_generic_params: vec![],
@@ -1074,8 +1059,7 @@ fn api_func_shape(
                     1 => {
                         impl_kind = ImplKind::new_trait(
                             TraitName::UnpinConstructor { name: quote! {Default}, params: vec![] },
-                            record,
-                            &ir,
+                            record.clone(),
                             /* format_first_param_as_self= */ false,
                             /* force_const_reference_params= */ false,
                         )?;
@@ -1092,8 +1076,7 @@ fn api_func_shape(
                                         name: quote! {Clone},
                                         params: vec![],
                                     },
-                                    record,
-                                    &ir,
+                                    record.clone(),
                                     /* format_first_param_as_self= */ true,
                                     /* force_const_reference_params= */ false,
                                 )?;
@@ -1106,8 +1089,7 @@ fn api_func_shape(
                                     name: quote! {From},
                                     params: vec![param_type.clone()],
                                 },
-                                record,
-                                &ir,
+                                record.clone(),
                                 /* format_first_param_as_self= */ false,
                                 /* force_const_reference_params= */
                                 false,
@@ -1456,7 +1438,8 @@ fn generate_func(
                 function_path: syn::parse2(quote! { #namespace_qualifier #func_name }).unwrap(),
             };
         }
-        ImplKind::Struct { record_name, .. } => {
+        ImplKind::Struct { record, .. } => {
+            let record_name = make_rs_ident(record.rs_name.as_ref());
             api_func = quote! { impl #record_name { #doc_comment #api_func_def } };
             function_id = FunctionId {
                 self_type: None,
@@ -1467,9 +1450,8 @@ fn generate_func(
             };
         }
         ImplKind::Trait {
+            record,
             trait_name,
-            record_name,
-            record_qualifier,
             impl_for,
             trait_generic_params,
             associated_return_type,
@@ -1505,6 +1487,7 @@ fn generate_func(
                 quote! {}
             };
 
+            let record_name = make_rs_ident(record.rs_name.as_ref());
             let extra_items;
             let trait_generic_params =
                 format_generic_params(/* lifetimes= */ &[], trait_generic_params);
@@ -1545,7 +1528,7 @@ fn generate_func(
                 }
                 #extra_items
             };
-            let record_qualifier = record_qualifier.format_for_rs();
+            let record_qualifier = namespace_qualifier_of_item(record.id, &ir)?.format_for_rs();
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
