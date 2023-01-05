@@ -11,25 +11,20 @@ namespace {
 
 using testing::DoubleEq;
 
-TEST(FunctionsTest, Get42AsFloat64ViaNoMangleExternC) {
-  EXPECT_THAT(functions::get_42_as_f64_via_no_mangle_extern_c(),
+namespace fn_abi_tests = functions::fn_abi_tests;
+namespace fn_param_ty_tests = functions::fn_param_ty_tests;
+
+TEST(FnAbiTests, ExternCNoMangle) {
+  EXPECT_THAT(fn_abi_tests::get_42_as_f64_via_no_mangle_extern_c(),
               DoubleEq(42.0));
 }
 
-TEST(FunctionsTest, AddFloat64ViaNoMangleExternC) {
-  EXPECT_THAT(functions::add_f64_via_no_mangle_extern_c(12.0, 34.0),
-              DoubleEq(12.0 + 34.0));
+TEST(FnAbiTests, ExternCWithExportName) {
+  EXPECT_EQ(12 + 34,
+            fn_abi_tests::add_i32_via_extern_c_with_export_name(12, 34));
 }
 
-TEST(FunctionsTest, AddInt32ViaNoMangleExternC) {
-  EXPECT_EQ(12 + 34, functions::add_i32_via_no_mangle_extern_c(12, 34));
-}
-
-TEST(FunctionsTest, AddInt32ViaExternCWithExportName) {
-  EXPECT_EQ(12 + 34, functions::add_i32_via_extern_c_with_export_name(12, 34));
-}
-
-TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
+TEST(FnAbiTests, ExternCWithMangling) {
   // TODO(b/262904507): Uncomment the test assertion below after ensuring that
   // the `genrule` in `test/functions/BUILD` invokes `cc_bindings_from_rs` with
   // the same rustc cmdline flags as when `rustc` is used to build
@@ -37,25 +32,36 @@ TEST(FunctionsTest, AddInt32ViaExternCWithMangling) {
   // slightly different - e.g.:
   // _ZN9functions34add_i32_via_extern_c_with_mangling17h9cf06f3d70bfe03aE vs
   // _ZN9functions34add_i32_via_extern_c_with_mangling17hc48a5cd0f6e44291E
-  // EXPECT_EQ(12 + 34, add_i32_via_extern_c_with_mangling(12, 34));
+  //
+  // EXPECT_EQ(12 + 34,
+  //           fn_abi_tests::add_i32_via_extern_c_with_mangling(12, 34));
 }
 
-TEST(FunctionsTest, AddInt32ViaRustAbi) {
-  EXPECT_EQ(12 + 34, functions::add_i32_via_rust_abi(12, 34));
+TEST(FnAbiTests, Rust) {
+  EXPECT_EQ(12 + 34, fn_abi_tests::add_i32_via_rust_abi(12, 34));
 }
 
-TEST(FunctionsTest, AddInt32ViaRustAbiWithDuplicatedParamNames) {
-  EXPECT_EQ(12 + 34,
-            functions::add_i32_via_rust_abi_with_duplicated_param_names(
-                12, 34, 56, 78));
+TEST(FnParamTyTests, Float64) {
+  EXPECT_THAT(fn_param_ty_tests::add_f64(12.0, 34.0), DoubleEq(12.0 + 34.0));
 }
 
-TEST(FunctionsTest, VoidReturningFunctionWithExportName) {
-  functions::set_global_i32_via_extern_c_with_export_name(123);
-  EXPECT_EQ(123, functions::get_global_i32_via_extern_c_with_export_name());
+TEST(FnParamTyTests, Int32) {
+  EXPECT_EQ(12 + 34, fn_param_ty_tests::add_i32(12, 34));
+}
 
-  functions::set_global_i32_via_extern_c_with_export_name(456);
-  EXPECT_EQ(456, functions::get_global_i32_via_extern_c_with_export_name());
+TEST(OtherFnTests, VoidReturningFunction) {
+  namespace tests = functions::unit_ret_ty_tests;
+  tests::set_global_i32_via_extern_c_with_export_name(123);
+  EXPECT_EQ(123, tests::get_global_i32_via_extern_c_with_export_name());
+
+  tests::set_global_i32_via_extern_c_with_export_name(456);
+  EXPECT_EQ(456, tests::get_global_i32_via_extern_c_with_export_name());
+}
+
+TEST(OtherFnTests, DuplicatedParamNames) {
+  namespace tests = functions::other_fn_param_tests;
+  EXPECT_EQ(12 + 34, tests::add_i32_via_rust_abi_with_duplicated_param_names(
+                         12, 34, 56, 78));
 }
 
 }  // namespace
