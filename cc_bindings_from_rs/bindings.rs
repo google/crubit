@@ -12,7 +12,6 @@ use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 use rustc_hir::definitions::{DefPathData, DisambiguatedDefPathData};
 use rustc_hir::{Item, ItemKind, Node, Unsafety};
-use rustc_interface::Queries;
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
@@ -89,20 +88,6 @@ impl GeneratedBindings {
 
         Ok(Self { h_body, rs_body })
     }
-}
-
-/// Helper (used by `bindings_driver` and `test::run_compiler`) for invoking
-/// functions operating on `TyCtxt`.
-pub fn enter_tcx<'tcx, F, T>(
-    queries: &'tcx Queries<'tcx>,
-    f: F,
-) -> rustc_interface::interface::Result<T>
-where
-    F: FnOnce(TyCtxt<'tcx>) -> T + Send,
-    T: Send,
-{
-    let query_context = queries.global_ctxt()?;
-    Ok(query_context.peek_mut().enter(f))
 }
 
 #[derive(Debug, Default)]
@@ -1013,70 +998,17 @@ pub mod tests {
     };
 
     use anyhow::Result;
-    use code_gen_utils::{format_cc_ident, format_cc_includes};
     use itertools::Itertools;
     use proc_macro2::TokenStream;
     use quote::quote;
     use rustc_middle::ty::{Ty, TyCtxt};
     use rustc_span::def_id::LocalDefId;
-    use std::path::PathBuf;
 
+    use crate::run_compiler::tests::run_compiler_for_testing;
+    use code_gen_utils::{format_cc_ident, format_cc_includes};
     use token_stream_matchers::{
         assert_cc_matches, assert_cc_not_matches, assert_rs_matches, assert_rs_not_matches,
     };
-
-    pub fn get_sysroot_for_testing() -> PathBuf {
-        let runfiles = runfiles::Runfiles::create().unwrap();
-        runfiles.rlocation(if std::env::var("LEGACY_TOOLCHAIN_RUST_TEST").is_ok() {
-            "google3/third_party/unsupported_toolchains/rust/toolchains/nightly"
-        } else {
-            "google3/nowhere/llvm/rust"
-        })
-    }
-
-    #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
-    fn test_infra_panic_when_test_input_contains_syntax_errors() {
-        run_compiler("syntax error here", |_tcx| panic!("This part shouldn't execute"))
-    }
-
-    #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
-    fn test_infra_panic_when_test_input_triggers_analysis_errors() {
-        run_compiler("#![feature(no_such_feature)]", |_tcx| panic!("This part shouldn't execute"))
-    }
-
-    #[test]
-    #[should_panic(expected = "Test inputs shouldn't cause compilation errors")]
-    fn test_infra_panic_when_test_input_triggers_warnings() {
-        run_compiler("pub fn foo(unused_parameter: i32) {}", |_tcx| {
-            panic!("This part shouldn't execute")
-        })
-    }
-
-    #[test]
-    fn test_infra_nightly_features_ok_in_test_input() {
-        // This test arbitrarily picks `yeet_expr` as an example of a feature that
-        // hasn't yet been stabilized.
-        let test_src = r#"
-                // This test is supposed to test that *nightly* features are ok
-                // in the test input.  The `forbid` directive below helps to
-                // ensure that we'll realize in the future when the `yeet_expr`
-                // feature gets stabilized, making it not quite fitting for use
-                // in this test.
-                #![forbid(stable_features)]
-
-                #![feature(yeet_expr)]
-            "#;
-        run_compiler(test_src, |_tcx| ())
-    }
-
-    #[test]
-    fn test_infra_stabilized_features_ok_in_test_input() {
-        // This test arbitrarily picks `const_ptr_offset_from` as an example of a
-        // feature that has been already stabilized.
-        run_compiler("#![feature(const_ptr_offset_from)]", |_tcx| ())
-    }
 
     #[test]
     #[should_panic(expected = "No items named `missing_name`.\n\
@@ -1092,7 +1024,7 @@ pub mod tests {
                     pub fn bar() {}
                 }
             "#;
-        run_compiler(test_src, |tcx| find_def_id_by_name(tcx, "missing_name"));
+        run_compiler_for_testing(test_src, |tcx| find_def_id_by_name(tcx, "missing_name"));
     }
 
     #[test]
@@ -1106,7 +1038,7 @@ pub mod tests {
                     pub fn some_name() {}
                 }
             "#;
-        run_compiler(test_src, |tcx| find_def_id_by_name(tcx, "some_name"));
+        run_compiler_for_testing(test_src, |tcx| find_def_id_by_name(tcx, "some_name"));
     }
 
     /// This test covers only a single example of a function that should get a
@@ -3037,7 +2969,7 @@ pub mod tests {
                 };
                 input.to_string()
             };
-            run_compiler(input, |tcx| {
+            run_compiler_for_testing(input, |tcx| {
                 let def_id = find_def_id_by_name(tcx, "test_function");
                 let ty = tcx.fn_sig(def_id.to_def_id()).no_bound_vars().unwrap().output();
                 test_fn(&desc, tcx, ty, expected);
@@ -3055,7 +2987,7 @@ pub mod tests {
         F: FnOnce(Result<Option<MixedSnippet>, String>) -> T + Send,
         T: Send,
     {
-        run_compiler(source, |tcx| {
+        run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
             let result = format_def(tcx, def_id);
 
@@ -3098,93 +3030,6 @@ pub mod tests {
         F: FnOnce(Result<GeneratedBindings>) -> T + Send,
         T: Send,
     {
-        run_compiler(source, |tcx| test_function(GeneratedBindings::generate(tcx)))
-    }
-
-    /// Invokes the Rust compiler on the given Rust `source` and then calls `f`
-    /// on the `TyCtxt` representation of the compiled `source`.
-    fn run_compiler<F, T>(source: impl Into<String>, f: F) -> T
-    where
-        F: for<'tcx> FnOnce(TyCtxt<'tcx>) -> T + Send,
-        T: Send,
-    {
-        use rustc_session::config::{
-            CodegenOptions, CrateType, Input, Options, OutputType, OutputTypes,
-        };
-
-        const TEST_FILENAME: &str = "crubit_unittests.rs";
-
-        // Setting `output_types` that will trigger code gen - otherwise some parts of
-        // the analysis will be missing (e.g. `tcx.exported_symbols()`).
-        // The choice of `Bitcode` is somewhat arbitrary (e.g. `Assembly`,
-        // `Mir`, etc. would also trigger code gen).
-        let output_types = OutputTypes::new(&[(OutputType::Bitcode, None /* PathBuf */)]);
-
-        let opts = Options {
-            crate_types: vec![CrateType::Rlib], // Test inputs simulate library crates.
-            maybe_sysroot: Some(get_sysroot_for_testing()),
-            output_types,
-            edition: rustc_span::edition::Edition::Edition2021,
-            unstable_features: rustc_feature::UnstableFeatures::Allow,
-            lint_opts: vec![
-                ("warnings".to_string(), rustc_lint_defs::Level::Deny),
-                ("stable_features".to_string(), rustc_lint_defs::Level::Allow),
-            ],
-            cg: CodegenOptions {
-                // As pointed out in `panics_and_exceptions.md` the tool only supports `-C
-                // panic=abort` and therefore we explicitly opt into this config for tests.
-                panic: Some(rustc_target::spec::PanicStrategy::Abort),
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-
-        let config = rustc_interface::interface::Config {
-            opts,
-            crate_cfg: Default::default(),
-            crate_check_cfg: Default::default(),
-            input: Input::Str {
-                name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
-                input: source.into(),
-            },
-            input_path: None,
-            output_file: None,
-            output_dir: None,
-            file_loader: None,
-            lint_caps: Default::default(),
-            parse_sess_created: None,
-            register_lints: None,
-            override_queries: None,
-            make_codegen_backend: None,
-            registry: rustc_errors::registry::Registry::new(rustc_error_codes::DIAGNOSTICS),
-        };
-
-        rustc_interface::interface::run_compiler(config, |compiler| {
-            compiler.enter(|queries| {
-                use rustc_interface::interface::Result;
-                let result: Result<Result<()>> = super::enter_tcx(queries, |tcx| {
-                    // Explicitly force full `analysis` stage to detect compilation
-                    // errors that the earlier stages might miss.  This helps ensure that the
-                    // test inputs are valid Rust (even if `f` wouldn't
-                    // have triggered full analysis).
-                    tcx.analysis(())
-                });
-
-                // Flatten the outer and inner results into a single result.  (outer result
-                // comes from `enter_tcx`; inner result comes from `analysis`).
-                //
-                // TODO(lukasza): Use `Result::flatten` API when it gets stabilized.  See also
-                // https://github.com/rust-lang/rust/issues/70142
-                let result: Result<()> = result.and_then(|result| result);
-
-                // `analysis` might succeed even if there are some lint / warning errors.
-                // Detecting these requires explicitly checking `compile_status`.
-                let result: Result<()> = result.and_then(|()| compiler.session().compile_status());
-
-                // Run the provided callback.
-                let result: Result<T> = result.and_then(|()| super::enter_tcx(queries, f));
-                result.expect("Test inputs shouldn't cause compilation errors")
-            })
-        })
+        run_compiler_for_testing(source, |tcx| test_function(GeneratedBindings::generate(tcx)))
     }
 }

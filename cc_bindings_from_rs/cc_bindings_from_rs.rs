@@ -18,141 +18,23 @@ extern crate rustc_session;
 extern crate rustc_span;
 extern crate rustc_target;
 
-// TODO(b/254679226): `bindings` and `cmdline` should be separate crates.
+// TODO(b/254679226): `bindings`, `cmdline`, and `run_compiler` should be
+// separate crates.
 mod bindings;
 mod cmdline;
+mod run_compiler;
 
 use anyhow::Context;
 use itertools::Itertools;
-use rustc_middle::ty::TyCtxt;
+use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use std::path::Path;
 
 use bindings::GeneratedBindings;
 use cmdline::Cmdline;
+use run_compiler::run_compiler;
 use token_stream_printer::{
     cc_tokens_to_formatted_string, rs_tokens_to_formatted_string, RustfmtConfig,
 };
-
-/// The `bindings_driver` module mostly wraps and simplifies a subset of APIs
-/// from the `rustc_driver` module.
-mod bindings_driver {
-
-    use anyhow::anyhow;
-    use either::Either;
-    use rustc_interface::interface::Compiler;
-    use rustc_interface::Queries;
-    use rustc_middle::ty::TyCtxt;
-
-    use crate::bindings::enter_tcx;
-
-    /// Wrapper around `rustc_driver::RunCompiler::run` that exposes a
-    /// simplified API:
-    /// - Takes a `callback` that will be invoked from within Rust compiler,
-    ///   after parsing and analysis are done,
-    /// - Compilation will stop after parsing, analysis, and the `callback` are
-    ///   done,
-    /// - Returns the combined results from the Rust compiler *and* the
-    ///   `callback`.
-    pub fn run_after_analysis_and_stop<F, R>(
-        rustc_args: &[String],
-        callback: F,
-    ) -> anyhow::Result<R>
-    where
-        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
-        R: Send,
-    {
-        AfterAnalysisCallback::new(rustc_args, callback).run()
-    }
-
-    struct AfterAnalysisCallback<'a, F, R>
-    where
-        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
-        R: Send,
-    {
-        args: &'a [String],
-        callback_or_result: Either<F, anyhow::Result<R>>,
-    }
-
-    impl<'a, F, R> AfterAnalysisCallback<'a, F, R>
-    where
-        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
-        R: Send,
-    {
-        fn new(args: &'a [String], callback: F) -> Self {
-            Self { args, callback_or_result: Either::Left(callback) }
-        }
-
-        /// Runs Rust compiler, and then invokes the stored callback (with
-        /// `TyCtxt` of the parsed+analyzed Rust crate as the callback's
-        /// argument), and then finally returns the combined results
-        /// from Rust compiler *and* the callback.
-        fn run(mut self) -> anyhow::Result<R> {
-            // Rust compiler unwinds with a special sentinel value to abort compilation on
-            // fatal errors. We use `catch_fatal_errors` to 1) catch such panics and
-            // translate them into a Result, and 2) resume and propagate other panics.
-            use rustc_interface::interface::Result;
-            let rustc_result: Result<Result<()>> = rustc_driver::catch_fatal_errors(|| {
-                rustc_driver::RunCompiler::new(self.args, &mut self).run()
-            });
-
-            // Flatten `Result<Result<T, ...>>` into `Result<T, ...>` (i.e. combine the
-            // result from `RunCompiler::run` and `catch_fatal_errors`).
-            //
-            // TODO(lukasza): Use `Result::flatten` API when it gets stabilized.  See also
-            // https://github.com/rust-lang/rust/issues/70142
-            let rustc_result: Result<()> = rustc_result.and_then(|result| result);
-
-            // Translate `rustc_interface::interface::Result` into `anyhow::Result`.  (Can't
-            // use `?` because the trait `std::error::Error` is not implemented for
-            // `ErrorGuaranteed` which is required by the impl of
-            // `From<ErrorGuaranteed>` for `anyhow::Error`.)
-            let rustc_result: anyhow::Result<()> = rustc_result.map_err(|_err| {
-                // We can ignore `_err` because it has no payload / because this type has only
-                // one valid/possible value.
-                anyhow!("Errors reported by Rust compiler.")
-            });
-
-            // Return either `rustc_result` or `self.callback_result` or a new error.
-            rustc_result.and_then(|()| {
-                self.callback_or_result.right_or_else(|_left| {
-                    // When rustc cmdline arguments (i.e. `self.args`) are empty (or contain
-                    // `--help`) then the `after_analysis` callback won't be invoked.  Handle
-                    // this case by emitting an explicit error at the Crubit level.
-                    Err(anyhow!("The Rust compiler had no crate to compile and analyze"))
-                })
-            })
-        }
-    }
-
-    impl<'a, F, R> rustc_driver::Callbacks for AfterAnalysisCallback<'a, F, R>
-    where
-        F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
-        R: Send,
-    {
-        fn after_analysis<'tcx>(
-            &mut self,
-            _compiler: &Compiler,
-            queries: &'tcx Queries<'tcx>,
-        ) -> rustc_driver::Compilation {
-            let rustc_result = enter_tcx(queries, |tcx| {
-                let callback = {
-                    let temporary_placeholder = Either::Right(Err(anyhow::anyhow!("unused")));
-                    std::mem::replace(&mut self.callback_or_result, temporary_placeholder)
-                        .left_or_else(|_| panic!("`after_analysis` should only run once"))
-                };
-                self.callback_or_result = Either::Right(callback(tcx));
-            });
-
-            // `expect`ing no errors in `rustc_result`, because `after_analysis` is only
-            // called by `rustc_driver` if earlier compiler analysis was successful
-            // (which as the *last* compilation phase presumably covers *all*
-            // errors).
-            rustc_result.expect("Expecting no compile errors inside `after_analysis` callback.");
-
-            rustc_driver::Compilation::Stop
-        }
-    }
-}
 
 fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
     std::fs::write(path, content)
@@ -182,7 +64,7 @@ fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
 /// `init_env_logger`) and therefore can be used from the tests module below.
 fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
     let cmdline = Cmdline::new(args)?;
-    bindings_driver::run_after_analysis_and_stop(&cmdline.rustc_args, |tcx| {
+    run_compiler(&cmdline.rustc_args, |tcx| {
         run_with_tcx(&cmdline, tcx)
     })
 }
@@ -219,7 +101,7 @@ fn main() -> anyhow::Result<()> {
 mod tests {
     use super::run_with_cmdline_args;
 
-    use crate::bindings::tests::get_sysroot_for_testing;
+    use crate::run_compiler::tests::get_sysroot_for_testing;
     use itertools::Itertools;
     use regex::{Regex, RegexBuilder};
     use std::path::PathBuf;
@@ -448,8 +330,12 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
+    /// `test_run_compiler_error_propagation` tests that errors from
+    /// `run_compiler` get propagated. More detailed test coverage of
+    /// various specific error types can be found in tests in `run_compiler.
+    /// rs`.
     #[test]
-    fn test_rustc_error_propagation() -> anyhow::Result<()> {
+    fn test_run_compiler_error_propagation() -> anyhow::Result<()> {
         let err = TestArgs::default_args()?
             .with_extra_rustc_args(&["--unrecognized-rustc-flag"])
             .run()
@@ -460,23 +346,12 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
         Ok(())
     }
 
-    /// `test_rustc_help` tests that we gracefully handle scenarios where `rustc`
-    /// doesn't compile anything (e.g. when there are no rustc cmdline
-    /// arguments, or when `--help` is present).
-    #[test]
-    fn test_rustc_help() -> anyhow::Result<()> {
-        let err = TestArgs::default_args()?
-            .with_extra_rustc_args(&["--help"])
-            .run()
-            .expect_err("--help passed to rustc should trigger Crubit-level error");
-
-        let msg = format!("{err:#}");
-        assert_eq!("The Rust compiler had no crate to compile and analyze", msg);
-        Ok(())
-    }
-
     /// `test_rustc_unsupported_panic_mechanism` tests that `panic=unwind` results
     /// in an error.
+    ///
+    /// This is tested at the `cc_bindings_from_rs.rs` level instead of at the `bindings.rs` level,
+    /// because `run_compiler::tests::run_compiler_for_testing` doesn't support specifying a custom
+    /// panic mechanism.
     #[test]
     fn test_rustc_unsupported_panic_mechanism() -> anyhow::Result<()> {
         let err = TestArgs::default_args()?
@@ -501,21 +376,6 @@ extern "C" fn __crubit_thunk__ANY_IDENTIFIER_CHARACTERS()
 
         let msg = format!("{err:#}");
         assert_eq!("Error when writing to ../..: Is a directory (os error 21)", msg);
-        Ok(())
-    }
-
-    /// `test_no_output_file` tests that we stop the compilation midway (i.e. that
-    /// we return `Stop` from `after_analysis`).
-    #[test]
-    fn test_no_output_file() -> anyhow::Result<()> {
-        let tmpdir = tempdir()?;
-        let out_path = tmpdir.path().join("unexpected_output.o");
-        TestArgs::default_args()?
-            .with_extra_rustc_args(&["-o", &out_path.display().to_string()])
-            .run()
-            .expect("No rustc or Crubit errors are expected in this test");
-
-        assert!(!out_path.exists());
         Ok(())
     }
 }

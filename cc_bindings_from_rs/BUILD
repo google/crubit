@@ -22,6 +22,7 @@ rust_binary(
         "bindings.rs",
         "cc_bindings_from_rs.rs",
         "cmdline.rs",
+        "run_compiler.rs",
     ],
     crate_root = "cc_bindings_from_rs.rs",
     # TODO(b/242703401): Remove once cc_common.link works for rustc libraries.
@@ -43,6 +44,7 @@ rust_binary(
         "@crate_index//:itertools",
         "@crate_index//:proc-macro2",
         "@crate_index//:quote",
+        "@rules_rust//tools/runfiles",
     ],
 )
 
@@ -78,7 +80,6 @@ rust_test(
         "//common:token_stream_matchers",
         "@crate_index//:regex",
         "@crate_index//:tempfile",
-        "@rules_rust//tools/runfiles",
     ],
 )
 
