@@ -124,32 +124,34 @@ impl NamespaceQualifier {
 pub fn format_namespace_bound_cc_tokens(
     iter: impl IntoIterator<Item = (NamespaceQualifier, TokenStream)>,
 ) -> TokenStream {
-    let mut iter = iter.into_iter().peekable();
-    let mut tokens_in_curr_ns = Vec::with_capacity(iter.size_hint().0);
-    let mut result = TokenStream::default();
-    while let Some((curr_ns, tokens)) = iter.next() {
-        tokens_in_curr_ns.push(tokens);
+    let iter = iter
+        .into_iter()
+        .coalesce(|(ns1, mut tokens1), (ns2, tokens2)| {
+            // Coallesce tokens if subsequent items belong to the same namespace.
+            if ns1 == ns2 {
+                tokens1.extend(tokens2);
+                Ok((ns1, tokens1))
+            } else {
+                Err(((ns1, tokens1), (ns2, tokens2)))
+            }
+        })
+        .map(|(ns, tokens)| {
+            ns.format_with_cc_body(tokens).unwrap_or_else(|err| {
+                let name = ns.0.iter().join("::");
+                let err = format!("Failed to format namespace name `{name}`: {err}");
+                quote! { __COMMENT__ #err }
+            })
+        });
 
-        // Flush `tokens_in_curr_ns` when at the end of the current namespace.
-        let next_ns = iter.peek().map(|(next_ns, _)| next_ns);
-        if next_ns != Some(&curr_ns) {
-            let tokens_in_curr_ns = tokens_in_curr_ns.drain(..);
-            let curr_ns = curr_ns
-                .format_with_cc_body(quote! { #(#tokens_in_curr_ns)* })
-                .unwrap_or_else(|err| {
-                    let name = curr_ns.0.iter().join("::");
-                    let err = format!("Failed to format namespace name `{name}`: {err}");
-                    quote!{ __COMMENT__ #err }
-                });
-            result.extend(curr_ns);
-        }
+    // Using fully-qualified syntax to avoid the warning that `intersperse`
+    // may be added to the standard library in the future.
+    //
+    // TODO(https://github.com/rust-lang/rust/issues/79524): Use `.intersperse(...)` syntax once
+    // 1) this stdlib feature gets stabilized and
+    // 2) the method with conflicting name gets removed from `itertools`.
+    let iter = itertools::Itertools::intersperse(iter, quote! { __NEWLINE__ __NEWLINE__ });
 
-        // Separate namespaces with a single empty line.
-        if iter.peek().is_some() {
-            result.extend(quote! { __NEWLINE__ __NEWLINE__ });
-        }
-    }
-    result
+    iter.collect()
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
