@@ -622,6 +622,10 @@ pub mod tests {
             (broken_module.clone(), quote! { void broken_module_f2(); }),
             (working_module.clone(), quote! { void working_module_f3(); }),
             (working_module.clone(), quote! { void working_module_f4(); }),
+            (broken_module.clone(), quote! { void broken_module_f5(); }),
+            (broken_module.clone(), quote! { void broken_module_f6(); }),
+            (working_module.clone(), quote! { void working_module_f7(); }),
+            (working_module.clone(), quote! { void working_module_f8(); }),
         ];
         let broken_module_msg = "Failed to format namespace name `foo::reinterpret_cast::bar`: \
                                  `reinterpret_cast` is a C++ reserved keyword \
@@ -634,6 +638,19 @@ pub mod tests {
                 namespace foo::working_module::bar {
                 void working_module_f3();
                 void working_module_f4();
+                }  // namespace foo::working_module::bar
+
+                // TODO(lukasza): Repeating the error message below seems somewhat undesirable.
+                // OTOH fixing this seems low priority, given that errors when formatting namespace
+                // names should be fairly rare.  And fixing this requires extra work and effort,
+                // especially if we want to:
+                // 1) coallesce the 2 chunks of the `working_module`
+                // 2) avoid reordering where the `broken_module` error comment appears.
+                __COMMENT__ #broken_module_msg
+
+                namespace foo::working_module::bar {
+                void working_module_f7();
+                void working_module_f8();
                 }  // namespace foo::working_module::bar
             },
         );
