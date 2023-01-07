@@ -32,5 +32,11 @@ TEST(StructsTest, ReorderingDefs) {
   EXPECT_EQ(123, m1::get_int_from_s2(std::move(s2)));
 }
 
+TEST(StructsTest, FwdDecls) {
+  namespace fwd_decls = structs::fwd_decls;
+  fwd_decls::S1 s1 = fwd_decls::create_s1();
+  EXPECT_EQ(456, fwd_decls::get_int_from_s1(&s1));
+}
+
 }  // namespace
 }  // namespace crubit

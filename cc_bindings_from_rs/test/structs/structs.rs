@@ -93,3 +93,45 @@ pub mod reordering_defs {
         }
     }
 }
+
+/// This module provides coverage for emitting forward declarations.  In
+/// particular, if we assume that the C++ bindings are emitted in the same order
+/// as the Rust items below, then `S1` needs to be forward-declared (because
+/// `get_int_from_s1` is *before* `S1`).
+///
+/// TODO(b/260725687): Using a cycle below should avoid the assumption above
+/// about preserving the same order (because a cycle can't be
+/// toposorted/reordered).  OTOH forming a cycle seems to depend on supporting
+/// bindings for additional language features - either static methods
+/// (b/260725279):
+/// ```
+///     // Cycle!:
+///     pub struct S1(i32);
+///     pub struct S2(i32);
+///     impl S1 {
+///         pub fn get_int_from_s2(s2: *const S2) { ... }
+///     }
+///     impl S2 {
+///         pub fn get_int_from_s1(s1: *const S1) { ... }
+///     }
+/// ```
+/// or fields (b/258233850):
+/// ```
+///     // Cycle!:
+///     pub struct S1 {
+///         ptr_to_s2: *const S2,
+///     }
+///     pub struct S2 {
+///         ptr_to_s1: *const S1,
+///     }
+/// ```
+pub mod fwd_decls {
+    pub fn get_int_from_s1(s1: *const S1) -> i32 {
+        #![allow(clippy::not_unsafe_ptr_arg_deref)]
+        unsafe { (*s1).0 }
+    }
+    pub fn create_s1() -> S1 {
+        S1(456)
+    }
+    pub struct S1(i32);
+}
