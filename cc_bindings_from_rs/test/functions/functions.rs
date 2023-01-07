@@ -61,6 +61,13 @@ pub mod fn_param_ty_tests {
     pub fn add_i32(x: i32, y: i32) -> i32 {
         x + y
     }
+
+    pub fn add_i32_via_ptr(x: *const i32, y: *const i32, sum: *mut i32) {
+        #![allow(clippy::not_unsafe_ptr_arg_deref)]
+        unsafe {
+            *sum = *x + *y;
+        }
+    }
 }
 
 /// APIs for testing functions that return the unit / `()` / `void` type.

@@ -13,6 +13,7 @@ use quote::{format_ident, quote};
 use rustc_hir::definitions::{DefPathData, DisambiguatedDefPathData};
 use rustc_hir::{Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
+use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
@@ -351,6 +352,22 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 prereqs
             }
         },
+
+        ty::TyKind::RawPtr(ty::TypeAndMut{ty, mutbl}) => {
+            let const_qualifier = match mutbl {
+                Mutability::Mut => quote!{},
+                Mutability::Not => quote!{ const },
+            };
+            let CcSnippet{ tokens, prereqs } = format_ty_for_cc(tcx, *ty)
+                .with_context(|| format!(
+                        "Failed to format the pointee of the pointer type `{ty}`"))?;
+            CcSnippet {
+                // TODO(b/260729464): Move `prereqs.defs` to `prereqs.fwd_decls`.
+                prereqs,
+                tokens: quote!{ #const_qualifier #tokens * },
+            }
+        },
+
         // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
         // element type of an Array, a pointee type of a RawPtr, a referent of a Ref or Slice, a
         // parameter type of an FnPtr, etc), one should also 1) propagate `CcPrerequisites::defs`,
@@ -358,7 +375,6 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
         // might be also desirable to separately track forward-declaration prerequisites.
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
-        | ty::TyKind::RawPtr(..)
         | ty::TyKind::Ref(..)
         | ty::TyKind::FnPtr(..)
         | ty::TyKind::Str
@@ -421,11 +437,20 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
             FullyQualifiedName::new(tcx, adt.did()).format_for_rs()
         },
+        ty::TyKind::RawPtr(ty::TypeAndMut{ty, mutbl}) => {
+            let qualifier = match mutbl {
+                Mutability::Mut => quote!{ mut },
+                Mutability::Not => quote!{ const },
+            };
+            let ty = format_ty_for_rs(tcx, *ty)
+                .with_context(|| format!(
+                        "Failed to format the pointee of the pointer type `{ty}`"))?;
+            quote!{ * #qualifier #ty }
+        },
         ty::TyKind::Foreign(..)
         | ty::TyKind::Str
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
-        | ty::TyKind::RawPtr(..)
         | ty::TyKind::Ref(..)
         | ty::TyKind::FnPtr(..)
         | ty::TyKind::Dynamic(..)
@@ -1753,15 +1778,14 @@ pub mod tests {
     #[test]
     fn test_format_def_unsupported_fn_ret_type() {
         let test_src = r#"
-                #[no_mangle]
-                pub extern "C" fn foo() -> *const i32 { std::ptr::null() }
+                pub fn foo() -> (i32, i32) { (123, 456) }
             "#;
         test_format_def(test_src, "foo", |result| {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
                 "Error formatting function return type: \
-                       The following Rust type is not supported yet: *const i32"
+                       Tuples are not supported yet: (i32, i32) (b/254099023)"
             );
         });
     }
@@ -2065,14 +2089,12 @@ pub mod tests {
     #[test]
     fn test_format_def_unsupported_fn_param_type() {
         let test_src = r#"
-                #[no_mangle]
-                pub extern "C" fn fn_with_params(_param: *const i32) {}
+                pub fn foo(_param: (i32, i32)) {}
             "#;
-        test_format_def(test_src, "fn_with_params", |result| {
+        test_format_def(test_src, "foo", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Error formatting the type of parameter #0: \
-                             The following Rust type is not supported yet: \
-                             *const i32");
+                             Tuples are not supported yet: (i32, i32) (b/254099023)");
         });
     }
 
@@ -2624,6 +2646,10 @@ pub mod tests {
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct")),
             ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion")),
+            ("*const i32", ("const std::int32_t*", "cstdint", "")),
+            ("*mut i32", ("std::int32_t*", "cstdint", "")),
+            // TODO(b/260729464): Move `prereqs.defs` expectation to `prereqs.fwd_decls`.
+            ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "SomeStruct")),
             // Extra parens/sugar are expected to be ignored:
             ("(bool)", ("bool", "", "")),
         ];
@@ -2713,10 +2739,6 @@ pub mod tests {
             (
                 "(i32, i32)", // Non-empty TyKind::Tuple
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
-            ),
-            (
-                "*const i32", // TyKind::Ptr
-                "The following Rust type is not supported yet: *const i32",
             ),
             (
                 "&'static i32", // TyKind::Ref
@@ -2833,10 +2855,17 @@ pub mod tests {
             ("char", "char"),
             ("!", "!"),
             ("()", "()"),
+            // ADTs:
             ("SomeStruct", "::rust_out::SomeStruct"),
             ("SomeEnum", "::rust_out::SomeEnum"),
             ("SomeUnion", "::rust_out::SomeUnion"),
+            // Type from another crate:
             ("std::cmp::Ordering", "::core::cmp::Ordering"),
+            // `const` and `mut` pointers:
+            ("*const i32", "*const i32"),
+            ("*mut i32", "*mut i32"),
+            // Pointer to an ADT:
+            ("*mut SomeStruct", "* mut :: rust_out :: SomeStruct"),
         ];
         let preamble = quote! {
             #![feature(never_type)]
@@ -2870,10 +2899,6 @@ pub mod tests {
             (
                 "(i32, i32)", // Non-empty TyKind::Tuple
                 "Tuples are not supported yet: (i32, i32) (b/254099023)",
-            ),
-            (
-                "*const i32", // TyKind::Ptr
-                "The following Rust type is not supported yet: *const i32",
             ),
             (
                 "&'static i32", // TyKind::Ref

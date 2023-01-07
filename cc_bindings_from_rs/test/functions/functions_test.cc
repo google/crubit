@@ -49,6 +49,16 @@ TEST(FnParamTyTests, Int32) {
   EXPECT_EQ(12 + 34, fn_param_ty_tests::add_i32(12, 34));
 }
 
+TEST(FnParamTyTests, Int32Ptr) {
+  std::int32_t x = 12;
+  std::int32_t y = 34;
+  std::int32_t sum;  // uninitialized
+  fn_param_ty_tests::add_i32_via_ptr(&x, &y, &sum);
+  EXPECT_EQ(12, x);
+  EXPECT_EQ(34, y);
+  EXPECT_EQ(12 + 34, sum);
+}
+
 TEST(OtherFnTests, VoidReturningFunction) {
   namespace tests = functions::unit_ret_ty_tests;
   tests::set_global_i32_via_extern_c_with_export_name(123);
