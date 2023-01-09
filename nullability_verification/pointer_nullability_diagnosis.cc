@@ -5,6 +5,7 @@
 #include "nullability_verification/pointer_nullability_diagnosis.h"
 
 #include <optional>
+#include <string>
 
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
@@ -78,6 +79,100 @@ bool isIncompatibleArgumentList(ArrayRef<QualType> ParamTypes,
   return false;
 }
 
+NullabilityKind parseNullabilityKind(StringRef EnumName) {
+  return llvm::StringSwitch<NullabilityKind>(EnumName)
+      .Case("NK_nonnull", NullabilityKind::NonNull)
+      .Case("NK_nullable", NullabilityKind::Nullable)
+      .Case("NK_unspecified", NullabilityKind::Unspecified)
+      .Default(NullabilityKind::Unspecified);
+}
+
+std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
+  std::string Result = "[";
+  llvm::interleave(
+      Nullability,
+      [&](const NullabilityKind n) {
+        Result += getNullabilitySpelling(n).str();
+      },
+      [&] { Result += ", "; });
+  Result += "]";
+  return Result;
+}
+
+/// Evaluates the `__assert_nullability` call by comparing the expected
+/// nullability to the nullability computed by the dataflow analysis.
+///
+/// If the function being diagnosed is called `__assert_nullability`, we assume
+/// it is a call of the shape __assert_nullability<a, b, c, ...>(p), where `p`
+/// is an expression that contains pointers and a, b, c ... represent each of
+/// the NullabilityKinds in `p`'s expected nullability. An expression's
+/// nullability can be expressed as a vector of NullabilityKinds, where each
+/// vector element corresponds to one of the pointers contained in the
+/// expression.
+///
+/// For example:
+/// \code
+///    enum NullabilityKind {
+///      NK_nonnull,
+///      NK_nullable,
+///      NK_unspecified,
+///    };
+///
+///    template<NullabilityKind ...NK, typename T>
+///    void __assert_nullability(T&);
+///
+///    template<typename T0, typename T1>
+///    struct Struct2Arg {
+///      T0 arg0;
+///      T1 arg1;
+///    };
+///
+///    void target(Struct2Arg<int *, int * _Nullable> p) {
+///      __assert_nullability<NK_unspecified, NK_nullable>(p);
+///    }
+/// \endcode
+bool diagnoseAssertNullabilityCall(
+    const CallExpr* CE,
+    const TransferStateForDiagnostics<PointerNullabilityLattice>& State,
+    ASTContext& Ctx) {
+  auto* DRE = cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
+
+  // Extract the expected nullability from the template parameter pack.
+  std::vector<NullabilityKind> Expected;
+  for (auto P : DRE->template_arguments()) {
+    if (P.getArgument().getKind() == TemplateArgument::Expression) {
+      if (auto* EnumDRE = dyn_cast<DeclRefExpr>(P.getSourceExpression())) {
+        Expected.push_back(parseNullabilityKind(EnumDRE->getDecl()->getName()));
+      }
+    }
+  }
+
+  // Compare the nullability computed by nullability analysis with the
+  // expected one.
+  const Expr* GivenExpr = CE->getArg(0);
+  Optional<ArrayRef<NullabilityKind>> MaybeComputed =
+      State.Lattice.getExprNullability(GivenExpr);
+  if (!MaybeComputed.has_value()) {
+    llvm::dbgs()
+        << "Could not evaluate __assert_nullability. Could not find the "
+           "nullability of the argument expression: ";
+    CE->dump();
+    return false;
+  }
+  if (MaybeComputed->vec() == Expected) return true;
+  // The computed and expected nullabilities differ. Print both to aid
+  // debugging.
+  llvm::dbgs() << "__assert_nullability failed at location: ";
+  CE->getExprLoc().print(llvm::dbgs(), Ctx.getSourceManager());
+  llvm::dbgs() << "\nExpression:\n";
+  GivenExpr->dump();
+  llvm::dbgs() << "Expected nullability: ";
+  llvm::dbgs() << nullabilityToString(Expected) << "\n";
+  llvm::dbgs() << "Computed nullability: ";
+  llvm::dbgs() << nullabilityToString(*MaybeComputed) << "\n";
+  return false;
+}
+
 // TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
 // a function returned from another function), or when the callee cannot be
 // interpreted as a function type (e.g. a pointer to a function pointer).
@@ -89,6 +184,16 @@ llvm::Optional<CFGElement> diagnoseCallExpr(
 
   auto* CalleeType = Callee->getFunctionType();
   if (!CalleeType) return std::nullopt;
+
+  if (auto* FD = Callee->getAsFunction()) {
+    if (FD->getDeclName().isIdentifier() &&
+        FD->getName() == "__assert_nullability" &&
+        !diagnoseAssertNullabilityCall(CE, State, *Result.Context)) {
+      // TODO: Handle __assert_nullability failures differently from regular
+      // diagnostic ([[unsafe]]) failures.
+      return llvm::Optional<CFGElement>(CFGStmt(CE));
+    }
+  }
 
   auto ParamTypes = CalleeType->getAs<FunctionProtoType>()->getParamTypes();
   ArrayRef<const Expr*> Args(CE->getArgs(), CE->getNumArgs());

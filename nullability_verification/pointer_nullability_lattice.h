@@ -28,7 +28,7 @@ class PointerNullabilityLattice {
           *ExprToNullability)
       : ExprToNullability(ExprToNullability) {}
 
-  Optional<ArrayRef<NullabilityKind>> getExprNullability(const Expr *E) {
+  Optional<ArrayRef<NullabilityKind>> getExprNullability(const Expr *E) const {
     auto I = ExprToNullability->find(E);
     return I == ExprToNullability->end()
                ? std::nullopt
