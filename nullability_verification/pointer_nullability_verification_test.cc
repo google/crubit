@@ -10,7 +10,6 @@
 #include "clang/Basic/SourceManager.h"
 #include "third_party/llvm/llvm-project/clang/unittests/Analysis/FlowSensitive/TestingSupport.h"
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Testing/Support/Error.h"
@@ -23,7 +22,6 @@ namespace {
 
 using dataflow::Environment;
 using dataflow::TransferStateForDiagnostics;
-using dataflow::TypeErasedDataflowAnalysisState;
 using dataflow::test::AnalysisInputs;
 using dataflow::test::AnalysisOutputs;
 using dataflow::test::checkDataflow;
