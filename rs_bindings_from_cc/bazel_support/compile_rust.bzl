@@ -90,6 +90,7 @@ def compile_rust(ctx, attr, src, extra_srcs, deps):
             is_test = False,
             rustc_env = {},
             compile_data = depset([]),
+            compile_data_targets = depset([]),
             owner = ctx.label,
         ),
         output_hash = output_hash,
