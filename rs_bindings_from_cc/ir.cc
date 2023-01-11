@@ -555,8 +555,8 @@ llvm::json::Value IR::ToJson() const {
       {"items", std::move(json_items)},
       {"top_level_item_ids", std::move(top_level_ids)},
   };
-  if (!crate_root_path_.empty()) {
-    result["crate_root_path"] = crate_root_path_;
+  if (!crate_root_path.empty()) {
+    result["crate_root_path"] = crate_root_path;
   }
   return std::move(result);
 }

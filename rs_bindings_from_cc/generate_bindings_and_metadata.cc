@@ -75,7 +75,7 @@ absl::StatusOr<BindingsAndMetadata> GenerateBindingsAndMetadata(
           clang_args_view, requested_instantiations));
 
   if (!cmdline.instantiations_out().empty()) {
-    ir.crate_root_path_ = "__cc_template_instantiations_rs_api";
+    ir.crate_root_path = "__cc_template_instantiations_rs_api";
   }
 
   bool generate_error_report = !cmdline.error_report_out().empty();

@@ -798,7 +798,7 @@ struct IR {
   //
   // TODO(hlopko): Replace empty strings with std::optional<std::string>
   // throughout the codebase
-  std::string crate_root_path_;
+  std::string crate_root_path;
 };
 
 inline std::string IrToJson(const IR& ir) {
