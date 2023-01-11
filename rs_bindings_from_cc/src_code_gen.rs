@@ -440,29 +440,62 @@ impl TraitName {
     pub fn lifetimes(&self) -> impl Iterator<Item = Lifetime> + '_ {
         self.params().flat_map(|p| p.lifetimes())
     }
+    /// Similar to to_tokens but removing a given record type from the list of
+    /// generic args
+    ///
+    /// This is used to remove the record whose trait implementation is being
+    /// generated.
+    fn to_token_stream_removing_trait_record(&self, trait_record: Option<&Record>) -> TokenStream {
+        match self {
+            Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
+                let formatted_params =
+                    format_generic_params_replacing_by_self(params, trait_record);
+                quote! {#name #formatted_params}
+            }
+            Self::PartialEq { params } => {
+                assert_eq!(params.len(), 1, "PartialEq must have a single generic param");
+
+                if trait_record.is_some() && params[0].is_record(trait_record.unwrap()) {
+                    quote! {PartialEq}
+                } else {
+                    let formatted_params =
+                        format_generic_params_replacing_by_self(params, trait_record);
+                    quote! {PartialEq #formatted_params}
+                }
+            }
+            Self::PartialOrd { params } => {
+                assert_eq!(params.len(), 1, "PartialOrd must have a single generic param");
+                if trait_record.is_some() && params[0].is_record(trait_record.unwrap()) {
+                    quote! {PartialOrd}
+                } else {
+                    let formatted_params =
+                        format_generic_params_replacing_by_self(params, trait_record);
+                    quote! {PartialOrd #formatted_params}
+                }
+            }
+            Self::CtorNew(arg_types) => {
+                let formatted_arg_types =
+                    format_tuple_except_singleton_replacing_by_self(arg_types, trait_record);
+                quote! { ::ctor::CtorNew < #formatted_arg_types > }
+            }
+        }
+    }
 }
 
 impl ToTokens for TraitName {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
-                let params = format_generic_params(/* lifetimes= */ &[], params);
-                quote! {#name #params}.to_tokens(tokens)
-            }
-            Self::PartialEq { params } => {
-                let params = format_generic_params(/* lifetimes= */ &[], params);
-                quote! {PartialEq #params}.to_tokens(tokens)
-            }
-            Self::PartialOrd { params } => {
-                let params = format_generic_params(/* lifetimes= */ &[], params);
-                quote! {PartialOrd #params}.to_tokens(tokens)
-            }
-            Self::CtorNew(arg_types) => {
-                let arg_types = format_tuple_except_singleton(arg_types);
-                quote! { ::ctor::CtorNew < #arg_types > }.to_tokens(tokens)
-            }
-        }
+        self.to_token_stream_removing_trait_record(None).to_tokens(tokens)
     }
+}
+
+fn format_generic_params_replacing_by_self<'a>(
+    types: impl IntoIterator<Item = &'a RsTypeKind>,
+    trait_record: Option<&Record>,
+) -> TokenStream {
+    format_generic_params(
+        [],
+        types.into_iter().map(|ty| ty.to_token_stream_replacing_by_self(trait_record)),
+    )
 }
 
 /// The kind of the `impl` block the function needs to be generated in.
@@ -1450,7 +1483,7 @@ fn generate_func(
             };
         }
         ImplKind::Trait {
-            record,
+            record: trait_record,
             trait_name,
             impl_for,
             trait_generic_params,
@@ -1468,9 +1501,13 @@ fn generate_func(
                 }
             } else if let TraitName::PartialOrd { ref params } = trait_name {
                 let param = params.get(0).ok_or_else(|| anyhow!("No parameter to PartialOrd"))?;
+                let quoted_param_or_self = match impl_for {
+                    ImplFor::T => param.to_token_stream_replacing_by_self(Some(&trait_record)),
+                    ImplFor::RefT => quote! { #param },
+                };
                 quote! {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: & #param) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: & #quoted_param_or_self) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -1487,7 +1524,7 @@ fn generate_func(
                 quote! {}
             };
 
-            let record_name = make_rs_ident(record.rs_name.as_ref());
+            let record_name = make_rs_ident(trait_record.rs_name.as_ref());
             let extra_items;
             let trait_generic_params =
                 format_generic_params(/* lifetimes= */ &[], trait_generic_params);
@@ -1513,22 +1550,26 @@ fn generate_func(
                     extra_items = quote! {};
                 }
             };
-            let impl_for = match impl_for {
-                ImplFor::T => quote! { #record_name },
+            let (trait_name_without_trait_record, impl_for) = match impl_for {
+                ImplFor::T => (
+                    trait_name.to_token_stream_removing_trait_record(Some(&trait_record)),
+                    quote! { #record_name },
+                ),
                 ImplFor::RefT => {
                     let param = &param_types[0];
-                    quote! { #param }
+                    (quote! { #trait_name }, quote! { #param })
                 }
             };
             api_func = quote! {
                 #doc_comment
-                impl #trait_generic_params #trait_name for #impl_for {
+                impl #trait_generic_params #trait_name_without_trait_record for #impl_for {
                     #extra_body
                     #api_func_def
                 }
                 #extra_items
             };
-            let record_qualifier = namespace_qualifier_of_item(record.id, &ir)?.format_for_rs();
+            let record_qualifier =
+                namespace_qualifier_of_item(trait_record.id, &ir)?.format_for_rs();
             function_id = FunctionId {
                 self_type: Some(syn::parse2(quote! { #record_qualifier #record_name }).unwrap()),
                 function_path: syn::parse2(quote! { #trait_name :: #func_name }).unwrap(),
@@ -1589,6 +1630,12 @@ fn function_signature(
     let mut api_params = Vec::with_capacity(func.params.len());
     let mut thunk_args = Vec::with_capacity(func.params.len());
     let mut thunk_prepare = quote! {};
+    let impl_kind_record = match impl_kind {
+        ImplKind::Struct { record, .. } | ImplKind::Trait { record, impl_for: ImplFor::T, .. } => {
+            Some(record)
+        }
+        _ => None,
+    };
     for (i, (ident, type_)) in param_idents.iter().zip(param_types.iter()).enumerate() {
         type_.check_by_value()?;
         if !type_.is_unpin() {
@@ -1604,11 +1651,21 @@ fn function_signature(
             if !type_.is_move_constructible() {
                 bail!("Non-movable, non-trivial_abi type '{type}' is not supported by value as parameter #{i}", type=quote!{#type_});
             }
-            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#type_>});
+            let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
+                type_.to_token_stream_replacing_by_self(Some(impl_record))
+            } else {
+                quote! {#type_}
+            };
+            api_params.push(quote! {#ident: impl ::ctor::Ctor<Output=#quoted_type_or_self>});
             thunk_args
                 .push(quote! {::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(#ident))});
         } else {
-            api_params.push(quote! {#ident: #type_});
+            let quoted_type_or_self = if let Some(impl_record) = impl_kind_record {
+                type_.to_token_stream_replacing_by_self(Some(impl_record))
+            } else {
+                quote! {#type_}
+            };
+            api_params.push(quote! {#ident: #quoted_type_or_self});
             thunk_args.push(quote! {#ident});
         }
     }
@@ -1661,7 +1718,11 @@ fn function_signature(
 
         // CtorNew groups parameters into a tuple.
         if let TraitName::CtorNew(args_type) = trait_name {
-            let args_type = format_tuple_except_singleton(args_type);
+            let args_type = if let Some(impl_record) = impl_kind_record {
+                format_tuple_except_singleton_replacing_by_self(args_type, Some(impl_record))
+            } else {
+                format_tuple_except_singleton(args_type)
+            };
             api_params = vec![quote! {args: #args_type}];
             let thunk_vars = format_tuple_except_singleton(&thunk_args);
             thunk_prepare.extend(quote! {let #thunk_vars = args;});
@@ -1821,6 +1882,27 @@ fn format_tuple_except_singleton<T: ToTokens>(items: &[T]) -> TokenStream {
     match items {
         [singleton] => quote! {#singleton},
         items => quote! {(#(#items),*)},
+    }
+}
+
+fn format_tuple_except_singleton_replacing_by_self(
+    items: &[RsTypeKind],
+    trait_record: Option<&Record>,
+) -> TokenStream {
+    match items {
+        [singleton] => quote! {#singleton},
+        items => {
+            let mut elements_of_tuple = quote! {};
+            for (type_index, type_) in items.iter().enumerate() {
+                let quoted_type_or_self = type_.to_token_stream_replacing_by_self(trait_record);
+                if type_index > 0 {
+                    (quote! {, #quoted_type_or_self }).to_tokens(&mut elements_of_tuple);
+                } else {
+                    (quote! { #quoted_type_or_self }).to_tokens(&mut elements_of_tuple);
+                }
+            }
+            quote! { ( #elements_of_tuple ) }
+        }
     }
 }
 
@@ -3098,6 +3180,41 @@ impl RsTypeKind {
                 Some(lifetime.clone())
             }
             _ => None,
+        }
+    }
+    /// Similar to to_token_stream, but replacing RsTypeKind:Record with Self
+    /// when the underlying Record matches the given one.
+    fn to_token_stream_replacing_by_self(&self, self_record: Option<&Record>) -> TokenStream {
+        match self {
+            RsTypeKind::Pointer { pointee, mutability } => {
+                let mutability = mutability.format_for_pointer();
+                let pointee_ = pointee.to_token_stream_replacing_by_self(self_record);
+                quote! {* #mutability #pointee_}
+            }
+            RsTypeKind::Reference { referent, mutability, lifetime } => {
+                let mut_ = mutability.format_for_reference();
+                let lifetime = lifetime.format_for_reference();
+                let referent_ = referent.to_token_stream_replacing_by_self(self_record);
+                let reference = quote! {& #lifetime #mut_ #referent_};
+                if mutability == &Mutability::Mut && !referent.is_unpin() {
+                    // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
+                    // `Pin`. This either requires deciding how to qualify pin at
+                    // RsTypeKind-creation time, or returning an RsSnippet from here (and not
+                    // implementing ToTokens, but instead some other interface.)
+                    quote! {::std::pin::Pin< #reference >}
+                } else {
+                    reference
+                }
+            }
+            RsTypeKind::Record { record, crate_path } => {
+                if self_record == Some(record) {
+                    quote! { Self }
+                } else {
+                    let ident = make_rs_ident(record.rs_name.as_ref());
+                    quote! { #crate_path #ident }
+                }
+            }
+            _ => self.to_token_stream(),
         }
     }
 }
@@ -6427,9 +6544,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq<crate::SomeStruct> for SomeStruct {
+                impl PartialEq for SomeStruct {
                     #[inline(always)]
-                    fn eq<'a, 'b>(&'a self, other: &'b crate::SomeStruct) -> bool {
+                    fn eq<'a, 'b>(&'a self, other: &'b Self) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZNK10SomeStructeqERKS_(self, other) }
                     }
                 }
@@ -6460,9 +6577,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq<crate::SomeStruct> for SomeStruct {
+                impl PartialEq for SomeStruct {
                     #[inline(always)]
-                    fn eq<'a, 'b>(&'a self, rhs: &'b crate::SomeStruct) -> bool {
+                    fn eq<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZeqRK10SomeStructS1_(self, rhs) }
                     }
                 }
@@ -6509,9 +6626,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialEq<crate::SomeStruct> for SomeStruct {
+                impl PartialEq for SomeStruct {
                     #[inline(always)]
-                    fn eq(& self, rhs: & crate::SomeStruct) -> bool {
+                    fn eq(& self, rhs: & Self) -> bool {
                         unsafe { crate::detail::__rust_thunk___Zeq10SomeStructS_(self.clone(), rhs.clone()) }
                     }
                 }
@@ -6538,9 +6655,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialOrd<crate::SomeStruct> for SomeStruct {
+                impl PartialOrd for SomeStruct {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: &crate::SomeStruct) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -6553,7 +6670,7 @@ mod tests {
                         None
                     }
                     #[inline(always)]
-                    fn lt<'a, 'b>(&'a self, other: &'b crate::SomeStruct) -> bool {
+                    fn lt<'a, 'b>(&'a self, other: &'b Self) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZNK10SomeStructltERKS_(self, other) }
                     }
                 }
@@ -6589,9 +6706,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialOrd<crate::SomeStruct> for SomeStruct {
+                impl PartialOrd for SomeStruct {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: &crate::SomeStruct) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -6604,7 +6721,7 @@ mod tests {
                         None
                     }
                     #[inline(always)]
-                    fn lt<'a, 'b>(&'a self, rhs: &'b crate::SomeStruct) -> bool {
+                    fn lt<'a, 'b>(&'a self, rhs: &'b Self) -> bool {
                         unsafe { crate::detail::__rust_thunk___ZltRK10SomeStructS1_(self, rhs) }
                     }
                 }
@@ -6629,9 +6746,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl PartialOrd<crate::SomeStruct> for SomeStruct {
+                impl PartialOrd for SomeStruct {
                     #[inline(always)]
-                    fn partial_cmp(&self, other: &crate::SomeStruct) -> Option<core::cmp::Ordering> {
+                    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                         if self == other {
                             return Some(core::cmp::Ordering::Equal);
                         }
@@ -6644,7 +6761,7 @@ mod tests {
                         None
                     }
                     #[inline(always)]
-                    fn lt(& self, rhs: & crate::SomeStruct) -> bool {
+                    fn lt(& self, rhs: &Self) -> bool {
                         unsafe { crate::detail::__rust_thunk___Zlt10SomeStructS_(self.clone(), rhs.clone()) }
                     }
                 }
@@ -6666,9 +6783,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+                impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b crate::SomeStruct) {
+                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
                         }
@@ -6692,9 +6809,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+                impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::SomeStruct) {
+                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
                         }
@@ -6718,9 +6835,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+                impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b crate::SomeStruct) {
+                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, other);
                         }
@@ -7613,9 +7730,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> ::ctor::Assign<&'b crate::Nontrivial> for Nontrivial {
+                impl<'b> ::ctor::Assign<&'b Self> for Nontrivial {
                     #[inline(always)]
-                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b crate::Nontrivial) {
+                    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             let _ = ::ctor::emplace!(::ctor::FnCtor::new(
                                 move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {

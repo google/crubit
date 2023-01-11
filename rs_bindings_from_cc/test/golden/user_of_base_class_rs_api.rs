@@ -98,9 +98,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Derived2>,)> for De
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::Derived2> for Derived2 {
+impl<'b> ::ctor::Assign<&'b Self> for Derived2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Derived2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN8Derived2aSERKS_(self, __param_0);
         }
@@ -224,9 +224,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualDerived2>,)>
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::VirtualDerived2> for VirtualDerived2 {
+impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::VirtualDerived2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN15VirtualDerived2aSERKS_(self, __param_0);
         }

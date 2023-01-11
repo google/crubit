@@ -114,14 +114,9 @@ forward_declare::unsafe_define!(
     crate::TriviallyCopyableButNontriviallyDestructible
 );
 
-impl<'b> ::ctor::Assign<&'b crate::TriviallyCopyableButNontriviallyDestructible>
-    for TriviallyCopyableButNontriviallyDestructible
-{
+impl<'b> ::ctor::Assign<&'b Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::TriviallyCopyableButNontriviallyDestructible,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
                 self, __param_0,
@@ -237,9 +232,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate
 // Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
 // Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
 
-impl<'b> ::ctor::Assign<&'b crate::NonCopyUnion2> for NonCopyUnion2 {
+impl<'b> ::ctor::Assign<&'b Self> for NonCopyUnion2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::NonCopyUnion2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13NonCopyUnion2aSERKS_(self, __param_0);
         }
@@ -391,12 +386,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::TrivialButInheritab
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::TrivialButInheritable> for TrivialButInheritable {
+impl<'b> ::ctor::Assign<&'b Self> for TrivialButInheritable {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::TrivialButInheritable,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN21TrivialButInheritableaSERKS_(self, __param_0);
         }
@@ -508,9 +500,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::UnionWithInheritabl
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::UnionWithInheritable> for UnionWithInheritable {
+impl<'b> ::ctor::Assign<&'b Self> for UnionWithInheritable {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::UnionWithInheritable) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN20UnionWithInheritableaSERKS_(self, __param_0);
         }
@@ -663,12 +655,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::TypedefUnionWithInh
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::TypedefUnionWithInheritable> for TypedefUnionWithInheritable {
+impl<'b> ::ctor::Assign<&'b Self> for TypedefUnionWithInheritable {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::TypedefUnionWithInheritable,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN27TypedefUnionWithInheritableaSERKS_(self, __param_0);
         }

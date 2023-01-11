@@ -134,10 +134,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateI8TopLevelE {
     #[inline(always)]
-    pub unsafe fn processT(
-        __this: *mut crate::__CcTemplateInst10MyTemplateI8TopLevelE,
-        t: crate::TopLevel,
-    ) {
+    pub unsafe fn processT(__this: *mut Self, t: crate::TopLevel) {
         crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -177,10 +174,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     #[inline(always)]
-    pub unsafe fn processT(
-        __this: *mut crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
-        t: crate::test_namespace_bindings::Inner,
-    ) {
+    pub unsafe fn processT(__this: *mut Self, t: crate::test_namespace_bindings::Inner) {
         crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -220,10 +214,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     #[inline(always)]
-    pub unsafe fn processT(
-        __this: *mut crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE,
-        t: crate::__CcTemplateInst10MyTemplateI8TopLevelE,
-    ) {
+    pub unsafe fn processT(__this: *mut Self, t: crate::__CcTemplateInst10MyTemplateI8TopLevelE) {
         crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -264,7 +255,7 @@ forward_declare::unsafe_define!(
 impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     #[inline(always)]
     pub unsafe fn processT(
-        __this: *mut crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE,
+        __this: *mut Self,
         t: crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE,
     ) {
         crate::detail::__rust_thunk___ZN10MyTemplateIS_IN23test_namespace_bindings5InnerEEE8processTES2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
@@ -306,7 +297,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIbE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut crate::__CcTemplateInst10MyTemplateIbE, t: bool) {
+    pub unsafe fn processT(__this: *mut Self, t: bool) {
         crate::detail::__rust_thunk___ZN10MyTemplateIbE8processTEb__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -346,7 +337,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIcE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut crate::__CcTemplateInst10MyTemplateIcE, t: u8) {
+    pub unsafe fn processT(__this: *mut Self, t: u8) {
         crate::detail::__rust_thunk___ZN10MyTemplateIcE8processTEc__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -386,7 +377,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIdE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut crate::__CcTemplateInst10MyTemplateIdE, t: f64) {
+    pub unsafe fn processT(__this: *mut Self, t: f64) {
         crate::detail::__rust_thunk___ZN10MyTemplateIdE8processTEd__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -426,7 +417,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut crate::__CcTemplateInst10MyTemplateIfE, t: f32) {
+    pub unsafe fn processT(__this: *mut Self, t: f32) {
         crate::detail::__rust_thunk___ZN10MyTemplateIfE8processTEf__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
@@ -466,7 +457,7 @@ forward_declare::unsafe_define!(
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
-    pub unsafe fn processT(__this: *mut crate::__CcTemplateInst10MyTemplateIiE, t: i32) {
+    pub unsafe fn processT(__this: *mut Self, t: i32) {
         crate::detail::__rust_thunk___ZN10MyTemplateIiE8processTEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }

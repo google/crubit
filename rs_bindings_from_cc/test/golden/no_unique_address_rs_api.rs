@@ -206,14 +206,9 @@ impl<'b> ::ctor::CtorNew<(&'b crate::FieldInTailPadding_InnerStruct,)>
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::FieldInTailPadding_InnerStruct>
-    for FieldInTailPadding_InnerStruct
-{
+impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding_InnerStruct {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::FieldInTailPadding_InnerStruct,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructaSERKS_(
                 self, __param_0,
@@ -328,9 +323,9 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::FieldInTailPadding> for FieldInTailPadding {
+impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::FieldInTailPadding) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN18FieldInTailPaddingaSERKS_(self, __param_0);
         }

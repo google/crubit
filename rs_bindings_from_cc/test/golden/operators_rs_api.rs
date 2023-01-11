@@ -221,10 +221,10 @@ impl<'a, 'b> ::std::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::Adda
     }
 }
 
-impl ::std::ops::Add<crate::AddableFree> for AddableFree {
+impl ::std::ops::Add<Self> for AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
-    fn add(self, rhs: crate::AddableFree) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         unsafe { crate::detail::__rust_thunk___Zpl11AddableFreeS_(self, rhs) }
     }
 }
@@ -445,12 +445,9 @@ impl<'b> ::ctor::CtorNew<(&'b crate::AddableConstMemberNonunpin,)> for AddableCo
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::AddableConstMemberNonunpin> for AddableConstMemberNonunpin {
+impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::AddableConstMemberNonunpin,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN26AddableConstMemberNonunpinaSERKS_(self, __param_0);
         }
@@ -579,9 +576,9 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>>
 // Error while generating bindings for item 'AddAssignMemberByConstRef::operator=':
 // operator= for Unpin types is not yet supported.
 
-impl<'b> ::std::ops::AddAssign<&'b crate::AddAssignMemberByConstRef> for AddAssignMemberByConstRef {
+impl<'b> ::std::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: &'b crate::AddAssignMemberByConstRef) {
+    fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_(self, rhs);
         }
@@ -674,9 +671,9 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>> for AddA
 // Error while generating bindings for item 'AddAssignFreeByValue::operator=':
 // operator= for Unpin types is not yet supported.
 
-impl ::std::ops::AddAssign<crate::AddAssignFreeByValue> for AddAssignFreeByValue {
+impl ::std::ops::AddAssign<Self> for AddAssignFreeByValue {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: crate::AddAssignFreeByValue) {
+    fn add_assign<'a>(&'a mut self, rhs: Self) {
         unsafe {
             crate::detail::__rust_thunk___ZpLR20AddAssignFreeByValueS_(self, rhs);
         }
@@ -767,9 +764,9 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>>
 // Error while generating bindings for item 'AddAssignFriendByValue::operator=':
 // operator= for Unpin types is not yet supported.
 
-impl ::std::ops::AddAssign<crate::AddAssignFriendByValue> for AddAssignFriendByValue {
+impl ::std::ops::AddAssign<Self> for AddAssignFriendByValue {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: crate::AddAssignFriendByValue) {
+    fn add_assign<'a>(&'a mut self, rhs: Self) {
         unsafe {
             crate::detail::__rust_thunk___ZpLR22AddAssignFriendByValueS_(self, rhs);
         }
@@ -1015,90 +1012,90 @@ impl<'a, 'b> ::std::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-impl<'b> ::std::ops::AddAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::AddAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn add_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorspLERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::SubAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::SubAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn sub_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn sub_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsmIERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::MulAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::MulAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn mul_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn mul_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsmLERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::DivAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::DivAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn div_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn div_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsdVERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::RemAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::RemAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn rem_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn rem_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsrMERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::BitAndAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::BitAndAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn bitand_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn bitand_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsaNERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::BitOrAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::BitOrAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn bitor_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn bitor_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsoRERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::BitXorAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::BitXorAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn bitxor_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn bitxor_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorseOERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::ShlAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::ShlAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn shl_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn shl_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorslSERKS_(self, rhs);
         }
     }
 }
 
-impl<'b> ::std::ops::ShrAssign<&'b crate::ManyOperators> for ManyOperators {
+impl<'b> ::std::ops::ShrAssign<&'b Self> for ManyOperators {
     #[inline(always)]
-    fn shr_assign<'a>(&'a mut self, rhs: &'b crate::ManyOperators) {
+    fn shr_assign<'a>(&'a mut self, rhs: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsrSERKS_(self, rhs);
         }

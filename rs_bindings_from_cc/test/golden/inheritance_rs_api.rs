@@ -95,9 +95,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base0>,)> for Base0
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::Base0> for Base0 {
+impl<'b> ::ctor::Assign<&'b Self> for Base0 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Base0) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base0aSERKS_(self, __param_0);
         }
@@ -198,9 +198,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base1>,)> for Base1
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::Base1> for Base1 {
+impl<'b> ::ctor::Assign<&'b Self> for Base1 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Base1) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base1aSERKS_(self, __param_0);
         }
@@ -298,9 +298,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base2>,)> for Base2
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::Base2> for Base2 {
+impl<'b> ::ctor::Assign<&'b Self> for Base2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Base2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base2aSERKS_(self, __param_0);
         }
@@ -449,9 +449,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase1>,)> fo
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::VirtualBase1> for VirtualBase1 {
+impl<'b> ::ctor::Assign<&'b Self> for VirtualBase1 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::VirtualBase1) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN12VirtualBase1aSERKS_(self, __param_0);
         }
@@ -552,9 +552,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase2>,)> fo
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::VirtualBase2> for VirtualBase2 {
+impl<'b> ::ctor::Assign<&'b Self> for VirtualBase2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::VirtualBase2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN12VirtualBase2aSERKS_(self, __param_0);
         }
@@ -661,9 +661,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualDerived>,)> 
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::VirtualDerived> for VirtualDerived {
+impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::VirtualDerived) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN14VirtualDerivedaSERKS_(self, __param_0);
         }
@@ -716,9 +716,9 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
-impl<'b> ::ctor::Assign<&'b crate::MyAbstractClass> for MyAbstractClass {
+impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::MyAbstractClass) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN15MyAbstractClassaSERKS_(self, __param_0);
         }
@@ -802,9 +802,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::MethodBase1>,)> for
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::MethodBase1> for MethodBase1 {
+impl<'b> ::ctor::Assign<&'b Self> for MethodBase1 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::MethodBase1) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase1aSERKS_(self, __param_0);
         }
@@ -920,9 +920,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::MethodBase2>,)> for
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::MethodBase2> for MethodBase2 {
+impl<'b> ::ctor::Assign<&'b Self> for MethodBase2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::MethodBase2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase2aSERKS_(self, __param_0);
         }

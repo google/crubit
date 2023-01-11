@@ -92,9 +92,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::SomeStruct>,)> for 
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::SomeStruct> for SomeStruct {
+impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::SomeStruct) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
         }
@@ -210,9 +210,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::SomeOtherStruct>,)>
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::SomeOtherStruct> for SomeOtherStruct {
+impl<'b> ::ctor::Assign<&'b Self> for SomeOtherStruct {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::SomeOtherStruct) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN15SomeOtherStructaSERKS_(self, __param_0);
         }

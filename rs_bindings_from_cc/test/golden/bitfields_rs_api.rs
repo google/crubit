@@ -109,9 +109,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::WithBitfields>,)> f
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::WithBitfields> for WithBitfields {
+impl<'b> ::ctor::Assign<&'b Self> for WithBitfields {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::WithBitfields) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN13WithBitfieldsaSERKS_(self, __param_0);
         }

@@ -107,9 +107,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasCustomAlignment>
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::HasCustomAlignment> for HasCustomAlignment {
+impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignment {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::HasCustomAlignment) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN18HasCustomAlignmentaSERKS_(self, __param_0);
         }
@@ -225,12 +225,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasFieldWithCustomA
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::HasFieldWithCustomAlignment> for HasFieldWithCustomAlignment {
+impl<'b> ::ctor::Assign<&'b Self> for HasFieldWithCustomAlignment {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::HasFieldWithCustomAlignment,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentaSERKS_(self, __param_0);
         }
@@ -350,14 +347,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::InheritsFromBaseWit
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::InheritsFromBaseWithCustomAlignment>
-    for InheritsFromBaseWithCustomAlignment
-{
+impl<'b> ::ctor::Assign<&'b Self> for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::InheritsFromBaseWithCustomAlignment,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSERKS_(
                 self, __param_0,
@@ -489,14 +481,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasCustomAlignmentW
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::HasCustomAlignmentWithGnuAttr>
-    for HasCustomAlignmentWithGnuAttr
-{
+impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::HasCustomAlignmentWithGnuAttr,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSERKS_(self, __param_0);
         }
@@ -664,15 +651,11 @@ impl<'b>
     }
 }
 
-impl<'b>
-    ::ctor::Assign<&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>
+impl<'b> ::ctor::Assign<&'b Self>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self,__param_0);
         }

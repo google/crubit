@@ -73,9 +73,9 @@ impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicBase,)> for PolymorphicBase {
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::PolymorphicBase> for PolymorphicBase {
+impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::PolymorphicBase) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN15PolymorphicBaseaSERKS_(self, __param_0);
         }
@@ -146,9 +146,9 @@ impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicBase2,)> for PolymorphicBase2 {
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
+impl<'b> ::ctor::Assign<&'b Self> for PolymorphicBase2 {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::PolymorphicBase2) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN16PolymorphicBase2aSERKS_(self, __param_0);
         }
@@ -267,9 +267,9 @@ impl ::ctor::PinnedDrop for PolymorphicDerived {
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::PolymorphicDerived> for PolymorphicDerived {
+impl<'b> ::ctor::Assign<&'b Self> for PolymorphicDerived {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::PolymorphicDerived) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSERKS_(self, __param_0);
         }

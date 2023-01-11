@@ -271,12 +271,9 @@ pub mod private_classes {
         }
     }
 
-    impl<'b> ::ctor::Assign<&'b crate::private_classes::HasPrivateType> for HasPrivateType {
+    impl<'b> ::ctor::Assign<&'b Self> for HasPrivateType {
         #[inline(always)]
-        fn assign<'a>(
-            self: ::std::pin::Pin<&'a mut Self>,
-            __param_0: &'b crate::private_classes::HasPrivateType,
-        ) {
+        fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
             unsafe {
                 crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeaSERKS0_(
                     self, __param_0,
@@ -812,14 +809,9 @@ impl<'b>
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>
-    for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
-{
+impl<'b> ::ctor::Assign<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
         }
@@ -1005,15 +997,11 @@ impl<'b>
     }
 }
 
-impl<'b>
-    ::ctor::Assign<&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>
+impl<'b> ::ctor::Assign<&'b Self>
     for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
         }

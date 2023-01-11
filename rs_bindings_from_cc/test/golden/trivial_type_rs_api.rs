@@ -197,12 +197,9 @@ pub mod ns {
         }
     }
 
-    impl<'b> ::ctor::Assign<&'b crate::ns::TrivialNonfinal> for TrivialNonfinal {
+    impl<'b> ::ctor::Assign<&'b Self> for TrivialNonfinal {
         #[inline(always)]
-        fn assign<'a>(
-            self: ::std::pin::Pin<&'a mut Self>,
-            __param_0: &'b crate::ns::TrivialNonfinal,
-        ) {
+        fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalaSERKS0_(self, __param_0);
             }

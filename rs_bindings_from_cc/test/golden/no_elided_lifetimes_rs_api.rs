@@ -50,14 +50,14 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 impl S {
     #[inline(always)]
-    pub unsafe fn const_method(__this: *const crate::S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+    pub unsafe fn const_method(__this: *const Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
     }
 }
 
 impl S {
     #[inline(always)]
-    pub unsafe fn method(__this: *mut crate::S, p1: *mut i32, p2: *mut i32) -> *mut i32 {
+    pub unsafe fn method(__this: *mut Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }

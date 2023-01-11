@@ -143,9 +143,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Nontrivial>,)> for 
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::Nontrivial> for Nontrivial {
+impl<'b> ::ctor::Assign<&'b Self> for Nontrivial {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::Nontrivial) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(self, __param_0);
         }
@@ -349,9 +349,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialInline>,)
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::NontrivialInline> for NontrivialInline {
+impl<'b> ::ctor::Assign<&'b Self> for NontrivialInline {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::NontrivialInline) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN16NontrivialInlineaSERKS_(self, __param_0);
         }
@@ -496,9 +496,9 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::NontrivialMembers> for NontrivialMembers {
+impl<'b> ::ctor::Assign<&'b Self> for NontrivialMembers {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b crate::NontrivialMembers) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN17NontrivialMembersaSERKS_(self, __param_0);
         }
@@ -750,9 +750,9 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialByValue>,
     }
 }
 
-impl<'b> ::ctor::Assign<&'b crate::NontrivialByValue> for NontrivialByValue {
+impl<'b> ::ctor::Assign<&'b Self> for NontrivialByValue {
     #[inline(always)]
-    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b crate::NontrivialByValue) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
         unsafe {
             crate::detail::__rust_thunk___ZN17NontrivialByValueaSERKS_(self, other);
         }
