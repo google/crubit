@@ -33,6 +33,12 @@ namespace {
 // Returns true if `Expr` is uninterpreted or known to be nullable.
 bool isNullableOrUntracked(const Expr* E, const Environment& Env) {
   auto* ActualVal = getPointerValueFromExpr(E, Env);
+  if (ActualVal == nullptr) {
+    llvm::dbgs()
+        << "The dataflow analysis framework does not model a PointerValue for "
+           "the following Expr, and thus its dereference is marked as unsafe:";
+    E->dump();
+  }
   return !ActualVal || isNullable(*ActualVal, Env);
 }
 
