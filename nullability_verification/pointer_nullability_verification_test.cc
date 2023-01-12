@@ -2901,7 +2901,7 @@ TEST(PointerNullabilityTest, AssertNullability) {
     };
 
     template <NullabilityKind... NK, typename T>
-    void __assert_nullability(T&);
+    void __assert_nullability(const T&);
   )cc";
 
   // Concrete struct.
@@ -3024,11 +3024,11 @@ TEST(PointerNullabilityTest, AssertNullability) {
 
   // Member variables and member calls on a struct with nested template
   // arguments.
-  // TODO: Write non-flow sensitive transfer functions for cast expressions,
-  // then change the argument type of `__assert_nullability` to take in a const
-  // T&, which then allows for member call arguments. Further, add non-flow
-  // sensitive transfer function for the dereference operator.
-  EXPECT_TRUE(checkDiagnostics(Declarations + R"(
+  // TODO: Add non-flow-sensitive transfer function for the dereference
+  // operator.
+  // TODO: Handle member call arguments (includes writing
+  // transferMaterializeTemporaryExpr).
+  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
       T0 arg0;
@@ -3041,49 +3041,121 @@ TEST(PointerNullabilityTest, AssertNullability) {
     void target(
         Struct2Arg<Struct2Arg<int *, int *_Nullable>,
                    Struct2Arg<Struct2Arg<int *_Nullable, int *_Nonnull>,
-                              Struct2Arg<int *_Nullable, int *_Nullable>>> *p) {
-      __assert_nullability<NK_unspecified, NK_unspecified, NK_nullable,
-                           NK_nullable, NK_nonnull, NK_nullable, NK_nullable>(
-          p);
+                              Struct2Arg<int *_Nullable, int *_Nullable>>>
+            p) {
+      __assert_nullability<NK_unspecified, NK_nullable, NK_nullable, NK_nonnull,
+                           NK_nullable, NK_nullable>(p);
+      __assert_nullability<NK_unspecified, NK_nullable>(p.arg0);
+      __assert_nullability<NK_unspecified>(p.arg0.arg0);
+      __assert_nullability<NK_nullable>(p.arg0.arg1);
+      __assert_nullability<NK_nullable, NK_nonnull, NK_nullable, NK_nullable>(
+          p.arg1);
+      __assert_nullability<NK_nullable, NK_nonnull>(p.arg1.arg0);
+      __assert_nullability<NK_nullable>(p.arg1.arg0.arg0);
+      __assert_nullability<NK_nonnull>(p.arg1.arg0.arg1);
+      __assert_nullability<NK_nullable, NK_nullable>(p.arg1.arg1);
+      __assert_nullability<NK_nullable>(p.arg1.arg1.arg0);
+      __assert_nullability<NK_nullable>(p.arg1.arg1.arg1);
 
-      __assert_nullability<>(p);  // [[unsafe]]
-      __assert_nullability        // [[unsafe]]
-          <NK_unspecified, NK_nullable, NK_nullable, NK_nonnull, NK_nullable,
-           NK_nullable, NK_nullable>(p);
-      __assert_nullability  // [[unsafe]]
-          <NK_unspecified, NK_nullable, NK_nullable, NK_nonnull, NK_nullable>(
-              p);
+      __assert_nullability<>(p.arg0.arg0);           // [[unsafe]]
+      __assert_nullability<NK_unspecified>(p.arg0);  // [[unsafe]]
+      __assert_nullability                           // [[unsafe]]
+          <NK_unspecified, NK_nullable, NK_nonnull, NK_nullable, NK_nullable>(
+              p.arg1);
 
-//      __assert_nullability<NK_unspecified, NK_nullable, NK_nullable, NK_nonnull,
-//                           NK_nullable, NK_nullable>(*p);
-      __assert_nullability  // [[unsafe]]
-          <NK_unspecified, NK_unspecified, NK_nullable, NK_nullable, NK_nonnull,
-           NK_nullable, NK_nullable>(*p);
+      // TODO: Add support for member call arguments.
+      // __assert_nullability<NK_unspecified, NK_nullable>(p->getT0());
+      // __assert_nullability  // TODO: fix false negative.
+      //     <NK_unspecified, NK_nullable, NK_unspecified>(p->getT0());
+      // __assert_nullability  // TODO: fix false negative.
+      //     <NK_unspecified>(p->getT0());
+      // __assert_nullability  // TODO: fix false negative.
+      //     <NK_unspecified, NK_nullable, NK_nullable>(p->arg0);
+      //  __assert_nullability  // TODO: fix false negative.
+      //     <NK_nullable>(p->arg0);
 
-//      __assert_nullability<NK_unspecified, NK_nullable>(p->getT0());
-//        __assert_nullability<NK_unspecified, NK_nullable>(p->arg0);
+      // __assert_nullability<NK_nonnull>(p->getT1().getT0().getT1());
+      // __assert_nullability<NK_nonnull>(p->getT1().arg0.getT1());
+      // __assert_nullability<NK_nonnull>(p->arg1.getT0().arg1);
+      // __assert_nullability<NK_nonnull>(p->arg1.arg0.arg1);
 
-//      __assert_nullability  // TODO: fix false negative.
-//          <NK_unspecified, NK_nullable, NK_unspecified>(p->getT0());
-//      __assert_nullability  // TODO: fix false negative.
-//          <NK_unspecified>(p->getT0());
-//      __assert_nullability  // TODO: fix false negative.
-//          <NK_unspecified, NK_nullable, NK_nullable>(p->arg0);
-//       __assert_nullability  // TODO: fix false negative.
-//          <NK_nullable>(p->arg0);
-
-//      __assert_nullability<NK_nonnull>(p->getT1().getT0().getT1());
-//      __assert_nullability<NK_nonnull>(p->getT1().arg0.getT1());
-//      __assert_nullability<NK_nonnull>(p->arg1.getT0().arg1);
-//      __assert_nullability<NK_nonnull>(p->arg1.arg0.arg1);
-
-//      __assert_nullability  // TODO: fix false negative.
-//          <>(p->getT1().getT0().getT1());
-//      __assert_nullability  // TODO: fix false negative.
-//          <NK_nonnull, NK_nonnull>(p->arg1.getT0().arg1);
+      // __assert_nullability  // TODO: fix false negative.
+      //     <>(p->getT1().getT0().getT1());
+      // __assert_nullability  // TODO: fix false negative.
+      //     <NK_nonnull, NK_nonnull>(p->arg1.getT0().arg1);
     }
-  )"));
+  )cc"));
 }
+
+TEST(PointerNullabilityTest, CastExpression) {
+  // TODO: We currently do not warn on local variables
+  // whose annotations conflict with the initializer. Decide whether to do so,
+  // and then treat static casts in an equivalent manner.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nullable p) {
+      static_cast<int *_Nonnull>(p);  // TODO: To warn, or not to warn, that is
+                                      // the question.
+      static_cast<int *>(p);
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <int I0, typename T1, typename T2>
+    struct Struct3Arg {
+      T1 arg1;
+      T2 arg2;
+    };
+
+    void target(Struct3Arg<1, int *_Nullable, int *> &p) {
+      *static_cast<const Struct3Arg<1, int *, int *> &>(p).arg1;  // [[unsafe]]
+      *static_cast<const Struct3Arg<1, int *, int *> &>(p).arg2;
+      *static_cast<int *>(p.arg1);  // [[unsafe]]
+      *static_cast<int *>(p.arg2);
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct Base {};
+    struct Derived : public Base {};
+
+    void target(Derived *_Nullable x, Derived *_Nonnull y) {
+      *static_cast<Base *>(x);  // [[unsafe]]
+      *static_cast<Base *>(y);  // [[unsafe]] TODO: Fix false positive.
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <int I0, typename T1, typename T2>
+    struct Struct3Arg {
+      T1 arg1;
+      T2 arg2;
+    };
+
+    void target(Struct3Arg<1, int *_Nullable, int *> &p) {
+      *((const Struct3Arg<1, int *, int *> &)p).arg1;  // [[unsafe]]
+      *((const Struct3Arg<1, int *, int *> &)p)        // [[unsafe]]
+           .arg2;        // TODO: Fix false positive.
+      *(int *)p.arg1;    // [[unsafe]]
+      *(int *)p.arg2;    // [[unsafe]] TODO: Fix false positive.
+      *(float *)p.arg1;  // [[unsafe]]
+      *(char *)p.arg2;   // [[unsafe]] TODO: Fix false positive.
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    struct Struct2Arg {
+      T0 arg0;
+      T1 arg1;
+    };
+
+    void target(Struct2Arg<const int *, const int *_Nullable> &p) {
+      *const_cast<int *>(p.arg0);  // [[unsafe]] TODO: Fix false positive.
+      *const_cast<int *>(p.arg1);  // [[unsafe]]
+    }
+  )cc"));
+}
+
 }  // namespace
 }  // namespace nullability
 }  // namespace tidy

@@ -472,6 +472,29 @@ void transferNonFlowSensitiveMemberCallExpr(
   });
 }
 
+void transferNonFlowSensitiveCastExpr(
+    const CastExpr* CE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  // TODO: Handle casts where the input and output types can have different
+  // numbers of pointers, and therefore different nullability. For example, a
+  // reinterpret_cast from `int *` to int.
+  State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
+    auto BaseNullability = State.Lattice.getExprNullability(CE->getSubExpr());
+    if (BaseNullability.has_value()) {
+      return BaseNullability->vec();
+    } else {
+      // Since we process child nodes before parents, we should already have
+      // computed the base (child) nullability. However, this is not true in all
+      // test cases. So, we return unspecified nullability annotations.
+      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
+      // remove the else branch.
+      llvm::dbgs() << "Nullability of child node not found\n";
+      return std::vector<NullabilityKind>(countPointersInType(CE->getType()),
+                                          NullabilityKind::Unspecified);
+    }
+  });
+}
+
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -480,6 +503,8 @@ auto buildNonFlowSensitiveTransferer() {
                                  transferNonFlowSensitiveMemberExpr)
       .CaseOfCFGStmt<CXXMemberCallExpr>(ast_matchers::cxxMemberCallExpr(),
                                         transferNonFlowSensitiveMemberCallExpr)
+      .CaseOfCFGStmt<CastExpr>(ast_matchers::castExpr(),
+                               transferNonFlowSensitiveCastExpr)
       .Build();
 }
 
