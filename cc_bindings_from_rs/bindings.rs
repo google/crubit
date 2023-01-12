@@ -999,15 +999,25 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
     // Find the order of `bindings` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
     // `bindings` in the same order as the source order of the Rust APIs.
-    let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
-        let nodes = bindings.keys().copied();
-        let deps = bindings.iter().flat_map(|(&successor, snippet)| {
-            let predecessors = snippet.cc.prereqs.defs.iter().copied();
-            predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
-        });
-        let preferred_order =
-            |id1: &LocalDefId, id2: &LocalDefId| tcx.def_span(*id1).cmp(&tcx.def_span(*id2));
-        toposort::toposort(nodes, deps, preferred_order)
+    let ordered_ids = {
+        let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
+            let nodes = bindings.keys().copied();
+            let deps = bindings.iter().flat_map(|(&successor, snippet)| {
+                let predecessors = snippet.cc.prereqs.defs.iter().copied();
+                predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
+            });
+            let preferred_order =
+                |id1: &LocalDefId, id2: &LocalDefId| tcx.def_span(*id1).cmp(&tcx.def_span(*id2));
+            toposort::toposort(nodes, deps, preferred_order)
+        };
+        assert_eq!(
+            0,
+            failed_ids.len(),
+            "There are no known scenarios where CcPrerequisites::defs can form \
+                    a dependency cycle. These `LocalDefId`s form an unexpected cycle: {}",
+            failed_ids.into_iter().map(|id| format!("{:?}", id)).join(",")
+        );
+        ordered_ids
     };
 
     // Destructure/rebuild `bindings` (in the same order as `ordered_ids`) into
@@ -1064,15 +1074,10 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
 
         let includes = format_cc_includes(&includes);
         let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc);
-        let failed_cc = failed_ids.into_iter().map(|def_id| {
-            // TODO(b/260725687): Add test coverage for the error condition below.
-            format_unsupported_def(tcx, def_id, anyhow!("Definition dependency cycle")).cc.tokens
-        });
         quote! {
             #includes __NEWLINE__
             namespace #crate_name {
                 #ordered_cc
-                #( #failed_cc )*
             }
         }
     };

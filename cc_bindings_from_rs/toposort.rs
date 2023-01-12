@@ -74,36 +74,13 @@ use std::hash::Hash;
 /// - https://docs.rs/topological-sort
 /// - https://docs.rs/petgraph (`petgraph::algo::toposort`)
 ///
-/// We aren't using these Cargo crates, because they don't meet all of our
-/// requirements - see below for details.
-///
-/// ## Best effort sorting and reporting cycle details
-///
-/// In cases where topological sorting of *all* nodes is not possible Crubit
-/// doesn't want to just give up - it wants to:
-/// - Topologically sort as many nodes as possible (and emit at least _their_
-///   C++ bindings)
-/// - Identify nodes that form cycles or depend on cycles (to emit diagnostics
-///   explaining why no C++ bindings have been generated for APIs associated
-///   with these nodes)
-///
-/// `petgraph::algo::toposort` returns a `Result<..., Cycle<G::NodeId>`.  When
-/// an error is reported:
-/// - The sortable subset of nodes is not returned
-/// - Only a single cycle-forming node is reported
-///
-/// `topological_sort` crate supports detecting a cycle (`pop` returns `None`
-/// when `len()` is still non-zero), but it doesn't support identifying the
-/// remaining nodes (ones that contain a cycle).
-///
-/// ## Best effort to preserve the preferred order
-///
-/// If possible, then Crubit wants to emit the C++ bindings in the same order as
-/// the order in which the wrapped Rust APIs are present in the `.rs` sources.
-/// Preserving this order is not always possible (because of dependencies
-/// between the generated C++ bindings), but Crubit wants to make the best
-/// effort to preserve this order.  In particular, when the preferred order
-/// already *is* a topological order, then it should be kept.
+/// We aren't using these Cargo crates, because if possible, then Crubit wants
+/// to emit the C++ bindings in the same order as the order in which the wrapped
+/// Rust APIs are present in the `.rs` sources.  Preserving this order is not
+/// always possible (because of dependencies between the generated C++
+/// bindings), but Crubit wants to make the best effort to preserve this order.
+/// In particular, when the preferred order already *is* a topological order,
+/// then it should be kept.
 ///
 /// `petgraph::algo::toposort` doesn't support extra ordering that can be used
 /// to decide the order between nodes that don't have a direct or indirect
