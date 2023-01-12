@@ -785,7 +785,6 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
             // *consider* calling `clone` from the copy constructor and `clone_from` from the copy
             // assignment operator.
             #cc_name(const #cc_name&) = delete;
-            #cc_name& operator=(const #cc_name&) = delete;
 
             // The generated bindings have to follow Rust move semantics:
             // * All Rust types are memcpy-movable (e.g. <internal link>/constructors.html says
@@ -820,7 +819,16 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
             // generated C++ move constructor might need to assign `Default::default()` to the
             // moved-from object.
             #cc_name(#cc_name&&) = default;
-            #cc_name& operator=(#cc_name&&) = default;
+
+            // TODO(b/258235219): Providing assignment operators enables mutation which
+            // may negatively interact with support for references.  Therefore until we
+            // have more confidence in our reference-handling-plans, we are deleting the
+            // assignment operators.
+            //
+            // (Move assignment operator has another set of concerns and constraints - see the
+            // comment for the move constructor above).
+            #cc_name& operator=(const #cc_name&) = delete;
+            #cc_name& operator=(#cc_name&&) = delete;
 
             // TODO(b/258251148): Support custom `Drop` impls and drop glue.
             ~#cc_name() = default;
@@ -2361,11 +2369,13 @@ pub mod tests {
 
                             // In this test there is no `Copy` implementation / derive.
                             SomeStruct(const SomeStruct&) = delete;
-                            SomeStruct& operator=(const SomeStruct&) = delete;
 
                             // All Rust types are trivially-movable.
                             SomeStruct(SomeStruct&&) = default;
-                            SomeStruct& operator=(SomeStruct&&) = default;
+
+                            // Assignment operators are disabled for now.
+                            SomeStruct& operator=(const SomeStruct&) = delete;
+                            SomeStruct& operator=(SomeStruct&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -2409,11 +2419,13 @@ pub mod tests {
 
                             // In this test there is no `Copy` implementation / derive.
                             TupleStruct(const TupleStruct&) = delete;
-                            TupleStruct& operator=(const TupleStruct&) = delete;
 
                             // All Rust types are trivially-movable.
                             TupleStruct(TupleStruct&&) = default;
-                            TupleStruct& operator=(TupleStruct&&) = default;
+
+                            // Assignment operators are disabled for now.
+                            TupleStruct& operator=(const TupleStruct&) = delete;
+                            TupleStruct& operator=(TupleStruct&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -2543,11 +2555,13 @@ pub mod tests {
 
                             // In this test there is no `Copy` implementation / derive.
                             SomeEnum(const SomeEnum&) = delete;
-                            SomeEnum& operator=(const SomeEnum&) = delete;
 
                             // All Rust types are trivially-movable.
                             SomeEnum(SomeEnum&&) = default;
-                            SomeEnum& operator=(SomeEnum&&) = default;
+
+                            // Assignment operators are disabled for now.
+                            SomeEnum& operator=(const SomeEnum&) = delete;
+                            SomeEnum& operator=(SomeEnum&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -2595,11 +2609,13 @@ pub mod tests {
 
                             // In this test there is no `Copy` implementation / derive.
                             Point(const Point&) = delete;
-                            Point& operator=(const Point&) = delete;
 
                             // All Rust types are trivially-movable.
                             Point(Point&&) = default;
-                            Point& operator=(Point&&) = default;
+
+                            // Assignment operators are disabled for now.
+                            Point& operator=(const Point&) = delete;
+                            Point& operator=(Point&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
@@ -2660,11 +2676,13 @@ pub mod tests {
 
                             // In this test there is no `Copy` implementation / derive.
                             SomeUnion(const SomeUnion&) = delete;
-                            SomeUnion& operator=(const SomeUnion&) = delete;
 
                             // All Rust types are trivially-movable.
                             SomeUnion(SomeUnion&&) = default;
-                            SomeUnion& operator=(SomeUnion&&) = default;
+
+                            // Assignment operators are disabled for now.
+                            SomeUnion& operator=(const SomeUnion&) = delete;
+                            SomeUnion& operator=(SomeUnion&&) = delete;
 
                             // In this test there is no custom `Drop`, so C++ can also
                             // just use the `default` destructor.
