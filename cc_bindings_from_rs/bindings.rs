@@ -120,6 +120,16 @@ impl CcPrerequisites {
         let &Self { ref includes, ref defs, ref fwd_decls } = self;
         includes.is_empty() && defs.is_empty() && fwd_decls.is_empty()
     }
+
+    /// Weakens all dependencies to only require a forward declaration. Example
+    /// usage scenarios:
+    /// - Computing prerequisites of pointer types (the pointee type can just be
+    ///   forward-declared),
+    /// - Computing prerequisites of function declarations (parameter types and
+    ///   return type can just be forward-declared).
+    fn move_defs_to_fwd_decls(&mut self) {
+        self.fwd_decls.extend(std::mem::take(&mut self.defs))
+    }
 }
 
 impl AddAssign for CcPrerequisites {
@@ -368,7 +378,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
             let CcSnippet{ tokens, mut prereqs } = format_ty_for_cc(tcx, *ty)
                 .with_context(|| format!(
                         "Failed to format the pointee of the pointer type `{ty}`"))?;
-            prereqs.fwd_decls.extend(std::mem::take(&mut prereqs.defs));
+            prereqs.move_defs_to_fwd_decls();
             CcSnippet {
                 prereqs,
                 tokens: quote!{ #const_qualifier #tokens * },
@@ -376,10 +386,10 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
         },
 
         // TODO(b/260268230, b/260729464): When recursively processing nested types (e.g. an
-        // element type of an Array, a referent of a Ref or Slice, a parameter type of an FnPtr,
-        // etc), one should also 1) propagate `CcPrerequisites::defs`, 2) cover
-        // `CcPrerequisites::defs` in `test_format_ty_for_cc...`.  For ptr/ref/slice it might be
-        // also desirable to separately track forward-declaration prerequisites.
+        // element type of an Array, a referent of a Ref, a parameter type of an FnPtr, etc), one
+        // should also 1) propagate `CcPrerequisites::defs`, 2) cover `CcPrerequisites::defs` in
+        // `test_format_ty_for_cc...`.  For ptr/ref it might be possible to use
+        // `CcPrerequisites::move_defs_to_fwd_decls`.
         | ty::TyKind::Array(..)
         | ty::TyKind::Slice(..)
         | ty::TyKind::Ref(..)
@@ -589,6 +599,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
             })
             .collect::<Result<Vec<_>>>()?;
         if name.as_str() == symbol_name.name {
+            cc_prereqs.move_defs_to_fwd_decls();
             quote! {
                 #doc_comment
                 extern "C" #ret_type #fn_name (
@@ -1317,9 +1328,10 @@ pub mod tests {
     }
 
     /// Tests that a forward declaration is present when it is required to
-    /// preserve the original source order.
+    /// preserve the original source order.  In this test the
+    /// `CcPrerequisites::fwd_decls` dependency comes from a pointer parameter.
     #[test]
-    fn test_generated_bindings_prereq_fwd_decls_required() {
+    fn test_generated_bindings_prereq_fwd_decls_for_ptr_param() {
         let test_src = r#"
                 // To preserve original API order we need to forward declare S.
                 pub fn f(_: *const S) {}
@@ -1333,10 +1345,57 @@ pub mod tests {
                     namespace rust_out {
                         ...
                         // Verifing the presence of this forward declaration
-                        // it the essence of this test.
+                        // it the essence of this test.  The order also matters:
+                        // 1. The fwd decl of `S` should come first,
+                        // 2. Definitions of `f` and `S` should come next
+                        //    (in their original order - `f` first and then `S`).
                         struct S;
                         ...
                         inline void f(const ::rust_out::S* __param_0) { ... }
+                        ...
+                        struct alignas(...) S final { ... }
+                        ...
+                    }  // namespace rust_out
+                }
+            );
+        });
+    }
+
+    /// Tests that a forward declaration is present when it is required to
+    /// preserve the original source order.  In this test the
+    /// `CcPrerequisites::fwd_decls` dependency comes from a parameter
+    /// that takes a struct by value, but is only needed in a C++ function
+    /// declaration (not in a C++ function definition).
+    #[test]
+    fn test_generated_bindings_prereq_fwd_decls_for_cpp_fn_decl() {
+        let test_src = r#"
+                // `f` will only have a C++ declaration (and no C++ definition)
+                // in the generated `..._cc_api.h` header.
+                //
+                // Therefore `f`'s `CcPrerequisites` should include `S`
+                // as a `fwd_decls` edge, rather than as a `defs` edge.
+                #[no_mangle]
+                pub extern "C" fn f(s: S) -> bool { s.0 }
+
+                #[repr(C)]
+                pub struct S(bool);
+            "#;
+
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace rust_out {
+                        ...
+                        // Verifing the presence of this forward declaration
+                        // it the essence of this test.  The order also matters:
+                        // 1. The fwd decl of `S` should come first,
+                        // 2. Declaration of `f` and definition of `S` should come next
+                        //    (in their original order - `f` first and then `S`).
+                        struct S;
+                        ...
+                        extern "C" bool f(::rust_out::S s);
                         ...
                         struct alignas(...) S final { ... }
                         ...
@@ -1837,15 +1896,18 @@ pub mod tests {
     /// This test mainly verifies that `format_def` correctly propagates
     /// `CcPrerequisites` of parameter types and return type.
     #[test]
-    fn test_format_def_fn_with_cc_prerequisites() {
+    fn test_format_def_fn_cc_prerequisites_if_cpp_definition_needed() {
         let test_src = r#"
-                pub struct S(i32);
                 pub fn foo(_i: i32) -> S { panic!("foo") }
+                pub struct S(i32);
             "#;
         test_format_def(test_src, "foo", |result| {
             let result = result.unwrap().unwrap();
 
             // Minimal coverage, just to double-check that the test setup works.
+            //
+            // Note that this is a definition, and therefore `S` should be defined
+            // earlier (not just forward declared).
             assert_cc_matches!(result.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
 
             // Main checks: `CcPrerequisites::includes`.
@@ -1853,12 +1915,51 @@ pub mod tests {
                 format_cc_includes(&result.cc.prereqs.includes),
                 quote! { include <cstdint> }
             );
-            // Main checks: `CcPrerequisites::defs`.
+
+            // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
             //
-            // Verifying the actual def_id is tricky, becayse `test_format_def` doesn't
+            // Verifying the actual def_id is tricky, because `test_format_def` doesn't
             // expose `tcx` to the verification function (and therefore calling
             // `find_def_id_by_name` is not easily possible).
             assert_eq!(1, result.cc.prereqs.defs.len());
+            assert_eq!(0, result.cc.prereqs.fwd_decls.len());
+        });
+    }
+
+    /// This test verifies that `format_def` uses `CcPrerequisites::fwd_decls`
+    /// rather than `CcPrerequisites::defs` for functions that only need a
+    /// C++ declaration (and don't need a C++ definition).
+    #[test]
+    fn test_format_def_fn_cc_prerequisites_if_only_cpp_declaration_needed() {
+        let test_src = r#"
+                // `foo` will only have a C++ declaration (and no C++ definition)
+                // in the generated `..._cc_api.h` header.
+                //
+                // Therefore `foo`'s `CcPrerequisites` should include `S`
+                // as a `fwd_decls` edge, rather than as a `defs` edge.
+                #[no_mangle]
+                pub extern "C" fn foo(s: S) -> bool { s.0 }
+
+                #[repr(C)]
+                pub struct S(bool);
+            "#;
+        test_format_def(test_src, "foo", |result| {
+            let result = result.unwrap().unwrap();
+
+            // Minimal coverage, just to double-check that the test setup works.
+            //
+            // Note that this is only a function *declaration* (not a function definition -
+            // there is no function body), and therefore `S` just needs to be
+            // forward-declared earlier.
+            assert_cc_matches!(result.cc.tokens, quote! { extern "C" bool foo(::rust_out::S s); });
+
+            // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
+            //
+            // Verifying the actual def_id is tricky, because `test_format_def` doesn't
+            // expose `tcx` to the verification function (and therefore calling
+            // `find_def_id_by_name` is not easily possible).
+            assert_eq!(0, result.cc.prereqs.defs.len());
+            assert_eq!(1, result.cc.prereqs.fwd_decls.len());
         });
     }
 
