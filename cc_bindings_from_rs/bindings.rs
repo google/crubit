@@ -273,6 +273,10 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
             }
         }
 
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#bool documents
+        // that "Rust's bool has the same layout as C17's _Bool".  The details (e.g. size, valid
+        // bit patterns) are implementation-defined, but this is okay, because `bool` in the
+        // `extern "C"` functions in the generated `..._cc_api.h` will also be the C17's _Bool.
         ty::TyKind::Bool => keyword(quote! { bool }),
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#fixed-width-floating-point-types
