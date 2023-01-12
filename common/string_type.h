@@ -100,7 +100,7 @@ class StringType {
 
   template <typename H>
   friend H AbslHashValue(H h, const StringType& s) {
-    H::combine(std::move(h), s.value());
+    return H::combine(std::move(h), s.value());
   }
 
   friend std::ostream& operator<<(std::ostream& os, const StringType& s) {
