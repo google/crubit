@@ -77,8 +77,8 @@ class Cmdline {
 
   const BazelLabel& current_target() const { return current_target_; }
 
-  const absl::flat_hash_map<const HeaderName, const BazelLabel>&
-  headers_to_targets() const {
+  const absl::flat_hash_map<HeaderName, BazelLabel>& headers_to_targets()
+      const {
     return headers_to_targets_;
   }
 
@@ -110,7 +110,7 @@ class Cmdline {
 
   BazelLabel current_target_;
   std::vector<HeaderName> public_headers_;
-  absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets_;
+  absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets_;
 
   std::vector<std::string> extra_rs_srcs_;
 

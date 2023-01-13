@@ -172,6 +172,7 @@ cc_library(
         "//common:status_macros",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/flags:flag",
+        "@absl//absl/log",
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@llvm-project//llvm:Support",

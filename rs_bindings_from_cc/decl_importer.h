@@ -20,8 +20,7 @@ namespace crubit {
 class Invocation {
  public:
   Invocation(BazelLabel target, absl::Span<const HeaderName> public_headers,
-             const absl::flat_hash_map<const HeaderName, const BazelLabel>&
-                 header_targets)
+             const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets)
       : target_(target),
         public_headers_(public_headers),
         lifetime_context_(std::make_shared<
@@ -57,8 +56,7 @@ class Invocation {
   IR ir_;
 
  private:
-  const absl::flat_hash_map<const HeaderName, const BazelLabel>&
-      header_targets_;
+  const absl::flat_hash_map<HeaderName, BazelLabel>& header_targets_;
 };
 
 // Explicitly defined interface that defines how `DeclImporter`s are allowed to

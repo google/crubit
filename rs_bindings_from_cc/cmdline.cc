@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "absl/flags/flag.h"
+#include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/substitute.h"
 #include "common/status_macros.h"
@@ -187,13 +188,19 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
             "Expected `h` fields of `--targets_and_headers` to be an array of "
             "non-empty strings");
       }
-      const auto [it, inserted] = cmdline.headers_to_targets_.insert(
-          std::make_pair(HeaderName(header), BazelLabel(target)));
+      BazelLabel target_label(target);
+      auto [it, inserted] = cmdline.headers_to_targets_.try_emplace(
+          HeaderName(header), std::move(target_label));
       if (!inserted) {
-        return absl::InvalidArgumentError(absl::Substitute(
-            "The `--targets_and_headers` cmdline argument assigns "
-            "`$0` header to two conflicting targets: `$1` vs `$2`",
-            header, target, it->second.value()));
+        LOG(WARNING) << "The `--targets_and_headers` cmdline argument assigns "
+                        "`"
+                     << header << "` header to two conflicting targets: `"
+                     << target << "` vs `" << it->second.value() << "`";
+        // Assign the one that comes first alphabetically, to get a consistent
+        // result.
+        if (target_label.value() < it->second.value()) {
+          it->second = std::move(target_label);
+        }
       }
     }
   }

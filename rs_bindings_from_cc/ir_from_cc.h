@@ -51,8 +51,7 @@ absl::StatusOr<IR> IrFromCc(
     absl::Span<const HeaderName> public_headers = {},
     absl::flat_hash_map<const HeaderName, const std::string>
         virtual_headers_contents_for_testing = {},
-    absl::flat_hash_map<const HeaderName, const BazelLabel> headers_to_targets =
-        {},
+    absl::flat_hash_map<HeaderName, BazelLabel> headers_to_targets = {},
     absl::Span<const std::string> extra_rs_srcs = {},
     absl::Span<const absl::string_view> clang_args = {},
     absl::Span<const std::string> extra_instantiations = {});

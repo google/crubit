@@ -146,14 +146,20 @@ TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeader) {
 }
 
 TEST(CmdlineTest, TargetsAndHeadersDuplicateHeader) {
-  constexpr absl::string_view kTestInput = R"([
+  constexpr absl::string_view kHeaders = R"([
       {"t": "t1", "h": ["h1"]},
-      {"t": "t2", "h": ["h1"]} ])";
-  ASSERT_THAT(
-      TestCmdline({"h1"}, std::string(kTestInput)),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               AllOf(HasSubstr("--targets_and_headers"), HasSubstr("conflict"),
-                     HasSubstr("h1"), HasSubstr("t1"), HasSubstr("t2"))));
+      {"t": "t2", "h": ["h1", "h2"]} ])";
+  ASSERT_OK_AND_ASSIGN(
+      Cmdline cmdline,
+      Cmdline::CreateForTesting(
+          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
+          /* do_nothing= */ false, {"h1"}, std::string(kHeaders),
+          {"extra_file.rs"}, {"scan_for_instantiations.rs"},
+          "instantiations_out", "error_report_out"));
+  EXPECT_THAT(cmdline.headers_to_targets(),
+              UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("t1")),
+                                   Pair(HeaderName("h2"), BazelLabel("t2"))));
 }
 
 TEST(CmdlineTest, PublicHeadersEmpty) {
