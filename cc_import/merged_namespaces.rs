@@ -8,13 +8,14 @@ use quote::{quote, ToTokens, TokenStreamExt};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::rc::Rc;
 use syn::Ident;
 
 /// Representation of a target's namespace hierarchy, as encoded in the
 /// *_namespace.json file.
 #[derive(Clone, Debug, Deserialize)]
 pub struct JsonNamespaceHierarchy {
-    pub label: String,
+    pub label: Rc<str>,
     #[serde(default)]
     pub namespaces: Vec<JsonNamespace>,
 }
@@ -22,7 +23,7 @@ pub struct JsonNamespaceHierarchy {
 /// Single C++ namespace, as encoded in the *_namespace.json file.
 #[derive(Clone, Debug, Deserialize)]
 pub struct JsonNamespace {
-    pub name: String,
+    pub name: Rc<str>,
     #[serde(default)]
     pub children: Vec<JsonNamespace>,
 }
@@ -33,32 +34,34 @@ pub struct JsonNamespace {
 pub struct MergedNamespaceHierarchy {
     /// A map of a top level namespace name to the corresponding
     /// MergedNamespace.
-    pub top_level_namespaces: BTreeMap<String, MergedNamespace>,
+    pub top_level_namespaces: BTreeMap<Rc<str>, MergedNamespace>,
 }
 
 /// A single C++ namespace potentially reopened across multiple targets.
 #[derive(Clone, Debug)]
 pub struct MergedNamespace {
     /// name of the current namespace.
-    pub name: String,
+    pub name: Rc<str>,
     /// A map of child namespace name to the corresponding MergedNamespace.
-    pub children: BTreeMap<String, MergedNamespace>,
+    pub children: BTreeMap<Rc<str>, MergedNamespace>,
     /// A set of targets that reopen this namespace.
-    pub labels: BTreeSet<String>,
+    pub labels: BTreeSet<Rc<str>>,
 }
 
 impl MergedNamespace {
     /// Creates a MergedNamespace from JsonNamespace.
-    pub fn from_json_namespace(label: &str, json_namespace: &JsonNamespace) -> MergedNamespace {
+    pub fn from_json_namespace(label: Rc<str>, json_namespace: &JsonNamespace) -> MergedNamespace {
         let mut merged_children = BTreeMap::new();
         for child in json_namespace.children.iter() {
-            merged_children
-                .insert(child.name.to_string(), MergedNamespace::from_json_namespace(label, child));
+            merged_children.insert(
+                child.name.clone(),
+                MergedNamespace::from_json_namespace(label.clone(), child),
+            );
         }
         MergedNamespace {
-            name: json_namespace.name.to_string(),
+            name: json_namespace.name.clone(),
             children: merged_children,
-            labels: BTreeSet::from([label.to_string()]),
+            labels: BTreeSet::from([label]),
         }
     }
 
@@ -87,7 +90,7 @@ impl MergedNamespace {
                 }
             }
             None => {
-                self.children.insert(namespace.name.to_string(), namespace);
+                self.children.insert(namespace.name.clone(), namespace);
             }
         }
     }
@@ -99,8 +102,8 @@ impl MergedNamespaceHierarchy {
         let mut merged_namespaces = BTreeMap::new();
         for top_level_namespace in jnh.namespaces.iter() {
             merged_namespaces.insert(
-                top_level_namespace.name.to_string(),
-                MergedNamespace::from_json_namespace(&jnh.label, top_level_namespace),
+                top_level_namespace.name.clone(),
+                MergedNamespace::from_json_namespace(jnh.label.clone(), top_level_namespace),
             );
         }
         MergedNamespaceHierarchy { top_level_namespaces: merged_namespaces }
@@ -163,6 +166,7 @@ fn to_use_stmts(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ops::Deref;
 
     #[test]
     fn from_json() {
@@ -177,9 +181,9 @@ mod tests {
         }"#;
 
         let ns: JsonNamespaceHierarchy = serde_json::from_str(json).unwrap();
-        assert_eq!(ns.label, "//foo/bar:baz");
+        assert_eq!(&*ns.label, "//foo/bar:baz");
         assert_eq!(ns.namespaces.len(), 1);
-        assert_eq!(ns.namespaces[0].name, "top_level");
+        assert_eq!(&*ns.namespaces[0].name, "top_level");
     }
 
     #[test]
@@ -227,21 +231,24 @@ mod tests {
         let MergedNamespace { name, children: _, labels } =
             top_level_namespaces.get("top_level_1").unwrap();
 
-        assert_eq!(name, "top_level_1");
-        assert_eq!(labels.iter().collect::<Vec<_>>(), ["//foo/bar:baz", "//foo/bar:xyz"]);
+        assert_eq!(&**name, "top_level_1");
+        assert_eq!(
+            labels.iter().map(Deref::deref).collect::<Vec<_>>(),
+            ["//foo/bar:baz", "//foo/bar:xyz"]
+        );
 
         let MergedNamespace { name, children: _, labels } =
             top_level_namespaces.get("top_level_2").unwrap();
 
-        assert_eq!(name, "top_level_2");
-        assert_eq!(labels.iter().collect::<Vec<_>>(), ["//foo/bar:xyz"]);
+        assert_eq!(&**name, "top_level_2");
+        assert_eq!(labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//foo/bar:xyz"]);
     }
 
     #[test]
     #[should_panic(expected = "Cannot merge namespaces with different names, got 'a' and 'b'")]
     fn test_merge_different_namespaces() {
         let mut namespace_one = MergedNamespace::from_json_namespace(
-            "//label1",
+            "//label1".into(),
             &serde_json::from_str(
                 r#"{
             "name": "a",
@@ -252,7 +259,7 @@ mod tests {
         );
 
         let namespace_two = MergedNamespace::from_json_namespace(
-            "//label2",
+            "//label2".into(),
             &serde_json::from_str(
                 r#"{
             "name": "b",
@@ -307,34 +314,36 @@ mod tests {
         .unwrap();
 
         let mut merged_namespace =
-            MergedNamespace::from_json_namespace("//:label1", &json_namespace_one);
+            MergedNamespace::from_json_namespace("//:label1".into(), &json_namespace_one);
         let merged_namespace_two =
-            MergedNamespace::from_json_namespace("//:label2", &json_namespace_two);
+            MergedNamespace::from_json_namespace("//:label2".into(), &json_namespace_two);
 
         merged_namespace.merge(merged_namespace_two);
         let MergedNamespace { name, children, labels } = merged_namespace;
 
-        assert_eq!(name, "a");
-        assert_eq!(labels.iter().collect::<Vec<_>>(), ["//:label1", "//:label2"]);
-        assert_eq!(children.len(), 3);
-        assert_eq!(children.keys().cloned().collect::<Vec<_>>(), ["b", "c", "d"]);
+        assert_eq!(&*name, "a");
+        assert_eq!(labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//:label1", "//:label2"]);
+        assert_eq!(children.keys().map(Deref::deref).collect::<Vec<_>>(), ["b", "c", "d"]);
 
         let MergedNamespace { name: _, children: _, labels: b_labels } = children.get("b").unwrap();
         // Namespace b only exists in the first target
-        assert_eq!(b_labels.iter().collect::<Vec<_>>(), ["//:label1"]);
+        assert_eq!(b_labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//:label1"]);
 
         let MergedNamespace { name: _, children: children_c, labels: c_labels } =
             children.get("c").unwrap();
         // Namespace c exists in both targets, however its child d only exists in the
         // second target
-        assert_eq!(c_labels.iter().collect::<Vec<_>>(), ["//:label1", "//:label2"]);
+        assert_eq!(
+            c_labels.iter().map(Deref::deref).collect::<Vec<_>>(),
+            ["//:label1", "//:label2"]
+        );
         let MergedNamespace { name: _, children: _, labels: c_child_labels } =
             children_c.get("d").unwrap();
-        assert_eq!(c_child_labels.iter().collect::<Vec<_>>(), ["//:label2"]);
+        assert_eq!(c_child_labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//:label2"]);
 
         let MergedNamespace { name: _, children: _, labels: d_labels } = children.get("d").unwrap();
         // Namespace d only exists in the second target
-        assert_eq!(d_labels.iter().collect::<Vec<_>>(), ["//:label2"]);
+        assert_eq!(d_labels.iter().map(Deref::deref).collect::<Vec<_>>(), ["//:label2"]);
     }
 
     #[test]
