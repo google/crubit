@@ -212,9 +212,7 @@ pub mod private_classes {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<
-                        &mut ::std::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
-                    >| {
+                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1ERKS0_(
                             ::std::pin::Pin::into_inner_unchecked(dest),
                             __param_0,
@@ -244,9 +242,7 @@ pub mod private_classes {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<
-                        &mut ::std::mem::MaybeUninit<crate::private_classes::HasPrivateType>,
-                    >| {
+                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeC1EOS0_(
                             ::std::pin::Pin::into_inner_unchecked(dest),
                             __param_0,
@@ -707,15 +703,9 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStruct
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<
-                        crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-                    >,
-                >| {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
+            })
         }
     }
 }
@@ -730,15 +720,9 @@ impl<'b> ::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings8M
     ) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<
-                        crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-                    >,
-                >| {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1ERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            })
         }
     }
 }
@@ -772,15 +756,9 @@ impl<'b>
     ) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<
-                        crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-                    >,
-                >| {
-                    crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            })
         }
     }
 }
@@ -909,7 +887,9 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params10MyTemp
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest)); })
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest));
+            })
         }
     }
 }
@@ -926,7 +906,9 @@ impl<'b>
     ) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); })
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1ERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            })
         }
     }
 }
@@ -965,7 +947,9 @@ impl<'b>
     ) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(move|dest: ::std::pin::Pin<&mut::std::mem::MaybeUninit<crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE>>|{ crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0); })
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(::std::pin::Pin::into_inner_unchecked(dest),__param_0);
+            })
         }
     }
 }

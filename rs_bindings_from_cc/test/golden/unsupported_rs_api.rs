@@ -79,16 +79,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialCustomType
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::NontrivialCustomType>,
-                >| {
-                    crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN20NontrivialCustomTypeC1EOS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }

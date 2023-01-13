@@ -1369,8 +1369,16 @@ fn generate_func(
                 let mut body = if return_type.is_unpin() {
                     quote! { #crate_root_path::detail::#thunk_ident( #( #thunk_args #clone_suffixes ),* ) }
                 } else {
+                    let record = match impl_kind {
+                        ImplKind::Struct { ref record, .. }
+                        | ImplKind::Trait { ref record, impl_for: ImplFor::T, .. } => {
+                            Some(&**record)
+                        }
+                        _ => None,
+                    };
+                    let return_type_or_self = return_type.to_token_stream_replacing_by_self(record);
                     quote! {
-                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<#return_type>>| {
+                        ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<#return_type_or_self>>| {
                             #crate_root_path::detail::#thunk_ident(::std::pin::Pin::into_inner_unchecked(dest) #( , #thunk_args )*);
                         })
                     }
@@ -7549,7 +7557,7 @@ mod tests {
                     fn ctor_new(args: ()) -> Self::CtorType {
                         let () = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Ev(::std::pin::Pin::into_inner_unchecked(dest));
                             })
                         }
@@ -7579,7 +7587,7 @@ mod tests {
                     fn ctor_new(args: u8) -> Self::CtorType {
                         let input = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Eh(::std::pin::Pin::into_inner_unchecked(dest), input);
                             })
                         }
@@ -7609,7 +7617,7 @@ mod tests {
                     fn ctor_new(args: (u8, i8)) -> Self::CtorType {
                         let (input1, input2) = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1Eha(::std::pin::Pin::into_inner_unchecked(dest), input1, input2);
                             })
                         }
@@ -7662,7 +7670,7 @@ mod tests {
                     ) -> Self::CtorType {
                         let (x, y, b) = args;
                         unsafe {
-                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::HasConstructor>>| {
+                            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                                 crate::detail::__rust_thunk___ZN14HasConstructorC1ERKiS_S_(::std::pin::Pin::into_inner_unchecked(dest), x, y, b);
                             })
                         }
@@ -7735,7 +7743,7 @@ mod tests {
                     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
                         unsafe {
                             let _ = ::ctor::emplace!(::ctor::FnCtor::new(
-                                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
+                                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                                     crate::detail::__rust_thunk___ZN10NontrivialaSERKS_(
                                         ::std::pin::Pin::into_inner_unchecked(dest),
                                         self,

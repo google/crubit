@@ -32,15 +32,11 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicBase>,
-                >| {
-                    crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN15PolymorphicBaseC1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            })
         }
     }
 }
@@ -51,16 +47,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase> for PolymorphicBase {
     fn ctor_new(args: &'b crate::PolymorphicBase) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicBase>,
-                >| {
-                    crate::detail::__rust_thunk___ZN15PolymorphicBaseC1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN15PolymorphicBaseC1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -105,15 +97,11 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicBase2>,
-                >| {
-                    crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN16PolymorphicBase2C1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            })
         }
     }
 }
@@ -124,16 +112,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
     fn ctor_new(args: &'b crate::PolymorphicBase2) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicBase2>,
-                >| {
-                    crate::detail::__rust_thunk___ZN16PolymorphicBase2C1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN16PolymorphicBase2C1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -185,15 +169,11 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicDerived>,
-                >| {
-                    crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            })
         }
     }
 }
@@ -204,16 +184,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicDerived> for PolymorphicDerived {
     fn ctor_new(args: &'b crate::PolymorphicDerived) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicDerived>,
-                >| {
-                    crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -234,16 +210,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::PolymorphicDerived>,
-                >| {
-                    crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1EOS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN18PolymorphicDerivedC1EOS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }

@@ -121,9 +121,7 @@ pub mod ns {
             let () = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<
-                        &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
-                    >| {
+                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1Ev(
                             ::std::pin::Pin::into_inner_unchecked(dest),
                         );
@@ -140,9 +138,7 @@ pub mod ns {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<
-                        &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
-                    >| {
+                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1ERKS0_(
                             ::std::pin::Pin::into_inner_unchecked(dest),
                             __param_0,
@@ -172,9 +168,7 @@ pub mod ns {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
-                    move |dest: ::std::pin::Pin<
-                        &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
-                    >| {
+                    move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
                         crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalC1EOS0_(
                             ::std::pin::Pin::into_inner_unchecked(dest),
                             __param_0,

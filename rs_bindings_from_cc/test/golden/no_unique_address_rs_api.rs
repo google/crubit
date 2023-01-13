@@ -161,15 +161,11 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::FieldInTailPadding_InnerStruct>,
-                >| {
-                    crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            })
         }
     }
 }
@@ -182,16 +178,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding_InnerStruct>
     fn ctor_new(args: &'b crate::FieldInTailPadding_InnerStruct) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::FieldInTailPadding_InnerStruct>,
-                >| {
-                    crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN30FieldInTailPadding_InnerStructC1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -260,16 +252,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding> for FieldInTailPadding {
     fn ctor_new(args: &'b crate::FieldInTailPadding) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::FieldInTailPadding>,
-                >| {
-                    crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -290,16 +278,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::FieldInTailPadding>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::FieldInTailPadding>,
-                >| {
-                    crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1EOS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -352,18 +336,14 @@ impl ::ctor::CtorNew<(i32, u8, u8)> for FieldInTailPadding {
     fn ctor_new(args: (i32, u8, u8)) -> Self::CtorType {
         let (inner_int, inner_char, outer_char) = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<
-                    &mut ::std::mem::MaybeUninit<crate::FieldInTailPadding>,
-                >| {
-                    crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        inner_int,
-                        inner_char,
-                        outer_char,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN18FieldInTailPaddingC1Eicc(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    inner_int,
+                    inner_char,
+                    outer_char,
+                );
+            })
         }
     }
 }

@@ -46,13 +46,11 @@ impl ::ctor::CtorNew<()> for WithBitfields {
     fn ctor_new(args: ()) -> Self::CtorType {
         let () = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::WithBitfields>>| {
-                    crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN13WithBitfieldsC1Ev(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                );
+            })
         }
     }
 }
@@ -63,14 +61,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::WithBitfields> for WithBitfields {
     fn ctor_new(args: &'b crate::WithBitfields) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::WithBitfields>>| {
-                    crate::detail::__rust_thunk___ZN13WithBitfieldsC1ERKS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN13WithBitfieldsC1ERKS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
@@ -89,14 +85,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::WithBitfields>> for 
     fn ctor_new(args: ::ctor::RvalueReference<'b, crate::WithBitfields>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
-            ::ctor::FnCtor::new(
-                move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::WithBitfields>>| {
-                    crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
-                        ::std::pin::Pin::into_inner_unchecked(dest),
-                        __param_0,
-                    );
-                },
-            )
+            ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
+                crate::detail::__rust_thunk___ZN13WithBitfieldsC1EOS_(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    __param_0,
+                );
+            })
         }
     }
 }
