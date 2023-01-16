@@ -35,9 +35,9 @@ impl Default for FirstStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::FirstStruct>> for FirstStruct {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11FirstStructC1EOS_(&mut tmp, __param_0);
@@ -77,9 +77,9 @@ impl Default for SecondStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::SecondStruct>> for SecondStruct {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN12SecondStructC1EOS_(&mut tmp, __param_0);

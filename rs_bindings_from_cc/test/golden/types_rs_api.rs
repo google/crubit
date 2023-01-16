@@ -35,9 +35,9 @@ impl Default for SomeStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::SomeStruct>> for SomeStruct {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10SomeStructC1EOS_(&mut tmp, __param_0);
@@ -123,9 +123,9 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>> for FieldTypeTestStruct {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN19FieldTypeTestStructC1EOS_(&mut tmp, __param_0);

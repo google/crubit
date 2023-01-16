@@ -43,13 +43,9 @@ pub mod test_namespace_bindings {
         }
     }
 
-    impl<'b> From<::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>>
-        for SomeClass
-    {
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
         #[inline(always)]
-        fn from(
-            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
-        ) -> Self {
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassC1EOS0_(

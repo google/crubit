@@ -51,9 +51,9 @@ impl Default for Struct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::Struct>> for Struct {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::Struct>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN6StructC1EOS_(&mut tmp, __param_0);
@@ -112,9 +112,9 @@ impl Default for PaddingBetweenFields {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::PaddingBetweenFields>> for PaddingBetweenFields {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsC1EOS_(&mut tmp, __param_0);
@@ -171,12 +171,10 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding_InnerStruct>
-    for FieldInTailPadding_InnerStruct
-{
+impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::FieldInTailPadding_InnerStruct) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -188,14 +186,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding_InnerStruct>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::FieldInTailPadding_InnerStruct,)>
-    for FieldInTailPadding_InnerStruct
-{
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding_InnerStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::FieldInTailPadding_InnerStruct,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::FieldInTailPadding_InnerStruct>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
@@ -247,10 +243,10 @@ impl FieldInTailPadding {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding> for FieldInTailPadding {
+impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::FieldInTailPadding) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -262,21 +258,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::FieldInTailPadding> for FieldInTailPadding {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::FieldInTailPadding,)> for FieldInTailPadding {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::FieldInTailPadding,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::FieldInTailPadding>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>
-    for FieldInTailPadding
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::FieldInTailPadding>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -288,16 +282,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::FieldInTailPadding>,)>
-    for FieldInTailPadding
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::FieldInTailPadding>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -317,13 +307,11 @@ impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::FieldInTailPadding>>
-    for FieldInTailPadding
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for FieldInTailPadding {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::FieldInTailPadding>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN18FieldInTailPaddingaSEOS_(self, __param_0);

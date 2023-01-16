@@ -56,10 +56,10 @@ impl ::ctor::CtorNew<()> for WithBitfields {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::WithBitfields> for WithBitfields {
+impl<'b> ::ctor::CtorNew<&'b Self> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::WithBitfields) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -71,19 +71,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::WithBitfields> for WithBitfields {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::WithBitfields,)> for WithBitfields {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::WithBitfields,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::WithBitfields>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::WithBitfields>> for WithBitfields {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::WithBitfields>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -95,12 +95,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::WithBitfields>> for 
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::WithBitfields>,)> for WithBitfields {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for WithBitfields {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::WithBitfields>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::WithBitfields>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -113,11 +113,11 @@ impl<'b> ::ctor::Assign<&'b Self> for WithBitfields {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::WithBitfields>> for WithBitfields {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for WithBitfields {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::WithBitfields>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN13WithBitfieldsaSEOS_(self, __param_0);

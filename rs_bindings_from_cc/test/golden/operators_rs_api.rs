@@ -41,9 +41,9 @@ impl Default for AddableConstMember {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddableConstMember>> for AddableConstMember {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableConstMemberC1EOS_(&mut tmp, __param_0);
@@ -92,9 +92,9 @@ impl Default for AddableNonConstMember {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddableNonConstMember>> for AddableNonConstMember {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN21AddableNonConstMemberC1EOS_(&mut tmp, __param_0);
@@ -142,9 +142,9 @@ impl Default for AddableFriend {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddableFriend>> for AddableFriend {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13AddableFriendC1EOS_(&mut tmp, __param_0);
@@ -187,9 +187,9 @@ impl Default for AddableFree {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddableFree>> for AddableFree {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFree {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddableFree>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11AddableFreeC1EOS_(&mut tmp, __param_0);
@@ -252,9 +252,9 @@ impl Default for Overloaded {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::Overloaded>> for Overloaded {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::Overloaded>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10OverloadedC1EOS_(&mut tmp, __param_0);
@@ -308,9 +308,9 @@ impl Default for IncompatibleLHS {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::IncompatibleLHS>> for IncompatibleLHS {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15IncompatibleLHSC1EOS_(&mut tmp, __param_0);
@@ -359,9 +359,9 @@ impl Default for AddableReturnsVoid {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddableReturnsVoid>> for AddableReturnsVoid {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddableReturnsVoidC1EOS_(&mut tmp, __param_0);
@@ -414,10 +414,10 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::AddableConstMemberNonunpin> for AddableConstMemberNonunpin {
+impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::AddableConstMemberNonunpin) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -429,12 +429,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::AddableConstMemberNonunpin> for AddableConst
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::AddableConstMemberNonunpin,)> for AddableConstMemberNonunpin {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for AddableConstMemberNonunpin {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::AddableConstMemberNonunpin,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::AddableConstMemberNonunpin>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
@@ -499,9 +499,9 @@ impl Default for AddAssignMemberInt {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignMemberInt>> for AddAssignMemberInt {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18AddAssignMemberIntC1EOS_(&mut tmp, __param_0);
@@ -548,11 +548,9 @@ impl Default for AddAssignMemberByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>>
-    for AddAssignMemberByConstRef
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefC1EOS_(&mut tmp, __param_0);
@@ -599,11 +597,9 @@ impl Default for AddAssignFreeByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>>
-    for AddAssignFreeByConstRef
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefC1EOS_(&mut tmp, __param_0);
@@ -645,9 +641,9 @@ impl Default for AddAssignFreeByValue {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>> for AddAssignFreeByValue {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN20AddAssignFreeByValueC1EOS_(&mut tmp, __param_0);
@@ -694,11 +690,9 @@ impl Default for AddAssignFriendByConstRef {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>>
-    for AddAssignFriendByConstRef
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefC1EOS_(&mut tmp, __param_0);
@@ -736,11 +730,9 @@ impl Default for AddAssignFriendByValue {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>>
-    for AddAssignFriendByValue
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN22AddAssignFriendByValueC1EOS_(&mut tmp, __param_0);
@@ -787,11 +779,9 @@ impl Default for AddAssignProhibitedConstMember {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>>
-    for AddAssignProhibitedConstMember
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberC1EOS_(
@@ -835,13 +825,9 @@ impl Default for AddAssignProhibitedFriendConstLhs {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>>
-    for AddAssignProhibitedFriendConstLhs
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1EOS_(
@@ -882,9 +868,9 @@ impl Default for ManyOperators {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::ManyOperators>> for ManyOperators {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13ManyOperatorsC1EOS_(&mut tmp, __param_0);

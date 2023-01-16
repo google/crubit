@@ -45,10 +45,10 @@ impl ::ctor::CtorNew<()> for Derived2 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::Derived2> for Derived2 {
+impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::Derived2) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -60,19 +60,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::Derived2> for Derived2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::Derived2,)> for Derived2 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::Derived2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::Derived2>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Derived2>> for Derived2 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Derived2>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -84,12 +84,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Derived2>> for Deriv
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Derived2>,)> for Derived2 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Derived2>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Derived2>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -102,11 +102,11 @@ impl<'b> ::ctor::Assign<&'b Self> for Derived2 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::Derived2>> for Derived2 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Derived2 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::Derived2>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN8Derived2aSEOS_(self, __param_0);
@@ -155,10 +155,10 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived2> for VirtualDerived2 {
+impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::VirtualDerived2) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -170,19 +170,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived2> for VirtualDerived2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::VirtualDerived2,)> for VirtualDerived2 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::VirtualDerived2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::VirtualDerived2>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived2>> for VirtualDerived2 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualDerived2>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -194,16 +194,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived2>> fo
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualDerived2>,)>
-    for VirtualDerived2
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualDerived2>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived2>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -216,11 +212,11 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived2 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualDerived2>> for VirtualDerived2 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived2>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN15VirtualDerived2aSEOS_(self, __param_0);

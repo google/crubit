@@ -38,9 +38,9 @@ pub mod ns {
         }
     }
 
-    impl<'b> From<::ctor::RvalueReference<'b, crate::ns::Trivial>> for Trivial {
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for Trivial {
         #[inline(always)]
-        fn from(__param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>) -> Self {
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns7TrivialC1EOS0_(&mut tmp, __param_0);
@@ -84,11 +84,9 @@ pub mod ns {
     // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
     // operator= for Unpin types is not yet supported.
 
-    impl<'b> From<::ctor::RvalueReference<'b, crate::ns::TrivialWithDefaulted>>
-        for TrivialWithDefaulted
-    {
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
         #[inline(always)]
-        fn from(__param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialWithDefaulted>) -> Self {
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns20TrivialWithDefaultedC1EOS0_(
@@ -132,10 +130,10 @@ pub mod ns {
         }
     }
 
-    impl<'b> ::ctor::CtorNew<&'b crate::ns::TrivialNonfinal> for TrivialNonfinal {
+    impl<'b> ::ctor::CtorNew<&'b Self> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(args: &'b crate::ns::TrivialNonfinal) -> Self::CtorType {
+        fn ctor_new(args: &'b Self) -> Self::CtorType {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
@@ -149,23 +147,19 @@ pub mod ns {
             }
         }
     }
-    impl<'b> ::ctor::CtorNew<(&'b crate::ns::TrivialNonfinal,)> for TrivialNonfinal {
+    impl<'b> ::ctor::CtorNew<(&'b Self,)> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(args: (&'b crate::ns::TrivialNonfinal,)) -> Self::CtorType {
+        fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
             let (arg,) = args;
-            <Self as ::ctor::CtorNew<&'b crate::ns::TrivialNonfinal>>::ctor_new(arg)
+            <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
         }
     }
 
-    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>>
-        for TrivialNonfinal
-    {
+    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(
-            args: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
-        ) -> Self::CtorType {
+        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
@@ -179,16 +173,12 @@ pub mod ns {
             }
         }
     }
-    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,)>
-        for TrivialNonfinal
-    {
+    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(
-            args: (::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,),
-        ) -> Self::CtorType {
+        fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
             let (arg,) = args;
-            <Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::ns::TrivialNonfinal>>>::ctor_new(arg)
+            <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
         }
     }
 
@@ -201,13 +191,11 @@ pub mod ns {
         }
     }
 
-    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>>
-        for TrivialNonfinal
-    {
+    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(
             self: ::std::pin::Pin<&'a mut Self>,
-            __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
+            __param_0: ::ctor::RvalueReference<'b, Self>,
         ) {
             unsafe {
                 crate::detail::__rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_(self, __param_0);

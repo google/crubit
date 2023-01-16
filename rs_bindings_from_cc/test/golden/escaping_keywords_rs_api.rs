@@ -35,9 +35,9 @@ impl Default for r#type {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::r#type>> for r#type {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::r#type>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN4typeC1EOS_(&mut tmp, __param_0);

@@ -1547,15 +1547,19 @@ fn generate_func(
                 format_generic_params(/* lifetimes= */ &[], trait_generic_params);
             match &trait_name {
                 TraitName::CtorNew(params) => {
-                    if let [single_param] = params.as_slice() {
+                    if params.len() == 1 {
+                        let single_param_ = format_tuple_except_singleton_replacing_by_self(
+                            params,
+                            Some(&trait_record),
+                        );
                         extra_items = quote! {
-                            impl #trait_generic_params ::ctor::CtorNew<(#single_param,)> for #record_name {
+                            impl #trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name {
                                 #extra_body
 
                                 #[inline (always)]
-                                fn ctor_new(args: (#single_param,)) -> Self::CtorType {
+                                fn ctor_new(args: (#single_param_,)) -> Self::CtorType {
                                     let (arg,) = args;
-                                    <Self as ::ctor::CtorNew<#single_param>>::ctor_new(arg)
+                                    <Self as ::ctor::CtorNew<#single_param_>>::ctor_new(arg)
                                 }
                             }
                         }
@@ -1818,7 +1822,7 @@ fn generate_func_thunk(
     let mut param_idents = param_idents.into_iter();
     let mut out_param = None;
     let mut out_param_ident = None;
-    let mut return_type_fragment = return_type.format_as_return_type_fragment();
+    let mut return_type_fragment = return_type.format_as_return_type_fragment(None);
     if func.name == UnqualifiedIdentifier::Constructor {
         // For constructors, inject MaybeUninit into the type of `__this_` parameter.
         let first_param = param_types
@@ -1907,7 +1911,10 @@ fn format_tuple_except_singleton_replacing_by_self(
     trait_record: Option<&Record>,
 ) -> TokenStream {
     match items {
-        [singleton] => quote! {#singleton},
+        [singleton] => {
+            let singleton_or_self = singleton.to_token_stream_replacing_by_self(trait_record);
+            quote! {#singleton_or_self}
+        }
         items => {
             let mut elements_of_tuple = quote! {};
             for (type_index, type_) in items.iter().enumerate() {
@@ -3055,11 +3062,12 @@ impl RsTypeKind {
         }
     }
 
-    pub fn format_as_return_type_fragment(&self) -> TokenStream {
+    pub fn format_as_return_type_fragment(&self, self_record: Option<&Record>) -> TokenStream {
         match self {
             RsTypeKind::Unit => quote! {},
             other_type => {
-                quote! { -> #other_type }
+                let other_type_ = other_type.to_token_stream_replacing_by_self(self_record);
+                quote! { -> #other_type_ }
             }
         }
     }
@@ -3226,6 +3234,23 @@ impl RsTypeKind {
                     reference
                 }
             }
+            RsTypeKind::RvalueReference { referent, mutability, lifetime } => {
+                let referent_ = referent.to_token_stream_replacing_by_self(self_record);
+                // TODO(b/239661934): Add a `use ::ctor::RvalueReference` (etc.) to the crate.
+                if mutability == &Mutability::Mut {
+                    quote! {::ctor::RvalueReference<#lifetime, #referent_>}
+                } else {
+                    quote! {::ctor::ConstRvalueReference<#lifetime, #referent_>}
+                }
+            }
+            RsTypeKind::FuncPtr { abi, return_type, param_types } => {
+                let param_types_: Vec<TokenStream> = param_types
+                    .iter()
+                    .map(|type_| type_.to_token_stream_replacing_by_self(self_record))
+                    .collect();
+                let return_frag = return_type.format_as_return_type_fragment(self_record);
+                quote! { extern #abi fn( #( #param_types_ ),* ) #return_frag }
+            }
             RsTypeKind::Record { record, crate_path } => {
                 if self_record == Some(record) {
                     quote! { Self }
@@ -3233,6 +3258,12 @@ impl RsTypeKind {
                     let ident = make_rs_ident(record.rs_name.as_ref());
                     quote! { #crate_path #ident }
                 }
+            }
+            RsTypeKind::Other { name, type_args } => {
+                let ident = make_rs_ident(name);
+                let generic_params =
+                    format_generic_params_replacing_by_self(type_args.iter(), self_record);
+                quote! {#ident #generic_params}
             }
             _ => self.to_token_stream(),
         }
@@ -3273,7 +3304,7 @@ impl ToTokens for RsTypeKind {
                 }
             }
             RsTypeKind::FuncPtr { abi, return_type, param_types } => {
-                let return_frag = return_type.format_as_return_type_fragment();
+                let return_frag = return_type.format_as_return_type_fragment(None);
                 quote! { extern #abi fn( #( #param_types ),* ) #return_frag }
             }
             RsTypeKind::IncompleteRecord { incomplete_record, crate_path } => {
@@ -6061,9 +6092,9 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                impl<'b> From<::ctor::RvalueReference<'b, crate::UnionWithDefaultConstructors>> for UnionWithDefaultConstructors {
+                impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithDefaultConstructors {
                     #[inline(always)]
-                    fn from(__param_0: ::ctor::RvalueReference<'b, crate::UnionWithDefaultConstructors>) -> Self {
+                    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
                         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
                         unsafe {
                             crate::detail::__rust_thunk___ZN28UnionWithDefaultConstructorsC1EOS_(&mut tmp, __param_0);
@@ -7664,8 +7695,8 @@ mod tests {
             quote! {
                 impl <'b, 'y, 'b_2> ::ctor::CtorNew<(
                     &'b i32,
-                    ::ctor::RvalueReference<'y, crate::HasConstructor>,
-                    ::ctor::RvalueReference<'b_2, crate::HasConstructor>)
+                    ::ctor::RvalueReference<'y, Self>,
+                    ::ctor::RvalueReference<'b_2, Self>)
                 > for HasConstructor {
                     // The captures are why we need explicit lifetimes for the two rvalue reference
                     // parameters.
@@ -7677,8 +7708,8 @@ mod tests {
                     #[inline (always)]
                     fn ctor_new(args: (
                         &'b i32,
-                        ::ctor::RvalueReference<'y, crate::HasConstructor>,
-                        ::ctor::RvalueReference<'b_2, crate::HasConstructor>)
+                        ::ctor::RvalueReference<'y, Self>,
+                        ::ctor::RvalueReference<'b_2, Self>)
                     ) -> Self::CtorType {
                         let (x, y, b) = args;
                         unsafe {

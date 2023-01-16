@@ -39,9 +39,9 @@ pub mod test_namespace_bindings {
         }
     }
 
-    impl<'b> From<::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>> for S {
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for S {
         #[inline(always)]
-        fn from(__param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::S>) -> Self {
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings1SC1EOS0_(
@@ -118,17 +118,9 @@ pub mod test_namespace_bindings_reopened_0 {
             }
         }
 
-        impl<'b>
-            From<::ctor::RvalueReference<'b, crate::test_namespace_bindings_reopened::inner::S>>
-            for S
-        {
+        impl<'b> From<::ctor::RvalueReference<'b, Self>> for S {
             #[inline(always)]
-            fn from(
-                __param_0: ::ctor::RvalueReference<
-                    'b,
-                    crate::test_namespace_bindings_reopened::inner::S,
-                >,
-            ) -> Self {
+            fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
                 let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(&mut tmp,__param_0);
@@ -200,21 +192,9 @@ pub mod test_namespace_bindings_inline {
             }
         }
 
-        impl<'b>
-            From<
-                ::ctor::RvalueReference<
-                    'b,
-                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
-                >,
-            > for StructInInlineNamespace
-        {
+        impl<'b> From<::ctor::RvalueReference<'b, Self>> for StructInInlineNamespace {
             #[inline(always)]
-            fn from(
-                __param_0: ::ctor::RvalueReference<
-                    'b,
-                    crate::test_namespace_bindings_inline::inner::StructInInlineNamespace,
-                >,
-            ) -> Self {
+            fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
                 let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
                 unsafe {
                     crate::detail::__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1EOS1_(&mut tmp,__param_0);

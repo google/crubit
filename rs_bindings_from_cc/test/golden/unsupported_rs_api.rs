@@ -38,9 +38,9 @@ impl Default for TrivialCustomType {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::TrivialCustomType>> for TrivialCustomType {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17TrivialCustomTypeC1EOS_(&mut tmp, __param_0);
@@ -72,12 +72,10 @@ forward_declare::unsafe_define!(
     crate::NontrivialCustomType
 );
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialCustomType>>
-    for NontrivialCustomType
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustomType {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialCustomType>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -89,16 +87,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialCustomType
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialCustomType>,)>
-    for NontrivialCustomType
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCustomType {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (::ctor::RvalueReference<'b, crate::NontrivialCustomType>,),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::NontrivialCustomType>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -137,9 +131,9 @@ impl Default for ContainingStruct {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::ContainingStruct>> for ContainingStruct {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16ContainingStructC1EOS_(&mut tmp, __param_0);

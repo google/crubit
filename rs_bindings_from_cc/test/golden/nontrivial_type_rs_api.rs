@@ -86,10 +86,10 @@ impl ::ctor::CtorNew<(i32, i32)> for Nontrivial {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::Nontrivial> for Nontrivial {
+impl<'b> ::ctor::CtorNew<&'b Self> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::Nontrivial) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -101,19 +101,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::Nontrivial> for Nontrivial {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::Nontrivial,)> for Nontrivial {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::Nontrivial,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::Nontrivial>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for Nontrivial {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -125,12 +125,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>> for Non
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Nontrivial>,)> for Nontrivial {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Nontrivial>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Nontrivial>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -143,11 +143,11 @@ impl<'b> ::ctor::Assign<&'b Self> for Nontrivial {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::Nontrivial>> for Nontrivial {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN10NontrivialaSEOS_(self, __param_0);
@@ -266,10 +266,10 @@ impl ::ctor::CtorNew<(i32, i32)> for NontrivialInline {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::NontrivialInline> for NontrivialInline {
+impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::NontrivialInline) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -281,21 +281,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialInline> for NontrivialInline {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialInline,)> for NontrivialInline {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::NontrivialInline,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::NontrivialInline>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialInline>>
-    for NontrivialInline
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialInline>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -307,16 +305,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialInline>>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialInline>,)>
-    for NontrivialInline
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::NontrivialInline>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialInline>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -329,11 +323,11 @@ impl<'b> ::ctor::Assign<&'b Self> for NontrivialInline {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::NontrivialInline>> for NontrivialInline {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialInline {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::NontrivialInline>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN16NontrivialInlineaSEOS_(self, __param_0);
@@ -394,10 +388,10 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::NontrivialMembers> for NontrivialMembers {
+impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::NontrivialMembers) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -409,21 +403,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialMembers> for NontrivialMembers {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialMembers,)> for NontrivialMembers {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::NontrivialMembers,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::NontrivialMembers>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialMembers>>
-    for NontrivialMembers
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialMembers>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -435,16 +427,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialMembers>>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialMembers>,)>
-    for NontrivialMembers
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::NontrivialMembers>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialMembers>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -464,13 +452,11 @@ impl<'b> ::ctor::Assign<&'b Self> for NontrivialMembers {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::NontrivialMembers>>
-    for NontrivialMembers
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialMembers {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::NontrivialMembers>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN17NontrivialMembersaSEOS_(self, __param_0);
@@ -519,9 +505,9 @@ impl Clone for NontrivialUnpin {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::NontrivialUnpin>> for NontrivialUnpin {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::NontrivialUnpin>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN15NontrivialUnpinC1EOS_(&mut tmp, __param_0);
@@ -647,10 +633,10 @@ forward_declare::unsafe_define!(
     crate::NontrivialByValue
 );
 
-impl<'b> ::ctor::CtorNew<&'b crate::NontrivialByValue> for NontrivialByValue {
+impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialByValue {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::NontrivialByValue) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let other = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -662,21 +648,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::NontrivialByValue> for NontrivialByValue {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::NontrivialByValue,)> for NontrivialByValue {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialByValue {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::NontrivialByValue,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::NontrivialByValue>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialByValue>>
-    for NontrivialByValue
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::NontrivialByValue>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let other = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -688,16 +672,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialByValue>>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::NontrivialByValue>,)>
-    for NontrivialByValue
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialByValue {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::NontrivialByValue>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::NontrivialByValue>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -710,14 +690,9 @@ impl<'b> ::ctor::Assign<&'b Self> for NontrivialByValue {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::NontrivialByValue>>
-    for NontrivialByValue
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
     #[inline(always)]
-    fn assign<'a>(
-        self: ::std::pin::Pin<&'a mut Self>,
-        other: ::ctor::RvalueReference<'b, crate::NontrivialByValue>,
-    ) {
+    fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: ::ctor::RvalueReference<'b, Self>) {
         unsafe {
             crate::detail::__rust_thunk___ZN17NontrivialByValueaSEOS_(self, other);
         }

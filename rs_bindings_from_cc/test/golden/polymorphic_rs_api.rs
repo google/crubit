@@ -42,10 +42,10 @@ impl ::ctor::CtorNew<()> for PolymorphicBase {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase> for PolymorphicBase {
+impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::PolymorphicBase) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -57,12 +57,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase> for PolymorphicBase {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicBase,)> for PolymorphicBase {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::PolymorphicBase,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::PolymorphicBase>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
@@ -107,10 +107,10 @@ impl ::ctor::CtorNew<()> for PolymorphicBase2 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
+impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::PolymorphicBase2) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -122,12 +122,12 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicBase2> for PolymorphicBase2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicBase2,)> for PolymorphicBase2 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::PolymorphicBase2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::PolymorphicBase2>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
@@ -179,10 +179,10 @@ impl ::ctor::CtorNew<()> for PolymorphicDerived {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicDerived> for PolymorphicDerived {
+impl<'b> ::ctor::CtorNew<&'b Self> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::PolymorphicDerived) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -194,21 +194,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::PolymorphicDerived> for PolymorphicDerived {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::PolymorphicDerived,)> for PolymorphicDerived {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::PolymorphicDerived,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::PolymorphicDerived>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>
-    for PolymorphicDerived
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -220,16 +218,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::PolymorphicDerived>,)>
-    for PolymorphicDerived
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for PolymorphicDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::PolymorphicDerived>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -249,13 +243,11 @@ impl<'b> ::ctor::Assign<&'b Self> for PolymorphicDerived {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::PolymorphicDerived>>
-    for PolymorphicDerived
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for PolymorphicDerived {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::PolymorphicDerived>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN18PolymorphicDerivedaSEOS_(self, __param_0);

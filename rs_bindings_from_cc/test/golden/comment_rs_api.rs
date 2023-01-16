@@ -45,9 +45,9 @@ impl Default for Foo {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::Foo>> for Foo {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Foo {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::Foo>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3FooC1EOS_(&mut tmp, __param_0);
@@ -104,9 +104,9 @@ impl Default for Bar {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::Bar>> for Bar {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Bar {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::Bar>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN3BarC1EOS_(&mut tmp, __param_0);
@@ -142,9 +142,9 @@ impl Default for HasNoComments {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::HasNoComments>> for HasNoComments {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasNoComments {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::HasNoComments>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13HasNoCommentsC1EOS_(&mut tmp, __param_0);

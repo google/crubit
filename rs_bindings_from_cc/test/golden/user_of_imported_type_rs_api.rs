@@ -43,9 +43,9 @@ impl Default for UserOfImportedType {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::UserOfImportedType>> for UserOfImportedType {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18UserOfImportedTypeC1EOS_(&mut tmp, __param_0);

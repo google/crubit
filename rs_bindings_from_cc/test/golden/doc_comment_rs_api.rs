@@ -32,9 +32,9 @@ forward_declare::unsafe_define!(
     crate::DocCommentSlashes
 );
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::DocCommentSlashes>> for DocCommentSlashes {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::DocCommentSlashes>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN17DocCommentSlashesC1EOS_(&mut tmp, __param_0);
@@ -125,9 +125,9 @@ impl Default for DocCommentBang {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::DocCommentBang>> for DocCommentBang {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::DocCommentBang>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DocCommentBangC1EOS_(&mut tmp, __param_0);
@@ -169,11 +169,9 @@ impl Default for MultilineCommentTwoStars {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>>
-    for MultilineCommentTwoStars
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsC1EOS_(&mut tmp, __param_0);
@@ -212,9 +210,9 @@ impl Default for LineComment {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::LineComment>> for LineComment {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::LineComment>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN11LineCommentC1EOS_(&mut tmp, __param_0);
@@ -256,9 +254,9 @@ impl Default for MultilineOneStar {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::MultilineOneStar>> for MultilineOneStar {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::MultilineOneStar>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN16MultilineOneStarC1EOS_(&mut tmp, __param_0);
@@ -333,13 +331,9 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>>
-    for __CcTemplateInst10MyTemplateIiE
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10MyTemplateIiEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp,__param_0);
@@ -391,13 +385,9 @@ impl Default for __CcTemplateInst10MyTemplateIfE {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>>
-    for __CcTemplateInst10MyTemplateIfE
-{
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN10MyTemplateIfEC1EOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(&mut tmp,__param_0);

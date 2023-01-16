@@ -42,10 +42,10 @@ impl ::ctor::CtorNew<()> for Base0 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::Base0> for Base0 {
+impl<'b> ::ctor::CtorNew<&'b Self> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::Base0) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -57,19 +57,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base0> for Base0 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::Base0,)> for Base0 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::Base0,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::Base0>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base0>> for Base0 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base0>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -81,12 +81,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base0>> for Base0 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base0>,)> for Base0 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Base0>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base0>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -99,11 +99,11 @@ impl<'b> ::ctor::Assign<&'b Self> for Base0 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::Base0>> for Base0 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base0 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::Base0>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base0aSEOS_(self, __param_0);
@@ -139,10 +139,10 @@ impl ::ctor::CtorNew<()> for Base1 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::Base1> for Base1 {
+impl<'b> ::ctor::CtorNew<&'b Self> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::Base1) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -154,19 +154,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base1> for Base1 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::Base1,)> for Base1 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::Base1,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::Base1>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base1>> for Base1 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base1>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -178,12 +178,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base1>> for Base1 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base1>,)> for Base1 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Base1>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base1>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -196,11 +196,11 @@ impl<'b> ::ctor::Assign<&'b Self> for Base1 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::Base1>> for Base1 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base1 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::Base1>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base1aSEOS_(self, __param_0);
@@ -233,10 +233,10 @@ impl ::ctor::CtorNew<()> for Base2 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::Base2> for Base2 {
+impl<'b> ::ctor::CtorNew<&'b Self> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::Base2) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -248,19 +248,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::Base2> for Base2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::Base2,)> for Base2 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::Base2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::Base2>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base2>> for Base2 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::Base2>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -272,12 +272,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base2>> for Base2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::Base2>,)> for Base2 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::Base2>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::Base2>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -290,11 +290,11 @@ impl<'b> ::ctor::Assign<&'b Self> for Base2 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::Base2>> for Base2 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base2 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::Base2>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN5Base2aSEOS_(self, __param_0);
@@ -321,9 +321,9 @@ impl Default for Derived {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::Derived>> for Derived {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::Derived>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN7DerivedC1EOS_(&mut tmp, __param_0);
@@ -378,10 +378,10 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase1> for VirtualBase1 {
+impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::VirtualBase1) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -393,19 +393,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase1> for VirtualBase1 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase1,)> for VirtualBase1 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::VirtualBase1,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::VirtualBase1>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase1>> for VirtualBase1 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualBase1>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -417,12 +417,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase1>> for V
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase1>,)> for VirtualBase1 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualBase1>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase1>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -435,11 +435,11 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualBase1 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualBase1>> for VirtualBase1 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase1>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN12VirtualBase1aSEOS_(self, __param_0);
@@ -475,10 +475,10 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase2> for VirtualBase2 {
+impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::VirtualBase2) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -490,19 +490,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualBase2> for VirtualBase2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::VirtualBase2,)> for VirtualBase2 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::VirtualBase2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::VirtualBase2>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase2>> for VirtualBase2 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualBase2>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -514,12 +514,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase2>> for V
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualBase2>,)> for VirtualBase2 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualBase2>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualBase2>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -532,11 +532,11 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualBase2 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualBase2>> for VirtualBase2 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::VirtualBase2>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN12VirtualBase2aSEOS_(self, __param_0);
@@ -572,10 +572,10 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived> for VirtualDerived {
+impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::VirtualDerived) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -587,19 +587,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::VirtualDerived> for VirtualDerived {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::VirtualDerived,)> for VirtualDerived {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::VirtualDerived,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::VirtualDerived>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived>> for VirtualDerived {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::VirtualDerived>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -611,12 +611,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived>> for
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::VirtualDerived>,)> for VirtualDerived {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::VirtualDerived>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::VirtualDerived>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -629,11 +629,11 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::VirtualDerived>> for VirtualDerived {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::VirtualDerived>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN14VirtualDerivedaSEOS_(self, __param_0);
@@ -707,10 +707,10 @@ impl ::ctor::CtorNew<()> for MethodBase1 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::MethodBase1> for MethodBase1 {
+impl<'b> ::ctor::CtorNew<&'b Self> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::MethodBase1) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -722,19 +722,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::MethodBase1> for MethodBase1 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::MethodBase1,)> for MethodBase1 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::MethodBase1,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::MethodBase1>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase1>> for MethodBase1 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::MethodBase1>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -746,12 +746,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase1>> for Me
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::MethodBase1>,)> for MethodBase1 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::MethodBase1>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase1>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -764,11 +764,11 @@ impl<'b> ::ctor::Assign<&'b Self> for MethodBase1 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::MethodBase1>> for MethodBase1 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::MethodBase1>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase1aSEOS_(self, __param_0);
@@ -819,10 +819,10 @@ impl ::ctor::CtorNew<()> for MethodBase2 {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::MethodBase2> for MethodBase2 {
+impl<'b> ::ctor::CtorNew<&'b Self> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::MethodBase2) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -834,19 +834,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::MethodBase2> for MethodBase2 {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::MethodBase2,)> for MethodBase2 {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::MethodBase2,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::MethodBase2>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase2>> for MethodBase2 {
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::MethodBase2>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -858,12 +858,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase2>> for Me
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::MethodBase2>,)> for MethodBase2 {
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::MethodBase2>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::MethodBase2>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -876,11 +876,11 @@ impl<'b> ::ctor::Assign<&'b Self> for MethodBase2 {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::MethodBase2>> for MethodBase2 {
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::MethodBase2>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN11MethodBase2aSEOS_(self, __param_0);
@@ -920,9 +920,9 @@ impl Default for MethodDerived {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::MethodDerived>> for MethodDerived {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodDerived {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN13MethodDerivedC1EOS_(&mut tmp, __param_0);

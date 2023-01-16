@@ -35,9 +35,9 @@ impl Default for DifferentScope {
     }
 }
 
-impl<'b> From<::ctor::RvalueReference<'b, crate::DifferentScope>> for DifferentScope {
+impl<'b> From<::ctor::RvalueReference<'b, Self>> for DifferentScope {
     #[inline(always)]
-    fn from(__param_0: ::ctor::RvalueReference<'b, crate::DifferentScope>) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN14DifferentScopeC1EOS_(&mut tmp, __param_0);
@@ -87,13 +87,9 @@ pub mod test_namespace_bindings {
         }
     }
 
-    impl<'b> From<::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>>
-        for TemplateParam
-    {
+    impl<'b> From<::ctor::RvalueReference<'b, Self>> for TemplateParam {
         #[inline(always)]
-        fn from(
-            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
-        ) -> Self {
+        fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
             let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
             unsafe {
                 crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamC1EOS0_(
@@ -206,10 +202,10 @@ pub mod private_classes {
         crate::private_classes::HasPrivateType
     );
 
-    impl<'b> ::ctor::CtorNew<&'b crate::private_classes::HasPrivateType> for HasPrivateType {
+    impl<'b> ::ctor::CtorNew<&'b Self> for HasPrivateType {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(args: &'b crate::private_classes::HasPrivateType) -> Self::CtorType {
+        fn ctor_new(args: &'b Self) -> Self::CtorType {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
@@ -223,23 +219,19 @@ pub mod private_classes {
             }
         }
     }
-    impl<'b> ::ctor::CtorNew<(&'b crate::private_classes::HasPrivateType,)> for HasPrivateType {
+    impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasPrivateType {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(args: (&'b crate::private_classes::HasPrivateType,)) -> Self::CtorType {
+        fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
             let (arg,) = args;
-            <Self as ::ctor::CtorNew<&'b crate::private_classes::HasPrivateType>>::ctor_new(arg)
+            <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
         }
     }
 
-    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>>
-        for HasPrivateType
-    {
+    impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(
-            args: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
-        ) -> Self::CtorType {
+        fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
             let __param_0 = args;
             unsafe {
                 ::ctor::FnCtor::new(
@@ -253,18 +245,12 @@ pub mod private_classes {
             }
         }
     }
-    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,)>
-        for HasPrivateType
-    {
+    impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasPrivateType {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
-        fn ctor_new(
-            args: (::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,),
-        ) -> Self::CtorType {
+        fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
             let (arg,) = args;
-            <Self as ::ctor::CtorNew<
-                ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
-            >>::ctor_new(arg)
+            <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
         }
     }
 
@@ -279,13 +265,11 @@ pub mod private_classes {
         }
     }
 
-    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>>
-        for HasPrivateType
-    {
+    impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasPrivateType {
         #[inline(always)]
         fn assign<'a>(
             self: ::std::pin::Pin<&'a mut Self>,
-            __param_0: ::ctor::RvalueReference<'b, crate::private_classes::HasPrivateType>,
+            __param_0: ::ctor::RvalueReference<'b, Self>,
         ) {
             unsafe {
                 crate::detail::__rust_thunk___ZN15private_classes14HasPrivateTypeaSEOS0_(
@@ -324,21 +308,11 @@ impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14Differ
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-        >,
-    > for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -401,21 +375,11 @@ impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13Tem
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-        >,
-    > for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -476,21 +440,11 @@ impl Default for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-        >,
-    > for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -549,21 +503,11 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-        >,
-    > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -602,21 +546,11 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        >,
-    > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -655,21 +589,11 @@ impl Default for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoPara
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        >,
-    > for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1EOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -711,14 +635,10 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN23test_namespace_bindings8MyStruct
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>
-    for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
-{
+impl<'b> ::ctor::CtorNew<&'b Self> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: &'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-    ) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -727,34 +647,21 @@ impl<'b> ::ctor::CtorNew<&'b crate::__CcTemplateInstN23test_namespace_bindings8M
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,)>
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE {
+    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
+    #[inline(always)]
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
+        let (arg,) = args;
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
+    }
+}
+
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (&'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,),
-    ) -> Self::CtorType {
-        let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            &'b crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-        >>::ctor_new(arg)
-    }
-}
-
-impl<'b>
-    ::ctor::CtorNew<
-        ::ctor::RvalueReference<'b, crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>,
-    > for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
-{
-    type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
-    #[inline(always)]
-    fn ctor_new(
-        args: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-        >,
-    ) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -763,28 +670,14 @@ impl<'b>
         }
     }
 }
-impl<'b>
-    ::ctor::CtorNew<(
-        ::ctor::RvalueReference<'b, crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>,
-    )> for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
+    for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (
-            ::ctor::RvalueReference<
-                'b,
-                crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-            >,
-        ),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            ::ctor::RvalueReference<
-                'b,
-                crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-            >,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -797,18 +690,13 @@ impl<'b> ::ctor::Assign<&'b Self> for __CcTemplateInstN23test_namespace_bindings
     }
 }
 
-impl<'b>
-    ::ctor::Assign<
-        ::ctor::RvalueReference<'b, crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE>,
-    > for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings8MyStructIcEE
 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN23test_namespace_bindings8MyStructIcEE,
-        >,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN23test_namespace_bindings8MyStructIcEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
@@ -837,21 +725,11 @@ impl Default for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings
     }
 }
 
-impl<'b>
-    From<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-        >,
-    > for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
+impl<'b> From<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
 {
     #[inline(always)]
-    fn from(
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,
-        >,
-    ) -> Self {
+    fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
         let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
         unsafe {
             crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEC1EOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(&mut tmp,__param_0);
@@ -895,16 +773,12 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN24template_template_params10MyTemp
     }
 }
 
-impl<'b>
-    ::ctor::CtorNew<
-        &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-    > for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+impl<'b> ::ctor::CtorNew<&'b Self>
+    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-    ) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -913,39 +787,23 @@ impl<'b>
         }
     }
 }
-impl<'b>
-    ::ctor::CtorNew<(
-        &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-    )> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+impl<'b> ::ctor::CtorNew<(&'b Self,)>
+    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (&'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            &'b crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b>
-    ::ctor::CtorNew<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >,
-    > for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >,
-    ) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -954,31 +812,14 @@ impl<'b>
         }
     }
 }
-impl<'b>
-    ::ctor::CtorNew<(
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >,
-    )> for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
+    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (
-            ::ctor::RvalueReference<
-                'b,
-                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-            >,
-        ),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            ::ctor::RvalueReference<
-                'b,
-                crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-            >,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -993,21 +834,13 @@ impl<'b> ::ctor::Assign<&'b Self>
     }
 }
 
-impl<'b>
-    ::ctor::Assign<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >,
-    > for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE
 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN24template_template_params10MyTemplateINS_6PolicyEEE,
-        >,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);

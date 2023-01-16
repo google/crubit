@@ -42,10 +42,10 @@ impl ::ctor::CtorNew<()> for HasCustomAlignment {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignment> for HasCustomAlignment {
+impl<'b> ::ctor::CtorNew<&'b Self> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::HasCustomAlignment) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -57,21 +57,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignment> for HasCustomAlignment {
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::HasCustomAlignment,)> for HasCustomAlignment {
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::HasCustomAlignment,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::HasCustomAlignment>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignment>>
-    for HasCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -83,16 +81,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignment>>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasCustomAlignment>,)>
-    for HasCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (::ctor::RvalueReference<'b, crate::HasCustomAlignment>,)) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignment>>>::ctor_new(
-            arg,
-        )
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -105,13 +99,11 @@ impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignment {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::HasCustomAlignment>>
-    for HasCustomAlignment
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignment>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN18HasCustomAlignmentaSEOS_(self, __param_0);
@@ -144,10 +136,10 @@ impl ::ctor::CtorNew<()> for HasFieldWithCustomAlignment {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment> for HasFieldWithCustomAlignment {
+impl<'b> ::ctor::CtorNew<&'b Self> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::HasFieldWithCustomAlignment) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -159,25 +151,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment> for HasFieldWit
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::HasFieldWithCustomAlignment,)>
-    for HasFieldWithCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::HasFieldWithCustomAlignment,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::HasFieldWithCustomAlignment>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>>
-    for HasFieldWithCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
-    ) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -189,16 +175,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasFieldWithCustomAl
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,)>
-    for HasFieldWithCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasFieldWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as::ctor::CtorNew<::ctor::RvalueReference<'b,crate::HasFieldWithCustomAlignment>>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -211,13 +193,11 @@ impl<'b> ::ctor::Assign<&'b Self> for HasFieldWithCustomAlignment {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>>
-    for HasFieldWithCustomAlignment
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasFieldWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::HasFieldWithCustomAlignment>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN27HasFieldWithCustomAlignmentaSEOS_(self, __param_0);
@@ -250,12 +230,10 @@ impl ::ctor::CtorNew<()> for InheritsFromBaseWithCustomAlignment {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>
-    for InheritsFromBaseWithCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<&'b Self> for InheritsFromBaseWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::InheritsFromBaseWithCustomAlignment) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -267,25 +245,21 @@ impl<'b> ::ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::InheritsFromBaseWithCustomAlignment,)>
-    for InheritsFromBaseWithCustomAlignment
-{
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for InheritsFromBaseWithCustomAlignment {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::InheritsFromBaseWithCustomAlignment,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::InheritsFromBaseWithCustomAlignment>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>>
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
     for InheritsFromBaseWithCustomAlignment
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
-    ) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -297,18 +271,14 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::InheritsFromBaseWith
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,)>
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
     for InheritsFromBaseWithCustomAlignment
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -323,13 +293,11 @@ impl<'b> ::ctor::Assign<&'b Self> for InheritsFromBaseWithCustomAlignment {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>>
-    for InheritsFromBaseWithCustomAlignment
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for InheritsFromBaseWithCustomAlignment {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::InheritsFromBaseWithCustomAlignment>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN35InheritsFromBaseWithCustomAlignmentaSEOS_(
@@ -372,12 +340,10 @@ impl ::ctor::CtorNew<()> for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr>
-    for HasCustomAlignmentWithGnuAttr
-{
+impl<'b> ::ctor::CtorNew<&'b Self> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: &'b crate::HasCustomAlignmentWithGnuAttr) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -389,25 +355,19 @@ impl<'b> ::ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr>
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(&'b crate::HasCustomAlignmentWithGnuAttr,)>
-    for HasCustomAlignmentWithGnuAttr
-{
+impl<'b> ::ctor::CtorNew<(&'b Self,)> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(args: (&'b crate::HasCustomAlignmentWithGnuAttr,)) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<&'b crate::HasCustomAlignmentWithGnuAttr>>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>>
-    for HasCustomAlignmentWithGnuAttr
-{
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
-    ) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -419,18 +379,12 @@ impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, crate::HasCustomAlignmentWi
         }
     }
 }
-impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,)>
-    for HasCustomAlignmentWithGnuAttr
-{
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for HasCustomAlignmentWithGnuAttr {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -443,13 +397,11 @@ impl<'b> ::ctor::Assign<&'b Self> for HasCustomAlignmentWithGnuAttr {
     }
 }
 
-impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>>
-    for HasCustomAlignmentWithGnuAttr
-{
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for HasCustomAlignmentWithGnuAttr {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<'b, crate::HasCustomAlignmentWithGnuAttr>,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN29HasCustomAlignmentWithGnuAttraSEOS_(self, __param_0);
@@ -501,15 +453,12 @@ impl ::ctor::CtorNew<()> for __CcTemplateInstN28template_with_preferred_name12So
     }
 }
 
-impl<'b>
-    ::ctor::CtorNew<&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE>
+impl<'b> ::ctor::CtorNew<&'b Self>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-    ) -> Self::CtorType {
+    fn ctor_new(args: &'b Self) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -518,38 +467,23 @@ impl<'b>
         }
     }
 }
-impl<'b>
-    ::ctor::CtorNew<(&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,)>
+impl<'b> ::ctor::CtorNew<(&'b Self,)>
     for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (&'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (&'b Self,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            &'b crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<&'b Self>>::ctor_new(arg)
     }
 }
 
-impl<'b>
-    ::ctor::CtorNew<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >,
-    > for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >,
-    ) -> Self::CtorType {
+    fn ctor_new(args: ::ctor::RvalueReference<'b, Self>) -> Self::CtorType {
         let __param_0 = args;
         unsafe {
             ::ctor::FnCtor::new(move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<Self>>| {
@@ -558,31 +492,14 @@ impl<'b>
         }
     }
 }
-impl<'b>
-    ::ctor::CtorNew<(
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >,
-    )> for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
-    fn ctor_new(
-        args: (
-            ::ctor::RvalueReference<
-                'b,
-                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-            >,
-        ),
-    ) -> Self::CtorType {
+    fn ctor_new(args: (::ctor::RvalueReference<'b, Self>,)) -> Self::CtorType {
         let (arg,) = args;
-        <Self as ::ctor::CtorNew<
-            ::ctor::RvalueReference<
-                'b,
-                crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-            >,
-        >>::ctor_new(arg)
+        <Self as ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>>>::ctor_new(arg)
     }
 }
 
@@ -597,21 +514,13 @@ impl<'b> ::ctor::Assign<&'b Self>
     }
 }
 
-impl<'b>
-    ::ctor::Assign<
-        ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >,
-    > for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
+impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE
 {
     #[inline(always)]
     fn assign<'a>(
         self: ::std::pin::Pin<&'a mut Self>,
-        __param_0: ::ctor::RvalueReference<
-            'b,
-            crate::__CcTemplateInstN28template_with_preferred_name12SomeTemplateIiEE,
-        >,
+        __param_0: ::ctor::RvalueReference<'b, Self>,
     ) {
         unsafe {
             crate::detail::__rust_thunk___ZN28template_with_preferred_name12SomeTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3aclang_5fattrs_5fcc(self,__param_0);
