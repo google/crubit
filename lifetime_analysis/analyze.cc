@@ -519,8 +519,8 @@ void ExtendPointsToMapAndConstraintsWithInitializers(
     if (!IsInitExprInitializingARecordObject(init_expr)) {
       TransferInitializer(
           object_repository.GetFieldObject(this_object.value(), field),
-          field->getType(), object_repository, init_expr, points_to_map,
-          constraints);
+          field->getType(), object_repository, init_expr,
+          TargetPointeeBehavior::kKeep, points_to_map, constraints);
     }
   }
 }
@@ -567,20 +567,19 @@ llvm::Error TransferDefaultConstructor(
   const FunctionLifetimes& ctor_lifetimes =
       std::get<FunctionLifetimes>(ctor_lifetimes_or_error);
 
-  std::vector<FunctionParameter> fn_params;
-  const Object* this_ptr = object_repository.CreateObject(
-      Lifetime::CreateLocal(), default_ctor->getThisType());
-  points_to_map.SetPointerPointsToSet(this_ptr, {this_object});
-  fn_params.push_back(FunctionParameter{
-      this_ptr->Type(), ctor_lifetimes.GetThisLifetimes(), this_ptr});
-  TransferLifetimesForCall(
-      // Passing `nullptr` for `call` is OK here because it's only required if
-      // the return value contains lifetimes.
-      /*call=*/nullptr, fn_params,
-      ValueLifetimes::ForLifetimeLessType(default_ctor->getReturnType()),
-      object_repository, points_to_map, constraints, single_valued_objects,
-      default_ctor->getASTContext());
-
+  // Similar to handling of constructor calls; however, this is simpler because
+  // there is only the "this" argument (as this is the default constructor).
+  // Moreover, since we don't run dataflow, we create the objects on the fly.
+  clang::QualType this_type = default_ctor->getThisType();
+  // "object" for the `this` pointer itself.
+  const Object* placeholder_this_ptr_object =
+      object_repository.CreateObjectsRecursively(
+          ObjectLifetimes(Lifetime::CreateVariable(),
+                          ctor_lifetimes.GetThisLifetimes()),
+          points_to_map);
+  HandlePointsToSetExtension({placeholder_this_ptr_object}, {this_object},
+                             this_type, object_repository, points_to_map,
+                             constraints);
   return llvm::Error::success();
 }
 

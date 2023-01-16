@@ -226,30 +226,59 @@ void GenerateConstraintsForAssignment(const ObjectSet& pointers,
       /*is_in_invariant_context=*/false, constraints, seen_pairs);
 }
 
+void GenerateConstraintsForObjectLifetimeEquality(
+    const ObjectSet& a, const ObjectSet& b, const clang::QualType& type,
+    const PointsToMap& points_to_map, const ObjectRepository& object_repository,
+    LifetimeConstraints& constraints) {
+  GenerateConstraintsForAssignmentNonRecursive(
+      a, b, /*is_in_invariant_context=*/true, constraints);
+  if (const auto* record_type = type->getAs<clang::RecordType>()) {
+    for (auto field : record_type->getDecl()->fields()) {
+      GenerateConstraintsForObjectLifetimeEquality(
+          object_repository.GetFieldObject(a, field),
+          object_repository.GetFieldObject(b, field), field->getType(),
+          points_to_map, object_repository, constraints);
+    }
+    if (auto* cxxrecord =
+            clang::dyn_cast<clang::CXXRecordDecl>(record_type->getDecl())) {
+      for (const clang::CXXBaseSpecifier& base : cxxrecord->bases()) {
+        GenerateConstraintsForObjectLifetimeEquality(
+            object_repository.GetBaseClassObject(a, base.getType()),
+            object_repository.GetBaseClassObject(b, base.getType()),
+            base.getType(), points_to_map, object_repository, constraints);
+      }
+    }
+  } else if (!PointeeType(type).isNull()) {
+    GenerateConstraintsForObjectLifetimeEquality(
+        points_to_map.GetPointerPointsToSet(a),
+        points_to_map.GetPointerPointsToSet(b), PointeeType(type),
+        points_to_map, object_repository, constraints);
+  }
+}
+
+}  // namespace
+
 void HandlePointsToSetExtension(const ObjectSet& pointers,
                                 const ObjectSet& new_pointees,
                                 clang::QualType pointer_type,
                                 const ObjectRepository& object_repository,
                                 PointsToMap& points_to_map,
                                 LifetimeConstraints& constraints) {
-  // TODO(veluca): record types should probably not get to this point at all, as
-  // their initialization is done by constructor calls. This currently happens
-  // because of the "synthetic" objects used to handle constructor calls.
-  if (!pointer_type->isRecordType()) {
-    GenerateConstraintsForAssignment(pointers, new_pointees, pointer_type,
-                                     object_repository, points_to_map,
-                                     constraints);
-  }
+  // Record types should not get to this point at all, as
+  // their initialization is done by constructor calls.
+  assert(!pointer_type->isRecordType());
+  GenerateConstraintsForAssignment(pointers, new_pointees, pointer_type,
+                                   object_repository, points_to_map,
+                                   constraints);
   for (const Object* pointer : pointers) {
     points_to_map.ExtendPointerPointsToSet(pointer, new_pointees);
   }
 }
 
-}  // namespace
-
 void TransferInitializer(const Object* dest, clang::QualType type,
                          const ObjectRepository& object_repository,
                          const clang::Expr* init_expr,
+                         TargetPointeeBehavior pointee_behavior,
                          PointsToMap& points_to_map,
                          LifetimeConstraints& constraints) {
   type = type.getCanonicalType();
@@ -270,7 +299,7 @@ void TransferInitializer(const Object* dest, clang::QualType type,
         ++init;
         TransferInitializer(object_repository.GetFieldObject(dest, f),
                             f->getType(), object_repository, field_init,
-                            points_to_map, constraints);
+                            pointee_behavior, points_to_map, constraints);
       }
       return;
     }
@@ -279,358 +308,16 @@ void TransferInitializer(const Object* dest, clang::QualType type,
   if (type->isPointerType() || type->isReferenceType() ||
       type->isStructureOrClassType()) {
     ObjectSet init_points_to = points_to_map.GetExprObjectSet(init_expr);
-    // It's important to use "Extend" (not "Set") here because we process
-    // initializers for member variables only _after_ the dataflow analysis has
-    // run.
-    HandlePointsToSetExtension({dest}, init_points_to, type, object_repository,
-                               points_to_map, constraints);
-  }
-}
-
-namespace {
-
-void SetPointerPointsToSetRespectingTypes(
-    const Object* pointer, const ObjectSet& points_to,
-    PointsToMap& points_to_map, clang::ASTContext& ast_context,
-    LifetimeConstraints& constraints, const ObjectSet& single_valued_objects,
-    const ObjectRepository& object_repository) {
-  assert(pointer->Type()->isPointerType() ||
-         pointer->Type()->isReferenceType());
-
-  ObjectSet original_points_to_set =
-      points_to_map.GetPointerPointsToSet(pointer);
-
-  ObjectSet points_to_filtered;
-
-  for (auto object : points_to) {
-    if (MayPointTo(pointer->Type(), object->Type(), ast_context)) {
-      points_to_filtered.Add(object);
-      // To handle flow-sensitiveness, we don't generate any constraints when
-      // replacing the points-to-set of a variable that is single-valued.
-      // TODO(veluca): explicitly splitting between "object values before an
-      // expression" and "object values after an expression" will likely make
-      // this whole kind of reasoning clearer and less error-prone.
-      if (!single_valued_objects.Contains(pointer)) {
-        // Descending in callees is handled at a higher level.
-        GenerateConstraintsForAssignmentNonRecursive(
-            original_points_to_set, {object},
-            /*is_in_invariant_context=*/
-            !PointeeType(pointer->Type()).isConstQualified(), constraints);
-      }
-    }
-  }
-
-  points_to_map.SetPointerPointsToSet(pointer, points_to_filtered);
-}
-
-void SetAllPointersPointsToSetRespectingTypes(
-    const ObjectSet& pointers, const ObjectSet& points_to,
-    PointsToMap& points_to_map, clang::ASTContext& ast_context,
-    LifetimeConstraints& constraints, const ObjectSet& single_valued_objects,
-    const ObjectRepository& object_repository) {
-  for (auto pointer : pointers) {
-    SetPointerPointsToSetRespectingTypes(
-        pointer, points_to, points_to_map, ast_context, constraints,
-        single_valued_objects, object_repository);
-  }
-}
-
-void CollectLifetimes(
-    const Object* arg_object, clang::QualType type,
-    const ValueLifetimes& value_lifetimes, const PointsToMap& points_to_map,
-    const ObjectRepository& object_repository,
-    llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set) {
-  class Visitor : public LifetimeVisitor {
-   public:
-    Visitor(const ObjectRepository& object_repository,
-            const PointsToMap& points_to_map,
-            llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set)
-        : object_repository_(object_repository),
-          points_to_map_(points_to_map),
-          lifetime_to_object_set_(lifetime_to_object_set) {}
-
-    const Object* GetFieldObject(const ObjectSet& objects,
-                                 const clang::FieldDecl* field) override {
-      // All the objects have the same field.
-      assert(!objects.empty());
-      return object_repository_.GetFieldObject(*objects.begin(), field);
-    }
-
-    const Object* GetBaseClassObject(const ObjectSet& objects,
-                                     clang::QualType base) override {
-      // All the objects have the same base.
-      assert(!objects.empty());
-      return object_repository_.GetBaseClassObject(*objects.begin(), base);
-    }
-
-    ObjectSet Traverse(const ObjectLifetimes& lifetimes,
-                       const ObjectSet& objects,
-                       int /*pointee_depth*/) override {
-      lifetime_to_object_set_[lifetimes.GetLifetime()].Add(objects);
-      return points_to_map_.GetPointerPointsToSet(objects);
-    }
-
-   private:
-    const ObjectRepository& object_repository_;
-    const PointsToMap& points_to_map_;
-    llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set_;
-  };
-  Visitor visitor(object_repository, points_to_map, lifetime_to_object_set);
-  VisitLifetimes({arg_object}, type,
-                 ObjectLifetimes(arg_object->GetLifetime(), value_lifetimes),
-                 visitor);
-}
-
-void PropagateLifetimesToPointees(
-    const Object* arg_object, clang::QualType type,
-    const ValueLifetimes& value_lifetimes, PointsToMap& points_to_map,
-    ObjectRepository& object_repository, LifetimeConstraints& constraints,
-    ObjectSet& single_valued_objects,
-    const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
-    clang::ASTContext& ast_context) {
-  class Visitor : public LifetimeVisitor {
-   public:
-    Visitor(ObjectRepository& object_repository, PointsToMap& points_to_map,
-            LifetimeConstraints& constraints,
-            const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
-            ObjectSet& single_valued_objects, clang::ASTContext& ast_context)
-        : object_repository_(object_repository),
-          points_to_map_(points_to_map),
-          constraints_(constraints),
-          single_valued_objects_(single_valued_objects),
-          lifetime_to_object_set_(lifetime_to_object_set),
-          ast_context_(ast_context) {}
-
-    const Object* GetFieldObject(const ObjectSet& objects,
-                                 const clang::FieldDecl* field) override {
-      // All the objects have the same field.
-      assert(!objects.empty());
-      return object_repository_.GetFieldObject(*objects.begin(), field);
-    }
-
-    const Object* GetBaseClassObject(const ObjectSet& objects,
-                                     clang::QualType base) override {
-      // All the objects have the same base.
-      assert(!objects.empty());
-      return object_repository_.GetBaseClassObject(*objects.begin(), base);
-    }
-
-    ObjectSet Traverse(const ObjectLifetimes& lifetimes,
-                       const ObjectSet& objects,
-                       int /*pointee_depth*/) override {
-      clang::QualType type = lifetimes.GetValueLifetimes().Type();
-      ObjectSet points_to_original =
-          points_to_map_.GetPointerPointsToSet(objects);
-      if (!type.isConstQualified() && !PointeeType(type).isNull()) {
-        Lifetime pointee_lifetime =
-            lifetimes.GetValueLifetimes().GetPointeeLifetimes().GetLifetime();
-        ObjectSet points_to = lifetime_to_object_set_.lookup(pointee_lifetime);
-        // If this is pointer-to-static, assume the callee can modify it to
-        // point to a static object that we don't know about.
-        if (pointee_lifetime == Lifetime::Static()) {
-          points_to.Add(
-              object_repository_.CreateStaticObject(PointeeType(type)));
-        }
-        SetAllPointersPointsToSetRespectingTypes(
-            objects, points_to, points_to_map_, ast_context_, constraints_,
-            single_valued_objects_, object_repository_);
-        if (!kUseConstraintBasedAnalysis) {
-          // This assertion may fail to be true when visiting the return value
-          // object, if its objects were created recursively.
-          // TODO(veluca): figure out a way to preserve this assertion in the
-          // presence of fictitious objects.
-          assert(points_to_map_.GetPointerPointsToSet(objects).Contains(
-              points_to_original));
-        }
-        // We can't simply call GenerateConstraintsForAssignment here, as the
-        // points_to_map_ has been modified already.
-      }
-      // Return the original points-to set, not the modified one. The original
-      // points-to set is sufficient because it captures the arguments that
-      // were passed to the function, but it doesn't contain any possibly
-      // spurious edges that may have been inserted by the logic above, which
-      // can reduce the precision of the analysis.
-      return points_to_original;
-    }
-
-   private:
-    ObjectRepository& object_repository_;
-    PointsToMap& points_to_map_;
-    LifetimeConstraints& constraints_;
-    ObjectSet& single_valued_objects_;
-    const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set_;
-    clang::ASTContext& ast_context_;
-  };
-  Visitor visitor(object_repository, points_to_map, constraints,
-                  lifetime_to_object_set, single_valued_objects, ast_context);
-  VisitLifetimes({arg_object}, type,
-                 ObjectLifetimes(arg_object->GetLifetime(), value_lifetimes),
-                 visitor);
-}
-
-bool AllStatic(const ValueLifetimes& lifetimes) {
-  return !lifetimes.HasAny([](Lifetime l) { return l != Lifetime::Static(); });
-}
-
-}  // namespace
-
-std::optional<ObjectSet> TransferLifetimesForCall(
-    const clang::Expr* call, const std::vector<FunctionParameter>& fn_params,
-    const ValueLifetimes& return_lifetimes, ObjectRepository& object_repository,
-    PointsToMap& points_to_map, LifetimeConstraints& constraints,
-    ObjectSet& single_valued_objects, clang::ASTContext& ast_context) {
-  // TODO(mboehme): The following description says what we _want_ to do, but
-  // this isn't what we actually do right now. Modify the code so that it
-  // corresponds to the description, then remove this TODO.
-  //
-  // Overall approach:
-  // - Step 1: Find all objects accessible by the callee.
-  //   This means finding all objects transitively accessible from the argument
-  //   pointees passed to the callee. As part of this step, we establish a
-  //   mapping from callee lifetimes to caller lifetimes, which will be used in
-  //   subsequent steps to determine whether a given object (whose lifetime is
-  //   a caller lifetime) has a given callee lifetime. Note that, in general, a
-  //   single callee lifetime may correspond to multiple caller lifetimes.
-  //
-  // - Step 2: Perform all modifications the callee could make to the points-to
-  //   map that are permissible from a lifetime and type system point of view.
-  //   Specifically, for every non-const pointer accessible by the callee:
-  //   - Determine the callee lifetime 'l associated with that pointer.
-  //   - For each object accessible by the callee, determine whether it has
-  //     callee lifetime 'l (using the mapping established in step 1) and
-  //     and whether the type of the pointer is compatible with the type of the
-  //     object. If both of these conditions are met, add an edge from the
-  //     pointer to the object into the points-to map.
-  //   It remains to be explained what "compatible" means above. The most
-  //   principled approach would be to use C++'s strict aliasing rules, but some
-  //   real-world code unfortunately violates the strict aliasing rules.
-  //   Instead, we make the compatibility rule more permissive than strict
-  //   aliasing; we expect we will need some experimentation to achieve a
-  //   good tradeoff between the following considerations:
-  //   - If we make the compatibility rule too strict, we miss some points-to
-  //     edges that may be introduced by real-world code (even though that code
-  //     is in violation of the strict aliasing rule), and the analysis result
-  //     becomes wrong.
-  //   - If we make the compatibility rule too permissive, we allow spurious
-  //     edges in the points-to map, and the analysis result becomes overly
-  //     restrictive.
-  //   We also need to consider that the type returned by Object::Type() might
-  //   not be identical to the actual dynamic type of the object. If the object
-  //   was passed in to the function through a pointer or reference to class
-  //   type, the dynamic type of the object might be a derived class of the
-  //   type we assumed for the object.
-  //
-  // - Step 3: Determine points-to set for the return value.
-  //   This is the set of all objects accessible by the callee that
-  //   - are compatible with the callee's return type, and
-  //   - conform to the lifetime annotations on the return type.
-  //   The latter point means that every object that is transitively reachable
-  //   from the original object has a lifetime that corresponds to the callee
-  //   lifetime implied by the annotation.
-  //
-  // Some additional considerations apply if the callee signature contains the
-  // 'static lifetime, either in the parameters or the return value:
-  // - Any objects that are associated with the static lifetime in the callee
-  //   must be forced to have static lifetime.
-  //   We have no way of doing this directly, as we cannot mutate the lifetime
-  //   of the object (and, in any case, such a mutation would be global and not
-  //   limited to the current point in the program flow).
-  //   Instead, for each such object, we synthesize a pointer with static
-  //   lifetime and make it point at the object. Later, in
-  //   PropagateStaticToPointees(), this will cause us to assign static lifetime
-  //   to the object.
-  //   A cleaner solution to this would be to explicitly express "outlives"
-  //   constraints in the lattice. This might also help more generally to
-  //   simplify the logic associated with static lifetimes, but it would also be
-  //   a more invasive change.
-  //
-  // - Any pointer or reference may point to an object of static lifetime. This
-  //   has the following implications:
-  //   - In step 2, when adding edges to the points-to map, we always add edges
-  //     to objects of static lifetime if their type is compatible with the
-  //     type of the pointer.
-  //   - In step 3, an object of static lifetime conforms to any callee lifetime
-  //     if that lifetime occurs in covariant position.
-  //
-  // - The callee may have access to objects of static lifetime that are not
-  //   passed as arguments, in addition to the ones that are accessible from the
-  //   arguments.
-  //   Because of this, for any non-const pointer accessible by the callee, we
-  //   add a points-to edge to a newly created static object of the appropriate
-  //   type.
-  //   This does cause us to add a lot of static objects to the graph that we
-  //   do not expect to occur in reality. If this turns out to have undesired
-  //   effects, we could use the following alternative approach as a compromise:
-  //   - In step 2, if the non-const pointer is associated with static lifetime,
-  //     does not already point to an object of static lifetime and would not
-  //     gain an edge to an existing object of static lifetime, create a new
-  //     object of static lifetime and the appropriate type and add an edge
-  //     from the pointer to the newly created object.
-  //   - In step 3, if we obtain an empty points-to set for the return value
-  //     because the return type contains 'static lifetime annotations and the
-  //     existing objects do not conform to these annotations, add newly
-  //     created static objects to the points-to map in suitable places so that
-  //     we can return a non-empty points-to set.
-  //   TODO(mboehme): Investigate whether it's really so bad to add newly
-  //   created static objects in all the places they could theoretically occur.
-  //   If this turns out not to have any adverse effect on the analysis, it
-  //   would be the more principled and simpler thing to do.
-
-  assert(call || !return_lifetimes.HasLifetimes());
-
-  // Step 1: Create mapping from callee lifetimes to points-to sets.
-  llvm::DenseMap<Lifetime, ObjectSet> lifetime_to_object_set;
-  for (auto [type, param_lifetimes, arg_object] : fn_params) {
-    CollectLifetimes(arg_object, type, param_lifetimes, points_to_map,
-                     object_repository, lifetime_to_object_set);
-  }
-
-  // Force any objects associated with the static lifetime in the callee to have
-  // static lifetime (see more detailed explanation above).
-  if (auto iter = lifetime_to_object_set.find(Lifetime::Static());
-      iter != lifetime_to_object_set.end()) {
-    for (const Object* object : iter->second) {
-      const Object* pointer = object_repository.CreateStaticObject(
-          ast_context.getPointerType(object->Type()));
-      points_to_map.ExtendPointerPointsToSet(pointer, {object});
-    }
-  }
-
-  // Step 2: Propagate points-to sets to output parameters.
-  for (auto [type, param_lifetimes, arg_object] : fn_params) {
-    PropagateLifetimesToPointees(arg_object, type, param_lifetimes,
-                                 points_to_map, object_repository, constraints,
-                                 single_valued_objects, lifetime_to_object_set,
-                                 ast_context);
-  }
-
-  // Step 3: Determine points-to set for the return value.
-  if (return_lifetimes.HasLifetimes()) {
-    if (IsInitExprInitializingARecordObject(call)) {
-      const Object* init_object = object_repository.GetInitializedObject(call);
-      PropagateLifetimesToPointees(
-          init_object, call->getType(), return_lifetimes, points_to_map,
-          object_repository, constraints, single_valued_objects,
-          lifetime_to_object_set, ast_context);
+    if (pointee_behavior == TargetPointeeBehavior::kKeep) {
+      // It's important to use "Extend" (not "Set") here because we process
+      // initializers for member variables only _after_ the dataflow analysis
+      // has run.
+      HandlePointsToSetExtension({dest}, init_points_to, type,
+                                 object_repository, points_to_map, constraints);
     } else {
-      ObjectSet rval_points_to;
-
-      rval_points_to = lifetime_to_object_set.lookup(
-          return_lifetimes.GetPointeeLifetimes().GetLifetime());
-      // If this return value is a pointer-to-static, assume the callee can
-      // return a static object that we don't know about.
-      if (return_lifetimes.GetPointeeLifetimes().GetLifetime() ==
-          Lifetime::Static()) {
-        bool all_static = AllStatic(return_lifetimes);
-        (void)all_static;
-        assert(all_static);
-        rval_points_to.Add(
-            object_repository.CreateStaticObject(PointeeType(call->getType())));
-      }
-      return rval_points_to;
+      points_to_map.SetPointerPointsToSet(dest, init_points_to);
     }
   }
-  return std::nullopt;
 }
 
 LifetimeLattice LifetimeAnalysis::initialElement() {
@@ -838,7 +525,8 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclStmt(
       // VisitCallExpr().
       if (var_decl->hasInit() && !var_decl->getType()->isRecordType()) {
         TransferInitializer(var_object, var_decl->getType(), object_repository_,
-                            var_decl->getInit(), points_to_map_, constraints_);
+                            var_decl->getInit(), TargetPointeeBehavior::kIgnore,
+                            points_to_map_, constraints_);
       }
     }
   }
@@ -1002,7 +690,8 @@ std::optional<std::string> TransferStmtVisitor::VisitInitListExpr(
     const Object* init_object =
         object_repository_.GetInitializedObject(init_list);
     TransferInitializer(init_object, init_list->getType(), object_repository_,
-                        init_list, points_to_map_, constraints_);
+                        init_list, TargetPointeeBehavior::kKeep, points_to_map_,
+                        constraints_);
   } else {
     // If the InitListExpr is not initializing a record object, we assume it's
     // initializing an array or a reference and hence associate the InitListExpr
@@ -1072,69 +761,6 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXThisExpr(
   return std::nullopt;
 }
 
-// Collects all function parameters, including (if this is a member call) the
-// implicit this argument.
-std::vector<FunctionParameter> CollectFunctionParameters(
-    const clang::CallExpr* call, const clang::FunctionDecl* callee,
-    const FunctionLifetimes& callee_lifetimes,
-    const ObjectRepository& object_repository) {
-  std::vector<FunctionParameter> fn_params;
-
-  if (clang::isa<clang::CXXOperatorCallExpr>(call) &&
-      clang::isa<clang::CXXMethodDecl>(callee)) {
-    // `this` is considered an argument in this case (but not a parameter on its
-    // definition).
-    assert(call->getNumArgs() == callee->getNumParams() + 1);
-
-    // Handle the `this` argument.
-    {
-      fn_params.push_back(FunctionParameter{
-          clang::dyn_cast<clang::CXXMethodDecl>(callee)->getThisType(),
-          callee_lifetimes.GetThisLifetimes(),
-          object_repository.GetCallExprThisPointer(call)});
-    }
-
-    // Handle all other arguments.
-    for (size_t i = 1; i < call->getNumArgs(); i++) {
-      fn_params.push_back(FunctionParameter{
-          callee->getParamDecl(i - 1)->getType().getCanonicalType(),
-          callee_lifetimes.GetParamLifetimes(i - 1),
-          object_repository.GetCallExprArgumentObject(call, i)});
-    }
-  } else {
-    // We check <= instead of == because of default arguments.
-    assert(call->getNumArgs() <= callee->getNumParams());
-
-    for (size_t i = 0; i < call->getNumArgs(); i++) {
-      fn_params.push_back(FunctionParameter{
-          callee->getParamDecl(i)->getType().getCanonicalType(),
-          callee_lifetimes.GetParamLifetimes(i),
-          object_repository.GetCallExprArgumentObject(call, i)});
-    }
-    if (const auto* member_call =
-            clang::dyn_cast<clang::CXXMemberCallExpr>(call)) {
-      // The callee is always a MemberExpr.
-      // - If the call uses `->`, the object argument should be a prvalue that
-      //   is a pointer to the struct.
-      // - If the call uses `.`, the object argument should be a glvalue of
-      //   struct type.
-      assert(clang::isa<clang::MemberExpr>(member_call->getCallee()));
-      assert(clang::dyn_cast<clang::MemberExpr>(member_call->getCallee())
-                 ->isArrow() ^
-             member_call->getImplicitObjectArgument()->isGLValue());
-      // This is the type of the function *parameter*, not of the argument.
-      // This is always a pointer, even if the argument is a reference, but as
-      // we don't treat pointers or references differently, this is not an
-      // issue.
-      fn_params.push_back(
-          FunctionParameter{member_call->getMethodDecl()->getThisType(),
-                            callee_lifetimes.GetThisLifetimes(),
-                            object_repository.GetCallExprThisPointer(call)});
-    }
-  }
-  return fn_params;
-}
-
 void SetExprObjectSetRespectingType(const clang::Expr* expr,
                                     const ObjectSet& points_to,
                                     PointsToMap& points_to_map,
@@ -1171,9 +797,34 @@ void SetExprObjectSetRespectingType(const clang::Expr* expr,
       }
     }
   }
-
-  points_to_map.SetExprObjectSet(expr, points_to_filtered);
 }
+
+namespace {
+void ConstrainFunctionLifetimesForCall(
+    const FunctionLifetimes& callee_lifetimes,
+    const FunctionLifetimes& placeholder_lifetimes,
+    LifetimeConstraints& constraints) {
+  // We handle function calls as follows:
+  // - We create a placeholder FunctionLifetimes for each call location, meant
+  // to indicate the concrete lifetimes that the callee is instantiated with for
+  // that specific call.
+  // - When we analyze the call, we constrain the concrete lifetimes so that
+  // they are compatible with the lifetimes of the arguments.
+  // - We then constrain the placeholder lifetimes so that the actual callee
+  // could be used in place of the placeholder callee.
+  // - As a consequence, the lifetimes of the return object are also constrained
+  // correctly (ie. in such a way that they are compatible with the callee and
+  // the call arguments).
+  // TODO(veluca): this code assumes that the lifetime of variables cannot
+  // change across function call boundaries. It is not an intrinsic limitation
+  // (could potentially be resolved by updating the PointsToMap after the fact,
+  // or - even better - by converting the entire CFG into SSA form), but for
+  // simplicity we are leaving things as they are for now; if real-world usage
+  // shows this to be an important limitation, we should revisit this decision.
+  constraints.join(LifetimeConstraints::ForCallableSubstitutionFull(
+      callee_lifetimes, placeholder_lifetimes));
+}
+}  // namespace
 
 std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
     const clang::CallExpr* call) {
@@ -1187,13 +838,12 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
   } else {
     const clang::Expr* callee = call->getCallee();
     for (const auto& object : points_to_map_.GetExprObjectSet(callee)) {
-      const clang::FunctionDecl* func = object->GetFunc();
-      assert(func);
-      callees.push_back(func);
+      // We might have created placeholder function objects here.
+      if (const clang::FunctionDecl* func = object->GetFunc()) {
+        callees.push_back(func);
+      }
     }
   }
-
-  std::optional<ObjectSet> call_points_to;
 
   for (const auto* callee : callees) {
     bool is_builtin = callee->getBuiltinID() != 0;
@@ -1214,6 +864,9 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
     }
     FunctionLifetimes callee_lifetimes =
         std::get<FunctionLifetimes>(callee_lifetimes_or_error);
+    ConstrainFunctionLifetimesForCall(
+        callee_lifetimes, object_repository_.GetCallExprVirtualLifetimes(call),
+        constraints_);
 
     bool is_member_operator = clang::isa<clang::CXXOperatorCallExpr>(call) &&
                               clang::isa<clang::CXXMethodDecl>(callee);
@@ -1227,40 +880,39 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
       TransferInitializer(
           object_repository_.GetCallExprArgumentObject(call, i),
           callee->getParamDecl(is_member_operator ? i - 1 : i)->getType(),
-          object_repository_, call->getArg(i), points_to_map_, constraints_);
+          object_repository_, call->getArg(i), TargetPointeeBehavior::kKeep,
+          points_to_map_, constraints_);
     }
+
+    std::optional<ObjectSet> this_object_set;
     if (is_member_operator) {
-      points_to_map_.SetPointerPointsToSet(
-          object_repository_.GetCallExprThisPointer(call),
-          points_to_map_.GetExprObjectSet(call->getArg(0)));
+      this_object_set = points_to_map_.GetExprObjectSet(call->getArg(0));
+    } else if (const auto* member_call =
+                   clang::dyn_cast<clang::CXXMemberCallExpr>(call)) {
+      this_object_set = points_to_map_.GetExprObjectSet(
+          member_call->getImplicitObjectArgument());
     }
-    if (const auto* member_call =
-            clang::dyn_cast<clang::CXXMemberCallExpr>(call)) {
-      points_to_map_.SetPointerPointsToSet(
-          object_repository_.GetCallExprThisPointer(call),
-          points_to_map_.GetExprObjectSet(
-              member_call->getImplicitObjectArgument()));
-    }
-
-    std::vector<FunctionParameter> fn_params = CollectFunctionParameters(
-        call, callee, callee_lifetimes, object_repository_);
-
-    std::optional<ObjectSet> single_call_points_to = TransferLifetimesForCall(
-        call, fn_params, callee_lifetimes.GetReturnLifetimes(),
-        object_repository_, points_to_map_, constraints_,
-        single_valued_objects_, callee->getASTContext());
-    if (single_call_points_to) {
-      if (call_points_to) {
-        call_points_to.value().Add(std::move(single_call_points_to).value());
-      } else {
-        call_points_to = std::move(single_call_points_to);
-      }
+    if (this_object_set.has_value()) {
+      const Object* this_ptr = object_repository_.GetCallExprThisPointer(call);
+      HandlePointsToSetExtension({this_ptr}, *this_object_set, this_ptr->Type(),
+                                 object_repository_, points_to_map_,
+                                 constraints_);
     }
   }
 
-  if (call_points_to) {
-    SetExprObjectSetRespectingType(call, call_points_to.value(), points_to_map_,
-                                   callees[0]->getASTContext());
+  if (IsInitExprInitializingARecordObject(call)) {
+    const Object* init_object = object_repository_.GetInitializedObject(call);
+    GenerateConstraintsForObjectLifetimeEquality(
+        {init_object}, {object_repository_.GetCallExprRetObject(call)},
+        init_object->Type(), points_to_map_, object_repository_, constraints_);
+  } else {
+    ObjectSet ret_pts = points_to_map_.GetPointerPointsToSet(
+        object_repository_.GetCallExprRetObject(call));
+    // SetExprObjectSet will assert-fail if `call` does not have a type that can
+    // have an object set; this `if` guards against that.
+    if (!ret_pts.empty()) {
+      points_to_map_.SetExprObjectSet(call, ret_pts);
+    }
   }
   return std::nullopt;
 }
@@ -1279,44 +931,30 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
   const FunctionLifetimes& callee_lifetimes =
       std::get<FunctionLifetimes>(callee_lifetimes_or_error);
 
+  ConstrainFunctionLifetimesForCall(
+      callee_lifetimes,
+      object_repository_.GetCallExprVirtualLifetimes(construct_expr),
+      constraints_);
+
   // We check <= instead of == because of default arguments.
   assert(construct_expr->getNumArgs() <= constructor->getNumParams());
 
   for (size_t i = 0; i < construct_expr->getNumArgs(); i++) {
     TransferInitializer(
         object_repository_.GetCXXConstructExprArgumentObject(construct_expr, i),
-        construct_expr->getArg(i)->getType(), object_repository_,
-        construct_expr->getArg(i), points_to_map_, constraints_);
+        constructor->getParamDecl(i)->getType(), object_repository_,
+        construct_expr->getArg(i), TargetPointeeBehavior::kKeep, points_to_map_,
+        constraints_);
   }
 
   // Handle the `this` parameter, which should point to the object getting
   // initialized.
-  points_to_map_.SetPointerPointsToSet(
-      object_repository_.GetCXXConstructExprThisPointer(construct_expr),
-      {object_repository_.GetInitializedObject(construct_expr)});
+  HandlePointsToSetExtension(
+      {object_repository_.GetCXXConstructExprThisPointer(construct_expr)},
+      {object_repository_.GetInitializedObject(construct_expr)},
+      constructor->getThisType(), object_repository_, points_to_map_,
+      constraints_);
 
-  // Populate fn_params for the constructor call.
-  std::vector<FunctionParameter> fn_params;
-
-  for (size_t i = 0; i < construct_expr->getNumArgs(); i++) {
-    clang::QualType arg_type =
-        constructor->getParamDecl(i)->getType().getCanonicalType();
-    fn_params.push_back(
-        FunctionParameter{arg_type, callee_lifetimes.GetParamLifetimes(i),
-                          object_repository_.GetCXXConstructExprArgumentObject(
-                              construct_expr, i)});
-  }
-
-  clang::QualType type = constructor->getThisType();
-  fn_params.push_back(FunctionParameter{
-      type, callee_lifetimes.GetThisLifetimes(),
-      object_repository_.GetCXXConstructExprThisPointer(construct_expr)});
-
-  TransferLifetimesForCall(
-      construct_expr, fn_params,
-      ValueLifetimes::ForLifetimeLessType(constructor->getReturnType()),
-      object_repository_, points_to_map_, constraints_, single_valued_objects_,
-      constructor->getASTContext());
   return std::nullopt;
 }
 

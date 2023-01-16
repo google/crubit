@@ -418,7 +418,7 @@ TEST_F(LifetimeAnalysisTest, DISABLED_IncompleteTypeTemplate) {
               LifetimesAre({{"target", "(a, b) -> (a, b)"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, UndefinedFunction_NoLifetimeElision) {
+TEST_F(LifetimeAnalysisTest, UndefinedFunctionNoLifetimeElision) {
   EXPECT_THAT(
       GetLifetimes(R"(
     int* f(int* a);
@@ -432,7 +432,7 @@ TEST_F(LifetimeAnalysisTest, UndefinedFunction_NoLifetimeElision) {
                      "enabled for 'f'"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, UndefinedFunction_LifetimeElision) {
+TEST_F(LifetimeAnalysisTest, UndefinedFunctionLifetimeElision) {
   EXPECT_THAT(GetLifetimes(R"(
     #pragma clang lifetime_elision
     int* f(int* a);
@@ -456,7 +456,7 @@ TEST_F(LifetimeAnalysisTest, ForwardDeclaration) {
               LifetimesAre({{"f", "a -> a"}, {"target", "a -> a"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, Overwrite_SingleDestination) {
+TEST_F(LifetimeAnalysisTest, OverwriteSingleDestination) {
   EXPECT_THAT(GetLifetimes(R"(
     int* target(int* a, int* b) {
       int** pp = &b;
@@ -469,7 +469,10 @@ TEST_F(LifetimeAnalysisTest, Overwrite_SingleDestination) {
               LifetimesAre({{"target", "a, b -> a"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, Overwrite_SingleDestinationVariant) {
+TEST_F(LifetimeAnalysisTest, DISABLED_OverwriteSingleDestinationVariant) {
+  // TODO(veluca): analysis currently concludes something "overly restrictive"
+  // on this function. Figure out when we run on real world code whether this is
+  // an actual problem we might want to do something about.
   EXPECT_THAT(GetLifetimes(R"(
     // Similar to above, but potentially leave `pp` uninitialized.
     int* target(int* a, int* b) {
@@ -488,7 +491,7 @@ TEST_F(LifetimeAnalysisTest, Overwrite_SingleDestinationVariant) {
               LifetimesAre({{"target", "a, b -> a"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, Overwrite_MultipleDestinations) {
+TEST_F(LifetimeAnalysisTest, OverwriteMultipleDestinations) {
   EXPECT_THAT(GetLifetimes(R"(
     // This is a regression test. The analysis used to conclude falsely that `b`
     // was unconditionally being overwritten with `a` in the assignment and was

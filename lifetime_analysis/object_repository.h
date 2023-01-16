@@ -116,6 +116,13 @@ class ObjectRepository {
   const Object* GetCallExprArgumentObject(const clang::CallExpr* expr,
                                           size_t arg_index) const;
 
+  // Returns the object associated with the return value of a CallExpr.
+  const Object* GetCallExprRetObject(const clang::Expr* expr) const;
+
+  // Returns the "virtual" lifetimes for a given function call.
+  const FunctionLifetimes& GetCallExprVirtualLifetimes(
+      const clang::Expr* expr) const;
+
   // Returns the object associated with the `this` argument to a CallExpr that
   // represents a method call. Note that this object represents the `this`
   // pointer, not the object that the method is being called on.
@@ -204,9 +211,23 @@ class ObjectRepository {
   // and the analysis terminates.
   const Object* CreateStaticObject(clang::QualType type);
 
+  // Creates an object and its pointees with the given lifetimes.
+  // The returned Object will live as long as this ObjectRepository.
+  const Object* CreateObjectsRecursively(
+      const ObjectLifetimes& object_lifetimes, PointsToMap& points_to_map);
+
  private:
+  // Creates objects for a given `type`, marking the given `root_object` as
+  // pointing to them; lifetimes of created objects are defined by the given
+  // `lifetime_factory`.
   void CreateObjects(const Object* root_object, clang::QualType type,
                      LifetimeFactory lifetime_factory, bool transitive);
+  // Same as `CreateObjects`, except the lifetimes are not created but taken
+  // from `value_lifetimes`. Points-to information is saved in the given
+  // `points_to_map`.
+  void CreateObjectsWithLifetimes(const Object* root_object,
+                                  const ValueLifetimes& value_lifetimes,
+                                  bool transitive, PointsToMap& points_to_map);
 
   const Object* CloneObject(const Object* object);
 
@@ -250,6 +271,11 @@ class ObjectRepository {
       call_expr_args_objects_;
 
   llvm::DenseMap<const clang::Expr*, const Object*> call_expr_this_pointers_;
+
+  llvm::DenseMap<const clang::Expr*, const Object*> call_expr_ret_objects_;
+
+  llvm::DenseMap<const clang::Expr*, FunctionLifetimes>
+      call_expr_virtual_lifetimes_;
 
   llvm::DenseMap<clang::QualType, const Object*> static_objects_;
 

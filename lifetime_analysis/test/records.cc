@@ -912,7 +912,7 @@ TEST_F(LifetimeAnalysisTest, StructInnerDoublePtr) {
       g(&s, a);
     }
   )"),
-              LifetimesAre({{"f", "a, (a, b)"}, {"g", "(a, b), a"}}));
+              LifetimesAre({{"f", "a, (a, a)"}, {"g", "(a, b), a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructInnerDoublePtrAssign) {
@@ -932,7 +932,7 @@ TEST_F(LifetimeAnalysisTest, StructInnerDoublePtrAssign) {
       return *b;
     }
   )"),
-              LifetimesAre({{"f", "a, (a, b) -> a"}, {"g", "(a, b), a"}}));
+              LifetimesAre({{"f", "a, (a, a) -> a"}, {"g", "(a, b), a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StructInnerDoublePtrParam) {

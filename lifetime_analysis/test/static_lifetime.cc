@@ -179,8 +179,7 @@ TEST_F(LifetimeAnalysisTest, StaticParameterChainedCall) {
 }
 
 TEST_F(LifetimeAnalysisTest, ConstructorStoresThisPointerInStatic) {
-  EXPECT_THAT(
-      GetLifetimes(R"(
+  EXPECT_THAT(GetLifetimes(R"(
     struct S {
       S() {
         static S* last_constructed = this;
@@ -193,15 +192,14 @@ TEST_F(LifetimeAnalysisTest, ConstructorStoresThisPointerInStatic) {
       S s;
     }
   )"),
-      // Because S() stores the `this` pointer in a static variable, the
-      // lifetime of the `this` pointer needs to be static. This means
-      // that any instances of `S` that are constructed need to have
-      // static lifetime.
-      LifetimesAre({{"S::S", "static:"},
-                    {"construct_static_variable", ""},
-                    {"construct_local_variable",
-                     "ERROR: attempted to make a pointer of static lifetime "
-                     "point at an object of local lifetime"}}));
+              // Because S() stores the `this` pointer in a static variable, the
+              // lifetime of the `this` pointer needs to be static. This means
+              // that any instances of `S` that are constructed need to have
+              // static lifetime.
+              LifetimesAre({{"S::S", "static:"},
+                            {"construct_static_variable", ""},
+                            {"construct_local_variable",
+                             "ERROR: Function assigns local to static"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, ConstructorStoresThisPointerInStatic_WithField) {

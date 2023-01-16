@@ -99,34 +99,30 @@ class ObjectRepository::VarDeclVisitor
       assert(InitializedObjectWasPropagatedTo(call_expr));
     }
 
-    // For calls to members, the type of the callee is a "bound member function
-    // type", so we look at the declaration instead.
-    if (auto member_call =
-            clang::dyn_cast<clang::CXXMemberCallExpr>(call_expr)) {
-      const clang::FunctionDecl* callee = call_expr->getDirectCallee();
-      // TODO(veluca): pointers-to-members are not supported (yet?)
-      assert(callee);
-      AddObjectsForArguments(call_expr, callee->getType(),
-                             /*index_shift=*/0);
-      auto method = clang::cast<clang::CXXMethodDecl>(callee);
-      clang::QualType type = method->getThisType();
-      object_repository_.call_expr_this_pointers_[call_expr] =
-          CreateLocalObject(type);
-    } else if (auto op_call =
-                   clang::dyn_cast<clang::CXXOperatorCallExpr>(call_expr)) {
-      const clang::FunctionDecl* callee = call_expr->getDirectCallee();
-      auto method = clang::dyn_cast<clang::CXXMethodDecl>(callee);
-      AddObjectsForArguments(call_expr, callee->getType(),
-                             /*index_shift=*/method ? 1 : 0);
-      if (method) {
-        clang::QualType type = method->getThisType();
-        object_repository_.call_expr_this_pointers_[call_expr] =
-            CreateLocalObject(type);
-      }
+    FunctionLifetimeFactorySingleCallback lifetime_factory(
+        [](auto) { return Lifetime::CreateVariable(); });
+
+    // If we have a direct callee, construct a FunctionLifetimes out of the
+    // function/method definition.
+    if (auto callee = call_expr->getDirectCallee()) {
+      bool is_operator_call = clang::isa<clang::CXXOperatorCallExpr>(call_expr);
+      bool is_method = clang::isa<clang::CXXMethodDecl>(callee);
+      object_repository_.call_expr_virtual_lifetimes_[call_expr] =
+          FunctionLifetimes::CreateForDecl(callee, lifetime_factory).get();
+      PrepareFunctionCall(
+          call_expr, /*index_shift=*/is_operator_call && is_method ? 1 : 0);
     } else {
       // Always a function pointer.
-      clang::QualType callee_type = call_expr->getCallee()->getType();
-      AddObjectsForArguments(call_expr, callee_type, /*index_shift=*/0);
+      // TODO(veluca): pointers-to-members are not supported (yet?)
+      clang::QualType callee_type =
+          call_expr->getCallee()->getType()->getPointeeType().IgnoreParens();
+      // TODO(veluca): what about FunctionNoProtoType??
+      object_repository_.call_expr_virtual_lifetimes_[call_expr] =
+          FunctionLifetimes::CreateForFunctionType(
+              clang::cast<clang::FunctionProtoType>(callee_type),
+              lifetime_factory)
+              .get();
+      PrepareFunctionCall(call_expr, /*index_shift=*/0);
     }
 
     return true;
@@ -135,13 +131,13 @@ class ObjectRepository::VarDeclVisitor
   bool VisitCXXConstructExpr(clang::CXXConstructExpr* construct_expr) {
     assert(InitializedObjectWasPropagatedTo(construct_expr));
 
-    // Create objects for constructor arguments.
+    FunctionLifetimeFactorySingleCallback lifetime_factory(
+        [](auto) { return Lifetime::CreateVariable(); });
     const clang::FunctionDecl* constructor = construct_expr->getConstructor();
-    AddObjectsForArguments(construct_expr, constructor->getType(),
-                           /*index_shift=*/0);
-    clang::QualType type = construct_expr->getConstructor()->getThisType();
-    object_repository_.call_expr_this_pointers_[construct_expr] =
-        CreateLocalObject(type);
+    object_repository_.call_expr_virtual_lifetimes_[construct_expr] =
+        FunctionLifetimes::CreateForDecl(constructor, lifetime_factory).get();
+    PrepareFunctionCall(construct_expr,
+                        /*index_shift=*/0);
     return true;
   }
 
@@ -172,41 +168,28 @@ class ObjectRepository::VarDeclVisitor
     return true;
   }
 
-  const Object* CreateLocalObject(clang::QualType type) {
-    const Object* object =
-        object_repository_.CreateObject(Lifetime::CreateLocal(), type);
-    object_repository_.CreateObjects(
-        object, type,
-        [](const clang::Expr*) { return Lifetime::CreateVariable(); },
-        /*transitive=*/false);
-    return object;
-  }
-
-  void AddObjectsForArguments(const clang::Expr* expr,
-                              clang::QualType callee_type, size_t index_shift) {
-    if (callee_type->isDependentType()) {
-      // TODO(veluca): the fact that we reach this point is a clang bug: it
-      // should not be possible to reach dependent types from a template
-      // instantiation. See also the following discussion, where richardsmith@
-      // agrees this looks like a Clang bug and suggests how it might be fixed:
-      // https://chat.google.com/room/AAAAb6i7WDQ/OvLC9NgO91A
-      return;
-    }
-    if (callee_type->isPointerType()) {
-      callee_type = callee_type->getPointeeType();
-    }
-    // TODO(veluca): figure out how to create a test where the callee is a
-    // ParenType.
-    // For reference, this was triggered in the implementation of `bsearch`.
-    callee_type = callee_type.IgnoreParens();
-    assert(callee_type->isFunctionType());
-    // TODO(veluca): could this be a clang::FunctionNoProtoType??
-    const auto* fn_type = clang::cast<clang::FunctionProtoType>(callee_type);
-    for (size_t i = 0; i < fn_type->getNumParams(); ++i) {
+  void PrepareFunctionCall(const clang::Expr* expr, size_t index_shift) {
+    const auto& func_lifetimes =
+        object_repository_.call_expr_virtual_lifetimes_[expr];
+    auto make_object = [this](const ValueLifetimes& lifetime) {
+      const Object* object = object_repository_.CreateObject(
+          Lifetime::CreateLocal(), lifetime.Type());
+      object_repository_.CreateObjectsWithLifetimes(
+          object, lifetime,
+          /*transitive=*/true, object_repository_.initial_points_to_map_);
+      return object;
+    };
+    for (size_t i = 0; i < func_lifetimes.GetNumParams(); ++i) {
       object_repository_
           .call_expr_args_objects_[std::make_pair(expr, i + index_shift)] =
-          CreateLocalObject(fn_type->getParamType(i));
+          make_object(func_lifetimes.GetParamLifetimes(i));
     }
+    if (func_lifetimes.IsNonStaticMethod()) {
+      object_repository_.call_expr_this_pointers_[expr] =
+          make_object(func_lifetimes.GetThisLifetimes());
+    }
+    object_repository_.call_expr_ret_objects_[expr] =
+        make_object(func_lifetimes.GetReturnLifetimes());
   }
 
   void AddObjectForVar(clang::VarDecl* var) {
@@ -237,10 +220,8 @@ class ObjectRepository::VarDeclVisitor
     const Object* object =
         object_repository_.CreateObject(lifetime, var->getType());
 
-    object_repository_.CreateObjects(
-        object, var->getType(), lifetime_factory,
-        /*transitive=*/clang::isa<clang::ParmVarDecl>(var) ||
-            lifetime == Lifetime::Static());
+    object_repository_.CreateObjects(object, var->getType(), lifetime_factory,
+                                     /*transitive=*/true);
 
     object_repository_.object_repository_[var] = object;
     if (!var->getType()->isArrayType()) {
@@ -275,7 +256,7 @@ class ObjectRepository::VarDeclVisitor
     object_repository_.CreateObjects(
         object, type,
         [](const clang::Expr*) { return Lifetime::CreateVariable(); },
-        /*transitive=*/false);
+        /*transitive=*/true);
 
     if (type->isRecordType()) {
       PropagateInitializedObject(expr, object);
@@ -614,6 +595,30 @@ const Object* ObjectRepository::GetCallExprArgumentObject(
   return iter->second;
 }
 
+const Object* ObjectRepository::GetCallExprRetObject(
+    const clang::Expr* expr) const {
+  auto iter = call_expr_ret_objects_.find(expr);
+  if (iter == call_expr_ret_objects_.end()) {
+    llvm::errs() << "Didn't find object for return value of call:\n";
+    expr->dump();
+    llvm::errs() << "\n" << DebugString();
+    llvm::report_fatal_error("Didn't find object for return value");
+  }
+  return iter->second;
+}
+
+const FunctionLifetimes& ObjectRepository::GetCallExprVirtualLifetimes(
+    const clang::Expr* expr) const {
+  auto iter = call_expr_virtual_lifetimes_.find(expr);
+  if (iter == call_expr_virtual_lifetimes_.end()) {
+    llvm::errs() << "Didn't find object for return value of call:\n";
+    expr->dump();
+    llvm::errs() << "\n" << DebugString();
+    llvm::report_fatal_error("Didn't find object for return value");
+  }
+  return iter->second;
+}
+
 const Object* ObjectRepository::GetCallExprThisPointer(
     const clang::CallExpr* expr) const {
   auto iter = call_expr_this_pointers_.find(expr);
@@ -731,14 +736,24 @@ const Object* ObjectRepository::CreateStaticObject(clang::QualType type) {
   return object;
 }
 
-void ObjectRepository::CreateObjects(const Object* root_object,
-                                     clang::QualType type,
-                                     LifetimeFactory lifetime_factory,
-                                     bool transitive) {
+const Object* ObjectRepository::CreateObjectsRecursively(
+    const ObjectLifetimes& object_lifetimes, PointsToMap& points_to_map) {
+  const auto* obj =
+      CreateObject(object_lifetimes.GetLifetime(), object_lifetimes.Type());
+  CreateObjectsWithLifetimes(obj, object_lifetimes.GetValueLifetimes(),
+                             /*transitive=*/true, points_to_map);
+  return obj;
+}
+
+void ObjectRepository::CreateObjectsWithLifetimes(
+    const Object* root_object, const ValueLifetimes& value_lifetimes,
+    bool transitive, PointsToMap& points_to_map) {
   class Visitor : public LifetimeVisitor {
    public:
-    Visitor(ObjectRepository& object_repository, bool create_transitive_objects)
+    Visitor(ObjectRepository& object_repository, PointsToMap& points_to_map,
+            bool create_transitive_objects)
         : object_repository_(object_repository),
+          points_to_map_(points_to_map),
           create_transitive_objects_(create_transitive_objects) {}
 
     const Object* GetFieldObject(const ObjectSet& objects,
@@ -810,25 +825,33 @@ void ObjectRepository::CreateObjects(const Object* root_object,
         child_pointee = iter->second;
       }
 
-      object_repository_.initial_points_to_map_.SetPointerPointsToSet(
-          objects, {child_pointee});
+      points_to_map_.SetPointerPointsToSet(objects, {child_pointee});
       return ObjectSet{child_pointee};
     }
 
    private:
     ObjectRepository& object_repository_;
+    PointsToMap& points_to_map_;
     bool create_transitive_objects_;
     // Inside of a given VarDecl, we re-use the same Object for all the
     // sub-objects with the same type and lifetimes. This avoids infinite loops
     // in the case of structs like lists.
     llvm::DenseMap<ObjectLifetimes, const Object*> object_cache_;
   };
-  Visitor visitor(*this, transitive);
+  Visitor visitor(*this, points_to_map, transitive);
   initial_object_lifetimes_[root_object] =
-      ObjectLifetimes(root_object->GetLifetime(),
-                      ValueLifetimes::Create(type, lifetime_factory).get());
-  VisitLifetimes({root_object}, type, initial_object_lifetimes_[root_object],
-                 visitor);
+      ObjectLifetimes(root_object->GetLifetime(), value_lifetimes);
+  VisitLifetimes({root_object}, value_lifetimes.Type(),
+                 initial_object_lifetimes_[root_object], visitor);
+}
+
+void ObjectRepository::CreateObjects(const Object* root_object,
+                                     clang::QualType type,
+                                     LifetimeFactory lifetime_factory,
+                                     bool transitive) {
+  CreateObjectsWithLifetimes(
+      root_object, ValueLifetimes::Create(type, lifetime_factory).get(),
+      transitive, initial_points_to_map_);
 }
 
 // Clones an object and its base classes and fields, if any.

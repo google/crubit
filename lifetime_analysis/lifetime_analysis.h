@@ -26,23 +26,30 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
+enum class TargetPointeeBehavior {
+  kIgnore,
+  kKeep,
+};
+
+// Updates constraints and points_to_map for an initialization of `dest` with
+// `init_expr`. If `pointee_behavior` is kIgnore, existing pointees of `dest`
+// will be ignored (this should be almost always the case, except when i.e.
+// initializing field variables after the fact for class constructors).
 void TransferInitializer(const Object* dest, clang::QualType type,
                          const ObjectRepository& object_repository,
                          const clang::Expr* init_expr,
+                         TargetPointeeBehavior pointee_behavior,
                          PointsToMap& points_to_map,
                          LifetimeConstraints& constraints);
 
-struct FunctionParameter {
-  clang::QualType param_type;
-  ValueLifetimes param_lifetimes;
-  const Object* arg_object;
-};
-
-std::optional<ObjectSet> TransferLifetimesForCall(
-    const clang::Expr* call, const std::vector<FunctionParameter>& fn_params,
-    const ValueLifetimes& return_lifetimes, ObjectRepository& object_repository,
-    PointsToMap& points_to_map, LifetimeConstraints& constraints,
-    ObjectSet& single_valued_objects, clang::ASTContext& ast_context);
+// Updates constraints and points_to_map whenever new pointees are added to the
+// pointees of a given pointer.
+void HandlePointsToSetExtension(const ObjectSet& pointers,
+                                const ObjectSet& new_pointees,
+                                clang::QualType pointer_type,
+                                const ObjectRepository& object_repository,
+                                PointsToMap& points_to_map,
+                                LifetimeConstraints& constraints);
 
 // Function to call to report a diagnostic.
 // This has the same interface as ClangTidyCheck::diag().

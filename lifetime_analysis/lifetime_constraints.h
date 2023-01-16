@@ -25,6 +25,12 @@ class LifetimeConstraints {
       const FunctionLifetimes& callable,
       const FunctionLifetimes& replacement_callable);
 
+  // Returns the constraints on `callable` and `replacement_callable` that allow
+  // `replacement_callable` to be used where `callable` is requested.
+  static LifetimeConstraints ForCallableSubstitutionFull(
+      const FunctionLifetimes& callable,
+      const FunctionLifetimes& replacement_callable);
+
   // Imposes the constraint shorter <= longer.
   void AddOutlivesConstraint(Lifetime shorter, Lifetime longer) {
     outlives_constraints_.insert({shorter, longer});

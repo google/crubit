@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_substitutions.h"
 #include "lifetime_annotations/pointee_type.h"
 
@@ -84,9 +85,11 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
 
   // Collect all "interesting" lifetimes, i.e. all lifetimes that appear in the
   // function call.
-  llvm::DenseSet<Lifetime> all_lifetimes;
+  llvm::DenseSet<Lifetime> all_interesting_lifetimes;
   function_lifetimes.Traverse(
-      [&all_lifetimes](Lifetime l, Variance) { all_lifetimes.insert(l); });
+      [&all_interesting_lifetimes](Lifetime l, Variance) {
+        all_interesting_lifetimes.insert(l);
+      });
 
   LifetimeSubstitutions substitutions;
 
@@ -106,11 +109,11 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
 
   LifetimeDSU dsu;
   dsu.MakeSet(Lifetime::Static());
-  for (Lifetime lifetime : all_lifetimes) {
+  for (Lifetime lifetime : all_interesting_lifetimes) {
     dsu.MakeSet(lifetime);
   }
 
-  for (Lifetime lifetime : all_lifetimes) {
+  for (Lifetime lifetime : all_interesting_lifetimes) {
     llvm::DenseSet<Lifetime> longer_lifetimes = GetOutlivingLifetimes(lifetime);
     longer_lifetimes.erase(Lifetime::Static());
 
@@ -130,6 +133,7 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
     // support inequalities, we simply state that they must be equivalent.
     for (Lifetime longer : longer_lifetimes) {
       if (already_have_substitutions.contains(longer)) continue;
+      if (!all_interesting_lifetimes.contains(longer)) continue;
       dsu.Union(longer, lifetime);
     }
   }
@@ -138,7 +142,7 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
   // by an arbitrary lifetime in the equivalence set.
   Lifetime cc_of_static = dsu.Find(Lifetime::Static());
 
-  for (Lifetime lifetime : all_lifetimes) {
+  for (Lifetime lifetime : all_interesting_lifetimes) {
     if (already_have_substitutions.contains(lifetime) ||
         !lifetime.IsVariable()) {
       continue;
@@ -218,8 +222,9 @@ void CollectLifetimeConstraints(const ValueLifetimes& obj,
          replacement.Type().getCanonicalType());
   if (!PointeeType(obj.Type()).isNull()) {
     LifetimeRequirement pointee_req =
-        obj.Type().isConstQualified() ? LifetimeRequirement::kReplacementIsLe
-                                      : LifetimeRequirement::kReplacementIsEq;
+        PointeeType(obj.Type()).isConstQualified()
+            ? LifetimeRequirement::kReplacementIsLe
+            : LifetimeRequirement::kReplacementIsEq;
     CollectLifetimeConstraints(obj.GetPointeeLifetimes(),
                                replacement.GetPointeeLifetimes(), requirement,
                                Compose(pointee_req, requirement), constraints);
@@ -278,8 +283,9 @@ void CollectLifetimeConstraints(const FunctionLifetimes& callable,
 LifetimeConstraints LifetimeConstraints::ForCallableSubstitution(
     const FunctionLifetimes& callable,
     const FunctionLifetimes& replacement_callable) {
-  LifetimeConstraints constraints;
-  CollectLifetimeConstraints(callable, replacement_callable, constraints);
+  LifetimeConstraints constraints =
+      LifetimeConstraints::ForCallableSubstitutionFull(callable,
+                                                       replacement_callable);
 
   llvm::DenseSet<Lifetime> all_lifetimes;
   callable.Traverse(
@@ -295,6 +301,14 @@ LifetimeConstraints LifetimeConstraints::ForCallableSubstitution(
   }
 
   return ret;
+}
+
+LifetimeConstraints LifetimeConstraints::ForCallableSubstitutionFull(
+    const FunctionLifetimes& callable,
+    const FunctionLifetimes& replacement_callable) {
+  LifetimeConstraints constraints;
+  CollectLifetimeConstraints(callable, replacement_callable, constraints);
+  return constraints;
 }
 
 }  // namespace lifetimes

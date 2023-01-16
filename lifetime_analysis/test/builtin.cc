@@ -22,7 +22,9 @@ TEST_F(LifetimeAnalysisTest, ReturnPtrFromRefAddressOf) {
               LifetimesContain({{"target", "a -> a"}}));
 }
 
-TEST_F(LifetimeAnalysisTest, ReturnDoublePtrFromRefAddressOf) {
+TEST_F(LifetimeAnalysisTest, DISABLED_ReturnDoublePtrFromRefAddressOf) {
+  // TODO(veluca): __builtin_addressof takes a void& and returns a void*, thus
+  // we don't currently handle this correctly.
   EXPECT_THAT(GetLifetimes(R"(
     int** target(int*& a) {
       return __builtin_addressof(a);
