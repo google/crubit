@@ -525,162 +525,11 @@ void ExtendPointsToMapAndConstraintsWithInitializers(
   }
 }
 
-// Modifies the given substitutions to update the `target` lifetime to the
-// lifetime that would be more constraining between `base` and `constraining`,
-// updating `is_more_constraining` to inform about whether the final function
-// lifetimes will be non-isomorphic to the ones originally in `base`.
-void MergeLifetimes(Lifetime target, Lifetime base, Lifetime constraining,
-                    Variance variance, LifetimeSubstitutions& subst,
-                    bool& is_more_constraining) {
-  // TODO(veluca): handle covariance.
-  assert(target.IsVariable());
-  assert(!base.IsLocal());
-  assert(!constraining.IsLocal());
-  if (base == Lifetime::Static()) {
-    if (variance == kCovariant) {
-      subst.Add(target, constraining);
-      if (constraining != Lifetime::Static()) {
-        is_more_constraining = true;
-      }
-    } else {
-      subst.Add(target, base);
-    }
-    return;
-  }
-  subst.Add(target, base);
-  if (constraining == Lifetime::Static()) {
-    if (variance == kInvariant) {
-      if (subst.Substitute(base) != base &&
-          subst.Substitute(base) != Lifetime::Static()) {
-        is_more_constraining = true;
-      }
-      subst.Add(subst.Substitute(base), Lifetime::Static());
-    }
-    return;
-  }
-  if ((subst.Substitute(base) != base &&
-       subst.Substitute(base) != constraining) ||
-      (subst.Substitute(constraining) != constraining &&
-       subst.Substitute(constraining) != base)) {
-    is_more_constraining = true;
-  }
-  subst.Add(subst.Substitute(constraining), base);
-  subst.Add(subst.Substitute(base), constraining);
-}
-
-void CollectLifetimeMapping(const ValueLifetimes&, const ValueLifetimes&,
-                            const ValueLifetimes&, Variance, Variance,
-                            LifetimeSubstitutions&, bool&);
-
-void CollectLifetimeMapping(const ObjectLifetimes& target,
-                            const ObjectLifetimes& base,
-                            const ObjectLifetimes& constraining,
-                            Variance self_variance,
-                            LifetimeSubstitutions& subst,
-                            bool& is_more_constraining) {
-  // Special case: if we have a non-const pointer, run invariant unification
-  // on the pointee.
-  Variance pointee_variance = kCovariant;
-  if (!PointeeType(base.Type()).isNull() && !base.Type().isConstQualified()) {
-    pointee_variance = kInvariant;
-  }
-  MergeLifetimes(target.GetLifetime(), base.GetLifetime(),
-                 constraining.GetLifetime(), self_variance, subst,
-                 is_more_constraining);
-  CollectLifetimeMapping(target.GetValueLifetimes(), base.GetValueLifetimes(),
-                         constraining.GetValueLifetimes(), self_variance,
-                         pointee_variance, subst, is_more_constraining);
-}
-
-void CollectLifetimeMapping(const ValueLifetimes& target,
-                            const ValueLifetimes& base,
-                            const ValueLifetimes& constraining,
-                            Variance self_variance, Variance pointee_variance,
-                            LifetimeSubstitutions& subst,
-                            bool& is_more_constraining) {
-  assert(target.Type().getCanonicalType() == base.Type().getCanonicalType());
-  assert(target.Type().getCanonicalType() ==
-         constraining.Type().getCanonicalType());
-  if (!PointeeType(base.Type()).isNull()) {
-    CollectLifetimeMapping(target.GetPointeeLifetimes(),
-                           base.GetPointeeLifetimes(),
-                           constraining.GetPointeeLifetimes(), pointee_variance,
-                           subst, is_more_constraining);
-  }
-  if (base.Type()->isRecordType()) {
-    assert(base.GetNumTemplateNestingLevels() ==
-           constraining.GetNumTemplateNestingLevels());
-    assert(base.GetNumTemplateNestingLevels() ==
-           target.GetNumTemplateNestingLevels());
-    for (size_t depth = 0; depth < base.GetNumTemplateNestingLevels();
-         depth++) {
-      assert(base.GetNumTemplateArgumentsAtDepth(depth) ==
-             constraining.GetNumTemplateArgumentsAtDepth(depth));
-      assert(base.GetNumTemplateArgumentsAtDepth(depth) ==
-             target.GetNumTemplateArgumentsAtDepth(depth));
-      for (size_t idx = 0; idx < base.GetNumTemplateArgumentsAtDepth(depth);
-           idx++) {
-        std::optional<ValueLifetimes> target_arg =
-            target.GetTemplateArgumentLifetimes(depth, idx);
-        std::optional<ValueLifetimes> base_arg =
-            base.GetTemplateArgumentLifetimes(depth, idx);
-        std::optional<ValueLifetimes> constraining_arg =
-            constraining.GetTemplateArgumentLifetimes(depth, idx);
-        assert(base_arg.has_value() == constraining_arg.has_value());
-        assert(target_arg.has_value() == constraining_arg.has_value());
-        if (target_arg.has_value() && base_arg.has_value() &&
-            constraining_arg.has_value()) {
-          CollectLifetimeMapping(*target_arg, *base_arg, *constraining_arg,
-                                 kInvariant, kInvariant, subst,
-                                 is_more_constraining);
-        }
-      }
-    }
-    for (const auto& lftm_param : GetLifetimeParameters(base.Type())) {
-      MergeLifetimes(target.GetLifetimeParameter(lftm_param),
-                     base.GetLifetimeParameter(lftm_param),
-                     constraining.GetLifetimeParameter(lftm_param),
-                     self_variance, subst, is_more_constraining);
-    }
-  }
-  // TODO(veluca): function types.
-}
-
-void CollectLifetimeMapping(const FunctionLifetimes& target,
-                            const FunctionLifetimes& base,
-                            const FunctionLifetimes& constraining,
-                            LifetimeSubstitutions& subst,
-                            bool& is_more_constraining) {
-  for (size_t i = 0; i < base.GetNumParams(); i++) {
-    CollectLifetimeMapping(target.GetParamLifetimes(i),
-                           base.GetParamLifetimes(i),
-                           constraining.GetParamLifetimes(i), kCovariant,
-                           kCovariant, subst, is_more_constraining);
-  }
-  CollectLifetimeMapping(target.GetReturnLifetimes(), base.GetReturnLifetimes(),
-                         constraining.GetReturnLifetimes(), kCovariant,
-                         kCovariant, subst, is_more_constraining);
-  if (base.IsNonStaticMethod()) {
-    CollectLifetimeMapping(target.GetThisLifetimes(), base.GetThisLifetimes(),
-                           constraining.GetThisLifetimes(), kCovariant,
-                           kCovariant, subst, is_more_constraining);
-  }
-}
-
-// Returns a pair containing the constrained lifetimes and a boolean that is
-// set to true if the lifetimes are, in fact, more constrained.
-std::pair<FunctionLifetimes, bool> ConstrainLifetimes(
-    const FunctionLifetimes& base, const FunctionLifetimes& constraining) {
-  FunctionLifetimes copy =
-      base.CreateCopy([](const clang::Expr*) -> llvm::Expected<Lifetime> {
-            return Lifetime::CreateVariable();
-          })
-          .get();
-  LifetimeSubstitutions subst;
-  bool is_more_constraining = false;
-  CollectLifetimeMapping(copy, base, constraining, subst, is_more_constraining);
-  copy.SubstituteLifetimes(subst);
-  return {copy, is_more_constraining};
+llvm::Error ConstrainLifetimes(FunctionLifetimes& base,
+                               const FunctionLifetimes& constraining) {
+  auto constraints =
+      LifetimeConstraints::ForCallableSubstitution(base, constraining);
+  return constraints.ApplyToFunctionLifetimes(base);
 }
 
 struct FunctionAnalysis {
@@ -1285,7 +1134,7 @@ std::optional<FunctionLifetimes> GetFunctionLifetimesFromAnalyzed(
 // that the lifetimes of the base method will become least permissive. The
 // updates will be reflected from the base to its final overrides as this is
 // recursively called.
-void UpdateFunctionLifetimesWithOverrides(
+llvm::Error UpdateFunctionLifetimesWithOverrides(
     const clang::FunctionDecl* func,
     llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
         analyzed,
@@ -1297,7 +1146,7 @@ void UpdateFunctionLifetimesWithOverrides(
   static_cast<void>(method);
 
   auto opt_lifetimes = GetFunctionLifetimesFromAnalyzed(canonical, analyzed);
-  if (!opt_lifetimes) return;
+  if (!opt_lifetimes) return llvm::Error::success();
   FunctionLifetimes base_lifetimes = *opt_lifetimes;
 
   assert(base_lifetimes.IsValidForDecl(func));
@@ -1309,20 +1158,24 @@ void UpdateFunctionLifetimesWithOverrides(
                    << overriding->getParent()->getNameAsString() << "\n";
       func->dump();
       overriding->dump();
-      assert(false);
-      return;
+      return llvm::createStringError(
+          llvm::inconvertibleErrorCode(),
+          absl::StrFormat("Param number mismatches between %s and %s\n",
+                          method->getParent()->getNameAsString(),
+                          overriding->getParent()->getNameAsString()));
     }
     auto opt_override_lifetimes = GetFunctionLifetimesFromAnalyzed(
         overriding->getCanonicalDecl(), analyzed);
     if (!opt_override_lifetimes) continue;
     FunctionLifetimes override_lifetimes = *opt_override_lifetimes;
 
-    base_lifetimes =
-        ConstrainLifetimes(base_lifetimes,
-                           override_lifetimes.ForOverriddenMethod(method))
-            .first;
+    if (llvm::Error err = ConstrainLifetimes(
+            base_lifetimes, override_lifetimes.ForOverriddenMethod(method))) {
+      return err;
+    }
   }
   analyzed[canonical] = base_lifetimes;
+  return llvm::Error::success();
 }
 
 llvm::Error AnalyzeRecursiveFunctions(
@@ -1613,7 +1466,10 @@ void AnalyzeFunctionRecursive(
   // If this has overrides and we're in an overrides traversal, the lifetimes
   // need to be (recursively) updated with the results of the overrides.
   if (in_overrides_traversal) {
-    UpdateFunctionLifetimesWithOverrides(func, analyzed, overrides);
+    if (llvm::Error err =
+            UpdateFunctionLifetimesWithOverrides(func, analyzed, overrides)) {
+      analyzed[func] = FunctionAnalysisError(err);
+    }
   }
 
   // Once we have finished analyzing `func`, we can remove it from the visited
@@ -1739,7 +1595,12 @@ DiagnosticReporter DiagReporterForDiagEngine(
 }  // namespace
 
 bool IsIsomorphic(const FunctionLifetimes& a, const FunctionLifetimes& b) {
-  return !ConstrainLifetimes(a, b).second && !ConstrainLifetimes(b, a).second;
+  return LifetimeConstraints::ForCallableSubstitution(a, b)
+             .AllConstraints()
+             .empty() &&
+         LifetimeConstraints::ForCallableSubstitution(b, a)
+             .AllConstraints()
+             .empty();
 }
 
 FunctionLifetimesOrError AnalyzeFunction(

@@ -9,13 +9,14 @@
 #include <algorithm>
 
 #include "lifetime_annotations/lifetime_substitutions.h"
+#include "lifetime_annotations/pointee_type.h"
 
 namespace clang {
 namespace tidy {
 namespace lifetimes {
 
 clang::dataflow::LatticeJoinEffect LifetimeConstraints::join(
-    const LifetimeConstraints &other) {
+    const LifetimeConstraints& other) {
   bool changed = false;
   for (auto p : other.outlives_constraints_) {
     changed |= outlives_constraints_.insert(p).second;
@@ -49,8 +50,30 @@ class LifetimeDSU {
 
 }  // namespace
 
+llvm::DenseSet<Lifetime> LifetimeConstraints::GetOutlivingLifetimes(
+    const Lifetime l) const {
+  // TODO(veluca): here we could certainly reduce complexity, for example by
+  // constructing the constraint graph instead of iterating over all constraints
+  // each time.
+  std::vector<Lifetime> stack{l};
+  llvm::DenseSet<Lifetime> visited;
+  while (!stack.empty()) {
+    Lifetime v = stack.back();
+    stack.pop_back();
+    if (visited.contains(v)) continue;
+    visited.insert(v);
+    for (auto [shorter, longer] : outlives_constraints_) {
+      if (shorter == v) {
+        stack.push_back(longer);
+      }
+    }
+  }
+  visited.erase(l);
+  return visited;
+}
+
 llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
-    FunctionLifetimes &function_lifetimes) {
+    FunctionLifetimes& function_lifetimes) {
   // We want to make output-only lifetimes as long as possible; thus, we collect
   // those separately.
   llvm::DenseSet<Lifetime> output_lifetimes;
@@ -65,31 +88,6 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
   function_lifetimes.Traverse(
       [&all_lifetimes](Lifetime l, Variance) { all_lifetimes.insert(l); });
 
-  // Compute the set of static, input or local lifetimes that must outlive the
-  // given lifetime (excluding the lifetime itself).
-  // This function ignores constraints of the form 'a <= 'static, as "outlived
-  // by 'static" is not a meaningful constraint.
-  // TODO(veluca): here we could certainly reduce complexity, for example by
-  // constructing the constraint graph instead of iterating over all constraints
-  // each time.
-  auto get_outliving_lifetimes = [&](Lifetime l) {
-    std::vector<Lifetime> stack{l};
-    llvm::DenseSet<Lifetime> visited;
-    while (!stack.empty()) {
-      Lifetime v = stack.back();
-      stack.pop_back();
-      if (visited.contains(v)) continue;
-      visited.insert(v);
-      for (auto [shorter, longer] : outlives_constraints_) {
-        if (shorter == v && longer != Lifetime::Static()) {
-          stack.push_back(longer);
-        }
-      }
-    }
-    visited.erase(l);
-    return visited;
-  };
-
   LifetimeSubstitutions substitutions;
 
   // Keep track of which lifetimes already have their final substitutions
@@ -97,7 +95,7 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
   llvm::DenseSet<Lifetime> already_have_substitutions;
 
   // First of all, substitute everything that outlives 'static with 'static.
-  for (Lifetime outlives_static : get_outliving_lifetimes(Lifetime::Static())) {
+  for (Lifetime outlives_static : GetOutlivingLifetimes(Lifetime::Static())) {
     if (outlives_static.IsLocal()) {
       return llvm::createStringError(llvm::inconvertibleErrorCode(),
                                      "Function assigns local to static");
@@ -113,10 +111,8 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
   }
 
   for (Lifetime lifetime : all_lifetimes) {
-    llvm::DenseSet<Lifetime> longer_lifetimes =
-        get_outliving_lifetimes(lifetime);
-    assert(!longer_lifetimes.contains(Lifetime::Static()));
-
+    llvm::DenseSet<Lifetime> longer_lifetimes = GetOutlivingLifetimes(lifetime);
+    longer_lifetimes.erase(Lifetime::Static());
 
     // If constrained to be outlived by 'local, replace the lifetime with
     // 'local, or error out if 'static.
@@ -160,6 +156,145 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
   function_lifetimes.SubstituteLifetimes(substitutions);
 
   return llvm::Error::success();
+}
+
+namespace {
+
+enum LifetimeRequirement {
+  kReplacementIsGe = 0x1,
+  kReplacementIsLe = 0x2,
+  kReplacementIsEq = 0x3,
+};
+
+// Computes the requirement corresponding to *composing* the two requirements
+// together; for example, using a type containing a contravariant lifetime in
+// contravariant position would result in a covariant lifetime.
+// In general, this function behaves like multiplication where Ge = -1, Le = 1,
+// Eq = 0.
+LifetimeRequirement Compose(LifetimeRequirement a, LifetimeRequirement b) {
+  if (a == LifetimeRequirement::kReplacementIsEq ||
+      b == LifetimeRequirement::kReplacementIsEq) {
+    return LifetimeRequirement::kReplacementIsEq;
+  }
+  if (a != b) {
+    return LifetimeRequirement::kReplacementIsGe;
+  }
+  return LifetimeRequirement::kReplacementIsLe;
+}
+
+void AddConstraint(LifetimeRequirement req, Lifetime obj, Lifetime replacement,
+                   LifetimeConstraints& constraints) {
+  if (req & LifetimeRequirement::kReplacementIsLe) {
+    constraints.AddOutlivesConstraint(replacement, obj);
+  }
+  if (req & LifetimeRequirement::kReplacementIsGe) {
+    constraints.AddOutlivesConstraint(obj, replacement);
+  }
+}
+
+void CollectLifetimeConstraints(const ValueLifetimes&, const ValueLifetimes&,
+                                LifetimeRequirement, LifetimeConstraints&);
+
+// Collects all the constraints that are required to use `replacement` as a
+// replacement for `obj`, taking into account the requirements due to their
+// positions (i.e. covariant/contravariant/invariant).
+void CollectLifetimeConstraints(const ObjectLifetimes& obj,
+                                const ObjectLifetimes& replacement,
+                                LifetimeRequirement object_requirement,
+                                LifetimeRequirement descendants_requirement,
+                                LifetimeConstraints& constraints) {
+  AddConstraint(object_requirement, obj.GetLifetime(),
+                replacement.GetLifetime(), constraints);
+  CollectLifetimeConstraints(obj.GetValueLifetimes(),
+                             replacement.GetValueLifetimes(),
+                             descendants_requirement, constraints);
+}
+
+void CollectLifetimeConstraints(const ValueLifetimes& obj,
+                                const ValueLifetimes& replacement,
+                                LifetimeRequirement requirement,
+                                LifetimeConstraints& constraints) {
+  assert(obj.Type().getCanonicalType() ==
+         replacement.Type().getCanonicalType());
+  if (!PointeeType(obj.Type()).isNull()) {
+    LifetimeRequirement pointee_req =
+        obj.Type().isConstQualified() ? LifetimeRequirement::kReplacementIsLe
+                                      : LifetimeRequirement::kReplacementIsEq;
+    CollectLifetimeConstraints(obj.GetPointeeLifetimes(),
+                               replacement.GetPointeeLifetimes(), requirement,
+                               Compose(pointee_req, requirement), constraints);
+  }
+  if (obj.Type()->isRecordType()) {
+    assert(obj.GetNumTemplateNestingLevels() ==
+           replacement.GetNumTemplateNestingLevels());
+    for (size_t depth = 0; depth < obj.GetNumTemplateNestingLevels(); depth++) {
+      assert(obj.GetNumTemplateArgumentsAtDepth(depth) ==
+             replacement.GetNumTemplateArgumentsAtDepth(depth));
+      for (size_t idx = 0; idx < obj.GetNumTemplateArgumentsAtDepth(depth);
+           idx++) {
+        std::optional<ValueLifetimes> obj_arg =
+            obj.GetTemplateArgumentLifetimes(depth, idx);
+        std::optional<ValueLifetimes> replacement_arg =
+            replacement.GetTemplateArgumentLifetimes(depth, idx);
+        assert(obj_arg.has_value() == replacement_arg.has_value());
+        if (obj_arg.has_value() && replacement_arg.has_value()) {
+          CollectLifetimeConstraints(*obj_arg, *replacement_arg,
+                                     LifetimeRequirement::kReplacementIsEq,
+                                     constraints);
+        }
+      }
+    }
+    for (const auto& lftm_param : GetLifetimeParameters(obj.Type())) {
+      // TODO(veluca): should lifetime parameters be invariant like template
+      // parameters?
+      AddConstraint(requirement, obj.GetLifetimeParameter(lftm_param),
+                    replacement.GetLifetimeParameter(lftm_param), constraints);
+    }
+  }
+  // TODO(veluca): function types.
+}
+
+void CollectLifetimeConstraints(const FunctionLifetimes& callable,
+                                const FunctionLifetimes& replacement_callable,
+                                LifetimeConstraints& constraints) {
+  for (size_t i = 0; i < callable.GetNumParams(); i++) {
+    CollectLifetimeConstraints(callable.GetParamLifetimes(i),
+                               replacement_callable.GetParamLifetimes(i),
+                               LifetimeRequirement::kReplacementIsGe,
+                               constraints);
+  }
+  CollectLifetimeConstraints(
+      callable.GetReturnLifetimes(), replacement_callable.GetReturnLifetimes(),
+      LifetimeRequirement::kReplacementIsLe, constraints);
+  if (callable.IsNonStaticMethod()) {
+    CollectLifetimeConstraints(
+        callable.GetThisLifetimes(), replacement_callable.GetThisLifetimes(),
+        LifetimeRequirement::kReplacementIsGe, constraints);
+  }
+}
+
+}  // namespace
+
+LifetimeConstraints LifetimeConstraints::ForCallableSubstitution(
+    const FunctionLifetimes& callable,
+    const FunctionLifetimes& replacement_callable) {
+  LifetimeConstraints constraints;
+  CollectLifetimeConstraints(callable, replacement_callable, constraints);
+
+  llvm::DenseSet<Lifetime> all_lifetimes;
+  callable.Traverse(
+      [&all_lifetimes](Lifetime l, Variance) { all_lifetimes.insert(l); });
+
+  LifetimeConstraints ret;
+  for (auto l : all_lifetimes) {
+    for (auto outliving : constraints.GetOutlivingLifetimes(l)) {
+      if (all_lifetimes.contains(outliving)) {
+        ret.AddOutlivesConstraint(l, outliving);
+      }
+    }
+  }
+
+  return ret;
 }
 
 }  // namespace lifetimes

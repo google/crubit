@@ -89,6 +89,7 @@ cc_library(
     deps = [
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:lifetime_substitutions",
+        "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:analysis",
         "@llvm-project//llvm:Support",

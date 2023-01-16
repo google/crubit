@@ -19,10 +19,20 @@ class LifetimeConstraints {
   // Creates empty constraints.
   LifetimeConstraints() {}
 
+  // Returns the constraints on `callable` that allow `replacement_callable` to
+  // be used where `callable` is requested.
+  static LifetimeConstraints ForCallableSubstitution(
+      const FunctionLifetimes& callable,
+      const FunctionLifetimes& replacement_callable);
+
   // Imposes the constraint shorter <= longer.
   void AddOutlivesConstraint(Lifetime shorter, Lifetime longer) {
     outlives_constraints_.insert({shorter, longer});
   }
+
+  // Returns all the lifetimes that this set of constraints implies must outlive
+  // the given lifetime l.
+  llvm::DenseSet<Lifetime> GetOutlivingLifetimes(Lifetime l) const;
 
   // Merges this set of constraints with the provided constraints, returning
   // the effect of the operation.
