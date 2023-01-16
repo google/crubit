@@ -101,6 +101,7 @@ cc_library(
     hdrs = ["lifetime_lattice.h"],
     deps = [
         ":lifetime_constraints",
+        ":object_set",
         ":points_to_map",
         "@llvm-project//clang:analysis",
         "@llvm-project//llvm:Support",

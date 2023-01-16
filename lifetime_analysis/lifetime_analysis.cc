@@ -52,13 +52,15 @@ class TransferStmtVisitor
  public:
   TransferStmtVisitor(
       ObjectRepository& object_repository, PointsToMap& points_to_map,
-      LifetimeConstraints& constraints, const clang::FunctionDecl* func,
+      LifetimeConstraints& constraints, ObjectSet& single_valued_objects,
+      const clang::FunctionDecl* func,
       const llvm::DenseMap<const clang::FunctionDecl*,
                            FunctionLifetimesOrError>& callee_lifetimes,
       const DiagnosticReporter& diag_reporter)
       : object_repository_(object_repository),
         points_to_map_(points_to_map),
         constraints_(constraints),
+        single_valued_objects_(single_valued_objects),
         func_(func),
         callee_lifetimes_(callee_lifetimes),
         diag_reporter_(diag_reporter) {}
@@ -94,6 +96,7 @@ class TransferStmtVisitor
   ObjectRepository& object_repository_;
   PointsToMap& points_to_map_;
   LifetimeConstraints& constraints_;
+  ObjectSet& single_valued_objects_;
   const clang::FunctionDecl* func_;
   const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
       callee_lifetimes_;
@@ -289,7 +292,7 @@ namespace {
 void SetPointerPointsToSetRespectingTypes(
     const Object* pointer, const ObjectSet& points_to,
     PointsToMap& points_to_map, clang::ASTContext& ast_context,
-    LifetimeConstraints& constraints,
+    LifetimeConstraints& constraints, const ObjectSet& single_valued_objects,
     const ObjectRepository& object_repository) {
   assert(pointer->Type()->isPointerType() ||
          pointer->Type()->isReferenceType());
@@ -307,8 +310,7 @@ void SetPointerPointsToSetRespectingTypes(
       // TODO(veluca): explicitly splitting between "object values before an
       // expression" and "object values after an expression" will likely make
       // this whole kind of reasoning clearer and less error-prone.
-      if (object_repository.GetObjectValueType(pointer) !=
-          ObjectRepository::ObjectValueType::kSingleValued) {
+      if (!single_valued_objects.Contains(pointer)) {
         // Descending in callees is handled at a higher level.
         GenerateConstraintsForAssignmentNonRecursive(
             original_points_to_set, {object},
@@ -324,12 +326,12 @@ void SetPointerPointsToSetRespectingTypes(
 void SetAllPointersPointsToSetRespectingTypes(
     const ObjectSet& pointers, const ObjectSet& points_to,
     PointsToMap& points_to_map, clang::ASTContext& ast_context,
-    LifetimeConstraints& constraints,
+    LifetimeConstraints& constraints, const ObjectSet& single_valued_objects,
     const ObjectRepository& object_repository) {
   for (auto pointer : pointers) {
-    SetPointerPointsToSetRespectingTypes(pointer, points_to, points_to_map,
-                                         ast_context, constraints,
-                                         object_repository);
+    SetPointerPointsToSetRespectingTypes(
+        pointer, points_to, points_to_map, ast_context, constraints,
+        single_valued_objects, object_repository);
   }
 }
 
@@ -383,6 +385,7 @@ void PropagateLifetimesToPointees(
     const Object* arg_object, clang::QualType type,
     const ValueLifetimes& value_lifetimes, PointsToMap& points_to_map,
     ObjectRepository& object_repository, LifetimeConstraints& constraints,
+    ObjectSet& single_valued_objects,
     const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
     clang::ASTContext& ast_context) {
   class Visitor : public LifetimeVisitor {
@@ -390,10 +393,11 @@ void PropagateLifetimesToPointees(
     Visitor(ObjectRepository& object_repository, PointsToMap& points_to_map,
             LifetimeConstraints& constraints,
             const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set,
-            clang::ASTContext& ast_context)
+            ObjectSet& single_valued_objects, clang::ASTContext& ast_context)
         : object_repository_(object_repository),
           points_to_map_(points_to_map),
           constraints_(constraints),
+          single_valued_objects_(single_valued_objects),
           lifetime_to_object_set_(lifetime_to_object_set),
           ast_context_(ast_context) {}
 
@@ -429,7 +433,7 @@ void PropagateLifetimesToPointees(
         }
         SetAllPointersPointsToSetRespectingTypes(
             objects, points_to, points_to_map_, ast_context_, constraints_,
-            object_repository_);
+            single_valued_objects_, object_repository_);
         if (!kUseConstraintBasedAnalysis) {
           // This assertion may fail to be true when visiting the return value
           // object, if its objects were created recursively.
@@ -453,11 +457,12 @@ void PropagateLifetimesToPointees(
     ObjectRepository& object_repository_;
     PointsToMap& points_to_map_;
     LifetimeConstraints& constraints_;
+    ObjectSet& single_valued_objects_;
     const llvm::DenseMap<Lifetime, ObjectSet>& lifetime_to_object_set_;
     clang::ASTContext& ast_context_;
   };
   Visitor visitor(object_repository, points_to_map, constraints,
-                  lifetime_to_object_set, ast_context);
+                  lifetime_to_object_set, single_valued_objects, ast_context);
   VisitLifetimes({arg_object}, type,
                  ObjectLifetimes(arg_object->GetLifetime(), value_lifetimes),
                  visitor);
@@ -473,7 +478,7 @@ std::optional<ObjectSet> TransferLifetimesForCall(
     const clang::Expr* call, const std::vector<FunctionParameter>& fn_params,
     const ValueLifetimes& return_lifetimes, ObjectRepository& object_repository,
     PointsToMap& points_to_map, LifetimeConstraints& constraints,
-    clang::ASTContext& ast_context) {
+    ObjectSet& single_valued_objects, clang::ASTContext& ast_context) {
   // TODO(mboehme): The following description says what we _want_ to do, but
   // this isn't what we actually do right now. Modify the code so that it
   // corresponds to the description, then remove this TODO.
@@ -595,7 +600,8 @@ std::optional<ObjectSet> TransferLifetimesForCall(
   for (auto [type, param_lifetimes, arg_object] : fn_params) {
     PropagateLifetimesToPointees(arg_object, type, param_lifetimes,
                                  points_to_map, object_repository, constraints,
-                                 lifetime_to_object_set, ast_context);
+                                 single_valued_objects, lifetime_to_object_set,
+                                 ast_context);
   }
 
   // Step 3: Determine points-to set for the return value.
@@ -604,7 +610,8 @@ std::optional<ObjectSet> TransferLifetimesForCall(
       const Object* init_object = object_repository.GetInitializedObject(call);
       PropagateLifetimesToPointees(
           init_object, call->getType(), return_lifetimes, points_to_map,
-          object_repository, constraints, lifetime_to_object_set, ast_context);
+          object_repository, constraints, single_valued_objects,
+          lifetime_to_object_set, ast_context);
     } else {
       ObjectSet rval_points_to;
 
@@ -627,7 +634,8 @@ std::optional<ObjectSet> TransferLifetimesForCall(
 }
 
 LifetimeLattice LifetimeAnalysis::initialElement() {
-  return LifetimeLattice(object_repository_.InitialPointsToMap());
+  return LifetimeLattice(object_repository_.InitialPointsToMap(),
+                         object_repository_.InitialSingleValuedObjects());
 }
 
 std::string LifetimeAnalysis::ToString(const LifetimeLattice& state) {
@@ -649,8 +657,8 @@ void LifetimeAnalysis::transfer(const clang::CFGElement* elt,
   auto stmt = cfg_stmt->getStmt();
 
   TransferStmtVisitor visitor(object_repository_, state.PointsTo(),
-                              state.Constraints(), func_, callee_lifetimes_,
-                              diag_reporter_);
+                              state.Constraints(), state.SingleValuedObjects(),
+                              func_, callee_lifetimes_, diag_reporter_);
   if (std::optional<std::string> err =
           visitor.Visit(const_cast<clang::Stmt*>(stmt))) {
     state = LifetimeLattice(*err);
@@ -922,11 +930,11 @@ std::optional<std::string> TransferStmtVisitor::VisitBinaryOperator(
       // only in very specific circumstances:
       // - We need to know unambiguously what the LHS refers to, so that we
       //   know we're definitely writing to a particular object, and
-      // - That destination object needs to be "single-valued" (it can't be
-      //   an array, for example).
+      // - That destination object needs to be "single-valued" (see docstring of
+      //   LifetimeLattice::SingleValuedObjects for the definition of this
+      //   term).
       if (lhs_points_to.size() == 1 &&
-          object_repository_.GetObjectValueType(*lhs_points_to.begin()) ==
-              ObjectRepository::ObjectValueType::kSingleValued) {
+          single_valued_objects_.Contains(*lhs_points_to.begin())) {
         // Replacing the points-to-set entirely does not generate any
         // constraints.
         points_to_map_.SetPointerPointsToSet(lhs_points_to, rhs_points_to);
@@ -1240,7 +1248,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
     std::optional<ObjectSet> single_call_points_to = TransferLifetimesForCall(
         call, fn_params, callee_lifetimes.GetReturnLifetimes(),
         object_repository_, points_to_map_, constraints_,
-        callee->getASTContext());
+        single_valued_objects_, callee->getASTContext());
     if (single_call_points_to) {
       if (call_points_to) {
         call_points_to.value().Add(std::move(single_call_points_to).value());
@@ -1307,7 +1315,7 @@ std::optional<std::string> TransferStmtVisitor::VisitCXXConstructExpr(
   TransferLifetimesForCall(
       construct_expr, fn_params,
       ValueLifetimes::ForLifetimeLessType(constructor->getReturnType()),
-      object_repository_, points_to_map_, constraints_,
+      object_repository_, points_to_map_, constraints_, single_valued_objects_,
       constructor->getASTContext());
   return std::nullopt;
 }

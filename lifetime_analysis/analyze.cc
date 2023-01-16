@@ -702,7 +702,7 @@ const CXXConstructorDecl* GetDefaultConstructor(const CXXRecordDecl* record) {
 llvm::Error TransferDefaultConstructor(
     const clang::CXXConstructorDecl* default_ctor, const Object* this_object,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
-    LifetimeConstraints& constraints,
+    LifetimeConstraints& constraints, ObjectSet& single_valued_objects,
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
         callee_lifetimes) {
   assert(callee_lifetimes.count(default_ctor->getCanonicalDecl()));
@@ -729,7 +729,7 @@ llvm::Error TransferDefaultConstructor(
       // the return value contains lifetimes.
       /*call=*/nullptr, fn_params,
       ValueLifetimes::ForLifetimeLessType(default_ctor->getReturnType()),
-      object_repository, points_to_map, constraints,
+      object_repository, points_to_map, constraints, single_valued_objects,
       default_ctor->getASTContext());
 
   return llvm::Error::success();
@@ -740,7 +740,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
         callee_lifetimes,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
-    LifetimeConstraints& constraints) {
+    LifetimeConstraints& constraints, ObjectSet& single_valued_objects) {
   assert(ctor->isDefaulted() && ctor->isDefaultConstructor());
 
   std::optional<const Object*> this_object_maybe =
@@ -760,7 +760,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
             object_repository.GetBaseClassObject(this_object, base.getType());
         if (llvm::Error err = TransferDefaultConstructor(
                 base_ctor, base_this_object, object_repository, points_to_map,
-                constraints, callee_lifetimes)) {
+                constraints, single_valued_objects, callee_lifetimes)) {
           return err;
         }
       }
@@ -775,7 +775,7 @@ llvm::Error AnalyzeDefaultedDefaultConstructor(
             object_repository.GetFieldObject(this_object, field);
         if (llvm::Error err = TransferDefaultConstructor(
                 field_ctor, field_this_object, object_repository, points_to_map,
-                constraints, callee_lifetimes)) {
+                constraints, single_valued_objects, callee_lifetimes)) {
           return err;
         }
       }
@@ -790,16 +790,16 @@ llvm::Error AnalyzeDefaultedFunction(
     const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
         callee_lifetimes,
     ObjectRepository& object_repository, PointsToMap& points_to_map,
-    LifetimeConstraints& constraints) {
+    LifetimeConstraints& constraints, ObjectSet& single_valued_objects) {
   assert(func->isDefaulted());
 
   // TODO(b/230693710): Add complete support for defaulted functions.
 
   if (const auto* ctor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
     if (ctor->isDefaultConstructor()) {
-      return AnalyzeDefaultedDefaultConstructor(ctor, callee_lifetimes,
-                                                object_repository,
-                                                points_to_map, constraints);
+      return AnalyzeDefaultedDefaultConstructor(
+          ctor, callee_lifetimes, object_repository, points_to_map, constraints,
+          single_valued_objects);
     }
   }
 
@@ -920,9 +920,14 @@ llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
   bool can_analyze_defaulted_func =
       ctor != nullptr && ctor->isDefaultConstructor();
   if (func->isDefaulted() && can_analyze_defaulted_func) {
+    // Single-valued objects are only used during the analysis itself, so no
+    // need to keep track of them past this point.
+    ObjectSet single_valued_objects =
+        analysis.object_repository.InitialSingleValuedObjects();
     if (llvm::Error err = AnalyzeDefaultedFunction(
             func, callee_lifetimes, analysis.object_repository,
-            analysis.points_to_map, analysis.constraints)) {
+            analysis.points_to_map, analysis.constraints,
+            single_valued_objects)) {
       return std::move(err);
     }
   } else if (func->getBody()) {

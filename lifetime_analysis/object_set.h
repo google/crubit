@@ -71,6 +71,16 @@ class ObjectSet {
     return result;
   }
 
+  // Returns a `ObjectSet` containing the intersection of the pointees from this
+  // `ObjectSet` and `other`.
+  ObjectSet Intersection(const ObjectSet& other) const {
+    ObjectSet result;
+    for (const Object* obj : *this) {
+      if (other.Contains(obj)) result.Add(obj);
+    }
+    return result;
+  }
+
   // Adds `object` to this object set.
   void Add(const Object* object) { objects_.insert(object); }
 

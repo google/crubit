@@ -10,6 +10,7 @@
 #include <variant>
 
 #include "lifetime_analysis/lifetime_constraints.h"
+#include "lifetime_analysis/object_set.h"
 #include "lifetime_analysis/points_to_map.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
@@ -29,9 +30,12 @@ class LifetimeLattice {
   LifetimeLattice& operator=(const LifetimeLattice&) = default;
   LifetimeLattice& operator=(LifetimeLattice&&) = default;
 
-  // Creates a lattice containing the given points-to map and empty constraints.
-  explicit LifetimeLattice(PointsToMap points_to_map)
-      : var_(std::make_pair(std::move(points_to_map), LifetimeConstraints())) {}
+  // Creates a lattice containing the given points-to map, single-valued object
+  // set, and empty constraints.
+  explicit LifetimeLattice(PointsToMap points_to_map,
+                           ObjectSet single_valued_objects)
+      : var_(std::make_tuple(std::move(points_to_map), LifetimeConstraints(),
+                             std::move(single_valued_objects))) {}
 
   // Creates an error state containing the error message `err`.
   explicit LifetimeLattice(std::string err) : var_(err) {}
@@ -45,6 +49,16 @@ class LifetimeLattice {
   // Precondition: !IsError().
   LifetimeConstraints& Constraints();
   const LifetimeConstraints& Constraints() const;
+
+  // Returns the set of single-valued objects, i.e. objects that will be
+  // guaranteed to be overwritten completely by a write operation.
+  // For example, all local variables are single-valued unless they are
+  // conditionally overwritten. Values that represent pointees of pointers are
+  // not (as they could be arrays), but values that represent pointees of
+  // references can be.
+  // Precondition: !IsError().
+  ObjectSet& SingleValuedObjects();
+  const ObjectSet& SingleValuedObjects() const;
 
   // Returns whether the lattice is in the error state.
   bool IsError() const { return std::holds_alternative<std::string>(var_); }
@@ -70,7 +84,9 @@ class LifetimeLattice {
   }
 
  private:
-  std::variant<std::pair<PointsToMap, LifetimeConstraints>, std::string> var_;
+  std::variant<std::tuple<PointsToMap, LifetimeConstraints, ObjectSet>,
+               std::string>
+      var_;
 };
 
 }  // namespace lifetimes

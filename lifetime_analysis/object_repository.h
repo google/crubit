@@ -47,14 +47,6 @@ class ObjectRepository {
   using MapType = llvm::DenseMap<const clang::ValueDecl*, const Object*>;
 
  public:
-  // An `Object` might represent objects that have either a single value (such
-  // as plain variables) or multiple ones (such as arrays, or structs).
-  // Assignment behaves differently in the two cases.
-  enum class ObjectValueType {
-    kSingleValued,
-    kMultiValued,
-  };
-
   // Tag struct for InitializedObject: the object being initialized is the
   // return value of the function.
   struct ReturnValue {};
@@ -147,9 +139,6 @@ class ObjectRepository {
   // represented by the object from GetCXXConstructExprThisPointer().
   const Object* GetInitializedObject(const clang::Expr* initializer_expr) const;
 
-  // Returns what kind of values the given object represents.
-  ObjectValueType GetObjectValueType(const Object* object) const;
-
   // Returns the object that represents `*this`, if in a member function.
   std::optional<const Object*> GetThisObject() const { return this_object_; }
 
@@ -201,6 +190,12 @@ class ObjectRepository {
     return initial_points_to_map_;
   }
 
+  // Returns the single-valued object set implied by variable declarations, i.e.
+  // assuming that no code has been executed yet.
+  const ObjectSet& InitialSingleValuedObjects() const {
+    return initial_single_valued_objects_;
+  }
+
   // Creates and returns an object with static lifetime of the given type.
   // Also creates any transitive objects if required.
   // When called multiple times with the same `type`, this function always
@@ -243,7 +238,7 @@ class ObjectRepository {
   std::optional<const Object*> this_object_;
   const Object* return_object_;
 
-  llvm::DenseMap<const Object*, ObjectValueType> object_value_types_;
+  ObjectSet initial_single_valued_objects_;
 
   class VarDeclVisitor;
 

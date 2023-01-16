@@ -243,9 +243,9 @@ class ObjectRepository::VarDeclVisitor
             lifetime == Lifetime::Static());
 
     object_repository_.object_repository_[var] = object;
-    object_repository_.object_value_types_[object] =
-        var->getType()->isArrayType() ? ObjectValueType::kMultiValued
-                                      : ObjectValueType::kSingleValued;
+    if (!var->getType()->isArrayType()) {
+      object_repository_.initial_single_valued_objects_.Add(object);
+    }
 
     // Remember the original value of function parameters.
     if (auto parm_var_decl = clang::dyn_cast<const clang::ParmVarDecl>(var)) {
@@ -664,17 +664,6 @@ const Object* ObjectRepository::GetInitializedObject(
     initializer_expr->dump();
     llvm::errs() << "\n" << DebugString();
     llvm::report_fatal_error("Didn't find object for initializer");
-  }
-  return iter->second;
-}
-
-ObjectRepository::ObjectValueType ObjectRepository::GetObjectValueType(
-    const Object* object) const {
-  auto iter = object_value_types_.find(object);
-  // If we don't know this lifetime, we conservatively assume it to be
-  // multi-valued.
-  if (iter == object_value_types_.end()) {
-    return ObjectValueType::kMultiValued;
   }
   return iter->second;
 }

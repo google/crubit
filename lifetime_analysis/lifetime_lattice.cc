@@ -10,8 +10,10 @@
 #include <tuple>
 #include <utility>
 
+#include "lifetime_analysis/lifetime_constraints.h"
+#include "lifetime_analysis/object_set.h"
+#include "lifetime_analysis/points_to_map.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
-#include "llvm/Support/ErrorHandling.h"
 
 namespace clang {
 namespace tidy {
@@ -25,19 +27,27 @@ std::string LifetimeLattice::ToString() const {
 }
 
 PointsToMap& LifetimeLattice::PointsTo() {
-  return std::get<0>(var_).first;
+  return std::get<PointsToMap>(std::get<0>(var_));
 }
 
 const PointsToMap& LifetimeLattice::PointsTo() const {
-  return std::get<0>(var_).first;
+  return std::get<PointsToMap>(std::get<0>(var_));
 }
 
 LifetimeConstraints& LifetimeLattice::Constraints() {
-  return std::get<0>(var_).second;
+  return std::get<LifetimeConstraints>(std::get<0>(var_));
 }
 
 const LifetimeConstraints& LifetimeLattice::Constraints() const {
-  return std::get<0>(var_).second;
+  return std::get<LifetimeConstraints>(std::get<0>(var_));
+}
+
+ObjectSet& LifetimeLattice::SingleValuedObjects() {
+  return std::get<ObjectSet>(std::get<0>(var_));
+}
+
+const ObjectSet& LifetimeLattice::SingleValuedObjects() const {
+  return std::get<ObjectSet>(std::get<0>(var_));
 }
 
 llvm::StringRef LifetimeLattice::Error() const {
@@ -54,16 +64,22 @@ clang::dataflow::LatticeJoinEffect LifetimeLattice::join(
     return clang::dataflow::LatticeJoinEffect::Changed;
   }
 
-  auto constraints_effect = Constraints().join(other.Constraints());
+  auto effect = Constraints().join(other.Constraints());
 
   PointsToMap joined_points_to_map = PointsTo().Union(other.PointsTo());
-  if (PointsTo() == joined_points_to_map &&
-      constraints_effect == clang::dataflow::LatticeJoinEffect::Unchanged) {
-    return clang::dataflow::LatticeJoinEffect::Unchanged;
+  if (PointsTo() != joined_points_to_map) {
+    PointsTo() = std::move(joined_points_to_map);
+    effect = clang::dataflow::LatticeJoinEffect::Changed;
   }
 
-  PointsTo() = std::move(joined_points_to_map);
-  return clang::dataflow::LatticeJoinEffect::Changed;
+  ObjectSet joined_single_valued_objects =
+      SingleValuedObjects().Intersection(other.SingleValuedObjects());
+  if (SingleValuedObjects() != joined_single_valued_objects) {
+    SingleValuedObjects() = std::move(joined_single_valued_objects);
+    effect = clang::dataflow::LatticeJoinEffect::Changed;
+  }
+
+  return effect;
 }
 
 bool LifetimeLattice::operator==(const LifetimeLattice& other) const {
