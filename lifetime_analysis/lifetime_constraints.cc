@@ -117,12 +117,6 @@ llvm::Error LifetimeConstraints::ApplyToFunctionLifetimes(
         get_outliving_lifetimes(lifetime);
     assert(!longer_lifetimes.contains(Lifetime::Static()));
 
-    // Replace unconstrained output lifetimes with 'static.
-    if (output_lifetimes.contains(lifetime) && longer_lifetimes.empty()) {
-      substitutions.Add(lifetime, Lifetime::Static());
-      already_have_substitutions.insert(lifetime);
-      continue;
-    }
 
     // If constrained to be outlived by 'local, replace the lifetime with
     // 'local, or error out if 'static.

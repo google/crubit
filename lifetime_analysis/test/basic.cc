@@ -190,7 +190,7 @@ TEST_F(LifetimeAnalysisTest, ReturnStaticViaPtr) {
       return &a;
     }
   )"),
-              LifetimesAre({{"target", "-> static"}}));
+              LifetimesAre({{"target", "-> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, StringLiteral) {
@@ -199,7 +199,7 @@ TEST_F(LifetimeAnalysisTest, StringLiteral) {
       return "this is a string literal";
     }
   )"),
-              LifetimesAre({{"target", "-> static"}}));
+              LifetimesAre({{"target", "-> a"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, OutParameter) {

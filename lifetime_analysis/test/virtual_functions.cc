@@ -49,7 +49,7 @@ struct Derived2 : public Base {
               LifetimesContain({
                   {"Base::f", "b: a -> a"},
                   {"Derived1::f", "b: a -> a"},
-                  {"Derived2::f", "b: a -> static"},
+                  {"Derived2::f", "b: a -> c"},
               }));
 }
 
@@ -91,7 +91,7 @@ struct Derived : public Base {
   )"),
               LifetimesContain({
                   {"Base::f", "b: a -> a"},
-                  {"Derived::f", "b: a -> static"},
+                  {"Derived::f", "b: a -> c"},
               }));
 }
 

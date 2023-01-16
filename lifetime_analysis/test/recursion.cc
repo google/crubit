@@ -24,7 +24,7 @@ TEST_F(LifetimeAnalysisTest, InfiniteDirectRecursion) {
       return f(a);
     }
   )"),
-              LifetimesAre({{"f", "a -> static"}}));
+              LifetimesAre({{"f", "a -> b"}}));
 }
 
 TEST_F(LifetimeAnalysisTest, FiniteDirectRecursion_1Pointee) {
