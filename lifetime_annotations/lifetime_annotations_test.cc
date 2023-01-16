@@ -16,6 +16,7 @@
 #include "lifetime_annotations/type_lifetimes.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Tooling/Tooling.h"
 #include "llvm/Support/FormatVariadic.h"
 
 // This file contains tests both for the "legacy" lifetime annotations
@@ -74,12 +75,14 @@ class LifetimeAnnotationsTest : public testing::Test {
   absl::StatusOr<NamedFuncLifetimes> GetNamedLifetimeAnnotations(
       absl::string_view code,
       const clang::tooling::FileContentMappings& file_contents =
-          clang::tooling::FileContentMappings()) {
+          clang::tooling::FileContentMappings(),
+      bool skip_templates = true) {
     absl::StatusOr<NamedFuncLifetimes> result;
     bool success = runOnCodeWithLifetimeHandlers(
         llvm::StringRef(code.data(), code.size()),
-        [&result](clang::ASTContext& ast_context,
-                  const LifetimeAnnotationContext& lifetime_context) {
+        [&result, skip_templates](
+            clang::ASTContext& ast_context,
+            const LifetimeAnnotationContext& lifetime_context) {
           using clang::ast_matchers::findAll;
           using clang::ast_matchers::functionDecl;
           using clang::ast_matchers::match;
@@ -89,7 +92,8 @@ class LifetimeAnnotationsTest : public testing::Test {
                match(findAll(functionDecl().bind("func")), ast_context)) {
             if (const auto* func =
                     node.getNodeAs<clang::FunctionDecl>("func")) {
-              // Skip various categories of function:
+              // Skip various categories of function, unless explicitly
+              // requested:
               // - Template instantiation don't contain any annotations that
               //   aren't present in the template itself, but they may contain
               //   reference-like types (which will obviously be unannotated),
@@ -98,7 +102,7 @@ class LifetimeAnnotationsTest : public testing::Test {
               // - Implicitly defaulted functions obviously cannot contain
               //   lifetime annotations. They will need to be handled through
               //   `AnalyzeDefaultedFunction()` in analyze.cc.
-              if (func->isTemplateInstantiation() ||
+              if ((func->isTemplateInstantiation() && skip_templates) ||
                   (func->isDefaulted() && !func->isExplicitlyDefaulted())) {
                 continue;
               }
@@ -526,6 +530,21 @@ TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_Template) {
   )")),
               IsOkAndHolds(LifetimesAre(
                   {{"f1", "(a, b) -> a"}, {"f2", "(a, b) -> a"}})));
+}
+
+TEST_F(LifetimeAnnotationsTest, LifetimeAnnotationTemplateUniversalReference) {
+  EXPECT_THAT(GetNamedLifetimeAnnotations(WithLifetimeMacros(R"(
+    #pragma clang lifetime_elision
+    template <typename T>
+    struct S {
+      static void f(T&&) {}
+    };
+
+    void g() { int a; S<int&>::f(a); }
+  )"),
+                                          clang::tooling::FileContentMappings(),
+                                          /*skip_templates=*/false),
+              IsOkAndHolds(LifetimesContain({{"S<int &>::f", "a"}})));
 }
 
 TEST_F(LifetimeAnnotationsTest, LifetimeAnnotation_VariadicTemplate) {

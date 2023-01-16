@@ -4,6 +4,8 @@
 
 #include "lifetime_annotations/pointee_type.h"
 
+#include "clang/AST/TypeLoc.h"
+
 namespace clang {
 namespace tidy {
 namespace lifetimes {
@@ -25,7 +27,18 @@ clang::TypeLoc PointeeTypeLoc(clang::TypeLoc type_loc) {
     return pointer_type_loc.getPointeeLoc();
   } else if (auto reference_type_loc =
                  type_loc.getAs<clang::ReferenceTypeLoc>()) {
-    return reference_type_loc.getPointeeLoc();
+    auto ret = reference_type_loc.getPointeeLoc();
+    if (auto tmplpar = ret.getAs<clang::SubstTemplateTypeParmTypeLoc>()) {
+      // When we have a T&& substituted with T = int&, the TypeLoc does not
+      // take reference collapsing into account, and would thus return a typeloc
+      // of a int& type as the pointee of an int&.
+      // TODO(veluca): figure out how to get at the typeloc of the underlying
+      // type, if it exists.
+      if (tmplpar.getType()->getAs<clang::ReferenceType>()) {
+        return clang::TypeLoc();
+      }
+    }
+    return ret;
   }
 
   return clang::TypeLoc();

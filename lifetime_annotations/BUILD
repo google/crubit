@@ -75,6 +75,7 @@ cc_test(
         "//lifetime_annotations/test:named_func_lifetimes",
         "//lifetime_annotations/test:run_on_code",
         "@llvm-project//clang:ast_matchers",
+        "@llvm-project//clang:tooling",
         "@llvm-project//llvm:Support",
     ],
 )
