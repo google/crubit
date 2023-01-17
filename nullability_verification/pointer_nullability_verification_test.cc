@@ -3022,12 +3022,6 @@ TEST(PointerNullabilityTest, AssertNullability) {
     }
   )cc"));
 
-  // Member variables and member calls on a struct with nested template
-  // arguments.
-  // TODO: Add non-flow-sensitive transfer function for the dereference
-  // operator.
-  // TODO: Handle member call arguments (includes writing
-  // transferMaterializeTemporaryExpr).
   EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
     template <typename T0, typename T1>
     struct Struct2Arg {
@@ -3063,26 +3057,22 @@ TEST(PointerNullabilityTest, AssertNullability) {
           <NK_unspecified, NK_nullable, NK_nonnull, NK_nullable, NK_nullable>(
               p.arg1);
 
-      // TODO: Add support for member call arguments.
-      // __assert_nullability<NK_unspecified, NK_nullable>(p->getT0());
-      // __assert_nullability  // TODO: fix false negative.
-      //     <NK_unspecified, NK_nullable, NK_unspecified>(p->getT0());
-      // __assert_nullability  // TODO: fix false negative.
-      //     <NK_unspecified>(p->getT0());
-      // __assert_nullability  // TODO: fix false negative.
-      //     <NK_unspecified, NK_nullable, NK_nullable>(p->arg0);
-      //  __assert_nullability  // TODO: fix false negative.
-      //     <NK_nullable>(p->arg0);
+      __assert_nullability<NK_unspecified, NK_nullable>(p.getT0());
+      __assert_nullability<NK_nonnull>(p.getT1().getT0().getT1());
 
-      // __assert_nullability<NK_nonnull>(p->getT1().getT0().getT1());
-      // __assert_nullability<NK_nonnull>(p->getT1().arg0.getT1());
-      // __assert_nullability<NK_nonnull>(p->arg1.getT0().arg1);
-      // __assert_nullability<NK_nonnull>(p->arg1.arg0.arg1);
+      __assert_nullability  // [[unsafe]]
+          <NK_unspecified, NK_nullable, NK_unspecified>(p.getT0());
+      __assert_nullability  // [[unsafe]]
+          <NK_unspecified>(p.getT0());
 
-      // __assert_nullability  // TODO: fix false negative.
-      //     <>(p->getT1().getT0().getT1());
-      // __assert_nullability  // TODO: fix false negative.
-      //     <NK_nonnull, NK_nonnull>(p->arg1.getT0().arg1);
+      __assert_nullability<NK_nonnull>(p.getT1().arg0.getT1());
+      __assert_nullability<NK_nonnull>(p.arg1.getT0().arg1);
+      __assert_nullability<NK_nonnull>(p.arg1.arg0.arg1);
+
+      __assert_nullability  // [[unsafe]]
+          <>(p.getT1().getT0().getT1());
+      __assert_nullability  // [[unsafe]]
+          <NK_nonnull, NK_nonnull>(p.arg1.getT0().arg1);
     }
   )cc"));
 }
@@ -3152,6 +3142,71 @@ TEST(PointerNullabilityTest, CastExpression) {
     void target(Struct2Arg<const int *, const int *_Nullable> &p) {
       *const_cast<int *>(p.arg0);  // [[unsafe]] TODO: Fix false positive.
       *const_cast<int *>(p.arg1);  // [[unsafe]]
+    }
+  )cc"));
+}
+
+// TODO: Handle non-flow-sensitive nullability of free functions to make the
+// following test work:
+TEST(PointerNullabilityTest, NonFlowSensitiveMaterializeTemporaryExpr) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    int *_Nonnull makeNonnull();
+    int *_Nullable makeNullable();
+    int *makeUnannotated();
+
+    template <typename T>
+    T identity(const T &);
+
+    void target() {
+      {
+        *identity<int *_Nonnull>(makeNonnull());
+        int *const &p = makeNonnull();
+        *p;
+      }
+      {
+        *identity<int *_Nullable>(makeNullable());  // TODO: Fix false negative.
+        int *const &p = makeNullable();
+        *p;  // [[unsafe]]
+      }
+      {
+        *identity<int *>(makeUnannotated());
+        int *const &p = makeUnannotated();
+        *p;
+      }
+    }
+  )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    struct Struct2Arg {
+      T0 getT0();
+      T1 getT1();
+    };
+
+    template <typename T>
+    T make();
+
+    template <typename T>
+    T identity(const T &);
+
+    void target(Struct2Arg<int *, int *_Nullable> &p) {
+      *identity<Struct2Arg<int *, int *_Nullable>>(p).getT0();
+      *identity<Struct2Arg<int *, int *_Nullable>>(
+           make<Struct2Arg<int *, int *_Nullable>>())
+           .getT0();
+      *identity<Struct2Arg<int *, int *_Nullable>>(
+           Struct2Arg<int *, int *_Nullable>(p))
+           .getT0();
+      *identity<int *>(p.getT0());
+      *identity<Struct2Arg<int *, int *_Nullable>>(p).getT1();  // TODO: Fix
+      // false negative.
+      *identity<Struct2Arg<int *, int *_Nullable>>(
+           make<Struct2Arg<int *, int *_Nullable>>())
+           .getT1();
+      *identity<Struct2Arg<int *, int *_Nullable>>(
+           Struct2Arg<int *, int *_Nullable>(p))
+           .getT1();                         // TODO: Fix false negative.
+      *identity<int *_Nullable>(p.getT1());  // TODO: Fix false negative.
     }
   )cc"));
 }
