@@ -9,6 +9,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
+#include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
 
 namespace clang {
@@ -29,7 +30,7 @@ class PointerNullabilityLattice {
       : ExprToNullability(ExprToNullability) {}
 
   Optional<ArrayRef<NullabilityKind>> getExprNullability(const Expr *E) const {
-    auto I = ExprToNullability->find(E);
+    auto I = ExprToNullability->find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == ExprToNullability->end()
                ? std::nullopt
                : Optional<ArrayRef<NullabilityKind>>(I->second);
@@ -41,8 +42,8 @@ class PointerNullabilityLattice {
   void insertExprNullabilityIfAbsent(
       const Expr *E,
       const std::function<std::vector<NullabilityKind>()> &GetNullability) {
-    auto [Iterator, Inserted] =
-        ExprToNullability->insert({E, std::vector<NullabilityKind>()});
+    auto [Iterator, Inserted] = ExprToNullability->insert(
+        {&dataflow::ignoreCFGOmittedNodes(*E), std::vector<NullabilityKind>()});
     if (Inserted) {
       Iterator->second = GetNullability();
     }
