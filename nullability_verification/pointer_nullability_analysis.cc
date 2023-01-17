@@ -107,14 +107,9 @@ class CountPointersInTypeVisitor
 
   unsigned getCount() { return count; }
 
-  void Visit(QualType T) { TypeVisitor::Visit(T.getTypePtrOrNull()); }
-
-  void VisitElaboratedType(const ElaboratedType* ET) {
-    Visit(ET->getNamedType());
-  }
-
-  void VisitAttributedType(const AttributedType* AT) {
-    Visit(AT->getModifiedType());
+  void Visit(QualType T) {
+    CHECK(T.isCanonical());
+    TypeVisitor::Visit(T.getTypePtrOrNull());
   }
 
   void VisitPointerType(const PointerType* PT) {
@@ -135,21 +130,17 @@ class CountPointersInTypeVisitor
       }
     }
   }
-
-  void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
-    Visit(TST->desugar());
-  }
 };
 
 unsigned countPointersInType(QualType T) {
   CountPointersInTypeVisitor PointerCountVisitor;
-  PointerCountVisitor.Visit(T);
+  PointerCountVisitor.Visit(T.getCanonicalType());
   return PointerCountVisitor.getCount();
 }
 
 unsigned countPointersInType(TemplateArgument TA) {
   if (TA.getKind() == TemplateArgument::Type) {
-    return countPointersInType(TA.getAsType());
+    return countPointersInType(TA.getAsType().getCanonicalType());
   }
   return 0;
 }
