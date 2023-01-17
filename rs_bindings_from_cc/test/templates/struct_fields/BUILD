@@ -13,5 +13,5 @@ rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [":struct_fields"],
-    deps = ["//rs_bindings_from_cc/support:ctor"],
+    deps = ["//support:ctor"],
 )

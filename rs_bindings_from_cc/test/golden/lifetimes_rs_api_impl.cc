@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "rs_bindings_from_cc/support/cxx20_backports.h"
-#include "rs_bindings_from_cc/support/offsetof.h"
+#include "support/cxx20_backports.h"
+#include "support/offsetof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/lifetimes.h"

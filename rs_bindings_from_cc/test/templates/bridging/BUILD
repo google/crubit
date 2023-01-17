@@ -29,6 +29,6 @@ rust_test(
         ":class_template_instantiation2",
     ],
     deps = [
-        "//rs_bindings_from_cc/support:forward_declare",
+        "//support:forward_declare",
     ],
 )

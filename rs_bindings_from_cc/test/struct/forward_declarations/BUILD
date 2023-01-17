@@ -41,7 +41,7 @@ rust_test(
         ":no_definition_in_headers",
     ],
     deps = [
-        "//rs_bindings_from_cc/support:ctor",
-        "//rs_bindings_from_cc/support:forward_declare",
+        "//support:ctor",
+        "//support:forward_declare",
     ],
 )

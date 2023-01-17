@@ -13,5 +13,5 @@ rust_test(
     name = "no_unique_address_test",
     srcs = ["no_unique_address_test.rs"],
     cc_deps = [":no_unique_address"],
-    deps = ["//rs_bindings_from_cc/support:ctor"],
+    deps = ["//support:ctor"],
 )

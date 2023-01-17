@@ -8,7 +8,7 @@ rust_test(
     cc_deps = [
         "//rs_bindings_from_cc:cc_std",
     ],
-    deps = ["//rs_bindings_from_cc/support:ctor"],
+    deps = ["//support:ctor"],
 )
 
 rust_test(
@@ -17,7 +17,7 @@ rust_test(
     cc_deps = [
         "//rs_bindings_from_cc:cc_std",
     ],
-    deps = ["//rs_bindings_from_cc/support:ctor"],
+    deps = ["//support:ctor"],
 )
 
 cc_library(

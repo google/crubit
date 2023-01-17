@@ -60,7 +60,7 @@ def generate_bindings(
         "--namespaces_out",
         namespaces_output.path,
         "--crubit_support_path",
-        "rs_bindings_from_cc/support",
+        "support",
         "--clang_format_exe_path",
         ctx.file._clang_format.path,
         "--rustfmt_exe_path",

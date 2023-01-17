@@ -43,15 +43,15 @@ rust_bindings_from_cc_binary(
 deps_for_bindings(
     name = "deps_for_bindings",
     deps_for_generated_cc_file = [
-        "//rs_bindings_from_cc/support:rs_api_impl_support",
+        "//support:rs_api_impl_support",
     ],
     deps_for_generated_rs_file = [
         # Required for struct layout assertions added to the generated
         # Rust code.
         "@crate_index//:memoffset",
-        "//rs_bindings_from_cc/support:ctor",
-        "//rs_bindings_from_cc/support:forward_declare",
-        "//rs_bindings_from_cc/support:oops",
+        "//support:ctor",
+        "//support:forward_declare",
+        "//support:oops",
         # Required for `Copy` trait assertions added to the generated Rust
         # code.
         "@crate_index//:static_assertions",
@@ -580,7 +580,7 @@ filegroup(
 bindings_for_toolchain_headers(
     name = "cc_std",
     hdrs = ":toolchain_headers",
-    extra_rs_srcs = ["//rs_bindings_from_cc/support/extra_rs_srcs_for_cc_std"],
+    extra_rs_srcs = ["//support/extra_rs_srcs_for_cc_std"],
     public_libc_hdrs = LIBC_HEADERS,
     public_libcxx_hdrs = LIBCXX_HEADERS,
     visibility = ["//visibility:public"],

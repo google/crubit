@@ -23,6 +23,6 @@ rust_test(
         ":type_alias_in_different_target",
     ],
     deps = [
-        "//rs_bindings_from_cc/support:forward_declare",
+        "//support:forward_declare",
     ],
 )

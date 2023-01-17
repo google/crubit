@@ -24,7 +24,7 @@ rust_test(
         ":no_elided_lifetimes",
     ],
     deps = [
-        "//rs_bindings_from_cc/support:ctor",
+        "//support:ctor",
         "@crate_index//:static_assertions",
     ],
 )

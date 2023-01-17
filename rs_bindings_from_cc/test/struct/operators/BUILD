@@ -15,7 +15,7 @@ rust_test(
     srcs = ["add_test.rs"],
     cc_deps = [":add"],
     deps = [
-        "//rs_bindings_from_cc/support:ctor",
+        "//support:ctor",
     ],
 )
 
@@ -30,7 +30,7 @@ rust_test(
     srcs = ["add_assign_test.rs"],
     cc_deps = [":add_assign"],
     deps = [
-        "//rs_bindings_from_cc/support:ctor",
+        "//support:ctor",
         "@crate_index//:static_assertions",
     ],
 )
@@ -46,7 +46,7 @@ rust_test(
     srcs = ["operators_test.rs"],
     cc_deps = [":operators"],
     deps = [
-        "//rs_bindings_from_cc/support:ctor",
+        "//support:ctor",
         "@crate_index//:static_assertions",
     ],
 )

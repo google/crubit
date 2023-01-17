@@ -28,7 +28,7 @@ ABSL_FLAG(std::string, ir_out, "",
           "(optional) output path for the JSON IR. If not present, the JSON IR "
           "will not be dumped.");
 ABSL_FLAG(std::string, crubit_support_path, "",
-          "path to a the crubit/rs_bindings/support directory in a format that "
+          "path to a the crubit/support directory in a format that "
           "should be used in the #include directives inside the generated .cc "
           "files.");
 ABSL_FLAG(std::string, clang_format_exe_path, "",

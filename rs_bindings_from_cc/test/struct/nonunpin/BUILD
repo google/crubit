@@ -13,5 +13,5 @@ rust_test(
     name = "nonunpin_test",
     srcs = ["nonunpin_test.rs"],
     cc_deps = [":nonunpin"],
-    deps = ["//rs_bindings_from_cc/support:ctor"],
+    deps = ["//support:ctor"],
 )
