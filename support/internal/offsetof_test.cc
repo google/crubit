@@ -2,7 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include "support/offsetof.h"
+#include "support/internal/offsetof.h"
 
 #include <stdint.h>
 

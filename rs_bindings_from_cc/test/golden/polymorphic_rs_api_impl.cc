@@ -8,8 +8,8 @@
 #include <cstddef>
 #include <memory>
 
-#include "support/cxx20_backports.h"
-#include "support/offsetof.h"
+#include "support/internal/cxx20_backports.h"
+#include "support/internal/offsetof.h"
 
 // Public headers of the C++ library being wrapped.
 #include "rs_bindings_from_cc/test/golden/polymorphic.h"

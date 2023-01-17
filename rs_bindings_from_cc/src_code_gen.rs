@@ -3964,7 +3964,7 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
     if ir.records().next().is_some() {
         internal_includes.insert(CcInclude::cstddef());
     };
-    for crubit_header in ["cxx20_backports.h", "offsetof.h"] {
+    for crubit_header in ["internal/cxx20_backports.h", "internal/offsetof.h"] {
         internal_includes.insert(CcInclude::user_header(
             format!("{crubit_support_path}/{crubit_header}").into(),
         ));
