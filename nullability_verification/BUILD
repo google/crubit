@@ -5,6 +5,7 @@ cc_library(
     hdrs = ["pointer_nullability_lattice.h"],
     deps = [
         "@absl//absl/container:flat_hash_map",
+        "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
     ],
 )

@@ -11,6 +11,7 @@
 #include "nullability_verification/pointer_nullability_lattice.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTDumper.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
@@ -143,6 +144,40 @@ unsigned countPointersInType(TemplateArgument TA) {
     return countPointersInType(TA.getAsType().getCanonicalType());
   }
   return 0;
+}
+
+QualType exprType(const Expr* E) {
+  if (E->hasPlaceholderType(BuiltinType::BoundMember))
+    return Expr::findBoundMemberType(E);
+  return E->getType();
+}
+
+unsigned countPointersInType(const Expr* E) {
+  return countPointersInType(exprType(E));
+}
+
+// Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
+template <typename T>
+void dump(const T& Node, llvm::raw_ostream& OS) {
+  clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
+}
+
+// Returns the computed nullability for a subexpr of the current expression.
+// This is always available as we compute bottom-up.
+ArrayRef<NullabilityKind> getNullabilityForChild(
+    const Expr* E, TransferState<PointerNullabilityLattice>& State) {
+  return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
+    // Since we process child nodes before parents, we should already have
+    // computed the child nullability. However, this is not true in all test
+    // cases. So, we return unspecified nullability annotations.
+    // TODO: fix this issue, and CHECK() instead.
+    llvm::dbgs() << "=== Missing child nullability: ===\n";
+    dump(E, llvm::dbgs());
+    llvm::dbgs() << "==================================\n";
+
+    return std::vector<NullabilityKind>(countPointersInType(E),
+                                        NullabilityKind::Unspecified);
+  });
 }
 
 class SubstituteNullabilityAnnotationsInTemplateVisitor
@@ -451,59 +486,36 @@ void transferFlowSensitiveCallExpr(
 void transferNonFlowSensitiveDeclRefExpr(
     const DeclRefExpr* DRE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  State.Lattice.insertExprNullabilityIfAbsent(
+  (void)State.Lattice.insertExprNullabilityIfAbsent(
       DRE, [&]() { return getNullabilityAnnotationsFromType(DRE->getType()); });
 }
 
 void transferNonFlowSensitiveMemberExpr(
     const MemberExpr* ME, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  State.Lattice.insertExprNullabilityIfAbsent(ME, [&]() {
-    auto BaseNullability = State.Lattice.getExprNullability(ME->getBase());
-    if (BaseNullability.has_value()) {
-      QualType MemberType = ME->getType();
-      // When a MemberExpr is a part of a member function call
-      // (a child of CXXMemberCallExpr), the MemberExpr models a
-      // partially-applied member function, which isn't a real C++ construct.
-      // The AST does not provide rich type information for such MemberExprs.
-      // Instead, the AST specifies a placeholder type, specifically
-      // BuiltinType::BoundMember. So we have to look at the type of the member
-      // function declaration.
-      if (ME->hasPlaceholderType(BuiltinType::BoundMember)) {
-        MemberType = ME->getMemberDecl()->getType();
-      }
-      return substituteNullabilityAnnotationsInClassTemplate(
-          MemberType, *BaseNullability, ME->getBase()->getType());
-    } else {
-      // Since we process child nodes before parents, we should already have
-      // computed the base (child) nullability. However, this is not true in all
-      // test cases. So, we return unspecified nullability annotations.
-      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
-      // remove the else branch.
-      llvm::dbgs() << "Nullability of child node not found\n";
-      return std::vector<NullabilityKind>(countPointersInType(ME->getType()),
-                                          NullabilityKind::Unspecified);
+  (void)State.Lattice.insertExprNullabilityIfAbsent(ME, [&]() {
+    auto BaseNullability = getNullabilityForChild(ME->getBase(), State);
+    QualType MemberType = ME->getType();
+    // When a MemberExpr is a part of a member function call
+    // (a child of CXXMemberCallExpr), the MemberExpr models a
+    // partially-applied member function, which isn't a real C++ construct.
+    // The AST does not provide rich type information for such MemberExprs.
+    // Instead, the AST specifies a placeholder type, specifically
+    // BuiltinType::BoundMember. So we have to look at the type of the member
+    // function declaration.
+    if (ME->hasPlaceholderType(BuiltinType::BoundMember)) {
+      MemberType = ME->getMemberDecl()->getType();
     }
+    return substituteNullabilityAnnotationsInClassTemplate(
+        MemberType, BaseNullability, ME->getBase()->getType());
   });
 }
 
 void transferNonFlowSensitiveMemberCallExpr(
     const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  State.Lattice.insertExprNullabilityIfAbsent(MCE, [&]() {
-    auto BaseNullability = State.Lattice.getExprNullability(MCE->getCallee());
-    if (BaseNullability.has_value()) {
-      return BaseNullability->vec();
-    } else {
-      // Since we process child nodes before parents, we should already have
-      // computed the base (child) nullability. However, this is not true in all
-      // test cases. So, we return unspecified nullability annotations.
-      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
-      // remove the else branch.
-      llvm::dbgs() << "Nullability of child node not found\n";
-      return std::vector<NullabilityKind>(countPointersInType(MCE->getType()),
-                                          NullabilityKind::Unspecified);
-    }
+  (void)State.Lattice.insertExprNullabilityIfAbsent(MCE, [&]() {
+    return getNullabilityForChild(MCE->getCallee(), State).vec();
   });
 }
 
@@ -513,40 +525,16 @@ void transferNonFlowSensitiveCastExpr(
   // TODO: Handle casts where the input and output types can have different
   // numbers of pointers, and therefore different nullability. For example, a
   // reinterpret_cast from `int *` to int.
-  State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
-    auto BaseNullability = State.Lattice.getExprNullability(CE->getSubExpr());
-    if (BaseNullability.has_value()) {
-      return BaseNullability->vec();
-    } else {
-      // Since we process child nodes before parents, we should already have
-      // computed the base (child) nullability. However, this is not true in all
-      // test cases. So, we return unspecified nullability annotations.
-      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
-      // remove the else branch.
-      llvm::dbgs() << "Nullability of child node not found\n";
-      return std::vector<NullabilityKind>(countPointersInType(CE->getType()),
-                                          NullabilityKind::Unspecified);
-    }
+  (void)State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
+    return getNullabilityForChild(CE->getSubExpr(), State).vec();
   });
 }
 
 void transferNonFlowSensitiveMaterializeTemporaryExpr(
     const MaterializeTemporaryExpr* MTE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  State.Lattice.insertExprNullabilityIfAbsent(MTE, [&]() {
-    auto BaseNullability = State.Lattice.getExprNullability(MTE->getSubExpr());
-    if (BaseNullability.has_value()) {
-      return BaseNullability->vec();
-    } else {
-      // Since we process child nodes before parents, we should already have
-      // computed the base (child) nullability. However, this is not true in all
-      // test cases. So, we return unspecified nullability annotations.
-      // TODO: Fix this issue, add a CHECK(BaseNullability.has_value()) and
-      // remove the else branch.
-      llvm::dbgs() << "Nullability of child node not found\n";
-      return std::vector<NullabilityKind>(countPointersInType(MTE->getType()),
-                                          NullabilityKind::Unspecified);
-    }
+  (void)State.Lattice.insertExprNullabilityIfAbsent(MTE, [&]() {
+    return getNullabilityForChild(MTE->getSubExpr(), State).vec();
   });
 }
 
@@ -555,7 +543,7 @@ void transferNonFlowSensitiveCallExpr(
     TransferState<PointerNullabilityLattice>& State) {
   // TODO: Check CallExpr arguments in the diagnoser against the nullability of
   // parameters.
-  State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
+  (void)State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
     return substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(),
                                                               CE);
   });

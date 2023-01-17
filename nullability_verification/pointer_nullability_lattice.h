@@ -8,6 +8,7 @@
 #include <ostream>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysis.h"
 #include "clang/Analysis/FlowSensitive/DataflowAnalysisContext.h"
 #include "clang/Analysis/FlowSensitive/DataflowLattice.h"
@@ -30,6 +31,7 @@ class PointerNullabilityLattice {
       : ExprToNullability(ExprToNullability) {}
 
   Optional<ArrayRef<NullabilityKind>> getExprNullability(const Expr *E) const {
+    E = &dataflow::ignoreCFGOmittedNodes(*E);
     auto I = ExprToNullability->find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == ExprToNullability->end()
                ? std::nullopt
@@ -39,14 +41,19 @@ class PointerNullabilityLattice {
   // If the `ExprToNullability` map already contains an entry for `E`, does
   // nothing. Otherwise, inserts a new entry with key `E` and value computed by
   // the provided GetNullability.
-  void insertExprNullabilityIfAbsent(
+  // Returns the (cached or computed) nullability.
+  ArrayRef<NullabilityKind> insertExprNullabilityIfAbsent(
       const Expr *E,
       const std::function<std::vector<NullabilityKind>()> &GetNullability) {
-    auto [Iterator, Inserted] = ExprToNullability->insert(
-        {&dataflow::ignoreCFGOmittedNodes(*E), std::vector<NullabilityKind>()});
-    if (Inserted) {
-      Iterator->second = GetNullability();
-    }
+    E = &dataflow::ignoreCFGOmittedNodes(*E);
+    if (auto It = ExprToNullability->find(E); It != ExprToNullability->end())
+      return It->second;
+    // Deliberately perform a separate lookup after calling GetNullability.
+    // It may invalidate iterators, e.g. inserting missing vectors for children.
+    auto [Iterator, Inserted] =
+        ExprToNullability->insert({E, GetNullability()});
+    CHECK(Inserted) << "GetNullability inserted same " << E->getStmtClassName();
+    return Iterator->second;
   }
 
   bool operator==(const PointerNullabilityLattice &Other) const { return true; }
