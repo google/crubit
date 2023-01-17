@@ -33,5 +33,6 @@ cc_test(
     deps = [
         ":functions_cc_api",
         "@com_google_googletest//:gtest_main",
+        "//support/rstd:char",
     ],
 )

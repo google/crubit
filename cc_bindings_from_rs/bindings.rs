@@ -29,8 +29,10 @@ pub struct Input<'tcx> {
     /// for.
     pub tcx: TyCtxt<'tcx>,
 
-    // TODO(b/265338802): Provide a base path for `#include ".../rs_char.h"`
-    pub _crubit_support_path: (),
+    /// Path to a the `crubit/support` directory in a format that should be used
+    /// in the `#include` directives inside the generated C++ files.
+    /// Example: "crubit/support".
+    pub crubit_support_path: Rc<str>,
 
     // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
     pub _features: (),
@@ -311,18 +313,15 @@ fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
         ty::TyKind::Float(ty::FloatTy::F32) => keyword(quote! { float }),
         ty::TyKind::Float(ty::FloatTy::F64) => keyword(quote! { double }),
 
+        // ABI compatibility and other details are described in the doc comments in
+        // `crubit/support/rstd/char.h` and `crubit/support/rstd/char_test.cc` (search for "Layout
+        // tests").
         ty::TyKind::Char => {
-            // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#char
-            // documents that "Rust char is 32-bit wide and represents an unicode scalar value".
-            //
-            // We don't map Rust's `char` to C++ `char32_t` because
-            // - It may be wider than 32 bits - <internal link>/c/string/multibyte/char32_t says that
-            //   "char32_t is an unsigned integer type used for 32-bit wide characters and is the
-            //   same type as uint_least32_t. uint_least32_t is the smallest unsigned integer type
-            //   with width of at least 32 bits"
-            // - It is problematic on MacOS - https://github.com/eqrion/cbindgen/issues/423
-            //   points out that `uchar.h` is missing on that platform.
-            cstdint(quote!{ std::uint32_t })
+            let rstd_char_path = format!("{}/rstd/char.h", &*input.crubit_support_path);
+            CcSnippet::with_include(
+                quote! { rstd::Char },
+                CcInclude::user_header(rstd_char_path.into()),
+            )
         },
 
         // https://rust-lang.github.io/unsafe-code-guidelines/layout/scalars.html#isize-and-usize
@@ -2975,22 +2974,22 @@ pub mod tests {
             ("bool", ("bool", "", "", "")),
             ("f32", ("float", "", "", "")),
             ("f64", ("double", "", "", "")),
-            ("i8", ("std::int8_t", "cstdint", "", "")),
-            ("i16", ("std::int16_t", "cstdint", "", "")),
-            ("i32", ("std::int32_t", "cstdint", "", "")),
-            ("i64", ("std::int64_t", "cstdint", "", "")),
-            ("isize", ("std::intptr_t", "cstdint", "", "")),
-            ("u8", ("std::uint8_t", "cstdint", "", "")),
-            ("u16", ("std::uint16_t", "cstdint", "", "")),
-            ("u32", ("std::uint32_t", "cstdint", "", "")),
-            ("u64", ("std::uint64_t", "cstdint", "", "")),
-            ("usize", ("std::uintptr_t", "cstdint", "", "")),
-            ("char", ("std::uint32_t", "cstdint", "", "")),
+            ("i8", ("std::int8_t", "<cstdint>", "", "")),
+            ("i16", ("std::int16_t", "<cstdint>", "", "")),
+            ("i32", ("std::int32_t", "<cstdint>", "", "")),
+            ("i64", ("std::int64_t", "<cstdint>", "", "")),
+            ("isize", ("std::intptr_t", "<cstdint>", "", "")),
+            ("u8", ("std::uint8_t", "<cstdint>", "", "")),
+            ("u16", ("std::uint16_t", "<cstdint>", "", "")),
+            ("u32", ("std::uint32_t", "<cstdint>", "", "")),
+            ("u64", ("std::uint64_t", "<cstdint>", "", "")),
+            ("usize", ("std::uintptr_t", "<cstdint>", "", "")),
+            ("char", ("rstd::Char", "\"crubit/support/for/tests/rstd/char.h\"", "", "")),
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
             ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
-            ("*const i32", ("const std::int32_t*", "cstdint", "", "")),
-            ("*mut i32", ("std::int32_t*", "cstdint", "", "")),
+            ("*const i32", ("const std::int32_t*", "<cstdint>", "", "")),
+            ("*mut i32", ("std::int32_t*", "<cstdint>", "", "")),
             // `SomeStruct` is a `fwd_decls` prerequisite (not `defs` prerequisite):
             ("*mut SomeStruct", ("::rust_out::SomeStruct*", "", "", "SomeStruct")),
             // Testing propagation of deeper/nested `fwd_decls`:
@@ -3033,10 +3032,10 @@ pub mod tests {
                 if expected_include.is_empty() {
                     assert!(actual_includes.is_empty());
                 } else {
-                    let expected_header = format_cc_ident(expected_include).unwrap();
+                    let expected_include: TokenStream = expected_include.parse().unwrap();
                     assert_cc_matches!(
                         format_cc_includes(&actual_includes),
-                        quote! { include <#expected_header> }
+                        quote! { __HASH_TOKEN__ include #expected_include }
                     );
                 }
 
@@ -3406,7 +3405,12 @@ pub mod tests {
     }
 
     fn bindings_input_for_tests(tcx: TyCtxt) -> Input {
-        Input { tcx, _crubit_support_path: (), _features: (), _crate_to_include_map: () }
+        Input {
+            tcx,
+            crubit_support_path: "crubit/support/for/tests".into(),
+            _features: (),
+            _crate_to_include_map: (),
+        }
     }
 
     /// Tests invoking `generate_bindings` on the given Rust `source`.

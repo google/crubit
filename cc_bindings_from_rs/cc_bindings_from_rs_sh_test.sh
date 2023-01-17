@@ -40,6 +40,7 @@ function test::happy_path() {
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         \"--h-out=${H_OUT_PATH}\" \
         \"--rs-out=${RS_OUT_PATH}\" \
+        \"--crubit-support-path=crubit/support/for/tests\" \
         \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
         -- \
@@ -123,6 +124,7 @@ function test::invalid_h_out() {
     "\"${CC_BINDINGS_FROM_RS}\" >\"$STDOUT_PATH\" 2>\"$STDERR_PATH\" \
         --h-out=../.. \
         --rs-out=blah \
+        \"--crubit-support-path=crubit/support/for/tests\" \
         \"--clang-format-exe-path=${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
         \"--rustfmt-exe-path=${DEFAULT_RUSTFMT_EXE_PATH}\" \
         -- \

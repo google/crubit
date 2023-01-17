@@ -43,8 +43,8 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
     use bindings::*;
     let Output { h_body, rs_body } = {
-        let input =
-            Input { tcx, _crubit_support_path: (), _features: (), _crate_to_include_map: () };
+        let crubit_support_path = cmdline.crubit_support_path.as_str().into();
+        let input = Input { tcx, crubit_support_path, _features: (), _crate_to_include_map: () };
         generate_bindings(&input)?
     };
 
@@ -204,6 +204,7 @@ mod tests {
                 "cc_bindings_from_rs_unittest_executable".to_string(),
                 format!("--h-out={}", h_path.display()),
                 format!("--rs-out={}", rs_path.display()),
+                format!("--crubit-support-path=crubit/support/for/tests"),
                 format!("--clang-format-exe-path={CLANG_FORMAT_EXE_PATH_FOR_TESTING}"),
                 format!("--rustfmt-exe-path={RUSTFMT_EXE_PATH_FOR_TESTING}"),
             ];

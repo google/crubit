@@ -12,3 +12,9 @@ bzl_library(
         "//:__subpackages__",
     ],
 )
+
+alias(
+    name = "cc_deps_for_bindings",
+    actual = "//support/rstd:char",
+    visibility = ["//visibility:public"],
+)

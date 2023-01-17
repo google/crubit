@@ -68,6 +68,10 @@ pub mod fn_param_ty_tests {
             *sum = *x + *y;
         }
     }
+
+    pub fn char_identity(c: char) -> char {
+        c
+    }
 }
 
 /// APIs for testing functions that return the unit / `()` / `void` type.
