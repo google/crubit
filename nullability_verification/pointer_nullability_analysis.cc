@@ -145,54 +145,6 @@ unsigned countPointersInType(TemplateArgument TA) {
   return 0;
 }
 
-/// Use the nullability annotations of the base type to compute the nullability
-/// of a type that was originally written as a template type parameter.
-/// For example, consider the following code:
-///
-/// template <typename T0, typename T1>
-/// struct S {
-///   T0 arg0;
-///   T1 arg1;
-/// };
-/// void target(S<pair<int * _Nullable, int *> * _Nonnull, int * _Nullable> p) {
-///   p.arg0; // (*)
-/// }
-///
-/// Suppose we wish to find the nullability annotations of arg0. The nullability
-/// annotation list of Struct2Arg is {_Nonnull, _Nullable, _Unknown, _Nullable}.
-/// We use this list and information about S to infer that the
-/// nullability annotation list of arg0 is {_Nonnull, _Nullable, _Unknown}.
-ArrayRef<NullabilityKind> getNullabilityForTemplateParameter(
-    const SubstTemplateTypeParmType* STTPT,
-    ArrayRef<NullabilityKind> BaseNullabilityAnnotations, QualType BaseType) {
-  unsigned PointerCount = 0;
-  unsigned ArgIndex = STTPT->getIndex();
-  if (auto RT = BaseType->getAs<RecordType>()) {
-    if (auto CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
-      auto TemplateArgs = CTSD->getTemplateArgs().asArray();
-      for (auto TA : TemplateArgs.take_front(ArgIndex)) {
-        PointerCount += countPointersInType(TA);
-      }
-      // TODO: Correctly handle the indexing of nested templates (e.g.
-      // PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct), then
-      // remove this fallback.
-      if (TemplateArgs.size() <= ArgIndex) {
-        return {};
-      }
-      unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
-      if (BaseNullabilityAnnotations.size() < PointerCount + SliceSize) {
-        // TODO: Currently, BaseNullabilityAnnotations can be erroneously empty
-        // due to lack of expression coverage. Use the dataflow lattice to
-        // retrieve correct base type annotations. Then, remove this fallback.
-        return {};
-      } else {
-        return BaseNullabilityAnnotations.slice(PointerCount, SliceSize);
-      }
-    }
-  }
-  return ArrayRef<NullabilityKind>();
-}
-
 class SubstituteNullabilityAnnotationsInTemplateVisitor
     : public TypeVisitor<SubstituteNullabilityAnnotationsInTemplateVisitor> {
   std::vector<NullabilityKind> NullabilityAnnotations;
@@ -242,40 +194,80 @@ class SubstituteNullabilityAnnotationsInTemplateVisitor
   }
 };
 
-/// Similar to getNullabilityForTemplateParameter, but here we get the
-/// nullability annotation for a type that *contains* another type that was
-/// originally written as a template type parameter. For example, consider the
-/// following code:
+/// Compute the nullability annotation of type `T`, which contains types
+/// originally written as a class template type parameter.
 ///
-/// template <typename T0, typename T1>
-/// struct Struct2Arg {
-///   T1 *_Nullable getNullableT1Ptr();
-/// };
-/// void target(Struct2Arg<int *, int *_Nonnull> &x) {
-///   x.getNullableT1Ptr();
-/// }
+/// Example:
 ///
-/// Suppose we wish to find the nullability annotations of x.getNullableT1Ptr().
-/// The return type of this method call is T1 * _Nullable, so its outer
-/// nullability is "_Nullable". Then, we continue recursing over this type to
-/// find the rest of the nullability annotation. We call
-/// getNullabilityFromTemplateParameter to find that T1 has nullability
-/// annotation {_Nonnull}. Thus, our complete nullability annotation for this
-/// member call is {_Nullable, _Nonnull}.
+/// \code
+///   template <typename F, typename S>
+///   struct pair {
+///     S *_Nullable getNullablePtrToSecond();
+///   };
+/// \endcode
+///
+/// Consider the following member call:
+///
+/// \code
+///   pair<int *, int *_Nonnull> x;
+///   x.getNullablePtrToSecond();
+/// \endcode
+///
+/// The class template specialization `x` has the following substitutions:
+///
+///   F=int *, whose nullability is [_Unspecified]
+///   S=int * _Nonnull, whose nullability is [_Nonnull]
+///
+/// The return type of the member call `x.getNullablePtrToSecond()` is
+/// S * _Nullable.
+///
+/// When we call `substituteNullabilityAnnotationsInClassTemplate` with the type
+/// `S * _Nullable` and the `base` node of the member call (in this case, a
+/// `DeclRefExpr`), it returns the nullability of the given type after applying
+/// substitutions, which in this case is [_Nullable, _Nonnull].
 std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
     QualType T, ArrayRef<NullabilityKind> BaseNullabilityAnnotations,
     QualType BaseType) {
   SubstituteNullabilityAnnotationsInTemplateVisitor AnnotationVisitor(
       [&](const SubstTemplateTypeParmType* ST) {
-        return getNullabilityForTemplateParameter(
-                   ST, BaseNullabilityAnnotations, BaseType)
-            .vec();
+        unsigned PointerCount = 0;
+        unsigned ArgIndex = ST->getIndex();
+        if (auto RT = BaseType->getAs<RecordType>()) {
+          if (auto CTSD =
+                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+            auto TemplateArgs = CTSD->getTemplateArgs().asArray();
+
+            // TODO: Correctly handle the indexing of nested templates (e.g.
+            // PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct),
+            // then remove this fallback.
+            if (TemplateArgs.size() <= ArgIndex &&
+                ST->getReplacedParameter()->getDepth() == 0) {
+              return std::vector<NullabilityKind>();
+            }
+
+            for (auto TA : TemplateArgs.take_front(ArgIndex)) {
+              PointerCount += countPointersInType(TA);
+            }
+            unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
+            if (BaseNullabilityAnnotations.size() < PointerCount + SliceSize) {
+              // TODO: Currently, BaseNullabilityAnnotations can be erroneously
+              // empty due to lack of expression coverage. Use the dataflow
+              // lattice to retrieve correct base type annotations. Then, remove
+              // this fallback.
+              return std::vector<NullabilityKind>();
+            } else {
+              return BaseNullabilityAnnotations.slice(PointerCount, SliceSize)
+                  .vec();
+            }
+          }
+        }
+        return std::vector<NullabilityKind>();
       });
   AnnotationVisitor.Visit(T);
   return std::move(AnnotationVisitor).getNullabilityAnnotations();
 }
 
-/// Compute nullability annotations of `T` which might contain template type
+/// Compute nullability annotations of `T`, which might contain template type
 /// variable substitutions bound by the call `CE`.
 ///
 /// Example:
@@ -287,7 +279,9 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
 ///
 /// Consider the following CallExpr:
 ///
+/// \code
 ///   flip<int * _Nonnull, int * _Nullable>(std::make_pair(&x, &y));
+/// \endcode
 ///
 /// This CallExpr has the following substitutions:
 ///   F=int * _Nonnull, whose nullability is [_Nonnull]
