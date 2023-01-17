@@ -29,7 +29,6 @@ use itertools::Itertools;
 use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
 use std::path::Path;
 
-use bindings::GeneratedBindings;
 use cmdline::Cmdline;
 use run_compiler::run_compiler;
 use token_stream_printer::{
@@ -42,7 +41,12 @@ fn write_file(path: &Path, content: &str) -> anyhow::Result<()> {
 }
 
 fn run_with_tcx(cmdline: &Cmdline, tcx: TyCtxt) -> anyhow::Result<()> {
-    let GeneratedBindings { h_body, rs_body } = GeneratedBindings::generate(tcx)?;
+    use bindings::*;
+    let Output { h_body, rs_body } = {
+        let input =
+            Input { tcx, _crubit_support_path: (), _features: (), _crate_to_include_map: () };
+        generate_bindings(&input)?
+    };
 
     {
         let h_body = cc_tokens_to_formatted_string(h_body, &cmdline.clang_format_exe_path)?;

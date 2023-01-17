@@ -24,71 +24,84 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::AddAssign;
 use std::rc::Rc;
 
-pub struct GeneratedBindings {
+pub struct Input<'tcx> {
+    /// Compilation context for the crate that the bindings should be generated
+    /// for.
+    pub tcx: TyCtxt<'tcx>,
+
+    // TODO(b/265338802): Provide a base path for `#include ".../rs_char.h"`
+    pub _crubit_support_path: (),
+
+    // TODO(b/262878759): Provide a set of enabled/disabled Crubit features.
+    pub _features: (),
+
+    // TODO(b/258261328): Provide a map from crate name into C++ header path with crate bindings.
+    pub _crate_to_include_map: (),
+}
+
+pub struct Output {
     pub h_body: TokenStream,
     pub rs_body: TokenStream,
 }
 
-impl GeneratedBindings {
-    pub fn generate(tcx: TyCtxt) -> Result<Self> {
-        match tcx.sess().panic_strategy() {
-            PanicStrategy::Unwind => bail!("No support for panic=unwind strategy (b/254049425)"),
-            PanicStrategy::Abort => (),
-        };
+pub fn generate_bindings(input: &Input) -> Result<Output> {
+    match input.tcx.sess().panic_strategy() {
+        PanicStrategy::Unwind => bail!("No support for panic=unwind strategy (b/254049425)"),
+        PanicStrategy::Abort => (),
+    };
 
-        let top_comment = {
-            let crate_name = tcx.crate_name(LOCAL_CRATE);
-            let txt = format!(
-                "Automatically @generated C++ bindings for the following Rust crate:\n\
-                 {crate_name}"
-            );
-            quote! { __COMMENT__ #txt __NEWLINE__ }
-        };
+    let top_comment = {
+        let crate_name = input.tcx.crate_name(LOCAL_CRATE);
+        let txt = format!(
+            "Automatically @generated C++ bindings for the following Rust crate:\n\
+             {crate_name}"
+        );
+        quote! { __COMMENT__ #txt __NEWLINE__ }
+    };
 
-        let Self { h_body, rs_body } = format_crate(tcx).unwrap_or_else(|err| {
-            let txt = format!("Failed to generate bindings for the crate: {err}");
-            let src = quote! { __COMMENT__ #txt };
-            Self { h_body: src.clone(), rs_body: src }
-        });
+    let Output { h_body, rs_body } = format_crate(input).unwrap_or_else(|err| {
+        let txt = format!("Failed to generate bindings for the crate: {err}");
+        let src = quote! { __COMMENT__ #txt };
+        Output { h_body: src.clone(), rs_body: src }
+    });
 
-        let h_body = quote! {
-            #top_comment
+    let h_body = quote! {
+        #top_comment
 
-            // TODO(b/251445877): Replace `#pragma once` with include guards.
-            __HASH_TOKEN__ pragma once __NEWLINE__
-            __NEWLINE__
+        // TODO(b/251445877): Replace `#pragma once` with include guards.
+        __HASH_TOKEN__ pragma once __NEWLINE__
+        __NEWLINE__
 
-            #h_body
-        };
+        #h_body
+    };
 
-        let rs_body = quote! {
-            #top_comment
+    let rs_body = quote! {
+        #top_comment
 
-            // Rust warns about non-`#[repr(C)]` structs being used as parameter types or return
-            // type of `extern "C"` functions (such as thunks that might be present in `rs_body`).
-            // This warning makes sense, because in absence of a guaranteed / well-defined ABI
-            // for this structs, one can't author C/C++ definitions compatible with that ABI.
-            // Unless... the author is `cc_bindings_from_rs` invoked with exactly the same version
-            // and cmdline flags as `rustc`.  Given this, we just disable warnings like the one
-            // in the example below:
-            //
-            //   warning: `extern` fn uses type `DefaultReprPoint`, which is not FFI-safe
-            //   --> .../cc_bindings_from_rs/test/structs/structs_cc_api_impl.rs:25:6
-            //       |
-            //    25 | ) -> structs::DefaultReprPoint {
-            //       |      ^^^^^^^^^^^^^^^^^^^^^^^^^ not FFI-safe
-            //       |
-            //       = help: consider adding a `#[repr(C)]` or `#[repr(transparent)]` attribute...
-            //       = note: this struct has unspecified layout
-            //       = note: `#[warn(improper_ctypes_definitions)]` on by default
-            #![allow(improper_ctypes_definitions)] __NEWLINE__
-            __NEWLINE__
+        // Rust warns about non-`#[repr(C)]` structs being used as parameter types or return
+        // type of `extern "C"` functions (such as thunks that might be present in `rs_body`).
+        // This warning makes sense, because in absence of a guaranteed / well-defined ABI
+        // for this structs, one can't author C/C++ definitions compatible with that ABI.
+        // Unless... the author is `cc_bindings_from_rs` invoked with exactly the same version
+        // and cmdline flags as `rustc`.  Given this, we just disable warnings like the one
+        // in the example below:
+        //
+        //   warning: `extern` fn uses type `DefaultReprPoint`, which is not FFI-safe
+        //   --> .../cc_bindings_from_rs/test/structs/structs_cc_api_impl.rs:25:6
+        //       |
+        //    25 | ) -> structs::DefaultReprPoint {
+        //       |      ^^^^^^^^^^^^^^^^^^^^^^^^^ not FFI-safe
+        //       |
+        //       = help: consider adding a `#[repr(C)]` or `#[repr(transparent)]` attribute...
+        //       = note: this struct has unspecified layout
+        //       = note: `#[warn(improper_ctypes_definitions)]` on by default
+        #![allow(improper_ctypes_definitions)] __NEWLINE__
+        __NEWLINE__
 
-            #rs_body
-        };
+        #rs_body
+    };
 
-        Ok(Self { h_body, rs_body })
-    }
+    Ok(Output { h_body, rs_body })
 }
 
 #[derive(Debug, Default)]
@@ -233,12 +246,12 @@ impl FullyQualifiedName {
     }
 }
 
-fn format_ret_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
+fn format_ret_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
     let void = Ok(CcSnippet::new(quote! { void }));
     match ty.kind() {
         ty::TyKind::Never => void,  // `!`
         ty::TyKind::Tuple(types) if types.len() == 0 => void,  // `()`
-        _ => format_ty_for_cc(tcx, ty),
+        _ => format_ty_for_cc(input, ty),
     }
 }
 
@@ -261,7 +274,7 @@ fn format_cc_thunk_arg<'tcx>(tcx: TyCtxt<'tcx>, ty: Ty<'tcx>, value: TokenStream
 /// spelled in a C++ declaration of a function parameter or field.
 //
 // TODO(b/259724276): This function's results should be memoized.
-fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
+fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
     fn cstdint(tokens: TokenStream) -> CcSnippet {
         CcSnippet::with_include(tokens, CcInclude::cstdint())
     }
@@ -352,7 +365,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
 
             // Verify if definition of `ty` can be succesfully imported and bail otherwise.
             let def_id = adt.did();
-            format_adt_core(tcx, def_id)
+            format_adt_core(input.tcx, def_id)
                 .with_context(|| format!(
                         "Failed to generate bindings for the definition of `{ty}`"))?;
 
@@ -365,7 +378,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
             };
 
             CcSnippet {
-                tokens: FullyQualifiedName::new(tcx, def_id).format_for_cc()?,
+                tokens: FullyQualifiedName::new(input.tcx, def_id).format_for_cc()?,
                 prereqs
             }
         },
@@ -375,7 +388,7 @@ fn format_ty_for_cc(tcx: TyCtxt, ty: Ty) -> Result<CcSnippet> {
                 Mutability::Mut => quote!{},
                 Mutability::Not => quote!{ const },
             };
-            let CcSnippet{ tokens, mut prereqs } = format_ty_for_cc(tcx, *ty)
+            let CcSnippet{ tokens, mut prereqs } = format_ty_for_cc(input, *ty)
                 .with_context(|| format!(
                         "Failed to format the pointee of the pointer type `{ty}`"))?;
             prereqs.move_defs_to_fwd_decls();
@@ -504,7 +517,8 @@ struct MixedSnippet {
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
 ///   b/258235219), type parameters, or const parameters.
-fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
+fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<MixedSnippet> {
+    let tcx = input.tcx;
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
     let mut symbol_name = {
@@ -575,7 +589,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
 
     let mut cc_prereqs = CcPrerequisites::default();
     let cc_tokens = {
-        let ret_type = format_ret_ty_for_cc(tcx, sig.output())
+        let ret_type = format_ret_ty_for_cc(input, sig.output())
             .context("Error formatting function return type")?
             .into_tokens(&mut cc_prereqs);
         let fn_name = format_cc_ident(name.as_str()).context("Error formatting function name")?;
@@ -593,7 +607,7 @@ fn format_fn(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
             .iter()
             .enumerate()
             .map(|(index, ty)| {
-                Ok(format_ty_for_cc(tcx, *ty)
+                Ok(format_ty_for_cc(input, *ty)
                     .with_context(|| format!("Error formatting the type of parameter #{index}"))?
                     .into_tokens(&mut cc_prereqs))
             })
@@ -954,15 +968,15 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
 /// item).
-fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
+fn format_def(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
     // undesirable, because it would mean exposing items from a private module.)
-    if !tcx.effective_visibilities(()).is_directly_public(def_id) {
+    if !input.tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(None);
     }
 
-    match tcx.hir().get_by_def_id(def_id) {
+    match input.tcx.hir().get_by_def_id(def_id) {
         Node::Item(item) => match item {
             Item { kind: ItemKind::Fn(_, generics, _) |
                          ItemKind::Struct(_, generics) |
@@ -974,9 +988,9 @@ fn format_def(tcx: TyCtxt, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
                 // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
                 bail!("Generics are not supported yet (b/259749023 and b/259749095)");
             },
-            Item { kind: ItemKind::Fn(..), .. } => format_fn(tcx, def_id).map(Some),
+            Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
             Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-                format_adt(tcx, def_id).map(Some),
+                format_adt(input.tcx, def_id).map(Some),
             Item { kind: ItemKind::Mod(_), .. } => Ok(None),
             Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
         },
@@ -1003,13 +1017,14 @@ fn format_unsupported_def(
 }
 
 /// Formats all public items from the Rust crate being compiled.
-fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
+fn format_crate(input: &Input) -> Result<Output> {
+    let tcx = input.tcx;
     let mut bindings: HashMap<LocalDefId, MixedSnippet> = tcx
         .hir()
         .items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
-            format_def(tcx, def_id)
+            format_def(input, def_id)
                 .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
                 .map(|snippet| (def_id, snippet))
         })
@@ -1101,14 +1116,14 @@ fn format_crate(tcx: TyCtxt) -> Result<GeneratedBindings> {
         }
     };
 
-    Ok(GeneratedBindings { h_body, rs_body })
+    Ok(Output { h_body, rs_body })
 }
 
 #[cfg(test)]
 pub mod tests {
     use super::{
         format_cc_thunk_arg, format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs,
-        GeneratedBindings, MixedSnippet,
+        generate_bindings, Input, MixedSnippet, Output,
     };
 
     use anyhow::Result;
@@ -2914,9 +2929,9 @@ pub mod tests {
         });
     }
 
-    /// `test_format_ret_ty_for_cc_successes` provides test coverage for cases where
-    /// `format_ret_ty_for_cc` returns an `Ok(...)`.  Additional testcases are
-    /// covered by `test_format_ty_for_cc_successes` (because
+    /// `test_format_ret_ty_for_cc_successes` provides test coverage for cases
+    /// where `format_ret_ty_for_cc` returns an `Ok(...)`.  Additional
+    /// testcases are covered by `test_format_ty_for_cc_successes` (because
     /// `format_ret_ty_for_cc` delegates most cases to `format_ty_for_cc`).
     #[test]
     fn test_format_ret_ty_for_cc_successes() {
@@ -2930,7 +2945,8 @@ pub mod tests {
         ];
         test_ty(&testcases, quote! {}, |desc, tcx, ty, expected| {
             let actual = {
-                let cc_snippet = format_ret_ty_for_cc(tcx, ty).unwrap();
+                let input = bindings_input_for_tests(tcx);
+                let cc_snippet = format_ret_ty_for_cc(&input, ty).unwrap();
                 assert!(cc_snippet.prereqs.is_empty());
                 cc_snippet.tokens.to_string()
             };
@@ -3004,7 +3020,8 @@ pub mod tests {
             |desc, tcx, ty,
              (expected_tokens, expected_include, expected_prereq_def, expected_prereq_fwd_decl)| {
                 let (actual_tokens, actual_prereqs) = {
-                    let s = format_ty_for_cc(tcx, ty).unwrap();
+                    let input = bindings_input_for_tests(tcx);
+                    let s = format_ty_for_cc(&input, ty).unwrap();
                     (s.tokens.to_string(), s.prereqs)
                 };
                 let (actual_includes, actual_prereq_defs, actual_prereq_fwd_decls) =
@@ -3166,10 +3183,11 @@ pub mod tests {
                 pub reference: &'a u8,
             }
         };
-        test_ty(&testcases, preamble, |desc, tcx, ty, expected_err| {
-            let anyhow_err = format_ty_for_cc(tcx, ty).unwrap_err();
-            let actual_err = format!("{anyhow_err:#}");
-            assert_eq!(&actual_err, *expected_err, "{desc}");
+        test_ty(&testcases, preamble, |desc, tcx, ty, expected_msg| {
+            let input = bindings_input_for_tests(tcx);
+            let anyhow_err = format_ty_for_cc(&input, ty).unwrap_err();
+            let actual_msg = format!("{anyhow_err:#}");
+            assert_eq!(&actual_msg, *expected_msg, "{desc}");
         });
     }
 
@@ -3355,7 +3373,7 @@ pub mod tests {
     {
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
-            let result = format_def(tcx, def_id);
+            let result = format_def(&bindings_input_for_tests(tcx), def_id);
 
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
@@ -3387,15 +3405,21 @@ pub mod tests {
         }
     }
 
-    /// Tests invoking `GeneratedBindings::generate` on the given Rust `source`.
+    fn bindings_input_for_tests(tcx: TyCtxt) -> Input {
+        Input { tcx, _crubit_support_path: (), _features: (), _crate_to_include_map: () }
+    }
+
+    /// Tests invoking `generate_bindings` on the given Rust `source`.
     /// Returns the result of calling `test_function` with the generated
     /// bindings as an argument. (`test_function` should typically `assert!`
     /// that it got the expected `GeneratedBindings`.)
     fn test_generated_bindings<F, T>(source: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<GeneratedBindings>) -> T + Send,
+        F: FnOnce(Result<Output>) -> T + Send,
         T: Send,
     {
-        run_compiler_for_testing(source, |tcx| test_function(GeneratedBindings::generate(tcx)))
+        run_compiler_for_testing(source, |tcx| {
+            test_function(generate_bindings(&bindings_input_for_tests(tcx)))
+        })
     }
 }
