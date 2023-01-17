@@ -3146,8 +3146,6 @@ TEST(PointerNullabilityTest, CastExpression) {
   )cc"));
 }
 
-// TODO: Handle non-flow-sensitive nullability of free functions to make the
-// following test work:
 TEST(PointerNullabilityTest, NonFlowSensitiveMaterializeTemporaryExpr) {
   EXPECT_TRUE(checkDiagnostics(R"cc(
     int *_Nonnull makeNonnull();
@@ -3164,7 +3162,7 @@ TEST(PointerNullabilityTest, NonFlowSensitiveMaterializeTemporaryExpr) {
         *p;
       }
       {
-        *identity<int *_Nullable>(makeNullable());  // TODO: Fix false negative.
+        *identity<int *_Nullable>(makeNullable());  // [[unsafe]]
         int *const &p = makeNullable();
         *p;  // [[unsafe]]
       }
@@ -3198,15 +3196,93 @@ TEST(PointerNullabilityTest, NonFlowSensitiveMaterializeTemporaryExpr) {
            Struct2Arg<int *, int *_Nullable>(p))
            .getT0();
       *identity<int *>(p.getT0());
-      *identity<Struct2Arg<int *, int *_Nullable>>(p).getT1();  // TODO: Fix
-      // false negative.
-      *identity<Struct2Arg<int *, int *_Nullable>>(
+      *identity<Struct2Arg<int *, int *_Nullable>>(p).getT1();  // [[unsafe]]
+      *identity<Struct2Arg<int *, int *_Nullable>>(             // [[unsafe]]
            make<Struct2Arg<int *, int *_Nullable>>())
            .getT1();
-      *identity<Struct2Arg<int *, int *_Nullable>>(
+      *identity<Struct2Arg<int *, int *_Nullable>>(  // [[unsafe]]
            Struct2Arg<int *, int *_Nullable>(p))
-           .getT1();                         // TODO: Fix false negative.
-      *identity<int *_Nullable>(p.getT1());  // TODO: Fix false negative.
+           .getT1();
+      *identity<int *_Nullable>(p.getT1());  // [[unsafe]]
+    }
+  )cc"));
+}
+
+TEST(PointerNullabilityTest, FunctionTemplates) {
+  // Call expression that returns the first of two type parameters.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    T0 returnFirst();
+
+    void target() {
+      *returnFirst<int *_Nonnull, int *_Nullable>();
+      *returnFirst<int *, int *_Nullable>();
+      *returnFirst<int *_Nullable, int *_Nonnull>();  // [[unsafe]]
+    }
+  )cc"));
+
+  // Call expression that returns the second of two type parameters.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <typename T0, typename T1>
+    T1 returnSecond();
+
+    void target() {
+      *returnSecond<int *_Nullable, int *_Nonnull>();
+      *returnSecond<int *_Nullable, int *>();
+      *returnSecond<int *, int *_Nullable>();  // [[unsafe]]
+    }
+  )cc"));
+
+  // Call expression that has an int parameter and two type parameters,
+  // returning the first type parameter.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    template <int I0, typename T1, typename T2>
+    T1 fn3ArgWithInt();
+
+    void target() {
+      *fn3ArgWithInt<1, int *_Nullable, int *>();  // [[unsafe]]
+      *fn3ArgWithInt<1, int *, int *_Nullable>();
+    }
+  )cc"));
+
+  // Call expression with template parameter substituted with a concrete struct.
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    enum NullabilityKind {
+      NK_nonnull,
+      NK_nullable,
+      NK_unspecified,
+    };
+
+    template <NullabilityKind... NK, typename T>
+    void __assert_nullability(const T &);
+
+    struct StructUnknownNullable {
+      int *var0;
+      int *_Nullable var1;
+
+      int *getVar0();
+      int *_Nullable getVar1();
+    };
+
+    template <typename T0, typename T1>
+    T1 returnSecond();
+
+    void target() {
+      *returnSecond<StructUnknownNullable, int *_Nullable>();  // [[unsafe]]
+      *returnSecond<int *_Nonnull, StructUnknownNullable *>();
+      // TODO: The following line is a false positive. We correctly compute the
+      // nullability of the expression, as confirmed by the call to
+      // `assert_nullability`. However, the dataflow framework currently does
+      // not model pointer values for this expression, which results in a (in
+      // this case incorrect) nullptr value.
+      *returnSecond<int *_Nonnull, StructUnknownNullable>()  // [[unsafe]]
+           .var0;  // TODO: Fix false positive.
+      __assert_nullability<NK_unspecified>(
+          returnSecond<int *_Nonnull, StructUnknownNullable>().var0);
+      *returnSecond<int *_Nonnull, StructUnknownNullable>().var1;  // [[unsafe]]
+      *returnSecond<int *_Nonnull, StructUnknownNullable>().getVar0();
+      *returnSecond<int *_Nonnull, StructUnknownNullable>()  // [[unsafe]]
+           .getVar1();
     }
   )cc"));
 }

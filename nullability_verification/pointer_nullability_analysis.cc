@@ -195,15 +195,17 @@ ArrayRef<NullabilityKind> getNullabilityForTemplateParameter(
 
 class SubstituteNullabilityAnnotationsInTemplateVisitor
     : public TypeVisitor<SubstituteNullabilityAnnotationsInTemplateVisitor> {
-  QualType BaseType;
-  ArrayRef<NullabilityKind> BaseNullabilityAnnotations;
   std::vector<NullabilityKind> NullabilityAnnotations;
+  std::function<std::vector<NullabilityKind>(
+      const SubstTemplateTypeParmType* ST)>
+      GetSubstitutedNullability;
 
  public:
-  SubstituteNullabilityAnnotationsInTemplateVisitor(
-      QualType BaseType, ArrayRef<NullabilityKind> BaseNullabilityAnnotations)
-      : BaseType(BaseType),
-        BaseNullabilityAnnotations(BaseNullabilityAnnotations) {}
+  explicit SubstituteNullabilityAnnotationsInTemplateVisitor(
+      std::function<
+          std::vector<NullabilityKind>(const SubstTemplateTypeParmType* ST)>
+          GetSubstitutedNullability)
+      : GetSubstitutedNullability(std::move(GetSubstitutedNullability)) {}
 
   std::vector<NullabilityKind> getNullabilityAnnotations() && {
     return std::move(NullabilityAnnotations);
@@ -217,8 +219,7 @@ class SubstituteNullabilityAnnotationsInTemplateVisitor
   }
 
   void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* ST) {
-    for (auto NK : getNullabilityForTemplateParameter(
-             ST, BaseNullabilityAnnotations, BaseType)) {
+    for (auto NK : GetSubstitutedNullability(ST)) {
       NullabilityAnnotations.push_back(NK);
     }
   }
@@ -261,11 +262,60 @@ class SubstituteNullabilityAnnotationsInTemplateVisitor
 /// getNullabilityFromTemplateParameter to find that T1 has nullability
 /// annotation {_Nonnull}. Thus, our complete nullability annotation for this
 /// member call is {_Nullable, _Nonnull}.
-std::vector<NullabilityKind> substituteNullabilityAnnotationsInTemplate(
+std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
     QualType T, ArrayRef<NullabilityKind> BaseNullabilityAnnotations,
     QualType BaseType) {
   SubstituteNullabilityAnnotationsInTemplateVisitor AnnotationVisitor(
-      BaseType, BaseNullabilityAnnotations);
+      [&](const SubstTemplateTypeParmType* ST) {
+        return getNullabilityForTemplateParameter(
+                   ST, BaseNullabilityAnnotations, BaseType)
+            .vec();
+      });
+  AnnotationVisitor.Visit(T);
+  return std::move(AnnotationVisitor).getNullabilityAnnotations();
+}
+
+/// Compute nullability annotations of `T` which might contain template type
+/// variable substitutions bound by the call `CE`.
+///
+/// Example:
+///
+/// \code
+///   template<typename F, typename S>
+///   std::pair<S, F> flip(std::pair<F, S> p);
+/// \endcode
+///
+/// Consider the following CallExpr:
+///
+///   flip<int * _Nonnull, int * _Nullable>(std::make_pair(&x, &y));
+///
+/// This CallExpr has the following substitutions:
+///   F=int * _Nonnull, whose nullability is [_Nonnull]
+///   S=int * _Nullable, whose nullability is [_Nullable]
+///
+/// The return type of this CallExpr is `std::pair<S, F>`.
+///
+/// When we call `substituteNullabilityAnnotationsInFunctionTemplate` with the
+/// type `std::pair<S, F>` and the above CallExpr, it returns the nullability
+/// the given type after applying substitutions, which in this case is
+/// [_Nullable, _Nonnull].
+std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
+    QualType T, const CallExpr* CE) {
+  SubstituteNullabilityAnnotationsInTemplateVisitor AnnotationVisitor(
+      [&](const SubstTemplateTypeParmType* ST) {
+        // TODO: Handle calls that use template argument deduction.
+        // TODO: Handle nested templates (...->getDepth() > 0).
+        if (auto* DRE =
+                dyn_cast<DeclRefExpr>(CE->getCallee()->IgnoreImpCasts());
+            ST->getReplacedParameter()->getDepth() == 0 &&
+            DRE->hasExplicitTemplateArgs()) {
+          return getNullabilityAnnotationsFromType(
+              DRE->template_arguments()[ST->getIndex()]
+                  .getTypeSourceInfo()
+                  ->getType());
+        }
+        return std::vector<NullabilityKind>();
+      });
   AnnotationVisitor.Visit(T);
   return std::move(AnnotationVisitor).getNullabilityAnnotations();
 }
@@ -428,7 +478,7 @@ void transferNonFlowSensitiveMemberExpr(
       if (ME->hasPlaceholderType(BuiltinType::BoundMember)) {
         MemberType = ME->getMemberDecl()->getType();
       }
-      return substituteNullabilityAnnotationsInTemplate(
+      return substituteNullabilityAnnotationsInClassTemplate(
           MemberType, *BaseNullability, ME->getBase()->getType());
     } else {
       // Since we process child nodes before parents, we should already have
@@ -506,6 +556,17 @@ void transferNonFlowSensitiveMaterializeTemporaryExpr(
   });
 }
 
+void transferNonFlowSensitiveCallExpr(
+    const CallExpr* CE, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  // TODO: Check CallExpr arguments in the diagnoser against the nullability of
+  // parameters.
+  State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
+    return substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(),
+                                                              CE);
+  });
+}
+
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -519,6 +580,8 @@ auto buildNonFlowSensitiveTransferer() {
       .CaseOfCFGStmt<MaterializeTemporaryExpr>(
           ast_matchers::materializeTemporaryExpr(),
           transferNonFlowSensitiveMaterializeTemporaryExpr)
+      .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(),
+                               transferNonFlowSensitiveCallExpr)
       .Build();
 }
 
