@@ -234,8 +234,13 @@ pub mod internal {
     /// - Via `forward_declare!` and `unsafe_define!` macros
     /// - Via blanket `impl`s provided for references, pointers (e.g. see `mod
     ///   ref_transmutability` below).
+    ///
+    /// # Safety
+    ///
+    /// Two types implement `CcType` with the same name if and only if they can
+    /// be transmuted to one another.
     pub unsafe trait CcType {
-        /// `Name` helps Rust type system to identify the given trasmutability
+        /// `Name` helps Rust type system to identify the given transmutability
         /// equivalence class.
         ///
         /// `forward_declare!` and `unsafe_define!` macros form the `Name` using
