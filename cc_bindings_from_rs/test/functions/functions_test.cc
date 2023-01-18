@@ -51,7 +51,7 @@ TEST(FnParamTyTests, Int32) {
 }
 
 TEST(FnParamTyTests, Char) {
-  rstd::Char input = U'🦀';
+  rstd::Char input(U'🦀');
   rstd::Char output = fn_param_ty_tests::char_identity(input);
   EXPECT_EQ(input, output);
 }

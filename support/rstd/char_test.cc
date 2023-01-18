@@ -32,12 +32,10 @@ static_assert(std::is_trivially_move_assignable_v<rstd::Char>);
 // value".
 //
 // We don't map Rust's `char` to C++ `char32_t` because
-// - It may be wider than 32 bits - <internal link>/c/string/multibyte/char32_t says
-//   that "char32_t is an unsigned integer type used for 32-bit wide characters
-//   and is the same type as uint_least32_t. uint_least32_t is the smallest
-//   unsigned integer type with width of at least 32 bits"
-// - It is problematic on MacOS - https://github.com/eqrion/cbindgen/issues/423
-//   points out that `uchar.h` is missing on that platform.
+// https://en.cppreference.com/w/cpp/language/types#char32_t points out that the
+// builtin `char32_t` type "has the same size, signedness, and alignment as
+// std::uint_least32_t" (and therefore it is not guaranteed to be exactly
+// 32-bits wide as required for ABI-compatibility with Rust).
 static_assert(sizeof(rstd::Char) == 4);
 static_assert(alignof(rstd::Char) == 4);
 static_assert(std::is_standard_layout_v<rstd::Char>);
@@ -50,7 +48,7 @@ static_assert(std::is_standard_layout_v<rstd::Char>);
 // - the representation of c-char in the execution character set (until C++23)
 // - the corresponding code point from ordinary literal encoding (since C++23).
 TEST(RsCharTest, FromAsciiLiteral) {
-  rstd::Char c = 'x';
+  const rstd::Char c('x');
   EXPECT_EQ(0x78, static_cast<uint32_t>(c));
 }
 
@@ -63,7 +61,7 @@ TEST(RsCharTest, FromAsciiLiteral) {
 // with a single UTF-8 code unit (that is, c-char is in the range 0x0-0x7F,
 // inclusive).
 TEST(RsCharTest, FromUtf8Literal) {
-  rstd::Char c = u8'x';
+  const rstd::Char c(u8'x');
   EXPECT_EQ(0x78, static_cast<uint32_t>(c));
 }
 
@@ -79,7 +77,7 @@ TEST(RsCharTest, FromUtf16Literal) {
   // Not testing `is_trivially_constructible`, because UTF-16 literals may
   // fail Rust's well-formed-ness checks (e.g. they may represent only one
   // part of a surrogate pair).
-  rstd::Char c = u'Ł';
+  const rstd::Char c(u'Ł');
   EXPECT_EQ(0x141, static_cast<uint32_t>(c));
 }
 
@@ -92,14 +90,14 @@ TEST(RsCharTest, FromUtf32Literal) {
   // Not testing `is_trivially_constructible`, because UTF-32 literals may fail
   // Rust's well-formed-ness checks (e.g. they may exceed the value of Rust's
   // `std::char::MAX`).
-  rstd::Char c = U'🦀';
+  const rstd::Char c(U'🦀');
   EXPECT_EQ(0x1F980, static_cast<uint32_t>(c));
 }
 
 // Test that `rstd::Char` values can be compared with other `rstd::Char` values.
 TEST(RsCharTest, ComparisonWithAnotherRsChar) {
-  const rstd::Char a = 'a';
-  const rstd::Char b = 'b';
+  const rstd::Char a('a');
+  const rstd::Char b('b');
 
   EXPECT_TRUE(a == a);
   EXPECT_FALSE(a != a);
