@@ -134,6 +134,7 @@ void VisitLifetimesImpl(const ObjectSet& points_to_set,
     // No new object -> nothing to do. This avoids infinite loops.
     return;
   }
+  object_lifetimes.GetValueLifetimes().Type()->dump();
 
   if (const clang::QualType type = object_lifetimes.GetValueLifetimes().Type();
       type->isRecordType()) {

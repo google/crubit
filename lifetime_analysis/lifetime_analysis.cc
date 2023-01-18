@@ -502,15 +502,9 @@ std::optional<std::string> TransferStmtVisitor::VisitReturnStmt(
   }
 
   ObjectSet expr_points_to = points_to_map_.GetExprObjectSet(ret_expr);
-  if (!kUseConstraintBasedAnalysis) {
-    HandlePointsToSetExtension({object_repository_.GetReturnObject()},
-                               expr_points_to, return_type, object_repository_,
-                               points_to_map_, constraints_);
-  } else {
-    GenerateConstraintsForAssignment(
-        {object_repository_.GetReturnObject()}, expr_points_to, return_type,
-        object_repository_, points_to_map_, constraints_);
-  }
+  GenerateConstraintsForAssignment(
+      {object_repository_.GetReturnObject()}, expr_points_to, return_type,
+      object_repository_, points_to_map_, constraints_);
   return std::nullopt;
 }
 

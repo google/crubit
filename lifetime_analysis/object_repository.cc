@@ -445,7 +445,7 @@ ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
   CreateObjects(
       return_object_, func->getReturnType(),
       [](const clang::Expr*) { return Lifetime::CreateVariable(); },
-      /*transitive=*/kUseConstraintBasedAnalysis);
+      /*transitive=*/true);
 
   if (method_decl) {
     if (!method_decl->isStatic()) {
