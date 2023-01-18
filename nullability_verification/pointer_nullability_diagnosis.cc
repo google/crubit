@@ -93,18 +93,6 @@ NullabilityKind parseNullabilityKind(StringRef EnumName) {
       .Default(NullabilityKind::Unspecified);
 }
 
-std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
-  std::string Result = "[";
-  llvm::interleave(
-      Nullability,
-      [&](const NullabilityKind n) {
-        Result += getNullabilitySpelling(n).str();
-      },
-      [&] { Result += ", "; });
-  Result += "]";
-  return Result;
-}
-
 /// Evaluates the `__assert_nullability` call by comparing the expected
 /// nullability to the nullability computed by the dataflow analysis.
 ///

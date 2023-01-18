@@ -7,6 +7,7 @@
 #include <string>
 
 #include "absl/log/check.h"
+#include "absl/strings/str_join.h"
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_lattice.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
@@ -118,6 +119,10 @@ class CountPointersInTypeVisitor
     Visit(PT->getPointeeType());
   }
 
+  void VisitFunctionProtoType(const FunctionProtoType* FPT) {
+    Visit(FPT->getReturnType());
+  }
+
   void Visit(TemplateArgument TA) {
     if (TA.getKind() == TemplateArgument::Type) {
       Visit(TA.getAsType());
@@ -172,6 +177,33 @@ std::vector<NullabilityKind> prepend(NullabilityKind Head,
   std::vector<NullabilityKind> Result = {Head};
   Result.insert(Result.end(), Tail.begin(), Tail.end());
   return Result;
+}
+
+void computeNullability(const Expr* E,
+                        TransferState<PointerNullabilityLattice>& State,
+                        std::function<std::vector<NullabilityKind>()> Compute) {
+  (void)State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
+    auto Nullability = Compute();
+    if (unsigned ExpectedSize = countPointersInType(E);
+        ExpectedSize != Nullability.size()) {
+      // A nullability vector must have one entry per pointer in the type.
+      // If this is violated, we probably failed to handle some AST node.
+      llvm::dbgs() << "=== Bad computed nullability: ===\n";
+      llvm::dbgs() << "Expression: \n";
+      dump(E, llvm::dbgs());
+      llvm::dbgs() << "\nNullability (" << Nullability.size()
+                   << " pointers): " << nullabilityToString(Nullability)
+                   << "\n";
+      llvm::dbgs() << "\nType (" << ExpectedSize << " pointers): \n";
+      dump(exprType(E), llvm::dbgs());
+      llvm::dbgs() << "=================================\n";
+
+      // We can't meaningfully interpret the vector, so discard it.
+      // TODO: fix all broken cases and upgrade to CHECK or DCHECK or so.
+      Nullability.assign(ExpectedSize, NullabilityKind::Unspecified);
+    }
+    return Nullability;
+  });
 }
 
 // Returns the computed nullability for a subexpr of the current expression.
@@ -519,14 +551,15 @@ void transferFlowSensitiveCallExpr(
 void transferNonFlowSensitiveDeclRefExpr(
     const DeclRefExpr* DRE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  (void)State.Lattice.insertExprNullabilityIfAbsent(
-      DRE, [&]() { return getNullabilityAnnotationsFromType(DRE->getType()); });
+  computeNullability(DRE, State, [&] {
+    return getNullabilityAnnotationsFromType(DRE->getType());
+  });
 }
 
 void transferNonFlowSensitiveMemberExpr(
     const MemberExpr* ME, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  (void)State.Lattice.insertExprNullabilityIfAbsent(ME, [&]() {
+  computeNullability(ME, State, [&]() {
     auto BaseNullability = getNullabilityForChild(ME->getBase(), State);
     QualType MemberType = ME->getType();
     // When a MemberExpr is a part of a member function call
@@ -547,7 +580,7 @@ void transferNonFlowSensitiveMemberExpr(
 void transferNonFlowSensitiveMemberCallExpr(
     const CXXMemberCallExpr* MCE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  (void)State.Lattice.insertExprNullabilityIfAbsent(MCE, [&]() {
+  computeNullability(MCE, State, [&]() {
     return getNullabilityForChild(MCE->getCallee(), State).vec();
   });
 }
@@ -558,7 +591,7 @@ void transferNonFlowSensitiveCastExpr(
   // TODO: Handle casts where the input and output types can have different
   // numbers of pointers, and therefore different nullability. For example, a
   // reinterpret_cast from `int *` to int.
-  (void)State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
+  computeNullability(CE, State, [&]() {
     return getNullabilityForChild(CE->getSubExpr(), State).vec();
   });
 }
@@ -566,7 +599,7 @@ void transferNonFlowSensitiveCastExpr(
 void transferNonFlowSensitiveMaterializeTemporaryExpr(
     const MaterializeTemporaryExpr* MTE, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  (void)State.Lattice.insertExprNullabilityIfAbsent(MTE, [&]() {
+  computeNullability(MTE, State, [&]() {
     return getNullabilityForChild(MTE->getSubExpr(), State).vec();
   });
 }
@@ -576,7 +609,7 @@ void transferNonFlowSensitiveCallExpr(
     TransferState<PointerNullabilityLattice>& State) {
   // TODO: Check CallExpr arguments in the diagnoser against the nullability of
   // parameters.
-  (void)State.Lattice.insertExprNullabilityIfAbsent(CE, [&]() {
+  computeNullability(CE, State, [&]() {
     return substituteNullabilityAnnotationsInFunctionTemplate(CE->getType(),
                                                               CE);
   });
@@ -585,40 +618,34 @@ void transferNonFlowSensitiveCallExpr(
 void transferNonFlowSensitiveUnaryOperator(
     const UnaryOperator* UO, const MatchFinder::MatchResult& MR,
     TransferState<PointerNullabilityLattice>& State) {
-  (void)State.Lattice.insertExprNullabilityIfAbsent(
-      UO, [&]() -> std::vector<NullabilityKind> {
-        switch (UO->getOpcode()) {
-          case UO_AddrOf:
-            return prepend(NullabilityKind::NonNull,
-                           getNullabilityForChild(UO->getSubExpr(), State));
-          case UO_Deref:
-            if (auto Base = getNullabilityForChild(UO->getSubExpr(), State);
-                !Base.empty()) {
-              return Base.drop_front(1).vec();
-            } else {
-              // TODO: this can only happen if the child nullability has the
-              // wrong length, remove once the invariant is enforced.
-              return unspecifiedNullability(UO);
-            }
+  computeNullability(UO, State, [&]() -> std::vector<NullabilityKind> {
+    switch (UO->getOpcode()) {
+      case UO_AddrOf:
+        return prepend(NullabilityKind::NonNull,
+                       getNullabilityForChild(UO->getSubExpr(), State));
+      case UO_Deref:
+        return getNullabilityForChild(UO->getSubExpr(), State)
+            .drop_front()
+            .vec();
 
-          case UO_PostInc:
-          case UO_PostDec:
-          case UO_PreInc:
-          case UO_PreDec:
-          case UO_Plus:
-          case UO_Minus:
-          case UO_Not:
-          case UO_LNot:
-          case UO_Real:
-          case UO_Imag:
-          case UO_Extension:
-            return getNullabilityForChild(UO->getSubExpr(), State);
+      case UO_PostInc:
+      case UO_PostDec:
+      case UO_PreInc:
+      case UO_PreDec:
+      case UO_Plus:
+      case UO_Minus:
+      case UO_Not:
+      case UO_LNot:
+      case UO_Real:
+      case UO_Imag:
+      case UO_Extension:
+        return getNullabilityForChild(UO->getSubExpr(), State);
 
-          case UO_Coawait:
-            // TODO: work out what to do here!
-            return unspecifiedNullability(UO);
-        }
-      });
+      case UO_Coawait:
+        // TODO: work out what to do here!
+        return unspecifiedNullability(UO);
+    }
+  });
 }
 
 auto buildNonFlowSensitiveTransferer() {

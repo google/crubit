@@ -29,6 +29,7 @@ cc_library(
         ":pointer_nullability_lattice",
         ":pointer_nullability_matchers",
         "@absl//absl/log:check",
+        "@absl//absl/strings",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:ast_matchers",

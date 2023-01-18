@@ -90,6 +90,9 @@ inline void initUnknownPointer(dataflow::PointerValue& PointerVal,
 bool isNullable(const dataflow::PointerValue& PointerVal,
                 const dataflow::Environment& Env);
 
+/// Returns a human-readable debug representation of a nullability vector.
+std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability);
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

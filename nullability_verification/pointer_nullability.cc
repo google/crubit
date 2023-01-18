@@ -62,6 +62,18 @@ bool isNullable(const PointerValue& PointerVal, const Environment& Env) {
   return !Env.flowConditionImplies(PointerNotKnownNull);
 }
 
+std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
+  std::string Result = "[";
+  llvm::interleave(
+      Nullability,
+      [&](const NullabilityKind n) {
+        Result += getNullabilitySpelling(n).str();
+      },
+      [&] { Result += ", "; });
+  Result += "]";
+  return Result;
+}
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang
