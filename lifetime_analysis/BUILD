@@ -11,7 +11,6 @@ cc_library(
         ":lifetime_lattice",
         ":object_repository",
         ":template_placeholder_support",
-        ":visit_lifetimes",
         "@absl//absl/strings",
         "@absl//absl/strings:str_format",
         "//lifetime_annotations",
@@ -72,7 +71,6 @@ cc_library(
         ":object_set",
         ":pointer_compatibility",
         ":points_to_map",
-        ":visit_lifetimes",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",
@@ -182,26 +180,11 @@ cc_library(
         ":object",
         ":object_set",
         ":points_to_map",
-        ":visit_lifetimes",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
-        "@llvm-project//llvm:Support",
-    ],
-)
-
-cc_library(
-    name = "visit_lifetimes",
-    srcs = ["visit_lifetimes.cc"],
-    hdrs = ["visit_lifetimes.h"],
-    deps = [
-        ":object",
-        ":object_set",
-        "//lifetime_annotations:pointee_type",
-        "//lifetime_annotations:type_lifetimes",
-        "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
     ],
 )

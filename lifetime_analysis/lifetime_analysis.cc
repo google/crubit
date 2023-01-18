@@ -18,7 +18,6 @@
 #include "lifetime_analysis/object_set.h"
 #include "lifetime_analysis/pointer_compatibility.h"
 #include "lifetime_analysis/points_to_map.h"
-#include "lifetime_analysis/visit_lifetimes.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/pointee_type.h"

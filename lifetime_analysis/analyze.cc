@@ -21,7 +21,6 @@
 #include "lifetime_analysis/lifetime_lattice.h"
 #include "lifetime_analysis/object_repository.h"
 #include "lifetime_analysis/template_placeholder_support.h"
-#include "lifetime_analysis/visit_lifetimes.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
 #include "lifetime_annotations/lifetime_substitutions.h"

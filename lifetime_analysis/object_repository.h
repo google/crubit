@@ -221,13 +221,13 @@ class ObjectRepository {
   // pointing to them; lifetimes of created objects are defined by the given
   // `lifetime_factory`.
   void CreateObjects(const Object* root_object, clang::QualType type,
-                     LifetimeFactory lifetime_factory, bool transitive);
+                     LifetimeFactory lifetime_factory);
   // Same as `CreateObjects`, except the lifetimes are not created but taken
   // from `value_lifetimes`. Points-to information is saved in the given
   // `points_to_map`.
   void CreateObjectsWithLifetimes(const Object* root_object,
                                   const ValueLifetimes& value_lifetimes,
-                                  bool transitive, PointsToMap& points_to_map);
+                                  PointsToMap& points_to_map);
 
   const Object* CloneObject(const Object* object);
 
@@ -282,6 +282,8 @@ class ObjectRepository {
   const clang::FunctionDecl* func_;
 
   llvm::DenseMap<const Object*, ObjectLifetimes> initial_object_lifetimes_;
+
+  struct ObjectCreator;
 };
 
 }  // namespace lifetimes
