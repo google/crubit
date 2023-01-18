@@ -162,6 +162,18 @@ void dump(const T& Node, llvm::raw_ostream& OS) {
   clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
 }
 
+std::vector<NullabilityKind> unspecifiedNullability(const Expr* E) {
+  return std::vector<NullabilityKind>(countPointersInType(E),
+                                      NullabilityKind::Unspecified);
+}
+
+std::vector<NullabilityKind> prepend(NullabilityKind Head,
+                                     ArrayRef<NullabilityKind> Tail) {
+  std::vector<NullabilityKind> Result = {Head};
+  Result.insert(Result.end(), Tail.begin(), Tail.end());
+  return Result;
+}
+
 // Returns the computed nullability for a subexpr of the current expression.
 // This is always available as we compute bottom-up.
 ArrayRef<NullabilityKind> getNullabilityForChild(
@@ -175,11 +187,12 @@ ArrayRef<NullabilityKind> getNullabilityForChild(
     dump(E, llvm::dbgs());
     llvm::dbgs() << "==================================\n";
 
-    return std::vector<NullabilityKind>(countPointersInType(E),
-                                        NullabilityKind::Unspecified);
+    return unspecifiedNullability(E);
   });
 }
 
+// TODO: Much logic is the same as GetNullabilityAnnotationsFromTypeVisitor.
+// Find a way to unify the two.
 class SubstituteNullabilityAnnotationsInTemplateVisitor
     : public TypeVisitor<SubstituteNullabilityAnnotationsInTemplateVisitor> {
   std::vector<NullabilityKind> NullabilityAnnotations;
@@ -225,6 +238,26 @@ class SubstituteNullabilityAnnotationsInTemplateVisitor
       if (TA.getKind() == TemplateArgument::Type) {
         Visit(TA.getAsType());
       }
+    }
+  }
+
+  void VisitAttributedType(const AttributedType* AT) {
+    Optional<NullabilityKind> NK = AT->getImmediateNullability();
+    if (NK.has_value()) {
+      NullabilityAnnotations.push_back(*NK);
+      QualType MT = AT->getModifiedType();
+      if (auto PT = MT->getAs<PointerType>()) {
+        Visit(PT->getPointeeType());
+      } else {
+        // TODO: Handle this unusual yet possible (e.g. through typedefs)
+        // case.
+        llvm::dbgs() << "\nThe type " << AT
+                     << "contains a nullability annotation that is not "
+                     << "succeeded by a pointer type. "
+                     << "This occurence is not currently handled.\n";
+      }
+    } else {
+      Visit(AT->getModifiedType());
     }
   }
 };
@@ -549,6 +582,45 @@ void transferNonFlowSensitiveCallExpr(
   });
 }
 
+void transferNonFlowSensitiveUnaryOperator(
+    const UnaryOperator* UO, const MatchFinder::MatchResult& MR,
+    TransferState<PointerNullabilityLattice>& State) {
+  (void)State.Lattice.insertExprNullabilityIfAbsent(
+      UO, [&]() -> std::vector<NullabilityKind> {
+        switch (UO->getOpcode()) {
+          case UO_AddrOf:
+            return prepend(NullabilityKind::NonNull,
+                           getNullabilityForChild(UO->getSubExpr(), State));
+          case UO_Deref:
+            if (auto Base = getNullabilityForChild(UO->getSubExpr(), State);
+                !Base.empty()) {
+              return Base.drop_front(1).vec();
+            } else {
+              // TODO: this can only happen if the child nullability has the
+              // wrong length, remove once the invariant is enforced.
+              return unspecifiedNullability(UO);
+            }
+
+          case UO_PostInc:
+          case UO_PostDec:
+          case UO_PreInc:
+          case UO_PreDec:
+          case UO_Plus:
+          case UO_Minus:
+          case UO_Not:
+          case UO_LNot:
+          case UO_Real:
+          case UO_Imag:
+          case UO_Extension:
+            return getNullabilityForChild(UO->getSubExpr(), State);
+
+          case UO_Coawait:
+            // TODO: work out what to do here!
+            return unspecifiedNullability(UO);
+        }
+      });
+}
+
 auto buildNonFlowSensitiveTransferer() {
   return CFGMatchSwitchBuilder<TransferState<PointerNullabilityLattice>>()
       .CaseOfCFGStmt<DeclRefExpr>(ast_matchers::declRefExpr(),
@@ -564,6 +636,8 @@ auto buildNonFlowSensitiveTransferer() {
           transferNonFlowSensitiveMaterializeTemporaryExpr)
       .CaseOfCFGStmt<CallExpr>(ast_matchers::callExpr(),
                                transferNonFlowSensitiveCallExpr)
+      .CaseOfCFGStmt<UnaryOperator>(ast_matchers::unaryOperator(),
+                                    transferNonFlowSensitiveUnaryOperator)
       .Build();
 }
 

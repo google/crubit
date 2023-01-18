@@ -1498,17 +1498,17 @@ TEST(PointerNullabilityTest, ClassTemplateInstantiation) {
       *p.unknownTPtr;
       *p.nullableTPtr;  // [[unsafe]]
       *p.nonnullTPtr;
-      **p.unknownTPtr;   // TODO: fix false negative.
+      **p.unknownTPtr;   // [[unsafe]]
       **p.nullableTPtr;  // [[unsafe]]
-      **p.nonnullTPtr;   // TODO: fix false negative.
+      **p.nonnullTPtr;   // [[unsafe]]
 
       *p.getT();  // [[unsafe]]
       *p.getUnknownTPtr();
       *p.getNullableTPtr();  // [[unsafe]]
       *p.getNonnullTPtr();
-      **p.getUnknownTPtr();   // TODO: fix false negative.
+      **p.getUnknownTPtr();   // [[unsafe]]
       **p.getNullableTPtr();  // [[unsafe]]
-      **p.getNonnullTPtr();   // TODO: fix false negative.
+      **p.getNonnullTPtr();   // [[unsafe]]
     }
   )cc"));
 
@@ -1915,7 +1915,7 @@ TEST(PointerNullabilityTest,
       *p.arg1.getConstUnknownChar();
       *p.arg1.getUnknownConstChar();
       *p.arg1.getConstUnknownConstChar();
-      *p.arg2.getConstNullableChar();       // TODO: fix false negative.
+      *p.arg2.getConstNullableChar();       // [[unsafe]]
       *p.arg2.getNullableConstChar();       // [[unsafe]]
       *p.arg2.getConstNullableConstChar();  // [[unsafe]]
       *p.arg3.getConstNonnullChar();
@@ -1935,7 +1935,7 @@ TEST(PointerNullabilityTest,
       *p.getT1().getConstUnknownChar();
       *p.getT1().getUnknownConstChar();
       *p.getT1().getConstUnknownConstChar();
-      *p.getT2().getConstNullableChar();       // TODO: fix false negative.
+      *p.getT2().getConstNullableChar();       // [[unsafe]]
       *p.getT2().getNullableConstChar();       // [[unsafe]]
       *p.getT2().getConstNullableConstChar();  // [[unsafe]]
       *p.getT3().getConstNonnullChar();
@@ -3075,6 +3075,16 @@ TEST(PointerNullabilityTest, AssertNullability) {
           <NK_nonnull, NK_nonnull>(p.arg1.getT0().arg1);
     }
   )cc"));
+
+  EXPECT_TRUE(checkDiagnostics(Declarations + R"cc(
+    void target(int* _Nullable p, int* _Nonnull q, int* r) {
+      __assert_nullability<NK_nonnull, NK_nullable>(&p);
+      __assert_nullability<NK_nonnull, NK_nonnull>(&q);
+      __assert_nullability<NK_nonnull>(&*p);  // [[unsafe]]
+      __assert_nullability<NK_nonnull>(&*q);
+      __assert_nullability<NK_nonnull>(&*r);
+    }
+  )cc"));
 }
 
 TEST(PointerNullabilityTest, CastExpression) {
@@ -3318,6 +3328,54 @@ TEST(PointerNullabilityTest, ParenthesizedExpressions) {
       *(((p))).getT1();
       (*((p)).arg2);         // [[unsafe]]
       *(((((p)))).getT2());  // [[unsafe]]
+    }
+  )cc"));
+}
+
+// TODO: fix false positives due to unsupported PointerValues in the framework.
+TEST(PointerNullabilityTest, PointerArithmetic) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    void target(int *_Nullable p, int *_Nonnull q, int *r) {
+      *++p;  // [[unsafe]]
+      *p++;  // [[unsafe]]
+      *--p;  // [[unsafe]]
+      *p--;  // [[unsafe]]
+      *+p;   // [[unsafe]]
+
+      *++q;  // [[unsafe]] TODO: fix false positive
+      *q++;  // [[unsafe]] TODO: fix false positive
+      *--q;  // [[unsafe]] TODO: fix false positive
+      *q--;  // [[unsafe]] TODO: fix false positive
+      *+q;   // [[unsafe]] TODO: fix false positive
+
+      *++r;  // [[unsafe]] TODO: fix false positive
+      *r++;  // [[unsafe]] TODO: fix false positive
+      *--r;  // [[unsafe]] TODO: fix false positive
+      *r--;  // [[unsafe]] TODO: fix false positive
+      *+r;   // [[unsafe]] TODO: fix false positive
+    }
+  )cc"));
+}
+
+// TODO: fix false positives due to unsupported PointerValues in the framework.
+TEST(PointerNullabilityTest, Deref) {
+  EXPECT_TRUE(checkDiagnostics(R"cc(
+    struct S {
+      S* _Nonnull nonnull;
+      S* _Nullable nullable;
+      S* unknown;
+    };
+    void target(S& s) {
+      *(*s.nonnull).nonnull;   // [[unsafe]] TODO: fix false positive
+      *(*s.nonnull).nullable;  // [[unsafe]]
+      *(*s.nonnull).unknown;   // [[unsafe]] TODO: fix false positive
+
+      s.nonnull->nonnull->nonnull;   // [[unsafe]] TODO: fix false positive
+      s.nonnull->nonnull->nullable;  // [[unsafe]] TODO: fix false positive
+      s.nonnull->nullable->nonnull;  // [[unsafe]]
+      s.nonnull->unknown->nonnull;   // [[unsafe]] TODO: fix false positive
+
+      *&s;
     }
   )cc"));
 }
