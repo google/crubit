@@ -209,21 +209,52 @@
 
 pub use forward_declare_proc_macros::*;
 
-/// `Symbol` type, equivalent to const &'static str values, but usable in
-/// generics in stable Rust.
-///
-/// Every symbol is a tuple of `C`: for example, `symbol!("xy")` is
-/// `Symbol((C<'x'>, C<'y'>))`
-#[repr(C)]
-pub struct Symbol<T>(std::marker::PhantomData<T>);
+/// Public to be exposed to macros, but otherwise for internal use only.
+pub mod internal {
+    /// `Symbol` type, equivalent to const &'static str values, but usable in
+    /// generics in stable Rust.
+    ///
+    /// Every symbol is a tuple of `C`: for example, `symbol!("xy")` is
+    /// `Symbol((C<'x'>, C<'y'>))`
+    #[repr(C)]
+    pub struct Symbol<T>(std::marker::PhantomData<T>);
 
-/// A character in a symbol string.
-#[repr(C)]
-pub struct C<const CHAR: char>;
+    /// A character in a symbol string.
+    #[repr(C)]
+    pub struct C<const CHAR: char>;
+
+    /// Types that implement the `CcType` trait with the same `Name` can be
+    /// safely transmuted between each other, because they either provide
+    /// bindings for the same C++ type, or point/refer to the same C++ type,
+    /// or contain the same C++ type.
+    ///
+    /// Even though this trait is public, implementations of this trait should
+    /// only be provided by Crubit itself:
+    ///
+    /// - Via `forward_declare!` and `unsafe_define!` macros
+    /// - Via blanket `impl`s provided for references, pointers (e.g. see `mod
+    ///   ref_transmutability` below).
+    pub unsafe trait CcType {
+        /// `Name` helps Rust type system to identify the given trasmutability
+        /// equivalence class.
+        ///
+        /// `forward_declare!` and `unsafe_define!` macros form the `Name` using
+        /// the `symbol!` macro, based on the fully-qualified name of
+        /// the imported C++ type.
+        ///
+        /// In other scenarios, the `Name` is formed using an arbitrary
+        /// convention that is sufficient to guarantee non-overlapping
+        /// names (e.g. see the private `ref_transmutability::RefName`
+        /// type alias below).
+        type Name;
+    }
+}
+
+use internal::*;
 
 extern "C" {
-    /// Adding an `Unsized` field to your type makes it completely unsized (not
-    /// just dynamically-sized).
+    /// Adding an `Unsized` field to your type makes it completely unsized
+    /// (not just dynamically-sized).
     type Unsized;
 }
 
@@ -266,32 +297,6 @@ pub trait Complete {}
 /// matter.
 impl<T: Unpin> Complete for T {}
 
-/// Types that implement the `CcType` trait with the same `Name` can be safely
-/// transmuted between each other, because they either provide bindings for the
-/// same C++ type, or point/refer to the same C++ type, or contain the same C++
-/// type.
-///
-/// Even though this trait is public, implementations of this trait should only
-/// be provided by Crubit itself:
-///
-/// - Via `forward_declare!` and `unsafe_define!` macros
-/// - Via blanket `impl`s provided for references, pointers (e.g. see `mod
-///   ref_transmutability` below).
-#[doc(hidden)]
-pub unsafe trait CcType {
-    /// `Name` helps Rust type system to identify the given trasmutability
-    /// equivalence class.
-    ///
-    /// `forward_declare!` and `unsafe_define!` macros form the `Name` using the
-    /// `symbol!` macro, based on the fully-qualified name of the imported C++
-    /// type.
-    ///
-    /// In other scenarios, the `Name` is formed using an arbitrary convention
-    /// that is sufficient to guarantee non-overlapping names (e.g. see the
-    /// private `ref_transmutability::RefName` type alias below).
-    type Name;
-}
-
 /// All forward declarations represented by `Incomplete<Name, ...>` form a
 /// transmutability equivalence class (together with the complete definition(s)
 /// - see the `unsafe_define!` macro below).
@@ -326,7 +331,7 @@ unsafe impl<Name, Declarer> CcType for Incomplete<Name, Declarer> {
 macro_rules! unsafe_define {
     // TODO(jeanpierreda): support generic complete type (e.g. `symbol!("xyz") <-> Foo<T> where T : Bar`)
     ($Name:ty, $Complete:ty) => {
-        unsafe impl $crate::CcType for $Complete {
+        unsafe impl $crate::internal::CcType for $Complete {
             type Name = $Name;
         }
     };

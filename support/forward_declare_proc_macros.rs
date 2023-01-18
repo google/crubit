@@ -12,12 +12,12 @@ pub fn symbol(input: TokenStream) -> TokenStream {
     let parts = string.chars().map(|c| {
         let c = syn::LitChar::new(c, input.span());
         quote! {
-          ::forward_declare::C<#c>
+          ::forward_declare::internal::C<#c>
         }
     });
 
     TokenStream::from(quote! {
-      ::forward_declare::Symbol<(
+      ::forward_declare::internal::Symbol<(
           #(#parts,)*
       )>
     })

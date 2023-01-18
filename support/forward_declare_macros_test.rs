@@ -7,24 +7,24 @@ mod std {}
 mod forward_declare {}
 
 mod test_is_same_0 {
-    type _Expected = ::forward_declare::Symbol<()>;
+    type _Expected = ::forward_declare::internal::Symbol<()>;
     fn _is_same(x: _Expected) -> ::forward_declare::symbol!("") {
         x
     }
 }
 
 mod test_is_same_1 {
-    type _Expected = ::forward_declare::Symbol<(::forward_declare::C<'x'>,)>;
+    type _Expected = ::forward_declare::internal::Symbol<(::forward_declare::internal::C<'x'>,)>;
     fn _is_same(x: _Expected) -> ::forward_declare::symbol!("x") {
         x
     }
 }
 
 mod test_is_same_3 {
-    type _Expected = ::forward_declare::Symbol<(
-        ::forward_declare::C<'f'>,
-        ::forward_declare::C<'o'>,
-        ::forward_declare::C<'o'>,
+    type _Expected = ::forward_declare::internal::Symbol<(
+        ::forward_declare::internal::C<'f'>,
+        ::forward_declare::internal::C<'o'>,
+        ::forward_declare::internal::C<'o'>,
     )>;
     fn _is_same(x: _Expected) -> ::forward_declare::symbol!("foo") {
         x
@@ -211,7 +211,9 @@ fn test_formerly_incomplete() {
 /// defining a whole new vector type for incomplete T.
 #[test]
 fn test_vector_alike() {
-    use ::forward_declare::{forward_declare, symbol, unsafe_define, CcCast, CcType, Complete};
+    use ::forward_declare::{
+        forward_declare, internal::CcType, symbol, unsafe_define, CcCast, Complete,
+    };
     struct MyComplete;
     unsafe_define!(symbol!("T"), MyComplete);
     forward_declare!(MyIncomplete = symbol!("T"));
