@@ -12,6 +12,14 @@ namespace rstd {
 // `rstd::Char` is a C++ representation of the `char` type from Rust.
 class Char final {
  public:
+  // Creates a default `Char` - one that represents ASCII NUL character.
+  //
+  // Providing the default constructor helps to ensure that the `value_` always
+  // effectively stores a C++ equivalent of a well-defined Rust's `u32` value
+  // (and never has a `MaybeUninit<u32>` value).  See also the P2723R1 proposal
+  // for C++ which argues that zero-initialization may mitigate 10% of exploits.
+  constexpr Char() = default;
+
   // TODO(b/265338802): Reject `char` values that may represent a part of a
   // UTF-8 character (i.e. only the first 0-127 ASCII characters should be
   // accepted).
@@ -52,7 +60,7 @@ class Char final {
  private:
   // See "layout tests" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
-  std::uint32_t value_;
+  std::uint32_t value_ = '\0';
 };
 
 }  // namespace rstd

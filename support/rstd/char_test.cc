@@ -121,4 +121,9 @@ TEST(RsCharTest, ComparisonWithAnotherRsChar) {
   EXPECT_TRUE(b > a);
 }
 
+TEST(RsCharTest, DefaultConstructedValue) {
+  rstd::Char c;
+  EXPECT_EQ(0, uint32_t{c});
+}
+
 }  // namespace
