@@ -4,6 +4,8 @@
 
 #include "nullability_verification/pointer_nullability.h"
 
+#include "absl/log/check.h"
+#include "clang/AST/TypeVisitor.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -74,6 +76,66 @@ std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
   return Result;
 }
 
+class CountPointersInTypeVisitor
+    : public TypeVisitor<CountPointersInTypeVisitor> {
+  unsigned count = 0;
+
+ public:
+  CountPointersInTypeVisitor() {}
+
+  unsigned getCount() { return count; }
+
+  void Visit(QualType T) {
+    CHECK(T.isCanonical());
+    TypeVisitor::Visit(T.getTypePtrOrNull());
+  }
+
+  void VisitPointerType(const PointerType* PT) {
+    count += 1;
+    Visit(PT->getPointeeType());
+  }
+
+  void VisitFunctionProtoType(const FunctionProtoType* FPT) {
+    Visit(FPT->getReturnType());
+  }
+
+  void Visit(TemplateArgument TA) {
+    if (TA.getKind() == TemplateArgument::Type) {
+      Visit(TA.getAsType());
+    }
+  }
+
+  void VisitRecordType(const RecordType* RT) {
+    if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+      for (auto& TA : CTSD->getTemplateArgs().asArray()) {
+        Visit(TA);
+      }
+    }
+  }
+};
+
+unsigned countPointersInType(QualType T) {
+  CountPointersInTypeVisitor PointerCountVisitor;
+  PointerCountVisitor.Visit(T.getCanonicalType());
+  return PointerCountVisitor.getCount();
+}
+
+unsigned countPointersInType(TemplateArgument TA) {
+  if (TA.getKind() == TemplateArgument::Type) {
+    return countPointersInType(TA.getAsType().getCanonicalType());
+  }
+  return 0;
+}
+
+QualType exprType(const Expr* E) {
+  if (E->hasPlaceholderType(BuiltinType::BoundMember))
+    return Expr::findBoundMemberType(E);
+  return E->getType();
+}
+
+unsigned countPointersInType(const Expr* E) {
+  return countPointersInType(exprType(E));
+}
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang

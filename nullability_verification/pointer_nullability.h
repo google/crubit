@@ -93,6 +93,12 @@ bool isNullable(const dataflow::PointerValue& PointerVal,
 /// Returns a human-readable debug representation of a nullability vector.
 std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability);
 
+QualType exprType(const Expr* E);
+
+unsigned countPointersInType(const Expr* E);
+unsigned countPointersInType(QualType T);
+unsigned countPointersInType(TemplateArgument TA);
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang
