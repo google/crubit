@@ -25,22 +25,22 @@ class Cmdline {
   // Creates `Cmdline` based on the provided cmdline arguments - `cc_out`,
   // `rs_out`, and so forth.
   static absl::StatusOr<Cmdline> CreateForTesting(
-      std::string cc_out, std::string rs_out, std::string ir_out,
-      std::string namespaces_out, std::string crubit_support_path,
-      std::string clang_format_exe_path, std::string rustfmt_exe_path,
-      std::string rustfmt_config_path, bool do_nothing,
-      std::vector<std::string> public_headers,
+      std::string current_target, std::string cc_out, std::string rs_out,
+      std::string ir_out, std::string namespaces_out,
+      std::string crubit_support_path, std::string clang_format_exe_path,
+      std::string rustfmt_exe_path, std::string rustfmt_config_path,
+      bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str,
       std::vector<std::string> extra_rs_sources,
       std::vector<std::string> srcs_to_scan_for_instantiations,
       std::string instantiations_out, std::string error_report_out) {
     return CreateFromArgs(
-        std::move(cc_out), std::move(rs_out), std::move(ir_out),
-        std::move(namespaces_out), std::move(crubit_support_path),
-        std::move(clang_format_exe_path), std::move(rustfmt_exe_path),
-        std::move(rustfmt_config_path), do_nothing, std::move(public_headers),
-        std::move(targets_and_headers_str), std::move(extra_rs_sources),
-        std::move(srcs_to_scan_for_instantiations),
+        std::move(current_target), std::move(cc_out), std::move(rs_out),
+        std::move(ir_out), std::move(namespaces_out),
+        std::move(crubit_support_path), std::move(clang_format_exe_path),
+        std::move(rustfmt_exe_path), std::move(rustfmt_config_path), do_nothing,
+        std::move(public_headers), std::move(targets_and_headers_str),
+        std::move(extra_rs_sources), std::move(srcs_to_scan_for_instantiations),
         std::move(instantiations_out), std::move(error_report_out));
   }
 
@@ -86,11 +86,11 @@ class Cmdline {
   Cmdline();
 
   static absl::StatusOr<Cmdline> CreateFromArgs(
-      std::string cc_out, std::string rs_out, std::string ir_out,
-      std::string namespaces_out, std::string crubit_support_path,
-      std::string clang_format_exe_path, std::string rustfmt_exe_path,
-      std::string rustfmt_config_path, bool do_nothing,
-      std::vector<std::string> public_headers,
+      std::string current_target, std::string cc_out, std::string rs_out,
+      std::string ir_out, std::string namespaces_out,
+      std::string crubit_support_path, std::string clang_format_exe_path,
+      std::string rustfmt_exe_path, std::string rustfmt_config_path,
+      bool do_nothing, std::vector<std::string> public_headers,
       std::string targets_and_headers_str,
       std::vector<std::string> extra_rs_sources,
       std::vector<std::string> srcs_to_scan_for_instantiations,

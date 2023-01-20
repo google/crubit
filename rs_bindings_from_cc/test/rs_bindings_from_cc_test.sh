@@ -18,10 +18,13 @@ function quote_escape() {
 function test::cmd_line_api() {
   EXPECT_FAIL "${RS_BINDINGS_FROM_CC}" "generator should return non-zero with no arguments"
   EXPECT_SUCCEED \
-    "${RS_BINDINGS_FROM_CC} 2>&1 | grep 'please specify --rs_out' > /dev/null" \
+    "${RS_BINDINGS_FROM_CC} 2>&1 | grep 'please specify --target' > /dev/null" \
+    "generator should show help message for --target"
+  EXPECT_SUCCEED \
+    "${RS_BINDINGS_FROM_CC} --target=//:target 2>&1 | grep 'please specify --rs_out' > /dev/null" \
     "generator should show help message for --rs_out"
   EXPECT_SUCCEED \
-    "${RS_BINDINGS_FROM_CC} --rs_out=/foo 2>&1 | \
+    "${RS_BINDINGS_FROM_CC} --target=//:target --rs_out=/foo 2>&1 | \
       grep 'please specify --cc_out' > /dev/null" \
     "generator should show help message for --cc_out"
 
@@ -30,6 +33,7 @@ function test::cmd_line_api() {
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 | \
       grep 'please specify --crubit_support_path' > /dev/null" \
@@ -37,6 +41,7 @@ function test::cmd_line_api() {
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
       --crubit_support_path=test/crubit/support/path | \
@@ -45,6 +50,7 @@ function test::cmd_line_api() {
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
       --crubit_support_path=test/crubit/support/path \
@@ -54,6 +60,7 @@ function test::cmd_line_api() {
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" 2>&1 \
       --crubit_support_path=test/crubit/support/path \
@@ -67,6 +74,7 @@ function test::cmd_line_api() {
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -84,6 +92,7 @@ EOT
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -108,6 +117,7 @@ EOT
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -140,6 +150,7 @@ EOT
 
   EXPECT_FAIL \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//:target \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -170,6 +181,7 @@ EOT
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//foo/bar:baz \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -199,6 +211,7 @@ EOT
   # Testing the default `rustfmt` config.
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//foo/bar:baz \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -228,6 +241,7 @@ EOT
 EOF
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//foo/bar:baz\
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/crubit/support/path \
@@ -267,6 +281,7 @@ EOT
 
   EXPECT_SUCCEED \
     "\"${RS_BINDINGS_FROM_CC}\" \
+      --target=//foo/bar:baz \
       --rs_out=\"${rs_out}\" \
       --cc_out=\"${cc_out}\" \
       --crubit_support_path=test/specific/crubit/support/path \

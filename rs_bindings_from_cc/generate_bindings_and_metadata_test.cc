@@ -39,8 +39,8 @@ TEST(GenerateBindingsAndMetadataTest, GeneratingIR) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          std::string(kDefaultClangFormatExePath),
+          "//:target", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -71,8 +71,8 @@ TEST(GenerateBindingsAndMetadataTest, InstantiationsAreEmptyInNormalMode) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          std::string(kDefaultClangFormatExePath),
+          "//:target", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */ {"a.h"}, std::string(kTargetsAndHeaders),
@@ -101,8 +101,8 @@ GetInstantiationsFor(absl::string_view header_content,
   CRUBIT_ASSIGN_OR_RETURN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          std::string(kDefaultClangFormatExePath),
+          "//:target", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,
           /* public_headers= */
@@ -215,7 +215,7 @@ TEST(GenerateBindingsAndMetadataTest,
 
 TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h"]}
+    {"t": "//:target1", "h": ["a.h"]}
   ])";
   constexpr absl::string_view kHeaderContent = R"(
     namespace top_level_1 {
@@ -234,7 +234,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
     namespace top_level_1 {}
   )";
   constexpr absl::string_view kExpected = R"({
-  "label": "target1",
+  "label": "//:target1",
   "namespaces": [
     {
       "children": [
@@ -269,7 +269,7 @@ TEST(GenerateBindingsAndMetadataTest, NamespacesJsonGenerated) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_json",
+          "//:target1", "cc_out", "rs_out", "ir_out", "namespaces_json",
           "crubit_support_path", std::string(kDefaultClangFormatExePath),
           std::string(kDefaultRustfmtExePath), "nowhere/rustfmt.toml",
           /* do_nothing= */ false,

@@ -53,6 +53,7 @@ def generate_bindings(
 
     rs_bindings_from_cc_flags = [
         "--stderrthreshold=2",
+        "--target=" + str(ctx.label),
         "--rs_out",
         rs_output.path,
         "--cc_out",

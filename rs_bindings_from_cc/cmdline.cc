@@ -44,6 +44,7 @@ ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "public headers of the cc_library this tool should generate bindings "
           "for, in a format suitable for usage in google3-relative quote "
           "include (#include \"\").");
+ABSL_FLAG(std::string, target, "", "The target to generate bindings for.");
 ABSL_FLAG(std::string, targets_and_headers, std::string(),
           "Information about which headers belong to which targets, encoded as "
           "a JSON array. For example: "
@@ -89,8 +90,9 @@ bool fromJSON(const llvm::json::Value& json, TargetAndHeaders& out,
 
 absl::StatusOr<Cmdline> Cmdline::Create() {
   return CreateFromArgs(
-      absl::GetFlag(FLAGS_cc_out), absl::GetFlag(FLAGS_rs_out),
-      absl::GetFlag(FLAGS_ir_out), absl::GetFlag(FLAGS_namespaces_out),
+      absl::GetFlag(FLAGS_target), absl::GetFlag(FLAGS_cc_out),
+      absl::GetFlag(FLAGS_rs_out), absl::GetFlag(FLAGS_ir_out),
+      absl::GetFlag(FLAGS_namespaces_out),
       absl::GetFlag(FLAGS_crubit_support_path),
       absl::GetFlag(FLAGS_clang_format_exe_path),
       absl::GetFlag(FLAGS_rustfmt_exe_path),
@@ -104,15 +106,19 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
 }
 
 absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
-    std::string cc_out, std::string rs_out, std::string ir_out,
-    std::string namespaces_out, std::string crubit_support_path,
-    std::string clang_format_exe_path, std::string rustfmt_exe_path,
-    std::string rustfmt_config_path, bool do_nothing,
-    std::vector<std::string> public_headers,
+    std::string current_target, std::string cc_out, std::string rs_out,
+    std::string ir_out, std::string namespaces_out,
+    std::string crubit_support_path, std::string clang_format_exe_path,
+    std::string rustfmt_exe_path, std::string rustfmt_config_path,
+    bool do_nothing, std::vector<std::string> public_headers,
     std::string targets_and_headers_str, std::vector<std::string> extra_rs_srcs,
     std::vector<std::string> srcs_to_scan_for_instantiations,
     std::string instantiations_out, std::string error_report_out) {
   Cmdline cmdline;
+  if (current_target.empty()) {
+    return absl::InvalidArgumentError("please specify --target");
+  }
+  cmdline.current_target_ = BazelLabel(std::move(current_target));
 
   if (rs_out.empty()) {
     return absl::InvalidArgumentError("please specify --rs_out");
@@ -205,19 +211,8 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     }
   }
 
-  CRUBIT_ASSIGN_OR_RETURN(cmdline.current_target_,
-                          cmdline.FindHeader(cmdline.public_headers_[0]));
   for (const HeaderName& public_header : cmdline.public_headers_) {
-    CRUBIT_ASSIGN_OR_RETURN(BazelLabel header_target,
-                            cmdline.FindHeader(public_header));
-
-    if (cmdline.current_target_ != header_target) {
-      return absl::InvalidArgumentError(absl::Substitute(
-          "Expected all public headers to belong to the current target '$0', "
-          "but header '$1' belongs to '$2'",
-          cmdline.current_target_.value(), public_header.IncludePath(),
-          header_target.value()));
-    }
+    CRUBIT_RETURN_IF_ERROR(cmdline.FindHeader(public_header).status());
   }
 
   return cmdline;

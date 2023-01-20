@@ -23,11 +23,13 @@ using ::testing::UnorderedElementsAre;
 
 namespace {
 
-absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
-                                    const std::string& targets_and_headers) {
+absl::StatusOr<Cmdline> TestCmdline(std::string target,
+                                    std::vector<std::string> public_headers,
+                                    std::string targets_and_headers) {
   return Cmdline::CreateForTesting(
-      "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-      "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
+      std::move(target), "cc_out", "rs_out", "ir_out", "namespaces_out",
+      "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+      "rustfmt_config_path",
 
       /*do_nothing=*/false, std::move(public_headers),
       std::move(targets_and_headers),
@@ -37,16 +39,23 @@ absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
       /* error_report_out= */ "");
 }
 
+absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
+                                    std::string targets_and_headers) {
+  return TestCmdline("//:target", std::move(public_headers),
+                     std::move(targets_and_headers));
+}
+
 }  // namespace
 
 TEST(CmdlineTest, BasicCorrectInput) {
   ASSERT_OK_AND_ASSIGN(
       Cmdline cmdline,
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
+          "//:t1", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+          "rustfmt_config_path",
           /* do_nothing= */ false, {"h1"},
-          R"([{"t": "t1", "h": ["h1", "h2"]}])", {"extra_file.rs"},
+          R"([{"t": "//:t1", "h": ["h1", "h2"]}])", {"extra_file.rs"},
           {"scan_for_instantiations.rs"}, "instantiations_out",
           "error_report_out"));
   EXPECT_EQ(cmdline.cc_out(), "cc_out");
@@ -60,14 +69,15 @@ TEST(CmdlineTest, BasicCorrectInput) {
   EXPECT_EQ(cmdline.instantiations_out(), "instantiations_out");
   EXPECT_EQ(cmdline.error_report_out(), "error_report_out");
   EXPECT_EQ(cmdline.do_nothing(), false);
-  EXPECT_EQ(cmdline.current_target().value(), "t1");
+  EXPECT_EQ(cmdline.current_target().value(), "//:t1");
   EXPECT_THAT(cmdline.public_headers(), ElementsAre(HeaderName("h1")));
   EXPECT_THAT(cmdline.extra_rs_srcs(), ElementsAre("extra_file.rs"));
   EXPECT_THAT(cmdline.srcs_to_scan_for_instantiations(),
               ElementsAre("scan_for_instantiations.rs"));
-  EXPECT_THAT(cmdline.headers_to_targets(),
-              UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("t1")),
-                                   Pair(HeaderName("h2"), BazelLabel("t1"))));
+  EXPECT_THAT(
+      cmdline.headers_to_targets(),
+      UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("//:t1")),
+                           Pair(HeaderName("h2"), BazelLabel("//:t1"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersEmpty) {
@@ -97,7 +107,7 @@ TEST(CmdlineTest, TargetsAndHeadersIntInTopLevelArray) {
 }
 
 TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeadersArray) {
-  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "h": 123}])"),
+  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "//:t1", "h": 123}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
                              HasSubstr(".h"), HasSubstr("array"))));
@@ -111,17 +121,25 @@ TEST(CmdlineTest, TargetsAndHeadersMissingTarget) {
 }
 
 TEST(CmdlineTest, TargetsAndHeadersMissingHeader) {
-  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1"}])"),
+  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "//:t1"}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
                              HasSubstr(".h"), HasSubstr("missing"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersEmptyHeader) {
-  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "h": ["", "h2"]}])"),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`h`"), HasSubstr("empty string"))));
+  ASSERT_THAT(
+      TestCmdline({"//:t1", "h1"}, R"([{"t": "//:t1", "h": ["", "h2"]}])"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               AllOf(HasSubstr("--targets_and_headers"), HasSubstr("`h`"),
+                     HasSubstr("empty string"))));
+}
+
+TEST(CmdlineTest, TargetsAndHeadersEmptyCurrentTarget) {
+  ASSERT_THAT(
+      TestCmdline("", {"//:t1", "h1"}, R"([{"t": "//:t1", "h": ["h1"]}])"),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               AllOf(HasSubstr("please specify --target"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersEmptyTarget) {
@@ -139,32 +157,28 @@ TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfTarget) {
 }
 
 TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeader) {
-  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "h": [123, "h2"]}])"),
+  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "//:t1", "h": [123, "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        AllOf(HasSubstr("--targets_and_headers"),
                              HasSubstr(".h"), HasSubstr("string"))));
 }
 
 TEST(CmdlineTest, TargetsAndHeadersDuplicateHeader) {
-  constexpr absl::string_view kHeaders = R"([
-      {"t": "t1", "h": ["h1"]},
-      {"t": "t2", "h": ["h1", "h2"]} ])";
-  ASSERT_OK_AND_ASSIGN(
-      Cmdline cmdline,
-      Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
-          /* do_nothing= */ false, {"h1"}, std::string(kHeaders),
-          {"extra_file.rs"}, {"scan_for_instantiations.rs"},
-          "instantiations_out", "error_report_out"));
-  EXPECT_THAT(cmdline.headers_to_targets(),
-              UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("t1")),
-                                   Pair(HeaderName("h2"), BazelLabel("t2"))));
+  for (const char* target : {"//:t1", "//:t2"}) {
+    ASSERT_OK_AND_ASSIGN(Cmdline cmdline, TestCmdline(target, {"h1"}, R"([
+        {"t": "//:t1", "h": ["h1"]},
+        {"t": "//:t2", "h": ["h1", "h2"]} ])"));
+    EXPECT_THAT(
+        cmdline.headers_to_targets(),
+        UnorderedElementsAre(Pair(HeaderName("h1"), BazelLabel("//:t1")),
+                             Pair(HeaderName("h2"), BazelLabel("//:t2"))));
+    EXPECT_EQ(cmdline.current_target().value(), target);
+  }
 }
 
 TEST(CmdlineTest, PublicHeadersEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(TestCmdline({}, std::string(kTargetsAndHeaders)),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -173,7 +187,7 @@ TEST(CmdlineTest, PublicHeadersEmpty) {
 
 TEST(CmdlineTest, PublicHeadersWhereFirstHeaderMissingInMap) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       TestCmdline({"missing-in-map.h"}, std::string(kTargetsAndHeaders)),
@@ -184,7 +198,7 @@ TEST(CmdlineTest, PublicHeadersWhereFirstHeaderMissingInMap) {
 
 TEST(CmdlineTest, PublicHeadersWhereSecondHeaderMissingInMap) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       TestCmdline({"a.h", "missing.h"}, std::string(kTargetsAndHeaders)),
@@ -194,25 +208,30 @@ TEST(CmdlineTest, PublicHeadersWhereSecondHeaderMissingInMap) {
 
 TEST(CmdlineTest, PublicHeadersCoveringMultipleTargets) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]},
-    {"t": "target2", "h": ["c.h", "d.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]},
+    {"t": "//:target2", "h": ["c.h", "d.h"]}
   ])";
-  ASSERT_THAT(TestCmdline({"a.h", "c.h"}, std::string(kTargetsAndHeaders)),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("Expected all public headers to belong "
-                                       "to the current target"),
-                             HasSubstr("target1"), HasSubstr("target2"),
-                             HasSubstr("c.h"))));
+  ASSERT_OK_AND_ASSIGN(Cmdline cmdline,
+                       TestCmdline("//:target1", {"a.h", "c.h"},
+                                   std::string(kTargetsAndHeaders)));
+  EXPECT_EQ(cmdline.current_target().value(), "//:target1");
+  EXPECT_THAT(
+      cmdline.headers_to_targets(),
+      UnorderedElementsAre(Pair(HeaderName("a.h"), BazelLabel("//:target1")),
+                           Pair(HeaderName("b.h"), BazelLabel("//:target1")),
+                           Pair(HeaderName("c.h"), BazelLabel("//:target2")),
+                           Pair(HeaderName("d.h"), BazelLabel("//:target2"))));
 }
 
 TEST(CmdlineTest, InstantiationsOutEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       (Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
+          "//:target1", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+          "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {}, {"lib.rs"},
           /* instantiations_out= */ "", "error_report_out")),
@@ -225,12 +244,13 @@ TEST(CmdlineTest, InstantiationsOutEmpty) {
 
 TEST(CmdlineTest, RustSourcesEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "clang_format_exe_path", "rustfmt_exe_path", "rustfmt_config_path",
+          "//:target1", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
+          "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
           /* srcs_to_scan_for_instantiations= */ {}, "instantiations_out",
@@ -244,10 +264,11 @@ TEST(CmdlineTest, RustSourcesEmpty) {
 
 TEST(CmdlineTest, CcOutEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       Cmdline::CreateForTesting(
+          "//:target1",
           /* cc_out= */ "", "rs_out", "ir_out", "namespaces_out",
           "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
           "rustfmt_config_path",
@@ -261,11 +282,11 @@ TEST(CmdlineTest, CcOutEmpty) {
 
 TEST(CmdlineTest, RsOutEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       Cmdline::CreateForTesting(
-          "cc_out", /* rs_out= */ "", "namespaces_out", "ir_out",
+          "//:target1", "cc_out", /* rs_out= */ "", "namespaces_out", "ir_out",
           "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
           "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
@@ -278,10 +299,10 @@ TEST(CmdlineTest, RsOutEmpty) {
 
 TEST(CmdlineTest, IrOutEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_OK(Cmdline::CreateForTesting(
-      "cc_out", "rs_out", /* ir_out= */ "", "namespaces_out",
+      "//:target1", "cc_out", "rs_out", /* ir_out= */ "", "namespaces_out",
       "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
       "rustfmt_config_path",
       /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
@@ -292,11 +313,12 @@ TEST(CmdlineTest, IrOutEmpty) {
 
 TEST(CmdlineTest, ClangFormatExePathEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
+          "//:target1", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path",
           /* clang_format_exe_path= */ "", "rustfmt_exe_path",
           "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
@@ -309,12 +331,12 @@ TEST(CmdlineTest, ClangFormatExePathEmpty) {
 
 TEST(CmdlineTest, RustfmtExePathEmpty) {
   constexpr absl::string_view kTargetsAndHeaders = R"([
-    {"t": "target1", "h": ["a.h", "b.h"]}
+    {"t": "//:target1", "h": ["a.h", "b.h"]}
   ])";
   ASSERT_THAT(
       Cmdline::CreateForTesting(
-          "cc_out", "rs_out", "ir_out", "namespaces_out", "crubit_support_path",
-          "clang_format_exe_path",
+          "//:target1", "cc_out", "rs_out", "ir_out", "namespaces_out",
+          "crubit_support_path", "clang_format_exe_path",
           /* rustfmt_exe_path= */ "", "rustfmt_config_path",
           /* do_nothing= */ false, {"a.h"}, std::string(kTargetsAndHeaders),
           /* extra_rs_srcs= */ {},
