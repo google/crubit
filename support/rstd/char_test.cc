@@ -16,9 +16,7 @@ namespace {
 // Check that `rstd::Char` is trivially destructible, copyable, and moveable.
 //
 // There are no constructor-related checks, because well-formed-ness checks
-// will make construction non-trivial.  The FromAsciiLiteral, FromUtf32Literal,
-// etc. tests ensure that `rstd::Char` provide test coverage for certain
-// construction-related scenarios.
+// require going through factory methods like `Char::from_u32`.
 static_assert(std::is_trivially_destructible_v<rstd::Char>);
 static_assert(std::is_trivially_copy_constructible_v<rstd::Char>);
 static_assert(std::is_trivially_copy_assignable_v<rstd::Char>);
@@ -48,8 +46,9 @@ static_assert(std::is_standard_layout_v<rstd::Char>);
 // - the representation of c-char in the execution character set (until C++23)
 // - the corresponding code point from ordinary literal encoding (since C++23).
 TEST(RsCharTest, FromAsciiLiteral) {
-  const rstd::Char c('x');
-  EXPECT_EQ(0x78, static_cast<uint32_t>(c));
+  std::optional<const rstd::Char> c = rstd::Char::from_u32('x');
+  ASSERT_TRUE(c.has_value());
+  EXPECT_EQ(0x78, uint32_t{*c});
 }
 
 // This test covers the following case from
@@ -61,8 +60,9 @@ TEST(RsCharTest, FromAsciiLiteral) {
 // with a single UTF-8 code unit (that is, c-char is in the range 0x0-0x7F,
 // inclusive).
 TEST(RsCharTest, FromUtf8Literal) {
-  const rstd::Char c(u8'x');
-  EXPECT_EQ(0x78, static_cast<uint32_t>(c));
+  std::optional<const rstd::Char> c = rstd::Char::from_u32(u8'x');
+  ASSERT_TRUE(c.has_value());
+  EXPECT_EQ(0x78, uint32_t{*c});
 }
 
 // This test covers the following case from
@@ -74,11 +74,9 @@ TEST(RsCharTest, FromUtf8Literal) {
 // single UTF-16 code unit (that is, c-char is in the range 0x0-0xFFFF,
 // inclusive).
 TEST(RsCharTest, FromUtf16Literal) {
-  // Not testing `is_trivially_constructible`, because UTF-16 literals may
-  // fail Rust's well-formed-ness checks (e.g. they may represent only one
-  // part of a surrogate pair).
-  const rstd::Char c(u'Ł');
-  EXPECT_EQ(0x141, static_cast<uint32_t>(c));
+  std::optional<const rstd::Char> c = rstd::Char::from_u32(u'Ł');
+  ASSERT_TRUE(c.has_value());
+  EXPECT_EQ(0x141, uint32_t{*c});
 }
 
 // This test covers the following case from
@@ -87,38 +85,74 @@ TEST(RsCharTest, FromUtf16Literal) {
 // UTF-32 character literal, e.g. U'猫' or U'🍌'. Such literal has type
 // `char32_t` and the value equal to ISO/IEC 10646 code point value of c-char.
 TEST(RsCharTest, FromUtf32Literal) {
-  // Not testing `is_trivially_constructible`, because UTF-32 literals may fail
-  // Rust's well-formed-ness checks (e.g. they may exceed the value of Rust's
-  // `std::char::MAX`).
-  const rstd::Char c(U'🦀');
-  EXPECT_EQ(0x1F980, static_cast<uint32_t>(c));
+  std::optional<const rstd::Char> c = rstd::Char::from_u32(U'🦀');
+  ASSERT_TRUE(c.has_value());
+  EXPECT_EQ(0x1F980, uint32_t{*c});
+}
+
+TEST(RsCharTest, FromU32ValidityChecks) {
+  // Max 32-bit value.
+  EXPECT_FALSE(rstd::Char::from_u32(0xffffffff).has_value());
+
+  // A value just above Rust's `char::MAX`:
+  // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX.
+  EXPECT_FALSE(rstd::Char::from_u32(0x110000).has_value());
+
+  // Smallest/greatest "high"/"low" surrogates.
+  EXPECT_FALSE(rstd::Char::from_u32(0xd800).has_value());
+  EXPECT_FALSE(rstd::Char::from_u32(0xdbff).has_value());
+  EXPECT_FALSE(rstd::Char::from_u32(0xdc00).has_value());
+  EXPECT_FALSE(rstd::Char::from_u32(0xdfff).has_value());
+
+  // Smallest valid value.
+  std::optional<rstd::Char> maybe_c = rstd::Char::from_u32('\0');
+  ASSERT_TRUE(maybe_c.has_value());
+  EXPECT_EQ(0x00, uint32_t{*maybe_c});
+
+  // Greatest valid value.  See also Rust's `char::MAX`:
+  // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX.
+  maybe_c = rstd::Char::from_u32(0x10ffff);
+  ASSERT_TRUE(maybe_c.has_value());
+  EXPECT_EQ(0x10ffff, uint32_t{*maybe_c});
+
+  // Just below surrogates.
+  maybe_c = rstd::Char::from_u32(0xd7ff);
+  ASSERT_TRUE(maybe_c.has_value());
+  EXPECT_EQ(0xd7ff, uint32_t{*maybe_c});
+
+  // Just above surrogates.
+  maybe_c = rstd::Char::from_u32(0xe000);
+  ASSERT_TRUE(maybe_c.has_value());
+  EXPECT_EQ(0xe000, uint32_t{*maybe_c});
 }
 
 // Test that `rstd::Char` values can be compared with other `rstd::Char` values.
 TEST(RsCharTest, ComparisonWithAnotherRsChar) {
-  const rstd::Char a('a');
-  const rstd::Char b('b');
+  std::optional<const rstd::Char> a = rstd::Char::from_u32('a');
+  std::optional<const rstd::Char> b = rstd::Char::from_u32('b');
+  ASSERT_TRUE(a.has_value());
+  ASSERT_TRUE(b.has_value());
 
-  EXPECT_TRUE(a == a);
-  EXPECT_FALSE(a != a);
-  EXPECT_TRUE(a <= a);
-  EXPECT_FALSE(a < a);
-  EXPECT_TRUE(a >= a);
-  EXPECT_FALSE(a > a);
+  EXPECT_TRUE(*a == *a);
+  EXPECT_FALSE(*a != *a);
+  EXPECT_TRUE(*a <= *a);
+  EXPECT_FALSE(a < *a);
+  EXPECT_TRUE(*a >= *a);
+  EXPECT_FALSE(*a > *a);
 
-  EXPECT_FALSE(a == b);
-  EXPECT_TRUE(a != b);
-  EXPECT_TRUE(a <= b);
-  EXPECT_TRUE(a < b);
-  EXPECT_FALSE(a >= b);
-  EXPECT_FALSE(a > b);
+  EXPECT_FALSE(*a == *b);
+  EXPECT_TRUE(*a != *b);
+  EXPECT_TRUE(*a <= *b);
+  EXPECT_TRUE(*a < *b);
+  EXPECT_FALSE(*a >= *b);
+  EXPECT_FALSE(*a > *b);
 
-  EXPECT_FALSE(b == a);
-  EXPECT_TRUE(b != a);
-  EXPECT_FALSE(b <= a);
-  EXPECT_FALSE(b < a);
-  EXPECT_TRUE(b >= a);
-  EXPECT_TRUE(b > a);
+  EXPECT_FALSE(*b == *a);
+  EXPECT_TRUE(*b != *a);
+  EXPECT_FALSE(*b <= *a);
+  EXPECT_FALSE(*b < *a);
+  EXPECT_TRUE(*b >= *a);
+  EXPECT_TRUE(*b > *a);
 }
 
 TEST(RsCharTest, DefaultConstructedValue) {

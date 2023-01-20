@@ -51,8 +51,9 @@ TEST(FnParamTyTests, Int32) {
 }
 
 TEST(FnParamTyTests, Char) {
-  rstd::Char input(U'🦀');
-  rstd::Char output = fn_param_ty_tests::char_identity(input);
+  std::optional<const rstd::Char> input = rstd::Char::from_u32(U'🦀');
+  ASSERT_TRUE(input.has_value());
+  rstd::Char output = fn_param_ty_tests::char_identity(*input);
   EXPECT_EQ(input, output);
 }
 

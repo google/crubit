@@ -6,6 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_RSTD_CHAR_H_
 
 #include <cstdint>
+#include <optional>
 
 namespace rstd {
 
@@ -20,15 +21,35 @@ class Char final {
   // for C++ which argues that zero-initialization may mitigate 10% of exploits.
   constexpr Char() = default;
 
-  // TODO(b/265338802): Reject `char` values that may represent a part of a
-  // UTF-8 character (i.e. only the first 0-127 ASCII characters should be
-  // accepted).
-  constexpr explicit Char(char c) : value_(c) {}
+  // Converts a `uint32_t` into a `rstd::Char`.
+  //
+  // Note that not all valid `uint32_t`s are valid `rstd::Char`s. `from_u32`
+  // will return `std::nullopt` if the input is not a valid value for a
+  // `rstd::Char`.
+  //
+  // See also
+  // https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+  // which documents that undefined behavior may result in presence of "A value
+  // in a char which is a surrogate or above char::MAX."
+  //
+  // This function mimics Rust's `char::from_u32`:
+  // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32
+  static constexpr std::optional<Char> from_u32(char32_t c) {
+    // TODO(lukasza): Consider using slightly more efficient checks similarly
+    // to how `char_try_from_u32` is implemented in Rust standard library.
+    if (c > 0x10ffff) {
+      // Value greater than Rust's `char::MAX`:
+      // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
+      return std::nullopt;
+    }
 
-  // TODO(b/265338802): Reject `char` values with invalid bit patterns
-  // (retaining the `constexpr` aspect if possible).
-  constexpr explicit Char(char16_t c) : value_(c) {}
-  constexpr explicit Char(char32_t c) : value_(c) {}
+    if (c >= 0xd800 && c <= 0xdfff) {
+      // Surrogate characters.
+      return std::nullopt;
+    }
+
+    return from_u32_unchecked(c);
+  }
 
   constexpr Char(const Char&) = default;
   constexpr Char& operator=(const Char&) = default;
@@ -58,6 +79,18 @@ class Char final {
   }
 
  private:
+  // This function mimics Rust's `char::from_u32_unchecked`:
+  // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32_unchecked
+  //
+  // TODO(b/254095482): Figure out how to annotate/expose unsafe functions in
+  // C++ and then make this method public.
+  static constexpr Char from_u32_unchecked(std::uint32_t value) {
+    return Char(value);
+  }
+
+  // Private constructor - intended to only be used from `from_u32_unchecked`.
+  explicit constexpr Char(std::uint32_t value) : value_(value) {}
+
   // See "layout tests" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
   std::uint32_t value_ = '\0';
