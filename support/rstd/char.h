@@ -80,6 +80,12 @@ class Char final {
     return value_ > other.value_;
   }
 
+  // The highest valid code point a char can have, '\u{10FFFF}'.
+  //
+  // This constant mimics Rust's `char::MAX`:
+  // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
+  static const Char MAX;
+
  private:
   // This function mimics Rust's `char::from_u32_unchecked`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32_unchecked
@@ -97,6 +103,12 @@ class Char final {
   // `char32_t` is not used.
   std::uint32_t value_ = '\0';
 };
+
+// Definition of `Char::MAX` - it can't be defined and declared within the
+// `class` definition, because before `Char` is fully defined the compiler
+// complains that `constexpr` variable cannot have non-literal type
+// 'const Char'.
+constexpr Char Char::MAX = Char::from_u32_unchecked(0x10ffff);
 
 }  // namespace rstd
 
