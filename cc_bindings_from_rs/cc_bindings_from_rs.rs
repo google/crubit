@@ -275,10 +275,14 @@ mod tests {
         let test_result = test_args.run().expect("Default args should succeed");
 
         assert!(test_result.h_path.exists());
+        let temp_dir_str = test_args.tempdir.path().to_str().unwrap();
         let h_body = std::fs::read_to_string(&test_result.h_path)?;
+        #[rustfmt::skip]
         assert_body_matches(
             &h_body,
-            r#"// Automatically @generated C++ bindings for the following Rust crate:
+            &format!(
+                "{}\n{}\n{}",
+r#"// Automatically @generated C++ bindings for the following Rust crate:
 // test_crate
 
 #pragma once
@@ -288,13 +292,16 @@ namespace public_module {
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
-}
-inline void public_function() {
+}"#,
+ // TODO(b/261185414): Avoid assuming that all source code paths are google3 paths.
+format!("// Generated from: google3{temp_dir_str}/test_crate.rs;l=2"),
+r#"inline void public_function() {
   return __crubit_internal::
       __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
 }  // namespace public_module
-}  // namespace test_crate"#,
+}  // namespace test_crate"#
+            ),
         );
 
         assert!(test_result.rs_path.exists());

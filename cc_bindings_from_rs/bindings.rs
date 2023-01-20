@@ -21,6 +21,7 @@ use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::iter::once;
 use std::ops::AddAssign;
 use std::rc::Rc;
 
@@ -577,11 +578,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<MixedSnippet> {
 
     let doc_comment = {
         let doc_comment = format_doc_comment(tcx, local_def_id);
-        if doc_comment.is_empty() {
-            quote!{}
-        } else {
-            quote! { __NEWLINE__ #doc_comment }
-        }
+        quote! { __NEWLINE__ #doc_comment }
     };
 
     let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
@@ -944,22 +941,38 @@ fn format_fwd_decl(tcx: TyCtxt, def_id: LocalDefId) -> TokenStream {
     quote! { #keyword #cc_name; }
 }
 
-/// Formats the doc comment associated with the item identified by
-/// `local_def_id`.
-/// If there is no associated doc comment, an empty `TokenStream` is returned.
+fn format_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
+    let def_span = tcx.def_span(local_def_id);
+    let rustc_span::FileLines { file, lines } =
+        match tcx.sess().source_map().span_to_lines(def_span) {
+            Ok(filelines) => filelines,
+            Err(_) => return "unknown location".to_string(),
+        };
+    let file_name = file.name.prefer_local().to_string();
+    // Note: line_index starts at 0, while CodeSearch starts indexing at 1.
+    let line_number = lines[0].line_index + 1;
+    let google3_prefix = {
+        // If rustc_span::FileName isn't a 'real' file, then it's surrounded by by angle
+        // brackets, thus don't prepend "google3" prefix.
+        if file.name.is_real() { "google3" } else { "" }
+    };
+    format!("Generated from: {google3_prefix}{file_name};l={line_number}")
+}
+
+/// Formats the doc comment (if any) associated with the item identified by
+/// `local_def_id`, and appends the source location at which the item is
+/// defined.
 fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
     let hir_id = tcx.local_def_id_to_hir_id(local_def_id);
-    let doc_comment: String = tcx
+    let doc_comment = tcx
         .hir()
         .attrs(hir_id)
         .iter()
         .filter_map(|attr| attr.doc_str())
+        .map(|symbol| symbol.to_string())
+        .chain(once(format_source_location(tcx, local_def_id)))
         .join("\n\n");
-    if doc_comment.is_empty() {
-        quote! {}
-    } else {
-        quote! { __COMMENT__ #doc_comment}
-    }
+    quote! { __COMMENT__ #doc_comment}
 }
 
 /// Formats a Rust item idenfied by `def_id`.  Returns `None` if the definition
@@ -1215,6 +1228,7 @@ pub mod tests {
                         namespace __crubit_internal {
                             extern "C" double export_name(double x, double y);
                         }
+                        ...
                         inline double public_function(double x, double y) {
                             return __crubit_internal::export_name(x, y);
                         }
@@ -1250,6 +1264,7 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     namespace rust_out {
+                        ...
                         struct alignas(4) Point final {
                             // No point replicating test coverage of
                             // `test_format_def_struct_with_fields`.
@@ -1287,6 +1302,7 @@ pub mod tests {
                 quote! {
                     __HASH_TOKEN__ include <cstdint> ...
                     namespace ... {
+                        ...
                         extern "C" void public_function(
                             std::int32_t i,
                             std::intptr_t d,
@@ -1310,6 +1326,7 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     namespace rust_out {
+                        ...
                         struct ... S final {
                             // No point replicating test coverage of
                             // `test_format_def_struct_with_fields`.
@@ -1323,6 +1340,7 @@ pub mod tests {
                         namespace __crubit_internal {
                             extern "C" bool ...(::rust_out::S s);
                         }
+                        ...
                         inline bool f(::rust_out::S s) { ... }
                     }  // namespace rust_out
                 }
@@ -1797,6 +1815,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
                     }
+                    ...
                     inline double public_function(double x, double y) {
                         return __crubit_internal::...(x, y);
                     }
@@ -1821,6 +1840,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" double export_name(double x, double y);
                     }
+                    ...
                     inline double public_function(double x, double y) {
                         return __crubit_internal::export_name(x, y);
                     }
@@ -1848,9 +1868,9 @@ pub mod tests {
     /// `test_format_def_fn_const` tests how bindings for an `const fn` are
     /// generated.
     ///
-    /// Right now the `const` qualifier is ignored, but one can imagine that in the
-    /// (very) long-term future such functions (including their bodies) could
-    /// be translated into C++ `consteval` functions.
+    /// Right now the `const` qualifier is ignored, but one can imagine that in
+    /// the (very) long-term future such functions (including their bodies)
+    /// could be translated into C++ `consteval` functions.
     #[test]
     fn test_format_def_fn_const() {
         let test_src = r#"
@@ -1867,6 +1887,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...( std::int32_t i);
                     }
+                    ...
                     inline std::int32_t foo(std::int32_t i) {
                         return __crubit_internal::...(i);
                     }
@@ -2024,6 +2045,8 @@ pub mod tests {
                 "             ",
                 "",
                 "Doc comment via doc attribute.",
+                "",
+                "Generated from: <crubit_unittests.rs>;l=7",
             ]
             .join("\n");
             assert_cc_matches!(
@@ -2049,7 +2072,12 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
-            let doc_comments = [" Outer doc comment.", " Inner doc comment."].join("\n\n");
+            let doc_comments = [
+                " Outer doc comment.",
+                " Inner doc comment.",
+                "Generated from: <crubit_unittests.rs>;l=4",
+            ]
+            .join("\n\n");
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
@@ -2070,7 +2098,8 @@ pub mod tests {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
-            let comment = " Doc comment of a function with mangled name.";
+            let comment = " Doc comment of a function with mangled name.\n\n\
+                           Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
@@ -2223,6 +2252,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
                     }
+                    ...
                     inline double add(double x, double y) {
                         return __crubit_internal::...(x, y);
                     }
@@ -2241,18 +2271,19 @@ pub mod tests {
         });
     }
 
-    /// `test_format_def_fn_rust_abi` tests a function call that is not a C-ABI, and
-    /// is not the default Rust ABI.  It can't use `"stdcall"`, because it is
-    /// not supported on the targets where Crubit's tests run.  So, it ended up
-    /// using `"vectorcall"`.
+    /// `test_format_def_fn_rust_abi` tests a function call that is not a C-ABI,
+    /// and is not the default Rust ABI.  It can't use `"stdcall"`, because
+    /// it is not supported on the targets where Crubit's tests run.  So, it
+    /// ended up using `"vectorcall"`.
     ///
-    /// This test almost entirely replicates `test_format_def_fn_rust_abi`, except
-    /// for the `extern "vectorcall"` part in the `test_src` test input.
+    /// This test almost entirely replicates `test_format_def_fn_rust_abi`,
+    /// except for the `extern "vectorcall"` part in the `test_src` test
+    /// input.
     ///
-    /// This test verifies the current behavior that gives reasonable and functional
-    /// FFI bindings.  OTOH, in the future we may decide to avoid having the
-    /// extra thunk for cases where the given non-C-ABI function call
-    /// convention is supported by both C++ and Rust
+    /// This test verifies the current behavior that gives reasonable and
+    /// functional FFI bindings.  OTOH, in the future we may decide to avoid
+    /// having the extra thunk for cases where the given non-C-ABI function
+    /// call convention is supported by both C++ and Rust
     /// (see also `format_cc_call_conv_as_clang_attribute` in
     /// `rs_bindings_from_cc/src_code_gen.rs`)
     #[test]
@@ -2270,6 +2301,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
                     }
+                    ...
                     inline double add(double x, double y) {
                         return __crubit_internal::...(x, y);
                     }
@@ -2317,6 +2349,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     extern "C" void foo(bool b, double f);
                 }
             );
@@ -2337,6 +2370,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     extern "C" void some_function(double __param_0);
                 }
             );
@@ -2358,6 +2392,7 @@ pub mod tests {
                         extern "C" void ...(
                             double __param_0, double __param_1);
                     }
+                    ...
                     inline void foo(double __param_0, double __param_1) {
                         return __crubit_internal::...(__param_0, __param_1);
                     }
@@ -2397,6 +2432,7 @@ pub mod tests {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...(::rust_out::S __param_0);
                     }
+                    ...
                     inline std::int32_t func(::rust_out::S __param_0) {
                         return __crubit_internal::...(std::move(__param_0));
                     }
@@ -2477,6 +2513,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     struct alignas(4) SomeStruct final {
                         public:
                             // In this test there is no `Default` implementation.
@@ -2527,6 +2564,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     struct alignas(4) TupleStruct final {
                         public:
                             // In this test there is no `Default` implementation.
@@ -2663,6 +2701,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     struct alignas(1) SomeEnum final {
                         public:
                             // In this test there is no `Default` implementation.
@@ -2717,6 +2756,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     struct alignas(4) Point final {
                         public:
                             // In this test there is no `Default` implementation.
@@ -2784,6 +2824,7 @@ pub mod tests {
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
+                    ...
                     struct alignas(8) SomeUnion final {
                         public:
                             // In this test there is no `Default` implementation.
@@ -2831,7 +2872,8 @@ pub mod tests {
         "#;
         test_format_def(test_src, "SomeUnionWithDocs", |result| {
             let result = result.unwrap().unwrap();
-            let comment = " Doc for some union.";
+            let comment = " Doc for some union.\n\n\
+                           Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
@@ -2855,7 +2897,8 @@ pub mod tests {
         "#;
         test_format_def(test_src, "SomeEnumWithDocs", |result| {
             let result = result.unwrap().unwrap();
-            let comment = " Doc for some enum. ";
+            let comment = " Doc for some enum. \n\n\
+                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
@@ -2880,7 +2923,8 @@ pub mod tests {
         "#;
         test_format_def(test_src, "SomeStructWithDocs", |result| {
             let result = result.unwrap().unwrap();
-            let comment = "Doc for some struct.";
+            let comment = "Doc for some struct.\n\n\
+                           Generated from: <crubit_unittests.rs>;l=4";
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
@@ -2902,12 +2946,63 @@ pub mod tests {
         "#;
         test_format_def(test_src, "SomeTupleStructWithDocs", |result| {
             let result = result.unwrap().unwrap();
-            let comment = " Doc for some tuple struct.";
+            let comment = " Doc for some tuple struct.\n\n\
+                           Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
                 result.cc.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeTupleStructWithDocs final {
+                        ...
+                    }
+                    ...
+                },
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_source_loc_macro_rules() {
+        let test_src = r#"
+            macro_rules! some_tuple_struct_macro_for_testing_source_loc {
+                () => {
+                    /// Some doc on SomeTupleStructMacroForTesingSourceLoc.
+                    pub struct SomeTupleStructMacroForTesingSourceLoc(i32);
+                };
+            }
+
+            some_tuple_struct_macro_for_testing_source_loc!();
+        "#;
+        test_format_def(test_src, "SomeTupleStructMacroForTesingSourceLoc", |result| {
+            let result = result.unwrap().unwrap();
+            let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.\n\n\
+                                      Generated from: <crubit_unittests.rs>;l=5";
+            assert_cc_matches!(
+                result.cc.tokens,
+                quote! {
+                    __COMMENT__ #source_loc_comment
+                    struct ... SomeTupleStructMacroForTesingSourceLoc final {
+                        ...
+                    }
+                    ...
+                },
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_def_source_loc_with_no_doc_comment() {
+        let test_src = r#"
+            pub struct SomeTupleStructWithNoDocComment(i32);
+        "#;
+        test_format_def(test_src, "SomeTupleStructWithNoDocComment", |result| {
+            let result = result.unwrap().unwrap();
+            let comment = "Generated from: <crubit_unittests.rs>;l=2";
+            assert_cc_matches!(
+                result.cc.tokens,
+                quote! {
+                    __COMMENT__ #comment
+                    struct ... SomeTupleStructWithNoDocComment final {
                         ...
                     }
                     ...
