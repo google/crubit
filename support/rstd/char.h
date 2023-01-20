@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <optional>
 
+#include "absl/base/optimization.h"
+
 namespace rstd {
 
 // `rstd::Char` is a C++ representation of the `char` type from Rust.
@@ -37,13 +39,13 @@ class Char final {
   static constexpr std::optional<Char> from_u32(char32_t c) {
     // TODO(lukasza): Consider using slightly more efficient checks similarly
     // to how `char_try_from_u32` is implemented in Rust standard library.
-    if (c > 0x10ffff) {
+    if (ABSL_PREDICT_FALSE(c > 0x10ffff)) {
       // Value greater than Rust's `char::MAX`:
       // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
       return std::nullopt;
     }
 
-    if (c >= 0xd800 && c <= 0xdfff) {
+    if (ABSL_PREDICT_FALSE(c >= 0xd800 && c <= 0xdfff)) {
       // Surrogate characters.
       return std::nullopt;
     }
