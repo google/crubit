@@ -93,11 +93,27 @@ bool isNullable(const dataflow::PointerValue& PointerVal,
 /// Returns a human-readable debug representation of a nullability vector.
 std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability);
 
-QualType exprType(const Expr* E);
+/// A function that may provide enhanced nullability information for a
+/// substituted template parameter (which has no sugar of its own).
+using TypeParamNullability = std::optional<std::vector<NullabilityKind>>(
+    const SubstTemplateTypeParmType* ST);
+/// Traverse over a type to get its nullability. For example, if T is the type
+/// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
+/// the resulting nullability annotations will be {_Nonnull, _Nonnull,
+/// _Nullable, _Unknown}. Note that non-pointer elements (e.g., the second
+/// argument of Struct3Arg) do not get a nullability annotation.
+std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
+    QualType T,
+    llvm::function_ref<TypeParamNullability> SubstNullability = nullptr);
 
-unsigned countPointersInType(const Expr* E);
+/// Computes the number of pointer slots within a type.
+/// Each of these could conceptually be nullable, so this is the length of
+/// the nullability vector computed by getNullabilityAnnotationsFromType().
 unsigned countPointersInType(QualType T);
+unsigned countPointersInType(const Expr* E);
 unsigned countPointersInType(TemplateArgument TA);
+
+QualType exprType(const Expr* E);
 
 }  // namespace nullability
 }  // namespace tidy

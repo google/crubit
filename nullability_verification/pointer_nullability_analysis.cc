@@ -7,7 +7,6 @@
 #include <string>
 
 #include "absl/log/check.h"
-#include "absl/strings/str_join.h"
 #include "nullability_verification/pointer_nullability.h"
 #include "nullability_verification/pointer_nullability_lattice.h"
 #include "nullability_verification/pointer_nullability_matchers.h"
@@ -17,7 +16,6 @@
 #include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/Type.h"
-#include "clang/AST/TypeVisitor.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
@@ -39,66 +37,6 @@ using dataflow::TransferState;
 using dataflow::Value;
 
 namespace {
-
-class GetNullabilityAnnotationsFromTypeVisitor
-    : public TypeVisitor<GetNullabilityAnnotationsFromTypeVisitor> {
-  std::vector<NullabilityKind> NullabilityAnnotations;
-
- public:
-  std::vector<NullabilityKind> getNullabilityAnnotations() && {
-    return std::move(NullabilityAnnotations);
-  }
-
-  void Visit(QualType T) { TypeVisitor::Visit(T.getTypePtr()); }
-
-  void VisitElaboratedType(const ElaboratedType* ET) {
-    Visit(ET->getNamedType());
-  }
-
-  void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
-    for (auto TA : TST->template_arguments()) {
-      if (TA.getKind() == TemplateArgument::Type) {
-        Visit(TA.getAsType());
-      }
-    }
-  }
-
-  void VisitAttributedType(const AttributedType* AT) {
-    Optional<NullabilityKind> NK = AT->getImmediateNullability();
-    if (NK.has_value()) {
-      NullabilityAnnotations.push_back(AT->getImmediateNullability().value());
-      QualType MT = AT->getModifiedType();
-      if (auto PT = MT->getAs<PointerType>()) {
-        Visit(PT->getPointeeType());
-      } else {
-        // TODO: Handle this unusual yet possible (e.g. through typedefs)
-        // case.
-        llvm::dbgs() << "\nThe type " << AT
-                     << "contains a nullability annotation that is not "
-                     << "succeeded by a pointer type. "
-                     << "This occurence is not currently handled.\n";
-      }
-    } else {
-      Visit(AT->getModifiedType());
-    }
-  }
-
-  void VisitPointerType(const PointerType* PT) {
-    NullabilityAnnotations.push_back(NullabilityKind::Unspecified);
-    Visit(PT->getPointeeType());
-  }
-};
-
-/// Traverse over a type to get its nullability. For example, if T is the type
-/// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
-/// the resulting nullability annotations will be {_Nonnull, _Nonnull,
-/// _Nullable, _Unknown}. Note that non-pointer elements (e.g., the second
-/// argument of Struct3Arg) do not get a nullability annotation.
-std::vector<NullabilityKind> getNullabilityAnnotationsFromType(QualType T) {
-  GetNullabilityAnnotationsFromTypeVisitor AnnotationVisitor;
-  AnnotationVisitor.Visit(T);
-  return std::move(AnnotationVisitor).getNullabilityAnnotations();
-}
 
 // Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
 template <typename T>
@@ -162,77 +100,6 @@ ArrayRef<NullabilityKind> getNullabilityForChild(
   });
 }
 
-// TODO: Much logic is the same as GetNullabilityAnnotationsFromTypeVisitor.
-// Find a way to unify the two.
-class SubstituteNullabilityAnnotationsInTemplateVisitor
-    : public TypeVisitor<SubstituteNullabilityAnnotationsInTemplateVisitor> {
-  std::vector<NullabilityKind> NullabilityAnnotations;
-  std::function<std::vector<NullabilityKind>(
-      const SubstTemplateTypeParmType* ST)>
-      GetSubstitutedNullability;
-
- public:
-  explicit SubstituteNullabilityAnnotationsInTemplateVisitor(
-      std::function<
-          std::vector<NullabilityKind>(const SubstTemplateTypeParmType* ST)>
-          GetSubstitutedNullability)
-      : GetSubstitutedNullability(std::move(GetSubstitutedNullability)) {}
-
-  std::vector<NullabilityKind> getNullabilityAnnotations() && {
-    return std::move(NullabilityAnnotations);
-  }
-
-  void Visit(QualType T) { TypeVisitor::Visit(T.getTypePtr()); }
-
-  void VisitFunctionProtoType(const FunctionProtoType* FPT) {
-    Visit(FPT->getReturnType());
-    // TODO: Visit arguments.
-  }
-
-  void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* ST) {
-    for (auto NK : GetSubstitutedNullability(ST)) {
-      NullabilityAnnotations.push_back(NK);
-    }
-  }
-
-  void VisitPointerType(const PointerType* PT) {
-    NullabilityAnnotations.push_back(NullabilityKind::Unspecified);
-    Visit(PT->getPointeeType());
-  }
-
-  void VisitElaboratedType(const ElaboratedType* ET) {
-    Visit(ET->getNamedType());
-  }
-
-  void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
-    for (auto TA : TST->template_arguments()) {
-      if (TA.getKind() == TemplateArgument::Type) {
-        Visit(TA.getAsType());
-      }
-    }
-  }
-
-  void VisitAttributedType(const AttributedType* AT) {
-    Optional<NullabilityKind> NK = AT->getImmediateNullability();
-    if (NK.has_value()) {
-      NullabilityAnnotations.push_back(*NK);
-      QualType MT = AT->getModifiedType();
-      if (auto PT = MT->getAs<PointerType>()) {
-        Visit(PT->getPointeeType());
-      } else {
-        // TODO: Handle this unusual yet possible (e.g. through typedefs)
-        // case.
-        llvm::dbgs() << "\nThe type " << AT
-                     << "contains a nullability annotation that is not "
-                     << "succeeded by a pointer type. "
-                     << "This occurence is not currently handled.\n";
-      }
-    } else {
-      Visit(AT->getModifiedType());
-    }
-  }
-};
-
 /// Compute the nullability annotation of type `T`, which contains types
 /// originally written as a class template type parameter.
 ///
@@ -267,13 +134,16 @@ class SubstituteNullabilityAnnotationsInTemplateVisitor
 std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
     QualType T, ArrayRef<NullabilityKind> BaseNullabilityAnnotations,
     QualType BaseType) {
-  SubstituteNullabilityAnnotationsInTemplateVisitor AnnotationVisitor(
-      [&](const SubstTemplateTypeParmType* ST) {
+  return getNullabilityAnnotationsFromType(
+      T,
+      [&](const SubstTemplateTypeParmType* ST)
+          -> std::optional<std::vector<NullabilityKind>> {
         unsigned PointerCount = 0;
         unsigned ArgIndex = ST->getIndex();
         if (auto RT = BaseType->getAs<RecordType>()) {
           if (auto CTSD =
-                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl());
+              CTSD == ST->getAssociatedDecl()) {
             auto TemplateArgs = CTSD->getTemplateArgs().asArray();
 
             // TODO: Correctly handle the indexing of nested templates (e.g.
@@ -281,7 +151,7 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
             // then remove this fallback.
             if (TemplateArgs.size() <= ArgIndex &&
                 ST->getReplacedParameter()->getDepth() == 0) {
-              return std::vector<NullabilityKind>();
+              return std::nullopt;
             }
 
             for (auto TA : TemplateArgs.take_front(ArgIndex)) {
@@ -293,17 +163,15 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
               // empty due to lack of expression coverage. Use the dataflow
               // lattice to retrieve correct base type annotations. Then, remove
               // this fallback.
-              return std::vector<NullabilityKind>();
+              return std::nullopt;
             } else {
               return BaseNullabilityAnnotations.slice(PointerCount, SliceSize)
                   .vec();
             }
           }
         }
-        return std::vector<NullabilityKind>();
+        return std::nullopt;
       });
-  AnnotationVisitor.Visit(T);
-  return std::move(AnnotationVisitor).getNullabilityAnnotations();
 }
 
 /// Compute nullability annotations of `T`, which might contain template type
@@ -334,8 +202,10 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
 /// [_Nullable, _Nonnull].
 std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
     QualType T, const CallExpr* CE) {
-  SubstituteNullabilityAnnotationsInTemplateVisitor AnnotationVisitor(
-      [&](const SubstTemplateTypeParmType* ST) {
+  return getNullabilityAnnotationsFromType(
+      T,
+      [&](const SubstTemplateTypeParmType* ST)
+          -> std::optional<std::vector<NullabilityKind>> {
         // TODO: Handle calls that use template argument deduction.
         // TODO: Handle nested templates (...->getDepth() > 0).
         if (auto* DRE =
@@ -347,10 +217,8 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
                   .getTypeSourceInfo()
                   ->getType());
         }
-        return std::vector<NullabilityKind>();
+        return std::nullopt;
       });
-  AnnotationVisitor.Visit(T);
-  return std::move(AnnotationVisitor).getNullabilityAnnotations();
 }
 
 NullabilityKind getPointerNullability(const Expr* E,

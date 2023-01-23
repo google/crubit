@@ -114,10 +114,78 @@ class CountPointersInTypeVisitor
   }
 };
 
+namespace {
+// Traverses a Type to find the points where it might be nullable.
+// This will visit the contained PointerType in the correct order to produce
+// the TypeNullability vector.
+//
+// Subclasses must provide `void report(const PointerType*, NullabilityKind)`,
+// and may override TypeVisitor Visit*Type methods to customize the traversal.
+//
+// Canonically-equivalent Types produce equivalent sequences of report() calls:
+//  - corresponding PointerTypes are canonically-equivalent
+//  - the NullabilityKind may be different, as it derives from type sugar
+template <class Impl>
+class NullabilityWalker : public TypeVisitor<Impl> {
+  Impl& derived() { return *static_cast<Impl*>(this); }
+
+ public:
+  void Visit(QualType T) { TypeVisitor<Impl>::Visit(T.getTypePtr()); }
+  void Visit(const TemplateArgument& TA) {
+    if (TA.getKind() == TemplateArgument::Type) Visit(TA.getAsType());
+  }
+
+  void VisitElaboratedType(const ElaboratedType* ET) {
+    Visit(ET->getNamedType());
+  }
+
+  void VisitFunctionProtoType(const FunctionProtoType* FPT) {
+    Visit(FPT->getReturnType());
+    // TODO: visit arguments.
+  }
+
+  void VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
+    for (auto TA : TST->template_arguments()) Visit(TA);
+  }
+
+  void VisitRecordType(const RecordType* RT) {
+    if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
+      for (auto& TA : CTSD->getTemplateArgs().asArray()) Visit(TA);
+    }
+  }
+
+  void VisitAttributedType(const AttributedType* AT) {
+    if (auto NK = AT->getImmediateNullability()) {
+      if (auto PT = AT->getModifiedType()->getAs<PointerType>()) {
+        derived().report(PT, *NK);
+        Visit(PT->getPointeeType());
+      } else {
+        // TODO: Handle this unusual yet possible (e.g. through typedefs)
+        // case.
+        llvm::dbgs() << "\nThe type " << AT
+                     << "contains a nullability annotation that is not "
+                     << "succeeded by a pointer type. "
+                     << "This occurence is not currently handled.\n";
+      }
+    } else {
+      Visit(AT->getModifiedType());
+    }
+  }
+
+  void VisitPointerType(const PointerType* PT) {
+    derived().report(PT, NullabilityKind::Unspecified);
+    Visit(PT->getPointeeType());
+  }
+};
+}  // namespace
+
 unsigned countPointersInType(QualType T) {
-  CountPointersInTypeVisitor PointerCountVisitor;
+  struct Walker : public NullabilityWalker<Walker> {
+    unsigned Count = 0;
+    void report(const PointerType*, NullabilityKind) { ++Count; }
+  } PointerCountVisitor;
   PointerCountVisitor.Visit(T.getCanonicalType());
-  return PointerCountVisitor.getCount();
+  return PointerCountVisitor.Count;
 }
 
 unsigned countPointersInType(TemplateArgument TA) {
@@ -136,6 +204,35 @@ QualType exprType(const Expr* E) {
 unsigned countPointersInType(const Expr* E) {
   return countPointersInType(exprType(E));
 }
+
+std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
+    QualType T, llvm::function_ref<TypeParamNullability> SubstNullability) {
+  struct Walker : NullabilityWalker<Walker> {
+    std::vector<NullabilityKind> Annotations;
+    llvm::function_ref<TypeParamNullability> SubstNullability;
+
+    void report(const PointerType*, NullabilityKind NK) {
+      Annotations.push_back(NK);
+    }
+
+    void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* ST) {
+      if (SubstNullability)
+        if (auto Subst = SubstNullability(ST)) {
+          DCHECK_EQ(Subst->size(),
+                    countPointersInType(ST->getCanonicalTypeInternal()))
+              << "Substituted nullability has the wrong structure: "
+              << QualType(ST, 0).getAsString();
+          Annotations.insert(Annotations.end(), Subst->begin(), Subst->end());
+          return;
+        }
+      Visit(ST->desugar());
+    }
+  } AnnotationVisitor;
+  AnnotationVisitor.SubstNullability = SubstNullability;
+  AnnotationVisitor.Visit(T);
+  return std::move(AnnotationVisitor.Annotations);
+}
+
 }  // namespace nullability
 }  // namespace tidy
 }  // namespace clang
