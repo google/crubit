@@ -77,7 +77,7 @@ class Importer final : public ImportContext {
     return std::nullopt;
   }
   std::optional<std::string> GetComment(const clang::Decl* decl) const override;
-  SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const override;
+  std::string ConvertSourceLocation(clang::SourceLocation loc) const override;
   absl::StatusOr<MappedType> ConvertQualType(
       clang::QualType qual_type,
       std::optional<clang::tidy::lifetimes::ValueLifetimes>& lifetimes,

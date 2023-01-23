@@ -2513,18 +2513,9 @@ fn generate_unsupported(
 ) -> Result<TokenStream> {
     errors.insert(item.cause());
 
-    let location = if item.source_loc.filename.is_empty() {
-        "<unknown location>".to_string()
-    } else {
-        // TODO(forster): The "google3" prefix should probably come from a command line
-        // argument.
-        // TODO(forster): Consider linking to the symbol instead of to the line number
-        // to avoid wrong links while generated files have not caught up.
-        format!("google3/{};l={}", item.source_loc.filename.as_ref(), &item.source_loc.line)
-    };
     let message = format!(
         "{}\nError while generating bindings for item '{}':\n{}",
-        &location,
+        item.source_loc.as_ref(),
         item.name.as_ref(),
         item.message()
     );

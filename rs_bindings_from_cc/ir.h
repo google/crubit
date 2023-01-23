@@ -424,19 +424,6 @@ struct MemberFuncMetadata {
   std::optional<InstanceMethodMetadata> instance_method_metadata;
 };
 
-// Source code location
-struct SourceLoc {
-  llvm::json::Value ToJson() const;
-
-  std::string filename;
-  uint64_t line;
-  uint64_t column;
-};
-
-inline std::ostream& operator<<(std::ostream& o, const SourceLoc& r) {
-  return o << std::string(llvm::formatv("{0:2}", r.ToJson()));
-}
-
 // A function involved in the bindings.
 struct Func {
   llvm::json::Value ToJson() const;
@@ -453,7 +440,7 @@ struct Func {
   std::optional<MemberFuncMetadata> member_func_metadata;
   bool has_c_calling_convention = true;
   bool is_member_or_descendant_of_class_template = false;
-  SourceLoc source_loc;
+  std::string source_loc;
   ItemId id;
   std::optional<ItemId> enclosing_namespace_id;
   // If present, this function should only generate top-level bindings if its
@@ -685,7 +672,7 @@ struct TypeAlias {
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
   MappedType underlying_type;
-  SourceLoc source_loc;
+  std::string source_loc;
   std::optional<ItemId> enclosing_record_id;
   std::optional<ItemId> enclosing_namespace_id;
 };
@@ -707,7 +694,7 @@ struct UnsupportedItem {
   // Explanation of why we couldn't generate bindings
   // TODO(forster): We should support multiple reasons per unsupported item.
   std::string message;
-  SourceLoc source_loc;
+  std::string source_loc;
   ItemId id;
 };
 

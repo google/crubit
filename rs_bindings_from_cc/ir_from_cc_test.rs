@@ -78,11 +78,7 @@ fn test_function() {
                 member_func_metadata: None,
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
-                source_loc: SourceLoc {
-                    filename: "ir_from_cc_virtual_header.h",
-                    line: 3,
-                    column: 1,
-                },
+                source_loc: "google3/ir_from_cc_virtual_header.h;l=3",
                 id: ItemId(...),
                 enclosing_namespace_id: None,
                 adl_enclosing_record: None,
@@ -812,7 +808,7 @@ fn test_typedef() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypedefDecl."),
             underlying_type: #int,
-            source_loc: SourceLoc {...},
+            source_loc: ...
             enclosing_record_id: None,
             enclosing_namespace_id: None,
           }
@@ -827,7 +823,7 @@ fn test_typedef() -> Result<()> {
             owning_target: BazelLabel("//test:testing_target"),
             doc_comment: Some("Doc comment for MyTypeAliasDecl."),
             underlying_type: #int,
-            source_loc: SourceLoc {...},
+            source_loc: ...,
             enclosing_record_id: None,
             enclosing_namespace_id: None,
           }
@@ -3641,4 +3637,60 @@ fn test_private_method() {
             assert_ir_not_matches!(ir, ir_with_function);
         }
     }
+}
+
+#[test]
+fn test_source_location() {
+    for (ir_type, cc_snippet, expected_source_loc) in [
+        (
+            quote! {Func},
+            "void no_op_func_to_test_source_location();",
+            "google3/ir_from_cc_virtual_header.h;l=3",
+        ),
+        (
+            quote! {TypeAlias},
+            r#"
+typedef float SomeTypedefToTestSourceLocation;"#,
+            "google3/ir_from_cc_virtual_header.h;l=4",
+        ),
+        (
+            quote! {UnsupportedItem},
+            r#"template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
+            "google3/ir_from_cc_virtual_header.h;l=3",
+        ),
+    ] {
+        let ir = ir_from_cc(cc_snippet).unwrap();
+        assert_ir_matches!(
+            ir,
+            quote! {
+            ...
+            #ir_type {
+              ...
+                source_loc: #expected_source_loc,
+              ...
+              }
+            ...
+            }
+        );
+    }
+}
+
+#[test]
+fn test_source_location_unknown() {
+    let dependency_header = r#"
+#define MyIntTypeAliasToTestSourceLocation(type_alias_name) using type_alias_name = int;"#;
+    let header = "MyIntTypeAliasToTestSourceLocation(my_int);";
+    let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+        ...
+        TypeAlias {
+          ...
+            source_loc: "<unknown location>",
+          ...
+          }
+        ...
+        }
+    );
 }

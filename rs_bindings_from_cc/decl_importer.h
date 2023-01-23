@@ -129,7 +129,8 @@ class ImportContext {
       const clang::Decl* decl) const = 0;
 
   // Converts a Clang source location to IR.
-  virtual SourceLoc ConvertSourceLocation(clang::SourceLocation loc) const = 0;
+  virtual std::string ConvertSourceLocation(
+      clang::SourceLocation loc) const = 0;
 
   // Converts the Clang type `qual_type` into an equivalent `MappedType`.
   // Lifetimes for the type can optionally be specified using `lifetimes`.

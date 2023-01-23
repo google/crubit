@@ -24,6 +24,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
@@ -614,7 +615,7 @@ IR::Item Importer::ImportUnsupportedItem(const clang::Decl* decl,
   if (const auto* named_decl = clang::dyn_cast<clang::NamedDecl>(decl)) {
     name = named_decl->getQualifiedNameAsString();
   }
-  SourceLoc source_loc = ConvertSourceLocation(decl->getBeginLoc());
+  std::string source_loc = ConvertSourceLocation(decl->getBeginLoc());
   return UnsupportedItem{.name = name,
                          .message = error,
                          .source_loc = source_loc,
@@ -656,17 +657,23 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
   return cleaned_comment_text;
 }
 
-SourceLoc Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
+std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   auto& sm = ctx_.getSourceManager();
 
   clang::StringRef filename = sm.getFilename(loc);
   if (filename.startswith("./")) {
     filename = filename.substr(2);
   }
-
-  return SourceLoc{.filename = filename.str(),
-                   .line = sm.getSpellingLineNumber(loc),
-                   .column = sm.getSpellingColumnNumber(loc)};
+  uint line = sm.getSpellingLineNumber(loc);
+  if (filename.empty()) {
+    return std::string("<unknown location>");
+  } else {
+    // TODO(b/261185414): The "google3" prefix should probably come from a
+    // command line argument.
+    // TODO(b/261185414): Consider linking to the symbol instead of to the line
+    // number to avoid wrong links while generated files have not caught up.
+    return absl::StrFormat("google3/%s;l=%u", filename.str(), line);
+  }
 }
 
 absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(

@@ -481,14 +481,6 @@ llvm::json::Value TypeAlias::ToJson() const {
   };
 }
 
-llvm::json::Value SourceLoc::ToJson() const {
-  return llvm::json::Object{
-      {"filename", filename},
-      {"line", line},
-      {"column", column},
-  };
-}
-
 llvm::json::Value UnsupportedItem::ToJson() const {
   llvm::json::Object unsupported{
       {"name", name},

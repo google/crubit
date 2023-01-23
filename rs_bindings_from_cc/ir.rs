@@ -319,7 +319,7 @@ pub struct Func {
     pub member_func_metadata: Option<MemberFuncMetadata>,
     pub has_c_calling_convention: bool,
     pub is_member_or_descendant_of_class_template: bool,
-    pub source_loc: SourceLoc,
+    pub source_loc: Rc<str>,
     pub id: ItemId,
     pub enclosing_namespace_id: Option<ItemId>,
     pub adl_enclosing_record: Option<ItemId>,
@@ -490,16 +490,9 @@ pub struct TypeAlias {
     pub owning_target: BazelLabel,
     pub doc_comment: Option<Rc<str>>,
     pub underlying_type: MappedType,
-    pub source_loc: SourceLoc,
+    pub source_loc: Rc<str>,
     pub enclosing_record_id: Option<ItemId>,
     pub enclosing_namespace_id: Option<ItemId>,
-}
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Deserialize)]
-pub struct SourceLoc {
-    pub filename: Rc<str>,
-    pub line: u64,
-    pub column: u64,
 }
 
 /// A wrapper type that does not contribute to equality or hashing. All
@@ -529,14 +522,14 @@ impl<T> Hash for IgnoredField<T> {
 pub struct UnsupportedItem {
     pub name: Rc<str>,
     message: Rc<str>,
-    pub source_loc: SourceLoc,
+    pub source_loc: Rc<str>,
     pub id: ItemId,
     #[serde(skip)]
     cause: IgnoredField<OnceCell<Error>>,
 }
 
 impl UnsupportedItem {
-    pub fn new_with_message(name: &str, message: &str, source_loc: SourceLoc, id: ItemId) -> Self {
+    pub fn new_with_message(name: &str, message: &str, source_loc: Rc<str>, id: ItemId) -> Self {
         Self {
             name: name.into(),
             message: message.into(),
@@ -545,7 +538,7 @@ impl UnsupportedItem {
             cause: Default::default(),
         }
     }
-    pub fn new_with_cause(name: String, cause: Error, source_loc: SourceLoc, id: ItemId) -> Self {
+    pub fn new_with_cause(name: String, cause: Error, source_loc: Rc<str>, id: ItemId) -> Self {
         Self {
             name: name.into(),
             message: cause.to_string().into(),

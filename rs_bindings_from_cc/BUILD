@@ -258,6 +258,7 @@ cc_library(
         "@absl//absl/status:statusor",
         "@absl//absl/strings",
         "@absl//absl/strings:cord",
+        "@absl//absl/strings:str_format",
         "@llvm-project//clang:ast",
         "@llvm-project//clang:basic",
         "@llvm-project//clang:sema",
