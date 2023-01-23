@@ -138,39 +138,25 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInClassTemplate(
       T,
       [&](const SubstTemplateTypeParmType* ST)
           -> std::optional<std::vector<NullabilityKind>> {
-        unsigned PointerCount = 0;
+        // The class specialization that is BaseType and owns ST.
+        const ClassTemplateSpecializationDecl* Specialization = nullptr;
+        if (auto RT = BaseType->getAs<RecordType>())
+          Specialization =
+              dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl());
+        // TODO: handle nested templates, where associated decl != base type
+        // (e.g. PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct)
+        if (!Specialization || Specialization != ST->getAssociatedDecl())
+          return std::nullopt;
+
         unsigned ArgIndex = ST->getIndex();
-        if (auto RT = BaseType->getAs<RecordType>()) {
-          if (auto CTSD =
-                  dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl());
-              CTSD == ST->getAssociatedDecl()) {
-            auto TemplateArgs = CTSD->getTemplateArgs().asArray();
+        auto TemplateArgs = Specialization->getTemplateArgs().asArray();
 
-            // TODO: Correctly handle the indexing of nested templates (e.g.
-            // PointerNullabilityTest.MemberFunctionTemplateOfTemplateStruct),
-            // then remove this fallback.
-            if (TemplateArgs.size() <= ArgIndex &&
-                ST->getReplacedParameter()->getDepth() == 0) {
-              return std::nullopt;
-            }
-
-            for (auto TA : TemplateArgs.take_front(ArgIndex)) {
-              PointerCount += countPointersInType(TA);
-            }
-            unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
-            if (BaseNullabilityAnnotations.size() < PointerCount + SliceSize) {
-              // TODO: Currently, BaseNullabilityAnnotations can be erroneously
-              // empty due to lack of expression coverage. Use the dataflow
-              // lattice to retrieve correct base type annotations. Then, remove
-              // this fallback.
-              return std::nullopt;
-            } else {
-              return BaseNullabilityAnnotations.slice(PointerCount, SliceSize)
-                  .vec();
-            }
-          }
+        unsigned PointerCount = 0;
+        for (auto TA : TemplateArgs.take_front(ArgIndex)) {
+          PointerCount += countPointersInType(TA);
         }
-        return std::nullopt;
+        unsigned SliceSize = countPointersInType(TemplateArgs[ArgIndex]);
+        return BaseNullabilityAnnotations.slice(PointerCount, SliceSize).vec();
       });
 }
 
