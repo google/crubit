@@ -956,7 +956,7 @@ fn format_source_location(tcx: TyCtxt, local_def_id: LocalDefId) -> String {
         // brackets, thus don't prepend "google3" prefix.
         if file.name.is_real() { "google3" } else { "" }
     };
-    format!("Generated from: {google3_prefix}{file_name};l={line_number}")
+    format!("{google3_prefix}{file_name};l={line_number}")
 }
 
 /// Formats the doc comment (if any) associated with the item identified by
@@ -970,7 +970,7 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
         .iter()
         .filter_map(|attr| attr.doc_str())
         .map(|symbol| symbol.to_string())
-        .chain(once(format_source_location(tcx, local_def_id)))
+        .chain(once(format!("Generated from: {}", format_source_location(tcx, local_def_id))))
         .join("\n\n");
     quote! { __COMMENT__ #doc_comment}
 }
@@ -1017,12 +1017,12 @@ fn format_unsupported_def(
     local_def_id: LocalDefId,
     err: anyhow::Error,
 ) -> MixedSnippet {
-    let span = tcx.sess().source_map().span_to_embeddable_string(tcx.def_span(local_def_id));
+    let source_loc = format_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
     // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations
     // says: To print causes as well [...], use the alternate selector “{:#}”.
-    let msg = format!("Error generating bindings for `{name}` defined at {span}: {err:#}");
+    let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
     let cc = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
 
     MixedSnippet { cc, rs: quote! {} }
@@ -1710,7 +1710,7 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             let expected_comment_txt = "Error generating bindings for `reinterpret_cast` \
-                 defined at <crubit_unittests.rs>:3:17: 3:53: \
+                 defined at <crubit_unittests.rs>;l=3: \
                  Error formatting function name: \
                  `reinterpret_cast` is a C++ reserved keyword \
                  and can't be used as a C++ identifier";
