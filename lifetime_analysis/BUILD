@@ -115,6 +115,7 @@ cc_library(
         "@absl//absl/strings",
         "@absl//absl/strings:str_format",
         "//lifetime_annotations:lifetime",
+        "//lifetime_annotations:type_lifetimes",
         "@llvm-project//clang:ast",
         "@llvm-project//llvm:Support",
     ],

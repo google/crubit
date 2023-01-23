@@ -135,6 +135,10 @@ class ValueLifetimes {
   // pointer or reference type.
   const ObjectLifetimes& GetPointeeLifetimes() const;
 
+  // Returns the FunctionLifetimes of the callable that this object represents.
+  // Type() must be a FunctionProtoType.
+  const FunctionLifetimes& GetFuncLifetimes() const;
+
   // Returns the lifetimes of the i-th template argument at the given nesting
   // `depth` within a chain of nested templates and with the given `index`.
   // For example, for a type `Outer<int*, double*>::Inner<long*>`, the

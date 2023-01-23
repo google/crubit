@@ -821,49 +821,78 @@ void ConstrainFunctionLifetimesForCall(
 
 std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
     const clang::CallExpr* call) {
-  llvm::SmallVector<const clang::FunctionDecl*> callees;
+  struct CalleeInfo {
+    bool is_member_operator;
+    FunctionLifetimes lifetimes;
+    // Type of the function being called. Note that this might not know anything
+    // about the `this` argument for non-static methods.
+    const clang::FunctionProtoType* type;
+  };
+
+  llvm::SmallVector<CalleeInfo, 1> callees;
+
+  auto add_callee_from_decl =
+      [&callees, call,
+       this](const clang::FunctionDecl* decl) -> std::optional<std::string> {
+    bool is_builtin = decl->getBuiltinID() != 0;
+
+    FunctionLifetimesOrError builtin_callee_lifetimes_or_error;
+    if (is_builtin) {
+      builtin_callee_lifetimes_or_error = GetBuiltinLifetimes(decl);
+    } else {
+      assert(callee_lifetimes_.count(decl->getCanonicalDecl()));
+    }
+    const FunctionLifetimesOrError& callee_lifetimes_or_error =
+        is_builtin ? builtin_callee_lifetimes_or_error
+                   : callee_lifetimes_.lookup(decl->getCanonicalDecl());
+
+    if (!std::holds_alternative<FunctionLifetimes>(callee_lifetimes_or_error)) {
+      return "No lifetimes for callee '" + decl->getNameAsString() + "': " +
+             std::get<FunctionAnalysisError>(callee_lifetimes_or_error).message;
+    }
+    FunctionLifetimes callee_lifetimes =
+        std::get<FunctionLifetimes>(callee_lifetimes_or_error);
+
+    bool is_member_operator = clang::isa<clang::CXXOperatorCallExpr>(call) &&
+                              clang::isa<clang::CXXMethodDecl>(decl);
+    callees.push_back(
+        CalleeInfo{is_member_operator, callee_lifetimes,
+                   decl->getType()->getAs<clang::FunctionProtoType>()});
+    return std::nullopt;
+  };
 
   const clang::FunctionDecl* direct_callee = call->getDirectCallee();
   if (direct_callee) {
     // This code path is needed for non-static member functions, as those don't
     // have an `Object` for their callees.
-    callees.push_back(direct_callee);
+    if (auto err = add_callee_from_decl(direct_callee); err.has_value()) {
+      return err;
+    }
   } else {
     const clang::Expr* callee = call->getCallee();
     for (const auto& object : points_to_map_.GetExprObjectSet(callee)) {
-      // We might have created placeholder function objects here.
       if (const clang::FunctionDecl* func = object->GetFunc()) {
-        callees.push_back(func);
+        if (auto err = add_callee_from_decl(func); err.has_value()) {
+          return err;
+        }
+      } else if (const std::optional<FunctionLifetimes>& func_lifetimes =
+                     object->GetFuncLifetimes();
+                 func_lifetimes.has_value()) {
+        callees.push_back(
+            {.is_member_operator = false,
+             .lifetimes = *func_lifetimes,
+             .type = object->Type()->getAs<clang::FunctionProtoType>()});
       }
     }
   }
 
-  for (const auto* callee : callees) {
-    bool is_builtin = callee->getBuiltinID() != 0;
-
-    FunctionLifetimesOrError builtin_callee_lifetimes_or_error;
-    if (is_builtin) {
-      builtin_callee_lifetimes_or_error = GetBuiltinLifetimes(callee);
-    } else {
-      assert(callee_lifetimes_.count(callee->getCanonicalDecl()));
-    }
-    const FunctionLifetimesOrError& callee_lifetimes_or_error =
-        is_builtin ? builtin_callee_lifetimes_or_error
-                   : callee_lifetimes_.lookup(callee->getCanonicalDecl());
-
-    if (!std::holds_alternative<FunctionLifetimes>(callee_lifetimes_or_error)) {
-      return "No lifetimes for callee '" + callee->getNameAsString() + "': " +
-             std::get<FunctionAnalysisError>(callee_lifetimes_or_error).message;
-    }
-    FunctionLifetimes callee_lifetimes =
-        std::get<FunctionLifetimes>(callee_lifetimes_or_error);
+  for (const CalleeInfo& callee : callees) {
     ConstrainFunctionLifetimesForCall(
-        callee_lifetimes, object_repository_.GetCallExprVirtualLifetimes(call),
+        callee.lifetimes, object_repository_.GetCallExprVirtualLifetimes(call),
         constraints_);
 
-    bool is_member_operator = clang::isa<clang::CXXOperatorCallExpr>(call) &&
-                              clang::isa<clang::CXXMethodDecl>(callee);
-    for (size_t i = is_member_operator ? 1 : 0; i < call->getNumArgs(); i++) {
+    for (size_t i = callee.is_member_operator ? 1 : 0; i < call->getNumArgs();
+         i++) {
       // We can't just use SetPointerPointsToSet here because call->getArg(i)
       // might not have an ObjectSet (for example for integer constants); it
       // also may be needed for struct initialization.
@@ -872,13 +901,13 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
       // sets never shrinking.
       TransferInitializer(
           object_repository_.GetCallExprArgumentObject(call, i),
-          callee->getParamDecl(is_member_operator ? i - 1 : i)->getType(),
+          callee.type->getParamType(callee.is_member_operator ? i - 1 : i),
           object_repository_, call->getArg(i), TargetPointeeBehavior::kKeep,
           points_to_map_, constraints_);
     }
 
     std::optional<ObjectSet> this_object_set;
-    if (is_member_operator) {
+    if (callee.is_member_operator) {
       this_object_set = points_to_map_.GetExprObjectSet(call->getArg(0));
     } else if (const auto* member_call =
                    clang::dyn_cast<clang::CXXMemberCallExpr>(call)) {

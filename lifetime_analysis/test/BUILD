@@ -53,6 +53,15 @@ cc_test(
 )
 
 cc_test(
+    name = "callbacks",
+    srcs = ["callbacks.cc"],
+    deps = [
+        ":lifetime_analysis_test",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "initializers",
     srcs = ["initializers.cc"],
     deps = [

@@ -508,6 +508,11 @@ const ObjectLifetimes& ValueLifetimes::GetPointeeLifetimes() const {
   return *pointee_lifetimes_;
 }
 
+const FunctionLifetimes& ValueLifetimes::GetFuncLifetimes() const {
+  assert(clang::isa<clang::FunctionProtoType>(type_));
+  return *function_lifetimes_;
+}
+
 bool ValueLifetimes::HasAny(
     const std::function<bool(Lifetime)>& predicate) const {
   for (const auto& tmpl_arg_at_depth : template_argument_lifetimes_) {

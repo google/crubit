@@ -840,6 +840,15 @@ struct ObjectRepository::ObjectCreator {
 
       );
     }
+
+    if (type->getAs<clang::FunctionType>()) {
+      assert(object->GetFunc() == nullptr);
+      // All objects must be allocated in the arena of this ObjectRepository, so
+      // this cast does not introduce UB due to mutating an object in a const
+      // location.
+      const_cast<Object*>(object)->SetFuncLifetimes(
+          value_lifetimes.GetFuncLifetimes());
+    }
   }
 
  private:
