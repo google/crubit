@@ -38,7 +38,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::Top
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::TopLevel':
-// Parameter #0 is not supported: Unsupported type 'struct TopLevel &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
@@ -46,7 +46,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::Top
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct TopLevel &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
 
 pub type Alias1 = crate::__CcTemplateInst10MyTemplateIiE;
 
@@ -81,7 +81,7 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'test_namespace_bindings::Inner::Inner':
-    // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings::Inner &&': Unsupported type: && without lifetime
+    // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
 
     // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'Inner::operator=':
@@ -89,7 +89,7 @@ pub mod test_namespace_bindings {
 
     // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'test_namespace_bindings::Inner::operator=':
-    // Parameter #0 is not supported: Unsupported type 'struct test_namespace_bindings::Inner &&': Unsupported type: && without lifetime
+    // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
 
     pub type Alias7 = crate::__CcTemplateInst10MyTemplateIcE;
 
@@ -125,7 +125,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<struct TopLevel> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
@@ -133,7 +133,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<struct TopLevel> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateI8TopLevelE {
     #[inline(always)]
@@ -165,7 +165,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<struct test_namespace_bindings::Inner> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
@@ -173,7 +173,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<struct test_namespace_bindings::Inner> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
     #[inline(always)]
@@ -205,7 +205,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<class MyTemplate<struct TopLevel> > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
@@ -213,7 +213,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<class MyTemplate<struct TopLevel> > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
     #[inline(always)]
@@ -245,7 +245,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<class MyTemplate<struct test_namespace_bindings::Inner> > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
@@ -253,7 +253,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<class MyTemplate<struct test_namespace_bindings::Inner> > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     #[inline(always)]
@@ -288,7 +288,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<_Bool> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
@@ -296,7 +296,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<_Bool> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIbE {
     #[inline(always)]
@@ -328,7 +328,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<char> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
@@ -336,7 +336,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<char> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIcE {
     #[inline(always)]
@@ -368,7 +368,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<double> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
@@ -376,7 +376,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<double> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIdE {
     #[inline(always)]
@@ -408,7 +408,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<float> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
@@ -416,7 +416,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<float> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
@@ -448,7 +448,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<int> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
@@ -456,7 +456,7 @@ forward_declare::unsafe_define!(
 
 // rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
-// Parameter #0 is not supported: Unsupported type 'class MyTemplate<int> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]

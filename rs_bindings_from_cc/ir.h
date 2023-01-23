@@ -323,7 +323,12 @@ class IntegerConstant {
   explicit IntegerConstant(const llvm::APSInt& value) {
     CHECK_LE(value.getSignificantBits(), 64);
     is_negative_ = value < 0;
-    wrapped_value_ = static_cast<uint64_t>(value.getExtValue());
+    // TODO: double-check that the following is correct to adapt for
+    // https://github.com/llvm/llvm-project/commit/0a89825a289d149195be390003424adad026067f
+    // Before:
+    // wrapped_value_ = static_cast<uint64_t>(value.getExtValue());
+    wrapped_value_ = static_cast<uint64_t>(
+        value.isSigned() ? value.getSExtValue() : value.getZExtValue());
   }
   IntegerConstant(const IntegerConstant& other) = default;
   IntegerConstant& operator=(const IntegerConstant& other) = default;

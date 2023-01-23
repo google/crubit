@@ -39,7 +39,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::S':
-// Parameter #0 is not supported: Unsupported type 'struct S &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
@@ -47,7 +47,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct S &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
 
 impl S {
     #[inline(always)]
@@ -109,7 +109,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate:
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::WrappedValue':
-// Parameter #0 is not supported: Unsupported type 'class WrappedValue &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::operator=':
@@ -117,7 +117,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("WrappedValue"), crate:
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 // Error while generating bindings for item 'WrappedValue::operator=':
-// Parameter #0 is not supported: Unsupported type 'class WrappedValue &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'WrappedValue &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=25
 // Error while generating bindings for item 'WrappedValue::WrappedValue':

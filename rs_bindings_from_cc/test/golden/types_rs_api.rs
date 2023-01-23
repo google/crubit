@@ -198,7 +198,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::integral_constant':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
@@ -206,7 +206,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
 // Error while generating bindings for item 'value_type':
@@ -244,7 +244,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::integral_constant':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
@@ -252,7 +252,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
 // Error while generating bindings for item 'value_type':

@@ -34,7 +34,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::No
 
 // rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::Noninline':
-// Parameter #0 is not supported: Unsupported type 'struct Noninline &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::operator=':
@@ -42,7 +42,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::No
 
 // rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Noninline &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
 
 impl Noninline {
     #[inline(always)]
@@ -96,7 +96,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inlin
 
 // rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::Inline':
-// Parameter #0 is not supported: Unsupported type 'struct Inline &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
 
 // rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::operator=':
@@ -104,7 +104,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inlin
 
 // rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct Inline &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
 
 impl Inline {
     #[inline(always)]

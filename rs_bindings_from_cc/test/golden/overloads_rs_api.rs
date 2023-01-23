@@ -68,7 +68,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::integral_constant':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
@@ -76,7 +76,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
 // Error while generating bindings for item 'value_type':
@@ -114,7 +114,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::integral_constant':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
@@ -122,7 +122,7 @@ forward_declare::unsafe_define!(
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct std::integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
 // Error while generating bindings for item 'value_type':
@@ -158,7 +158,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("std::__type_list<std::
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
 // Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::__type_list':
-// Parameter #0 is not supported: Unsupported type 'struct std::__type_list<struct std::__align_type<unsigned char>, struct std::__type_list<struct std::__align_type<unsigned short>, struct std::__type_list<struct std::__align_type<unsigned int>, struct std::__type_list<struct std::__align_type<unsigned long>, struct std::__type_list<struct std::__align_type<unsigned long long>, struct std::__type_list<struct std::__align_type<double>, struct std::__type_list<struct std::__align_type<long double>, struct std::__type_list<struct std::__align_type<struct std::__struct_double>, struct std::__type_list<struct std::__align_type<struct std::__struct_double4>, struct std::__type_list<struct std::__align_type<int *>, struct std::__nat> > > > > > > > > > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type '__type_list<__align_type<unsigned char>, __type_list<__align_type<unsigned short>, __type_list<__align_type<unsigned int>, __type_list<__align_type<unsigned long>, __type_list<__align_type<unsigned long long>, __type_list<__align_type<double>, __type_list<__align_type<long double>, __type_list<__align_type<__struct_double>, __type_list<__align_type<__struct_double4>, __type_list<__align_type<int *>, __nat> > > > > > > > > > &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
 // Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::operator=':
@@ -166,7 +166,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("std::__type_list<std::
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
 // Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::operator=':
-// Parameter #0 is not supported: Unsupported type 'struct std::__type_list<struct std::__align_type<unsigned char>, struct std::__type_list<struct std::__align_type<unsigned short>, struct std::__type_list<struct std::__align_type<unsigned int>, struct std::__type_list<struct std::__align_type<unsigned long>, struct std::__type_list<struct std::__align_type<unsigned long long>, struct std::__type_list<struct std::__align_type<double>, struct std::__type_list<struct std::__align_type<long double>, struct std::__type_list<struct std::__align_type<struct std::__struct_double>, struct std::__type_list<struct std::__align_type<struct std::__struct_double4>, struct std::__type_list<struct std::__align_type<int *>, struct std::__nat> > > > > > > > > > &&': Unsupported type: && without lifetime
+// Parameter #0 is not supported: Unsupported type '__type_list<__align_type<unsigned char>, __type_list<__align_type<unsigned short>, __type_list<__align_type<unsigned int>, __type_list<__align_type<unsigned long>, __type_list<__align_type<unsigned long long>, __type_list<__align_type<double>, __type_list<__align_type<long double>, __type_list<__align_type<__struct_double>, __type_list<__align_type<__struct_double4>, __type_list<__align_type<int *>, __nat> > > > > > > > > > &&': Unsupported type: && without lifetime
 
 // google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=24
 // Error while generating bindings for item '_Head':
