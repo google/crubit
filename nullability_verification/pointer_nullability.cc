@@ -206,29 +206,31 @@ unsigned countPointersInType(const Expr* E) {
 }
 
 std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
-    QualType T, llvm::function_ref<TypeParamNullability> SubstNullability) {
+    QualType T,
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam) {
   struct Walker : NullabilityWalker<Walker> {
     std::vector<NullabilityKind> Annotations;
-    llvm::function_ref<TypeParamNullability> SubstNullability;
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam;
 
     void report(const PointerType*, NullabilityKind NK) {
       Annotations.push_back(NK);
     }
 
     void VisitSubstTemplateTypeParmType(const SubstTemplateTypeParmType* ST) {
-      if (SubstNullability)
-        if (auto Subst = SubstNullability(ST)) {
+      if (SubstituteTypeParam) {
+        if (auto Subst = SubstituteTypeParam(ST)) {
           DCHECK_EQ(Subst->size(),
                     countPointersInType(ST->getCanonicalTypeInternal()))
               << "Substituted nullability has the wrong structure: "
               << QualType(ST, 0).getAsString();
-          Annotations.insert(Annotations.end(), Subst->begin(), Subst->end());
+          llvm::append_range(Annotations, *Subst);
           return;
         }
+      }
       Visit(ST->desugar());
     }
   } AnnotationVisitor;
-  AnnotationVisitor.SubstNullability = SubstNullability;
+  AnnotationVisitor.SubstituteTypeParam = SubstituteTypeParam;
   AnnotationVisitor.Visit(T);
   return std::move(AnnotationVisitor.Annotations);
 }

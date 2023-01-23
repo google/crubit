@@ -95,7 +95,7 @@ std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability);
 
 /// A function that may provide enhanced nullability information for a
 /// substituted template parameter (which has no sugar of its own).
-using TypeParamNullability = std::optional<std::vector<NullabilityKind>>(
+using GetTypeParamNullability = std::optional<std::vector<NullabilityKind>>(
     const SubstTemplateTypeParmType* ST);
 /// Traverse over a type to get its nullability. For example, if T is the type
 /// Struct3Arg<int * _Nonnull, int, pair<int * _Nullable, int *>> * _Nonnull,
@@ -104,7 +104,7 @@ using TypeParamNullability = std::optional<std::vector<NullabilityKind>>(
 /// argument of Struct3Arg) do not get a nullability annotation.
 std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
     QualType T,
-    llvm::function_ref<TypeParamNullability> SubstNullability = nullptr);
+    llvm::function_ref<GetTypeParamNullability> SubstituteTypeParam = nullptr);
 
 /// Computes the number of pointer slots within a type.
 /// Each of these could conceptually be nullable, so this is the length of
