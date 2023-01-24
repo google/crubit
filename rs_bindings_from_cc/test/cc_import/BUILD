@@ -22,7 +22,7 @@ rust_library(
         ":two",
     ],
     proc_macro_deps = [
-        "//cc_import",
+        "//support/cc_import",
     ],
 )
 
