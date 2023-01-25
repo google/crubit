@@ -112,10 +112,7 @@ trait BindingsGenerator {
 
     fn rs_type_kind(&self, rs_type: RsType) -> Result<RsTypeKind>;
 
-    fn generate_func(
-        &self,
-        func: Rc<Func>,
-    ) -> Result<Option<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>>;
+    fn generate_func(&self, func: Rc<Func>) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>>;
 
     fn overloaded_funcs(&self) -> Rc<HashSet<Rc<FunctionId>>>;
 
@@ -208,59 +205,6 @@ fn generate_bindings(
     );
 
     Ok(Bindings { rs_api, rs_api_impl })
-}
-
-/// Rust source code with attached information about how to modify the parent
-/// crate.
-///
-/// For example, the snippet `vec![].into_raw_parts()` is not valid unless the
-/// `vec_into_raw_parts` feature is enabled. So such a snippet should be
-/// represented as:
-///
-/// ```
-/// RsSnippet {
-///   features: btree_set![make_rs_ident("vec_into_raw_parts")],
-///   tokens: quote!{vec![].into_raw_parts()},
-/// }
-/// ```
-#[derive(Clone, Debug)]
-struct RsSnippet {
-    /// Rust feature flags used by this snippet.
-    features: BTreeSet<Ident>,
-    /// The snippet itself, as a token stream.
-    tokens: TokenStream,
-}
-
-impl From<TokenStream> for RsSnippet {
-    fn from(tokens: TokenStream) -> Self {
-        RsSnippet { features: BTreeSet::new(), tokens }
-    }
-}
-
-impl Eq for RsSnippet {}
-
-impl PartialEq for RsSnippet {
-    fn eq(&self, other: &Self) -> bool {
-        fn to_comparable_tuple(_x: &RsSnippet) -> (&BTreeSet<Ident>, String) {
-            // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
-            // `String`. This is a bit expensive, but should be okay (especially
-            // given that this code doesn't execute at this point).  Having a
-            // working `impl PartialEq` helps `salsa` reuse unchanged memoized
-            // results of previous computations (although this is a bit
-            // theoretical, since right now we don't re-set `salsa`'s inputs  - we only call
-            // `set_ir` once).
-            //
-            // TODO(lukasza): If incremental `salsa` computations are ever used in the
-            // future, we may end up hitting the `panic!` below.  At that point
-            // it should be okay to just remove the `panic!`, but we should also
-            // 1) think about improving performance of comparing `TokenStream`
-            // for equality and 2) add unit tests covering this `PartialEq` `impl`.
-            panic!("This code is not expected to execute in practice");
-            #[allow(unreachable_code)]
-            (&_x.features, _x.tokens.to_string())
-        }
-        to_comparable_tuple(self) == to_comparable_tuple(other)
-    }
 }
 
 /// If we know the original C++ function is codegenned and already compatible
@@ -1259,7 +1203,7 @@ fn materialize_ctor_in_caller(func: &Func, params: &mut [RsTypeKind]) {
 fn generate_func(
     db: &dyn BindingsGenerator,
     func: Rc<Func>,
-) -> Result<Option<Rc<(RsSnippet, RsSnippet, Rc<FunctionId>)>>> {
+) -> Result<Option<(Rc<GeneratedItem>, Rc<FunctionId>)>> {
     let ir = db.ir();
     let crate_root_path = crate_root_path_tokens(&ir);
     let mut features = BTreeSet::new();
@@ -1598,11 +1542,9 @@ fn generate_func(
         }
     }
 
-    Ok(Some(Rc::new((
-        RsSnippet { features, tokens: api_func },
-        thunk.into(),
-        Rc::new(function_id),
-    ))))
+    let generated_item =
+        GeneratedItem { item: api_func, thunks: thunk, features, ..Default::default() };
+    Ok(Some((Rc::new(generated_item), Rc::new(function_id))))
 }
 
 /// The function signature for a function's bindings.
@@ -1998,14 +1940,15 @@ fn namespace_qualifier_of_item(item_id: ItemId, ir: &IR) -> Result<NamespaceQual
 }
 
 /// Generates Rust source code for a given incomplete record declaration.
-fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<TokenStream> {
+fn generate_incomplete_record(incomplete_record: &IncompleteRecord) -> Result<GeneratedItem> {
     let ident = make_rs_ident(incomplete_record.rs_name.as_ref());
     let name = incomplete_record.rs_name.as_ref();
     Ok(quote! {
         forward_declare::forward_declare!(
             pub #ident __SPACE__ = __SPACE__ forward_declare::symbol!(#name)
         );
-    })
+    }
+    .into())
 }
 
 fn make_rs_field_ident(field: &Field, field_index: usize) -> Ident {
@@ -2467,7 +2410,7 @@ fn generate_derives(record: &Record) -> Vec<Ident> {
     derives
 }
 
-fn generate_enum(db: &Database, enum_: &Enum) -> Result<TokenStream> {
+fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
     let name = make_rs_ident(&enum_.identifier.identifier);
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
     let enumerator_names =
@@ -2490,10 +2433,11 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<TokenStream> {
                 value.0
             }
         }
-    })
+    }
+    .into())
 }
 
-fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<TokenStream> {
+fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<GeneratedItem> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
     let doc_comment =
         generate_doc_comment(type_alias.doc_comment.as_deref(), Some(&type_alias.source_loc));
@@ -2503,14 +2447,15 @@ fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<TokenStr
     Ok(quote! {
         #doc_comment
         pub type #ident = #underlying_type;
-    })
+    }
+    .into())
 }
 
 /// Generates Rust source code for a given `UnsupportedItem`.
 fn generate_unsupported(
     item: &UnsupportedItem,
     errors: &mut dyn ErrorReporting,
-) -> Result<TokenStream> {
+) -> Result<GeneratedItem> {
     errors.insert(item.cause());
 
     let message = format!(
@@ -2519,13 +2464,13 @@ fn generate_unsupported(
         item.name.as_ref(),
         item.message()
     );
-    Ok(quote! { __COMMENT__ #message })
+    Ok(quote! { __COMMENT__ #message }.into())
 }
 
 /// Generates Rust source code for a given `Comment`.
-fn generate_comment(comment: &Comment) -> Result<TokenStream> {
+fn generate_comment(comment: &Comment) -> Result<GeneratedItem> {
     let text = comment.text.as_ref();
-    Ok(quote! { __COMMENT__ #text })
+    Ok(quote! { __COMMENT__ #text }.into())
 }
 
 fn generate_namespace(
@@ -2621,6 +2566,47 @@ struct GeneratedItem {
     has_record: bool,
 }
 
+impl From<TokenStream> for GeneratedItem {
+    fn from(item: TokenStream) -> Self {
+        GeneratedItem { item, ..Default::default() }
+    }
+}
+
+impl Eq for GeneratedItem {}
+
+impl PartialEq for GeneratedItem {
+    fn eq(&self, other: &Self) -> bool {
+        fn to_comparable_tuple(
+            _x: &GeneratedItem,
+        ) -> (&BTreeSet<Ident>, String, String, String, String, bool) {
+            // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
+            // `String`. This is a bit expensive, but should be okay (especially
+            // given that this code doesn't execute at this point).  Having a
+            // working `impl PartialEq` helps `salsa` reuse unchanged memoized
+            // results of previous computations (although this is a bit
+            // theoretical, since right now we don't re-set `salsa`'s inputs  - we only call
+            // `set_ir` once).
+            //
+            // TODO(lukasza): If incremental `salsa` computations are ever used in the
+            // future, we may end up hitting the `panic!` below.  At that point
+            // it should be okay to just remove the `panic!`, but we should also
+            // 1) think about improving performance of comparing `TokenStream`
+            // for equality and 2) add unit tests covering this `PartialEq` `impl`.
+            panic!("This code is not expected to execute in practice");
+            #[allow(unreachable_code)]
+            (
+                &_x.features,
+                _x.item.to_string(),
+                _x.thunks.to_string(),
+                _x.thunk_impls.to_string(),
+                _x.assertions.to_string(),
+                _x.has_record,
+            )
+        }
+        to_comparable_tuple(self) == to_comparable_tuple(other)
+    }
+}
+
 fn generate_item(
     db: &Database,
     item: &Item,
@@ -2630,37 +2616,23 @@ fn generate_item(
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
         Item::Func(func) => match db.generate_func(func.clone()) {
-            Err(e) => GeneratedItem {
-                item: generate_unsupported(
-                    &make_unsupported_fn(func, &ir, format!("{e}").as_str())?,
-                    errors,
-                )?,
-                ..Default::default()
-            },
+            Err(e) => generate_unsupported(
+                &make_unsupported_fn(func, &ir, format!("{e}").as_str())?,
+                errors,
+            )?,
             Ok(None) => GeneratedItem::default(),
-            Ok(Some(f)) => {
-                let (api_func, thunk, function_id) = &*f;
-                if overloaded_funcs.contains(function_id) {
-                    GeneratedItem {
-                        item: generate_unsupported(
-                            &make_unsupported_fn(
-                                func,
-                                &ir,
-                                "Cannot generate bindings for overloaded function",
-                            )?,
-                            errors,
+            Ok(Some((item, function_id))) => {
+                if overloaded_funcs.contains(&function_id) {
+                    generate_unsupported(
+                        &make_unsupported_fn(
+                            func,
+                            &ir,
+                            "Cannot generate bindings for overloaded function",
                         )?,
-                        ..Default::default()
-                    }
+                        errors,
+                    )?
                 } else {
-                    // TODO(b/236687702): Use Rc for these, or else split this into a non-query
-                    // and only use the query for Function IDs.
-                    GeneratedItem {
-                        item: api_func.tokens.clone(),
-                        thunks: thunk.tokens.clone(),
-                        features: api_func.features.union(&thunk.features).cloned().collect(),
-                        ..Default::default()
-                    }
+                    (*item).clone()
                 }
             }
         },
@@ -2670,10 +2642,7 @@ fn generate_item(
             {
                 GeneratedItem::default()
             } else {
-                GeneratedItem {
-                    item: generate_incomplete_record(incomplete_record)?,
-                    ..Default::default()
-                }
+                generate_incomplete_record(incomplete_record)?
             }
         }
         Item::Record(record) => {
@@ -2691,7 +2660,7 @@ fn generate_item(
             {
                 GeneratedItem::default()
             } else {
-                GeneratedItem { item: generate_enum(db, enum_)?, ..Default::default() }
+                generate_enum(db, enum_)?
             }
         }
         Item::TypeAlias(type_alias) => {
@@ -2701,35 +2670,23 @@ fn generate_item(
                 GeneratedItem::default()
             } else if type_alias.enclosing_record_id.is_some() {
                 // TODO(b/200067824): support nested type aliases.
-                GeneratedItem {
-                    item: generate_unsupported(
-                        &make_unsupported_nested_type_alias(type_alias)?,
-                        errors,
-                    )?,
-                    ..Default::default()
-                }
+                generate_unsupported(&make_unsupported_nested_type_alias(type_alias)?, errors)?
             } else {
-                GeneratedItem { item: generate_type_alias(db, type_alias)?, ..Default::default() }
+                generate_type_alias(db, type_alias)?
             }
         }
-        Item::UnsupportedItem(unsupported) => {
-            GeneratedItem { item: generate_unsupported(unsupported, errors)?, ..Default::default() }
-        }
-        Item::Comment(comment) => {
-            GeneratedItem { item: generate_comment(comment)?, ..Default::default() }
-        }
+        Item::UnsupportedItem(unsupported) => generate_unsupported(unsupported, errors)?,
+        Item::Comment(comment) => generate_comment(comment)?,
         Item::Namespace(namespace) => generate_namespace(db, namespace, errors)?,
         Item::UseMod(use_mod) => {
             let UseMod { path, mod_name, .. } = &**use_mod;
             let mod_name = make_rs_ident(&mod_name.identifier);
-            GeneratedItem {
-                item: quote! {
-                    #[path = #path]
-                    mod #mod_name;
-                    pub use #mod_name::*;
-                },
-                ..Default::default()
+            quote! {
+                #[path = #path]
+                mod #mod_name;
+                pub use #mod_name::*;
             }
+            .into()
         }
     };
 
@@ -2744,7 +2701,7 @@ fn overloaded_funcs(db: &dyn BindingsGenerator) -> Rc<HashSet<Rc<FunctionId>>> {
     let mut overloaded_funcs = HashSet::new();
     for func in db.ir().functions() {
         if let Ok(Some(f)) = db.generate_func(func.clone()) {
-            let (.., function_id) = &*f;
+            let (.., function_id) = &f;
             if !seen_funcs.insert(function_id.clone()) {
                 overloaded_funcs.insert(function_id.clone());
             }
@@ -2777,8 +2734,7 @@ fn generate_bindings_tokens(
         const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
     });
 
-    // TODO(jeanpierreda): Delete has_record, either in favor of using RsSnippet, or not
-    // having uses. See https://chat.google.com/room/AAAAnQmj8Qs/6QbkSvWcfhA
+    // TODO(jeanpierreda): Delete has_record.
     let mut has_record = false;
     let mut features = BTreeSet::new();
 
@@ -3218,8 +3174,8 @@ impl RsTypeKind {
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
-                    // RsTypeKind-creation time, or returning an RsSnippet from here (and not
-                    // implementing ToTokens, but instead some other interface.)
+                    // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
+                    // not implementing ToTokens, but instead some other interface.)
                     quote! {::std::pin::Pin< #reference >}
                 } else {
                     reference
@@ -3279,8 +3235,8 @@ impl ToTokens for RsTypeKind {
                 if mutability == &Mutability::Mut && !referent.is_unpin() {
                     // TODO(b/239661934): Add a `use ::std::pin::Pin` to the crate, and use
                     // `Pin`. This either requires deciding how to qualify pin at
-                    // RsTypeKind-creation time, or returning an RsSnippet from here (and not
-                    // implementing ToTokens, but instead some other interface.)
+                    // RsTypeKind-creation time, or returning a non-TokenStream type from here (and
+                    // not implementing ToTokens, but instead some other interface.)
                     quote! {::std::pin::Pin< #reference >}
                 } else {
                     reference
@@ -3781,7 +3737,7 @@ fn generate_rs_api_impl(db: &mut Database, crubit_support_path: &str) -> Result<
                 continue;
             }
             Some(generated) => {
-                let (_, _, function_id) = &*generated;
+                let (.., function_id) = &generated;
                 // TODO(jeanpierreda): this should be moved into can_skip_cc_thunk, but that'd be
                 // cyclic right now, because overloaded_funcs calls generate_func calls
                 // can_skip_cc_thunk. We probably need to break generate_func apart.
