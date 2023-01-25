@@ -9,7 +9,9 @@ licenses(["notice"])
 
 TESTS = [name[:-2] for name in glob(
     ["*.h"],
-    exclude = ["*namespaces_json.h"],
+    exclude = [
+        "*namespaces_json.h",
+    ],
 )]
 
 # Maps a test to the list of tests it depends on.
@@ -17,6 +19,7 @@ DEPS = {
     "user_of_unsupported": ["unsupported"],
     "user_of_imported_type": ["trivial_type"],
     "user_of_base_class": ["inheritance"],
+    "source_location_doc_comments": ["source_location_doc_comments_macro_def"],
 }
 
 TAGS = {}

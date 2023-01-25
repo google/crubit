@@ -74,7 +74,6 @@ absl::Status CheckImportStatus(const std::optional<IR::Item>& item) {
 }
 }  // namespace
 
-
 namespace {
 
 // Converts clang::CallingConv enum [1] into an equivalent Rust Abi [2, 3, 4].
@@ -659,21 +658,47 @@ std::optional<std::string> Importer::GetComment(const clang::Decl* decl) const {
 
 std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   auto& sm = ctx_.getSourceManager();
-
-  clang::StringRef filename = sm.getFilename(loc);
-  if (filename.startswith("./")) {
-    filename = filename.substr(2);
-  }
-  uint line = sm.getSpellingLineNumber(loc);
-  if (filename.empty()) {
-    return std::string("<unknown location>");
+  // For macros: https://clang.llvm.org/doxygen/SourceManager_8h.html:
+  // Spelling location: where the macro is originally defined.
+  // Expansion location: where the macro is expanded.
+  const clang::SourceLocation& spelling_loc = sm.getSpellingLoc(loc);
+  // TODO(b/261185414): The "google3" prefix should probably come from a command
+  // line argument.
+  // TODO(b/261185414): Consider linking to the symbol instead of to the line
+  // number to avoid wrong links while generated files have not caught up.
+  constexpr auto kSourceLocationFunc = [](absl::string_view filename,
+                                          uint32_t line) {
+    return absl::Substitute("google3/$0;l=$1", filename, line);
+  };
+  constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
+  std::string spelling_loc_str;
+  if (absl::string_view spelling_filename = sm.getFilename(spelling_loc);
+      spelling_filename.empty()) {
+    spelling_loc_str = kSourceLocUnknown;
   } else {
-    // TODO(b/261185414): The "google3" prefix should probably come from a
-    // command line argument.
-    // TODO(b/261185414): Consider linking to the symbol instead of to the line
-    // number to avoid wrong links while generated files have not caught up.
-    return absl::StrFormat("google3/%s;l=%u", filename.str(), line);
+    uint32_t spelling_line = sm.getSpellingLineNumber(loc);
+    if (absl::StartsWith(spelling_filename, "./")) {
+      spelling_filename = spelling_filename.substr(2);
+    }
+    spelling_loc_str = kSourceLocationFunc(spelling_filename, spelling_line);
   }
+  if (!loc.isMacroID()) {
+    return spelling_loc_str;
+  }
+  const clang::SourceLocation& expansion_loc = sm.getExpansionLoc(loc);
+  std::string expansion_loc_str;
+  if (absl::string_view expansion_filename = sm.getFilename(expansion_loc);
+      expansion_filename.empty()) {
+    expansion_loc_str = kSourceLocUnknown;
+  } else {
+    uint32_t expansion_line = sm.getExpansionLineNumber(loc);
+    if (absl::StartsWith(expansion_filename, "./")) {
+      expansion_filename = expansion_filename.substr(2);
+    }
+    expansion_loc_str = kSourceLocationFunc(expansion_filename, expansion_line);
+  }
+  return absl::StrCat(spelling_loc_str, "\n",
+                      "Expanded at: ", expansion_loc_str);
 }
 
 absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(

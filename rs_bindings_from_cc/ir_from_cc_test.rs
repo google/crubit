@@ -3640,6 +3640,51 @@ fn test_private_method() {
 }
 
 #[test]
+fn test_source_location_with_macro() {
+    for (ir_type, cc_snippet, expected_source_loc) in [
+        (
+            quote! {Func},
+            r#"
+#define NO_OP_FUNC(func_name) \
+  void fun_name();
+
+NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
+            "google3/ir_from_cc_virtual_header.h;l=5\n\
+             Expanded at: google3/ir_from_cc_virtual_header.h;l=7",
+        ),
+        (
+            quote! {TypeAlias},
+            r#"
+#define TYPE_ALIAS_TO_INT(type_alias) using type_alias = int;
+TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
+            "google3/ir_from_cc_virtual_header.h;l=4\n\
+             Expanded at: google3/ir_from_cc_virtual_header.h;l=5",
+        ),
+        (
+            quote! {UnsupportedItem},
+            r#"
+#define TEMPLATE_NO_OP_FUNC(func_name) \
+template <typename T> void func_name() {};
+  TEMPLATE_NO_OP_FUNC(unsupported_templated_no_op_func_to_test_source_location_with_macro);"#,
+            "google3/ir_from_cc_virtual_header.h;l=4\n\
+             Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
+        ),
+    ] {
+        let ir = ir_from_cc(cc_snippet).unwrap();
+        assert_ir_matches!(
+            ir,
+            quote! {
+            #ir_type {
+              ...
+                source_loc: #expected_source_loc,
+              ...
+              }
+            }
+        );
+    }
+}
+
+#[test]
 fn test_source_location() {
     for (ir_type, cc_snippet, expected_source_loc) in [
         (
@@ -3655,7 +3700,7 @@ typedef float SomeTypedefToTestSourceLocation;"#,
         ),
         (
             quote! {UnsupportedItem},
-            r#"template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
+            r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
             "google3/ir_from_cc_virtual_header.h;l=3",
         ),
     ] {
@@ -3663,31 +3708,31 @@ typedef float SomeTypedefToTestSourceLocation;"#,
         assert_ir_matches!(
             ir,
             quote! {
-            ...
             #ir_type {
               ...
                 source_loc: #expected_source_loc,
               ...
               }
-            ...
             }
         );
     }
 }
 
 #[test]
-fn test_source_location_unknown() {
+fn test_source_location_with_macro_defined_in_another_file() {
     let dependency_header = r#"
 #define MyIntTypeAliasToTestSourceLocation(type_alias_name) using type_alias_name = int;"#;
     let header = "MyIntTypeAliasToTestSourceLocation(my_int);";
     let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
+    let expected_source_loc = "google3/test/dependency_header.h;l=2\n\
+                               Expanded at: google3/ir_from_cc_virtual_header.h;l=3";
     assert_ir_matches!(
         ir,
         quote! {
         ...
         TypeAlias {
           ...
-            source_loc: "<unknown location>",
+            source_loc: #expected_source_loc,
           ...
           }
         ...

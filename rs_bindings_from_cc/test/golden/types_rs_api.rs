@@ -216,11 +216,13 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'type':
 // Typedefs nested in classes are not supported yet
 
-// <unknown location>
+// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=26
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator bool':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
-// <unknown location>
+// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=29
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
@@ -262,11 +264,13 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'type':
 // Typedefs nested in classes are not supported yet
 
-// <unknown location>
+// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=26
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator bool':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
-// <unknown location>
+// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=29
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
