@@ -2360,7 +2360,6 @@ fn generate_record(
         assertions: assertion_tokens,
         thunks: thunk_tokens,
         thunk_impls: quote! {#(#thunk_impls_from_record_items __NEWLINE__ __NEWLINE__)*},
-        has_record: true,
     })
 }
 
@@ -2483,7 +2482,6 @@ fn generate_namespace(
     let mut thunks = vec![];
     let mut thunk_impls = vec![];
     let mut assertions = vec![];
-    let mut has_record = false;
     let mut features = BTreeSet::new();
 
     for item_id in namespace.child_item_ids.iter() {
@@ -2502,7 +2500,6 @@ fn generate_namespace(
             assertions.push(generated.assertions);
         }
         features.extend(generated.features);
-        has_record = has_record || generated.has_record;
     }
 
     let reopened_namespace_idx = ir.get_reopened_namespace_idx(namespace.id)?;
@@ -2547,7 +2544,6 @@ fn generate_namespace(
     Ok(GeneratedItem {
         item: namespace_tokens,
         features: features,
-        has_record: has_record,
         thunks: quote! { #( #thunks )* },
         thunk_impls: quote! { #( #thunk_impls )* },
         assertions: quote! { #( #assertions )* },
@@ -2563,7 +2559,6 @@ struct GeneratedItem {
     thunk_impls: TokenStream,
     assertions: TokenStream,
     features: BTreeSet<Ident>,
-    has_record: bool,
 }
 
 impl From<TokenStream> for GeneratedItem {
@@ -2578,7 +2573,7 @@ impl PartialEq for GeneratedItem {
     fn eq(&self, other: &Self) -> bool {
         fn to_comparable_tuple(
             _x: &GeneratedItem,
-        ) -> (&BTreeSet<Ident>, String, String, String, String, bool) {
+        ) -> (&BTreeSet<Ident>, String, String, String, String) {
             // TokenStream doesn't implement `PartialEq`, so we convert to an equivalent
             // `String`. This is a bit expensive, but should be okay (especially
             // given that this code doesn't execute at this point).  Having a
@@ -2600,7 +2595,6 @@ impl PartialEq for GeneratedItem {
                 _x.thunks.to_string(),
                 _x.thunk_impls.to_string(),
                 _x.assertions.to_string(),
-                _x.has_record,
             )
         }
         to_comparable_tuple(self) == to_comparable_tuple(other)
@@ -2734,8 +2728,6 @@ fn generate_bindings_tokens(
         const _: () = assert!(::std::mem::size_of::<Option<&i32>>() == ::std::mem::size_of::<&i32>());
     });
 
-    // TODO(jeanpierreda): Delete has_record.
-    let mut has_record = false;
     let mut features = BTreeSet::new();
 
     // For #![rustfmt::skip].
@@ -2756,7 +2748,6 @@ fn generate_bindings_tokens(
             thunk_impls.push(generated.thunk_impls);
         }
         features.extend(generated.features);
-        has_record = has_record || generated.has_record;
     }
 
     let mod_detail = if thunks.is_empty() {
