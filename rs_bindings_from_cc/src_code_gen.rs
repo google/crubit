@@ -1477,7 +1477,7 @@ fn generate_func(
         }
     };
 
-    let doc_comment = generate_doc_comment(&func.doc_comment, Some(&func.source_loc));
+    let doc_comment = generate_doc_comment(func.doc_comment.as_deref(), Some(&func.source_loc));
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {
@@ -1863,12 +1863,12 @@ fn generate_func_thunk(
         ) #return_type_fragment ;
     })
 }
-fn generate_doc_comment(comment: &Option<Rc<str>>, source_loc: Option<&str>) -> TokenStream {
+fn generate_doc_comment(comment: Option<&str>, source_loc: Option<&str>) -> TokenStream {
     let (comment, sep, source_loc) = match (comment, source_loc) {
         (None, None) => return quote! {},
         (None, Some(source_loc)) => ("", "", source_loc),
-        (Some(comment), Some(source_loc)) => (comment.as_ref(), "\n\n", source_loc),
-        (Some(comment), None) => (comment.as_ref(), "", ""),
+        (Some(comment), Some(source_loc)) => (comment, "\n\n", source_loc),
+        (Some(comment), None) => (comment, "", ""),
     };
     // token_stream_printer (and rustfmt) don't put a space between /// and the doc
     // comment, let's add it here so our comments are pretty.
@@ -2051,7 +2051,7 @@ fn generate_record(
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
-    let doc_comment = generate_doc_comment(&record.doc_comment, Some(&record.source_loc));
+    let doc_comment = generate_doc_comment(record.doc_comment.as_deref(), Some(&record.source_loc));
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
     let fields_with_bounds = (record.fields.iter())
@@ -2163,7 +2163,7 @@ fn generate_record(
 
             let ident = make_rs_field_ident(field, field_index);
             let doc_comment = match field.type_.as_ref() {
-                Ok(_) => generate_doc_comment(&field.doc_comment, None),
+                Ok(_) => generate_doc_comment(field.doc_comment.as_deref(), None),
                 Err(msg) => {
                     let supplemental_text =
                         format!("Reason for representing this field as a blob of bytes:\n{}", msg);
@@ -2171,7 +2171,7 @@ fn generate_record(
                         None => supplemental_text,
                         Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
                     };
-                    generate_doc_comment(&Some(new_text.into()), None)
+                    generate_doc_comment(Some(new_text.as_str()), None)
                 }
             };
             let access = if field.access == AccessSpecifier::Public
@@ -2495,7 +2495,8 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<TokenStream> {
 
 fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<TokenStream> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
-    let doc_comment = generate_doc_comment(&type_alias.doc_comment, Some(&type_alias.source_loc));
+    let doc_comment =
+        generate_doc_comment(type_alias.doc_comment.as_deref(), Some(&type_alias.source_loc));
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.rs_type.clone())
         .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
@@ -8390,22 +8391,20 @@ mod tests {
 
     #[test]
     fn test_generate_doc_comment_with_no_comment_with_no_source_loc() {
-        let actual = generate_doc_comment(&None, None);
+        let actual = generate_doc_comment(None, None);
         assert_rs_matches!(actual, quote! {});
     }
 
     #[test]
     fn test_generate_doc_comment_with_no_comment_with_source_loc() {
-        let actual = generate_doc_comment(&None, Some("google3/some/header;l=11"));
+        let actual = generate_doc_comment(None, Some("google3/some/header;l=11"));
         assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
     }
 
     #[test]
     fn test_generate_doc_comment_with_comment_with_source_loc() {
-        let actual = generate_doc_comment(
-            &Some(Rc::from("Some doc comment")),
-            Some("google3/some/header;l=12"),
-        );
+        let actual =
+            generate_doc_comment(Some("Some doc comment"), Some("google3/some/header;l=12"));
         assert_rs_matches!(
             actual,
             quote! {#[doc = " Some doc comment\n \n google3/some/header;l=12"]}
@@ -8414,7 +8413,7 @@ mod tests {
 
     #[test]
     fn test_generate_doc_comment_with_comment_with_no_source_loc() {
-        let actual = generate_doc_comment(&Some(Rc::from("Some doc comment")), None);
+        let actual = generate_doc_comment(Some("Some doc comment"), None);
         assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
     }
 }
