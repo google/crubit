@@ -17,6 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeClass {
@@ -24,6 +25,7 @@ pub struct SomeClass {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=10
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
@@ -35,6 +37,7 @@ impl Default for SomeClass {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -55,21 +58,26 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
 // operator= for Unpin types is not yet supported.
 
 /// Friend functions that are visible via ADL.
+///
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=13
 #[inline(always)]
 pub fn visible_val(__param_0: crate::SomeClass) {
     unsafe { crate::detail::__rust_thunk___Z11visible_val9SomeClass(__param_0) }
 }
 
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=14
 #[inline(always)]
 pub fn visible_ref<'a>(__param_0: &'a mut crate::SomeClass) {
     unsafe { crate::detail::__rust_thunk___Z11visible_refR9SomeClass(__param_0) }
 }
 
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=15
 #[inline(always)]
 pub fn visible_cref<'a>(__param_0: &'a crate::SomeClass) {
     unsafe { crate::detail::__rust_thunk___Z12visible_crefRK9SomeClass(__param_0) }
 }
 
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=16
 #[inline(always)]
 pub fn visible_rref<'a>(__param_0: ::ctor::RvalueReference<'a, crate::SomeClass>) {
     unsafe { crate::detail::__rust_thunk___Z12visible_rrefO9SomeClass(__param_0) }
@@ -79,6 +87,8 @@ pub fn visible_rref<'a>(__param_0: ::ctor::RvalueReference<'a, crate::SomeClass>
 /// declaration below + in a definition below.  This example mimics
 /// Uint128Low64 declarations from absl/numeric/int128.h.  This is a
 /// regression test for b/244311755.
+///
+/// rs_bindings_from_cc/test/golden/friend_functions.h;l=26
 #[inline(always)]
 pub fn multiple_declarations<'a>(__param_0: &'a crate::SomeClass) -> i32 {
     unsafe { crate::detail::__rust_thunk___Z21multiple_declarationsRK9SomeClass(__param_0) }

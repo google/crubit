@@ -17,11 +17,13 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=8
 #[inline(always)]
 pub unsafe fn free_function(p1: *mut i32) -> *mut i32 {
     crate::detail::__rust_thunk___Z13free_functionRi(p1)
 }
 
+/// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct S {
@@ -50,6 +52,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 // Parameter #0 is not supported: Unsupported type 'S &&': Unsupported type: && without lifetime
 
 impl S {
+    /// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=11
     #[inline(always)]
     pub unsafe fn const_method(__this: *const Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         crate::detail::__rust_thunk___ZNK1S12const_methodERiS0_(__this, p1, p2)
@@ -57,12 +60,14 @@ impl S {
 }
 
 impl S {
+    /// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=12
     #[inline(always)]
     pub unsafe fn method(__this: *mut Self, p1: *mut i32, p2: *mut i32) -> *mut i32 {
         crate::detail::__rust_thunk___ZN1S6methodERiS0_(__this, p1, p2)
     }
 }
 
+/// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=15
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
@@ -81,6 +86,7 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'TriviallyCopyableButNontriviallyDestructible::TriviallyCopyableButNontriviallyDestructible':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
+/// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=18
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -88,11 +94,13 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=21
 #[inline(always)]
 pub unsafe fn take_pointer(p: *mut i32) {
     crate::detail::__rust_thunk___Z12take_pointerPi(p)
 }
 
+/// rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=23
 #[::ctor::recursively_pinned]
 #[repr(C, align(4))]
 pub struct WrappedValue {

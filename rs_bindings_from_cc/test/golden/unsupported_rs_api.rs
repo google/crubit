@@ -17,6 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TrivialCustomType {
@@ -27,6 +28,7 @@ forward_declare::unsafe_define!(
     crate::TrivialCustomType
 );
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=10
 impl Default for TrivialCustomType {
     #[inline(always)]
     fn default() -> Self {
@@ -38,6 +40,7 @@ impl Default for TrivialCustomType {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -61,6 +64,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
 // Error while generating bindings for item 'TrivialCustomType::operator||':
 // Bindings for this kind of operator (operator || with 2 parameter(s)) are not supported
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=18
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct NontrivialCustomType {
@@ -72,6 +76,7 @@ forward_declare::unsafe_define!(
     crate::NontrivialCustomType
 );
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=19
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialCustomType {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -106,6 +111,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialCus
 //
 // Return type is not supported: Unsupported type 'volatile int *': Unsupported `volatile` qualifier: volatile int
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=35
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ContainingStruct {
@@ -120,6 +126,7 @@ forward_declare::unsafe_define!(
     crate::ContainingStruct
 );
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=35
 impl Default for ContainingStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -131,6 +138,7 @@ impl Default for ContainingStruct {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/unsupported.h;l=35
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {

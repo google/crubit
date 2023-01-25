@@ -2181,6 +2181,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
                id: ItemId(...),
                owning_target: BazelLabel("//test:testing_target"),
                doc_comment: Some(...),
+               source_loc: "google3/ir_from_cc_virtual_header.h;l=15",
                unambiguous_public_bases: [],
                fields: [Field {
                    identifier: Some("derived_field"), ...
@@ -3669,6 +3670,24 @@ template <typename T> void func_name() {};
             "google3/ir_from_cc_virtual_header.h;l=4\n\
              Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
         ),
+        (
+            quote! {Enum},
+            r#"
+#define DEFINE_EMPTY_ENUM(enum_name) \
+  enum enum_name {};
+DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
+            "google3/ir_from_cc_virtual_header.h;l=5\n\
+             Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
+        ),
+        (
+            quote! {Record},
+            r#"
+#define DEFINE_EMPTY_STRUCT(struct_name) \
+  struct struct_name {};
+DEFINE_EMPTY_STRUCT(EmptyStructToTestSourceLocationWithMacro);"#,
+            "google3/ir_from_cc_virtual_header.h;l=5\n\
+             Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
+        ),
     ] {
         let ir = ir_from_cc(cc_snippet).unwrap();
         assert_ir_matches!(
@@ -3703,6 +3722,16 @@ typedef float SomeTypedefToTestSourceLocation;"#,
             r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
             "google3/ir_from_cc_virtual_header.h;l=3",
         ),
+        (
+            quote! {Enum},
+            r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
+            "google3/ir_from_cc_virtual_header.h;l=3",
+        ),
+        (
+            quote! {Record},
+            r#"struct SomeEmptyStructToTestSourceLocation {};"#,
+            "google3/ir_from_cc_virtual_header.h;l=3",
+        ),
     ] {
         let ir = ir_from_cc(cc_snippet).unwrap();
         assert_ir_matches!(
@@ -3726,6 +3755,26 @@ fn test_source_location_with_macro_defined_in_another_file() {
     let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
     let expected_source_loc = "google3/test/dependency_header.h;l=2\n\
                                Expanded at: google3/ir_from_cc_virtual_header.h;l=3";
+    assert_ir_matches!(
+        ir,
+        quote! {
+        ...
+        TypeAlias {
+          ...
+            source_loc: #expected_source_loc,
+          ...
+          }
+        ...
+        }
+    );
+}
+
+#[test]
+fn test_source_location_class_template_specialization() {
+    let cc_snippet = "template <typename T> class MyClassTemplateToTestSourceLocation { T t_; };
+    using MyClassTemplateSpecializationToTestSourceLocation = MyClassTemplateToTestSourceLocation<bool>;";
+    let ir = ir_from_cc(cc_snippet).unwrap();
+    let expected_source_loc = "google3/ir_from_cc_virtual_header.h;l=4";
     assert_ir_matches!(
         ir,
         quote! {

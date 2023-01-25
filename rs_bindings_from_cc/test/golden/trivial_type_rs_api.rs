@@ -20,6 +20,8 @@
 pub mod ns {
     /// Implicitly defined special member functions are trivial on a struct with
     /// only trivial members.
+    ///
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct Trivial {
@@ -27,6 +29,7 @@ pub mod ns {
     }
     forward_declare::unsafe_define!(forward_declare::symbol!("Trivial"), crate::ns::Trivial);
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     impl Default for Trivial {
         #[inline(always)]
         fn default() -> Self {
@@ -38,6 +41,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=13
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for Trivial {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -59,6 +63,8 @@ pub mod ns {
 
     /// Defaulted special member functions are trivial on a struct with only trivial
     /// members.
+    ///
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=19
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct TrivialWithDefaulted {
@@ -69,6 +75,7 @@ pub mod ns {
         crate::ns::TrivialWithDefaulted
     );
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=20
     impl Default for TrivialWithDefaulted {
         #[inline(always)]
         fn default() -> Self {
@@ -84,6 +91,7 @@ pub mod ns {
     // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
     // operator= for Unpin types is not yet supported.
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=24
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -103,6 +111,8 @@ pub mod ns {
 
     /// This struct is trivial, and therefore trivially relocatable etc., but still
     /// not safe to pass by reference as it is not final.
+    ///
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=34
     #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct TrivialNonfinal {
@@ -113,6 +123,7 @@ pub mod ns {
         crate::ns::TrivialNonfinal
     );
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=34
     impl ::ctor::CtorNew<()> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
@@ -130,6 +141,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=34
     impl<'b> ::ctor::CtorNew<&'b Self> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -156,6 +168,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=34
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -182,6 +195,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=34
     impl<'b> ::ctor::Assign<&'b Self> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -191,6 +205,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=34
     impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(
@@ -203,11 +218,13 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=38
     #[inline(always)]
     pub fn TakesByValue(trivial: crate::ns::Trivial) {
         unsafe { crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(trivial) }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=39
     #[inline(always)]
     pub fn TakesWithDefaultedByValue(trivial: crate::ns::TrivialWithDefaulted) {
         unsafe {
@@ -215,6 +232,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=40
     #[inline(always)]
     pub fn TakesTrivialNonfinalByValue(
         trivial: impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal>,
@@ -226,11 +244,13 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=42
     #[inline(always)]
     pub fn TakesByReference<'a>(trivial: &'a mut crate::ns::Trivial) {
         unsafe { crate::detail::__rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE(trivial) }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=43
     #[inline(always)]
     pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut crate::ns::TrivialWithDefaulted) {
         unsafe {
@@ -238,6 +258,7 @@ pub mod ns {
         }
     }
 
+    /// rs_bindings_from_cc/test/golden/trivial_type.h;l=44
     #[inline(always)]
     pub fn TakesTrivialNonfinalByReference<'a>(
         trivial: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,

@@ -17,6 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/types.h;l=13
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
@@ -24,6 +25,7 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
+/// rs_bindings_from_cc/test/golden/types.h;l=13
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -35,6 +37,7 @@ impl Default for SomeStruct {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/types.h;l=13
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -56,6 +59,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
+/// rs_bindings_from_cc/test/golden/types.h;l=17
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FieldTypeTestStruct {
@@ -123,6 +127,7 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
+/// rs_bindings_from_cc/test/golden/types.h;l=17
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -134,6 +139,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/types.h;l=89
 #[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
@@ -162,12 +168,15 @@ impl From<Color> for u32 {
 /// this becomes un-compilable. The syntax here is awful, but this is a function
 /// returning a function. In ML-like syntax:
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
+///
+/// rs_bindings_from_cc/test/golden/types.h;l=97
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
 {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
+/// rs_bindings_from_cc/test/golden/types.h;l=101
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::std::os::raw::c_void,
@@ -178,6 +187,7 @@ pub unsafe fn FunctionWithVoidPointers(
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
+/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u17integral_constantIbLb0EEE {
@@ -226,6 +236,7 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
+/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u17integral_constantIbLb1EEE {

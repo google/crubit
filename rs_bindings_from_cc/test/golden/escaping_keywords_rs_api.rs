@@ -17,6 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct r#type {
@@ -24,6 +25,7 @@ pub struct r#type {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("type"), crate::r#type);
 
+/// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 impl Default for r#type {
     #[inline(always)]
     fn default() -> Self {
@@ -35,6 +37,7 @@ impl Default for r#type {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -54,6 +57,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
 // Error while generating bindings for item 'type::operator=':
 // operator= for Unpin types is not yet supported.
 
+/// rs_bindings_from_cc/test/golden/escaping_keywords.h;l=14
 #[inline(always)]
 pub fn r#impl(r#match: i32) {
     unsafe { crate::detail::__rust_thunk___Z4impli(r#match) }

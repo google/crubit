@@ -17,6 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Noninline {
@@ -45,6 +46,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::No
 // Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
 
 impl Noninline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=9
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this)
@@ -52,6 +54,7 @@ impl Noninline {
 }
 
 impl Noninline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=10
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this)
@@ -59,6 +62,7 @@ impl Noninline {
 }
 
 impl Noninline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=11
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this)
@@ -66,6 +70,7 @@ impl Noninline {
 }
 
 impl Noninline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=12
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this)
@@ -73,12 +78,14 @@ impl Noninline {
 }
 
 impl Noninline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=13
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this)
     }
 }
 
+/// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Inline {
@@ -107,6 +114,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inlin
 // Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
 
 impl Inline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=17
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this)
@@ -114,6 +122,7 @@ impl Inline {
 }
 
 impl Inline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=18
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this)
@@ -121,6 +130,7 @@ impl Inline {
 }
 
 impl Inline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=19
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this)
@@ -128,6 +138,7 @@ impl Inline {
 }
 
 impl Inline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=20
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this)
@@ -135,6 +146,7 @@ impl Inline {
 }
 
 impl Inline {
+    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=21
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this)

@@ -1477,7 +1477,7 @@ fn generate_func(
         }
     };
 
-    let doc_comment = generate_doc_comment(&func.doc_comment);
+    let doc_comment = generate_doc_comment(&func.doc_comment, Some(&func.source_loc));
     let api_func: TokenStream;
     let function_id: FunctionId;
     match impl_kind {
@@ -1863,17 +1863,17 @@ fn generate_func_thunk(
         ) #return_type_fragment ;
     })
 }
-
-fn generate_doc_comment(comment: &Option<Rc<str>>) -> TokenStream {
-    match comment {
-        Some(text) => {
-            // token_stream_printer (and rustfmt) don't put a space between /// and the doc
-            // comment, let's add it here so our comments are pretty.
-            let doc = format!(" {}", text.as_ref()).replace('\n', "\n ");
-            quote! {#[doc=#doc]}
-        }
-        None => quote! {},
-    }
+fn generate_doc_comment(comment: &Option<Rc<str>>, source_loc: Option<&str>) -> TokenStream {
+    let (comment, sep, source_loc) = match (comment, source_loc) {
+        (None, None) => return quote! {},
+        (None, Some(source_loc)) => ("", "", source_loc),
+        (Some(comment), Some(source_loc)) => (comment.as_ref(), "\n\n", source_loc),
+        (Some(comment), None) => (comment.as_ref(), "", ""),
+    };
+    // token_stream_printer (and rustfmt) don't put a space between /// and the doc
+    // comment, let's add it here so our comments are pretty.
+    let doc_comment = format!(" {comment}{sep}{source_loc}").replace('\n', "\n ");
+    quote! {#[doc = #doc_comment]}
 }
 
 fn format_generic_params<'a, T: ToTokens>(
@@ -2051,8 +2051,7 @@ fn generate_record(
     let qualified_ident = {
         quote! { #crate_root_path:: #namespace_qualifier #ident }
     };
-    let doc_comment = generate_doc_comment(&record.doc_comment);
-
+    let doc_comment = generate_doc_comment(&record.doc_comment, Some(&record.source_loc));
     let mut field_copy_trait_assertions: Vec<TokenStream> = vec![];
 
     let fields_with_bounds = (record.fields.iter())
@@ -2164,7 +2163,7 @@ fn generate_record(
 
             let ident = make_rs_field_ident(field, field_index);
             let doc_comment = match field.type_.as_ref() {
-                Ok(_) => generate_doc_comment(&field.doc_comment),
+                Ok(_) => generate_doc_comment(&field.doc_comment, None),
                 Err(msg) => {
                     let supplemental_text =
                         format!("Reason for representing this field as a blob of bytes:\n{}", msg);
@@ -2172,7 +2171,7 @@ fn generate_record(
                         None => supplemental_text,
                         Some(old_text) => format!("{}\n\n{}", old_text.as_ref(), supplemental_text),
                     };
-                    generate_doc_comment(&Some(new_text.into()))
+                    generate_doc_comment(&Some(new_text.into()), None)
                 }
             };
             let access = if field.access == AccessSpecifier::Public
@@ -2496,7 +2495,7 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<TokenStream> {
 
 fn generate_type_alias(db: &Database, type_alias: &TypeAlias) -> Result<TokenStream> {
     let ident = make_rs_ident(&type_alias.identifier.identifier);
-    let doc_comment = generate_doc_comment(&type_alias.doc_comment);
+    let doc_comment = generate_doc_comment(&type_alias.doc_comment, Some(&type_alias.source_loc));
     let underlying_type = db
         .rs_type_kind(type_alias.underlying_type.rs_type.clone())
         .with_context(|| format!("Failed to format underlying type for {:?}", type_alias))?;
@@ -4188,6 +4187,7 @@ mod tests {
             rs_api,
             quote! {
                 impl __CcTemplateInst10MyTemplateIiE {
+                    #[doc = " google3/test/dependency_header.h;l=4"]
                     #[inline(always)]
                     pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> i32 { unsafe {
                         crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
@@ -4799,9 +4799,9 @@ mod tests {
                #[repr(C, align(4))]
                pub struct StructWithUnnamedMembers {
                    pub first_field: i32,
-                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
+                   #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'struct StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:7:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field1: [::std::mem::MaybeUninit<u8>; 8],
-                   #[doc=" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
+                   #[doc =" Reason for representing this field as a blob of bytes:\n Unsupported type 'union StructWithUnnamedMembers::(anonymous at ./ir_from_cc_virtual_header.h:11:15)': No generated bindings found for ''"]
                    pub(crate) __unnamed_field2: [::std::mem::MaybeUninit<u8>; 4],
                    pub last_field: i32,
                }
@@ -5739,7 +5739,7 @@ mod tests {
             // leading space is intentional so there is a space between /// and the text of the
             // comment
             quote! {
-                #[doc = " Doc Comment\n with two lines"]
+                #[doc = " Doc Comment\n with two lines\n \n google3/ir_from_cc_virtual_header.h;l=6"]
                 #[inline(always)]
                 pub fn func
             }
@@ -5763,7 +5763,7 @@ mod tests {
         assert_rs_matches!(
             generate_bindings_tokens(ir)?.rs_api,
             quote! {
-                #[doc = " Doc Comment\n \n  * with bullet"]
+                #[doc = " Doc Comment\n \n  * with bullet\n \n google3/ir_from_cc_virtual_header.h;l=6"]
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub struct SomeStruct {
@@ -7162,7 +7162,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[doc = " MyTypedefDecl doc comment"]
+                #[doc = " MyTypedefDecl doc comment\n \n google3/ir_from_cc_virtual_header.h;l=5"]
                 pub type MyTypedefDecl = i32;
             }
         );
@@ -8386,5 +8386,35 @@ mod tests {
             lifetime: Lifetime::new("_"),
         };
         assert_rs_matches!(quote! {#reference}, quote! {RvalueReference<'_, T>});
+    }
+
+    #[test]
+    fn test_generate_doc_comment_with_no_comment_with_no_source_loc() {
+        let actual = generate_doc_comment(&None, None);
+        assert_rs_matches!(actual, quote! {});
+    }
+
+    #[test]
+    fn test_generate_doc_comment_with_no_comment_with_source_loc() {
+        let actual = generate_doc_comment(&None, Some("google3/some/header;l=11"));
+        assert_rs_matches!(actual, quote! {#[doc = " google3/some/header;l=11"]});
+    }
+
+    #[test]
+    fn test_generate_doc_comment_with_comment_with_source_loc() {
+        let actual = generate_doc_comment(
+            &Some(Rc::from("Some doc comment")),
+            Some("google3/some/header;l=12"),
+        );
+        assert_rs_matches!(
+            actual,
+            quote! {#[doc = " Some doc comment\n \n google3/some/header;l=12"]}
+        );
+    }
+
+    #[test]
+    fn test_generate_doc_comment_with_comment_with_no_source_loc() {
+        let actual = generate_doc_comment(&Some(Rc::from("Some doc comment")), None);
+        assert_rs_matches!(actual, quote! {#[doc = " Some doc comment"]});
     }
 }

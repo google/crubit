@@ -21,6 +21,7 @@
 // Error while generating bindings for item 'Ptr':
 // Class templates are not supported yet
 
+/// rs_bindings_from_cc/test/golden/private_method.h;l=17
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Outer {

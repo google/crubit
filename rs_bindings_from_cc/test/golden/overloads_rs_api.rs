@@ -37,6 +37,7 @@
 // Error while generating bindings for item 'UncallableOverload':
 // Function templates are not supported yet
 
+/// rs_bindings_from_cc/test/golden/overloads.h;l=25
 #[inline(always)]
 pub fn AlsoTemplateOverload() {
     unsafe { crate::detail::__rust_thunk___Z20AlsoTemplateOverloadv() }
@@ -48,6 +49,7 @@ pub fn AlsoTemplateOverload() {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OVERLOADS_H_
 
+/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u17integral_constantIbLb0EEE {
@@ -96,6 +98,7 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
+/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u17integral_constantIbLb1EEE {
@@ -144,6 +147,7 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
+/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE

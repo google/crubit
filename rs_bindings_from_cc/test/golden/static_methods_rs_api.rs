@@ -17,6 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+/// rs_bindings_from_cc/test/golden/static_methods.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct SomeClass {
@@ -27,6 +28,7 @@ pub struct SomeClass {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeClass"), crate::SomeClass);
 
+/// rs_bindings_from_cc/test/golden/static_methods.h;l=10
 impl Default for SomeClass {
     #[inline(always)]
     fn default() -> Self {
@@ -38,6 +40,7 @@ impl Default for SomeClass {
     }
 }
 
+/// rs_bindings_from_cc/test/golden/static_methods.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -59,6 +62,8 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
 
 impl SomeClass {
     /// Example of a factory method.
+    ///
+    /// rs_bindings_from_cc/test/golden/static_methods.h;l=13
     #[inline(always)]
     pub fn static_factory_method(initial_value_of_field: i32) -> crate::SomeClass {
         unsafe {
@@ -71,6 +76,8 @@ impl SomeClass {
 
 impl SomeClass {
     /// Static method working on primitive types (and unrelated to the struct).
+    ///
+    /// rs_bindings_from_cc/test/golden/static_methods.h;l=16
     #[inline(always)]
     pub fn static_method_that_multiplies_its_args(x: i32, y: i32) -> i32 {
         unsafe {

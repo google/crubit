@@ -562,6 +562,7 @@ struct Record {
   ItemId id;
   BazelLabel owning_target;
   std::optional<std::string> doc_comment;
+  std::string source_loc;
   std::vector<BaseClass> unambiguous_public_bases;
   std::vector<Field> fields;
   std::vector<LifetimeName> lifetime_params;
@@ -659,6 +660,7 @@ struct Enum {
   Identifier identifier;
   ItemId id;
   BazelLabel owning_target;
+  std::string source_loc;
   MappedType underlying_type;
   std::vector<Enumerator> enumerators;
   std::optional<ItemId> enclosing_namespace_id;

@@ -6,6 +6,7 @@
 
 #include <optional>
 
+#include "clang/Basic/SourceLocation.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
@@ -165,6 +166,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
   }
 
   std::string rs_name, cc_name, preferred_cc_name;
+  clang::SourceLocation source_loc;
   std::optional<std::string> doc_comment;
   bool is_explicit_class_template_instantiation_definition = false;
   if (auto* specialization_decl =
@@ -186,6 +188,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       doc_comment =
           ictx_.GetComment(specialization_decl->getSpecializedTemplate());
     }
+    source_loc = specialization_decl->getBeginLoc();
   } else {
     std::optional<Identifier> record_name =
         ictx_.GetTranslatedIdentifier(record_decl);
@@ -194,6 +197,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
     rs_name = cc_name = record_name->Ident();
     doc_comment = ictx_.GetComment(record_decl);
+    source_loc = record_decl->getBeginLoc();
   }
 
   if (clang::CXXRecordDecl* complete = record_decl->getDefinition()) {
@@ -244,6 +248,7 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
       .id = GenerateItemId(record_decl),
       .owning_target = ictx_.GetOwningTarget(record_decl),
       .doc_comment = std::move(doc_comment),
+      .source_loc = ictx_.ConvertSourceLocation(source_loc),
       .unambiguous_public_bases = GetUnambiguousPublicBases(*record_decl),
       .fields = std::move(fields),
       .size = layout.getSize().getQuantity(),
