@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
+/// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Noninline {
@@ -25,28 +25,28 @@ pub struct Noninline {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Noninline"), crate::Noninline);
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::Noninline':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::Noninline':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::Noninline':
 // Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=8
 // Error while generating bindings for item 'Noninline::operator=':
 // Parameter #0 is not supported: Unsupported type 'Noninline &&': Unsupported type: && without lifetime
 
 impl Noninline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=9
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=9
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN9Noninline17UnqualifiedMethodEv(__this)
@@ -54,7 +54,7 @@ impl Noninline {
 }
 
 impl Noninline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=10
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=10
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNR9Noninline12LvalueMethodEv(__this)
@@ -62,7 +62,7 @@ impl Noninline {
 }
 
 impl Noninline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=11
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=11
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKR9Noninline17LvalueMethodConstEv(__this)
@@ -70,7 +70,7 @@ impl Noninline {
 }
 
 impl Noninline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=12
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=12
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNO9Noninline12RvalueMethodEv(__this)
@@ -78,14 +78,14 @@ impl Noninline {
 }
 
 impl Noninline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=13
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKO9Noninline17RvalueMethodConstEv(__this)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Inline {
@@ -93,28 +93,28 @@ pub struct Inline {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Inline"), crate::Inline);
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::Inline':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::Inline':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::Inline':
 // Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=16
 // Error while generating bindings for item 'Inline::operator=':
 // Parameter #0 is not supported: Unsupported type 'Inline &&': Unsupported type: && without lifetime
 
 impl Inline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=17
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=17
     #[inline(always)]
     pub unsafe fn UnqualifiedMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZN6Inline17UnqualifiedMethodEv(__this)
@@ -122,7 +122,7 @@ impl Inline {
 }
 
 impl Inline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=18
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=18
     #[inline(always)]
     pub unsafe fn LvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNR6Inline12LvalueMethodEv(__this)
@@ -130,7 +130,7 @@ impl Inline {
 }
 
 impl Inline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=19
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=19
     #[inline(always)]
     pub unsafe fn LvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKR6Inline17LvalueMethodConstEv(__this)
@@ -138,7 +138,7 @@ impl Inline {
 }
 
 impl Inline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=20
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=20
     #[inline(always)]
     pub unsafe fn RvalueMethod(__this: *mut Self) {
         crate::detail::__rust_thunk___ZNO6Inline12RvalueMethodEv(__this)
@@ -146,7 +146,7 @@ impl Inline {
 }
 
 impl Inline {
-    /// rs_bindings_from_cc/test/golden/method_qualifiers.h;l=21
+    /// Generated from: rs_bindings_from_cc/test/golden/method_qualifiers.h;l=21
     #[inline(always)]
     pub unsafe fn RvalueMethodConst(__this: *const Self) {
         crate::detail::__rust_thunk___ZNKO6Inline17RvalueMethodConstEv(__this)

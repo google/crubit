@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FirstStruct {
@@ -25,7 +25,7 @@ pub struct FirstStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("FirstStruct"), crate::FirstStruct);
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 impl Default for FirstStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -37,7 +37,7 @@ impl Default for FirstStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -49,21 +49,21 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=10
+// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
 // Error while generating bindings for item 'FirstStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=14
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=14
 #[inline(always)]
 pub fn first_func() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z10first_funcv() }
 }
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SecondStruct {
@@ -71,7 +71,7 @@ pub struct SecondStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SecondStruct"), crate::SecondStruct);
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 impl Default for SecondStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -83,7 +83,7 @@ impl Default for SecondStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -95,15 +95,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/item_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
 // Error while generating bindings for item 'SecondStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/item_order.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=20
 #[inline(always)]
 pub fn second_func() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z11second_funcv() }

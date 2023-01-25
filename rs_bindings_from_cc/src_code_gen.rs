@@ -4187,7 +4187,7 @@ mod tests {
             rs_api,
             quote! {
                 impl __CcTemplateInst10MyTemplateIiE {
-                    #[doc = " google3/test/dependency_header.h;l=4"]
+                    #[doc = " Generated from: google3/test/dependency_header.h;l=4"]
                     #[inline(always)]
                     pub fn GetValue<'a>(self: ... Pin<&'a mut Self>) -> i32 { unsafe {
                         crate::detail::__rust_thunk___ZN10MyTemplateIiE8GetValueEv__2f_2ftest_3atesting_5ftarget(
@@ -5739,7 +5739,7 @@ mod tests {
             // leading space is intentional so there is a space between /// and the text of the
             // comment
             quote! {
-                #[doc = " Doc Comment\n with two lines\n \n google3/ir_from_cc_virtual_header.h;l=6"]
+                #[doc = " Doc Comment\n with two lines\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=6"]
                 #[inline(always)]
                 pub fn func
             }
@@ -5763,7 +5763,7 @@ mod tests {
         assert_rs_matches!(
             generate_bindings_tokens(ir)?.rs_api,
             quote! {
-                #[doc = " Doc Comment\n \n  * with bullet\n \n google3/ir_from_cc_virtual_header.h;l=6"]
+                #[doc = " Doc Comment\n \n  * with bullet\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=6"]
                 #[derive(Clone, Copy)]
                 #[repr(C)]
                 pub struct SomeStruct {
@@ -6455,7 +6455,7 @@ mod tests {
         let rs_api = generate_bindings_tokens(ir)?.rs_api;
         assert_rs_not_matches!(rs_api, quote! {impl From});
         assert_rs_matches!(rs_api, {
-            let txt = "google3/ir_from_cc_virtual_header.h;l=34\n\
+            let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=34\n\
                            Error while generating bindings for item 'Foo::Foo':\n\
                            The lifetime of `__this` is \
                                unexpectedly also used by another parameter: Lifetime(\"a\")";
@@ -7108,7 +7108,7 @@ mod tests {
 
         // Cannot overload free functions.
         assert_cc_matches!(rs_api, {
-            let txt = "google3/ir_from_cc_virtual_header.h;l=4\n\
+            let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
                            Error while generating bindings for item 'f':\n\
                            Cannot generate bindings for overloaded function";
             quote! { __COMMENT__ #txt }
@@ -7117,7 +7117,7 @@ mod tests {
         assert_rs_not_matches!(rs_api, quote! {pub fn f(i: i32)});
 
         assert_cc_matches!(rs_api, {
-            let txt = "google3/ir_from_cc_virtual_header.h;l=7\n\
+            let txt = "Generated from: google3/ir_from_cc_virtual_header.h;l=7\n\
                            Error while generating bindings for item 'S1::f':\n\
                            Cannot generate bindings for overloaded function";
             quote! { __COMMENT__ #txt }
@@ -7162,7 +7162,7 @@ mod tests {
         assert_rs_matches!(
             rs_api,
             quote! {
-                #[doc = " MyTypedefDecl doc comment\n \n google3/ir_from_cc_virtual_header.h;l=5"]
+                #[doc = " MyTypedefDecl doc comment\n \n Generated from: google3/ir_from_cc_virtual_header.h;l=5"]
                 pub type MyTypedefDecl = i32;
             }
         );

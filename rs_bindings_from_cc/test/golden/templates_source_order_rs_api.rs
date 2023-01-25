@@ -17,11 +17,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=8
 // Error while generating bindings for item 'MyTemplate':
 // Class templates are not supported yet
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct TopLevel {
@@ -29,46 +29,46 @@ pub struct TopLevel {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::TopLevel);
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::TopLevel':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::TopLevel':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::TopLevel':
 // Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
 // Parameter #0 is not supported: Unsupported type 'TopLevel &&': Unsupported type: && without lifetime
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=18
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=18
 pub type Alias1 = crate::__CcTemplateInst10MyTemplateIiE;
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=19
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=19
 pub type Alias2 = crate::__CcTemplateInst10MyTemplateIfE;
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=20
 pub type Alias3 = crate::__CcTemplateInst10MyTemplateI8TopLevelE;
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=21
 pub type Alias4 = crate::__CcTemplateInst10MyTemplateIdE;
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=22
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=22
 pub type Alias5 = crate::__CcTemplateInst10MyTemplateIbE;
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=23
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=23
 pub type Alias6 = crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE;
 
 pub mod test_namespace_bindings {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct Inner {
@@ -79,33 +79,33 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::Inner
     );
 
-    // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
+    // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'Inner::Inner':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-    // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
+    // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'Inner::Inner':
     // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-    // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
+    // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'test_namespace_bindings::Inner::Inner':
     // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
 
-    // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
+    // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'Inner::operator=':
     // operator= for Unpin types is not yet supported.
 
-    // rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
+    // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'test_namespace_bindings::Inner::operator=':
     // Parameter #0 is not supported: Unsupported type 'Inner &&': Unsupported type: && without lifetime
 
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=27
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=27
     pub type Alias7 = crate::__CcTemplateInst10MyTemplateIcE;
 
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=28
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=28
     pub type Alias8 = crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE;
 
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=29
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=29
     pub type Alias9 = crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE;
 }
 
@@ -113,7 +113,7 @@ pub mod test_namespace_bindings {
 
 // THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TEMPLATES_SOURCE_ORDER_H_
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateI8TopLevelE {
@@ -127,35 +127,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateI8TopLevelE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate<TopLevel>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate<TopLevel>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<TopLevel> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateI8TopLevelE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: crate::TopLevel) {
         crate::detail::__rust_thunk___ZN10MyTemplateI8TopLevelE8processTES0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
@@ -169,35 +169,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate<test_namespace_bindings::Inner>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate<test_namespace_bindings::Inner>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<Inner> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIN23test_namespace_bindings5InnerEE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: crate::test_namespace_bindings::Inner) {
         crate::detail::__rust_thunk___ZN10MyTemplateIN23test_namespace_bindings5InnerEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
@@ -211,35 +211,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIS_I8TopLevelEE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate<MyTemplate<TopLevel>>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate<MyTemplate<TopLevel>>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<TopLevel> > &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIS_I8TopLevelEE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: crate::__CcTemplateInst10MyTemplateI8TopLevelE) {
         crate::detail::__rust_thunk___ZN10MyTemplateIS_I8TopLevelEE8processTES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
@@ -253,28 +253,28 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate<MyTemplate<test_namespace_bindings::Inner>>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<MyTemplate<Inner> > &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(
         __this: *mut Self,
@@ -284,7 +284,7 @@ impl __CcTemplateInst10MyTemplateIS_IN23test_namespace_bindings5InnerEEE {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIbE {
@@ -298,35 +298,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIbE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate<bool>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate<bool>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<_Bool> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIbE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: bool) {
         crate::detail::__rust_thunk___ZN10MyTemplateIbE8processTEb__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIcE {
@@ -340,35 +340,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIcE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate<char>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate<char>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<char> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIcE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: u8) {
         crate::detail::__rust_thunk___ZN10MyTemplateIcE8processTEc__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct __CcTemplateInst10MyTemplateIdE {
@@ -382,35 +382,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIdE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate<double>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate<double>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<double> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIdE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: f64) {
         crate::detail::__rust_thunk___ZN10MyTemplateIdE8processTEd__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIfE {
@@ -424,35 +424,35 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIfE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate<float>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate<float>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<float> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIfE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: f32) {
         crate::detail::__rust_thunk___ZN10MyTemplateIfE8processTEf__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)
     }
 }
 
-/// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+/// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct __CcTemplateInst10MyTemplateIiE {
@@ -466,28 +466,28 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIiE
 );
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate<int>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::MyTemplate':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
+// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
 // Parameter #0 is not supported: Unsupported type 'MyTemplate<int> &&': Unsupported type: && without lifetime
 
 impl __CcTemplateInst10MyTemplateIiE {
-    /// rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
+    /// Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=13
     #[inline(always)]
     pub unsafe fn processT(__this: *mut Self, t: i32) {
         crate::detail::__rust_thunk___ZN10MyTemplateIiE8processTEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fsource_5forder_5fcc(__this,t)

@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct SomeStruct {
@@ -25,7 +25,7 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 impl ::ctor::CtorNew<()> for SomeStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -41,7 +41,7 @@ impl ::ctor::CtorNew<()> for SomeStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 impl<'b> ::ctor::CtorNew<&'b Self> for SomeStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -66,7 +66,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for SomeStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -91,7 +91,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for SomeStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -101,7 +101,7 @@ impl<'b> ::ctor::Assign<&'b Self> for SomeStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=10
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn assign<'a>(
@@ -114,15 +114,15 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=11
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=11
 // Error while generating bindings for item 'nested_type':
 // Typedefs nested in classes are not supported yet
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=13
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=13
 // Error while generating bindings for item 'SomeStruct':
 // Typedef only used to introduce a name in C. Not importing.
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct SomeOtherStruct {
@@ -133,7 +133,7 @@ forward_declare::unsafe_define!(
     crate::SomeOtherStruct
 );
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 impl ::ctor::CtorNew<()> for SomeOtherStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -149,7 +149,7 @@ impl ::ctor::CtorNew<()> for SomeOtherStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 impl<'b> ::ctor::CtorNew<&'b Self> for SomeOtherStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -174,7 +174,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for SomeOtherStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -199,7 +199,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for SomeOtherStru
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 impl<'b> ::ctor::Assign<&'b Self> for SomeOtherStruct {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -209,7 +209,7 @@ impl<'b> ::ctor::Assign<&'b Self> for SomeOtherStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=15
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
     #[inline(always)]
     fn assign<'a>(
@@ -222,7 +222,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for SomeOtherStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=18
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union SomeUnion {
@@ -230,7 +230,7 @@ pub union SomeUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeUnion"), crate::SomeUnion);
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=18
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
 impl Default for SomeUnion {
     #[inline(always)]
     fn default() -> Self {
@@ -242,7 +242,7 @@ impl Default for SomeUnion {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=18
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -254,19 +254,19 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=18
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
 // Error while generating bindings for item 'SomeUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=18
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
 // Error while generating bindings for item 'SomeUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=19
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=19
 // Error while generating bindings for item 'SomeUnion':
 // Typedef only used to introduce a name in C. Not importing.
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union SomeOtherUnion {
@@ -274,7 +274,7 @@ pub union SomeOtherUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeOtherUnion"), crate::SomeOtherUnion);
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
 impl Default for SomeOtherUnion {
     #[inline(always)]
     fn default() -> Self {
@@ -286,7 +286,7 @@ impl Default for SomeOtherUnion {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -298,15 +298,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=21
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
 // Error while generating bindings for item 'SomeOtherUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/typedefs.h;l=21
+// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
 // Error while generating bindings for item 'SomeOtherUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/typedefs.h;l=24
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=24
 #[inline(always)]
 pub fn FunctionUsingNestedType() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z23FunctionUsingNestedTypev() }

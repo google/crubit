@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_unsupported.h;l=12
 #[inline(always)]
 pub fn UseNontrivialCustomType(
     non_trivial_custom_type: impl ::ctor::Ctor<Output = unsupported_cc::NontrivialCustomType>,

@@ -666,10 +666,12 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
   // line argument.
   // TODO(b/261185414): Consider linking to the symbol instead of to the line
   // number to avoid wrong links while generated files have not caught up.
-  constexpr auto kSourceLocationFunc = [](absl::string_view filename,
-                                          uint32_t line) {
-    return absl::Substitute("google3/$0;l=$1", filename, line);
-  };
+  constexpr absl::string_view kGeneratedFrom = "Generated from";
+  constexpr absl::string_view kExpandedAt = "Expanded at";
+  constexpr auto kSourceLocationFunc =
+      [](absl::string_view origin, absl::string_view filename, uint32_t line) {
+        return absl::Substitute("$0: google3/$1;l=$2", origin, filename, line);
+      };
   constexpr absl::string_view kSourceLocUnknown = "<unknown location>";
   std::string spelling_loc_str;
   if (absl::string_view spelling_filename = sm.getFilename(spelling_loc);
@@ -680,7 +682,8 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
     if (absl::StartsWith(spelling_filename, "./")) {
       spelling_filename = spelling_filename.substr(2);
     }
-    spelling_loc_str = kSourceLocationFunc(spelling_filename, spelling_line);
+    spelling_loc_str =
+        kSourceLocationFunc(kGeneratedFrom, spelling_filename, spelling_line);
   }
   if (!loc.isMacroID()) {
     return spelling_loc_str;
@@ -695,10 +698,10 @@ std::string Importer::ConvertSourceLocation(clang::SourceLocation loc) const {
     if (absl::StartsWith(expansion_filename, "./")) {
       expansion_filename = expansion_filename.substr(2);
     }
-    expansion_loc_str = kSourceLocationFunc(expansion_filename, expansion_line);
+    expansion_loc_str =
+        kSourceLocationFunc(kExpandedAt, expansion_filename, expansion_line);
   }
-  return absl::StrCat(spelling_loc_str, "\n",
-                      "Expanded at: ", expansion_loc_str);
+  return absl::StrCat(spelling_loc_str, "\n", expansion_loc_str);
 }
 
 absl::StatusOr<MappedType> Importer::ConvertTemplateSpecializationType(

@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union EmptyUnion {
@@ -25,7 +25,7 @@ pub union EmptyUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("EmptyUnion"), crate::EmptyUnion);
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
 impl Default for EmptyUnion {
     #[inline(always)]
     fn default() -> Self {
@@ -37,7 +37,7 @@ impl Default for EmptyUnion {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=10
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -49,15 +49,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unions.h;l=10
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
 // Error while generating bindings for item 'EmptyUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unions.h;l=10
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
 // Error while generating bindings for item 'EmptyUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=12
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Nontrivial {
@@ -66,7 +66,7 @@ pub struct Nontrivial {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nontrivial"), crate::Nontrivial);
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=13
 impl ::ctor::CtorNew<()> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -82,7 +82,7 @@ impl ::ctor::CtorNew<()> for Nontrivial {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=14
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=14
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Nontrivial {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -107,7 +107,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Nontrivial {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=19
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=19
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct TriviallyCopyableButNontriviallyDestructible {
@@ -118,7 +118,7 @@ forward_declare::unsafe_define!(
     crate::TriviallyCopyableButNontriviallyDestructible
 );
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=19
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=19
 impl<'b> ::ctor::Assign<&'b Self> for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -130,7 +130,7 @@ impl<'b> ::ctor::Assign<&'b Self> for TriviallyCopyableButNontriviallyDestructib
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=20
 impl<'b> ::ctor::CtorNew<&'b Self> for TriviallyCopyableButNontriviallyDestructible {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -152,7 +152,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for TriviallyCopyableButNontriviallyDestru
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=22
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=22
 impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -160,7 +160,7 @@ impl ::ctor::PinnedDrop for TriviallyCopyableButNontriviallyDestructible {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union NonEmptyUnion {
@@ -171,7 +171,7 @@ pub union NonEmptyUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonEmptyUnion"), crate::NonEmptyUnion);
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
 impl Default for NonEmptyUnion {
     #[inline(always)]
     fn default() -> Self {
@@ -183,7 +183,7 @@ impl Default for NonEmptyUnion {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -195,15 +195,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unions.h;l=25
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unions.h;l=25
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
 // Error while generating bindings for item 'NonEmptyUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=32
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=32
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub union NonCopyUnion {
@@ -212,7 +212,7 @@ pub union NonCopyUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion"), crate::NonCopyUnion);
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=37
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub union NonCopyUnion2 {
@@ -222,15 +222,15 @@ pub union NonCopyUnion2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("NonCopyUnion2"), crate::NonCopyUnion2);
 
-// rs_bindings_from_cc/test/golden/unions.h;l=37
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=37
 // Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
 // Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
 
-// rs_bindings_from_cc/test/golden/unions.h;l=37
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=37
 // Error while generating bindings for item 'NonCopyUnion2::NonCopyUnion2':
 // Can't directly construct values of type `NonCopyUnion2` as it has a non-public or deleted destructor
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=37
 impl<'b> ::ctor::Assign<&'b Self> for NonCopyUnion2 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -240,7 +240,7 @@ impl<'b> ::ctor::Assign<&'b Self> for NonCopyUnion2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=37
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NonCopyUnion2 {
     #[inline(always)]
     fn assign<'a>(
@@ -253,7 +253,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NonCopyUnion2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union UnionWithOpaqueField {
@@ -266,7 +266,7 @@ forward_declare::unsafe_define!(
     crate::UnionWithOpaqueField
 );
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
 impl Default for UnionWithOpaqueField {
     #[inline(always)]
     fn default() -> Self {
@@ -278,7 +278,7 @@ impl Default for UnionWithOpaqueField {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -290,15 +290,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unions.h;l=42
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
 // Error while generating bindings for item 'UnionWithOpaqueField::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unions.h;l=42
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
 // Error while generating bindings for item 'UnionWithOpaqueField::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct TrivialButInheritable {
@@ -309,7 +309,7 @@ forward_declare::unsafe_define!(
     crate::TrivialButInheritable
 );
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 impl ::ctor::CtorNew<()> for TrivialButInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -325,7 +325,7 @@ impl ::ctor::CtorNew<()> for TrivialButInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 impl<'b> ::ctor::CtorNew<&'b Self> for TrivialButInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -350,7 +350,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for TrivialButInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -375,7 +375,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for TrivialButInh
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 impl<'b> ::ctor::Assign<&'b Self> for TrivialButInheritable {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -385,7 +385,7 @@ impl<'b> ::ctor::Assign<&'b Self> for TrivialButInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialButInheritable {
     #[inline(always)]
     fn assign<'a>(
@@ -398,7 +398,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialButInherit
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=50
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=50
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub union UnionWithInheritable {
@@ -409,7 +409,7 @@ forward_declare::unsafe_define!(
     crate::UnionWithInheritable
 );
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=50
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=50
 impl ::ctor::CtorNew<()> for UnionWithInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -425,7 +425,7 @@ impl ::ctor::CtorNew<()> for UnionWithInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=50
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=50
 impl<'b> ::ctor::CtorNew<&'b Self> for UnionWithInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -450,7 +450,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for UnionWithInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=50
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=50
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -475,7 +475,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for UnionWithInhe
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=50
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=50
 impl<'b> ::ctor::Assign<&'b Self> for UnionWithInheritable {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -485,7 +485,7 @@ impl<'b> ::ctor::Assign<&'b Self> for UnionWithInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=50
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=50
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for UnionWithInheritable {
     #[inline(always)]
     fn assign<'a>(
@@ -498,7 +498,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for UnionWithInherita
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=54
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub union TypedefUnion {
@@ -506,7 +506,7 @@ pub union TypedefUnion {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("TypedefUnion"), crate::TypedefUnion);
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=54
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
 impl Default for TypedefUnion {
     #[inline(always)]
     fn default() -> Self {
@@ -518,7 +518,7 @@ impl Default for TypedefUnion {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=54
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -530,15 +530,15 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
     }
 }
 
-// rs_bindings_from_cc/test/golden/unions.h;l=54
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
 // Error while generating bindings for item 'TypedefUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/unions.h;l=54
+// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
 // Error while generating bindings for item 'TypedefUnion::operator=':
 // operator= for Unpin types is not yet supported.
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub union TypedefUnionWithInheritable {
@@ -549,7 +549,7 @@ forward_declare::unsafe_define!(
     crate::TypedefUnionWithInheritable
 );
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 impl ::ctor::CtorNew<()> for TypedefUnionWithInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -565,7 +565,7 @@ impl ::ctor::CtorNew<()> for TypedefUnionWithInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 impl<'b> ::ctor::CtorNew<&'b Self> for TypedefUnionWithInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -590,7 +590,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for TypedefUnionWithInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -615,7 +615,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for TypedefUnionW
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 impl<'b> ::ctor::Assign<&'b Self> for TypedefUnionWithInheritable {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -625,7 +625,7 @@ impl<'b> ::ctor::Assign<&'b Self> for TypedefUnionWithInheritable {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/unions.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TypedefUnionWithInheritable {
     #[inline(always)]
     fn assign<'a>(

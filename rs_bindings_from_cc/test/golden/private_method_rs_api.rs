@@ -17,11 +17,11 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=8
+// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=8
 // Error while generating bindings for item 'Ptr':
 // Class templates are not supported yet
 
-/// rs_bindings_from_cc/test/golden/private_method.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=17
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Outer {
@@ -29,23 +29,23 @@ pub struct Outer {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Outer"), crate::Outer);
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=17
+// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=17
 // Error while generating bindings for item 'Outer::Outer':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=17
+// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=17
 // Error while generating bindings for item 'Outer::Outer':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=17
+// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=17
 // Error while generating bindings for item 'Outer::Outer':
 // Parameter #0 is not supported: Unsupported type 'Outer &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=17
+// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=17
 // Error while generating bindings for item 'Outer::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// rs_bindings_from_cc/test/golden/private_method.h;l=17
+// Generated from: rs_bindings_from_cc/test/golden/private_method.h;l=17
 // Error while generating bindings for item 'Outer::operator=':
 // Parameter #0 is not supported: Unsupported type 'Outer &&': Unsupported type: && without lifetime
 

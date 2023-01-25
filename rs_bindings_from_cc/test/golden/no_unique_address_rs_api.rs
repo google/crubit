@@ -23,7 +23,7 @@
 /// coverage for working accessor functions, while the latter helps manually
 /// inspect and verify the expected layout of the generated Rust struct.
 ///
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct Struct {
@@ -42,7 +42,7 @@ impl Struct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 impl Default for Struct {
     #[inline(always)]
     fn default() -> Self {
@@ -54,7 +54,7 @@ impl Default for Struct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -66,16 +66,16 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 // Error while generating bindings for item 'Struct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
 // Error while generating bindings for item 'Struct::operator=':
 // operator= for Unpin types is not yet supported.
 
 impl Struct {
-    /// rs_bindings_from_cc/test/golden/no_unique_address.h;l=16
+    /// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=16
     #[inline(always)]
     pub fn Make(f1: i32, f2: u8) -> crate::Struct {
         unsafe { crate::detail::__rust_thunk___ZN6Struct4MakeEic(f1, f2) }
@@ -88,7 +88,7 @@ impl Struct {
 /// compile-time assertions of field offsets in the generated Rust code.  Before
 /// cl/448287893 `field2` would be incorrectly placed at offset 1.
 ///
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct PaddingBetweenFields {
@@ -108,7 +108,7 @@ impl PaddingBetweenFields {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 impl Default for PaddingBetweenFields {
     #[inline(always)]
     fn default() -> Self {
@@ -120,7 +120,7 @@ impl Default for PaddingBetweenFields {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -132,16 +132,16 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
     }
 }
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 // Error while generating bindings for item 'PaddingBetweenFields::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
 // Error while generating bindings for item 'PaddingBetweenFields::operator=':
 // operator= for Unpin types is not yet supported.
 
 impl PaddingBetweenFields {
-    /// rs_bindings_from_cc/test/golden/no_unique_address.h;l=29
+    /// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=29
     #[inline(always)]
     pub fn Make(f1: u8, f2: i32) -> crate::PaddingBetweenFields {
         unsafe { crate::detail::__rust_thunk___ZN20PaddingBetweenFields4MakeEci(f1, f2) }
@@ -154,7 +154,7 @@ impl PaddingBetweenFields {
 ///   (4 bytes for `inner_int_field`, 1 byte for `inner_char_field`)
 /// - size: 8 (dsize adjusted up to account for alignment)
 ///
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct FieldInTailPadding_InnerStruct {
@@ -168,7 +168,7 @@ forward_declare::unsafe_define!(
     crate::FieldInTailPadding_InnerStruct
 );
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
 impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -184,7 +184,7 @@ impl ::ctor::CtorNew<()> for FieldInTailPadding_InnerStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
 impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding_InnerStruct {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -209,7 +209,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding_InnerStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=42
 impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding_InnerStruct {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -224,7 +224,7 @@ impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding_InnerStruct {
 /// User-defined destructor to make this struct non-POD for the purposes of
 /// layout.
 ///
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=48
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=48
 impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -241,7 +241,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding_InnerStruct {
 /// code.  The initial alignment-based fix idea for b/232418721 would incorrectly
 /// put `char_in_tail_padding_of_prev_field` at offset 8.
 ///
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
 pub struct FieldInTailPadding {
@@ -262,7 +262,7 @@ impl FieldInTailPadding {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
 impl<'b> ::ctor::CtorNew<&'b Self> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -287,7 +287,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for FieldInTailPadding {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -312,7 +312,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for FieldInTailPa
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
 impl ::ctor::PinnedDrop for FieldInTailPadding {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -320,7 +320,7 @@ impl ::ctor::PinnedDrop for FieldInTailPadding {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
 impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -330,7 +330,7 @@ impl<'b> ::ctor::Assign<&'b Self> for FieldInTailPadding {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=59
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for FieldInTailPadding {
     #[inline(always)]
     fn assign<'a>(
@@ -343,7 +343,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for FieldInTailPaddin
     }
 }
 
-/// rs_bindings_from_cc/test/golden/no_unique_address.h;l=60
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=60
 impl ::ctor::CtorNew<(i32, u8, u8)> for FieldInTailPadding {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]

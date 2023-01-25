@@ -17,13 +17,13 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=12
 #[inline(always)]
 pub fn UsesImportedType(t: trivial_type_cc::ns::Trivial) -> trivial_type_cc::ns::Trivial {
     unsafe { crate::detail::__rust_thunk___Z16UsesImportedTypeN2ns7TrivialE(t) }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct UserOfImportedType {
@@ -34,7 +34,7 @@ forward_declare::unsafe_define!(
     crate::UserOfImportedType
 );
 
-/// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 impl Default for UserOfImportedType {
     #[inline(always)]
     fn default() -> Self {
@@ -46,7 +46,7 @@ impl Default for UserOfImportedType {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -58,11 +58,11 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
     }
 }
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
 // Error while generating bindings for item 'UserOfImportedType::operator=':
 // operator= for Unpin types is not yet supported.
 

@@ -23,7 +23,7 @@
 ///
 /// TODO(b/216195042): Correctly namespace base classes in generated Rust code.
 ///
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct Derived2 {
@@ -32,7 +32,7 @@ pub struct Derived2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived2"), crate::Derived2);
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
 impl ::ctor::CtorNew<()> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -48,7 +48,7 @@ impl ::ctor::CtorNew<()> for Derived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
 impl<'b> ::ctor::CtorNew<&'b Self> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -73,7 +73,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Derived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Derived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -98,7 +98,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Derived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
 impl<'b> ::ctor::Assign<&'b Self> for Derived2 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -108,7 +108,7 @@ impl<'b> ::ctor::Assign<&'b Self> for Derived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=17
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Derived2 {
     #[inline(always)]
     fn assign<'a>(
@@ -137,7 +137,7 @@ unsafe impl oops::Inherits<inheritance_cc::Base2> for crate::Derived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualDerived2 {
@@ -148,7 +148,7 @@ forward_declare::unsafe_define!(
     crate::VirtualDerived2
 );
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
 impl ::ctor::CtorNew<()> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -164,7 +164,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -189,7 +189,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -214,7 +214,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerive
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
 impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived2 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -224,7 +224,7 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived2 {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_base_class.h;l=21
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualDerived2 {
     #[inline(always)]
     fn assign<'a>(

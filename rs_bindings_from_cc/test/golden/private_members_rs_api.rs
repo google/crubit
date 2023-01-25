@@ -18,7 +18,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 pub mod test_namespace_bindings {
-    /// rs_bindings_from_cc/test/golden/private_members.h;l=11
+    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     #[derive(Clone, Copy)]
     #[repr(C, align(4))]
     pub struct SomeClass {
@@ -33,7 +33,7 @@ pub mod test_namespace_bindings {
         crate::test_namespace_bindings::SomeClass
     );
 
-    /// rs_bindings_from_cc/test/golden/private_members.h;l=11
+    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     impl Default for SomeClass {
         #[inline(always)]
         fn default() -> Self {
@@ -45,7 +45,7 @@ pub mod test_namespace_bindings {
         }
     }
 
-    /// rs_bindings_from_cc/test/golden/private_members.h;l=11
+    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
         #[inline(always)]
         fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -59,16 +59,16 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // rs_bindings_from_cc/test/golden/private_members.h;l=11
+    // Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     // Error while generating bindings for item 'SomeClass::operator=':
     // operator= for Unpin types is not yet supported.
 
-    // rs_bindings_from_cc/test/golden/private_members.h;l=11
+    // Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
     // Error while generating bindings for item 'SomeClass::operator=':
     // operator= for Unpin types is not yet supported.
 
     impl SomeClass {
-        /// rs_bindings_from_cc/test/golden/private_members.h;l=13
+        /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=13
         #[inline(always)]
         pub fn public_method<'a>(&'a mut self) {
             unsafe {
@@ -80,7 +80,7 @@ pub mod test_namespace_bindings {
     }
 
     impl SomeClass {
-        /// rs_bindings_from_cc/test/golden/private_members.h;l=14
+        /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=14
         #[inline(always)]
         pub fn public_static_method() {
             unsafe {

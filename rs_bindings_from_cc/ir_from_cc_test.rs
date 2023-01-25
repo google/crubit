@@ -78,7 +78,7 @@ fn test_function() {
                 member_func_metadata: None,
                 has_c_calling_convention: true,
                 is_member_or_descendant_of_class_template: false,
-                source_loc: "google3/ir_from_cc_virtual_header.h;l=3",
+                source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
                 id: ItemId(...),
                 enclosing_namespace_id: None,
                 adl_enclosing_record: None,
@@ -2181,7 +2181,7 @@ fn test_record_with_unsupported_base() -> Result<()> {
                id: ItemId(...),
                owning_target: BazelLabel("//test:testing_target"),
                doc_comment: Some(...),
-               source_loc: "google3/ir_from_cc_virtual_header.h;l=15",
+               source_loc: "Generated from: google3/ir_from_cc_virtual_header.h;l=15",
                unambiguous_public_bases: [],
                fields: [Field {
                    identifier: Some("derived_field"), ...
@@ -3650,7 +3650,7 @@ fn test_source_location_with_macro() {
   void fun_name();
 
 NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
-            "google3/ir_from_cc_virtual_header.h;l=5\n\
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
              Expanded at: google3/ir_from_cc_virtual_header.h;l=7",
         ),
         (
@@ -3658,7 +3658,7 @@ NO_OP_FUNC(no_op_func_to_test_source_location_with_macro);"#,
             r#"
 #define TYPE_ALIAS_TO_INT(type_alias) using type_alias = int;
 TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
-            "google3/ir_from_cc_virtual_header.h;l=4\n\
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
              Expanded at: google3/ir_from_cc_virtual_header.h;l=5",
         ),
         (
@@ -3667,7 +3667,7 @@ TYPE_ALIAS_TO_INT(MyIntToTestSourceLocationWithMacro);"#,
 #define TEMPLATE_NO_OP_FUNC(func_name) \
 template <typename T> void func_name() {};
   TEMPLATE_NO_OP_FUNC(unsupported_templated_no_op_func_to_test_source_location_with_macro);"#,
-            "google3/ir_from_cc_virtual_header.h;l=4\n\
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=4\n\
              Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
         ),
         (
@@ -3676,7 +3676,7 @@ template <typename T> void func_name() {};
 #define DEFINE_EMPTY_ENUM(enum_name) \
   enum enum_name {};
 DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
-            "google3/ir_from_cc_virtual_header.h;l=5\n\
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
              Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
         ),
         (
@@ -3685,7 +3685,7 @@ DEFINE_EMPTY_ENUM(EmptyEnumToTestSourceLocationWithMacro);"#,
 #define DEFINE_EMPTY_STRUCT(struct_name) \
   struct struct_name {};
 DEFINE_EMPTY_STRUCT(EmptyStructToTestSourceLocationWithMacro);"#,
-            "google3/ir_from_cc_virtual_header.h;l=5\n\
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=5\n\
              Expanded at: google3/ir_from_cc_virtual_header.h;l=6",
         ),
     ] {
@@ -3709,28 +3709,28 @@ fn test_source_location() {
         (
             quote! {Func},
             "void no_op_func_to_test_source_location();",
-            "google3/ir_from_cc_virtual_header.h;l=3",
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
         ),
         (
             quote! {TypeAlias},
             r#"
 typedef float SomeTypedefToTestSourceLocation;"#,
-            "google3/ir_from_cc_virtual_header.h;l=4",
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=4",
         ),
         (
             quote! {UnsupportedItem},
             r#"  template <typename T> void unsupported_templated_func_to_test_source_location() {}"#,
-            "google3/ir_from_cc_virtual_header.h;l=3",
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
         ),
         (
             quote! {Enum},
             r#"enum SomeEmptyEnumToTestSourceLocation {};"#,
-            "google3/ir_from_cc_virtual_header.h;l=3",
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
         ),
         (
             quote! {Record},
             r#"struct SomeEmptyStructToTestSourceLocation {};"#,
-            "google3/ir_from_cc_virtual_header.h;l=3",
+            "Generated from: google3/ir_from_cc_virtual_header.h;l=3",
         ),
     ] {
         let ir = ir_from_cc(cc_snippet).unwrap();
@@ -3753,7 +3753,7 @@ fn test_source_location_with_macro_defined_in_another_file() {
 #define MyIntTypeAliasToTestSourceLocation(type_alias_name) using type_alias_name = int;"#;
     let header = "MyIntTypeAliasToTestSourceLocation(my_int);";
     let ir = ir_from_cc_dependency(header, dependency_header).unwrap();
-    let expected_source_loc = "google3/test/dependency_header.h;l=2\n\
+    let expected_source_loc = "Generated from: google3/test/dependency_header.h;l=2\n\
                                Expanded at: google3/ir_from_cc_virtual_header.h;l=3";
     assert_ir_matches!(
         ir,
@@ -3774,7 +3774,7 @@ fn test_source_location_class_template_specialization() {
     let cc_snippet = "template <typename T> class MyClassTemplateToTestSourceLocation { T t_; };
     using MyClassTemplateSpecializationToTestSourceLocation = MyClassTemplateToTestSourceLocation<bool>;";
     let ir = ir_from_cc(cc_snippet).unwrap();
-    let expected_source_loc = "google3/ir_from_cc_virtual_header.h;l=4";
+    let expected_source_loc = "Generated from: google3/ir_from_cc_virtual_header.h;l=4";
     assert_ir_matches!(
         ir,
         quote! {

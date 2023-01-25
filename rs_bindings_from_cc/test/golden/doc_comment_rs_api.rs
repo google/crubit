@@ -21,7 +21,7 @@
 ///
 ///  * with three slashes
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentSlashes {
@@ -34,7 +34,7 @@ forward_declare::unsafe_define!(
     crate::DocCommentSlashes
 );
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -46,18 +46,18 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=13
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=13
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
 // Error while generating bindings for item 'DocCommentSlashes::operator=':
 // operator= for Unpin types is not yet supported.
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=16
 impl Default for DocCommentSlashes {
     #[inline(always)]
     fn default() -> Self {
@@ -72,7 +72,7 @@ impl Default for DocCommentSlashes {
 /// An implicit conversion constructor which will get translated into `impl
 /// From<int> for DocCommentSlashes`.
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=21
 impl From<i32> for DocCommentSlashes {
     #[inline(always)]
     fn from(__param_0: i32) -> Self {
@@ -87,7 +87,7 @@ impl From<i32> for DocCommentSlashes {
 impl DocCommentSlashes {
     /// A non-static member function (`const` flavor).
     ///
-    /// rs_bindings_from_cc/test/golden/doc_comment.h;l=24
+    /// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=24
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> i32 {
         unsafe { crate::detail::__rust_thunk___ZNK17DocCommentSlashes15get_field_valueEv(self) }
@@ -97,7 +97,7 @@ impl DocCommentSlashes {
 impl DocCommentSlashes {
     /// A non-static member function (non-`const` flavor).
     ///
-    /// rs_bindings_from_cc/test/golden/doc_comment.h;l=27
+    /// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=27
     #[inline(always)]
     pub fn set_field_value<'a>(&'a mut self, new_value: i32) {
         unsafe {
@@ -109,7 +109,7 @@ impl DocCommentSlashes {
 impl DocCommentSlashes {
     /// A static method.
     ///
-    /// rs_bindings_from_cc/test/golden/doc_comment.h;l=30
+    /// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=30
     #[inline(always)]
     pub fn static_method() -> i32 {
         unsafe { crate::detail::__rust_thunk___ZN17DocCommentSlashes13static_methodEv() }
@@ -120,7 +120,7 @@ impl DocCommentSlashes {
 ///
 ///  * with slashes and bang
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct DocCommentBang {
@@ -129,7 +129,7 @@ pub struct DocCommentBang {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("DocCommentBang"), crate::DocCommentBang);
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 impl Default for DocCommentBang {
     #[inline(always)]
     fn default() -> Self {
@@ -141,7 +141,7 @@ impl Default for DocCommentBang {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -153,11 +153,11 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'DocCommentBang::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
 // Error while generating bindings for item 'DocCommentBang::operator=':
 // operator= for Unpin types is not yet supported.
 
@@ -165,7 +165,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
 ///
 ///  with two stars
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MultilineCommentTwoStars {
@@ -177,7 +177,7 @@ forward_declare::unsafe_define!(
     crate::MultilineCommentTwoStars
 );
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 impl Default for MultilineCommentTwoStars {
     #[inline(always)]
     fn default() -> Self {
@@ -189,7 +189,7 @@ impl Default for MultilineCommentTwoStars {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -201,11 +201,11 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
 // Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
 // operator= for Unpin types is not yet supported.
 
@@ -213,7 +213,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
 ///
 ///  * with two slashes
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct LineComment {
@@ -222,7 +222,7 @@ pub struct LineComment {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("LineComment"), crate::LineComment);
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 impl Default for LineComment {
     #[inline(always)]
     fn default() -> Self {
@@ -234,7 +234,7 @@ impl Default for LineComment {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -246,11 +246,11 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 // Error while generating bindings for item 'LineComment::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
 // Error while generating bindings for item 'LineComment::operator=':
 // operator= for Unpin types is not yet supported.
 
@@ -258,7 +258,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
 ///
 ///  with one star
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MultilineOneStar {
@@ -270,7 +270,7 @@ forward_declare::unsafe_define!(
     crate::MultilineOneStar
 );
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 impl Default for MultilineOneStar {
     #[inline(always)]
     fn default() -> Self {
@@ -282,7 +282,7 @@ impl Default for MultilineOneStar {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -294,17 +294,17 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 // Error while generating bindings for item 'MultilineOneStar::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
 // Error while generating bindings for item 'MultilineOneStar::operator=':
 // operator= for Unpin types is not yet supported.
 
 /// A function
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=69
 #[inline(always)]
 pub fn foo() -> i32 {
     unsafe { crate::detail::__rust_thunk___Z3foov() }
@@ -312,10 +312,10 @@ pub fn foo() -> i32 {
 
 /// A type alias
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=72
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=72
 pub type MyTypeAlias = crate::DocCommentSlashes;
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=75
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=75
 // Error while generating bindings for item 'MyTemplate':
 // Class templates are not supported yet
 
@@ -327,19 +327,19 @@ pub type MyTypeAlias = crate::DocCommentSlashes;
 
 /// Type alias to template instantiation.
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=95
 pub type MyInstantiation = crate::__CcTemplateInst10MyTemplateIiE;
 
 /// Type alias to instantiation of a template specialization.
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=98
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=98
 pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=101
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=101
 // Error while generating bindings for item 'OuterTemplate':
 // Class templates are not supported yet
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=111
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=111
 // Error while generating bindings for item 'ConcreteNestedStruct':
 // Unsupported type 'struct OuterTemplate<int>::NestedStruct': No generated bindings found for 'NestedStruct'
 
@@ -347,7 +347,7 @@ pub type MySpecializedInstantiation = crate::__CcTemplateInst10MyTemplateIfE;
 
 /// Class template.
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIiE {
@@ -359,7 +359,7 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIiE
 );
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 impl Default for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     fn default() -> Self {
@@ -371,7 +371,7 @@ impl Default for __CcTemplateInst10MyTemplateIiE {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIiE {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -383,11 +383,11 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
 // operator= for Unpin types is not yet supported.
 
@@ -396,7 +396,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
 impl __CcTemplateInst10MyTemplateIiE {
     /// A non-static member function.
     ///
-    /// rs_bindings_from_cc/test/golden/doc_comment.h;l=78
+    /// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=78
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> &'a i32 {
         unsafe {
@@ -407,7 +407,7 @@ impl __CcTemplateInst10MyTemplateIiE {
 
 /// Class template specialization.
 ///
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct __CcTemplateInst10MyTemplateIfE {
@@ -419,7 +419,7 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInst10MyTemplateIfE
 );
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 impl Default for __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
     fn default() -> Self {
@@ -431,7 +431,7 @@ impl Default for __CcTemplateInst10MyTemplateIfE {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplateIfE {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -443,18 +443,18 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
     }
 }
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
 // operator= for Unpin types is not yet supported.
 
 impl __CcTemplateInst10MyTemplateIfE {
     /// A non-static member function in a specialization.
     ///
-    /// rs_bindings_from_cc/test/golden/doc_comment.h;l=88
+    /// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=88
     #[inline(always)]
     pub fn get_field_value<'a>(&'a self) -> &'a f32 {
         unsafe {

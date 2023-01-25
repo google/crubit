@@ -19,7 +19,7 @@
 
 /// A comment immediate above the macro expansion.
 ///
-/// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=8
+/// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=8
 /// Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -31,34 +31,34 @@ forward_declare::unsafe_define!(
     crate::StructFromMacro
 );
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 // Error while generating bindings for item 'StructFromMacro::StructFromMacro':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 // Error while generating bindings for item 'StructFromMacro::StructFromMacro':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 // Error while generating bindings for item 'StructFromMacro::StructFromMacro':
 // Parameter #0 is not supported: Unsupported type 'StructFromMacro &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 // Error while generating bindings for item 'StructFromMacro::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 // Error while generating bindings for item 'StructFromMacro::operator=':
 // Parameter #0 is not supported: Unsupported type 'StructFromMacro &&': Unsupported type: && without lifetime
 
 // A comment on a field of macro-generated struct.
 
-/// rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=8
+/// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=8
 /// Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=19
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -67,27 +67,27 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=19
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=19
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=19
 // Error while generating bindings for item 'SomeStruct::SomeStruct':
 // Parameter #0 is not supported: Unsupported type 'SomeStruct &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=19
 // Error while generating bindings for item 'SomeStruct::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=19
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'SomeStruct &&': Unsupported type: && without lifetime
@@ -96,7 +96,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::S
 
 /// A doc comment on SomeStruct3 immediately above the macro expansion.
 ///
-/// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=23
+/// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=23
 /// Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 #[::ctor::recursively_pinned]
 #[repr(C)]
@@ -105,27 +105,27 @@ pub struct SomeStruct3 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct3"), crate::SomeStruct3);
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Error while generating bindings for item 'SomeStruct3::SomeStruct3':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Error while generating bindings for item 'SomeStruct3::SomeStruct3':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Error while generating bindings for item 'SomeStruct3::SomeStruct3':
 // Parameter #0 is not supported: Unsupported type 'SomeStruct3 &&': Unsupported type: && without lifetime
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Error while generating bindings for item 'SomeStruct3::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
+// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29
 // Error while generating bindings for item 'SomeStruct3::operator=':
 // Parameter #0 is not supported: Unsupported type 'SomeStruct3 &&': Unsupported type: && without lifetime

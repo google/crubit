@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
@@ -25,7 +25,7 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-/// rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -37,7 +37,7 @@ impl Default for SomeStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -49,17 +49,17 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     }
 }
 
-// rs_bindings_from_cc/test/golden/types.h;l=13
+// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
-// rs_bindings_from_cc/test/golden/types.h;l=13
+// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
 // Error while generating bindings for item 'SomeStruct::operator=':
 // operator= for Unpin types is not yet supported.
 
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
-/// rs_bindings_from_cc/test/golden/types.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=17
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct FieldTypeTestStruct {
@@ -127,7 +127,7 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-/// rs_bindings_from_cc/test/golden/types.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=17
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -139,7 +139,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     }
 }
 
-/// rs_bindings_from_cc/test/golden/types.h;l=89
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=89
 #[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
@@ -169,14 +169,14 @@ impl From<Color> for u32 {
 /// returning a function. In ML-like syntax:
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
 ///
-/// rs_bindings_from_cc/test/golden/types.h;l=97
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=97
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
 {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
-/// rs_bindings_from_cc/test/golden/types.h;l=101
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=101
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::std::os::raw::c_void,
@@ -187,7 +187,7 @@ pub unsafe fn FunctionWithVoidPointers(
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_TYPES_H_
 
-/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+/// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u17integral_constantIbLb0EEE {
@@ -198,45 +198,45 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstNSt3__u17integral_constantIbLb0EEE
 );
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::std::integral_constant<bool, false>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::std::integral_constant<bool, false>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::integral_constant':
 // Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator=':
 // Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, false> &&': Unsupported type: && without lifetime
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
 // Error while generating bindings for item 'value_type':
 // Typedefs nested in classes are not supported yet
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
 // Error while generating bindings for item 'type':
 // Typedefs nested in classes are not supported yet
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
 // Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=26
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator bool':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
 // Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=29
 // Error while generating bindings for item 'std::integral_constant<bool, false>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
-/// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+/// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct __CcTemplateInstNSt3__u17integral_constantIbLb1EEE {
@@ -247,40 +247,40 @@ forward_declare::unsafe_define!(
     crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE
 );
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::std::integral_constant<bool, true>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::std::integral_constant<bool, true>':
 // Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::integral_constant':
 // Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
 // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=21
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator=':
 // Parameter #0 is not supported: Unsupported type 'integral_constant<_Bool, true> &&': Unsupported type: && without lifetime
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=24
 // Error while generating bindings for item 'value_type':
 // Typedefs nested in classes are not supported yet
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=25
 // Error while generating bindings for item 'type':
 // Typedefs nested in classes are not supported yet
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
 // Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=26
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator bool':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
-// google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__config;l=543
 // Expanded at: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/integral_constant.h;l=29
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
