@@ -221,7 +221,11 @@ llvm::Optional<CFGElement> diagnoseReturn(
     const ReturnStmt* RS, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
-  assert(ReturnType->isPointerType());
+
+  // TODO: Handle non-pointer return types.
+  if (!ReturnType->isPointerType()) {
+    return std::nullopt;
+  }
 
   auto* ReturnExpr = RS->getRetValue();
   assert(ReturnExpr->getType()->isPointerType());
