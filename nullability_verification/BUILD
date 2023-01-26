@@ -58,6 +58,7 @@ cc_library(
     srcs = ["pointer_nullability.cc"],
     hdrs = ["pointer_nullability.h"],
     deps = [
+        ":pointer_nullability_lattice",
         "@absl//absl/log:check",
         "@llvm-project//clang:analysis",
         "@llvm-project//clang:ast",

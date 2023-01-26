@@ -38,17 +38,6 @@ using dataflow::Value;
 
 namespace {
 
-// Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
-template <typename T>
-void dump(const T& Node, llvm::raw_ostream& OS) {
-  clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
-}
-
-std::vector<NullabilityKind> unspecifiedNullability(const Expr* E) {
-  return std::vector<NullabilityKind>(countPointersInType(E),
-                                      NullabilityKind::Unspecified);
-}
-
 std::vector<NullabilityKind> prepend(NullabilityKind Head,
                                      ArrayRef<NullabilityKind> Tail) {
   std::vector<NullabilityKind> Result = {Head};
@@ -80,23 +69,6 @@ void computeNullability(const Expr* E,
       Nullability.assign(ExpectedSize, NullabilityKind::Unspecified);
     }
     return Nullability;
-  });
-}
-
-// Returns the computed nullability for a subexpr of the current expression.
-// This is always available as we compute bottom-up.
-ArrayRef<NullabilityKind> getNullabilityForChild(
-    const Expr* E, TransferState<PointerNullabilityLattice>& State) {
-  return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
-    // Since we process child nodes before parents, we should already have
-    // computed the child nullability. However, this is not true in all test
-    // cases. So, we return unspecified nullability annotations.
-    // TODO: fix this issue, and CHECK() instead.
-    llvm::dbgs() << "=== Missing child nullability: ===\n";
-    dump(E, llvm::dbgs());
-    llvm::dbgs() << "==================================\n";
-
-    return unspecifiedNullability(E);
   });
 }
 

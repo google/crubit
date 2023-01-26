@@ -5,7 +5,11 @@
 #include "nullability_verification/pointer_nullability.h"
 
 #include "absl/log/check.h"
+#include "nullability_verification/pointer_nullability_lattice.h"
+#include "clang/AST/ASTDumper.h"
 #include "clang/AST/TypeVisitor.h"
+#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
+#include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "llvm/ADT/StringRef.h"
 
@@ -18,6 +22,7 @@ using dataflow::BoolValue;
 using dataflow::Environment;
 using dataflow::PointerValue;
 using dataflow::SkipPast;
+using dataflow::TransferState;
 
 /// The nullness information of a pointer is represented by two properties
 /// which indicate if a pointer's nullability (i.e., if the pointer can hold
@@ -233,6 +238,26 @@ std::vector<NullabilityKind> getNullabilityAnnotationsFromType(
   AnnotationVisitor.SubstituteTypeParam = SubstituteTypeParam;
   AnnotationVisitor.Visit(T);
   return std::move(AnnotationVisitor.Annotations);
+}
+
+std::vector<NullabilityKind> unspecifiedNullability(const Expr* E) {
+  return std::vector<NullabilityKind>(countPointersInType(E),
+                                      NullabilityKind::Unspecified);
+}
+
+ArrayRef<NullabilityKind> getNullabilityForChild(
+    const Expr* E, TransferState<PointerNullabilityLattice>& State) {
+  return State.Lattice.insertExprNullabilityIfAbsent(E, [&] {
+    // Since we process child nodes before parents, we should already have
+    // computed the child nullability. However, this is not true in all test
+    // cases. So, we return unspecified nullability annotations.
+    // TODO: fix this issue, and CHECK() instead.
+    llvm::dbgs() << "=== Missing child nullability: ===\n";
+    dump(E, llvm::dbgs());
+    llvm::dbgs() << "==================================\n";
+
+    return unspecifiedNullability(E);
+  });
 }
 
 }  // namespace nullability

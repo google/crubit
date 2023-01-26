@@ -7,8 +7,11 @@
 
 #include <utility>
 
+#include "nullability_verification/pointer_nullability_lattice.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTDumper.h"
 #include "clang/AST/Expr.h"
+#include "clang/Analysis/FlowSensitive/CFGMatchSwitch.h"
 #include "clang/Analysis/FlowSensitive/DataflowEnvironment.h"
 #include "clang/Analysis/FlowSensitive/Value.h"
 #include "clang/Basic/Specifiers.h"
@@ -16,6 +19,8 @@
 namespace clang {
 namespace tidy {
 namespace nullability {
+
+using dataflow::TransferState;
 
 /// Returns the `NullabilityKind` corresponding to the nullability annotation on
 /// `Type` if present. Otherwise, returns `NullabilityKind::Unspecified`.
@@ -114,6 +119,19 @@ unsigned countPointersInType(const Expr* E);
 unsigned countPointersInType(TemplateArgument TA);
 
 QualType exprType(const Expr* E);
+
+std::vector<NullabilityKind> unspecifiedNullability(const Expr* E);
+
+// Work around the lack of Expr.dump() etc with an ostream but no ASTContext.
+template <typename T>
+void dump(const T& Node, llvm::raw_ostream& OS) {
+  clang::ASTDumper(OS, /*ShowColors=*/false).Visit(Node);
+}
+
+// Returns the computed nullability for a subexpr of the current expression.
+// This is always available as we compute bottom-up.
+ArrayRef<NullabilityKind> getNullabilityForChild(
+    const Expr* E, TransferState<PointerNullabilityLattice>& State);
 
 }  // namespace nullability
 }  // namespace tidy
