@@ -45,7 +45,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("S"), crate::S);
 
 // Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/no_elided_lifetimes.h;l=10
 // Error while generating bindings for item 'S::operator=':

@@ -49,13 +49,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
-// Error while generating bindings for item 'SomeStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
-// Error while generating bindings for item 'SomeStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10SomeStructaSEOS_(self, __param_0);
+        }
+    }
+}
 
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
@@ -296,6 +308,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::SomeStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN10SomeStructaSERKS_<'a, 'b>(
+            __this: &'a mut crate::SomeStruct,
+            __param_0: &'b crate::SomeStruct,
+        ) -> &'a mut crate::SomeStruct;
+        pub(crate) fn __rust_thunk___ZN10SomeStructaSEOS_<'a, 'b>(
+            __this: &'a mut crate::SomeStruct,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeStruct>,
+        ) -> &'a mut crate::SomeStruct;
         pub(crate) fn __rust_thunk___ZN19FieldTypeTestStructC1EOS_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::FieldTypeTestStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::FieldTypeTestStruct>,

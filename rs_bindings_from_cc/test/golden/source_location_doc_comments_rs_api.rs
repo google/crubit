@@ -17,13 +17,12 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// A comment immediate above the macro expansion.
-///
 /// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=8
 /// Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct StructFromMacro {
+    /// A comment immediate above the macro expansion.
     pub val: i32,
 }
 forward_declare::unsafe_define!(
@@ -49,7 +48,7 @@ forward_declare::unsafe_define!(
 // Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
 // Error while generating bindings for item 'StructFromMacro::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments_macro_def.h;l=14
 // Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=11
@@ -63,6 +62,7 @@ forward_declare::unsafe_define!(
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct SomeStruct {
+    /// A comment on a field of macro-generated struct.
     pub some_field: i32,
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
@@ -92,9 +92,9 @@ forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::S
 // Error while generating bindings for item 'SomeStruct::operator=':
 // Parameter #0 is not supported: Unsupported type 'SomeStruct &&': Unsupported type: && without lifetime
 
-// A comment on a macro-generated struct.
+// A doc comment on SomeStruct3 immediately above the macro expansion.
 
-/// A doc comment on SomeStruct3 immediately above the macro expansion.
+/// A comment on a macro-generated struct.
 ///
 /// Generated from: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=23
 /// Expanded at: rs_bindings_from_cc/test/golden/source_location_doc_comments.h;l=29

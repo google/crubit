@@ -1057,6 +1057,13 @@ impl<'a, T: Unpin + CtorNew<ConstRvalueReference<'a, T>>> Assign<ConstRvalueRefe
         }
     }
 }
+
+/// Overloaded assignment operator, but for Unpin types
+///  TODO(b/219963671): use specialization instead of a distinct trait
+pub trait UnpinAssign<From> {
+    fn unpin_assign(&mut self, src: From);
+}
+
 // =======================
 // Constructor overloading
 // =======================

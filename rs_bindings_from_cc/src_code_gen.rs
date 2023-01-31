@@ -823,16 +823,25 @@ fn api_func_shape(
             );
             let record =
                 maybe_record.ok_or_else(|| anyhow!("operator= must be a member function."))?;
-            if record.is_unpin() {
-                bail!("operator= for Unpin types is not yet supported.");
-            }
             materialize_ctor_in_caller(func, param_types);
+
             let rhs = &param_types[1];
+
+            //  TODO(b/219963671): consolidate UnpinAssign and Assign in ctor.rs
+            let trait_name;
+            if record.is_unpin() {
+                trait_name = quote! {::ctor::UnpinAssign};
+                func_name = make_rs_ident("unpin_assign");
+            } else {
+                trait_name = quote! {::ctor::Assign};
+                func_name = make_rs_ident("assign")
+            };
+
             impl_kind = {
                 ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: quote! {::ctor::Assign},
+                        name: trait_name,
                         params: vec![rhs.clone()],
                         is_unsafe_fn: false,
                     },
@@ -844,7 +853,6 @@ fn api_func_shape(
                     force_const_reference_params: false,
                 }
             };
-            func_name = make_rs_ident("assign");
         }
         UnqualifiedIdentifier::Operator(op) => match op_meta
             .by_cc_name_and_params

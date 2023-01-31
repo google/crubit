@@ -25,6 +25,18 @@ extern "C" void __rust_thunk___ZN23test_namespace_bindings1SC1EOS0_(
     struct test_namespace_bindings::S* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" struct test_namespace_bindings::S*
+__rust_thunk___ZN23test_namespace_bindings1SaSERKS0_(
+    struct test_namespace_bindings::S* __this,
+    const struct test_namespace_bindings::S* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" struct test_namespace_bindings::S*
+__rust_thunk___ZN23test_namespace_bindings1SaSEOS0_(
+    struct test_namespace_bindings::S* __this,
+    struct test_namespace_bindings::S* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void
 __rust_thunk___ZN23test_namespace_bindings15inline_functionEv() {
   test_namespace_bindings::inline_function();
@@ -39,6 +51,18 @@ __rust_thunk___ZN32test_namespace_bindings_reopened5inner1SC1EOS1_(
     struct test_namespace_bindings_reopened::inner::S* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" struct test_namespace_bindings_reopened::inner::S*
+__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSERKS1_(
+    struct test_namespace_bindings_reopened::inner::S* __this,
+    const struct test_namespace_bindings_reopened::inner::S* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" struct test_namespace_bindings_reopened::inner::S*
+__rust_thunk___ZN32test_namespace_bindings_reopened5inner1SaSEOS1_(
+    struct test_namespace_bindings_reopened::inner::S* __this,
+    struct test_namespace_bindings_reopened::inner::S* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void
 __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceC1Ev(
     struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
@@ -52,6 +76,22 @@ __rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespace
     struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
         __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
+__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSERKS1_(
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
+        __this,
+    const struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
+        __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
+__rust_thunk___ZN30test_namespace_bindings_inline5inner23StructInInlineNamespaceaSEOS1_(
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
+        __this,
+    struct test_namespace_bindings_inline::inner::StructInInlineNamespace*
+        __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN4impl3fooEv() { impl::foo(); }
 

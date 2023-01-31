@@ -566,17 +566,35 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpi
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=70
-// Error while generating bindings for item 'NontrivialUnpin::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=70
+impl<'b> ::ctor::UnpinAssign<&'b Self> for NontrivialUnpin {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=71
-// Error while generating bindings for item 'NontrivialUnpin::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=71
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinaSEOS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=72
-// Error while generating bindings for item 'NontrivialUnpin::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=72
+impl ::ctor::UnpinAssign<i32> for NontrivialUnpin {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: i32) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15NontrivialUnpinaSEi(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=73
 impl Drop for NontrivialUnpin {
@@ -978,6 +996,21 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::NontrivialUnpin>,
             __param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>,
         );
+        #[link_name = "_ZN15NontrivialUnpinaSERKS_"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinaSERKS_<'a, 'b>(
+            __this: &'a mut crate::NontrivialUnpin,
+            __param_0: &'b crate::NontrivialUnpin,
+        ) -> &'a mut crate::NontrivialUnpin;
+        #[link_name = "_ZN15NontrivialUnpinaSEOS_"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinaSEOS_<'a, 'b>(
+            __this: &'a mut crate::NontrivialUnpin,
+            __param_0: ::ctor::RvalueReference<'b, crate::NontrivialUnpin>,
+        ) -> &'a mut crate::NontrivialUnpin;
+        #[link_name = "_ZN15NontrivialUnpinaSEi"]
+        pub(crate) fn __rust_thunk___ZN15NontrivialUnpinaSEi<'a>(
+            __this: &'a mut crate::NontrivialUnpin,
+            __param_0: i32,
+        ) -> &'a mut crate::NontrivialUnpin;
         #[link_name = "_ZN15NontrivialUnpinD1Ev"]
         pub(crate) fn __rust_thunk___ZN15NontrivialUnpinD1Ev<'a>(
             __this: &'a mut crate::NontrivialUnpin,

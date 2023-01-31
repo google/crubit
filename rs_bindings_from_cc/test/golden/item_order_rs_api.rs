@@ -49,13 +49,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FirstStruct {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
-// Error while generating bindings for item 'FirstStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
+impl<'b> ::ctor::UnpinAssign<&'b Self> for FirstStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11FirstStructaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
-// Error while generating bindings for item 'FirstStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=10
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for FirstStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11FirstStructaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=14
 #[inline(always)]
@@ -95,13 +107,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SecondStruct {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
-// Error while generating bindings for item 'SecondStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
+impl<'b> ::ctor::UnpinAssign<&'b Self> for SecondStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12SecondStructaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
-// Error while generating bindings for item 'SecondStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=16
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SecondStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12SecondStructaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/item_order.h;l=20
 #[inline(always)]
@@ -122,6 +146,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::FirstStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN11FirstStructaSERKS_<'a, 'b>(
+            __this: &'a mut crate::FirstStruct,
+            __param_0: &'b crate::FirstStruct,
+        ) -> &'a mut crate::FirstStruct;
+        pub(crate) fn __rust_thunk___ZN11FirstStructaSEOS_<'a, 'b>(
+            __this: &'a mut crate::FirstStruct,
+            __param_0: ::ctor::RvalueReference<'b, crate::FirstStruct>,
+        ) -> &'a mut crate::FirstStruct;
         pub(crate) fn __rust_thunk___Z10first_funcv() -> i32;
         pub(crate) fn __rust_thunk___ZN12SecondStructC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::SecondStruct>,
@@ -130,6 +162,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::SecondStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN12SecondStructaSERKS_<'a, 'b>(
+            __this: &'a mut crate::SecondStruct,
+            __param_0: &'b crate::SecondStruct,
+        ) -> &'a mut crate::SecondStruct;
+        pub(crate) fn __rust_thunk___ZN12SecondStructaSEOS_<'a, 'b>(
+            __this: &'a mut crate::SecondStruct,
+            __param_0: ::ctor::RvalueReference<'b, crate::SecondStruct>,
+        ) -> &'a mut crate::SecondStruct;
         pub(crate) fn __rust_thunk___Z11second_funcv() -> i32;
     }
 }

@@ -49,13 +49,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for r#type {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
-// Error while generating bindings for item 'type::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
+impl<'b> ::ctor::UnpinAssign<&'b Self> for r#type {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN4typeaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
-// Error while generating bindings for item 'type::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=10
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for r#type {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN4typeaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/escaping_keywords.h;l=14
 #[inline(always)]
@@ -84,6 +96,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::r#type>,
             __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
         );
+        pub(crate) fn __rust_thunk___ZN4typeaSERKS_<'a, 'b>(
+            __this: &'a mut crate::r#type,
+            __param_0: &'b crate::r#type,
+        ) -> &'a mut crate::r#type;
+        pub(crate) fn __rust_thunk___ZN4typeaSEOS_<'a, 'b>(
+            __this: &'a mut crate::r#type,
+            __param_0: ::ctor::RvalueReference<'b, crate::r#type>,
+        ) -> &'a mut crate::r#type;
         #[link_name = "_Z4impli"]
         pub(crate) fn __rust_thunk___Z4impli(r#match: i32);
     }

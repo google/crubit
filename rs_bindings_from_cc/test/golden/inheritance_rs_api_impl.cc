@@ -80,6 +80,14 @@ extern "C" void __rust_thunk___ZN7DerivedC1EOS_(struct Derived* __this,
                                                 struct Derived* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" struct Derived* __rust_thunk___ZN7DerivedaSERKS_(
+    struct Derived* __this, const struct Derived* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" struct Derived* __rust_thunk___ZN7DerivedaSEOS_(
+    struct Derived* __this, struct Derived* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void __rust_thunk___ZN12VirtualBase1C1Ev(
     class VirtualBase1* __this) {
   crubit::construct_at(__this);
@@ -189,6 +197,14 @@ extern "C" void __rust_thunk___ZN13MethodDerivedC1Ev(
 extern "C" void __rust_thunk___ZN13MethodDerivedC1EOS_(
     class MethodDerived* __this, class MethodDerived* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" class MethodDerived* __rust_thunk___ZN13MethodDerivedaSERKS_(
+    class MethodDerived* __this, const class MethodDerived* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" class MethodDerived* __rust_thunk___ZN13MethodDerivedaSEOS_(
+    class MethodDerived* __this, class MethodDerived* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(class Base0) == 1);

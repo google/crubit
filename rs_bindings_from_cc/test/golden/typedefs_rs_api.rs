@@ -254,13 +254,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeUnion {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
-// Error while generating bindings for item 'SomeUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
+impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeUnionaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
-// Error while generating bindings for item 'SomeUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=18
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeUnionaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=19
 // Error while generating bindings for item 'SomeUnion':
@@ -298,13 +310,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
-// Error while generating bindings for item 'SomeOtherUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
+impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeOtherUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14SomeOtherUnionaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
-// Error while generating bindings for item 'SomeOtherUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=21
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeOtherUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14SomeOtherUnionaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/typedefs.h;l=24
 #[inline(always)]
@@ -363,6 +387,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::SomeUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
         );
+        pub(crate) fn __rust_thunk___ZN9SomeUnionaSERKS_<'a, 'b>(
+            __this: &'a mut crate::SomeUnion,
+            __param_0: &'b crate::SomeUnion,
+        ) -> &'a mut crate::SomeUnion;
+        pub(crate) fn __rust_thunk___ZN9SomeUnionaSEOS_<'a, 'b>(
+            __this: &'a mut crate::SomeUnion,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeUnion>,
+        ) -> &'a mut crate::SomeUnion;
         pub(crate) fn __rust_thunk___ZN14SomeOtherUnionC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherUnion>,
         );
@@ -370,6 +402,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::SomeOtherUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
         );
+        pub(crate) fn __rust_thunk___ZN14SomeOtherUnionaSERKS_<'a, 'b>(
+            __this: &'a mut crate::SomeOtherUnion,
+            __param_0: &'b crate::SomeOtherUnion,
+        ) -> &'a mut crate::SomeOtherUnion;
+        pub(crate) fn __rust_thunk___ZN14SomeOtherUnionaSEOS_<'a, 'b>(
+            __this: &'a mut crate::SomeOtherUnion,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeOtherUnion>,
+        ) -> &'a mut crate::SomeOtherUnion;
         #[link_name = "_Z23FunctionUsingNestedTypev"]
         pub(crate) fn __rust_thunk___Z23FunctionUsingNestedTypev() -> i32;
     }

@@ -354,13 +354,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
-// Error while generating bindings for item 'Derived::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Derived {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN7DerivedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
-// Error while generating bindings for item 'Derived::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Derived {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN7DerivedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 unsafe impl oops::Inherits<crate::Base0> for crate::Derived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::Base0 {
@@ -994,13 +1006,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodDerived {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
-// Error while generating bindings for item 'MethodDerived::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodDerived {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13MethodDerivedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
-// Error while generating bindings for item 'MethodDerived::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MethodDerived {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13MethodDerivedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 unsafe impl oops::Inherits<crate::MethodBase1> for crate::MethodDerived {
     unsafe fn upcast_ptr(derived: *const Self) -> *const crate::MethodBase1 {
@@ -1083,6 +1107,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::Derived>,
             __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
         );
+        pub(crate) fn __rust_thunk___ZN7DerivedaSERKS_<'a, 'b>(
+            __this: &'a mut crate::Derived,
+            __param_0: &'b crate::Derived,
+        ) -> &'a mut crate::Derived;
+        pub(crate) fn __rust_thunk___ZN7DerivedaSEOS_<'a, 'b>(
+            __this: &'a mut crate::Derived,
+            __param_0: ::ctor::RvalueReference<'b, crate::Derived>,
+        ) -> &'a mut crate::Derived;
         pub(crate) fn __rust_thunk___ZN12VirtualBase1C1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::VirtualBase1>,
         );
@@ -1224,6 +1256,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::MethodDerived>,
             __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
         );
+        pub(crate) fn __rust_thunk___ZN13MethodDerivedaSERKS_<'a, 'b>(
+            __this: &'a mut crate::MethodDerived,
+            __param_0: &'b crate::MethodDerived,
+        ) -> &'a mut crate::MethodDerived;
+        pub(crate) fn __rust_thunk___ZN13MethodDerivedaSEOS_<'a, 'b>(
+            __this: &'a mut crate::MethodDerived,
+            __param_0: ::ctor::RvalueReference<'b, crate::MethodDerived>,
+        ) -> &'a mut crate::MethodDerived;
     }
 }
 

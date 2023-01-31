@@ -23,6 +23,14 @@ extern "C" void __rust_thunk___ZN10SomeStructC1EOS_(
     struct SomeStruct* __this, struct SomeStruct* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSERKS_(
+    struct SomeStruct* __this, const struct SomeStruct* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" struct SomeStruct* __rust_thunk___ZN10SomeStructaSEOS_(
+    struct SomeStruct* __this, struct SomeStruct* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void __rust_thunk___ZN19FieldTypeTestStructC1EOS_(
     struct FieldTypeTestStruct* __this, struct FieldTypeTestStruct* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));

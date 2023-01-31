@@ -49,13 +49,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DifferentScope {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
-// Error while generating bindings for item 'DifferentScope::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
+impl<'b> ::ctor::UnpinAssign<&'b Self> for DifferentScope {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DifferentScopeaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
-// Error while generating bindings for item 'DifferentScope::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=10
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DifferentScope {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DifferentScopeaSEOS_(self, __param_0);
+        }
+    }
+}
 
 pub mod test_namespace_bindings {
     // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=14
@@ -108,13 +120,29 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
-    // Error while generating bindings for item 'TemplateParam::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
+    impl<'b> ::ctor::UnpinAssign<&'b Self> for TemplateParam {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamaSERKS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
-    // Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
-    // Error while generating bindings for item 'TemplateParam::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=32
+    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TemplateParam {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings13TemplateParamaSEOS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
     /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=33
     pub type TemplateWithStructTemplateParam =
@@ -346,13 +374,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
-// Error while generating bindings for item 'test_namespace_bindings::MyTemplate<DifferentScope>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
-// Error while generating bindings for item 'test_namespace_bindings::MyTemplate<DifferentScope>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE {
     /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=17
@@ -418,13 +462,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
-// Error while generating bindings for item 'test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
-// Error while generating bindings for item 'test_namespace_bindings::MyTemplate<test_namespace_bindings::TemplateParam>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE {
     /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=17
@@ -488,13 +548,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
-// Error while generating bindings for item 'test_namespace_bindings::MyTemplate<int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
-// Error while generating bindings for item 'test_namespace_bindings::MyTemplate<int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=15
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE {
     /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=17
@@ -556,13 +632,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
-// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
-// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<test_namespace_bindings::TemplateWithTwoParams<int, int>, int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 #[derive(Clone, Copy)]
@@ -602,13 +694,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
-// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, float>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
-// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, float>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
 #[derive(Clone, Copy)]
@@ -648,13 +756,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
-// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
-// Error while generating bindings for item 'test_namespace_bindings::TemplateWithTwoParams<int, int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=37
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 /// Explicit class template specialization with definition should be imported
 /// even when not instantiated if there is a type alias for it.
@@ -794,13 +918,29 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
-// Error while generating bindings for item 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
+impl<'b> ::ctor::UnpinAssign<&'b Self>
+    for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
-// Error while generating bindings for item 'MyTopLevelTemplate<test_namespace_bindings::TemplateParam>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/templates.h;l=80
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(self,__param_0);
+        }
+    }
+}
 
 forward_declare::forward_declare!(pub __CcTemplateInst18MyTopLevelTemplateIiE = forward_declare::symbol!("__CcTemplateInst18MyTopLevelTemplateIiE"));
 
@@ -933,6 +1073,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::DifferentScope>,
             __param_0: ::ctor::RvalueReference<'b, crate::DifferentScope>,
         );
+        pub(crate) fn __rust_thunk___ZN14DifferentScopeaSERKS_<'a, 'b>(
+            __this: &'a mut crate::DifferentScope,
+            __param_0: &'b crate::DifferentScope,
+        ) -> &'a mut crate::DifferentScope;
+        pub(crate) fn __rust_thunk___ZN14DifferentScopeaSEOS_<'a, 'b>(
+            __this: &'a mut crate::DifferentScope,
+            __param_0: ::ctor::RvalueReference<'b, crate::DifferentScope>,
+        ) -> &'a mut crate::DifferentScope;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::TemplateParam>,
         );
@@ -940,6 +1088,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::TemplateParam>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamaSERKS0_<'a, 'b>(
+            __this: &'a mut crate::test_namespace_bindings::TemplateParam,
+            __param_0: &'b crate::test_namespace_bindings::TemplateParam,
+        ) -> &'a mut crate::test_namespace_bindings::TemplateParam;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings13TemplateParamaSEOS0_<'a, 'b>(
+            __this: &'a mut crate::test_namespace_bindings::TemplateParam,
+            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::TemplateParam>,
+        ) -> &'a mut crate::test_namespace_bindings::TemplateParam;
         #[link_name = "_Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE"]
         pub(crate) fn __rust_thunk___Z36processForwardDeclaredSpecializationP18MyTopLevelTemplateIiE<
             'a,
@@ -981,6 +1137,23 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
             >,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+            __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE,
+            >,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateI14DifferentScopeE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: crate::DifferentScope,
         ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateI14DifferentScopeEE;
@@ -1008,6 +1181,8 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,
             >,
         );
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE)->&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE>)->&'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateINS_13TemplateParamEE6CreateES1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: crate::test_namespace_bindings::TemplateParam,
         ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateINS_13TemplateParamEEE;
@@ -1035,6 +1210,23 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
             >,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
+            __param_0: &'b crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE,
+            >,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings10MyTemplateIiE6CreateEi__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc(
             value: i32,
         ) -> crate::__CcTemplateInstN23test_namespace_bindings10MyTemplateIiEE;
@@ -1055,6 +1247,8 @@ mod detail {
             __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
             __param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>,
         );
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,__param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE)->&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE;
+        pub(crate)fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE>)->&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsINS0_IiiEEiEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1074,6 +1268,23 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
             >,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+            __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIifEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE,
+            >,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIifEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1093,6 +1304,23 @@ mod detail {
                 crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
             >,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEaSERKS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            __param_0:&'b crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings21TemplateWithTwoParamsIiiEaSEOS1___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
+            'a,
+            'b,
+        >(
+            __this:&'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            __param_0: ::ctor::RvalueReference<
+                'b,
+                crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE,
+            >,
+        ) -> &'a mut crate::__CcTemplateInstN23test_namespace_bindings21TemplateWithTwoParamsIiiEE;
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings8MyStructIcEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(
@@ -1154,6 +1382,8 @@ mod detail {
             __this:&'a mut::std::mem::MaybeUninit<crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
             __param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>,
         );
+        pub(crate)fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSERKS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,__param_0:&'b crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE)->&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE;
+        pub(crate)fn __rust_thunk___ZN18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEEaSEOS2___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<'a,'b>(__this:&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE,__param_0: ::ctor::RvalueReference<'b,crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE>)->&'a mut crate::__CcTemplateInst18MyTopLevelTemplateIN23test_namespace_bindings13TemplateParamEE;
         pub(crate) fn __rust_thunk___ZN24template_template_params10MyTemplateINS_6PolicyEEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3atemplates_5fcc<
             'a,
         >(

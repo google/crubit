@@ -46,13 +46,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
-// Error while generating bindings for item 'DocCommentSlashes::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
+impl<'b> ::ctor::UnpinAssign<&'b Self> for DocCommentSlashes {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
-// Error while generating bindings for item 'DocCommentSlashes::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=13
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DocCommentSlashes {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17DocCommentSlashesaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// The default constructor which will get translated into
 /// `impl Default for DocCommentSlashes`.
@@ -153,13 +165,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
-// Error while generating bindings for item 'DocCommentBang::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+impl<'b> ::ctor::UnpinAssign<&'b Self> for DocCommentBang {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DocCommentBangaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
-// Error while generating bindings for item 'DocCommentBang::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=39
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for DocCommentBang {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN14DocCommentBangaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Multiline comment
 ///
@@ -201,13 +225,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
-// Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+impl<'b> ::ctor::UnpinAssign<&'b Self> for MultilineCommentTwoStars {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
-// Error while generating bindings for item 'MultilineCommentTwoStars::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=47
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MultilineCommentTwoStars {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN24MultilineCommentTwoStarsaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Line comment
 ///
@@ -246,13 +282,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for LineComment {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
-// Error while generating bindings for item 'LineComment::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+impl<'b> ::ctor::UnpinAssign<&'b Self> for LineComment {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11LineCommentaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
-// Error while generating bindings for item 'LineComment::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=55
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for LineComment {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11LineCommentaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Multiline comment
 ///
@@ -294,13 +342,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
-// Error while generating bindings for item 'MultilineOneStar::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+impl<'b> ::ctor::UnpinAssign<&'b Self> for MultilineOneStar {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16MultilineOneStaraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
-// Error while generating bindings for item 'MultilineOneStar::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=63
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MultilineOneStar {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16MultilineOneStaraSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// A function
 ///
@@ -383,13 +443,27 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
-// Error while generating bindings for item 'MyTemplate<int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+impl<'b> ::ctor::UnpinAssign<&'b Self> for __CcTemplateInst10MyTemplateIiE {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
-// Error while generating bindings for item 'MyTemplate<int>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=76
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInst10MyTemplateIiE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self,__param_0);
+        }
+    }
+}
 
 // A non-static member function.
 
@@ -443,13 +517,27 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for __CcTemplateInst10MyTemplat
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
-// Error while generating bindings for item 'MyTemplate<float>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+impl<'b> ::ctor::UnpinAssign<&'b Self> for __CcTemplateInst10MyTemplateIfE {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self,__param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
-// Error while generating bindings for item 'MyTemplate<float>::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/doc_comment.h;l=86
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for __CcTemplateInst10MyTemplateIfE
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc(self,__param_0);
+        }
+    }
+}
 
 impl __CcTemplateInst10MyTemplateIfE {
     /// A non-static member function in a specialization.
@@ -471,6 +559,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::DocCommentSlashes>,
             __param_0: ::ctor::RvalueReference<'b, crate::DocCommentSlashes>,
         );
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesaSERKS_<'a, 'b>(
+            __this: &'a mut crate::DocCommentSlashes,
+            __param_0: &'b crate::DocCommentSlashes,
+        ) -> &'a mut crate::DocCommentSlashes;
+        pub(crate) fn __rust_thunk___ZN17DocCommentSlashesaSEOS_<'a, 'b>(
+            __this: &'a mut crate::DocCommentSlashes,
+            __param_0: ::ctor::RvalueReference<'b, crate::DocCommentSlashes>,
+        ) -> &'a mut crate::DocCommentSlashes;
         #[link_name = "_ZN17DocCommentSlashesC1Ev"]
         pub(crate) fn __rust_thunk___ZN17DocCommentSlashesC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::DocCommentSlashes>,
@@ -498,6 +594,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::DocCommentBang>,
             __param_0: ::ctor::RvalueReference<'b, crate::DocCommentBang>,
         );
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangaSERKS_<'a, 'b>(
+            __this: &'a mut crate::DocCommentBang,
+            __param_0: &'b crate::DocCommentBang,
+        ) -> &'a mut crate::DocCommentBang;
+        pub(crate) fn __rust_thunk___ZN14DocCommentBangaSEOS_<'a, 'b>(
+            __this: &'a mut crate::DocCommentBang,
+            __param_0: ::ctor::RvalueReference<'b, crate::DocCommentBang>,
+        ) -> &'a mut crate::DocCommentBang;
         pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
         );
@@ -505,6 +609,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::MultilineCommentTwoStars>,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>,
         );
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsaSERKS_<'a, 'b>(
+            __this: &'a mut crate::MultilineCommentTwoStars,
+            __param_0: &'b crate::MultilineCommentTwoStars,
+        ) -> &'a mut crate::MultilineCommentTwoStars;
+        pub(crate) fn __rust_thunk___ZN24MultilineCommentTwoStarsaSEOS_<'a, 'b>(
+            __this: &'a mut crate::MultilineCommentTwoStars,
+            __param_0: ::ctor::RvalueReference<'b, crate::MultilineCommentTwoStars>,
+        ) -> &'a mut crate::MultilineCommentTwoStars;
         pub(crate) fn __rust_thunk___ZN11LineCommentC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::LineComment>,
         );
@@ -512,6 +624,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::LineComment>,
             __param_0: ::ctor::RvalueReference<'b, crate::LineComment>,
         );
+        pub(crate) fn __rust_thunk___ZN11LineCommentaSERKS_<'a, 'b>(
+            __this: &'a mut crate::LineComment,
+            __param_0: &'b crate::LineComment,
+        ) -> &'a mut crate::LineComment;
+        pub(crate) fn __rust_thunk___ZN11LineCommentaSEOS_<'a, 'b>(
+            __this: &'a mut crate::LineComment,
+            __param_0: ::ctor::RvalueReference<'b, crate::LineComment>,
+        ) -> &'a mut crate::LineComment;
         pub(crate) fn __rust_thunk___ZN16MultilineOneStarC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::MultilineOneStar>,
         );
@@ -519,6 +639,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::MultilineOneStar>,
             __param_0: ::ctor::RvalueReference<'b, crate::MultilineOneStar>,
         );
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStaraSERKS_<'a, 'b>(
+            __this: &'a mut crate::MultilineOneStar,
+            __param_0: &'b crate::MultilineOneStar,
+        ) -> &'a mut crate::MultilineOneStar;
+        pub(crate) fn __rust_thunk___ZN16MultilineOneStaraSEOS_<'a, 'b>(
+            __this: &'a mut crate::MultilineOneStar,
+            __param_0: ::ctor::RvalueReference<'b, crate::MultilineOneStar>,
+        ) -> &'a mut crate::MultilineOneStar;
         pub(crate) fn __rust_thunk___Z3foov() -> i32;
         pub(crate) fn __rust_thunk___ZN10MyTemplateIiEC1Ev__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
@@ -532,6 +660,20 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::__CcTemplateInst10MyTemplateIiE>,
             __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
         );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInst10MyTemplateIiE,
+            __param_0: &'b crate::__CcTemplateInst10MyTemplateIiE,
+        ) -> &'a mut crate::__CcTemplateInst10MyTemplateIiE;
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIiEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInst10MyTemplateIiE,
+            __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIiE>,
+        ) -> &'a mut crate::__CcTemplateInst10MyTemplateIiE;
         pub(crate) fn __rust_thunk___ZNK10MyTemplateIiE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(
@@ -549,6 +691,20 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::__CcTemplateInst10MyTemplateIfE>,
             __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
         );
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEaSERKS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInst10MyTemplateIfE,
+            __param_0: &'b crate::__CcTemplateInst10MyTemplateIfE,
+        ) -> &'a mut crate::__CcTemplateInst10MyTemplateIfE;
+        pub(crate) fn __rust_thunk___ZN10MyTemplateIfEaSEOS0___2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
+            'a,
+            'b,
+        >(
+            __this: &'a mut crate::__CcTemplateInst10MyTemplateIfE,
+            __param_0: ::ctor::RvalueReference<'b, crate::__CcTemplateInst10MyTemplateIfE>,
+        ) -> &'a mut crate::__CcTemplateInst10MyTemplateIfE;
         pub(crate) fn __rust_thunk___ZNK10MyTemplateIfE15get_field_valueEv__2f_2fthird_5fparty_2fcrubit_2frs_5fbindings_5ffrom_5fcc_2ftest_2fgolden_3adoc_5fcomment_5fcc<
             'a,
         >(

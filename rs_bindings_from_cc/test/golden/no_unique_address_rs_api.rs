@@ -66,13 +66,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Struct {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
-// Error while generating bindings for item 'Struct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Struct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN6StructaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
-// Error while generating bindings for item 'Struct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=15
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Struct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN6StructaSEOS_(self, __param_0);
+        }
+    }
+}
 
 impl Struct {
     /// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=16
@@ -132,13 +144,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
-// Error while generating bindings for item 'PaddingBetweenFields::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+impl<'b> ::ctor::UnpinAssign<&'b Self> for PaddingBetweenFields {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
-// Error while generating bindings for item 'PaddingBetweenFields::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=28
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for PaddingBetweenFields {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20PaddingBetweenFieldsaSEOS_(self, __param_0);
+        }
+    }
+}
 
 impl PaddingBetweenFields {
     /// Generated from: rs_bindings_from_cc/test/golden/no_unique_address.h;l=29
@@ -375,6 +399,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::Struct>,
             __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
         );
+        pub(crate) fn __rust_thunk___ZN6StructaSERKS_<'a, 'b>(
+            __this: &'a mut crate::Struct,
+            __param_0: &'b crate::Struct,
+        ) -> &'a mut crate::Struct;
+        pub(crate) fn __rust_thunk___ZN6StructaSEOS_<'a, 'b>(
+            __this: &'a mut crate::Struct,
+            __param_0: ::ctor::RvalueReference<'b, crate::Struct>,
+        ) -> &'a mut crate::Struct;
         pub(crate) fn __rust_thunk___ZN6Struct4MakeEic(f1: i32, f2: u8) -> crate::Struct;
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFieldsC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::PaddingBetweenFields>,
@@ -383,6 +415,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::PaddingBetweenFields>,
             __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
         );
+        pub(crate) fn __rust_thunk___ZN20PaddingBetweenFieldsaSERKS_<'a, 'b>(
+            __this: &'a mut crate::PaddingBetweenFields,
+            __param_0: &'b crate::PaddingBetweenFields,
+        ) -> &'a mut crate::PaddingBetweenFields;
+        pub(crate) fn __rust_thunk___ZN20PaddingBetweenFieldsaSEOS_<'a, 'b>(
+            __this: &'a mut crate::PaddingBetweenFields,
+            __param_0: ::ctor::RvalueReference<'b, crate::PaddingBetweenFields>,
+        ) -> &'a mut crate::PaddingBetweenFields;
         pub(crate) fn __rust_thunk___ZN20PaddingBetweenFields4MakeEci(
             f1: u8,
             f2: i32,

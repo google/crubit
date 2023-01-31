@@ -49,13 +49,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
-// Error while generating bindings for item 'EmptyUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
+impl<'b> ::ctor::UnpinAssign<&'b Self> for EmptyUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10EmptyUnionaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
-// Error while generating bindings for item 'EmptyUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=10
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for EmptyUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10EmptyUnionaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=12
 #[::ctor::recursively_pinned]
@@ -195,13 +207,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
-// Error while generating bindings for item 'NonEmptyUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
+impl<'b> ::ctor::UnpinAssign<&'b Self> for NonEmptyUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
-// Error while generating bindings for item 'NonEmptyUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=25
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NonEmptyUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13NonEmptyUnionaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=32
 #[::ctor::recursively_pinned]
@@ -290,13 +314,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
-// Error while generating bindings for item 'UnionWithOpaqueField::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
+impl<'b> ::ctor::UnpinAssign<&'b Self> for UnionWithOpaqueField {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
-// Error while generating bindings for item 'UnionWithOpaqueField::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=42
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UnionWithOpaqueField {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=46
 #[::ctor::recursively_pinned]
@@ -530,13 +566,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
-// Error while generating bindings for item 'TypedefUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
+impl<'b> ::ctor::UnpinAssign<&'b Self> for TypedefUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12TypedefUnionaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
-// Error while generating bindings for item 'TypedefUnion::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=54
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TypedefUnion {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN12TypedefUnionaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/unions.h;l=58
 #[::ctor::recursively_pinned]
@@ -651,6 +699,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::EmptyUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
         );
+        pub(crate) fn __rust_thunk___ZN10EmptyUnionaSERKS_<'a, 'b>(
+            __this: &'a mut crate::EmptyUnion,
+            __param_0: &'b crate::EmptyUnion,
+        ) -> &'a mut crate::EmptyUnion;
+        pub(crate) fn __rust_thunk___ZN10EmptyUnionaSEOS_<'a, 'b>(
+            __this: &'a mut crate::EmptyUnion,
+            __param_0: ::ctor::RvalueReference<'b, crate::EmptyUnion>,
+        ) -> &'a mut crate::EmptyUnion;
         #[link_name = "_ZN10NontrivialC1Ev"]
         pub(crate) fn __rust_thunk___ZN10NontrivialC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::Nontrivial>,
@@ -686,6 +742,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::NonEmptyUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
         );
+        pub(crate) fn __rust_thunk___ZN13NonEmptyUnionaSERKS_<'a, 'b>(
+            __this: &'a mut crate::NonEmptyUnion,
+            __param_0: &'b crate::NonEmptyUnion,
+        ) -> &'a mut crate::NonEmptyUnion;
+        pub(crate) fn __rust_thunk___ZN13NonEmptyUnionaSEOS_<'a, 'b>(
+            __this: &'a mut crate::NonEmptyUnion,
+            __param_0: ::ctor::RvalueReference<'b, crate::NonEmptyUnion>,
+        ) -> &'a mut crate::NonEmptyUnion;
         pub(crate) fn __rust_thunk___ZN13NonCopyUnion2aSERKS_<'a, 'b>(
             __this: ::std::pin::Pin<&'a mut crate::NonCopyUnion2>,
             __param_0: &'b crate::NonCopyUnion2,
@@ -701,6 +765,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::UnionWithOpaqueField>,
             __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
         );
+        pub(crate) fn __rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_<'a, 'b>(
+            __this: &'a mut crate::UnionWithOpaqueField,
+            __param_0: &'b crate::UnionWithOpaqueField,
+        ) -> &'a mut crate::UnionWithOpaqueField;
+        pub(crate) fn __rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_<'a, 'b>(
+            __this: &'a mut crate::UnionWithOpaqueField,
+            __param_0: ::ctor::RvalueReference<'b, crate::UnionWithOpaqueField>,
+        ) -> &'a mut crate::UnionWithOpaqueField;
         pub(crate) fn __rust_thunk___ZN21TrivialButInheritableC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::TrivialButInheritable>,
         );
@@ -746,6 +818,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnion>,
             __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
         );
+        pub(crate) fn __rust_thunk___ZN12TypedefUnionaSERKS_<'a, 'b>(
+            __this: &'a mut crate::TypedefUnion,
+            __param_0: &'b crate::TypedefUnion,
+        ) -> &'a mut crate::TypedefUnion;
+        pub(crate) fn __rust_thunk___ZN12TypedefUnionaSEOS_<'a, 'b>(
+            __this: &'a mut crate::TypedefUnion,
+            __param_0: ::ctor::RvalueReference<'b, crate::TypedefUnion>,
+        ) -> &'a mut crate::TypedefUnion;
         pub(crate) fn __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::TypedefUnionWithInheritable>,
         );

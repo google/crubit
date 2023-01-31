@@ -58,13 +58,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
-// Error while generating bindings for item 'UserOfImportedType::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+impl<'b> ::ctor::UnpinAssign<&'b Self> for UserOfImportedType {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
-// Error while generating bindings for item 'UserOfImportedType::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/user_of_imported_type.h;l=14
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for UserOfImportedType {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18UserOfImportedTypeaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_USER_OF_IMPORTED_TYPE_H_
 
@@ -83,6 +95,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::UserOfImportedType>,
             __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
         );
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeaSERKS_<'a, 'b>(
+            __this: &'a mut crate::UserOfImportedType,
+            __param_0: &'b crate::UserOfImportedType,
+        ) -> &'a mut crate::UserOfImportedType;
+        pub(crate) fn __rust_thunk___ZN18UserOfImportedTypeaSEOS_<'a, 'b>(
+            __this: &'a mut crate::UserOfImportedType,
+            __param_0: ::ctor::RvalueReference<'b, crate::UserOfImportedType>,
+        ) -> &'a mut crate::UserOfImportedType;
     }
 }
 

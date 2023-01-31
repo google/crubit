@@ -49,13 +49,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeClass {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/friend_functions.h;l=10
-// Error while generating bindings for item 'SomeClass::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/friend_functions.h;l=10
+impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeClass {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/friend_functions.h;l=10
-// Error while generating bindings for item 'SomeClass::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/friend_functions.h;l=10
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN9SomeClassaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Friend functions that are visible via ADL.
 ///
@@ -107,6 +119,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::SomeClass>,
             __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
         );
+        pub(crate) fn __rust_thunk___ZN9SomeClassaSERKS_<'a, 'b>(
+            __this: &'a mut crate::SomeClass,
+            __param_0: &'b crate::SomeClass,
+        ) -> &'a mut crate::SomeClass;
+        pub(crate) fn __rust_thunk___ZN9SomeClassaSEOS_<'a, 'b>(
+            __this: &'a mut crate::SomeClass,
+            __param_0: ::ctor::RvalueReference<'b, crate::SomeClass>,
+        ) -> &'a mut crate::SomeClass;
         #[link_name = "_Z11visible_val9SomeClass"]
         pub(crate) fn __rust_thunk___Z11visible_val9SomeClass(__param_0: crate::SomeClass);
         #[link_name = "_Z11visible_refR9SomeClass"]

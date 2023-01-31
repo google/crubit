@@ -52,13 +52,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
-// Error while generating bindings for item 'TrivialCustomType::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
+impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialCustomType {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17TrivialCustomTypeaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
-// Error while generating bindings for item 'TrivialCustomType::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=10
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialCustomType {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN17TrivialCustomTypeaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=13
 // Error while generating bindings for item 'TrivialCustomType::operator||':
@@ -150,13 +162,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=35
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=35
+impl<'b> ::ctor::UnpinAssign<&'b Self> for ContainingStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16ContainingStructaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=35
-// Error while generating bindings for item 'ContainingStruct::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=35
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ContainingStruct {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN16ContainingStructaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/unsupported.h;l=36
 // Error while generating bindings for item 'ContainingStruct::NestedStruct':
@@ -175,6 +199,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::TrivialCustomType>,
             __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
         );
+        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeaSERKS_<'a, 'b>(
+            __this: &'a mut crate::TrivialCustomType,
+            __param_0: &'b crate::TrivialCustomType,
+        ) -> &'a mut crate::TrivialCustomType;
+        pub(crate) fn __rust_thunk___ZN17TrivialCustomTypeaSEOS_<'a, 'b>(
+            __this: &'a mut crate::TrivialCustomType,
+            __param_0: ::ctor::RvalueReference<'b, crate::TrivialCustomType>,
+        ) -> &'a mut crate::TrivialCustomType;
         #[link_name = "_ZN20NontrivialCustomTypeC1EOS_"]
         pub(crate) fn __rust_thunk___ZN20NontrivialCustomTypeC1EOS_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::NontrivialCustomType>,
@@ -187,6 +219,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::ContainingStruct>,
             __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
         );
+        pub(crate) fn __rust_thunk___ZN16ContainingStructaSERKS_<'a, 'b>(
+            __this: &'a mut crate::ContainingStruct,
+            __param_0: &'b crate::ContainingStruct,
+        ) -> &'a mut crate::ContainingStruct;
+        pub(crate) fn __rust_thunk___ZN16ContainingStructaSEOS_<'a, 'b>(
+            __this: &'a mut crate::ContainingStruct,
+            __param_0: ::ctor::RvalueReference<'b, crate::ContainingStruct>,
+        ) -> &'a mut crate::ContainingStruct;
     }
 }
 

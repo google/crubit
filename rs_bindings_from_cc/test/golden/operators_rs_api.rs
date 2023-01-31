@@ -55,13 +55,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
-// Error while generating bindings for item 'AddableConstMember::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableConstMember {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableConstMemberaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
-// Error while generating bindings for item 'AddableConstMember::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableConstMemberaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=14
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
@@ -110,13 +122,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
-// Error while generating bindings for item 'AddableNonConstMember::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableNonConstMember {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN21AddableNonConstMemberaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
-// Error while generating bindings for item 'AddableNonConstMember::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN21AddableNonConstMemberaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=22
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableNonConstMember>
@@ -164,13 +188,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
-// Error while generating bindings for item 'AddableFriend::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFriend {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13AddableFriendaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
-// Error while generating bindings for item 'AddableFriend::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFriend {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13AddableFriendaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=30
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
@@ -213,13 +249,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFree {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
-// Error while generating bindings for item 'AddableFree::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFree {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11AddableFreeaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
-// Error while generating bindings for item 'AddableFree::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFree {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN11AddableFreeaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=38
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree {
@@ -284,13 +332,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
-// Error while generating bindings for item 'Overloaded::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Overloaded {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10OverloadedaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
-// Error while generating bindings for item 'Overloaded::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Overloaded {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN10OverloadedaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=44
 impl<'a> ::std::ops::Add<i16> for &'a crate::Overloaded {
@@ -345,13 +405,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
-// Error while generating bindings for item 'IncompatibleLHS::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+impl<'b> ::ctor::UnpinAssign<&'b Self> for IncompatibleLHS {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15IncompatibleLHSaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
-// Error while generating bindings for item 'IncompatibleLHS::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN15IncompatibleLHSaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/operators.h;l=48
 // Error while generating bindings for item 'operator+':
@@ -399,13 +471,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
-// Error while generating bindings for item 'AddableReturnsVoid::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableReturnsVoid {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableReturnsVoidaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
-// Error while generating bindings for item 'AddableReturnsVoid::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddableReturnsVoidaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=53
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::AddableReturnsVoid {
@@ -549,13 +633,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
-// Error while generating bindings for item 'AddAssignMemberInt::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberInt {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddAssignMemberIntaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
-// Error while generating bindings for item 'AddAssignMemberInt::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN18AddAssignMemberIntaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=70
 impl ::std::ops::AddAssign<i32> for AddAssignMemberInt {
@@ -602,13 +698,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
-// Error while generating bindings for item 'AddAssignMemberByConstRef::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberByConstRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
-// Error while generating bindings for item 'AddAssignMemberByConstRef::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignMemberByConstRefaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=74
 impl<'b> ::std::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
@@ -655,13 +763,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
-// Error while generating bindings for item 'AddAssignFreeByConstRef::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByConstRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
-// Error while generating bindings for item 'AddAssignFreeByConstRef::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN23AddAssignFreeByConstRefaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/operators.h;l=78
 // Error while generating bindings for item 'operator+=':
@@ -702,13 +822,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
-// Error while generating bindings for item 'AddAssignFreeByValue::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByValue {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
-// Error while generating bindings for item 'AddAssignFreeByValue::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN20AddAssignFreeByValueaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=82
 impl ::std::ops::AddAssign<Self> for AddAssignFreeByValue {
@@ -755,13 +887,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
-// Error while generating bindings for item 'AddAssignFriendByConstRef::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByConstRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
-// Error while generating bindings for item 'AddAssignFriendByConstRef::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
 #[derive(Clone, Copy)]
@@ -798,13 +942,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
-// Error while generating bindings for item 'AddAssignFriendByValue::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByValue {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
-// Error while generating bindings for item 'AddAssignFriendByValue::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN22AddAssignFriendByValueaSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=91
 impl ::std::ops::AddAssign<Self> for AddAssignFriendByValue {
@@ -853,13 +1009,27 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMem
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
-// Error while generating bindings for item 'AddAssignProhibitedConstMember::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedConstMember {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
-// Error while generating bindings for item 'AddAssignProhibitedConstMember::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN30AddAssignProhibitedConstMemberaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/operators.h;l=96
 // Error while generating bindings for item 'AddAssignProhibitedConstMember::operator+=':
@@ -902,13 +1072,31 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendCo
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
-// Error while generating bindings for item 'AddAssignProhibitedFriendConstLhs::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedFriendConstLhs {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
-// Error while generating bindings for item 'AddAssignProhibitedFriendConstLhs::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
+    for AddAssignProhibitedFriendConstLhs
+{
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSEOS_(
+                self, __param_0,
+            );
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/operators.h;l=100
 // Error while generating bindings for item 'operator+=':
@@ -946,13 +1134,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
-// Error while generating bindings for item 'ManyOperators::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+impl<'b> ::ctor::UnpinAssign<&'b Self> for ManyOperators {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
-// Error while generating bindings for item 'ManyOperators::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ManyOperators {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13ManyOperatorsaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // Generated from: rs_bindings_from_cc/test/golden/operators.h;l=104
 // Error while generating bindings for item 'ManyOperators::operator+':
@@ -1183,6 +1383,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
         );
+        pub(crate) fn __rust_thunk___ZN18AddableConstMemberaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableConstMember,
+            __param_0: &'b crate::AddableConstMember,
+        ) -> &'a mut crate::AddableConstMember;
+        pub(crate) fn __rust_thunk___ZN18AddableConstMemberaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableConstMember,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableConstMember>,
+        ) -> &'a mut crate::AddableConstMember;
         #[link_name = "_ZNK18AddableConstMemberplERKS_"]
         pub(crate) fn __rust_thunk___ZNK18AddableConstMemberplERKS_<'a, 'b>(
             __this: &'a crate::AddableConstMember,
@@ -1195,6 +1403,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableNonConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
         );
+        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableNonConstMember,
+            __param_0: &'b crate::AddableNonConstMember,
+        ) -> &'a mut crate::AddableNonConstMember;
+        pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableNonConstMember,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableNonConstMember>,
+        ) -> &'a mut crate::AddableNonConstMember;
         #[link_name = "_ZN21AddableNonConstMemberplERKS_"]
         pub(crate) fn __rust_thunk___ZN21AddableNonConstMemberplERKS_<'a, 'b>(
             __this: &'a mut crate::AddableNonConstMember,
@@ -1207,6 +1423,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFriend>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
         );
+        pub(crate) fn __rust_thunk___ZN13AddableFriendaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableFriend,
+            __param_0: &'b crate::AddableFriend,
+        ) -> &'a mut crate::AddableFriend;
+        pub(crate) fn __rust_thunk___ZN13AddableFriendaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableFriend,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFriend>,
+        ) -> &'a mut crate::AddableFriend;
         #[link_name = "_ZplRK13AddableFriendS1_"]
         pub(crate) fn __rust_thunk___ZplRK13AddableFriendS1_<'a, 'b>(
             lhs: &'a crate::AddableFriend,
@@ -1219,6 +1443,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableFree>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableFree>,
         );
+        pub(crate) fn __rust_thunk___ZN11AddableFreeaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableFree,
+            __param_0: &'b crate::AddableFree,
+        ) -> &'a mut crate::AddableFree;
+        pub(crate) fn __rust_thunk___ZN11AddableFreeaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableFree,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableFree>,
+        ) -> &'a mut crate::AddableFree;
         #[link_name = "_ZplRK11AddableFreeS1_"]
         pub(crate) fn __rust_thunk___ZplRK11AddableFreeS1_<'a, 'b>(
             lhs: &'a crate::AddableFree,
@@ -1241,6 +1473,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::Overloaded>,
             __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
         );
+        pub(crate) fn __rust_thunk___ZN10OverloadedaSERKS_<'a, 'b>(
+            __this: &'a mut crate::Overloaded,
+            __param_0: &'b crate::Overloaded,
+        ) -> &'a mut crate::Overloaded;
+        pub(crate) fn __rust_thunk___ZN10OverloadedaSEOS_<'a, 'b>(
+            __this: &'a mut crate::Overloaded,
+            __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
+        ) -> &'a mut crate::Overloaded;
         #[link_name = "_ZplRK10Overloadeds"]
         pub(crate) fn __rust_thunk___ZplRK10Overloadeds<'a>(
             lhs: &'a crate::Overloaded,
@@ -1258,6 +1498,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::IncompatibleLHS>,
             __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
         );
+        pub(crate) fn __rust_thunk___ZN15IncompatibleLHSaSERKS_<'a, 'b>(
+            __this: &'a mut crate::IncompatibleLHS,
+            __param_0: &'b crate::IncompatibleLHS,
+        ) -> &'a mut crate::IncompatibleLHS;
+        pub(crate) fn __rust_thunk___ZN15IncompatibleLHSaSEOS_<'a, 'b>(
+            __this: &'a mut crate::IncompatibleLHS,
+            __param_0: ::ctor::RvalueReference<'b, crate::IncompatibleLHS>,
+        ) -> &'a mut crate::IncompatibleLHS;
         pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableReturnsVoid>,
         );
@@ -1265,6 +1513,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddableReturnsVoid>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
         );
+        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddableReturnsVoid,
+            __param_0: &'b crate::AddableReturnsVoid,
+        ) -> &'a mut crate::AddableReturnsVoid;
+        pub(crate) fn __rust_thunk___ZN18AddableReturnsVoidaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddableReturnsVoid,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddableReturnsVoid>,
+        ) -> &'a mut crate::AddableReturnsVoid;
         #[link_name = "_ZNK18AddableReturnsVoidplERKS_"]
         pub(crate) fn __rust_thunk___ZNK18AddableReturnsVoidplERKS_<'a, 'b>(
             __this: &'a crate::AddableReturnsVoid,
@@ -1296,6 +1552,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberInt>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
         );
+        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignMemberInt,
+            __param_0: &'b crate::AddAssignMemberInt,
+        ) -> &'a mut crate::AddAssignMemberInt;
+        pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignMemberInt,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberInt>,
+        ) -> &'a mut crate::AddAssignMemberInt;
         #[link_name = "_ZN18AddAssignMemberIntpLEi"]
         pub(crate) fn __rust_thunk___ZN18AddAssignMemberIntpLEi<'a>(
             __this: &'a mut crate::AddAssignMemberInt,
@@ -1308,6 +1572,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignMemberByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
         );
+        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignMemberByConstRef,
+            __param_0: &'b crate::AddAssignMemberByConstRef,
+        ) -> &'a mut crate::AddAssignMemberByConstRef;
+        pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignMemberByConstRef,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignMemberByConstRef>,
+        ) -> &'a mut crate::AddAssignMemberByConstRef;
         #[link_name = "_ZN25AddAssignMemberByConstRefpLERKS_"]
         pub(crate) fn __rust_thunk___ZN25AddAssignMemberByConstRefpLERKS_<'a, 'b>(
             __this: &'a mut crate::AddAssignMemberByConstRef,
@@ -1320,6 +1592,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
         );
+        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFreeByConstRef,
+            __param_0: &'b crate::AddAssignFreeByConstRef,
+        ) -> &'a mut crate::AddAssignFreeByConstRef;
+        pub(crate) fn __rust_thunk___ZN23AddAssignFreeByConstRefaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFreeByConstRef,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByConstRef>,
+        ) -> &'a mut crate::AddAssignFreeByConstRef;
         pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByValue>,
         );
@@ -1327,6 +1607,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFreeByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
         );
+        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFreeByValue,
+            __param_0: &'b crate::AddAssignFreeByValue,
+        ) -> &'a mut crate::AddAssignFreeByValue;
+        pub(crate) fn __rust_thunk___ZN20AddAssignFreeByValueaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFreeByValue,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFreeByValue>,
+        ) -> &'a mut crate::AddAssignFreeByValue;
         #[link_name = "_ZpLR20AddAssignFreeByValueS_"]
         pub(crate) fn __rust_thunk___ZpLR20AddAssignFreeByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFreeByValue,
@@ -1339,6 +1627,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByConstRef>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
         );
+        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFriendByConstRef,
+            __param_0: &'b crate::AddAssignFriendByConstRef,
+        ) -> &'a mut crate::AddAssignFriendByConstRef;
+        pub(crate) fn __rust_thunk___ZN25AddAssignFriendByConstRefaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFriendByConstRef,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByConstRef>,
+        ) -> &'a mut crate::AddAssignFriendByConstRef;
         pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByValue>,
         );
@@ -1346,6 +1642,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignFriendByValue>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
         );
+        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFriendByValue,
+            __param_0: &'b crate::AddAssignFriendByValue,
+        ) -> &'a mut crate::AddAssignFriendByValue;
+        pub(crate) fn __rust_thunk___ZN22AddAssignFriendByValueaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignFriendByValue,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignFriendByValue>,
+        ) -> &'a mut crate::AddAssignFriendByValue;
         #[link_name = "_ZpLR22AddAssignFriendByValueS_"]
         pub(crate) fn __rust_thunk___ZpLR22AddAssignFriendByValueS_<'a>(
             lhs: &'a mut crate::AddAssignFriendByValue,
@@ -1358,6 +1662,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedConstMember>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
         );
+        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignProhibitedConstMember,
+            __param_0: &'b crate::AddAssignProhibitedConstMember,
+        ) -> &'a mut crate::AddAssignProhibitedConstMember;
+        pub(crate) fn __rust_thunk___ZN30AddAssignProhibitedConstMemberaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignProhibitedConstMember,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedConstMember>,
+        ) -> &'a mut crate::AddAssignProhibitedConstMember;
         pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
         );
@@ -1365,6 +1677,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::AddAssignProhibitedFriendConstLhs>,
             __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
         );
+        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSERKS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignProhibitedFriendConstLhs,
+            __param_0: &'b crate::AddAssignProhibitedFriendConstLhs,
+        ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
+        pub(crate) fn __rust_thunk___ZN33AddAssignProhibitedFriendConstLhsaSEOS_<'a, 'b>(
+            __this: &'a mut crate::AddAssignProhibitedFriendConstLhs,
+            __param_0: ::ctor::RvalueReference<'b, crate::AddAssignProhibitedFriendConstLhs>,
+        ) -> &'a mut crate::AddAssignProhibitedFriendConstLhs;
         pub(crate) fn __rust_thunk___ZN13ManyOperatorsC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
         );
@@ -1372,6 +1692,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::ManyOperators>,
             __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
         );
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsaSERKS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            __param_0: &'b crate::ManyOperators,
+        ) -> &'a mut crate::ManyOperators;
+        pub(crate) fn __rust_thunk___ZN13ManyOperatorsaSEOS_<'a, 'b>(
+            __this: &'a mut crate::ManyOperators,
+            __param_0: ::ctor::RvalueReference<'b, crate::ManyOperators>,
+        ) -> &'a mut crate::ManyOperators;
         #[link_name = "_ZNK13ManyOperatorsngEv"]
         pub(crate) fn __rust_thunk___ZNK13ManyOperatorsngEv<'a>(
             __this: &'a crate::ManyOperators,

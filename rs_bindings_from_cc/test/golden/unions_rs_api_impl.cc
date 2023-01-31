@@ -23,6 +23,14 @@ extern "C" void __rust_thunk___ZN10EmptyUnionC1EOS_(
     union EmptyUnion* __this, union EmptyUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSERKS_(
+    union EmptyUnion* __this, const union EmptyUnion* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" union EmptyUnion* __rust_thunk___ZN10EmptyUnionaSEOS_(
+    union EmptyUnion* __this, union EmptyUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" struct TriviallyCopyableButNontriviallyDestructible*
 __rust_thunk___ZN44TriviallyCopyableButNontriviallyDestructibleaSERKS_(
     struct TriviallyCopyableButNontriviallyDestructible* __this,
@@ -48,6 +56,14 @@ extern "C" void __rust_thunk___ZN13NonEmptyUnionC1EOS_(
     union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSERKS_(
+    union NonEmptyUnion* __this, const union NonEmptyUnion* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" union NonEmptyUnion* __rust_thunk___ZN13NonEmptyUnionaSEOS_(
+    union NonEmptyUnion* __this, union NonEmptyUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" union NonCopyUnion2* __rust_thunk___ZN13NonCopyUnion2aSERKS_(
     union NonCopyUnion2* __this, const union NonCopyUnion2* __param_0) {
   return &__this->operator=(*__param_0);
@@ -63,6 +79,17 @@ extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1Ev(
 extern "C" void __rust_thunk___ZN20UnionWithOpaqueFieldC1EOS_(
     union UnionWithOpaqueField* __this, union UnionWithOpaqueField* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" union UnionWithOpaqueField*
+__rust_thunk___ZN20UnionWithOpaqueFieldaSERKS_(
+    union UnionWithOpaqueField* __this,
+    const union UnionWithOpaqueField* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" union UnionWithOpaqueField*
+__rust_thunk___ZN20UnionWithOpaqueFieldaSEOS_(
+    union UnionWithOpaqueField* __this, union UnionWithOpaqueField* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN21TrivialButInheritableC1Ev(
     struct TrivialButInheritable* __this) {
@@ -120,6 +147,14 @@ extern "C" void __rust_thunk___ZN12TypedefUnionC1Ev(TypedefUnion* __this) {
 extern "C" void __rust_thunk___ZN12TypedefUnionC1EOS_(TypedefUnion* __this,
                                                       TypedefUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" TypedefUnion* __rust_thunk___ZN12TypedefUnionaSERKS_(
+    TypedefUnion* __this, const TypedefUnion* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" TypedefUnion* __rust_thunk___ZN12TypedefUnionaSEOS_(
+    TypedefUnion* __this, TypedefUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___ZN27TypedefUnionWithInheritableC1Ev(
     TypedefUnionWithInheritable* __this) {

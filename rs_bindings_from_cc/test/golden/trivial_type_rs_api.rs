@@ -53,13 +53,25 @@ pub mod ns {
         }
     }
 
-    // Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
-    // Error while generating bindings for item 'Trivial::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
+    impl<'b> ::ctor::UnpinAssign<&'b Self> for Trivial {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns7TrivialaSERKS0_(self, __param_0);
+            }
+        }
+    }
 
-    // Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
-    // Error while generating bindings for item 'Trivial::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=13
+    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Trivial {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns7TrivialaSEOS0_(self, __param_0);
+            }
+        }
+    }
 
     /// Defaulted special member functions are trivial on a struct with only trivial
     /// members.
@@ -87,9 +99,15 @@ pub mod ns {
         }
     }
 
-    // Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=23
-    // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=23
+    impl<'b> ::ctor::UnpinAssign<&'b Self> for TrivialWithDefaulted {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns20TrivialWithDefaultedaSERKS0_(self, __param_0);
+            }
+        }
+    }
 
     /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=24
     impl<'b> From<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
@@ -105,9 +123,15 @@ pub mod ns {
         }
     }
 
-    // Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=25
-    // Error while generating bindings for item 'TrivialWithDefaulted::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=25
+    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for TrivialWithDefaulted {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns20TrivialWithDefaultedaSEOS0_(self, __param_0);
+            }
+        }
+    }
 
     /// This struct is trivial, and therefore trivially relocatable etc., but still
     /// not safe to pass by reference as it is not final.
@@ -284,13 +308,29 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::ns::Trivial>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
         );
+        pub(crate) fn __rust_thunk___ZN2ns7TrivialaSERKS0_<'a, 'b>(
+            __this: &'a mut crate::ns::Trivial,
+            __param_0: &'b crate::ns::Trivial,
+        ) -> &'a mut crate::ns::Trivial;
+        pub(crate) fn __rust_thunk___ZN2ns7TrivialaSEOS0_<'a, 'b>(
+            __this: &'a mut crate::ns::Trivial,
+            __param_0: ::ctor::RvalueReference<'b, crate::ns::Trivial>,
+        ) -> &'a mut crate::ns::Trivial;
         pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialWithDefaulted>,
         );
+        pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedaSERKS0_<'a, 'b>(
+            __this: &'a mut crate::ns::TrivialWithDefaulted,
+            __param_0: &'b crate::ns::TrivialWithDefaulted,
+        ) -> &'a mut crate::ns::TrivialWithDefaulted;
         pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedC1EOS0_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialWithDefaulted>,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialWithDefaulted>,
         );
+        pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaultedaSEOS0_<'a, 'b>(
+            __this: &'a mut crate::ns::TrivialWithDefaulted,
+            __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialWithDefaulted>,
+        ) -> &'a mut crate::ns::TrivialWithDefaulted;
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
         );

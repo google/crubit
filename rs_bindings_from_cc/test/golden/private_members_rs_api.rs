@@ -59,13 +59,29 @@ pub mod test_namespace_bindings {
         }
     }
 
-    // Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
-    // Error while generating bindings for item 'SomeClass::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
+    impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeClass {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
-    // Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
-    // Error while generating bindings for item 'SomeClass::operator=':
-    // operator= for Unpin types is not yet supported.
+    /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=11
+    impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeClass {
+        #[inline(always)]
+        fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN23test_namespace_bindings9SomeClassaSEOS0_(
+                    self, __param_0,
+                );
+            }
+        }
+    }
 
     impl SomeClass {
         /// Generated from: rs_bindings_from_cc/test/golden/private_members.h;l=13
@@ -105,6 +121,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::test_namespace_bindings::SomeClass>,
             __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
         );
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSERKS0_<'a, 'b>(
+            __this: &'a mut crate::test_namespace_bindings::SomeClass,
+            __param_0: &'b crate::test_namespace_bindings::SomeClass,
+        ) -> &'a mut crate::test_namespace_bindings::SomeClass;
+        pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClassaSEOS0_<'a, 'b>(
+            __this: &'a mut crate::test_namespace_bindings::SomeClass,
+            __param_0: ::ctor::RvalueReference<'b, crate::test_namespace_bindings::SomeClass>,
+        ) -> &'a mut crate::test_namespace_bindings::SomeClass;
         #[link_name = "_ZN23test_namespace_bindings9SomeClass13public_methodEv"]
         pub(crate) fn __rust_thunk___ZN23test_namespace_bindings9SomeClass13public_methodEv<'a>(
             __this: &'a mut crate::test_namespace_bindings::SomeClass,

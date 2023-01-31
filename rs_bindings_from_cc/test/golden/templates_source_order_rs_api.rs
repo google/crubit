@@ -43,7 +43,7 @@ forward_declare::unsafe_define!(forward_declare::symbol!("TopLevel"), crate::Top
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=16
 // Error while generating bindings for item 'TopLevel::operator=':
@@ -93,7 +93,7 @@ pub mod test_namespace_bindings {
 
     // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'Inner::operator=':
-    // operator= for Unpin types is not yet supported.
+    // `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
     // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=26
     // Error while generating bindings for item 'test_namespace_bindings::Inner::operator=':
@@ -141,7 +141,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<TopLevel>::operator=':
@@ -183,7 +183,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<test_namespace_bindings::Inner>::operator=':
@@ -225,7 +225,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<TopLevel>>::operator=':
@@ -267,7 +267,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<MyTemplate<test_namespace_bindings::Inner>>::operator=':
@@ -312,7 +312,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<bool>::operator=':
@@ -354,7 +354,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<char>::operator=':
@@ -396,7 +396,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<double>::operator=':
@@ -438,7 +438,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<float>::operator=':
@@ -480,7 +480,7 @@ forward_declare::unsafe_define!(
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':
-// operator= for Unpin types is not yet supported.
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
 
 // Generated from: rs_bindings_from_cc/test/golden/templates_source_order.h;l=9
 // Error while generating bindings for item 'MyTemplate<int>::operator=':

@@ -60,13 +60,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Foo {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
-// Error while generating bindings for item 'Foo::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Foo {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
-// Error while generating bindings for item 'Foo::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=17
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Foo {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN3FooaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // TODO(rosica): This comment appears near fields of a struct, and
 // is currently generated below the struct definiton on the Rust side.
@@ -125,13 +137,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Bar {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
-// Error while generating bindings for item 'Bar::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
+impl<'b> ::ctor::UnpinAssign<&'b Self> for Bar {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN3BaraSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
-// Error while generating bindings for item 'Bar::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=46
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Bar {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN3BaraSEOS_(self, __param_0);
+        }
+    }
+}
 
 /// d
 ///
@@ -167,13 +191,25 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for HasNoComments {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
-// Error while generating bindings for item 'HasNoComments::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
+impl<'b> ::ctor::UnpinAssign<&'b Self> for HasNoComments {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13HasNoCommentsaSERKS_(self, __param_0);
+        }
+    }
+}
 
-// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
-// Error while generating bindings for item 'HasNoComments::operator=':
-// operator= for Unpin types is not yet supported.
+/// Generated from: rs_bindings_from_cc/test/golden/comment.h;l=52
+impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for HasNoComments {
+    #[inline(always)]
+    fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
+        unsafe {
+            crate::detail::__rust_thunk___ZN13HasNoCommentsaSEOS_(self, __param_0);
+        }
+    }
+}
 
 // e
 
@@ -190,6 +226,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::Foo>,
             __param_0: ::ctor::RvalueReference<'b, crate::Foo>,
         );
+        pub(crate) fn __rust_thunk___ZN3FooaSERKS_<'a, 'b>(
+            __this: &'a mut crate::Foo,
+            __param_0: &'b crate::Foo,
+        ) -> &'a mut crate::Foo;
+        pub(crate) fn __rust_thunk___ZN3FooaSEOS_<'a, 'b>(
+            __this: &'a mut crate::Foo,
+            __param_0: ::ctor::RvalueReference<'b, crate::Foo>,
+        ) -> &'a mut crate::Foo;
         pub(crate) fn __rust_thunk___Z3foov();
         pub(crate) fn __rust_thunk___ZN3BarC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::Bar>,
@@ -198,6 +242,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::Bar>,
             __param_0: ::ctor::RvalueReference<'b, crate::Bar>,
         );
+        pub(crate) fn __rust_thunk___ZN3BaraSERKS_<'a, 'b>(
+            __this: &'a mut crate::Bar,
+            __param_0: &'b crate::Bar,
+        ) -> &'a mut crate::Bar;
+        pub(crate) fn __rust_thunk___ZN3BaraSEOS_<'a, 'b>(
+            __this: &'a mut crate::Bar,
+            __param_0: ::ctor::RvalueReference<'b, crate::Bar>,
+        ) -> &'a mut crate::Bar;
         pub(crate) fn __rust_thunk___ZN13HasNoCommentsC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::HasNoComments>,
         );
@@ -205,6 +257,14 @@ mod detail {
             __this: &'a mut ::std::mem::MaybeUninit<crate::HasNoComments>,
             __param_0: ::ctor::RvalueReference<'b, crate::HasNoComments>,
         );
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsaSERKS_<'a, 'b>(
+            __this: &'a mut crate::HasNoComments,
+            __param_0: &'b crate::HasNoComments,
+        ) -> &'a mut crate::HasNoComments;
+        pub(crate) fn __rust_thunk___ZN13HasNoCommentsaSEOS_<'a, 'b>(
+            __this: &'a mut crate::HasNoComments,
+            __param_0: ::ctor::RvalueReference<'b, crate::HasNoComments>,
+        ) -> &'a mut crate::HasNoComments;
     }
 }
 

@@ -62,12 +62,28 @@ extern "C" void __rust_thunk___ZN9SomeUnionC1EOS_(union SomeUnion* __this,
                                                   union SomeUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
 }
+extern "C" union SomeUnion* __rust_thunk___ZN9SomeUnionaSERKS_(
+    union SomeUnion* __this, const union SomeUnion* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" union SomeUnion* __rust_thunk___ZN9SomeUnionaSEOS_(
+    union SomeUnion* __this, union SomeUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
+}
 extern "C" void __rust_thunk___ZN14SomeOtherUnionC1Ev(SomeOtherUnion* __this) {
   crubit::construct_at(__this);
 }
 extern "C" void __rust_thunk___ZN14SomeOtherUnionC1EOS_(
     SomeOtherUnion* __this, SomeOtherUnion* __param_0) {
   crubit::construct_at(__this, std::move(*__param_0));
+}
+extern "C" SomeOtherUnion* __rust_thunk___ZN14SomeOtherUnionaSERKS_(
+    SomeOtherUnion* __this, const SomeOtherUnion* __param_0) {
+  return &__this->operator=(*__param_0);
+}
+extern "C" SomeOtherUnion* __rust_thunk___ZN14SomeOtherUnionaSEOS_(
+    SomeOtherUnion* __this, SomeOtherUnion* __param_0) {
+  return &__this->operator=(std::move(*__param_0));
 }
 
 static_assert(sizeof(struct SomeStruct) == 1);
