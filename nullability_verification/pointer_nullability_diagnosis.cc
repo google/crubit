@@ -51,20 +51,20 @@ bool isIncompatibleAssignment(QualType DeclaredType, const Expr* E,
          isNullableOrUntracked(E, Env);
 }
 
-llvm::Optional<CFGElement> diagnoseDereference(
+std::optional<CFGElement> diagnoseDereference(
     const UnaryOperator* UnaryOp, const MatchFinder::MatchResult&,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   if (isNullableOrUntracked(UnaryOp->getSubExpr(), State.Env)) {
-    return llvm::Optional<CFGElement>(CFGStmt(UnaryOp));
+    return std::optional<CFGElement>(CFGStmt(UnaryOp));
   }
   return std::nullopt;
 }
 
-llvm::Optional<CFGElement> diagnoseArrow(
+std::optional<CFGElement> diagnoseArrow(
     const MemberExpr* MemberExpr, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   if (isNullableOrUntracked(MemberExpr->getBase(), State.Env)) {
-    return llvm::Optional<CFGElement>(CFGStmt(MemberExpr));
+    return std::optional<CFGElement>(CFGStmt(MemberExpr));
   }
   return std::nullopt;
 }
@@ -144,7 +144,7 @@ bool diagnoseAssertNullabilityCall(
   // Compare the nullability computed by nullability analysis with the
   // expected one.
   const Expr* GivenExpr = CE->getArg(0);
-  Optional<ArrayRef<NullabilityKind>> MaybeComputed =
+  std::optional<ArrayRef<NullabilityKind>> MaybeComputed =
       State.Lattice.getExprNullability(GivenExpr);
   if (!MaybeComputed.has_value()) {
     llvm::dbgs()
@@ -170,7 +170,7 @@ bool diagnoseAssertNullabilityCall(
 // TODO(b/233582219): Handle call expressions whose callee is not a decl (e.g.
 // a function returned from another function), or when the callee cannot be
 // interpreted as a function type (e.g. a pointer to a function pointer).
-llvm::Optional<CFGElement> diagnoseCallExpr(
+std::optional<CFGElement> diagnoseCallExpr(
     const CallExpr* CE, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto* Callee = CE->getCalleeDecl();
@@ -185,7 +185,7 @@ llvm::Optional<CFGElement> diagnoseCallExpr(
         !diagnoseAssertNullabilityCall(CE, State, *Result.Context)) {
       // TODO: Handle __assert_nullability failures differently from regular
       // diagnostic ([[unsafe]]) failures.
-      return llvm::Optional<CFGElement>(CFGStmt(CE));
+      return std::optional<CFGElement>(CFGStmt(CE));
     }
   }
 
@@ -199,11 +199,11 @@ llvm::Optional<CFGElement> diagnoseCallExpr(
 
   return isIncompatibleArgumentList(ParamTypes, Args, State.Env,
                                     *Result.Context)
-             ? llvm::Optional<CFGElement>(CFGStmt(CE))
+             ? std::optional<CFGElement>(CFGStmt(CE))
              : std::nullopt;
 }
 
-llvm::Optional<CFGElement> diagnoseConstructExpr(
+std::optional<CFGElement> diagnoseConstructExpr(
     const CXXConstructExpr* CE, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto ConstructorParamTypes = CE->getConstructor()
@@ -213,11 +213,11 @@ llvm::Optional<CFGElement> diagnoseConstructExpr(
   ArrayRef<const Expr*> ConstructorArgs(CE->getArgs(), CE->getNumArgs());
   return isIncompatibleArgumentList(ConstructorParamTypes, ConstructorArgs,
                                     State.Env, *Result.Context)
-             ? llvm::Optional<CFGElement>(CFGStmt(CE))
+             ? std::optional<CFGElement>(CFGStmt(CE))
              : std::nullopt;
 }
 
-llvm::Optional<CFGElement> diagnoseReturn(
+std::optional<CFGElement> diagnoseReturn(
     const ReturnStmt* RS, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   auto ReturnType = cast<FunctionDecl>(State.Env.getDeclCtx())->getReturnType();
@@ -232,11 +232,11 @@ llvm::Optional<CFGElement> diagnoseReturn(
 
   return isIncompatibleAssignment(ReturnType, ReturnExpr, State.Env,
                                   *Result.Context)
-             ? llvm::Optional<CFGElement>(CFGStmt(RS))
+             ? std::optional<CFGElement>(CFGStmt(RS))
              : std::nullopt;
 }
 
-llvm::Optional<CFGElement> diagnoseMemberInitializer(
+std::optional<CFGElement> diagnoseMemberInitializer(
     const CXXCtorInitializer* CI, const MatchFinder::MatchResult& Result,
     const TransferStateForDiagnostics<PointerNullabilityLattice>& State) {
   assert(CI->isAnyMemberInitializer());
@@ -247,14 +247,14 @@ llvm::Optional<CFGElement> diagnoseMemberInitializer(
   auto MemberInitExpr = CI->getInit();
   return isIncompatibleAssignment(MemberType, MemberInitExpr, State.Env,
                                   *Result.Context)
-             ? llvm::Optional<CFGElement>(CFGInitializer(CI))
+             ? std::optional<CFGElement>(CFGInitializer(CI))
              : std::nullopt;
 }
 
 auto buildDiagnoser() {
   return CFGMatchSwitchBuilder<const dataflow::TransferStateForDiagnostics<
                                    PointerNullabilityLattice>,
-                               llvm::Optional<CFGElement>>()
+                               std::optional<CFGElement>>()
       // (*)
       .CaseOfCFGStmt<UnaryOperator>(isPointerDereference(), diagnoseDereference)
       // (->)

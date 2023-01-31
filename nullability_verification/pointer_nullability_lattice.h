@@ -5,6 +5,7 @@
 #ifndef THIRD_PARTY_CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_LATTICE_H_
 #define THIRD_PARTY_CRUBIT_NULLABILITY_VERIFICATION_POINTER_NULLABILITY_LATTICE_H_
 
+#include <optional>
 #include <ostream>
 
 #include "absl/container/flat_hash_map.h"
@@ -30,12 +31,13 @@ class PointerNullabilityLattice {
           *ExprToNullability)
       : ExprToNullability(ExprToNullability) {}
 
-  Optional<ArrayRef<NullabilityKind>> getExprNullability(const Expr *E) const {
+  std::optional<ArrayRef<NullabilityKind>> getExprNullability(
+      const Expr *E) const {
     E = &dataflow::ignoreCFGOmittedNodes(*E);
     auto I = ExprToNullability->find(&dataflow::ignoreCFGOmittedNodes(*E));
     return I == ExprToNullability->end()
                ? std::nullopt
-               : Optional<ArrayRef<NullabilityKind>>(I->second);
+               : std::optional<ArrayRef<NullabilityKind>>(I->second);
   }
 
   // If the `ExprToNullability` map already contains an entry for `E`, does

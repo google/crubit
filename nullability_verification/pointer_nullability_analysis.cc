@@ -4,6 +4,7 @@
 
 #include "nullability_verification/pointer_nullability_analysis.h"
 
+#include <optional>
 #include <string>
 
 #include "absl/log/check.h"
@@ -182,7 +183,7 @@ std::vector<NullabilityKind> substituteNullabilityAnnotationsInFunctionTemplate(
 NullabilityKind getPointerNullability(const Expr* E,
                                       PointerNullabilityAnalysis::Lattice& L) {
   QualType ExprType = E->getType();
-  Optional<NullabilityKind> Nullability = ExprType->getNullability();
+  std::optional<NullabilityKind> Nullability = ExprType->getNullability();
 
   // If the expression's type does not contain nullability information, it may
   // be a template instantiation. Look up the nullability in the

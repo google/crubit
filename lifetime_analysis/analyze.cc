@@ -305,8 +305,8 @@ std::string CfgBlockLabel(const clang::CFGBlock* block, const clang::CFG& cfg,
 
 std::string CreateCfgDot(
     const clang::CFG& cfg, const clang::ASTContext& ast_context,
-    const std::vector<llvm::Optional<
-        clang::dataflow::DataflowAnalysisState<LifetimeLattice>>>&
+    const std::vector<
+        std::optional<clang::dataflow::DataflowAnalysisState<LifetimeLattice>>>&
         block_to_output_state,
     const ObjectRepository& object_repository) {
   std::string result = "digraph d {\ncompound=true;\nedge [minlen=2];\n";
@@ -537,7 +537,7 @@ llvm::Error AnalyzeFunctionBody(
                             diag_reporter);
 
   llvm::Expected<std::vector<
-      llvm::Optional<clang::dataflow::DataflowAnalysisState<LifetimeLattice>>>>
+      std::optional<clang::dataflow::DataflowAnalysisState<LifetimeLattice>>>>
       maybe_block_to_output_state =
           clang::dataflow::runDataflowAnalysis(*cfctx, analysis, environment);
   if (!maybe_block_to_output_state) {

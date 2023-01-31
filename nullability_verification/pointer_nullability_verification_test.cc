@@ -2,6 +2,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <optional>
 #include <set>
 #include <string>
 
@@ -61,10 +62,10 @@ bool checkDiagnostics(llvm::StringRef SourceCode) {
             }
             auto &SrcMgr = AnalysisData.ASTCtx.getSourceManager();
             for (auto Element : Diagnostics) {
-              if (Optional<CFGStmt> stmt = Element.getAs<CFGStmt>()) {
+              if (std::optional<CFGStmt> stmt = Element.getAs<CFGStmt>()) {
                 ActualLines.insert(SrcMgr.getPresumedLineNumber(
                     stmt->getStmt()->getBeginLoc()));
-              } else if (Optional<CFGInitializer> init =
+              } else if (std::optional<CFGInitializer> init =
                              Element.getAs<CFGInitializer>()) {
                 ActualLines.insert(SrcMgr.getPresumedLineNumber(
                     init->getInitializer()->getSourceLocation()));
