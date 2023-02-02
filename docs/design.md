@@ -495,7 +495,9 @@ Firefox.
 
 **Pros**
 
-*   **The oldest and the most mature** of the existing C++ interop tools.
+*   **The oldest and the most mature** of the existing C++ interop tools
+    (developed
+    [since Feb 2012](https://github.com/rust-lang/rust-bindgen/commit/9fe92b0cfd48d5ebd1c82af8b1ff041f8c416a65)).
 
 **Cons**
 
@@ -516,6 +518,89 @@ bindgen could be used in a project that has very limited C++ interop needs.
 However, creating safe and ergonomic wrappers for the generated bindings would
 require additional effort. Our vision and goals for C++ interop are very
 different from what bindgen provides.
+
+### cbindgen
+
+[cbindgen](https://github.com/eqrion/cbindgen) **automatically generates C or
+C++ headers for Rust libraries which expose a public C API**.
+
+**Pros**
+
+*   **An old and mature tool** (developed
+    [since March 2017](https://github.com/eqrion/cbindgen/commit/215d3a987b223d4a1a878e2385c8677d5ae3a80b)).
+
+**Cons**
+
+*   **Shallow understanding of Rust's modules and types**.
+
+    *   [`cbindgen`'s docs](https://github.com/eqrion/cbindgen/blob/master/docs.md)
+        point out that "A major limitation of cbindgen is that it does not
+        understand Rust's module system or namespacing. This means that if
+        cbindgen sees that it needs the definition for MyType and there exists
+        two things in your project with the type name MyType, it won't know what
+        to do. Currently, cbindgen's behaviour is unspecified if this happens."
+    *   This limitation seems mostly caused by building `cbindgen` on top of
+        [the `syn` crate](https://docs.rs/syn). `syn` is able to parse Rust
+        source code into an AST, but there is no facility at the `syn` level for
+        type deduction or module traversal. Building such functionality would
+        require replicating parts of the `rustc` compiler into `cbindgen`, or
+        alternatively rewriting `cbindgen` on top of
+        [the `rustc_driver` crate](https://doc.rust-lang.org/stable/nightly-rustc/rustc_driver/)).
+
+*   **Support of only `extern "C"` functions**.
+
+    *   Supporting Rust functions that use the default calling convention would
+        require generating not only C/C++ headers, but also generating Rust
+        source with `extern "C"` thunks that trampoline into the original
+        function (requiring that `cbindgen` starts generating Rust sources).
+
+*   **Support of only `#[repr(C)]` structs**.
+
+    *   Default memory layout of Rust structs is
+        [unspecified](https://rust-lang.github.io/unsafe-code-guidelines/layout/structs-and-tuples.html#default-layout-repr-rust:~:text=the%20default%20layout%20of%20structs%20is%20not%20specified)
+        and therefore cannot be determined by code examination at the `syn`
+        level.
+    *   Even if the memory layout could be determined, the layout can change in
+        a future compiler version, or change depending on compilation command
+        line flags. To prevent using stale layout information, the
+        auto-generated FFI code should therefore include compile-time assertions
+        that the layout didn't change from the FFI generation time. The
+        assertions should be present both in the generated C/C++ headers *and*
+        on the Rust side (requiring that `cbindgen` starts generating Rust
+        sources). The assertions would effectively verify that the FFI
+        generation is driven by the build system (i.e. by Bazel, or Cargo, or
+        GN/ninja, rather than manually) and that the integration between the FFI
+        tools and the build system doesn't have any bugs (e.g. that it
+        faithfully replicates all relevent compilation flags).
+
+**Evaluation**
+
+cbindgen could be used in a project that can create a narrow `extern "C"` /
+`#[repr(C)]` API and that is ready to manage the risk of incorrect name/module
+resolution. Wrapping additional Rust APIs would require extra effort.
+
+**Take-aways for Crubit design**
+
+Notes and observations about `cbindgen` can guide some design aspects of
+Crubit's [`cc_bindings_from_rs`](../cc_bindings_from_rs/README.md) tool
+(that similarly to `cbindgen` generates C++ bindings for Rust crates).
+Using internal compiler knowledge (e.g. memory layout of structs, name and type
+resolution) requires that `cc_bindings_from_rs` depends on
+`rustc_driver` and other internal crates of `rustc`. The API of these crates is
+unstable which might increase the risk and maintenance cost of Crubit.
+Nevertheless, our experience with maintaining tools based on (also unstable)
+Clang APIs suggests that this extra risk and cost is likely going to be
+acceptable.
+
+Build determinism requires that the Rust compiler produces the same output for
+the same set of inputs (the same compiler version, the same command-line flags,
+the same sources, etc.). This means that (despite
+[conservative reservations about layout determinism](https://rust-lang.github.io/unsafe-code-guidelines/layout/structs-and-tuples.html#default-layout-repr-rust:~:text=A%20note%20on%20determinism))
+it should be okay to assume that `cc_bindings_from_rs` and `rustc` invocations
+will observe the same memory layout of structs, but this requires that
+`cc_bindings_from_rs` is built against exactly the same version of
+`rustc_driver` libraries as `rustc`. (This should also be reinforced by
+compile-time assertions in the generated FFI layer.)
 
 ### cxx
 
