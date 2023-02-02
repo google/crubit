@@ -10,8 +10,7 @@ enum EmptyBool : bool {};
 enum EmptyInt : unsigned int {};
 enum EmptyChar : char {};
 
-// TODO(b/265024558): Uncomment this:
-// enum NonEmptyBool : bool { kBool1, kBool2 = true };
+enum NonEmptyBool : bool { kBool1, kBool2 = true };
 enum NonEmptyInt : unsigned int { kInt1, kInt2 = 4294967295 };
 enum NonEmptyChar : char { kChar1, kChar2 = 'a' };
 
@@ -20,8 +19,7 @@ enum class EmptyBoolClass : bool {};
 enum class EmptyIntClass : int {};
 enum class EmptyCharClass : char {};
 
-// TODO(b/265024558): Uncomment this:
-// enum class NonEmptyBoolClass : bool { k1, k2 = true };
+enum class NonEmptyBoolClass : bool { k1, k2 = true };
 enum class NonEmptyIntClass : unsigned int { k1, k2 = 4294967295 };
 enum class NonEmptyCharClass : char { k1, k2 = 'a' };
 

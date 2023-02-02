@@ -8,8 +8,8 @@
 
 use arc_anyhow::{anyhow, bail, Context, Error, Result};
 use once_cell::unsync::OnceCell;
-use proc_macro2::{Literal, TokenStream};
-use quote::{quote, ToTokens, TokenStreamExt};
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
 use serde::Deserialize;
 use std::collections::hash_map::{Entry, HashMap};
 use std::convert::TryFrom;
@@ -175,16 +175,6 @@ impl fmt::Debug for Identifier {
 pub struct IntegerConstant {
     pub is_negative: bool,
     pub wrapped_value: u64,
-}
-
-impl ToTokens for IntegerConstant {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.append(if self.is_negative {
-            Literal::i64_unsuffixed(self.wrapped_value as i64)
-        } else {
-            Literal::u64_unsuffixed(self.wrapped_value)
-        })
-    }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Deserialize)]

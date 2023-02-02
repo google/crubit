@@ -79,6 +79,24 @@ impl From<EmptyChar> for u8 {
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+pub struct NonEmptyBool(bool);
+impl NonEmptyBool {
+    pub const kBool1: NonEmptyBool = NonEmptyBool(false);
+    pub const kBool2: NonEmptyBool = NonEmptyBool(true);
+}
+impl From<bool> for NonEmptyBool {
+    fn from(value: bool) -> NonEmptyBool {
+        NonEmptyBool(value)
+    }
+}
+impl From<NonEmptyBool> for bool {
+    fn from(value: NonEmptyBool) -> bool {
+        value.0
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub struct NonEmptyInt(u32);
 impl NonEmptyInt {
     pub const kInt1: NonEmptyInt = NonEmptyInt(0);
@@ -169,6 +187,24 @@ impl From<u8> for EmptyCharClass {
 }
 impl From<EmptyCharClass> for u8 {
     fn from(value: EmptyCharClass) -> u8 {
+        value.0
+    }
+}
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+pub struct NonEmptyBoolClass(bool);
+impl NonEmptyBoolClass {
+    pub const k1: NonEmptyBoolClass = NonEmptyBoolClass(false);
+    pub const k2: NonEmptyBoolClass = NonEmptyBoolClass(true);
+}
+impl From<bool> for NonEmptyBoolClass {
+    fn from(value: bool) -> NonEmptyBoolClass {
+        NonEmptyBoolClass(value)
+    }
+}
+impl From<NonEmptyBoolClass> for bool {
+    fn from(value: NonEmptyBoolClass) -> bool {
         value.0
     }
 }

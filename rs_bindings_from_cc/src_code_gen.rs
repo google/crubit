@@ -1,6 +1,7 @@
 // Part of the Crubit project, under the Apache License v2.0 with LLVM
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+#![allow(clippy::collapsible_else_if)]
 
 use arc_anyhow::{Context, Result};
 use code_gen_utils::{format_cc_includes, make_rs_ident, CcInclude, NamespaceQualifier};
@@ -2422,7 +2423,22 @@ fn generate_enum(db: &Database, enum_: &Enum) -> Result<GeneratedItem> {
     let underlying_type = db.rs_type_kind(enum_.underlying_type.rs_type.clone())?;
     let enumerator_names =
         enum_.enumerators.iter().map(|enumerator| make_rs_ident(&enumerator.identifier.identifier));
-    let enumerator_values = enum_.enumerators.iter().map(|enumerator| enumerator.value);
+    let enumerator_values = enum_.enumerators.iter().map(|enumerator| {
+        if underlying_type.is_bool() {
+            if enumerator.value.wrapped_value == 0 {
+                quote! {false}
+            } else {
+                quote! {true}
+            }
+        } else {
+            if enumerator.value.is_negative {
+                Literal::i64_unsuffixed(enumerator.value.wrapped_value as i64).into_token_stream()
+            } else {
+                Literal::u64_unsuffixed(enumerator.value.wrapped_value).into_token_stream()
+            }
+        }
+    });
+
     Ok(quote! {
         #[repr(transparent)]
         #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
@@ -3120,6 +3136,14 @@ impl RsTypeKind {
             RsTypeKind::Record { record: actual_record, .. } => {
                 actual_record.id == expected_record.id
             }
+            _ => false,
+        }
+    }
+
+    pub fn is_bool(&self) -> bool {
+        match self {
+            RsTypeKind::Other { name, .. } => &**name == "bool",
+            RsTypeKind::TypeAlias { underlying_type, .. } => underlying_type.is_bool(),
             _ => false,
         }
     }
@@ -5673,6 +5697,64 @@ mod tests {
                 }
                 impl From<Color> for u32 {
                     fn from(value: Color) -> u32 {
+                        value.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_bool() -> Result<()> {
+        let ir = ir_from_cc("enum Bool : bool { kFalse, kTrue };")?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Bool(bool);
+                impl Bool {
+                    pub const kFalse: Bool = Bool(false);
+                    pub const kTrue: Bool = Bool(true);
+                }
+                impl From<bool> for Bool {
+                    fn from(value: bool) -> Bool {
+                        Bool(value)
+                    }
+                }
+                impl From<Bool> for bool {
+                    fn from(value: Bool) -> bool {
+                        value.0
+                    }
+                }
+            }
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_enum_bool_alias() -> Result<()> {
+        let ir = ir_from_cc("using MyBool = bool; enum Bool : MyBool { kFalse, kTrue };")?;
+        let rs_api = generate_bindings_tokens(ir)?.rs_api;
+        assert_rs_matches!(
+            rs_api,
+            quote! {
+                #[repr(transparent)]
+                #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+                pub struct Bool(crate::MyBool);
+                impl Bool {
+                    pub const kFalse: Bool = Bool(false);
+                    pub const kTrue: Bool = Bool(true);
+                }
+                impl From<crate::MyBool> for Bool {
+                    fn from(value: crate::MyBool) -> Bool {
+                        Bool(value)
+                    }
+                }
+                impl From<Bool> for crate::MyBool {
+                    fn from(value: Bool) -> crate::MyBool {
                         value.0
                     }
                 }
