@@ -157,38 +157,19 @@ pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
 }
 
-#[repr(transparent)]
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
-pub struct Color(u32);
-impl Color {
-    pub const kRed: Color = Color(0);
-    pub const kBlue: Color = Color(1);
-    pub const kLimeGreen: Color = Color(4294967295);
-}
-impl From<u32> for Color {
-    fn from(value: u32) -> Color {
-        Color(value)
-    }
-}
-impl From<Color> for u32 {
-    fn from(value: Color) -> u32 {
-        value.0
-    }
-}
-
 /// Note especially the use of references. If we convert those to pointers,
 /// this becomes un-compilable. The syntax here is awful, but this is a function
 /// returning a function. In ML-like syntax:
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=97
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=95
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
 {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=101
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=99
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::std::os::raw::c_void,

@@ -88,8 +88,6 @@ struct FieldTypeTestStruct final {
 
 inline void VoidReturningFunction() {}
 
-enum Color : unsigned int { kRed, kBlue, kLimeGreen = 4294967295 };
-
 // Note especially the use of references. If we convert those to pointers,
 // this becomes un-compilable. The syntax here is awful, but this is a function
 // returning a function. In ML-like syntax:
