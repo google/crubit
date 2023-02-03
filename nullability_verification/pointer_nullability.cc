@@ -143,6 +143,8 @@ class NullabilityWalker : public TypeVisitor<Impl> {
     derived().report(PT, NullabilityKind::Unspecified);
     Visit(PT->getPointeeType());
   }
+
+  void VisitParenType(const ParenType* PT) { Visit(PT->getInnerType()); }
 };
 }  // namespace
 
