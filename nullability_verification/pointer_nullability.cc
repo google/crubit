@@ -81,44 +81,6 @@ std::string nullabilityToString(ArrayRef<NullabilityKind> Nullability) {
   return Result;
 }
 
-class CountPointersInTypeVisitor
-    : public TypeVisitor<CountPointersInTypeVisitor> {
-  unsigned count = 0;
-
- public:
-  CountPointersInTypeVisitor() {}
-
-  unsigned getCount() { return count; }
-
-  void Visit(QualType T) {
-    CHECK(T.isCanonical());
-    TypeVisitor::Visit(T.getTypePtrOrNull());
-  }
-
-  void VisitPointerType(const PointerType* PT) {
-    count += 1;
-    Visit(PT->getPointeeType());
-  }
-
-  void VisitFunctionProtoType(const FunctionProtoType* FPT) {
-    Visit(FPT->getReturnType());
-  }
-
-  void Visit(TemplateArgument TA) {
-    if (TA.getKind() == TemplateArgument::Type) {
-      Visit(TA.getAsType());
-    }
-  }
-
-  void VisitRecordType(const RecordType* RT) {
-    if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RT->getDecl())) {
-      for (auto& TA : CTSD->getTemplateArgs().asArray()) {
-        Visit(TA);
-      }
-    }
-  }
-};
-
 namespace {
 // Traverses a Type to find the points where it might be nullable.
 // This will visit the contained PointerType in the correct order to produce
