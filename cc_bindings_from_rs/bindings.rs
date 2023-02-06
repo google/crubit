@@ -3012,7 +3012,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_hir_item_kind() {
+    fn test_format_def_unsupported_static_value() {
         let test_src = r#"
                 #[no_mangle]
                 pub static STATIC_VALUE: i32 = 42;
@@ -3020,6 +3020,29 @@ pub mod tests {
         test_format_def(test_src, "STATIC_VALUE", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: static item");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_const_value() {
+        let test_src = r#"
+                pub const CONST_VALUE: i32 = 42;
+            "#;
+        test_format_def(test_src, "CONST_VALUE", |result| {
+            let err = result.unwrap_err();
+            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: constant item");
+        });
+    }
+
+    #[test]
+    fn test_format_def_unsupported_type_alias() {
+        let test_src = r#"
+                pub type TypeAlias = i32;
+            "#;
+        test_format_def(test_src, "TypeAlias", |result| {
+            // TODO(b/254096006): Add support for type alias definitions.
+            let err = result.unwrap_err();
+            assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: type alias");
         });
     }
 
