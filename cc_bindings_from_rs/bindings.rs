@@ -17,7 +17,6 @@ use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
 use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
-use rustc_target::abi::Layout;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -676,28 +675,6 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<MixedSnippet> {
     Ok(MixedSnippet { cc: CcSnippet { prereqs: cc_prereqs, tokens: cc_tokens }, rs: rs_tokens })
 }
 
-/// Gets the layout of the algebraic data type (an ADT - a struct, an enum, or a
-/// union) represented by `def_id`.
-fn get_adt_layout<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Result<Layout<'tcx>> {
-    // TODO(b/259749095): Support non-empty set of generic parameters.  (One
-    // scenario where the `layout_of` call below returns an error is when it
-    // can't compute the layout for generic ADTs with unsubstituted types / with
-    // empty ParamEnv.)
-    let param_env = ty::ParamEnv::empty();
-
-    let ty = tcx.type_of(def_id);
-    let layout = tcx
-        .layout_of(param_env.and(ty))
-        // Have to use `.map_err` instead of `.with_context`, because `LayoutError` doesn't
-        // satisfy the `anyhow::context::ext::StdError` trait bound.
-        .map_err(|layout_err| {
-            let item_name = tcx.item_name(def_id);
-            anyhow!("Error computing the layout of #{item_name}: {layout_err}")
-        })?
-        .layout;
-    Ok(layout)
-}
-
 /// Represents bindings for the "core" part of an algebraic data type (an ADT -
 /// a struct, an enum, or a union) in a way that supports later injecting the
 /// other parts like so:
@@ -706,7 +683,7 @@ fn get_adt_layout<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Result<Layout<'tcx>
 /// quote! {
 ///     #keyword #alignment #name final {
 ///         #core
-///         #other_parts  // (e.g. struct fields, methods, etc.)
+///         #decls_of_other_parts  // (e.g. struct fields, methods, etc.)
 ///     }
 /// }
 /// ```
@@ -714,16 +691,20 @@ fn get_adt_layout<'tcx>(tcx: TyCtxt<'tcx>, def_id: DefId) -> Result<Layout<'tcx>
 /// `keyword`, `name` are stored separately, to support formatting them as a
 /// forward declaration - e.g. `struct SomeStruct`.
 struct AdtCoreBindings {
+    /// DefId of the ADT.
+    def_id: DefId,
+
     /// C++ tag - e.g. `struct`, `class`, `enum`, or `union`.  This isn't always
     /// a direct mapping from Rust (e.g. a Rust `enum` might end up being
     /// represented as an opaque C++ `struct`).
     keyword: TokenStream,
 
-    /// Alignment declaration - e.g. `alignas(4)`.
-    alignment: TokenStream,
-
     /// C++ translation of the ADT identifier - e.g. `SomeStruct`.
     cc_name: TokenStream,
+
+    /// Rust spelling of the ADT type - e.g.
+    /// `some_crate::some_module::SomeStruct`.
+    rs_name: TokenStream,
 
     /// `core` contains declarations of
     /// - the default constructor
@@ -734,14 +715,8 @@ struct AdtCoreBindings {
     /// - the destructor
     core: TokenStream,
 
-    /// Assertions that we want C++ to make about the ADT.
-    /// Example: `static_assert`s about the ADT size and alignment.
-    cc_assertions: TokenStream,
-
-    /// Assertions that we want Rust to make about the ADT.
-    /// Example: `const` evaluations of `assert`s about the ADT size and
-    /// alignment.
-    rs_assertions: TokenStream,
+    alignment_in_bytes: u64,
+    size_in_bytes: u64,
 }
 
 /// Formats the core of an algebraic data type (an ADT - a struct, an enum, or a
@@ -767,31 +742,36 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     // TODO(b/259749095): Support non-empty set of generic parameters.
     let param_env = ty::ParamEnv::empty();
 
-    let cc_name = {
-        let item_name = tcx.item_name(def_id);
-        format_cc_ident(item_name.as_str()).context("Error formatting item name")?
-    };
-
     let ty = tcx.type_of(def_id);
     if ty.needs_drop(tcx, param_env) {
         // TODO(b/258251148): Support custom `Drop` impls.
         bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
     }
 
-    let layout = get_adt_layout(tcx, def_id)?;
-    let alignment = {
+    let rs_name = format_ty_for_rs(tcx, ty)?;
+    let cc_name = {
+        let item_name = tcx.item_name(def_id);
+        format_cc_ident(item_name.as_str()).context("Error formatting item name")?
+    };
+
+    let layout = tcx
+        .layout_of(param_env.and(ty))
+        // Have to use `.map_err` instead of `.with_context`, because `LayoutError` doesn't
+        // satisfy the `anyhow::context::ext::StdError` trait bound.
+        .map_err(|layout_err| {
+            let item_name = tcx.item_name(def_id);
+            anyhow!("Error computing the layout of #{item_name}: {layout_err}")
+        })?
+        .layout;
+    let alignment_in_bytes = {
         // Only the ABI-mandated alignment is considered (i.e. `AbiAndPrefAlign::pref`
         // is ignored), because 1) Rust's `std::mem::align_of` returns the
         // ABI-mandated alignment and 2) the generated C++'s `alignas(...)`
         // should specify the minimal/mandatory alignment.
-        let alignment = layout.align().abi.bytes();
-        Literal::u64_unsuffixed(alignment)
+        layout.align().abi.bytes()
     };
-    let size = {
-        let size = layout.size().bytes();
-        ensure!(size != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
-        Literal::u64_unsuffixed(size)
-    };
+    let size_in_bytes = layout.size().bytes();
+    ensure!(size_in_bytes != 0, "Zero-sized types (ZSTs) are not supported (b/258259459)");
 
     let core = quote! {
         public:
@@ -854,73 +834,56 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
             // TODO(b/258251148): Support custom `Drop` impls and drop glue.
             ~#cc_name() = default;
     };
-    let cc_assertions = quote! {
-        static_assert(
-            sizeof(#cc_name) == #size,
-            "Verify that struct layout didn't change since this header got generated");
-        static_assert(
-            alignof(#cc_name) == #alignment,
-            "Verify that struct layout didn't change since this header got generated");
-    };
-    let rs_assertions = {
-        let rs_type = format_ty_for_rs(tcx, ty)?;
-        quote! {
-            const _: () = assert!(::std::mem::size_of::<#rs_type>() == #size);
-            const _: () = assert!(::std::mem::align_of::<#rs_type>() == #alignment);
-        }
-    };
     Ok(AdtCoreBindings {
+        def_id,
         keyword: quote! { struct },
-        alignment: quote! { alignas(#alignment) },
         cc_name,
+        rs_name,
         core,
-        cc_assertions,
-        rs_assertions,
+        alignment_in_bytes,
+        size_in_bytes,
     })
 }
 
-/// Formats the data (e.g. the fields) of an algebraic data type (an ADT - a
-/// struct, an enum, or a union).
-///
-/// This function needs to remain infallible (see the doc comment of
-/// `format_adt_core`).
-///
-/// Will panic if `def_id` doesn't identify an ADT that can be successfully
-/// handled by `format_adt_core`.
-fn format_adt_data(tcx: TyCtxt, def_id: LocalDefId) -> TokenStream {
-    let def_id = def_id.to_def_id(); // LocalDefId -> DefId conversion.
-    let size = get_adt_layout(tcx, def_id)
-        .expect("`format_adt_data` should only be called if `format_adt_core` succeeded")
-        .size()
-        .bytes();
-    let size = Literal::u64_unsuffixed(size);
-    quote! {
-        private:
-            // TODO(b/258233850): Emit individual fields.
-            unsigned char opaque_blob_of_bytes[#size];
-    }
-}
-
 /// Formats an algebraic data type (an ADT - a struct, an enum, or a union)
-/// represented by `def_id`.
-///
-/// Will panic if `def_id` is invalid or doesn't identify an ADT.
-fn format_adt(tcx: TyCtxt, local_def_id: LocalDefId) -> Result<MixedSnippet> {
-    let AdtCoreBindings { keyword, alignment, cc_name, core, cc_assertions, rs_assertions: rs} =
-        format_adt_core(tcx, local_def_id.to_def_id())?;
+/// represented by `core`.  This function is infallible - after
+/// `format_adt_core` returns success we have committed to emitting C++ bindings
+/// for the ADT.
+fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> MixedSnippet {
+    assert!(core.def_id.is_local(), "`format_adt` should only be called for local ADTs");
 
-    let data = format_adt_data(tcx, local_def_id);
-    let doc_comment = format_doc_comment(tcx, local_def_id);
-    let cc = CcSnippet::new(quote! {
-        __NEWLINE__ #doc_comment
-        #keyword #alignment #cc_name final {
-            #core
-            #data
-        };
-        #cc_assertions
-    });
+    let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
+    let size = Literal::u64_unsuffixed(core.size_in_bytes);
+    let cc = {
+        let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
+        let keyword = &core.keyword;
+        let cc_name = &core.cc_name;
+        let core = &core.core;
+        CcSnippet::new(quote! {
+            __NEWLINE__ #doc_comment
+            #keyword alignas(#alignment) #cc_name final {
+                #core
+                private:
+                    // TODO(b/258233850): Emit individual fields.
+                    unsigned char opaque_blob_of_bytes[#size];
+            };
+            static_assert(
+                sizeof(#cc_name) == #size,
+                "Verify that struct layout didn't change since this header got generated");
+            static_assert(
+                alignof(#cc_name) == #alignment,
+                "Verify that struct layout didn't change since this header got generated");
+        })
+    };
+    let rs = {
+        let rs_name = &core.rs_name;
+        quote! {
+            const _: () = assert!(::std::mem::size_of::<#rs_name>() == #size);
+            const _: () = assert!(::std::mem::align_of::<#rs_name>() == #alignment);
+        }
+    };
 
-    Ok(MixedSnippet { cc, rs })
+    MixedSnippet { cc, rs }
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a
@@ -1002,7 +965,8 @@ fn format_def(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>>
             },
             Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
             Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-                format_adt(input.tcx, def_id).map(Some),
+                format_adt_core(input.tcx, def_id.to_def_id())
+                    .map(|core| Some(format_adt(input.tcx, &core))),
             Item { kind: ItemKind::Mod(_), .. } => Ok(None),
             Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
         },
