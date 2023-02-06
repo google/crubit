@@ -11,7 +11,7 @@ use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 use rustc_hir::definitions::{DefPathData, DisambiguatedDefPathData};
-use rustc_hir::{Item, ItemKind, Node, Unsafety};
+use rustc_hir::{Item, ItemKind, Unsafety};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
@@ -938,12 +938,11 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
     quote! { __COMMENT__ #doc_comment}
 }
 
-/// Formats a Rust item idenfied by `def_id`.  Returns `None` if the definition
+/// Formats a HIR item idenfied by `def_id`.  Returns `None` if the item
 /// can be ignored. Returns an `Err` is the definition couldn't be formatted.
 ///
-/// Will panic if `def_id` is invalid (i.e. doesn't identify a Rust node or
-/// item).
-fn format_def(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
+/// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
+fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
     // undesirable, because it would mean exposing items from a private module.)
@@ -951,26 +950,27 @@ fn format_def(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>>
         return Ok(None);
     }
 
-    match input.tcx.hir().get_by_def_id(def_id) {
-        Node::Item(item) => match item {
-            Item { kind: ItemKind::Fn(_, generics, _) |
-                         ItemKind::Struct(_, generics) |
-                         ItemKind::Enum(_, generics) |
-                         ItemKind::Union(_, generics),
-                   .. } if !generics.params.is_empty() => {
-                // TODO(b/258235219): Supporting function parameter types (or return types) that
-                // are references requires adding support for generic lifetime parameters.  The
-                // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
-                bail!("Generics are not supported yet (b/259749023 and b/259749095)");
-            },
-            Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
-            Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-                format_adt_core(input.tcx, def_id.to_def_id())
-                    .map(|core| Some(format_adt(input.tcx, &core))),
-            Item { kind: ItemKind::Mod(_), .. } => Ok(None),
-            Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
-        },
-        _unsupported_node => bail!("Unsupported rustc_hir::hir::Node"),
+    match input.tcx.hir().expect_item(def_id) {
+        Item {
+            kind:
+                ItemKind::Fn(_, generics, _)
+                | ItemKind::Struct(_, generics)
+                | ItemKind::Enum(_, generics)
+                | ItemKind::Union(_, generics),
+            ..
+        } if !generics.params.is_empty() => {
+            // TODO(b/258235219): Supporting function parameter types (or return types) that
+            // are references requires adding support for generic lifetime parameters.  The
+            // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
+            bail!("Generics are not supported yet (b/259749023 and b/259749095)");
+        }
+        Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
+        Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
+            format_adt_core(input.tcx, def_id.to_def_id())
+                .map(|core| Some(format_adt(input.tcx, &core)))
+        }
+        Item { kind: ItemKind::Mod(_), .. } => Ok(None),
+        Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
     }
 }
 
@@ -1000,7 +1000,7 @@ fn format_crate(input: &Input) -> Result<Output> {
         .items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
-            format_def(input, def_id)
+            format_item(input, def_id)
                 .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
                 .map(|snippet| (def_id, snippet))
         })
@@ -1098,7 +1098,7 @@ fn format_crate(input: &Input) -> Result<Output> {
 #[cfg(test)]
 pub mod tests {
     use super::{
-        format_cc_thunk_arg, format_def, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs,
+        format_cc_thunk_arg, format_item, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs,
         generate_bindings, Input, MixedSnippet, Output,
     };
 
@@ -1150,7 +1150,7 @@ pub mod tests {
     /// C++ binding. The test focuses on verification that the output from
     /// `format_fn` gets propagated all the way to `GenerateBindings::new`.
     /// Additional coverage of how functions are formatted is provided
-    /// by `test_format_def_..._fn_...` tests (which work at the `format_fn`
+    /// by `test_format_item_..._fn_...` tests (which work at the `format_fn`
     /// level).
     #[test]
     fn test_generated_bindings_fn_no_mangle_extern_c() {
@@ -1205,14 +1205,14 @@ pub mod tests {
     /// The `test_generated_bindings_struct` test covers only a single example
     /// of an ADT (struct/enum/union) that should get a C++ binding.
     /// Additional coverage of how items are formatted is provided by
-    /// `test_format_def_..._struct_...`, `test_format_def_..._enum_...`,
-    /// and `test_format_def_..._union_...` tests.
+    /// `test_format_item_..._struct_...`, `test_format_item_..._enum_...`,
+    /// and `test_format_item_..._union_...` tests.
     ///
     /// We don't want to duplicate coverage already provided by
-    /// `test_format_def_struct_with_fields`, but we do want to verify that
+    /// `test_format_item_struct_with_fields`, but we do want to verify that
     /// * `format_crate` will actually find and process the struct
-    ///   (`test_format_def_...` doesn't cover this aspect - it uses a test-only
-    ///   `find_def_id_by_name` instead)
+    ///   (`test_format_item_...` doesn't cover this aspect - it uses a
+    ///   test-only `find_def_id_by_name` instead)
     /// * The actual shape of the bindings still looks okay at this level.
     #[test]
     fn test_generated_bindings_struct() {
@@ -1231,7 +1231,7 @@ pub mod tests {
                         ...
                         struct alignas(4) Point final {
                             // No point replicating test coverage of
-                            // `test_format_def_struct_with_fields`.
+                            // `test_format_item_struct_with_fields`.
                             ...
                         };
                         static_assert(sizeof(Point) == 8, ...);
@@ -1293,7 +1293,7 @@ pub mod tests {
                         ...
                         struct ... S final {
                             // No point replicating test coverage of
-                            // `test_format_def_struct_with_fields`.
+                            // `test_format_item_struct_with_fields`.
                             ...
                         };
                         static_assert(sizeof(S) == ..., ...);
@@ -1656,10 +1656,10 @@ pub mod tests {
     }
 
     /// The `test_generated_bindings_unsupported_item` test verifies how `Err`
-    /// from `format_def` is formatted as a C++ comment (in `format_crate`
+    /// from `format_item` is formatted as a C++ comment (in `format_crate`
     /// and `format_unsupported_def`):
     /// - This test covers only a single example of an unsupported item.
-    ///   Additional coverage is provided by `test_format_def_unsupported_...`
+    ///   Additional coverage is provided by `test_format_item_unsupported_...`
     ///   tests.
     /// - This test somewhat arbitrarily chooses an example of an unsupported
     ///   item, trying to pick one that 1) will never be supported (b/254104998
@@ -1688,12 +1688,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_extern_c_no_mangle_no_params_no_return_type() {
+    fn test_format_item_fn_extern_c_no_mangle_no_params_no_return_type() {
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn public_function() {}
             "#;
-        test_format_def(test_src, "public_function", |result| {
+        test_format_item(test_src, "public_function", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -1706,9 +1706,9 @@ pub mod tests {
         });
     }
 
-    /// The `test_format_def_fn_explicit_unit_return_type` test below is very
+    /// The `test_format_item_fn_explicit_unit_return_type` test below is very
     /// similar to the
-    /// `test_format_def_fn_extern_c_no_mangle_no_params_no_return_type` above,
+    /// `test_format_item_fn_extern_c_no_mangle_no_params_no_return_type` above,
     /// except that the return type is explicitly spelled out.  There is no
     /// difference in `ty::FnSig` so our code behaves exactly the same, but the
     /// test has been planned based on earlier, hir-focused approach and having
@@ -1716,12 +1716,12 @@ pub mod tests {
     /// and `hir::FnRetTy` _would_ see a difference between the two tests, even
     /// though there is no different in the current `bindings.rs` code).
     #[test]
-    fn test_format_def_fn_explicit_unit_return_type() {
+    fn test_format_item_fn_explicit_unit_return_type() {
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn explicit_unit_return_type() -> () {}
             "#;
-        test_format_def(test_src, "explicit_unit_return_type", |result| {
+        test_format_item(test_src, "explicit_unit_return_type", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -1735,14 +1735,14 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_never_return_type() {
+    fn test_format_item_fn_never_return_type() {
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn never_returning_function() -> ! {
                     panic!("This function panics and therefore never returns");
                 }
             "#;
-        test_format_def(test_src, "never_returning_function", |result| {
+        test_format_item(test_src, "never_returning_function", |result| {
             // TODO(b/254507801): The function should be annotated with the `[[noreturn]]`
             // attribute.
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
@@ -1759,17 +1759,17 @@ pub mod tests {
         })
     }
 
-    /// `test_format_def_fn_mangling` checks that bindings can be generated for
+    /// `test_format_item_fn_mangling` checks that bindings can be generated for
     /// `extern "C"` functions that do *not* have `#[no_mangle]` attribute.  The
     /// test elides away the mangled name in the `assert_cc_matches` checks
     /// below, but end-to-end test coverage should eventually be provided by
     /// `test/functions` (see b/262904507).
     #[test]
-    fn test_format_def_fn_mangling() {
+    fn test_format_item_fn_mangling() {
         let test_src = r#"
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
-        test_format_def(test_src, "public_function", |result| {
+        test_format_item(test_src, "public_function", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -1789,12 +1789,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_export_name() {
+    fn test_format_item_fn_export_name() {
         let test_src = r#"
                 #[export_name = "export_name"]
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
-        test_format_def(test_src, "public_function", |result| {
+        test_format_item(test_src, "public_function", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -1814,12 +1814,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_unsafe() {
+    fn test_format_item_unsupported_fn_unsafe() {
         let test_src = r#"
                 #[no_mangle]
                 pub unsafe extern "C" fn foo() {}
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
@@ -1829,18 +1829,18 @@ pub mod tests {
         });
     }
 
-    /// `test_format_def_fn_const` tests how bindings for an `const fn` are
+    /// `test_format_item_fn_const` tests how bindings for an `const fn` are
     /// generated.
     ///
     /// Right now the `const` qualifier is ignored, but one can imagine that in
     /// the (very) long-term future such functions (including their bodies)
     /// could be translated into C++ `consteval` functions.
     #[test]
-    fn test_format_def_fn_const() {
+    fn test_format_item_fn_const() {
         let test_src = r#"
                 pub const fn foo(i: i32) -> i32 { i * 42 }
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
             let result = result.unwrap().unwrap();
@@ -1871,7 +1871,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_c_unwind_abi() {
+    fn test_format_item_fn_with_c_unwind_abi() {
         // See also https://rust-lang.github.io/rfcs/2945-c-unwind-abi.html
         let test_src = r#"
                 #![feature(c_unwind)]
@@ -1879,7 +1879,7 @@ pub mod tests {
                 #[no_mangle]
                 pub extern "C-unwind" fn may_throw() {}
             "#;
-        test_format_def(test_src, "may_throw", |result| {
+        test_format_item(test_src, "may_throw", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -1892,15 +1892,15 @@ pub mod tests {
         });
     }
 
-    /// This test mainly verifies that `format_def` correctly propagates
+    /// This test mainly verifies that `format_item` correctly propagates
     /// `CcPrerequisites` of parameter types and return type.
     #[test]
-    fn test_format_def_fn_cc_prerequisites_if_cpp_definition_needed() {
+    fn test_format_item_fn_cc_prerequisites_if_cpp_definition_needed() {
         let test_src = r#"
                 pub fn foo(_i: i32) -> S { panic!("foo") }
                 pub struct S(i32);
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let result = result.unwrap().unwrap();
 
             // Minimal coverage, just to double-check that the test setup works.
@@ -1917,7 +1917,7 @@ pub mod tests {
 
             // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
             //
-            // Verifying the actual def_id is tricky, because `test_format_def` doesn't
+            // Verifying the actual def_id is tricky, because `test_format_item` doesn't
             // expose `tcx` to the verification function (and therefore calling
             // `find_def_id_by_name` is not easily possible).
             assert_eq!(1, result.cc.prereqs.defs.len());
@@ -1925,11 +1925,11 @@ pub mod tests {
         });
     }
 
-    /// This test verifies that `format_def` uses `CcPrerequisites::fwd_decls`
+    /// This test verifies that `format_item` uses `CcPrerequisites::fwd_decls`
     /// rather than `CcPrerequisites::defs` for functions that only need a
     /// C++ declaration (and don't need a C++ definition).
     #[test]
-    fn test_format_def_fn_cc_prerequisites_if_only_cpp_declaration_needed() {
+    fn test_format_item_fn_cc_prerequisites_if_only_cpp_declaration_needed() {
         let test_src = r#"
                 // `foo` will only have a C++ declaration (and no C++ definition)
                 // in the generated `..._cc_api.h` header.
@@ -1942,7 +1942,7 @@ pub mod tests {
                 #[repr(C)]
                 pub struct S(bool);
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let result = result.unwrap().unwrap();
 
             // Minimal coverage, just to double-check that the test setup works.
@@ -1954,7 +1954,7 @@ pub mod tests {
 
             // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
             //
-            // Verifying the actual def_id is tricky, because `test_format_def` doesn't
+            // Verifying the actual def_id is tricky, because `test_format_item` doesn't
             // expose `tcx` to the verification function (and therefore calling
             // `find_def_id_by_name` is not easily possible).
             assert_eq!(0, result.cc.prereqs.defs.len());
@@ -1963,7 +1963,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_type_aliased_return_type() {
+    fn test_format_item_fn_with_type_aliased_return_type() {
         // Type aliases disappear at the `rustc_middle::ty::Ty` level and therefore in
         // the short-term the generated bindings also ignore type aliases.
         //
@@ -1975,7 +1975,7 @@ pub mod tests {
                 #[no_mangle]
                 pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
-        test_format_def(test_src, "type_aliased_return", |result| {
+        test_format_item(test_src, "type_aliased_return", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -1989,7 +1989,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_doc_comment_with_unmangled_name() {
+    fn test_format_item_fn_with_doc_comment_with_unmangled_name() {
         let test_src = r#"
             /// Outer line doc.
             /** Outer block doc that spans lines.
@@ -1998,7 +1998,7 @@ pub mod tests {
             #[no_mangle]
             pub extern "C" fn fn_with_doc_comment_with_unmangled_name() {}
           "#;
-        test_format_def(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
+        test_format_item(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -2024,7 +2024,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_inner_doc_comment_with_unmangled_name() {
+    fn test_format_item_fn_with_inner_doc_comment_with_unmangled_name() {
         let test_src = r#"
             /// Outer doc comment.
             #[no_mangle]
@@ -2032,7 +2032,7 @@ pub mod tests {
                 //! Inner doc comment.
             }
           "#;
-        test_format_def(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
+        test_format_item(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -2053,12 +2053,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_doc_comment_with_mangled_name() {
+    fn test_format_item_fn_with_doc_comment_with_mangled_name() {
         let test_src = r#"
                 /// Doc comment of a function with mangled name.
                 pub extern "C" fn fn_with_doc_comment_with_mangled_name() {}
             "#;
-        test_format_def(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
+        test_format_item(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -2080,12 +2080,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_name_is_reserved_cpp_keyword() {
+    fn test_format_item_unsupported_fn_name_is_reserved_cpp_keyword() {
         let test_src = r#"
                 #[no_mangle]
                 pub extern "C" fn reinterpret_cast() -> () {}
             "#;
-        test_format_def(test_src, "reinterpret_cast", |result| {
+        test_format_item(test_src, "reinterpret_cast", |result| {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
@@ -2097,11 +2097,11 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_ret_type() {
+    fn test_format_item_unsupported_fn_ret_type() {
         let test_src = r#"
                 pub fn foo() -> (i32, i32) { (123, 456) }
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
@@ -2112,7 +2112,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_with_late_bound_lifetimes() {
+    fn test_format_item_unsupported_fn_with_late_bound_lifetimes() {
         // TODO(b/258235219): Expect success after adding support for references.
         let test_src = r#"
                 pub fn foo(arg: &i32) -> &i32 { arg }
@@ -2123,14 +2123,14 @@ pub mod tests {
                 // taken from each of the callsites).  In other words, we can't
                 // just call `no_bound_vars` on this `FnSig`'s `Binder`.
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_generic_fn() {
+    fn test_format_item_unsupported_generic_fn() {
         let test_src = r#"
                 use std::default::Default;
                 use std::fmt::Display;
@@ -2138,60 +2138,60 @@ pub mod tests {
                     println!("{}", T::default());
                 }
             "#;
-        test_format_def(test_src, "generic_function", |result| {
+        test_format_item(test_src, "generic_function", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_generic_struct() {
+    fn test_format_item_unsupported_generic_struct() {
         let test_src = r#"
                 pub struct Point<T> {
                     pub x: T,
                     pub y: T,
                 }
             "#;
-        test_format_def(test_src, "Point", |result| {
+        test_format_item(test_src, "Point", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_generic_enum() {
+    fn test_format_item_unsupported_generic_enum() {
         let test_src = r#"
                 pub enum Point<T> {
                     Cartesian{x: T, y: T},
                     Polar{angle: T, dist: T},
                 }
             "#;
-        test_format_def(test_src, "Point", |result| {
+        test_format_item(test_src, "Point", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_generic_union() {
+    fn test_format_item_unsupported_generic_union() {
         let test_src = r#"
                 pub union SomeUnion<T> {
                     pub x: std::mem::ManuallyDrop<T>,
                     pub y: i32,
                 }
             "#;
-        test_format_def(test_src, "SomeUnion", |result| {
+        test_format_item(test_src, "SomeUnion", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_async() {
+    fn test_format_item_unsupported_fn_async() {
         let test_src = r#"
                 pub async fn async_function() {}
             "#;
-        test_format_def(test_src, "async_function", |result| {
+        test_format_item(test_src, "async_function", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Error formatting function return type: \
                              The following Rust type is not supported yet: \
@@ -2200,11 +2200,11 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_rust_abi() {
+    fn test_format_item_fn_rust_abi() {
         let test_src = r#"
                 pub fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
-        test_format_def(test_src, "add", |result| {
+        test_format_item(test_src, "add", |result| {
             // TODO(b/261074843): Re-add thunk name verification once we are using stable name
             // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
             // + manual review and tweaks.)
@@ -2235,12 +2235,12 @@ pub mod tests {
         });
     }
 
-    /// `test_format_def_fn_rust_abi` tests a function call that is not a C-ABI,
-    /// and is not the default Rust ABI.  It can't use `"stdcall"`, because
-    /// it is not supported on the targets where Crubit's tests run.  So, it
-    /// ended up using `"vectorcall"`.
+    /// `test_format_item_fn_rust_abi` tests a function call that is not a
+    /// C-ABI, and is not the default Rust ABI.  It can't use `"stdcall"`,
+    /// because it is not supported on the targets where Crubit's tests run.
+    /// So, it ended up using `"vectorcall"`.
     ///
-    /// This test almost entirely replicates `test_format_def_fn_rust_abi`,
+    /// This test almost entirely replicates `test_format_item_fn_rust_abi`,
     /// except for the `extern "vectorcall"` part in the `test_src` test
     /// input.
     ///
@@ -2251,12 +2251,12 @@ pub mod tests {
     /// (see also `format_cc_call_conv_as_clang_attribute` in
     /// `rs_bindings_from_cc/src_code_gen.rs`)
     #[test]
-    fn test_format_def_fn_vectorcall_abi() {
+    fn test_format_item_fn_vectorcall_abi() {
         let test_src = r#"
                 #![feature(abi_vectorcall)]
                 pub extern "vectorcall" fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
-        test_format_def(test_src, "add", |result| {
+        test_format_item(test_src, "add", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2285,14 +2285,14 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_variadic() {
+    fn test_format_item_unsupported_fn_variadic() {
         let test_src = r#"
                 #![feature(c_variadic)]
 
                 #[no_mangle]
                 pub unsafe extern "C" fn variadic_function(_fmt: *const u8, ...) {}
             "#;
-        test_format_def(test_src, "variadic_function", |result| {
+        test_format_item(test_src, "variadic_function", |result| {
             // TODO(b/254097223): Add support for variadic functions.
             let err = result.unwrap_err();
             assert_eq!(err, "C variadic functions are not supported (b/254097223)");
@@ -2300,13 +2300,13 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_params() {
+    fn test_format_item_fn_params() {
         let test_src = r#"
                 #[allow(unused_variables)]
                 #[no_mangle]
                 pub extern "C" fn foo(b: bool, f: f64) {}
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -2321,13 +2321,13 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_param_name_reserved_keyword() {
+    fn test_format_item_fn_param_name_reserved_keyword() {
         let test_src = r#"
                 #[allow(unused_variables)]
                 #[no_mangle]
                 pub extern "C" fn some_function(reinterpret_cast: f64) {}
             "#;
-        test_format_def(test_src, "some_function", |result| {
+        test_format_item(test_src, "some_function", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert!(result.rs.is_empty());
@@ -2342,11 +2342,11 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_multiple_anonymous_parameter_names() {
+    fn test_format_item_fn_with_multiple_anonymous_parameter_names() {
         let test_src = r#"
                 pub fn foo(_: f64, _: f64) {}
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2375,7 +2375,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_fn_with_destructuring_parameter_name() {
+    fn test_format_item_fn_with_destructuring_parameter_name() {
         let test_src = r#"
                 pub struct S {
                     pub f1: i32,
@@ -2388,7 +2388,7 @@ pub mod tests {
                 // which points out that function parameters are just irrefutable patterns.
                 pub fn func(S{f1, f2}: S) -> i32 { f1 + f2 }
             "#;
-        test_format_def(test_src, "func", |result| {
+        test_format_item(test_src, "func", |result| {
             let result = result.unwrap().unwrap();
             assert_cc_matches!(
                 result.cc.tokens,
@@ -2415,11 +2415,11 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_param_type() {
+    fn test_format_item_unsupported_fn_param_type() {
         let test_src = r#"
                 pub fn foo(_param: (i32, i32)) {}
             "#;
-        test_format_def(test_src, "foo", |result| {
+        test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Error formatting the type of parameter #0: \
                              Tuples are not supported yet: (i32, i32) (b/254099023)");
@@ -2427,12 +2427,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_param_type_unit() {
+    fn test_format_item_unsupported_fn_param_type_unit() {
         let test_src = r#"
                 #[no_mangle]
                 pub fn fn_with_params(_param: ()) {}
             "#;
-        test_format_def(test_src, "fn_with_params", |result| {
+        test_format_item(test_src, "fn_with_params", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Error formatting the type of parameter #0: \
                              `()` / `void` is only supported as a return type (b/254507801)");
@@ -2440,14 +2440,14 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_fn_param_type_never() {
+    fn test_format_item_unsupported_fn_param_type_never() {
         let test_src = r#"
                 #![feature(never_type)]
 
                 #[no_mangle]
                 pub extern "C" fn fn_with_params(_param: !) {}
             "#;
-        test_format_def(test_src, "fn_with_params", |result| {
+        test_format_item(test_src, "fn_with_params", |result| {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
@@ -2461,7 +2461,7 @@ pub mod tests {
     /// https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as
     /// `StructStruct` or "nominal struct type".
     #[test]
-    fn test_format_def_struct_with_fields() {
+    fn test_format_item_struct_with_fields() {
         let test_src = r#"
                 pub struct SomeStruct {
                     pub x: i32,
@@ -2471,7 +2471,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::size_of::<SomeStruct>() == 8);
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
             "#;
-        test_format_def(test_src, "SomeStruct", |result| {
+        test_format_item(test_src, "SomeStruct", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2516,13 +2516,13 @@ pub mod tests {
     /// This is a test for `TupleStruct` or "tuple struct" - for more details
     /// please refer to https://doc.rust-lang.org/reference/items/structs.html
     #[test]
-    fn test_format_def_struct_with_tuple() {
+    fn test_format_item_struct_with_tuple() {
         let test_src = r#"
                 pub struct TupleStruct(i32, i32);
                 const _: () = assert!(std::mem::size_of::<TupleStruct>() == 8);
                 const _: () = assert!(std::mem::align_of::<TupleStruct>() == 4);
             "#;
-        test_format_def(test_src, "TupleStruct", |result| {
+        test_format_item(test_src, "TupleStruct", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2565,7 +2565,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_struct_with_name_that_is_reserved_keyword() {
+    fn test_format_item_unsupported_struct_with_name_that_is_reserved_keyword() {
         let test_src = r#"
                 #[allow(non_camel_case_types)]
                 pub struct reinterpret_cast {
@@ -2573,7 +2573,7 @@ pub mod tests {
                     pub y: i32,
                 }
             "#;
-        test_format_def(test_src, "reinterpret_cast", |result| {
+        test_format_item(test_src, "reinterpret_cast", |result| {
             let err = result.unwrap_err();
             assert_eq!(
                 err,
@@ -2585,7 +2585,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_struct_with_custom_drop_impl() {
+    fn test_format_item_unsupported_struct_with_custom_drop_impl() {
         let test_src = r#"
                 pub struct StructWithCustomDropImpl {
                     pub x: i32,
@@ -2596,14 +2596,14 @@ pub mod tests {
                     fn drop(&mut self) {}
                 }
             "#;
-        test_format_def(test_src, "StructWithCustomDropImpl", |result| {
+        test_format_item(test_src, "StructWithCustomDropImpl", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_struct_with_custom_drop_glue() {
+    fn test_format_item_unsupported_struct_with_custom_drop_glue() {
         let test_src = r#"
                 #![allow(dead_code)]
 
@@ -2620,7 +2620,7 @@ pub mod tests {
                     field: StructWithCustomDropImpl,
                 }
             "#;
-        test_format_def(test_src, "StructRequiringCustomDropGlue", |result| {
+        test_format_item(test_src, "StructRequiringCustomDropGlue", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
         });
@@ -2630,14 +2630,14 @@ pub mod tests {
     /// https://doc.rust-lang.org/reference/items/structs.html refers to this kind of struct as a
     /// "unit-like struct".
     #[test]
-    fn test_format_def_unsupported_struct_zero_sized_type() {
+    fn test_format_item_unsupported_struct_zero_sized_type() {
         let test_src = r#"
                 pub struct ZeroSizedType1;
                 pub struct ZeroSizedType2();
                 pub struct ZeroSizedType3{}
             "#;
         for name in ["ZeroSizedType1", "ZeroSizedType2", "ZeroSizedType3"] {
-            test_format_def(test_src, name, |result| {
+            test_format_item(test_src, name, |result| {
                 let err = result.unwrap_err();
                 assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
             });
@@ -2648,7 +2648,7 @@ pub mod tests {
     /// (and doesn't have `EnumItemTuple` or `EnumItemStruct` items).  See
     /// also https://doc.rust-lang.org/reference/items/enumerations.html
     #[test]
-    fn test_format_def_enum_with_only_discriminant_items() {
+    fn test_format_item_enum_with_only_discriminant_items() {
         let test_src = r#"
                 pub enum SomeEnum {
                     Red,
@@ -2659,7 +2659,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::size_of::<SomeEnum>() == 1);
                 const _: () = assert!(std::mem::align_of::<SomeEnum>() == 1);
             "#;
-        test_format_def(test_src, "SomeEnum", |result| {
+        test_format_item(test_src, "SomeEnum", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2704,7 +2704,7 @@ pub mod tests {
     /// This is a test for an enum that has `EnumItemTuple` and `EnumItemStruct`
     /// items. See also https://doc.rust-lang.org/reference/items/enumerations.html
     #[test]
-    fn test_format_def_enum_with_tuple_and_struct_items() {
+    fn test_format_item_enum_with_tuple_and_struct_items() {
         let test_src = r#"
                 pub enum Point {
                     Cartesian(f32, f32),
@@ -2714,7 +2714,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::size_of::<Point>() == 12);
                 const _: () = assert!(std::mem::align_of::<Point>() == 4);
             "#;
-        test_format_def(test_src, "Point", |result| {
+        test_format_item(test_src, "Point", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2759,11 +2759,11 @@ pub mod tests {
     /// This test covers how zero-variant enums are handled.  See also
     /// https://doc.rust-lang.org/reference/items/enumerations.html#zero-variant-enums
     #[test]
-    fn test_format_def_unsupported_enum_zero_variants() {
+    fn test_format_item_unsupported_enum_zero_variants() {
         let test_src = r#"
                 pub enum ZeroVariantEnum {}
             "#;
-        test_format_def(test_src, "ZeroVariantEnum", |result| {
+        test_format_item(test_src, "ZeroVariantEnum", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
         });
@@ -2772,7 +2772,7 @@ pub mod tests {
     /// This is a test for a `union`.  See also
     /// https://doc.rust-lang.org/reference/items/unions.html
     #[test]
-    fn test_format_def_union() {
+    fn test_format_item_union() {
         let test_src = r#"
                 pub union SomeUnion {
                     pub i: i32,
@@ -2782,7 +2782,7 @@ pub mod tests {
                 const _: () = assert!(std::mem::size_of::<SomeUnion>() == 8);
                 const _: () = assert!(std::mem::align_of::<SomeUnion>() == 8);
             "#;
-        test_format_def(test_src, "SomeUnion", |result| {
+        test_format_item(test_src, "SomeUnion", |result| {
             let result = result.unwrap().unwrap();
             assert!(result.cc.prereqs.is_empty());
             assert_cc_matches!(
@@ -2825,7 +2825,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_doc_comments_union() {
+    fn test_format_item_doc_comments_union() {
         let test_src = r#"
             /// Doc for some union.
             pub union SomeUnionWithDocs {
@@ -2834,7 +2834,7 @@ pub mod tests {
                 pub f: f64
             }
         "#;
-        test_format_def(test_src, "SomeUnionWithDocs", |result| {
+        test_format_item(test_src, "SomeUnionWithDocs", |result| {
             let result = result.unwrap().unwrap();
             let comment = " Doc for some union.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
@@ -2852,14 +2852,14 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_doc_comments_enum() {
+    fn test_format_item_doc_comments_enum() {
         let test_src = r#"
             /** Doc for some enum. */
             pub enum SomeEnumWithDocs {
                 Kind1(i32),
             }
         "#;
-        test_format_def(test_src, "SomeEnumWithDocs", |result| {
+        test_format_item(test_src, "SomeEnumWithDocs", |result| {
             let result = result.unwrap().unwrap();
             let comment = " Doc for some enum. \n\n\
                             Generated from: <crubit_unittests.rs>;l=3";
@@ -2877,7 +2877,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_doc_comments_struct() {
+    fn test_format_item_doc_comments_struct() {
         let test_src = r#"
             #![allow(dead_code)]
             #[doc = "Doc for some struct."]
@@ -2885,7 +2885,7 @@ pub mod tests {
                 some_field : i32,
             }
         "#;
-        test_format_def(test_src, "SomeStructWithDocs", |result| {
+        test_format_item(test_src, "SomeStructWithDocs", |result| {
             let result = result.unwrap().unwrap();
             let comment = "Doc for some struct.\n\n\
                            Generated from: <crubit_unittests.rs>;l=4";
@@ -2903,12 +2903,12 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_doc_comments_tuple_struct() {
+    fn test_format_item_doc_comments_tuple_struct() {
         let test_src = r#"
             /// Doc for some tuple struct.
             pub struct SomeTupleStructWithDocs(i32);
         "#;
-        test_format_def(test_src, "SomeTupleStructWithDocs", |result| {
+        test_format_item(test_src, "SomeTupleStructWithDocs", |result| {
             let result = result.unwrap().unwrap();
             let comment = " Doc for some tuple struct.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
@@ -2926,7 +2926,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_source_loc_macro_rules() {
+    fn test_format_item_source_loc_macro_rules() {
         let test_src = r#"
             macro_rules! some_tuple_struct_macro_for_testing_source_loc {
                 () => {
@@ -2937,7 +2937,7 @@ pub mod tests {
 
             some_tuple_struct_macro_for_testing_source_loc!();
         "#;
-        test_format_def(test_src, "SomeTupleStructMacroForTesingSourceLoc", |result| {
+        test_format_item(test_src, "SomeTupleStructMacroForTesingSourceLoc", |result| {
             let result = result.unwrap().unwrap();
             let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.\n\n\
                                       Generated from: <crubit_unittests.rs>;l=5";
@@ -2955,11 +2955,11 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_source_loc_with_no_doc_comment() {
+    fn test_format_item_source_loc_with_no_doc_comment() {
         let test_src = r#"
             pub struct SomeTupleStructWithNoDocComment(i32);
         "#;
-        test_format_def(test_src, "SomeTupleStructWithNoDocComment", |result| {
+        test_format_item(test_src, "SomeTupleStructWithNoDocComment", |result| {
             let result = result.unwrap().unwrap();
             let comment = "Generated from: <crubit_unittests.rs>;l=2";
             assert_cc_matches!(
@@ -2976,34 +2976,34 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_def_unsupported_static_value() {
+    fn test_format_item_unsupported_static_value() {
         let test_src = r#"
                 #[no_mangle]
                 pub static STATIC_VALUE: i32 = 42;
             "#;
-        test_format_def(test_src, "STATIC_VALUE", |result| {
+        test_format_item(test_src, "STATIC_VALUE", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: static item");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_const_value() {
+    fn test_format_item_unsupported_const_value() {
         let test_src = r#"
                 pub const CONST_VALUE: i32 = 42;
             "#;
-        test_format_def(test_src, "CONST_VALUE", |result| {
+        test_format_item(test_src, "CONST_VALUE", |result| {
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: constant item");
         });
     }
 
     #[test]
-    fn test_format_def_unsupported_type_alias() {
+    fn test_format_item_unsupported_type_alias() {
         let test_src = r#"
                 pub type TypeAlias = i32;
             "#;
-        test_format_def(test_src, "TypeAlias", |result| {
+        test_format_item(test_src, "TypeAlias", |result| {
             // TODO(b/254096006): Add support for type alias definitions.
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: type alias");
@@ -3442,19 +3442,19 @@ pub mod tests {
         }
     }
 
-    /// Tests invoking `format_def` on the item with the specified `name` from
+    /// Tests invoking `format_item` on the item with the specified `name` from
     /// the given Rust `source`.  Returns the result of calling
-    /// `test_function` with `format_def`'s result as an argument.
+    /// `test_function` with `format_item`'s result as an argument.
     /// (`test_function` should typically `assert!` that it got the expected
-    /// result from `format_def`.)
-    fn test_format_def<F, T>(source: &str, name: &str, test_function: F) -> T
+    /// result from `format_item`.)
+    fn test_format_item<F, T>(source: &str, name: &str, test_function: F) -> T
     where
         F: FnOnce(Result<Option<MixedSnippet>, String>) -> T + Send,
         T: Send,
     {
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
-            let result = format_def(&bindings_input_for_tests(tcx), def_id);
+            let result = format_item(&bindings_input_for_tests(tcx), def_id);
 
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
