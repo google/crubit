@@ -19,6 +19,7 @@ use rustc_span::def_id::{DefId, LocalDefId, LOCAL_CRATE};
 use rustc_span::symbol::Symbol;
 use rustc_target::spec::abi::Abi;
 use rustc_target::spec::PanicStrategy;
+use std::cmp::Ordering;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::iter::once;
 use std::ops::AddAssign;
@@ -501,6 +502,39 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
     })
 }
 
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+enum SnippetKind {
+    /// Main API - for example:
+    /// - A C++ declaration of a function (with a doc comment),
+    /// - A C++ definition of a struct (with a doc comment).
+    MainApi,
+
+    /// Implementation details - for example:
+    /// - A C++ declaration of an `extern "C"` thunk,
+    /// - A Rust implementation of an `extern "C"` thunk,
+    /// - C++ or Rust assertions about struct size and aligment.
+    ///
+    /// TODO(b/260725279): Split results of `format_fn` and `format_adt` into
+    /// multiple snippets - one `MainApi` snippet and 0-N `ImplDetails`
+    /// snippets,
+    _ImplDetails,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+struct SnippetKey {
+    def_id: LocalDefId,
+    kind: SnippetKind,
+}
+
+fn preferred_snippet_order(tcx: TyCtxt) -> impl Fn(&SnippetKey, &SnippetKey) -> Ordering + '_ {
+    move |lhs: &SnippetKey, rhs: &SnippetKey| {
+        let to_ordering_key = |x: &SnippetKey| (x.kind.clone(), tcx.def_span(x.def_id));
+        let lhs = to_ordering_key(lhs);
+        let rhs = to_ordering_key(rhs);
+        lhs.cmp(&rhs)
+    }
+}
+
 /// A C++ snippet (e.g. function declaration for `..._cc_api.h`) and a Rust
 /// snippet (e.g. a thunk definition for `..._cc_api_impl.rs`).
 #[derive(Debug)]
@@ -516,7 +550,7 @@ struct MixedSnippet {
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
 ///   b/258235219), type parameters, or const parameters.
-fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<MixedSnippet> {
+fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<(SnippetKey, MixedSnippet)> {
     let tcx = input.tcx;
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
@@ -672,7 +706,11 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<MixedSnippet> {
             }
         }
     };
-    Ok(MixedSnippet { cc: CcSnippet { prereqs: cc_prereqs, tokens: cc_tokens }, rs: rs_tokens })
+
+    Ok((
+        SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi },
+        MixedSnippet { cc: CcSnippet { prereqs: cc_prereqs, tokens: cc_tokens }, rs: rs_tokens },
+    ))
 }
 
 /// Represents bindings for the "core" part of an algebraic data type (an ADT -
@@ -849,8 +887,9 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
-fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> MixedSnippet {
-    assert!(core.def_id.is_local(), "`format_adt` should only be called for local ADTs");
+fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> (SnippetKey, MixedSnippet) {
+    // `format_adt` should only be called for local ADTs.
+    let local_def_id = core.def_id.expect_local();
 
     // TODO(b/260725279): Add support for static methods.
     let impl_item_decls = tcx
@@ -868,7 +907,7 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> MixedSnippet {
         .sorted_by_key(|impl_item_def_id| tcx.def_span(*impl_item_def_id))
         .map(|impl_item_def_id| {
             let err = anyhow!("`impl` items are not supported yet");
-            format_unsupported_def(tcx, impl_item_def_id, err).cc
+            format_unsupported_def(tcx, impl_item_def_id, err).1.cc
         })
         .collect_vec();
 
@@ -920,7 +959,7 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> MixedSnippet {
         }
     };
 
-    MixedSnippet { cc, rs }
+    (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, MixedSnippet { cc, rs })
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a
@@ -979,7 +1018,7 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
-fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
+fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<(SnippetKey, MixedSnippet)>> {
     let tcx = input.tcx;
 
     // TODO(b/262052635): When adding support for re-exports we may need to change
@@ -1017,7 +1056,7 @@ fn format_unsupported_def(
     tcx: TyCtxt,
     local_def_id: LocalDefId,
     err: anyhow::Error,
-) -> MixedSnippet {
+) -> (SnippetKey, MixedSnippet) {
     let source_loc = format_source_location(tcx, local_def_id);
     let name = tcx.def_path_str(local_def_id.to_def_id());
 
@@ -1026,22 +1065,28 @@ fn format_unsupported_def(
     let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
     let cc = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
 
-    MixedSnippet { cc, rs: quote! {} }
+    (
+        SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi },
+        MixedSnippet { cc, rs: quote! {} },
+    )
 }
 
 /// Formats all public items from the Rust crate being compiled.
 fn format_crate(input: &Input) -> Result<Output> {
     let tcx = input.tcx;
-    let mut bindings: HashMap<LocalDefId, MixedSnippet> = tcx
+    let mut bindings: HashMap<SnippetKey, MixedSnippet> = tcx
         .hir()
         .items()
         .filter_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
             format_item(input, def_id)
                 .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
-                .map(|snippet| (def_id, snippet))
         })
-        .collect();
+        .fold(HashMap::new(), |mut map, (key, value)| {
+            let old_item = map.insert(key, value);
+            assert!(old_item.is_none(), "Duplicated key: {key:?}");
+            map
+        });
 
     // Find the order of `bindings` that 1) meets the requirements of
     // `CcPrerequisites::defs` and 2) makes a best effort attempt to keep the
@@ -1050,12 +1095,12 @@ fn format_crate(input: &Input) -> Result<Output> {
         let toposort::TopoSortResult { ordered: ordered_ids, failed: failed_ids } = {
             let nodes = bindings.keys().copied();
             let deps = bindings.iter().flat_map(|(&successor, snippet)| {
-                let predecessors = snippet.cc.prereqs.defs.iter().copied();
+                let predecessors = snippet.cc.prereqs.defs.iter().map(|&def_id|
+                    SnippetKey { def_id, kind: SnippetKind::MainApi }
+                );
                 predecessors.map(move |predecessor| toposort::Dependency { predecessor, successor })
             });
-            let preferred_order =
-                |id1: &LocalDefId, id2: &LocalDefId| tcx.def_span(*id1).cmp(&tcx.def_span(*id2));
-            toposort::toposort(nodes, deps, preferred_order)
+            toposort::toposort(nodes, deps, preferred_snippet_order(tcx))
         };
         assert_eq!(
             0,
@@ -1075,8 +1120,8 @@ fn format_crate(input: &Input) -> Result<Output> {
         let mut includes = BTreeSet::new();
         let mut ordered_cc = Vec::new();
         let mut rs_body = quote! {};
-        for local_def_id in ordered_ids.into_iter() {
-            let mod_path = FullyQualifiedName::new(tcx, local_def_id.to_def_id()).mod_path;
+        for key in ordered_ids.into_iter() {
+            let mod_path = FullyQualifiedName::new(tcx, key.def_id.to_def_id()).mod_path;
             let MixedSnippet {
                 rs: inner_rs,
                 cc: CcSnippet {
@@ -1087,10 +1132,10 @@ fn format_crate(input: &Input) -> Result<Output> {
                         .. // `defs` have already been utilized by `toposort` above
                     }
                 }
-            } = bindings.remove(&local_def_id).unwrap();
+            } = bindings.remove(&key).unwrap();
 
             fwd_decls.extend(inner_fwd_decls.difference(&already_declared).copied());
-            already_declared.insert(local_def_id);
+            already_declared.insert(key.def_id);
             already_declared.extend(inner_fwd_decls.into_iter());
 
             includes.append(&mut inner_includes);
@@ -3571,6 +3616,9 @@ pub mod tests {
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
             let result = result.map_err(|anyhow_err| format!("{anyhow_err:#}"));
+
+            // Ignore SnippetKey for now.
+            let result = result.map(|opt| opt.map(|(_key, snippet)| snippet));
 
             test_function(result)
         })
