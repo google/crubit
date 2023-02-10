@@ -852,6 +852,26 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> MixedSnippet {
     assert!(core.def_id.is_local(), "`format_adt` should only be called for local ADTs");
 
+    // TODO(b/260725279): Add support for static methods.
+    let impl_item_decls = tcx
+        .inherent_impls(core.def_id)
+        .iter()
+        .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
+        .flat_map(|item| match &item.kind {
+            ItemKind::Impl(impl_) => impl_.items,
+            other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
+        })
+        .map(|impl_item_ref| impl_item_ref.id.owner_id.def_id)
+        .filter(|impl_item_def_id| {
+            tcx.effective_visibilities(()).is_directly_public(*impl_item_def_id)
+        })
+        .sorted_by_key(|impl_item_def_id| tcx.def_span(*impl_item_def_id))
+        .map(|impl_item_def_id| {
+            let err = anyhow!("`impl` items are not supported yet");
+            format_unsupported_def(tcx, impl_item_def_id, err).cc
+        })
+        .collect_vec();
+
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
     let cc = {
@@ -859,21 +879,38 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> MixedSnippet {
         let keyword = &core.keyword;
         let cc_name = &core.cc_name;
         let core = &core.core;
-        CcSnippet::new(quote! {
-            __NEWLINE__ #doc_comment
-            #keyword alignas(#alignment) #cc_name final {
-                #core
-                private:
-                    // TODO(b/258233850): Emit individual fields.
-                    unsigned char opaque_blob_of_bytes[#size];
-            };
-            static_assert(
-                sizeof(#cc_name) == #size,
-                "Verify that struct layout didn't change since this header got generated");
-            static_assert(
-                alignof(#cc_name) == #alignment,
-                "Verify that struct layout didn't change since this header got generated");
-        })
+
+        let mut prereqs = CcPrerequisites::default();
+        let impl_item_decls = if impl_item_decls.is_empty() {
+            quote! {}
+        } else {
+            let tokens =
+                impl_item_decls.into_iter().map(|snippet| snippet.into_tokens(&mut prereqs));
+            quote! {
+                public:
+                    #( #tokens )*
+            }
+        };
+
+        CcSnippet {
+            prereqs,
+            tokens: quote! {
+                __NEWLINE__ #doc_comment
+                #keyword alignas(#alignment) #cc_name final {
+                    #core
+                    #impl_item_decls
+                    private:
+                        // TODO(b/258233850): Emit individual fields.
+                        unsigned char opaque_blob_of_bytes[#size];
+                };
+                static_assert(
+                    sizeof(#cc_name) == #size,
+                    "Verify that struct layout didn't change since this header got generated");
+                static_assert(
+                    alignof(#cc_name) == #alignment,
+                    "Verify that struct layout didn't change since this header got generated");
+            },
+        }
     };
     let rs = {
         let rs_name = &core.rs_name;
@@ -939,14 +976,16 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 }
 
 /// Formats a HIR item idenfied by `def_id`.  Returns `None` if the item
-/// can be ignored. Returns an `Err` is the definition couldn't be formatted.
+/// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
 fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>> {
+    let tcx = input.tcx;
+
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
     // undesirable, because it would mean exposing items from a private module.)
-    if !input.tcx.effective_visibilities(()).is_directly_public(def_id) {
+    if !tcx.effective_visibilities(()).is_directly_public(def_id) {
         return Ok(None);
     }
 
@@ -963,8 +1002,8 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>
         },
         Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
-            format_adt_core(input.tcx, def_id.to_def_id())
-                .map(|core| Some(format_adt(input.tcx, &core))),
+            format_adt_core(tcx, def_id.to_def_id())
+                .map(|core| Some(format_adt(tcx, &core))),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(None),
@@ -1271,7 +1310,7 @@ pub mod tests {
                         ...
                         struct ... SomeStruct ... {
                             // No point replicating test coverage of
-                            // `test_format_def_struct_with_tuple`.
+                            // `test_format_item_struct_with_tuple`.
                             ...
                             // TODO(b/260725279): Expect presence of a static method.
                             // (For now this test ensures that `impl` blocks don't
@@ -1635,6 +1674,12 @@ pub mod tests {
                     y: i32,
                 }
 
+                pub struct PublicStruct(i32);
+
+                impl PublicStruct {
+                    fn private_method() {}
+                }
+
                 pub mod public_module {
                     fn priv_func_in_pub_module() {}
                 }
@@ -1650,6 +1695,8 @@ pub mod tests {
             assert_rs_not_matches!(bindings.rs_body, quote! { private_function });
             assert_cc_not_matches!(bindings.h_body, quote! { PrivateStruct });
             assert_rs_not_matches!(bindings.rs_body, quote! { PrivateStruct });
+            assert_cc_not_matches!(bindings.h_body, quote! { private_method });
+            assert_rs_not_matches!(bindings.rs_body, quote! { private_method });
             assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_priv_module });
             assert_rs_not_matches!(bindings.rs_body, quote! { priv_func_in_priv_module });
             assert_cc_not_matches!(bindings.h_body, quote! { priv_func_in_pub_module });
@@ -3042,6 +3089,36 @@ pub mod tests {
             // TODO(b/254096006): Add support for type alias definitions.
             let err = result.unwrap_err();
             assert_eq!(err, "Unsupported rustc_hir::hir::ItemKind: type alias");
+        });
+    }
+
+    #[test]
+    fn test_format_item_unsupported_impl_item_const_value() {
+        let test_src = r#"
+                pub struct SomeStruct(i32);
+
+                impl SomeStruct {
+                    pub const CONST_VALUE: i32 = 42;
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap().unwrap();
+            assert!(result.cc.prereqs.is_empty());
+            let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
+                                   defined at <crubit_unittests.rs>;l=5: \
+                                   `impl` items are not supported yet";
+            assert_cc_matches!(
+                result.cc.tokens,
+                quote! {
+                    ...
+                    struct alignas(4) SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
         });
     }
 
