@@ -107,7 +107,7 @@ pub fn generate_bindings(input: &Input) -> Result<Output> {
     Ok(Output { h_body, rs_body })
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 struct CcPrerequisites {
     /// Set of `#include`s that a `CcSnippet` depends on.  For example if
     /// `CcSnippet::tokens` expands to `std::int32_t`, then `includes`
@@ -513,11 +513,7 @@ enum SnippetKind {
     /// - A C++ declaration of an `extern "C"` thunk,
     /// - A Rust implementation of an `extern "C"` thunk,
     /// - C++ or Rust assertions about struct size and aligment.
-    ///
-    /// TODO(b/260725279): Split results of `format_fn` and `format_adt` into
-    /// multiple snippets - one `MainApi` snippet and 0-N `ImplDetails`
-    /// snippets,
-    _ImplDetails,
+    ImplDetails,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -537,10 +533,16 @@ fn preferred_snippet_order(tcx: TyCtxt) -> impl Fn(&SnippetKey, &SnippetKey) -> 
 
 /// A C++ snippet (e.g. function declaration for `..._cc_api.h`) and a Rust
 /// snippet (e.g. a thunk definition for `..._cc_api_impl.rs`).
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct MixedSnippet {
     cc: CcSnippet,
     rs: TokenStream,
+}
+
+impl From<CcSnippet> for MixedSnippet {
+    fn from(cc: CcSnippet) -> Self {
+        Self { cc, rs: quote! {} }
+    }
 }
 
 /// Formats a function with the given `local_def_id`.
@@ -550,6 +552,9 @@ struct MixedSnippet {
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
 ///   b/258235219), type parameters, or const parameters.
+///
+/// TODO(b/260725279): Split results of `format_fn` into MainApi and
+/// ImplDetails.
 fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<(SnippetKey, MixedSnippet)> {
     let tcx = input.tcx;
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
@@ -887,7 +892,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
-fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> (SnippetKey, MixedSnippet) {
+fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnippet)> {
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
@@ -913,10 +918,10 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> (SnippetKey, MixedSnippet)
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
-    let cc = {
+    let cc_name = &core.cc_name;
+    let main_api = {
         let doc_comment = format_doc_comment(tcx, core.def_id.expect_local());
         let keyword = &core.keyword;
-        let cc_name = &core.cc_name;
         let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
@@ -942,24 +947,33 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> (SnippetKey, MixedSnippet)
                         // TODO(b/258233850): Emit individual fields.
                         unsigned char opaque_blob_of_bytes[#size];
                 };
-                static_assert(
-                    sizeof(#cc_name) == #size,
-                    "Verify that struct layout didn't change since this header got generated");
-                static_assert(
-                    alignof(#cc_name) == #alignment,
-                    "Verify that struct layout didn't change since this header got generated");
             },
         }
     };
-    let rs = {
-        let rs_name = &core.rs_name;
-        quote! {
-            const _: () = assert!(::std::mem::size_of::<#rs_name>() == #size);
-            const _: () = assert!(::std::mem::align_of::<#rs_name>() == #alignment);
-        }
+    let impl_details = {
+        let mut cc = CcSnippet::new(quote! {
+            static_assert(
+                sizeof(#cc_name) == #size,
+                "Verify that struct layout didn't change since this header got generated");
+            static_assert(
+                alignof(#cc_name) == #alignment,
+                "Verify that struct layout didn't change since this header got generated");
+        });
+        cc.prereqs.defs.insert(local_def_id);
+        let rs = {
+            let rs_name = &core.rs_name;
+            quote! {
+                const _: () = assert!(::std::mem::size_of::<#rs_name>() == #size);
+                const _: () = assert!(::std::mem::align_of::<#rs_name>() == #alignment);
+            }
+        };
+        MixedSnippet { cc, rs }
     };
 
-    (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, MixedSnippet { cc, rs })
+    vec![
+        (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, main_api.into()),
+        (SnippetKey { def_id: local_def_id, kind: SnippetKind::ImplDetails }, impl_details),
+    ]
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a
@@ -1018,14 +1032,14 @@ fn format_doc_comment(tcx: TyCtxt, local_def_id: LocalDefId) -> TokenStream {
 /// can be ignored. Returns an `Err` if the definition couldn't be formatted.
 ///
 /// Will panic if `def_id` is invalid (i.e. doesn't identify a HIR item).
-fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<(SnippetKey, MixedSnippet)>> {
+fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, MixedSnippet)>> {
     let tcx = input.tcx;
 
     // TODO(b/262052635): When adding support for re-exports we may need to change
     // `is_directly_public` below into `is_exported`.  (OTOH such change *alone* is
     // undesirable, because it would mean exposing items from a private module.)
     if !tcx.effective_visibilities(()).is_directly_public(def_id) {
-        return Ok(None);
+        return Ok(vec![]);
     }
 
     match input.tcx.hir().expect_item(def_id) {
@@ -1039,13 +1053,15 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<(SnippetKey, 
             // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
             bail!("Generics are not supported yet (b/259749023 and b/259749095)");
         },
-        Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
+        Item { kind: ItemKind::Fn(..), .. } =>
+            format_fn(input, def_id)
+                .map(|snippet| vec![snippet]),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
             format_adt_core(tcx, def_id.to_def_id())
-                .map(|core| Some(format_adt(tcx, &core))),
+                .map(|core| format_adt(tcx, &core)),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
-            Ok(None),
+            Ok(vec![]),
         Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
     }
 }
@@ -1065,10 +1081,7 @@ fn format_unsupported_def(
     let msg = format!("Error generating bindings for `{name}` defined at {source_loc}: {err:#}");
     let cc = CcSnippet::new(quote! { __NEWLINE__ __NEWLINE__ __COMMENT__ #msg __NEWLINE__ });
 
-    (
-        SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi },
-        MixedSnippet { cc, rs: quote! {} },
-    )
+    (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, cc.into())
 }
 
 /// Formats all public items from the Rust crate being compiled.
@@ -1077,10 +1090,11 @@ fn format_crate(input: &Input) -> Result<Output> {
     let mut bindings: HashMap<SnippetKey, MixedSnippet> = tcx
         .hir()
         .items()
-        .filter_map(|item_id| {
+        .flat_map(|item_id| {
             let def_id: LocalDefId = item_id.owner_id.def_id;
             format_item(input, def_id)
-                .unwrap_or_else(|err| Some(format_unsupported_def(tcx, def_id, err)))
+                .unwrap_or_else(|err| vec![format_unsupported_def(tcx, def_id, err)])
+                .into_iter()
         })
         .fold(HashMap::new(), |mut map, (key, value)| {
             let old_item = map.insert(key, value);
@@ -1179,10 +1193,7 @@ fn format_crate(input: &Input) -> Result<Output> {
 
 #[cfg(test)]
 pub mod tests {
-    use super::{
-        format_cc_thunk_arg, format_item, format_ret_ty_for_cc, format_ty_for_cc, format_ty_for_rs,
-        generate_bindings, Input, MixedSnippet, Output,
-    };
+    use super::*;
 
     use anyhow::Result;
     use itertools::Itertools;
@@ -1415,28 +1426,28 @@ pub mod tests {
                             // `test_format_item_struct_with_fields`.
                             ...
                         };
-                        static_assert(sizeof(S) == ..., ...);
-                        static_assert(alignof(S) == ..., ...);
-
                         ...
-
                         namespace __crubit_internal {
                             extern "C" bool ...(::rust_out::S s);
                         }
                         ...
                         inline bool f(::rust_out::S s) { ... }
+                        ...
+                        static_assert(sizeof(S) == ..., ...);
+                        static_assert(alignof(S) == ..., ...);
+                        ...
                     }  // namespace rust_out
                 }
             );
             assert_rs_matches!(
                 bindings.rs_body,
                 quote! {
-                    const _: () = assert!(::std::mem::size_of::<::rust_out::S>() == ...);
-                    const _: () = assert!(::std::mem::align_of::<::rust_out::S>() == ...);
-                    ...
                     #[no_mangle]
                     extern "C"
                     fn ...(s: ::rust_out::S) -> bool { ...  }
+                    ...
+                    const _: () = assert!(::std::mem::size_of::<::rust_out::S>() == ...);
+                    const _: () = assert!(::std::mem::align_of::<::rust_out::S>() == ...);
                 }
             );
         });
@@ -1821,11 +1832,11 @@ pub mod tests {
                 pub extern "C" fn public_function() {}
             "#;
         test_format_item(test_src, "public_function", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     extern "C" void public_function();
                 }
@@ -1849,11 +1860,11 @@ pub mod tests {
                 pub extern "C" fn explicit_unit_return_type() -> () {}
             "#;
         test_format_item(test_src, "explicit_unit_return_type", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     extern "C" void explicit_unit_return_type();
                 }
@@ -1874,11 +1885,11 @@ pub mod tests {
             // attribute.
             // TODO(b/254507801): Expect `crubit::Never` instead (see the bug for more
             // details).
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     extern "C" void never_returning_function();
                 }
@@ -1897,11 +1908,12 @@ pub mod tests {
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_item(test_src, "public_function", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(main_api.cc.prereqs.is_empty());
+            assert!(main_api.rs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -1922,11 +1934,12 @@ pub mod tests {
                 pub extern "C" fn public_function(x: f64, y: f64) -> f64 { x + y }
             "#;
         test_format_item(test_src, "public_function", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(main_api.cc.prereqs.is_empty());
+            assert!(main_api.rs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double export_name(double x, double y);
@@ -1970,10 +1983,11 @@ pub mod tests {
         test_format_item(test_src, "foo", |result| {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
-            let result = result.unwrap().unwrap();
-            assert!(!result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(!main_api.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...( std::int32_t i);
@@ -1985,7 +1999,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                main_api.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2007,11 +2021,11 @@ pub mod tests {
                 pub extern "C-unwind" fn may_throw() {}
             "#;
         test_format_item(test_src, "may_throw", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     extern "C" void may_throw();
                 }
@@ -2028,17 +2042,18 @@ pub mod tests {
                 pub struct S(i32);
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
 
             // Minimal coverage, just to double-check that the test setup works.
             //
             // Note that this is a definition, and therefore `S` should be defined
             // earlier (not just forward declared).
-            assert_cc_matches!(result.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
+            assert_cc_matches!(main_api.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
 
             // Main checks: `CcPrerequisites::includes`.
             assert_cc_matches!(
-                format_cc_includes(&result.cc.prereqs.includes),
+                format_cc_includes(&main_api.cc.prereqs.includes),
                 quote! { include <cstdint> }
             );
 
@@ -2047,8 +2062,8 @@ pub mod tests {
             // Verifying the actual def_id is tricky, because `test_format_item` doesn't
             // expose `tcx` to the verification function (and therefore calling
             // `find_def_id_by_name` is not easily possible).
-            assert_eq!(1, result.cc.prereqs.defs.len());
-            assert_eq!(0, result.cc.prereqs.fwd_decls.len());
+            assert_eq!(1, main_api.cc.prereqs.defs.len());
+            assert_eq!(0, main_api.cc.prereqs.fwd_decls.len());
         });
     }
 
@@ -2070,22 +2085,23 @@ pub mod tests {
                 pub struct S(bool);
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
 
             // Minimal coverage, just to double-check that the test setup works.
             //
             // Note that this is only a function *declaration* (not a function definition -
             // there is no function body), and therefore `S` just needs to be
             // forward-declared earlier.
-            assert_cc_matches!(result.cc.tokens, quote! { extern "C" bool foo(::rust_out::S s); });
+            assert_cc_matches!(main_api.tokens, quote! { extern "C" bool foo(::rust_out::S s); });
 
             // Main checks: `CcPrerequisites::defs` and `CcPrerequisites::fwd_decls`.
             //
             // Verifying the actual def_id is tricky, because `test_format_item` doesn't
             // expose `tcx` to the verification function (and therefore calling
             // `find_def_id_by_name` is not easily possible).
-            assert_eq!(0, result.cc.prereqs.defs.len());
-            assert_eq!(1, result.cc.prereqs.fwd_decls.len());
+            assert_eq!(0, main_api.prereqs.defs.len());
+            assert_eq!(1, main_api.prereqs.fwd_decls.len());
         });
     }
 
@@ -2103,11 +2119,11 @@ pub mod tests {
                 pub extern "C" fn type_aliased_return() -> MyTypeAlias { 42.0 }
             "#;
         test_format_item(test_src, "type_aliased_return", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     extern "C" double type_aliased_return();
                 }
@@ -2126,9 +2142,9 @@ pub mod tests {
             pub extern "C" fn fn_with_doc_comment_with_unmangled_name() {}
           "#;
         test_format_item(test_src, "fn_with_doc_comment_with_unmangled_name", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             let doc_comments = [
                 " Outer line doc.",
                 "",
@@ -2141,7 +2157,7 @@ pub mod tests {
             ]
             .join("\n");
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #doc_comments
                     extern "C" void fn_with_doc_comment_with_unmangled_name();
@@ -2160,9 +2176,9 @@ pub mod tests {
             }
           "#;
         test_format_item(test_src, "fn_with_inner_doc_comment_with_unmangled_name", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             let doc_comments = [
                 " Outer doc comment.",
                 " Inner doc comment.",
@@ -2170,7 +2186,7 @@ pub mod tests {
             ]
             .join("\n\n");
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #doc_comments
                     extern "C" void fn_with_inner_doc_comment_with_unmangled_name();
@@ -2186,13 +2202,14 @@ pub mod tests {
                 pub extern "C" fn fn_with_doc_comment_with_mangled_name() {}
             "#;
         test_format_item(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(main_api.cc.prereqs.is_empty());
+            assert!(main_api.rs.is_empty());
             let comment = " Doc comment of a function with mangled name.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...();
@@ -2335,10 +2352,11 @@ pub mod tests {
             // TODO(b/261074843): Re-add thunk name verification once we are using stable name
             // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
             // + manual review and tweaks.)
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(main_api.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -2350,7 +2368,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                main_api.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2384,10 +2402,11 @@ pub mod tests {
                 pub extern "vectorcall" fn add(x: f64, y: f64) -> f64 { x * y }
             "#;
         test_format_item(test_src, "add", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(main_api.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -2399,7 +2418,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                main_api.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2434,11 +2453,11 @@ pub mod tests {
                 pub extern "C" fn foo(b: bool, f: f64) {}
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     extern "C" void foo(bool b, double f);
@@ -2455,11 +2474,11 @@ pub mod tests {
                 pub extern "C" fn some_function(reinterpret_cast: f64) {}
             "#;
         test_format_item(test_src, "some_function", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
-            assert!(result.rs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     extern "C" void some_function(double __param_0);
@@ -2474,10 +2493,11 @@ pub mod tests {
                 pub fn foo(_: f64, _: f64) {}
             "#;
         test_format_item(test_src, "foo", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
+            assert!(main_api.cc.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...(
@@ -2490,7 +2510,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                main_api.rs,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
@@ -2516,9 +2536,10 @@ pub mod tests {
                 pub fn func(S{f1, f2}: S) -> i32 { f1 + f2 }
             "#;
         test_format_item(test_src, "func", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_mixed_snippet(&result);
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...(::rust_out::S __param_0);
@@ -2530,7 +2551,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                main_api.rs,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: ::rust_out::S) -> i32 {
@@ -2599,10 +2620,12 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeStruct>() == 4);
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     struct alignas(4) SomeStruct final {
@@ -2626,12 +2649,17 @@ pub mod tests {
                         private:
                             unsigned char opaque_blob_of_bytes[8];
                     };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
                     static_assert(sizeof(SomeStruct) == 8, ...);
                     static_assert(alignof(SomeStruct) == 4, ...);
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                impl_details.rs,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeStruct>() == 4);
@@ -2650,10 +2678,12 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<TupleStruct>() == 4);
             "#;
         test_format_item(test_src, "TupleStruct", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     struct alignas(4) TupleStruct final {
@@ -2677,12 +2707,17 @@ pub mod tests {
                         private:
                             unsigned char opaque_blob_of_bytes[8];
                     };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
                     static_assert(sizeof(TupleStruct) == 8, ...);
                     static_assert(alignof(TupleStruct) == 4, ...);
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                impl_details.rs,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
@@ -2787,10 +2822,12 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeEnum>() == 1);
             "#;
         test_format_item(test_src, "SomeEnum", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     struct alignas(1) SomeEnum final {
@@ -2814,12 +2851,17 @@ pub mod tests {
                         private:
                             unsigned char opaque_blob_of_bytes[1];
                     };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
                     static_assert(sizeof(SomeEnum) == 1, ...);
                     static_assert(alignof(SomeEnum) == 1, ...);
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                impl_details.rs,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeEnum>() == 1);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeEnum>() == 1);
@@ -2842,10 +2884,12 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<Point>() == 4);
             "#;
         test_format_item(test_src, "Point", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     struct alignas(4) Point final {
@@ -2869,12 +2913,17 @@ pub mod tests {
                         private:
                             unsigned char opaque_blob_of_bytes[12];
                     };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
                     static_assert(sizeof(Point) == 12, ...);
                     static_assert(alignof(Point) == 4, ...);
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                impl_details.rs,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 12);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
@@ -2910,10 +2959,12 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeUnion>() == 8);
             "#;
         test_format_item(test_src, "SomeUnion", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     struct alignas(8) SomeUnion final {
@@ -2937,12 +2988,17 @@ pub mod tests {
                         private:
                             unsigned char opaque_blob_of_bytes[8];
                     };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
                     static_assert(sizeof(SomeUnion) == 8, ...);
                     static_assert(alignof(SomeUnion) == 8, ...);
                 }
             );
             assert_rs_matches!(
-                result.rs,
+                impl_details.rs,
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::SomeUnion>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::SomeUnion>() == 8);
@@ -2962,11 +3018,12 @@ pub mod tests {
             }
         "#;
         test_format_item(test_src, "SomeUnionWithDocs", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
             let comment = " Doc for some union.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeUnionWithDocs final {
@@ -2987,11 +3044,12 @@ pub mod tests {
             }
         "#;
         test_format_item(test_src, "SomeEnumWithDocs", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
             let comment = " Doc for some enum. \n\n\
                             Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeEnumWithDocs final {
@@ -3013,11 +3071,12 @@ pub mod tests {
             }
         "#;
         test_format_item(test_src, "SomeStructWithDocs", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
             let comment = "Doc for some struct.\n\n\
                            Generated from: <crubit_unittests.rs>;l=4";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeStructWithDocs final {
@@ -3036,11 +3095,12 @@ pub mod tests {
             pub struct SomeTupleStructWithDocs(i32);
         "#;
         test_format_item(test_src, "SomeTupleStructWithDocs", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
             let comment = " Doc for some tuple struct.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeTupleStructWithDocs final {
@@ -3065,11 +3125,12 @@ pub mod tests {
             some_tuple_struct_macro_for_testing_source_loc!();
         "#;
         test_format_item(test_src, "SomeTupleStructMacroForTesingSourceLoc", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
             let source_loc_comment = " Some doc on SomeTupleStructMacroForTesingSourceLoc.\n\n\
                                       Generated from: <crubit_unittests.rs>;l=5";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #source_loc_comment
                     struct ... SomeTupleStructMacroForTesingSourceLoc final {
@@ -3087,10 +3148,11 @@ pub mod tests {
             pub struct SomeTupleStructWithNoDocComment(i32);
         "#;
         test_format_item(test_src, "SomeTupleStructWithNoDocComment", |result| {
-            let result = result.unwrap().unwrap();
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
             let comment = "Generated from: <crubit_unittests.rs>;l=2";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
                     struct ... SomeTupleStructWithNoDocComment final {
@@ -3147,13 +3209,14 @@ pub mod tests {
                 }
             "#;
         test_format_item(test_src, "SomeStruct", |result| {
-            let result = result.unwrap().unwrap();
-            assert!(result.cc.prereqs.is_empty());
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
                                    defined at <crubit_unittests.rs>;l=5: \
                                    `impl` items are not supported yet";
             assert_cc_matches!(
-                result.cc.tokens,
+                main_api.tokens,
                 quote! {
                     ...
                     struct alignas(4) SomeStruct final {
@@ -3599,6 +3662,46 @@ pub mod tests {
         }
     }
 
+    // TODO(b/260725279): Remove this test helper (and use `get_main_api_snippet`)
+    // after `format_fn` gets refactored and returns separate MainApi (only C++)
+    // and ImplDetails (mix of C++ and Rust).
+    fn get_main_api_mixed_snippet(
+        format_item_result: &Vec<(SnippetKey, MixedSnippet)>,
+    ) -> &MixedSnippet {
+        format_item_result
+            .iter()
+            .filter_map(|(key, snippet)| match key.kind {
+                SnippetKind::MainApi => Some(snippet),
+                _ => None,
+            })
+            .exactly_one()
+            .expect("Expecting exactly 1 MainApi snippet")
+    }
+
+    fn get_main_api_snippet(format_item_result: &Vec<(SnippetKey, MixedSnippet)>) -> &CcSnippet {
+        let snippet = get_main_api_mixed_snippet(format_item_result);
+        assert!(snippet.rs.is_empty(), "MainApi should be C++-only");
+        &snippet.cc
+    }
+
+    /// Combines all ImplDetails snippets into a single MixedSnippet.
+    fn get_impl_details_snippet(
+        format_item_result: &Vec<(SnippetKey, MixedSnippet)>,
+    ) -> MixedSnippet {
+        format_item_result
+            .iter()
+            .filter_map(|(key, snippet)| match key.kind {
+                SnippetKind::ImplDetails => Some(snippet),
+                _ => None,
+            })
+            .fold(Default::default(), |mut acc, snippet| {
+                acc.cc.prereqs += snippet.cc.prereqs.clone();
+                acc.cc.tokens.extend(snippet.cc.tokens.clone());
+                acc.rs.extend(snippet.rs.clone());
+                acc
+            })
+    }
+
     /// Tests invoking `format_item` on the item with the specified `name` from
     /// the given Rust `source`.  Returns the result of calling
     /// `test_function` with `format_item`'s result as an argument.
@@ -3606,19 +3709,26 @@ pub mod tests {
     /// result from `format_item`.)
     fn test_format_item<F, T>(source: &str, name: &str, test_function: F) -> T
     where
-        F: FnOnce(Result<Option<MixedSnippet>, String>) -> T + Send,
+        F: FnOnce(Result<Vec<(SnippetKey, MixedSnippet)>, String>) -> T + Send,
         T: Send,
     {
         run_compiler_for_testing(source, |tcx| {
             let def_id = find_def_id_by_name(tcx, name);
             let result = format_item(&bindings_input_for_tests(tcx), def_id);
 
+            // Sort the vector of results to make the tests more deterministic.  Below (i.e. in
+            // tests) we use a somewhat arbitrary SnippetKey-based order.  The order of these
+            // intermediate results doesn't matter in prod, because they will later get toposorted
+            // based on CcPrerequisites.
+            let result = result.map(|mut vec| {
+                let cmp = preferred_snippet_order(tcx);
+                vec.sort_by(|(key1, _), (key2, _)| cmp(key1, key2));
+                vec
+            });
+
             // https://docs.rs/anyhow/latest/anyhow/struct.Error.html#display-representations says:
             // To print causes as well [...], use the alternate selector “{:#}”.
             let result = result.map_err(|anyhow_err| format!("{anyhow_err:#}"));
-
-            // Ignore SnippetKey for now.
-            let result = result.map(|opt| opt.map(|(_key, snippet)| snippet));
 
             test_function(result)
         })

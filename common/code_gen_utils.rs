@@ -155,7 +155,7 @@ pub fn format_namespace_bound_cc_tokens(
 }
 
 /// `CcInclude` represents a single `#include ...` directive in C++.
-#[derive(Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum CcInclude {
     SystemHeader(&'static str),
     UserHeader(Rc<str>),
