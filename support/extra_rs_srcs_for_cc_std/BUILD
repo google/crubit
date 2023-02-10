@@ -2,6 +2,8 @@
 # Exceptions. See /LICENSE for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 filegroup(
     name = "extra_rs_srcs_for_cc_std",
     srcs = glob([

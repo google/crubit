@@ -5,6 +5,8 @@ load(
     "rust_test",
 )
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 rust_proc_macro(
     name = "cc_import",
     srcs = [

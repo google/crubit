@@ -1,5 +1,7 @@
 # C++ libraries that help work with Rust types.
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 cc_library(
     name = "char",
     hdrs = ["char.h"],
