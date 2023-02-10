@@ -216,7 +216,7 @@ impl FullyQualifiedName {
         fn get_symbol(path_component: DisambiguatedDefPathData) -> Symbol {
             match path_component.data {
                 DefPathData::TypeNs(symbol) | DefPathData::ValueNs(symbol) => symbol,
-                other_data => panic!("Unexpected `path_component`: {other_data}"),
+                other_data => panic!("Unexpected `path_component`: {other_data:?}"),
             }
         }
 
@@ -951,25 +951,23 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Option<MixedSnippet>
     }
 
     match input.tcx.hir().expect_item(def_id) {
-        Item {
-            kind:
-                ItemKind::Fn(_, generics, _)
-                | ItemKind::Struct(_, generics)
-                | ItemKind::Enum(_, generics)
-                | ItemKind::Union(_, generics),
-            ..
-        } if !generics.params.is_empty() => {
+        Item { kind: ItemKind::Fn(_, generics, _) |
+                     ItemKind::Struct(_, generics) |
+                     ItemKind::Enum(_, generics) |
+                     ItemKind::Union(_, generics),
+               .. } if !generics.params.is_empty() => {
             // TODO(b/258235219): Supporting function parameter types (or return types) that
             // are references requires adding support for generic lifetime parameters.  The
             // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
             bail!("Generics are not supported yet (b/259749023 and b/259749095)");
-        }
+        },
         Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id).map(Some),
-        Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } => {
+        Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
             format_adt_core(input.tcx, def_id.to_def_id())
-                .map(|core| Some(format_adt(input.tcx, &core)))
-        }
-        Item { kind: ItemKind::Mod(_), .. } => Ok(None),
+                .map(|core| Some(format_adt(input.tcx, &core))),
+        Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
+        Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
+            Ok(None),
         Item { kind, .. } => bail!("Unsupported rustc_hir::hir::ItemKind: {}", kind.descr()),
     }
 }
@@ -1244,6 +1242,43 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
+                }
+            );
+        });
+    }
+
+    /// The `test_generated_bindings_impl` test covers only a single example of
+    /// a non-trait `impl`. Additional coverage of how items are formatted
+    /// should be provided in the future by `test_format_item_...` tests.
+    #[test]
+    fn test_generated_bindings_impl() {
+        let test_src = r#"
+                pub struct SomeStruct(i32);
+
+                impl SomeStruct {
+                    pub fn public_static_method() -> i32 { 123 }
+
+                    #[allow(dead_code)]
+                    fn private_static_method() -> i32 { 123 }
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+            assert_cc_matches!(
+                bindings.h_body,
+                quote! {
+                    namespace rust_out {
+                        ...
+                        struct ... SomeStruct ... {
+                            // No point replicating test coverage of
+                            // `test_format_def_struct_with_tuple`.
+                            ...
+                            // TODO(b/260725279): Expect presence of a static method.
+                            // (For now this test ensures that `impl` blocks don't
+                            // trigger a panic during bindings generation.)
+                        };
+                        ...
+                    }  // namespace rust_out
                 }
             );
         });
