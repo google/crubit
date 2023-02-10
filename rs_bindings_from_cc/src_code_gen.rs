@@ -922,7 +922,7 @@ fn api_func_shape(
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: Rc::from(String::from("::std::ops::") + trait_name),
+                        name: Rc::from(format!("::std::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
@@ -967,7 +967,7 @@ fn api_func_shape(
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: Rc::from(String::from("::std::ops::") + trait_name),
+                        name: Rc::from(format!("::std::ops::{trait_name}")),
                         params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
