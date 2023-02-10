@@ -119,8 +119,11 @@ trait BindingsGenerator {
 
     fn is_record_clonable(&self, record: Rc<Record>) -> bool;
 
-    // TODO(b/236687702): convert the get_binding function into a query once
-    // ImplKind implements Eq.
+    fn get_binding(
+        &self,
+        expected_function_name: UnqualifiedIdentifier,
+        expected_param_types: Vec<RsTypeKind>,
+    ) -> Option<(Ident, ImplKind)>;
 }
 
 #[salsa::database(BindingsGeneratorStorage)]
@@ -363,19 +366,50 @@ fn make_unsupported_nested_type_alias(type_alias: &TypeAlias) -> Result<Unsuppor
 
 /// The name of a one-function trait, with extra entries for
 /// specially-understood traits and families of traits.
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum TraitName {
     /// The constructor trait for !Unpin types, with a list of parameter types.
     /// For example, `CtorNew(vec![])` is the default constructor.
-    CtorNew(Vec<RsTypeKind>),
+    CtorNew(Rc<[RsTypeKind]>),
     /// An Unpin constructor trait, e.g. From or Clone, with a list of parameter
     /// types.
-    UnpinConstructor { name: TokenStream, params: Vec<RsTypeKind> },
+    UnpinConstructor {
+        name: Rc<str>,
+        // /// Clonable, comparable token stream, which can be copied into a new TokenStream.
+        // #[repr(transparent)]
+        // struct TokenArray(Rc<[TokenTree]>);
+        // // impl From<TokenStream> for TokenArray, From<TokenArray> for TokenStream, PartialEq,
+        // Eq, Hash, etc.
+
+        // This avoids deferred parsing.
+
+        // I just can't figure out how to make the equality check not prohibitively ugly:
+
+        // impl PartialEq for TokenArray {
+        //   fn eq(&self, other: &TokenArray) {
+        //     struct EqTokenTree<'a>(&'a TokenTree);
+        //     impl PartialEq for EqTokenTree {
+        //       fn eq(&self, other: &EqTokenTree) {
+        //         match (&self.0, &other.0) {
+        //           (Group(g1), Group(g2)) => g1.delimiter() == g2.delimiter(),
+        //           (Ident(i1), Ident(i2)) => i1 == i2,
+        //           (Punct(p1), Punct(p2)) => p1.as_char() == p2.as_char(),
+        //           (Literal(l1), Literal(l2)) => /* can't find a better way to do this */
+        // l1.to_string() == l2.to_string(),           _ => False,
+        //         }
+        //       }
+        //     }
+        //     self.0.iter().map(EqTokenTree).eq(other.0.iter().map(EqTokenTree))
+        //   }
+        // }
+        params: Rc<[RsTypeKind]>,
+    },
     /// The PartialEq trait.
-    PartialEq { params: Vec<RsTypeKind> },
+    PartialEq { params: Rc<[RsTypeKind]> },
     /// The PartialOrd trait.
-    PartialOrd { params: Vec<RsTypeKind> },
+    PartialOrd { params: Rc<[RsTypeKind]> },
     /// Any other trait, e.g. Eq.
-    Other { name: TokenStream, params: Vec<RsTypeKind>, is_unsafe_fn: bool },
+    Other { name: Rc<str>, params: Rc<[RsTypeKind]>, is_unsafe_fn: bool },
 }
 
 impl TraitName {
@@ -402,9 +436,10 @@ impl TraitName {
     fn to_token_stream_removing_trait_record(&self, trait_record: Option<&Record>) -> TokenStream {
         match self {
             Self::UnpinConstructor { name, params } | Self::Other { name, params, .. } => {
+                let name_as_token_stream = name.parse::<TokenStream>().unwrap();
                 let formatted_params =
-                    format_generic_params_replacing_by_self(params, trait_record);
-                quote! {#name #formatted_params}
+                    format_generic_params_replacing_by_self(&**params, trait_record);
+                quote! {#name_as_token_stream #formatted_params}
             }
             Self::PartialEq { params } => {
                 assert_eq!(params.len(), 1, "PartialEq must have a single generic param");
@@ -413,7 +448,7 @@ impl TraitName {
                     quote! {PartialEq}
                 } else {
                     let formatted_params =
-                        format_generic_params_replacing_by_self(params, trait_record);
+                        format_generic_params_replacing_by_self(&**params, trait_record);
                     quote! {PartialEq #formatted_params}
                 }
             }
@@ -423,7 +458,7 @@ impl TraitName {
                     quote! {PartialOrd}
                 } else {
                     let formatted_params =
-                        format_generic_params_replacing_by_self(params, trait_record);
+                        format_generic_params_replacing_by_self(&**params, trait_record);
                     quote! {PartialOrd #formatted_params}
                 }
             }
@@ -453,6 +488,7 @@ fn format_generic_params_replacing_by_self<'a>(
 }
 
 /// The kind of the `impl` block the function needs to be generated in.
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum ImplKind {
     /// Used for free functions for which we don't want the `impl` block.
     None { is_unsafe: bool },
@@ -476,9 +512,10 @@ enum ImplKind {
         /// Reference style for the `impl` block and self parameters.
         impl_for: ImplFor,
 
-        /// The generic params of trait `impl` (e.g. `vec![quote!{'b}]`). These
-        /// start empty and only later are mutated into the correct value.
-        trait_generic_params: Vec<TokenStream>,
+        /// The generic params of trait `impl` (e.g. `vec!['b]`).
+        /// These start empty and only later are mutated into the
+        /// correct value.
+        trait_generic_params: Rc<[Lifetime]>,
 
         /// Whether to format the first parameter as "self" (e.g. `__this:
         /// &mut T` -> `&mut self`)
@@ -511,7 +548,7 @@ impl ImplKind {
             record,
             trait_name,
             impl_for: ImplFor::T,
-            trait_generic_params: vec![],
+            trait_generic_params: Rc::new([]),
             format_first_param_as_self,
             drop_return: false,
             associated_return_type: None,
@@ -539,6 +576,7 @@ impl ImplKind {
 /// Whether the impl block is for T, and the receivers take self by reference,
 /// or the impl block is for a reference to T, and the method receivers take
 /// self by value.
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum ImplFor {
     /// Implement the trait for `T` directly.
     ///
@@ -739,7 +777,7 @@ fn api_func_shape(
             };
             func_name = make_rs_ident("eq");
             impl_kind = ImplKind::new_trait(
-                TraitName::PartialEq { params },
+                TraitName::PartialEq { params: Rc::from(params) },
                 lhs_record.clone(),
                 /* format_first_param_as_self= */ true,
                 /* force_const_reference_params= */ true,
@@ -801,12 +839,12 @@ fn api_func_shape(
             match get_binding(
                 db,
                 UnqualifiedIdentifier::Operator(Operator { name: Rc::from("==") }),
-                param_types,
+                param_types.to_vec(),
             ) {
                 Some((_, ImplKind::Trait { trait_name: TraitName::PartialEq { .. }, .. })) => {
                     func_name = make_rs_ident("lt");
                     impl_kind = ImplKind::new_trait(
-                        TraitName::PartialOrd { params },
+                        TraitName::PartialOrd { params: Rc::from(params) },
                         lhs_record.clone(),
                         /* format_first_param_as_self= */
                         true,
@@ -831,10 +869,10 @@ fn api_func_shape(
             //  TODO(b/219963671): consolidate UnpinAssign and Assign in ctor.rs
             let trait_name;
             if record.is_unpin() {
-                trait_name = quote! {::ctor::UnpinAssign};
+                trait_name = Rc::from("::ctor::UnpinAssign");
                 func_name = make_rs_ident("unpin_assign");
             } else {
-                trait_name = quote! {::ctor::Assign};
+                trait_name = Rc::from("::ctor::Assign");
                 func_name = make_rs_ident("assign")
             };
 
@@ -843,11 +881,11 @@ fn api_func_shape(
                     record: record.clone(),
                     trait_name: TraitName::Other {
                         name: trait_name,
-                        params: vec![rhs.clone()],
+                        params: Rc::new([rhs.clone()]),
                         is_unsafe_fn: false,
                     },
                     impl_for: ImplFor::T,
-                    trait_generic_params: vec![],
+                    trait_generic_params: Rc::new([]),
                     format_first_param_as_self: true,
                     drop_return: true,
                     associated_return_type: None,
@@ -881,16 +919,15 @@ fn api_func_shape(
                     _ => bail!("Expected first parameter to be a record or reference"),
                 };
 
-                let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: quote! {::std::ops::#trait_name},
-                        params: param_types[1..].to_vec(),
+                        name: Rc::from(String::from("::std::ops::") + trait_name),
+                        params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
                     impl_for,
-                    trait_generic_params: vec![],
+                    trait_generic_params: Rc::new([]),
                     format_first_param_as_self: true,
                     drop_return: false,
                     associated_return_type: Some(make_rs_ident("Output")),
@@ -927,16 +964,15 @@ fn api_func_shape(
                     _ => bail!("Expected first parameter to be a record or reference"),
                 };
 
-                let trait_name = make_rs_ident(trait_name);
                 impl_kind = ImplKind::Trait {
                     record: record.clone(),
                     trait_name: TraitName::Other {
-                        name: quote! {::std::ops::#trait_name},
-                        params: param_types[1..].to_vec(),
+                        name: Rc::from(String::from("::std::ops::") + trait_name),
+                        params: Rc::from(&param_types[1..]),
                         is_unsafe_fn: false,
                     },
                     impl_for: ImplFor::T,
-                    trait_generic_params: vec![],
+                    trait_generic_params: Rc::new([]),
                     format_first_param_as_self: true,
                     drop_return: true,
                     associated_return_type: None,
@@ -985,7 +1021,11 @@ fn api_func_shape(
             }
             if record.is_unpin() {
                 impl_kind = ImplKind::new_trait(
-                    TraitName::Other { name: quote! {Drop}, params: vec![], is_unsafe_fn: false },
+                    TraitName::Other {
+                        name: Rc::from("Drop"),
+                        params: Rc::from([]),
+                        is_unsafe_fn: false,
+                    },
                     record.clone(),
                     /* format_first_param_as_self= */ true,
                     /* force_const_reference_params= */
@@ -996,8 +1036,8 @@ fn api_func_shape(
                 materialize_ctor_in_caller(func, param_types);
                 impl_kind = ImplKind::new_trait(
                     TraitName::Other {
-                        name: quote! {::ctor::PinnedDrop},
-                        params: vec![],
+                        name: Rc::from("::ctor::PinnedDrop"),
+                        params: Rc::from([]),
                         is_unsafe_fn: true,
                     },
                     record.clone(),
@@ -1040,7 +1080,7 @@ fn api_func_shape(
                             record: record.clone(),
                             trait_name: TraitName::CtorNew(params.iter().cloned().collect()),
                             impl_for: ImplFor::T,
-                            trait_generic_params: vec![],
+                            trait_generic_params: Rc::new([]),
                             format_first_param_as_self: false,
                             drop_return: false,
                             associated_return_type: Some(make_rs_ident("CtorType")),
@@ -1053,7 +1093,10 @@ fn api_func_shape(
                     0 => bail!("Missing `__this` parameter in a constructor: {:?}", func),
                     1 => {
                         impl_kind = ImplKind::new_trait(
-                            TraitName::UnpinConstructor { name: quote! {Default}, params: vec![] },
+                            TraitName::UnpinConstructor {
+                                name: Rc::from("Default"),
+                                params: Rc::from([]),
+                            },
                             record.clone(),
                             /* format_first_param_as_self= */ false,
                             /* force_const_reference_params= */ false,
@@ -1068,8 +1111,8 @@ fn api_func_shape(
                             } else {
                                 impl_kind = ImplKind::new_trait(
                                     TraitName::UnpinConstructor {
-                                        name: quote! {Clone},
-                                        params: vec![],
+                                        name: Rc::from("Clone"),
+                                        params: Rc::from([]),
                                     },
                                     record.clone(),
                                     /* format_first_param_as_self= */ true,
@@ -1081,8 +1124,8 @@ fn api_func_shape(
                             let param_type = &param_types[1];
                             impl_kind = ImplKind::new_trait(
                                 TraitName::UnpinConstructor {
-                                    name: quote! {From},
-                                    params: vec![param_type.clone()],
+                                    name: Rc::from("From"),
+                                    params: Rc::from([param_type.clone()]),
                                 },
                                 record.clone(),
                                 /* format_first_param_as_self= */ false,
@@ -1110,7 +1153,7 @@ fn api_func_shape(
 fn get_binding(
     db: &dyn BindingsGenerator,
     expected_function_name: UnqualifiedIdentifier,
-    expected_param_types: &[RsTypeKind],
+    expected_param_types: Vec<RsTypeKind>,
 ) -> Option<(Ident, ImplKind)> {
     db.ir()
         // TODO(jeanpierreda): make this O(1) using a hash table lookup.
@@ -1126,7 +1169,7 @@ fn get_binding(
                 .map(|param| db.rs_type_kind(param.type_.rs_type.clone()))
                 .collect::<Result<Vec<_>>>()
                 .ok()?;
-            if !function_param_types.iter().eq(expected_param_types) {
+            if !function_param_types.iter().eq(expected_param_types.iter()) {
                 return None;
             }
             api_func_shape(db, function, &mut function_param_types).ok().flatten()
@@ -1401,12 +1444,18 @@ fn generate_func(
                 lifetimes.iter().filter(|lifetime| !trait_lifetimes.contains(lifetime)),
                 std::iter::empty::<syn::Ident>(),
             );
-            *trait_generic_params = lifetimes
-                .iter()
-                .filter_map(|lifetime| {
-                    if trait_lifetimes.contains(lifetime) { Some(quote! {#lifetime}) } else { None }
-                })
-                .collect();
+            *trait_generic_params = Rc::from(
+                lifetimes
+                    .iter()
+                    .filter_map(|lifetime| {
+                        if trait_lifetimes.contains(lifetime) {
+                            Some(lifetime.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<Lifetime>>(),
+            );
         } else {
             fn_generic_params = format_generic_params(&lifetimes, std::iter::empty::<syn::Ident>());
         }
@@ -1496,8 +1545,8 @@ fn generate_func(
 
             let record_name = make_rs_ident(trait_record.rs_name.as_ref());
             let extra_items;
-            let trait_generic_params =
-                format_generic_params(/* lifetimes= */ &[], trait_generic_params);
+            let formatted_trait_generic_params =
+                format_generic_params(/* lifetimes= */ &[], &*trait_generic_params);
             match &trait_name {
                 TraitName::CtorNew(params) => {
                     if params.len() == 1 {
@@ -1506,7 +1555,7 @@ fn generate_func(
                             Some(&trait_record),
                         );
                         extra_items = quote! {
-                            impl #trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name {
+                            impl #formatted_trait_generic_params ::ctor::CtorNew<(#single_param_,)> for #record_name {
                                 #extra_body
 
                                 #[inline (always)]
@@ -1536,7 +1585,7 @@ fn generate_func(
             };
             api_func = quote! {
                 #doc_comment
-                impl #trait_generic_params #trait_name_without_trait_record for #impl_for {
+                impl #formatted_trait_generic_params #trait_name_without_trait_record for #impl_for {
                     #extra_body
                     #api_func_def
                 }
@@ -2834,7 +2883,7 @@ fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> 
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 enum Mutability {
     Const,
     Mut,
@@ -2901,7 +2950,7 @@ impl ToTokens for Lifetime {
 }
 
 /// Qualified path from the root of the crate to the module containing the type.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct CratePath {
     /// `Some("other_crate")` or `None` for paths within the current crate.
     crate_ident: Option<Ident>,
@@ -2933,7 +2982,7 @@ impl ToTokens for CratePath {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 enum RsTypeKind {
     Pointer {
         pointee: Rc<RsTypeKind>,
