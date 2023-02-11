@@ -11,7 +11,7 @@ use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
 use rustc_hir::definitions::{DefPathData, DisambiguatedDefPathData};
-use rustc_hir::{Item, ItemKind, Unsafety};
+use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
 use rustc_middle::ty::{self, Ty, TyCtxt}; // See <internal link>/ty.html#import-conventions
@@ -212,11 +212,27 @@ struct FullyQualifiedName {
 }
 
 impl FullyQualifiedName {
+    /// Computes a `FullyQualifiedName` for `def_id`.
+    ///
+    /// May panic if `def_id` is an invalid id, or identifies an unnamed item.
+    /// Examples of supported items:
+    /// - `Node::Item` with `ItemKind::Fn`
+    /// - `Node::Item` with `ItemKind::Struct`
+    /// - Any `Node::ImplItem` (e.g. `ImplItemKind::Fn`)
+    /// Examples of unsupported items:
+    /// - `Node::Item` with `ItemKind::Impl` (the `impl` block itself doesn't
+    ///   have a name)
     // TODO(b/259724276): This function's results should be memoized.
     fn new(tcx: TyCtxt, def_id: DefId) -> Self {
-        fn get_symbol(path_component: DisambiguatedDefPathData) -> Symbol {
+        fn get_symbol(path_component: DisambiguatedDefPathData) -> Option<Symbol> {
             match path_component.data {
-                DefPathData::TypeNs(symbol) | DefPathData::ValueNs(symbol) => symbol,
+                DefPathData::TypeNs(symbol) | DefPathData::ValueNs(symbol) => Some(symbol),
+
+                // `Impl` and `ImplTrait` variants can appear in `full_path` of
+                // a method - e.g. (pseudocode): `module1::module2::impl::method`.
+                // Return `None` to skip these when calculating the `mod_path`.
+                DefPathData::Impl | DefPathData::ImplTrait => None,
+
                 other_data => panic!("Unexpected `path_component`: {other_data:?}"),
             }
         }
@@ -225,10 +241,10 @@ impl FullyQualifiedName {
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
-        let name = get_symbol(name);
+        let name = get_symbol(name).expect("Caller should ensure `def_id` maps to a named item");
 
         let mod_path = NamespaceQualifier::new(
-            full_path.into_iter().map(get_symbol).map(|s| Rc::<str>::from(s.as_str())),
+            full_path.into_iter().filter_map(get_symbol).map(|s| Rc::<str>::from(s.as_str())),
         );
 
         Self { krate, mod_path, name }
@@ -652,6 +668,19 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
         })
         .collect::<Result<Vec<_>>>()?;
 
+    let struct_name = match tcx.impl_of_method(def_id) {
+        Some(impl_id) => match tcx.impl_subject(impl_id) {
+            ty::ImplSubject::Inherent(ty) => match ty.kind() {
+                ty::TyKind::Adt(adt, substs) => {
+                    assert_eq!(0, substs.len(), "Callers should filter out generics");
+                    Some(tcx.item_name(adt.did()))
+                }
+                _ => panic!("Non-ADT `impl`s should be filtered by caller"),
+            },
+            ty::ImplSubject::Trait(_) => panic!("Trait methods should be filtered by caller"),
+        },
+        None => None,
+    };
     let needs_definition = name.as_str() != symbol_name.name;
     let main_api = {
         let doc_comment = {
@@ -659,9 +688,21 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             quote! { __NEWLINE__ #doc_comment }
         };
 
+        let static_ = match tcx.hir().get_by_def_id(local_def_id) {
+            Node::ImplItem(impl_item) => match &impl_item.kind {
+                ImplItemKind::Fn(fn_sig, _) => match fn_sig.decl.implicit_self {
+                    ImplicitSelfKind::None => quote! { static },
+                    _ => bail!("`self` parameter is not supported yet"),
+                },
+                _ => panic!("`format_fn` can only work with functions"),
+            },
+            Node::Item(_) => quote! {}, // Free function ==> no `static` qualifier.
+            other => panic!("Unexpected HIR node kind: {other:?}"),
+        };
+
         let mut prereqs = prereqs.clone();
         prereqs.move_defs_to_fwd_decls();
-        let qualifiers = if !needs_definition {
+        let extern_c_or_inline = if !needs_definition {
             quote! { extern "C" }
         } else {
             quote! { inline }
@@ -670,7 +711,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             prereqs,
             tokens: quote! {
                 #doc_comment
-                #qualifiers #cc_ret_type #cc_fn_name (
+                #static_ #extern_c_or_inline #cc_ret_type #cc_fn_name (
                         #( #cc_arg_types #cc_arg_names ),*
                 );
             },
@@ -681,6 +722,14 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
     } else {
         let cc_exported_name =
             format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+        let cc_struct_name = match struct_name.as_ref() {
+            None => quote! {},
+            Some(symbol) => {
+                let name = format_cc_ident(symbol.as_str())
+                    .expect("Caller of format_fn should verify struct name via format_adt_core");
+                quote! { #name :: }
+            }
+        };
         let thunk_args = cc_arg_names
             .clone()
             .into_iter()
@@ -695,7 +744,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                             #( #cc_arg_types #cc_arg_names ),*
                     );
                 }
-                inline #cc_ret_type #cc_fn_name (
+                inline #cc_ret_type #cc_struct_name #cc_fn_name (
                         #( #cc_arg_types #cc_arg_names ),* ) {
                     return __crubit_internal :: #cc_exported_name( #( #thunk_args ),* );
                 }
@@ -709,6 +758,13 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
             let mod_path = mod_path.format_for_rs();
             let rs_fn_name = make_rs_ident(name.as_str());
             let rs_exported_name = make_rs_ident(symbol_name.name);
+            let rs_struct_name = match struct_name.as_ref() {
+                None => quote! {},
+                Some(symbol) => {
+                    let name = make_rs_ident(symbol.as_str());
+                    quote! { #name :: }
+                }
+            };
             let rs_ret_type = format_ty_for_rs(tcx, sig.output())?;
             let rs_arg_names = tcx
                 .fn_arg_names(def_id)
@@ -732,7 +788,9 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                 #[no_mangle]
                 extern "C" fn #rs_exported_name( #( #rs_arg_names: #rs_arg_types ),* )
                         -> #rs_ret_type {
-                    :: #crate_name :: #mod_path #rs_fn_name( #( #rs_arg_names ),* )
+                    :: #crate_name :: #mod_path #rs_struct_name #rs_fn_name(
+                        #( #rs_arg_names ),*
+                    )
                 }
             }
         };
@@ -926,17 +984,19 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
 ///
-/// Returns multiple snippets to support independent reordering of 1) the struct definition
-/// (including declarations of methods - aka member functions), and 2) an arbitrary number of
-/// method definitions.  For motivation see the `non_contiguous_method_decls_and_defs` module in
-/// `cc_bindings_from_rs/test/impls/impls.rs`).  Secondary motivation is to keep implementation
+/// Returns multiple snippets to support independent reordering of 1) the struct
+/// definition (including declarations of methods - aka member functions), and
+/// 2) an arbitrary number of method definitions.  For motivation see the
+/// `non_contiguous_method_decls_and_defs` module in `cc_bindings_from_rs/test/
+/// impls/impls.rs`).  Secondary motivation is to keep implementation
 /// details out of the way (to improve readability of the main apis).
-fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnippet)> {
+fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnippet)> {
+    let tcx = input.tcx;
+
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
 
-    // TODO(b/260725279): Add support for static methods.
-    let impl_item_decls = tcx
+    let (impl_item_main_apis, impl_item_other_snippets) = tcx
         .inherent_impls(core.def_id)
         .iter()
         .map(|impl_id| tcx.hir().expect_item(impl_id.expect_local()))
@@ -944,16 +1004,18 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnip
             ItemKind::Impl(impl_) => impl_.items,
             other => panic!("Unexpected `ItemKind` from `inherent_impls`: {other:?}"),
         })
-        .map(|impl_item_ref| impl_item_ref.id.owner_id.def_id)
-        .filter(|impl_item_def_id| {
-            tcx.effective_visibilities(()).is_directly_public(*impl_item_def_id)
+        .flat_map(|impl_item_ref| {
+            let def_id = impl_item_ref.id.owner_id.def_id;
+            if !tcx.effective_visibilities(()).is_directly_public(def_id) {
+                return vec![];
+            }
+            let result = match impl_item_ref.kind {
+                AssocItemKind::Fn { .. } => format_fn(input, def_id),
+                _ => Err(anyhow!("`impl` items are not supported yet")),
+            };
+            result.unwrap_or_else(|err| vec![format_unsupported_def(tcx, def_id, err)])
         })
-        .sorted_by_key(|impl_item_def_id| tcx.def_span(*impl_item_def_id))
-        .map(|impl_item_def_id| {
-            let err = anyhow!("`impl` items are not supported yet");
-            format_unsupported_def(tcx, impl_item_def_id, err).1.cc
-        })
-        .collect_vec();
+        .partition::<Vec<_>, _>(|(SnippetKey { kind, .. }, _)| *kind == SnippetKind::MainApi);
 
     let alignment = Literal::u64_unsuffixed(core.alignment_in_bytes);
     let size = Literal::u64_unsuffixed(core.size_in_bytes);
@@ -964,11 +1026,14 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnip
         let core = &core.core;
 
         let mut prereqs = CcPrerequisites::default();
-        let impl_item_decls = if impl_item_decls.is_empty() {
+        let impl_item_decls = if impl_item_main_apis.is_empty() {
             quote! {}
         } else {
-            let tokens =
-                impl_item_decls.into_iter().map(|snippet| snippet.into_tokens(&mut prereqs));
+            let cmp = preferred_snippet_order(tcx);
+            let tokens = impl_item_main_apis
+                .into_iter()
+                .sorted_by(|(key1, _), (key2, _)| cmp(key1, key2))
+                .map(|(_key, snippet)| snippet.cc.into_tokens(&mut prereqs));
             quote! {
                 public:
                     #( #tokens )*
@@ -1009,10 +1074,12 @@ fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnip
         MixedSnippet { cc, rs }
     };
 
-    vec![
+    let mut result = vec![
         (SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, main_api.into()),
         (SnippetKey { def_id: local_def_id, kind: SnippetKind::ImplDetails }, impl_details),
-    ]
+    ];
+    result.extend(impl_item_other_snippets);
+    result
 }
 
 /// Formats the forward declaration of an algebraic data type (an ADT - a
@@ -1095,7 +1162,7 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, Mix
         Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
             format_adt_core(tcx, def_id.to_def_id())
-                .map(|core| format_adt(tcx, &core)),
+                .map(|core| format_adt(input, &core)),
         Item { kind: ItemKind::Impl(_), .. } |  // Handled by `format_adt`
         Item { kind: ItemKind::Mod(_), .. } =>  // Handled by `format_crate`
             Ok(vec![]),
@@ -1383,6 +1450,11 @@ pub mod tests {
     /// The `test_generated_bindings_impl` test covers only a single example of
     /// a non-trait `impl`. Additional coverage of how items are formatted
     /// should be provided in the future by `test_format_item_...` tests.
+    ///
+    /// We don't want to duplicate coverage already provided by
+    /// `test_format_item_static_method`, but we do want to verify that
+    /// * `format_crate` won't process the `impl` as a standalone HIR item
+    /// * The actual shape of the bindings still looks okay at this level.
     #[test]
     fn test_generated_bindings_impl() {
         let test_src = r#"
@@ -1404,14 +1476,24 @@ pub mod tests {
                         ...
                         struct ... SomeStruct ... {
                             // No point replicating test coverage of
-                            // `test_format_item_struct_with_tuple`.
+                            // `test_format_item_static_method`.
                             ...
-                            // TODO(b/260725279): Expect presence of a static method.
-                            // (For now this test ensures that `impl` blocks don't
-                            // trigger a panic during bindings generation.)
+                            std::int32_t public_static_method();
+                            ...
                         };
                         ...
+                        std::int32_t SomeStruct::public_static_method() {
+                            ...
+                        }
                     }  // namespace rust_out
+                }
+            );
+            assert_rs_matches!(
+                bindings.rs_body,
+                quote! {
+                    extern "C" fn ...() -> i32 {
+                        ::rust_out::SomeStruct::public_static_method()
+                    }
                 }
             );
         });
@@ -2819,6 +2901,59 @@ pub mod tests {
                 quote! {
                     const _: () = assert!(::std::mem::size_of::<::rust_out::TupleStruct>() == 8);
                     const _: () = assert!(::std::mem::align_of::<::rust_out::TupleStruct>() == 4);
+                }
+            );
+        });
+    }
+
+    #[test]
+    fn test_format_item_static_method() {
+        let test_src = r#"
+                /// No-op `f32` placeholder is used, because ZSTs are not supported.
+                pub struct Math(f32);
+
+                impl Math {
+                    pub fn add_i32(x: f32, y: f32) -> f32 {
+                        x + y
+                    }
+                }
+            "#;
+        test_format_item(test_src, "Math", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... Math final {
+                        ...
+                        public:
+                          ...
+                          static inline float add_i32(float x, float y);
+                        ...
+                    };
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
+                quote! {
+                    namespace __crubit_internal {
+                    extern "C" float ... (float x, float y);
+                    }
+                    inline float Math::add_i32(float x, float y) {
+                      return __crubit_internal::...(x, y);
+                    }
+                }
+            );
+            assert_rs_matches!(
+                impl_details.rs,
+                quote! {
+                    #[no_mangle]
+                    extern "C" fn ...(x: f32, y: f32) -> f32 {
+                        ::rust_out::Math::add_i32(x, y)
+                    }
                 }
             );
         });
