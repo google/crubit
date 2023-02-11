@@ -1039,6 +1039,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                     #( #tokens )*
             }
         };
+        prereqs.fwd_decls.remove(&local_def_id);
 
         CcSnippet {
             prereqs,
@@ -1743,7 +1744,7 @@ pub mod tests {
     /// forward declarations for *all* `structs` (regardless if they are
     /// needed or not).
     #[test]
-    fn test_generated_bindings_prereq_fwd_decls_not_needed() {
+    fn test_generated_bindings_prereq_fwd_decls_not_needed_because_of_initial_order() {
         let test_src = r#"
                 pub struct S(bool);
 
@@ -1753,6 +1754,26 @@ pub mod tests {
         test_generated_bindings(test_src, |bindings| {
             let bindings = bindings.unwrap();
             assert_cc_not_matches!(bindings.h_body, quote! { struct S; });
+            assert_cc_matches!(bindings.h_body, quote! { void f(const ::rust_out::S* _s); });
+        });
+    }
+
+    /// This test verifies that a method declaration doesn't ask for a forward
+    /// declaration to the struct.
+    #[test]
+    fn test_generated_bindings_prereq_fwd_decls_not_needed_inside_struct_definition() {
+        let test_src = r#"
+                pub struct S(bool);
+
+                impl S {
+                    // This shouldn't require a fwd decl of S.
+                    pub fn create() -> S { Self(true) }
+                }
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+            assert_cc_not_matches!(bindings.h_body, quote! { struct S; });
+            assert_cc_matches!(bindings.h_body, quote! { S create(); });
         });
     }
 
