@@ -547,15 +547,26 @@ impl From<CcSnippet> for MixedSnippet {
 
 /// Formats a function with the given `local_def_id`.
 ///
+/// Returns multiple snippets, so that a function declaration can be emitted
+/// separately from a function definition (and thunk declaration).  This is
+/// mostly needed to handle method declarations (which need to be emitted
+/// separately from method definitions;  they also need to be reordered
+/// separately - see the `non_contiguous_method_decls_and_defs` module in
+/// `cc_bindings_from_rs/test/impls/impls.rs`).  Secondary motivation is to keep
+/// implementation details out of the way (to improve readability of the main
+/// apis).
+///
+/// Multiple snippets are returned as a `Vec` for consistency with
+/// `format_item`.  This is a somewhat arbitrary choice - in theory the return
+/// value could be represented as a pair/tuple or a struct that explicitly only
+/// holds two snippets: a declaration and an (optional) definition.
+///
 /// Will panic if `local_def_id`
 /// - is invalid
 /// - doesn't identify a function,
 /// - has generic parameters of any kind - lifetime parameters (see also
 ///   b/258235219), type parameters, or const parameters.
-///
-/// TODO(b/260725279): Split results of `format_fn` into MainApi and
-/// ImplDetails.
-fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<(SnippetKey, MixedSnippet)> {
+fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey, MixedSnippet)>> {
     let tcx = input.tcx;
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
@@ -614,108 +625,130 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<(SnippetKey, Mix
         }
     };
 
-    let doc_comment = {
-        let doc_comment = format_doc_comment(tcx, local_def_id);
-        quote! { __NEWLINE__ #doc_comment }
-    };
-
     let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
 
-    let mut cc_prereqs = CcPrerequisites::default();
-    let cc_tokens = {
-        let ret_type = format_ret_ty_for_cc(input, sig.output())
-            .context("Error formatting function return type")?
-            .into_tokens(&mut cc_prereqs);
-        let fn_name = format_cc_ident(name.as_str()).context("Error formatting function name")?;
-        let arg_names = tcx
-            .fn_arg_names(def_id)
-            .iter()
-            .enumerate()
-            .map(|(index, ident)| {
-                format_cc_ident(ident.as_str())
-                    .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{index}")).unwrap())
-            })
-            .collect_vec();
-        let arg_types = sig
-            .inputs()
-            .iter()
-            .enumerate()
-            .map(|(index, ty)| {
-                Ok(format_ty_for_cc(input, *ty)
-                    .with_context(|| format!("Error formatting the type of parameter #{index}"))?
-                    .into_tokens(&mut cc_prereqs))
-            })
-            .collect::<Result<Vec<_>>>()?;
-        if name.as_str() == symbol_name.name {
-            cc_prereqs.move_defs_to_fwd_decls();
-            quote! {
-                #doc_comment
-                extern "C" #ret_type #fn_name (
-                        #( #arg_types #arg_names ),*
-                );
-            }
+    let mut prereqs = CcPrerequisites::default();
+    let cc_ret_type = format_ret_ty_for_cc(input, sig.output())
+        .context("Error formatting function return type")?
+        .into_tokens(&mut prereqs);
+    let cc_fn_name = format_cc_ident(name.as_str()).context("Error formatting function name")?;
+    let cc_arg_names = tcx
+        .fn_arg_names(def_id)
+        .iter()
+        .enumerate()
+        .map(|(index, ident)| {
+            format_cc_ident(ident.as_str())
+                .unwrap_or_else(|_err| format_cc_ident(&format!("__param_{index}")).unwrap())
+        })
+        .collect_vec();
+    let cc_arg_types = sig
+        .inputs()
+        .iter()
+        .enumerate()
+        .map(|(index, ty)| {
+            Ok(format_ty_for_cc(input, *ty)
+                .with_context(|| format!("Error formatting the type of parameter #{index}"))?
+                .into_tokens(&mut prereqs))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let needs_definition = name.as_str() != symbol_name.name;
+    let main_api = {
+        let doc_comment = {
+            let doc_comment = format_doc_comment(tcx, local_def_id);
+            quote! { __NEWLINE__ #doc_comment }
+        };
+
+        let mut prereqs = prereqs.clone();
+        prereqs.move_defs_to_fwd_decls();
+        let qualifiers = if !needs_definition {
+            quote! { extern "C" }
         } else {
-            let exported_name =
-                format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
-            let thunk_args = arg_names
-                .clone()
-                .into_iter()
-                .zip(sig.inputs().iter())
-                .map(|(arg, &ty)| format_cc_thunk_arg(tcx, ty, arg).into_tokens(&mut cc_prereqs))
-                .collect_vec();
-            quote! {
+            quote! { inline }
+        };
+        CcSnippet {
+            prereqs,
+            tokens: quote! {
+                #doc_comment
+                #qualifiers #cc_ret_type #cc_fn_name (
+                        #( #cc_arg_types #cc_arg_names ),*
+                );
+            },
+        }
+    };
+    let impl_details = if !needs_definition {
+        None
+    } else {
+        let cc_exported_name =
+            format_cc_ident(symbol_name.name).context("Error formatting exported name")?;
+        let thunk_args = cc_arg_names
+            .clone()
+            .into_iter()
+            .zip(sig.inputs().iter())
+            .map(|(arg, &ty)| format_cc_thunk_arg(tcx, ty, arg).into_tokens(&mut prereqs))
+            .collect_vec();
+        let cc = CcSnippet {
+            prereqs,
+            tokens: quote! {
                 namespace __crubit_internal {
-                    extern "C" #ret_type #exported_name (
-                            #( #arg_types #arg_names ),*
+                    extern "C" #cc_ret_type #cc_exported_name (
+                            #( #cc_arg_types #cc_arg_names ),*
                     );
                 }
-                #doc_comment
-                inline #ret_type #fn_name (
-                        #( #arg_types #arg_names ),* ) {
-                    return __crubit_internal :: #exported_name( #( #thunk_args ),* );
+                inline #cc_ret_type #cc_fn_name (
+                        #( #cc_arg_types #cc_arg_names ),* ) {
+                    return __crubit_internal :: #cc_exported_name( #( #thunk_args ),* );
+                }
+            },
+        };
+
+        let rs = if !needs_thunk {
+            quote! {}
+        } else {
+            let crate_name = make_rs_ident(krate.as_str());
+            let mod_path = mod_path.format_for_rs();
+            let rs_fn_name = make_rs_ident(name.as_str());
+            let rs_exported_name = make_rs_ident(symbol_name.name);
+            let rs_ret_type = format_ty_for_rs(tcx, sig.output())?;
+            let rs_arg_names = tcx
+                .fn_arg_names(def_id)
+                .iter()
+                .enumerate()
+                .map(|(index, ident)| {
+                    if ident.as_str().is_empty() {
+                        format_ident!("__param_{index}")
+                    } else {
+                        make_rs_ident(ident.as_str())
+                    }
+                })
+                .collect_vec();
+            let rs_arg_types = sig
+                .inputs()
+                .iter()
+                .copied()
+                .map(|ty| format_ty_for_rs(tcx, ty))
+                .collect::<Result<Vec<_>>>()?;
+            quote! {
+                #[no_mangle]
+                extern "C" fn #rs_exported_name( #( #rs_arg_names: #rs_arg_types ),* )
+                        -> #rs_ret_type {
+                    :: #crate_name :: #mod_path #rs_fn_name( #( #rs_arg_names ),* )
                 }
             }
-        }
+        };
+
+        Some(MixedSnippet { cc, rs })
     };
 
-    let rs_tokens = if !needs_thunk {
-        quote! {}
-    } else {
-        let crate_name = make_rs_ident(krate.as_str());
-        let mod_path = mod_path.format_for_rs();
-        let fn_name = make_rs_ident(name.as_str());
-        let exported_name = make_rs_ident(symbol_name.name);
-        let ret_type = format_ty_for_rs(tcx, sig.output())?;
-        let arg_names = tcx
-            .fn_arg_names(def_id)
-            .iter()
-            .enumerate()
-            .map(|(index, ident)| {
-                if ident.as_str().is_empty() {
-                    format_ident!("__param_{index}")
-                } else {
-                    make_rs_ident(ident.as_str())
-                }
-            })
-            .collect_vec();
-        let arg_types = sig
-            .inputs()
-            .iter()
-            .copied()
-            .map(|ty| format_ty_for_rs(tcx, ty))
-            .collect::<Result<Vec<_>>>()?;
-        quote! {
-            #[no_mangle]
-            extern "C" fn #exported_name( #( #arg_names: #arg_types ),* ) -> #ret_type {
-                :: #crate_name :: #mod_path #fn_name( #( #arg_names ),* )
-            }
-        }
-    };
-
-    Ok((
-        SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi },
-        MixedSnippet { cc: CcSnippet { prereqs: cc_prereqs, tokens: cc_tokens }, rs: rs_tokens },
-    ))
+    let mut result =
+        vec![(SnippetKey { def_id: local_def_id, kind: SnippetKind::MainApi }, main_api.into())];
+    if let Some(impl_details) = impl_details {
+        result.push((
+            SnippetKey { def_id: local_def_id, kind: SnippetKind::ImplDetails },
+            impl_details,
+        ));
+    }
+    Ok(result)
 }
 
 /// Represents bindings for the "core" part of an algebraic data type (an ADT -
@@ -892,6 +925,12 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
 /// represented by `core`.  This function is infallible - after
 /// `format_adt_core` returns success we have committed to emitting C++ bindings
 /// for the ADT.
+///
+/// Returns multiple snippets to support independent reordering of 1) the struct definition
+/// (including declarations of methods - aka member functions), and 2) an arbitrary number of
+/// method definitions.  For motivation see the `non_contiguous_method_decls_and_defs` module in
+/// `cc_bindings_from_rs/test/impls/impls.rs`).  Secondary motivation is to keep implementation
+/// details out of the way (to improve readability of the main apis).
 fn format_adt(tcx: TyCtxt, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSnippet)> {
     // `format_adt` should only be called for local ADTs.
     let local_def_id = core.def_id.expect_local();
@@ -1053,9 +1092,7 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, Mix
             // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
             bail!("Generics are not supported yet (b/259749023 and b/259749095)");
         },
-        Item { kind: ItemKind::Fn(..), .. } =>
-            format_fn(input, def_id)
-                .map(|snippet| vec![snippet]),
+        Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
             format_adt_core(tcx, def_id.to_def_id())
                 .map(|core| format_adt(tcx, &core)),
@@ -1282,10 +1319,11 @@ pub mod tests {
                 bindings.h_body,
                 quote! {
                     namespace rust_out {
+                        ...
+                        inline double public_function(double x, double y);
                         namespace __crubit_internal {
                             extern "C" double export_name(double x, double y);
                         }
-                        ...
                         inline double public_function(double x, double y) {
                             return __crubit_internal::export_name(x, y);
                         }
@@ -1471,15 +1509,15 @@ pub mod tests {
                     namespace rust_out {
                         ...
                         // Verifing the presence of this forward declaration
-                        // it the essence of this test.  The order also matters:
-                        // 1. The fwd decl of `S` should come first,
-                        // 2. Definitions of `f` and `S` should come next
-                        //    (in their original order - `f` first and then `S`).
+                        // it the essence of this test.  The order of the items
+                        // below also matters.
                         struct S;
                         ...
-                        inline void f(const ::rust_out::S* __param_0) { ... }
+                        inline void f(const ::rust_out::S* __param_0);
                         ...
                         struct alignas(...) S final { ... }
+                        ...
+                        inline void f(const ::rust_out::S* __param_0) { ... }
                         ...
                     }  // namespace rust_out
                 }
@@ -1701,13 +1739,14 @@ pub mod tests {
                     namespace rust_out {
                         namespace working_module {
                             ...
-                            inline void working_module_f1() { ... }
+                            inline void working_module_f1();
                             ...
-                            inline void working_module_f2() { ... }
+                            inline void working_module_f2();
                             ...
                         }  // namespace some_module
 
                         __COMMENT__ #broken_module_msg
+                        ...
                     }  // namespace rust_out
                 }
             );
@@ -1909,11 +1948,19 @@ pub mod tests {
             "#;
         test_format_item(test_src, "public_function", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(main_api.cc.prereqs.is_empty());
-            assert!(main_api.rs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline double public_function(double x, double y);
+                }
+            );
+            assert!(impl_details.rs.is_empty());
+            assert!(impl_details.cc.prereqs.is_empty());
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -1935,11 +1982,19 @@ pub mod tests {
             "#;
         test_format_item(test_src, "public_function", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(main_api.cc.prereqs.is_empty());
-            assert!(main_api.rs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline double public_function(double x, double y);
+                }
+            );
+            assert!(impl_details.rs.is_empty());
+            assert!(impl_details.cc.prereqs.is_empty());
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double export_name(double x, double y);
@@ -1984,10 +2039,18 @@ pub mod tests {
             // TODO(b/254095787): Update test expectations below once `const fn` from Rust
             // is translated into a `consteval` C++ function.
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(!main_api.cc.prereqs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(!main_api.prereqs.is_empty());
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline std::int32_t foo(std::int32_t i);
+                }
+            );
+            assert!(!impl_details.cc.prereqs.is_empty());
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...( std::int32_t i);
@@ -1999,7 +2062,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                main_api.rs,
+                impl_details.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2043,17 +2106,23 @@ pub mod tests {
             "#;
         test_format_item(test_src, "foo", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
 
             // Minimal coverage, just to double-check that the test setup works.
             //
             // Note that this is a definition, and therefore `S` should be defined
             // earlier (not just forward declared).
-            assert_cc_matches!(main_api.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
+            assert_cc_matches!(main_api.tokens, quote! { S foo(std::int32_t _i);});
+            assert_cc_matches!(impl_details.cc.tokens, quote! { S foo(std::int32_t _i) { ... }});
 
             // Main checks: `CcPrerequisites::includes`.
             assert_cc_matches!(
-                format_cc_includes(&main_api.cc.prereqs.includes),
+                format_cc_includes(&main_api.prereqs.includes),
+                quote! { include <cstdint> }
+            );
+            assert_cc_matches!(
+                format_cc_includes(&impl_details.cc.prereqs.includes),
                 quote! { include <cstdint> }
             );
 
@@ -2062,8 +2131,12 @@ pub mod tests {
             // Verifying the actual def_id is tricky, because `test_format_item` doesn't
             // expose `tcx` to the verification function (and therefore calling
             // `find_def_id_by_name` is not easily possible).
-            assert_eq!(1, main_api.cc.prereqs.defs.len());
-            assert_eq!(0, main_api.cc.prereqs.fwd_decls.len());
+            //
+            // Note that `main_api` and `impl_details` have different expectations.
+            assert_eq!(0, main_api.prereqs.defs.len());
+            assert_eq!(1, main_api.prereqs.fwd_decls.len());
+            assert_eq!(1, impl_details.cc.prereqs.defs.len());
+            assert_eq!(0, impl_details.cc.prereqs.fwd_decls.len());
         });
     }
 
@@ -2203,21 +2276,15 @@ pub mod tests {
             "#;
         test_format_item(test_src, "fn_with_doc_comment_with_mangled_name", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(main_api.cc.prereqs.is_empty());
-            assert!(main_api.rs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             let comment = " Doc comment of a function with mangled name.\n\n\
                            Generated from: <crubit_unittests.rs>;l=3";
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
                 quote! {
-                    namespace __crubit_internal {
-                        extern "C" void ...();
-                    }
                     __COMMENT__ #comment
-                    inline void fn_with_doc_comment_with_mangled_name() {
-                        return __crubit_internal::...();
-                    }
+                    inline void fn_with_doc_comment_with_mangled_name();
                 }
             );
         });
@@ -2353,10 +2420,18 @@ pub mod tests {
             // mangling (which may be coming in Q1 2023).  (This might mean reverting cl/492333432
             // + manual review and tweaks.)
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(main_api.cc.prereqs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline double add(double x, double y);
+                }
+            );
+            assert!(impl_details.cc.prereqs.is_empty());
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -2368,7 +2443,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                main_api.rs,
+                impl_details.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2403,10 +2478,18 @@ pub mod tests {
             "#;
         test_format_item(test_src, "add", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(main_api.cc.prereqs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline double add(double x, double y);
+                }
+            );
+            assert!(impl_details.cc.prereqs.is_empty());
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" double ...(double x, double y);
@@ -2418,7 +2501,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                main_api.rs,
+                impl_details.rs,
                 quote! {
                     #[no_mangle]
                     extern "C"
@@ -2494,10 +2577,18 @@ pub mod tests {
             "#;
         test_format_item(test_src, "foo", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
-            assert!(main_api.cc.prereqs.is_empty());
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline void foo(double __param_0, double __param_1);
+                }
+            );
+            assert!(impl_details.cc.prereqs.is_empty());
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" void ...(
@@ -2510,7 +2601,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                main_api.rs,
+                impl_details.rs,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: f64, __param_1: f64) -> () {
@@ -2537,9 +2628,16 @@ pub mod tests {
             "#;
         test_format_item(test_src, "func", |result| {
             let result = result.unwrap();
-            let main_api = get_main_api_mixed_snippet(&result);
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
             assert_cc_matches!(
-                main_api.cc.tokens,
+                main_api.tokens,
+                quote! {
+                    inline std::int32_t func(::rust_out::S __param_0);
+                }
+            );
+            assert_cc_matches!(
+                impl_details.cc.tokens,
                 quote! {
                     namespace __crubit_internal {
                         extern "C" std::int32_t ...(::rust_out::S __param_0);
@@ -2551,7 +2649,7 @@ pub mod tests {
                 }
             );
             assert_rs_matches!(
-                main_api.rs,
+                impl_details.rs,
                 quote! {
                     #[no_mangle]
                     extern "C" fn ...(__param_0: ::rust_out::S) -> i32 {
@@ -3662,26 +3760,18 @@ pub mod tests {
         }
     }
 
-    // TODO(b/260725279): Remove this test helper (and use `get_main_api_snippet`)
-    // after `format_fn` gets refactored and returns separate MainApi (only C++)
-    // and ImplDetails (mix of C++ and Rust).
-    fn get_main_api_mixed_snippet(
-        format_item_result: &Vec<(SnippetKey, MixedSnippet)>,
-    ) -> &MixedSnippet {
+    fn get_main_api_snippet(format_item_result: &Vec<(SnippetKey, MixedSnippet)>) -> &CcSnippet {
         format_item_result
             .iter()
             .filter_map(|(key, snippet)| match key.kind {
-                SnippetKind::MainApi => Some(snippet),
+                SnippetKind::MainApi => {
+                    assert!(snippet.rs.is_empty(), "MainApi should be C++-only");
+                    Some(&snippet.cc)
+                }
                 _ => None,
             })
             .exactly_one()
             .expect("Expecting exactly 1 MainApi snippet")
-    }
-
-    fn get_main_api_snippet(format_item_result: &Vec<(SnippetKey, MixedSnippet)>) -> &CcSnippet {
-        let snippet = get_main_api_mixed_snippet(format_item_result);
-        assert!(snippet.rs.is_empty(), "MainApi should be C++-only");
-        &snippet.cc
     }
 
     /// Combines all ImplDetails snippets into a single MixedSnippet.
