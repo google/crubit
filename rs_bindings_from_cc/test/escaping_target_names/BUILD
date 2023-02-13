@@ -1,5 +1,7 @@
 load("@rules_rust//rust:defs.bzl", "rust_test")
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 cc_library(

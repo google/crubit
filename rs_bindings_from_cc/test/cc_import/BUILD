@@ -4,6 +4,8 @@ load(
     "rust_test",
 )
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 cc_library(
     name = "two",
     hdrs = ["two.h"],

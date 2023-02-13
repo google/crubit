@@ -4,6 +4,8 @@
 
 load("@rules_rust//rust:defs.bzl", "rust_test")
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 cc_library(
     name = "string_view_apis",
     hdrs = ["string_view_apis.h"],
