@@ -81,9 +81,9 @@ impl NamespaceQualifier {
         } else {
             let namespace_cc_idents = self.cc_idents()?;
             Ok(quote! {
-                namespace #(#namespace_cc_idents)::* {
+                __NEWLINE__ namespace #(#namespace_cc_idents)::* { __NEWLINE__
                     #body
-                }
+                __NEWLINE__ }  __NEWLINE__
             })
         }
     }

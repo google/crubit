@@ -710,10 +710,12 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
         CcSnippet {
             prereqs,
             tokens: quote! {
+                __NEWLINE__
                 #doc_comment
                 #static_ #extern_c_or_inline #cc_ret_type #cc_fn_name (
                         #( #cc_arg_types #cc_arg_names ),*
                 );
+                __NEWLINE__
             },
         }
     };
@@ -739,6 +741,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
         let cc = CcSnippet {
             prereqs,
             tokens: quote! {
+                __NEWLINE__
                 namespace __crubit_internal {
                     extern "C" #cc_ret_type #cc_exported_name (
                             #( #cc_arg_types #cc_arg_names ),*
@@ -748,6 +751,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
                         #( #cc_arg_types #cc_arg_names ),* ) {
                     return __crubit_internal :: #cc_exported_name( #( #thunk_args ),* );
                 }
+                __NEWLINE__
             },
         };
 
@@ -1052,17 +1056,20 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
                         // TODO(b/258233850): Emit individual fields.
                         unsigned char opaque_blob_of_bytes[#size];
                 };
+                __NEWLINE__
             },
         }
     };
     let impl_details = {
         let mut cc = CcSnippet::new(quote! {
+            __NEWLINE__
             static_assert(
                 sizeof(#cc_name) == #size,
                 "Verify that struct layout didn't change since this header got generated");
             static_assert(
                 alignof(#cc_name) == #alignment,
                 "Verify that struct layout didn't change since this header got generated");
+            __NEWLINE__
         });
         cc.prereqs.defs.insert(local_def_id);
         let rs = {
@@ -1286,10 +1293,14 @@ fn format_crate(input: &Input) -> Result<Output> {
         let includes = format_cc_includes(&includes);
         let ordered_cc = format_namespace_bound_cc_tokens(ordered_cc);
         quote! {
-            #includes __NEWLINE__
+            #includes
+            __NEWLINE__ __NEWLINE__
             namespace #crate_name {
+                __NEWLINE__
                 #ordered_cc
+                __NEWLINE__
             }
+            __NEWLINE__
         }
     };
 

@@ -288,10 +288,13 @@ r#"// Automatically @generated C++ bindings for the following Rust crate:
 #pragma once
 
 namespace test_crate {
-namespace public_module {"#,
+
+namespace public_module {
+"#,
  // TODO(b/261185414): Avoid assuming that all source code paths are google3 paths.
 format!("// Generated from: google3{temp_dir_str}/test_crate.rs;l=2"),
 r#"inline void public_function();
+
 namespace __crubit_internal {
 extern "C" void
 __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
@@ -300,8 +303,11 @@ inline void public_function() {
   return __crubit_internal::
       __crubit_thunk__ANY_IDENTIFIER_CHARACTERS();
 }
+
 }  // namespace public_module
-}  // namespace test_crate"#
+
+}  // namespace test_crate
+"#
             ),
         );
 
