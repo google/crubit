@@ -145,7 +145,7 @@ mod tests {
     fn test_assert_ir_matches_assumes_trailing_commas_in_groups() {
         assert_ir_matches!(
             ir_from_cc("").unwrap(),
-            quote! {{... crate_root_path: None, }}
+            quote! {{... , }}
         );
     }
 
