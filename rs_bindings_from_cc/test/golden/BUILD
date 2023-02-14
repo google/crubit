@@ -21,6 +21,13 @@ DEPS = {
     "user_of_unsupported": ["unsupported"],
     "user_of_imported_type": ["trivial_type"],
     "user_of_base_class": ["inheritance"],
+    "includes": [
+        "comment",
+        "namespace",
+        "types",
+        "unions",
+        "unsupported",
+    ],
     "source_location_doc_comments": ["source_location_doc_comments_macro_def"],
 }
 
