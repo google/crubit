@@ -2680,6 +2680,11 @@ fn generate_item(
     errors: &mut dyn ErrorReporting,
 ) -> Result<GeneratedItem> {
     let ir = db.ir();
+    if let Some(owning_target) = item.owning_target() {
+        if !ir.is_current_target(owning_target) && !ir.is_stdlib_target(owning_target) {
+            return Ok(GeneratedItem::default());
+        }
+    }
     let overloaded_funcs = db.overloaded_funcs();
     let generated_item = match item {
         Item::Func(func) => match db.generate_func(func.clone()) {
@@ -2703,39 +2708,11 @@ fn generate_item(
                 }
             }
         },
-        Item::IncompleteRecord(incomplete_record) => {
-            if !ir.is_current_target(&incomplete_record.owning_target)
-                && !ir.is_stdlib_target(&incomplete_record.owning_target)
-            {
-                GeneratedItem::default()
-            } else {
-                generate_incomplete_record(incomplete_record)?
-            }
-        }
-        Item::Record(record) => {
-            if !ir.is_current_target(&record.owning_target)
-                && !ir.is_stdlib_target(&record.owning_target)
-            {
-                GeneratedItem::default()
-            } else {
-                generate_record(db, record, errors)?
-            }
-        }
-        Item::Enum(enum_) => {
-            if !ir.is_current_target(&enum_.owning_target)
-                && !ir.is_stdlib_target(&enum_.owning_target)
-            {
-                GeneratedItem::default()
-            } else {
-                generate_enum(db, enum_)?
-            }
-        }
+        Item::IncompleteRecord(incomplete_record) => generate_incomplete_record(incomplete_record)?,
+        Item::Record(record) => generate_record(db, record, errors)?,
+        Item::Enum(enum_) => generate_enum(db, enum_)?,
         Item::TypeAlias(type_alias) => {
-            if !ir.is_current_target(&type_alias.owning_target)
-                && !ir.is_stdlib_target(&type_alias.owning_target)
-            {
-                GeneratedItem::default()
-            } else if type_alias.enclosing_record_id.is_some() {
+            if type_alias.enclosing_record_id.is_some() {
                 // TODO(b/200067824): support nested type aliases.
                 generate_unsupported(&make_unsupported_nested_type_alias(type_alias)?, errors)?
             } else {

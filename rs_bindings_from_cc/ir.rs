@@ -608,9 +608,24 @@ impl Item {
             Item::Func(func) => func.enclosing_namespace_id,
             Item::Namespace(namespace) => namespace.enclosing_namespace_id,
             Item::TypeAlias(type_alias) => type_alias.enclosing_namespace_id,
-            Item::Comment(_) => None,
-            Item::UnsupportedItem(_) => None,
-            Item::UseMod(_) => None,
+            Item::Comment(..) => None,
+            Item::UnsupportedItem(..) => None,
+            Item::UseMod(..) => None,
+        }
+    }
+
+    /// Returns the target that this should generate source code in.
+    pub fn owning_target(&self) -> Option<&BazelLabel> {
+        match self {
+            Item::Func(..) => None,
+            Item::IncompleteRecord(record) => Some(&record.owning_target),
+            Item::Record(record) => Some(&record.owning_target),
+            Item::Enum(e) => Some(&e.owning_target),
+            Item::TypeAlias(type_alias) => Some(&type_alias.owning_target),
+            Item::UnsupportedItem(..) => None,
+            Item::Comment(..) => None,
+            Item::Namespace(..) => None,
+            Item::UseMod(..) => None,
         }
     }
 }
