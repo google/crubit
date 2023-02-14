@@ -53,7 +53,7 @@ rust_bindings_from_cc_binary = rule(
             cfg = "exec",
         ),
         "_rustfmt": attr.label(
-            default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
+            default = "//nowhere/llvm/rust:genrustfmt_for_crubit_aspects",
             executable = True,
             allow_single_file = True,
             cfg = "exec",

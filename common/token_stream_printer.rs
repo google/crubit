@@ -22,7 +22,7 @@ pub struct RustfmtConfig {
 }
 
 pub const RUSTFMT_EXE_PATH_FOR_TESTING: &str =
-    "third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt";
+    "nowhere/llvm/rust/main_sysroot/bin/rustfmt";
 
 pub const CLANG_FORMAT_EXE_PATH_FOR_TESTING: &str =
     "third_party/crosstool/google3_users/clang-format";

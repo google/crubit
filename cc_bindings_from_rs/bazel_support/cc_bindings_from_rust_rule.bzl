@@ -188,7 +188,7 @@ cc_bindings_from_rust = rule(
             cfg = "exec",
         ),
         "_rustfmt": attr.label(
-            default = "//third_party/unsupported_toolchains/rust/toolchains/nightly:bin/rustfmt",
+            default = "//nowhere/llvm/rust:main_sysroot/bin/rustfmt",
             executable = True,
             allow_single_file = True,
             cfg = "exec",

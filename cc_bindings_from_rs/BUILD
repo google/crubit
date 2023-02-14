@@ -89,6 +89,7 @@ sh_test(
     srcs = ["legacy_toolchain_test_wrapper.sh"],
     data = [
         ":cc_bindings_from_rs_test",
+        "//nowhere/llvm/rust:main_sysroot/bin/rustfmt",
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:rustc_driver_libs",
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:stdlibs_generated",
     ],

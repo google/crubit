@@ -21,7 +21,7 @@ function delete_all_test_outputs() {
 }
 
 readonly DEFAULT_CLANG_FORMAT_EXE_PATH="${RUNFILES}/google3/third_party/crosstool/google3_users/clang-format"
-readonly DEFAULT_RUSTFMT_EXE_PATH="third_party/unsupported_toolchains/rust/toolchains/nightly/bin/rustfmt"
+readonly DEFAULT_RUSTFMT_EXE_PATH="nowhere/llvm/rust/main_sysroot/bin/rustfmt"
 
 # This tests a simple happy, errors-free code path.
 function test::happy_path() {
