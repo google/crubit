@@ -807,21 +807,6 @@ impl IR {
         &self.flat_ir.current_target
     }
 
-    // Returns whether `target` is the target that corresponds to the C++
-    // standard library.
-    pub fn is_stdlib_target(&self, target: &BazelLabel) -> bool {
-        // TODO(hlopko): Make this be a pointer comparison, now it's comparing string
-        // values.
-        // TODO(b/208377928): We don't yet have an actual target for the standard
-        // library, so instead we're just testing against the "virtual target" that
-        // AstVisitor::GetOwningTarget() returns if it can't find the header in the
-        // header-to-target map.
-        // Once we do have an actual target for the standard library, we may need to
-        // query `self` to find out what it is, so we have a `self` parameter on this
-        // method even though we currently don't use it.
-        target.0.as_ref() == "//:virtual_clang_resource_dir_target"
-    }
-
     // Returns the standard Debug print string for the `flat_ir`. The reason why we
     // don't use the debug print of `Self` is that `Self` contains HashMaps, and
     // their debug print produces content that is not valid Rust code.

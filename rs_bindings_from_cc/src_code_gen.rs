@@ -2681,7 +2681,7 @@ fn generate_item(
 ) -> Result<GeneratedItem> {
     let ir = db.ir();
     if let Some(owning_target) = item.owning_target() {
-        if !ir.is_current_target(owning_target) && !ir.is_stdlib_target(owning_target) {
+        if !ir.is_current_target(owning_target) {
             return Ok(GeneratedItem::default());
         }
     }
@@ -2848,7 +2848,7 @@ fn format_cc_ident(ident: &str) -> TokenStream {
 
 /// Returns Some(crate_ident) if this is an imported crate.
 fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
-    if ir.is_current_target(owning_target) || ir.is_stdlib_target(owning_target) {
+    if ir.is_current_target(owning_target){
         None
     } else {
         let owning_crate_name = owning_target.target_name();
@@ -3624,7 +3624,7 @@ fn format_cc_type_inner(ty: &ir::CcType, ir: &IR, references_ok: bool) -> Result
 }
 
 fn cc_struct_layout_assertion(record: &Record, ir: &IR) -> Result<TokenStream> {
-    if !ir.is_current_target(&record.owning_target) && !ir.is_stdlib_target(&record.owning_target) {
+    if !ir.is_current_target(&record.owning_target) {
         return Ok(quote! {});
     }
     let record_ident = format_cc_ident(record.cc_name.as_ref());
