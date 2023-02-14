@@ -9,7 +9,7 @@ bzl_library(
     name = "cc_bindings_from_rust_rule_bzl",
     srcs = ["cc_bindings_from_rust_rule.bzl"],
     visibility = [
-        "//:__subpackages__",
+        "//visibility:private",  # Only private by automation, not intent. Owner may accept CLs adding visibility. See <internal link>.
     ],
 )
 
