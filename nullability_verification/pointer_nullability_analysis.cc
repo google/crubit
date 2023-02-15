@@ -459,12 +459,12 @@ PointerNullabilityAnalysis::PointerNullabilityAnalysis(ASTContext& Context)
       NonFlowSensitiveTransferer(buildNonFlowSensitiveTransferer()),
       FlowSensitiveTransferer(buildFlowSensitiveTransferer()) {}
 
-void PointerNullabilityAnalysis::transfer(const CFGElement* Elt,
+void PointerNullabilityAnalysis::transfer(const CFGElement& Elt,
                                           PointerNullabilityLattice& Lattice,
                                           Environment& Env) {
   TransferState<PointerNullabilityLattice> State(Lattice, Env);
-  NonFlowSensitiveTransferer(*Elt, getASTContext(), State);
-  FlowSensitiveTransferer(*Elt, getASTContext(), State);
+  NonFlowSensitiveTransferer(Elt, getASTContext(), State);
+  FlowSensitiveTransferer(Elt, getASTContext(), State);
 }
 
 BoolValue& mergeBoolValues(BoolValue& Bool1, const Environment& Env1,

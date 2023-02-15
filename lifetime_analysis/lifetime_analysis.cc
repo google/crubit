@@ -333,12 +333,12 @@ bool LifetimeAnalysis::IsEqual(const LifetimeLattice& state1,
   return state1 == state2;
 }
 
-void LifetimeAnalysis::transfer(const clang::CFGElement* elt,
+void LifetimeAnalysis::transfer(const clang::CFGElement& elt,
                                 LifetimeLattice& state,
                                 clang::dataflow::Environment& /*environment*/) {
   if (state.IsError()) return;
 
-  auto cfg_stmt = elt->getAs<clang::CFGStmt>();
+  auto cfg_stmt = elt.getAs<clang::CFGStmt>();
   if (!cfg_stmt) return;
   auto stmt = cfg_stmt->getStmt();
 
