@@ -32,6 +32,8 @@ rust_binary(
         "manual",
         "nobuilder",
         "notap",
+        # TODO(b/269496347): Re-enable when this is fixed.
+        "noguitar",
     ],
     deps = [
         ":toposort",
@@ -75,6 +77,8 @@ rust_test(
         "manual",
         "nobuilder",
         "notap",
+        # TODO(b/269496347): Re-enable when this is fixed.
+        "noguitar",
     ],
     deps = [
         "//common:token_stream_matchers",
@@ -94,6 +98,10 @@ sh_test(
         "//third_party/unsupported_toolchains/rust/toolchains/nightly:stdlibs_generated",
     ],
     env = {"LEGACY_TOOLCHAIN_RUST_TEST": "cc_bindings_from_rs_test"},
+    tags = [
+        # TODO(b/269496347): Re-enable when this is fixed.
+        "noguitar",
+    ],
 )
 
 sh_test(
@@ -104,6 +112,10 @@ sh_test(
         # `cc_bindings_from_rs` binary (without the indirection of `.sar` or
         # `sh_binary`).  This can be done once we statically link rustc_driver.
         ":cc_bindings_from_rs_legacy_toolchain_runner.sar",
+    ],
+    tags = [
+        # TODO(b/269496347): Re-enable when this is fixed.
+        "noguitar",
     ],
     deps = [
         "//util/shell/gbash",

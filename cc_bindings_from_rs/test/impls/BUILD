@@ -30,6 +30,10 @@ cc_bindings_from_rust(
 cc_test(
     name = "impls_test",
     srcs = ["impls_test.cc"],
+    tags = [
+        # TODO(b/269496347): Re-enable when this is fixed.
+        "noguitar",
+    ],
     deps = [
         ":impls_cc_api",
         "@com_google_googletest//:gtest_main",
