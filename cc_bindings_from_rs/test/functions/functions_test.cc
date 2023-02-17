@@ -5,7 +5,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "cc_bindings_from_rs/test/functions/functions_cc_api.h"
-#include "support/rstd/char.h"
+#include "support/rs_std/char.h"
 
 namespace crubit {
 namespace {
@@ -51,9 +51,9 @@ TEST(FnParamTyTests, Int32) {
 }
 
 TEST(FnParamTyTests, Char) {
-  std::optional<const rstd::Char> input = rstd::Char::from_u32(U'🦀');
+  std::optional<const rs_std::Char> input = rs_std::Char::from_u32(U'🦀');
   ASSERT_TRUE(input.has_value());
-  rstd::Char output = fn_param_ty_tests::char_identity(*input);
+  rs_std::Char output = fn_param_ty_tests::char_identity(*input);
   EXPECT_EQ(input, output);
 }
 

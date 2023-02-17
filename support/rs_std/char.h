@@ -2,17 +2,17 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_RSTD_CHAR_H_
-#define CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_RSTD_CHAR_H_
+#ifndef CRUBIT_SUPPORT_RS_STD_CHAR_H_
+#define CRUBIT_SUPPORT_RS_STD_CHAR_H_
 
 #include <cstdint>
 #include <optional>
 
 #include "absl/base/optimization.h"
 
-namespace rstd {
+namespace rs_std {
 
-// `rstd::Char` is a C++ representation of the `char` type from Rust.
+// `rs_std::Char` is a C++ representation of the `char` type from Rust.
 class Char final {
  public:
   // Creates a default `Char` - one that represents ASCII NUL character.
@@ -23,11 +23,11 @@ class Char final {
   // for C++ which argues that zero-initialization may mitigate 10% of exploits.
   constexpr Char() = default;
 
-  // Converts a `uint32_t` into a `rstd::Char`.
+  // Converts a `uint32_t` into a `rs_std::Char`.
   //
-  // Note that not all valid `uint32_t`s are valid `rstd::Char`s. `from_u32`
+  // Note that not all valid `uint32_t`s are valid `rs_std::Char`s. `from_u32`
   // will return `std::nullopt` if the input is not a valid value for a
-  // `rstd::Char`.
+  // `rs_std::Char`.
   //
   // See also
   // https://doc.rust-lang.org/reference/behavior-considered-undefined.html
@@ -110,6 +110,6 @@ class Char final {
 // 'const Char'.
 constexpr Char Char::MAX = Char::from_u32_unchecked(0x10ffff);
 
-}  // namespace rstd
+}  // namespace rs_std
 
-#endif  // CRUBIT_RS_BINDINGS_FROM_CC_SUPPORT_RSTD_CHAR_H_
+#endif  // CRUBIT_SUPPORT_RS_STD_CHAR_H_

@@ -331,13 +331,13 @@ fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
         ty::TyKind::Float(ty::FloatTy::F64) => keyword(quote! { double }),
 
         // ABI compatibility and other details are described in the doc comments in
-        // `crubit/support/rstd/char.h` and `crubit/support/rstd/char_test.cc` (search for "Layout
-        // tests").
+        // `crubit/support/rs_std/char.h` and `crubit/support/rs_std/char_test.cc` (search for
+        // "Layout tests").
         ty::TyKind::Char => {
-            let rstd_char_path = format!("{}/rstd/char.h", &*input.crubit_support_path);
+            let rs_char_path = format!("{}/rs_std/char.h", &*input.crubit_support_path);
             CcSnippet::with_include(
-                quote! { rstd::Char },
-                CcInclude::user_header(rstd_char_path.into()),
+                quote! { rs_std::Char },
+                CcInclude::user_header(rs_char_path.into()),
             )
         },
 
@@ -3686,7 +3686,7 @@ pub mod tests {
             ("u32", ("std::uint32_t", "<cstdint>", "", "")),
             ("u64", ("std::uint64_t", "<cstdint>", "", "")),
             ("usize", ("std::uintptr_t", "<cstdint>", "", "")),
-            ("char", ("rstd::Char", "\"crubit/support/for/tests/rstd/char.h\"", "", "")),
+            ("char", ("rs_std::Char", "\"crubit/support/for/tests/rs_std/char.h\"", "", "")),
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
             ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
