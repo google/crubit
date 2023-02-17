@@ -1,5 +1,7 @@
 # Verification for null safety
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 cc_library(
     name = "pointer_nullability_lattice",
     hdrs = ["pointer_nullability_lattice.h"],

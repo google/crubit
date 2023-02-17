@@ -3,6 +3,8 @@ be used yet."""
 
 load(":namespaces_json_test.bzl", "namespaces_json_test")
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 namespaces_json_test(name = "namespaces_json")

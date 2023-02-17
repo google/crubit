@@ -10,6 +10,8 @@ load(
     "cc_bindings_from_rust",
 )
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 rust_library(

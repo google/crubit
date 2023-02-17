@@ -1,5 +1,7 @@
 """Generates equivalent Rust code from C++ code."""
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 cc_binary(

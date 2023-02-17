@@ -2,10 +2,13 @@
 
 licenses(["notice"])
 
-package(default_visibility = [
-    "//lifetime_analysis:__subpackages__",
-    "//:__subpackages__",
-])
+package(
+    default_applicable_licenses = ["//third_party/crubit:license"],
+    default_visibility = [
+        "//lifetime_analysis:__subpackages__",
+        "//:__subpackages__",
+    ],
+)
 
 cc_library(
     name = "named_func_lifetimes",

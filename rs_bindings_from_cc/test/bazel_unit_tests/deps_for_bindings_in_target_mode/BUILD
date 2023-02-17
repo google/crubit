@@ -4,6 +4,8 @@ be used yet."""
 load(":deps_for_bindings_are_in_target_cfg_test.bzl", "deps_for_bindings_are_in_target_cfg_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 deps_for_bindings_are_in_target_cfg_test(name = "deps_for_bindings_are_in_target_cfg_test")

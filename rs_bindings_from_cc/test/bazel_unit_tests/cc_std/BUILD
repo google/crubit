@@ -4,6 +4,8 @@ be used yet."""
 load(":cc_std_test.bzl", "cc_std_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 cc_library(

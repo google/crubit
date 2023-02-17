@@ -4,6 +4,8 @@ be used yet."""
 load(":headers_and_targets_test.bzl", "headers_and_targets_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
+package(default_applicable_licenses = ["//third_party/crubit:license"])
+
 licenses(["notice"])
 
 headers_and_targets_test(name = "headers_and_targets_test")
