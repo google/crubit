@@ -74,8 +74,6 @@ fn run_with_cmdline_args(args: &[String]) -> anyhow::Result<()> {
 }
 
 fn main() -> anyhow::Result<()> {
-    rustc_driver::init_env_logger("CRUBIT_LOG");
-
     // TODO: Investigate if we should install a signal handler here.  See also how
     // compiler/rustc_driver/src/lib.rs calls `signal_handler::install()`.
 

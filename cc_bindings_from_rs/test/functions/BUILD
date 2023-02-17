@@ -30,12 +30,6 @@ cc_bindings_from_rust(
 cc_test(
     name = "functions_test",
     srcs = ["functions_test.cc"],
-    tags = [
-        # TODO(b/269496347): Remove all these tags when this is fixed
-        "noguitar",
-        "notap",
-        "manual",
-    ],
     deps = [
         ":functions_cc_api",
         "@com_google_googletest//:gtest_main",

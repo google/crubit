@@ -419,37 +419,7 @@ fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
         // should also 1) propagate `CcPrerequisites::defs`, 2) cover `CcPrerequisites::defs` in
         // `test_format_ty_for_cc...`.  For ptr/ref it might be possible to use
         // `CcPrerequisites::move_defs_to_fwd_decls`.
-        | ty::TyKind::Array(..)
-        | ty::TyKind::Slice(..)
-        | ty::TyKind::Ref(..)
-        | ty::TyKind::FnPtr(..)
-        | ty::TyKind::Str
-        | ty::TyKind::Foreign(..)
-        | ty::TyKind::Dynamic(..)
-        | ty::TyKind::Generator(..)
-        | ty::TyKind::GeneratorWitness(..)
-        | ty::TyKind::Alias(..)
-        | ty::TyKind::Param(..)
-        | ty::TyKind::Bound(..)
-        | ty::TyKind::Placeholder(..) => {
-            bail!("The following Rust type is not supported yet: {ty}")
-        }
-        ty::TyKind::Closure(..)
-        | ty::TyKind::FnDef(..)
-        | ty::TyKind::Infer(..)
-        | ty::TyKind::Error(..) => {
-            // `Closure` types are assumed to never appear in a public API of a crate (only
-            // function-body-local variables/values should be able to have a closure type).
-            //
-            // `FnDef` is assumed to never appear in a public API of a crate - this seems to
-            // be an internal, compiler-only type similar to `Closure` (e.g.
-            // based on the statement from https://doc.rust-lang.org/stable/nightly-rustc/rustc_middle/ty/enum.TyKind.html#variant.FnDef
-            // that "each function has a unique type"
-            //
-            // `Infer` and `Error` types should be impossible at the time when Crubit's code
-            // runs (after the "analysis" phase of the Rust compiler).
-            panic!("Unexpected TyKind: {:?}", ty.kind());
-        }
+        _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
 }
 
@@ -493,28 +463,7 @@ fn format_ty_for_rs(tcx: TyCtxt, ty: Ty) -> Result<TokenStream> {
                         "Failed to format the pointee of the pointer type `{ty}`"))?;
             quote!{ * #qualifier #ty }
         },
-        ty::TyKind::Foreign(..)
-        | ty::TyKind::Str
-        | ty::TyKind::Array(..)
-        | ty::TyKind::Slice(..)
-        | ty::TyKind::Ref(..)
-        | ty::TyKind::FnPtr(..)
-        | ty::TyKind::Dynamic(..)
-        | ty::TyKind::Generator(..)
-        | ty::TyKind::GeneratorWitness(..)
-        | ty::TyKind::Alias(..)
-        | ty::TyKind::Param(..)
-        | ty::TyKind::Bound(..)
-        | ty::TyKind::Placeholder(..) => {
-            bail!("The following Rust type is not supported yet: {ty}")
-        }
-        ty::TyKind::Closure(..)
-        | ty::TyKind::FnDef(..)
-        | ty::TyKind::Infer(..)
-        | ty::TyKind::Error(..) => {
-            // See the comment inside the similar fallback branch in `format_ty_for_cc`.
-            panic!("Unexpected TyKind: {:?}", ty.kind());
-        }
+        _ => bail!("The following Rust type is not supported yet: {ty}"),
     })
 }
 
@@ -595,6 +544,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
 
     let sig = tcx
         .fn_sig(def_id)
+        .subst_identity()
         .no_bound_vars()
         .expect("Doc comment points out there should be no generic parameters");
 
@@ -3921,7 +3871,12 @@ pub mod tests {
             };
             run_compiler_for_testing(input, |tcx| {
                 let def_id = find_def_id_by_name(tcx, "test_function");
-                let ty = tcx.fn_sig(def_id.to_def_id()).no_bound_vars().unwrap().output();
+                let ty = tcx
+                    .fn_sig(def_id.to_def_id())
+                    .subst_identity()
+                    .no_bound_vars()
+                    .unwrap()
+                    .output();
                 test_fn(&desc, tcx, ty, expected);
             });
         }

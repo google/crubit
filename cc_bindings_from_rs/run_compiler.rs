@@ -18,11 +18,27 @@ use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-convent
 /// - Compilation will stop after parsing, analysis, and the `callback` are
 ///   done,
 /// - Returns the combined results from the Rust compiler *and* the `callback`.
+/// - Is safe to run from unit tests (which may run in parallel / on multiple
+///   threads).
 pub fn run_compiler<F, R>(rustc_args: &[String], callback: F) -> anyhow::Result<R>
 where
     F: FnOnce(TyCtxt) -> anyhow::Result<R> + Send,
     R: Send,
 {
+    // Calling `init_env_logger` 1) here and 2) via `sync::Lazy` helps to ensure
+    // that logging is intialized exactly once, even if the `run_compiler`
+    // function is invoked by mutliple unit tests running in parallel on
+    // separate threads.  This is important for avoiding flaky/racy
+    // panics related to 1) multiple threads entering
+    // `!tracing::dispatcher::has_been_set()` code in `rustc_driver_impl/src/
+    // lib.rs` and 2) `rustc_log/src/lib.rs` assumming that
+    // `tracing::subscriber::set_global_default` always succeeds.
+    use once_cell::sync::Lazy;
+    static ENV_LOGGER_INIT: Lazy<()> = Lazy::new(|| {
+        rustc_driver::init_env_logger("CRUBIT_LOG");
+    });
+    Lazy::force(&ENV_LOGGER_INIT);
+
     AfterAnalysisCallback::new(rustc_args, callback).run()
 }
 
@@ -80,7 +96,9 @@ where
                 // When rustc cmdline arguments (i.e. `self.args`) are empty (or contain
                 // `--help`) then the `after_analysis` callback won't be invoked.  Handle
                 // this case by emitting an explicit error at the Crubit level.
-                Err(anyhow!("The Rust compiler had no crate to compile and analyze"))
+                Err(anyhow!(
+                    "The Rust compiler had no crate to compile and analyze"
+                ))
             })
         })
     }
@@ -125,13 +143,14 @@ where
     F: FnOnce(TyCtxt<'tcx>) -> T + Send,
     T: Send,
 {
-    let query_context = queries.global_ctxt()?;
-    Ok(query_context.peek_mut().enter(f))
+    let mut query_context = queries.global_ctxt()?;
+    Ok(query_context.enter(f))
 }
 
 #[cfg(test)]
 pub mod tests {
     use super::run_compiler;
+
     use rustc_middle::ty::TyCtxt; // See also <internal link>/ty.html#import-conventions
     use std::path::PathBuf;
     use tempfile::tempdir;
@@ -326,7 +345,6 @@ pub mod tests {
                 name: rustc_span::FileName::Custom(TEST_FILENAME.to_string()),
                 input: source.into(),
             },
-            input_path: None,
             output_file: None,
             output_dir: None,
             file_loader: None,
