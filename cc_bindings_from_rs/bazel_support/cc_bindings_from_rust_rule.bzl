@@ -125,15 +125,17 @@ def _compile_rs_out_file(ctx, rs_out_file, target_crate):
 def _cc_bindings_from_rust_rule_impl(ctx):
     basename = ctx.attr.crate.label.name
 
-    crate_root = ctx.attr.crate[CrateInfo].root
+    crate_info = ctx.attr.crate[CrateInfo]
+    crate_root = crate_info.root
 
     # TODO(b/258449205): Extract `rustc_args` from the target `crate` (instead
-    # of figouring out the `crate_root` and hard-coding `--crate-type`,
+    # of figuring out the `crate_root` and hard-coding `--crate-type`,
     # `panic=abort`, etc.).  It seems that `BuildInfo` from
     # @rules_rust//rust/private/providers.bzl is not
     # exposed publicly?
     rustc_args = ctx.actions.args()
     rustc_args.add(crate_root)
+    rustc_args.add("--crate-name", crate_info.name)
     rustc_args.add("--crate-type", "lib")
     rustc_args.add("--codegen", "panic=abort")
 
