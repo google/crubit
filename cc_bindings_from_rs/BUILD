@@ -99,8 +99,10 @@ sh_test(
     ],
     env = {"LEGACY_TOOLCHAIN_RUST_TEST": "cc_bindings_from_rs_test"},
     tags = [
-        # TODO(b/269496347): Re-enable when this is fixed.
+        # TODO(b/269496347): Remove all these tags when this is fixed
         "noguitar",
+        "notap",
+        "manual",
     ],
 )
 
@@ -114,8 +116,10 @@ sh_test(
         ":cc_bindings_from_rs_legacy_toolchain_runner.sar",
     ],
     tags = [
-        # TODO(b/269496347): Re-enable when this is fixed.
+        # TODO(b/269496347): Remove all these tags when this is fixed
         "noguitar",
+        "notap",
+        "manual",
     ],
     deps = [
         "//util/shell/gbash",

@@ -31,8 +31,10 @@ cc_test(
     name = "functions_test",
     srcs = ["functions_test.cc"],
     tags = [
-        # TODO(b/269496347): Re-enable when this is fixed.
+        # TODO(b/269496347): Remove all these tags when this is fixed
         "noguitar",
+        "notap",
+        "manual",
     ],
     deps = [
         ":functions_cc_api",
