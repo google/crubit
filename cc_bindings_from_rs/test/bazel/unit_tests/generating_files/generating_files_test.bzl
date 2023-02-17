@@ -56,7 +56,7 @@ def _header_generation_test_impl(ctx):
     asserts.true(env, "rusty_lib_crate_root.rs" in [i.basename for i in generate_action.inputs.to_list()])
     generate_cmdline = " ".join(generate_action.argv)
     asserts.true(env, "rusty_lib_crate_root.rs" in generate_cmdline)
-    asserts.true(env, "--crate-type lib" in generate_cmdline)
+    asserts.true(env, "--crate-type rlib" in generate_cmdline)
     asserts.true(env, "--codegen panic=abort" in generate_cmdline)
 
     # Verify that `CcBindingsFromRust` generates:

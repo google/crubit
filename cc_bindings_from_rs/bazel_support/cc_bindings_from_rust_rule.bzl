@@ -129,14 +129,14 @@ def _cc_bindings_from_rust_rule_impl(ctx):
     crate_root = crate_info.root
 
     # TODO(b/258449205): Extract `rustc_args` from the target `crate` (instead
-    # of figuring out the `crate_root` and hard-coding `--crate-type`,
-    # `panic=abort`, etc.).  It seems that `BuildInfo` from
+    # of figuring out the `crate_root` and hard-coding `panic=abort`, etc.).
+    # It seems that `BuildInfo` from
     # @rules_rust//rust/private/providers.bzl is not
     # exposed publicly?
     rustc_args = ctx.actions.args()
     rustc_args.add(crate_root)
     rustc_args.add("--crate-name", crate_info.name)
-    rustc_args.add("--crate-type", "lib")
+    rustc_args.add("--crate-type", crate_info.type)
     rustc_args.add("--codegen", "panic=abort")
 
     (h_out_file, rs_out_file) = _generate_bindings(ctx, basename, [crate_root], rustc_args)
