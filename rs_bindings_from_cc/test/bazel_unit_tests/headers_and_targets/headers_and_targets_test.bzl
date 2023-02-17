@@ -194,6 +194,9 @@ def _toolchain_headers_in_header_analysis_action_test_impl(ctx):
 
 toolchain_headers_in_header_analysis_action_test = analysistest.make(
     _toolchain_headers_in_header_analysis_action_test_impl,
+    config_settings = {
+        "//command_line_option:crosstool_top": "//nowhere/llvm:everything",
+    },
 )
 
 def _test_textual_hdrs_not_in_targets_and_hdrs():
