@@ -529,24 +529,24 @@ impl From<CcSnippet> for MixedSnippet {
 /// Will panic if `local_def_id`
 /// - is invalid
 /// - doesn't identify a function,
-/// - has generic parameters of any kind - lifetime parameters (see also
-///   b/258235219), type parameters, or const parameters.
 fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey, MixedSnippet)>> {
     let tcx = input.tcx;
     let def_id: DefId = local_def_id.to_def_id(); // Convert LocalDefId to DefId.
 
+    ensure!(
+        tcx.generics_of(def_id).count() == 0,
+        "Generic functions are not supported yet (b/259749023)"
+    );
+    let sig = match tcx.fn_sig(def_id).subst_identity().no_bound_vars() {
+        None => bail!("Generic functions are not supported yet (b/259749023)"),
+        Some(sig) => sig,
+    };
+
     let mut symbol_name = {
-        // Call to `mono` is ok - doc comment requires no generic parameters (although
-        // lifetime parameters would have been okay).
+        // Call to `mono` is ok - `generics_of` have been checked above.
         let instance = ty::Instance::mono(tcx, def_id);
         tcx.symbol_name(instance)
     };
-
-    let sig = tcx
-        .fn_sig(def_id)
-        .subst_identity()
-        .no_bound_vars()
-        .expect("Doc comment points out there should be no generic parameters");
 
     if sig.c_variadic {
         // TODO(b/254097223): Add support for variadic functions.
@@ -965,7 +965,7 @@ fn format_adt(input: &Input, core: &AdtCoreBindings) -> Vec<(SnippetKey, MixedSn
             }
             let result = match impl_item_ref.kind {
                 AssocItemKind::Fn { .. } => format_fn(input, def_id),
-                _ => Err(anyhow!("`impl` items are not supported yet")),
+                other => Err(anyhow!("Unsupported `impl` item kind: {other:?}")),
             };
             result.unwrap_or_else(|err| vec![format_unsupported_def(tcx, def_id, err)])
         })
@@ -1107,15 +1107,11 @@ fn format_item(input: &Input, def_id: LocalDefId) -> Result<Vec<(SnippetKey, Mix
     }
 
     match input.tcx.hir().expect_item(def_id) {
-        Item { kind: ItemKind::Fn(_, generics, _) |
-                     ItemKind::Struct(_, generics) |
+        Item { kind: ItemKind::Struct(_, generics) |
                      ItemKind::Enum(_, generics) |
                      ItemKind::Union(_, generics),
                .. } if !generics.params.is_empty() => {
-            // TODO(b/258235219): Supporting function parameter types (or return types) that
-            // are references requires adding support for generic lifetime parameters.  The
-            // required changes may cascade into `format_fn`'s usage of `no_bound_vars`.
-            bail!("Generics are not supported yet (b/259749023 and b/259749095)");
+            bail!("Generic types are not supported yet (b/259749095)");
         },
         Item { kind: ItemKind::Fn(..), .. } => format_fn(input, def_id),
         Item { kind: ItemKind::Struct(..) | ItemKind::Enum(..) | ItemKind::Union(..), .. } =>
@@ -2400,7 +2396,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "foo", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
+            assert_eq!(err, "Generic functions are not supported yet (b/259749023)");
         });
     }
 
@@ -2415,7 +2411,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "generic_function", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
+            assert_eq!(err, "Generic functions are not supported yet (b/259749023)");
         });
     }
 
@@ -2429,7 +2425,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "Point", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
+            assert_eq!(err, "Generic types are not supported yet (b/259749095)");
         });
     }
 
@@ -2443,7 +2439,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "Point", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
+            assert_eq!(err, "Generic types are not supported yet (b/259749095)");
         });
     }
 
@@ -2457,7 +2453,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "SomeUnion", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Generics are not supported yet (b/259749023 and b/259749095)");
+            assert_eq!(err, "Generic types are not supported yet (b/259749095)");
         });
     }
 
@@ -2891,7 +2887,8 @@ pub mod tests {
     #[test]
     fn test_format_item_static_method() {
         let test_src = r#"
-                /// No-op `f32` placeholder is used, because ZSTs are not supported.
+                /// No-op `f32` placeholder is used, because ZSTs are not supported
+                /// (b/258259459).
                 pub struct Math(f32);
 
                 impl Math {
@@ -2938,6 +2935,194 @@ pub mod tests {
                     }
                 }
             );
+        });
+    }
+
+    #[test]
+    fn test_format_item_static_method_with_generic_type_parameters() {
+        let test_src = r#"
+                /// No-op `f32` placeholder is used, because ZSTs are not supported
+                /// (b/258259459).
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    // To make this testcase distinct / non-overlapping wrt
+                    // test_format_item_static_method_with_generic_lifetime_parameters
+                    // `t` is taken by value below.
+                    pub fn generic_method<T: Clone>(t: T) -> T {
+                        t.clone()
+                    }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
+            let unsupported_msg = "Error generating bindings for `SomeStruct::generic_method` \
+                                   defined at <crubit_unittests.rs>;l=10: \
+                                   Generic functions are not supported yet (b/259749023)";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::generic_method },);
+            assert_rs_not_matches!(impl_details.rs, quote! { generic_method },);
+        });
+    }
+
+    #[test]
+    fn test_format_item_static_method_with_generic_lifetime_parameters() {
+        let test_src = r#"
+                /// No-op `f32` placeholder is used, because ZSTs are not supported
+                /// (b/258259459).
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn fn_taking_reference<'a>(x: &'a i32) -> i32 { *x }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
+            let unsupported_msg = "Error generating bindings for `SomeStruct::fn_taking_reference` \
+                                   defined at <crubit_unittests.rs>;l=7: \
+                                   Generic functions are not supported yet (b/259749023)";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(
+                impl_details.cc.tokens,
+                quote! { SomeStruct::fn_taking_reference },
+            );
+            assert_rs_not_matches!(impl_details.rs, quote! { fn_taking_reference },);
+        });
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_value() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn into_f32(self) -> f32 {
+                        self.0
+                    }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
+            let unsupported_msg = "Error generating bindings for `SomeStruct::into_f32` \
+                                   defined at <crubit_unittests.rs>;l=5: \
+                                   `self` parameter is not supported yet";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::into_f32 },);
+            assert_rs_not_matches!(impl_details.rs, quote! { into_f32 },);
+        });
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_const_ref() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn get_f32(&self) -> f32 {
+                        self.0
+                    }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
+            let unsupported_msg = "Error generating bindings for `SomeStruct::get_f32` \
+                                   defined at <crubit_unittests.rs>;l=5: \
+                                   Generic functions are not supported yet (b/259749023)";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::get_f32 },);
+            assert_rs_not_matches!(impl_details.rs, quote! { get_f32 },);
+        });
+    }
+
+    #[test]
+    fn test_format_item_method_taking_self_by_mutable_ref() {
+        let test_src = r#"
+                pub struct SomeStruct(f32);
+
+                impl SomeStruct {
+                    pub fn set_f32(&mut self, new_value: f32) {
+                        self.0 = new_value;
+                    }
+                }
+            "#;
+        test_format_item(test_src, "SomeStruct", |result| {
+            let result = result.unwrap();
+            let main_api = get_main_api_snippet(&result);
+            let impl_details = get_impl_details_snippet(&result);
+            assert!(main_api.prereqs.is_empty());
+            let unsupported_msg = "Error generating bindings for `SomeStruct::set_f32` \
+                                   defined at <crubit_unittests.rs>;l=5: \
+                                   Generic functions are not supported yet (b/259749023)";
+            assert_cc_matches!(
+                main_api.tokens,
+                quote! {
+                    ...
+                    struct ... SomeStruct final {
+                        ...
+                        __COMMENT__ #unsupported_msg
+                        ...
+                    };
+                    ...
+                }
+            );
+            assert_cc_not_matches!(impl_details.cc.tokens, quote! { SomeStruct::set_f32 },);
+            assert_rs_not_matches!(impl_details.rs, quote! { set_f32 },);
         });
     }
 
@@ -3429,7 +3614,7 @@ pub mod tests {
             assert!(main_api.prereqs.is_empty());
             let unsupported_msg = "Error generating bindings for `SomeStruct::CONST_VALUE` \
                                    defined at <crubit_unittests.rs>;l=5: \
-                                   `impl` items are not supported yet";
+                                   Unsupported `impl` item kind: Const";
             assert_cc_matches!(
                 main_api.tokens,
                 quote! {
