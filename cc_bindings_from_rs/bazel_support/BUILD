@@ -15,6 +15,6 @@ bzl_library(
 
 alias(
     name = "cc_deps_for_bindings",
-    actual = "//support/rs_std:char",
+    actual = "//support/rs_std:rs_char",
     visibility = ["//visibility:public"],
 )

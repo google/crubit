@@ -3,8 +3,8 @@
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
 cc_library(
-    name = "char",
-    hdrs = ["char.h"],
+    name = "rs_char",
+    hdrs = ["rs_char.h"],
     visibility = ["//:__subpackages__"],
 
     # It is important to be thoughtful when adding new dependencies for `char`
@@ -16,10 +16,10 @@ cc_library(
 )
 
 cc_test(
-    name = "char_test",
-    srcs = ["char_test.cc"],
+    name = "rs_char_test",
+    srcs = ["rs_char_test.cc"],
     deps = [
-        ":char",
+        ":rs_char",
         "@com_google_googletest//:gtest_main",
     ],
 )

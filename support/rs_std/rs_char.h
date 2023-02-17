@@ -12,22 +12,22 @@
 
 namespace rs_std {
 
-// `rs_std::Char` is a C++ representation of the `char` type from Rust.
-class Char final {
+// `rs_std::rs_char` is a C++ representation of the `char` type from Rust.
+class rs_char final {
  public:
-  // Creates a default `Char` - one that represents ASCII NUL character.
+  // Creates a default `rs_char` - one that represents ASCII NUL character.
   //
   // Providing the default constructor helps to ensure that the `value_` always
   // effectively stores a C++ equivalent of a well-defined Rust's `u32` value
   // (and never has a `MaybeUninit<u32>` value).  See also the P2723R1 proposal
   // for C++ which argues that zero-initialization may mitigate 10% of exploits.
-  constexpr Char() = default;
+  constexpr rs_char() = default;
 
-  // Converts a `uint32_t` into a `rs_std::Char`.
+  // Converts a `uint32_t` into a `rs_std::rs_char`.
   //
-  // Note that not all valid `uint32_t`s are valid `rs_std::Char`s. `from_u32`
-  // will return `std::nullopt` if the input is not a valid value for a
-  // `rs_std::Char`.
+  // Note that not all valid `uint32_t`s are valid `rs_std::rs_char`s.
+  // `from_u32` will return `std::nullopt` if the input is not a valid value for
+  // a `rs_std::rs_char`.
   //
   // See also
   // https://doc.rust-lang.org/reference/behavior-considered-undefined.html
@@ -36,7 +36,7 @@ class Char final {
   //
   // This function mimics Rust's `char::from_u32`:
   // https://doc.rust-lang.org/std/primitive.char.html#method.from_u32
-  static constexpr std::optional<Char> from_u32(char32_t c) {
+  static constexpr std::optional<rs_char> from_u32(char32_t c) {
     // TODO(lukasza): Consider using slightly more efficient checks similarly
     // to how `char_try_from_u32` is implemented in Rust standard library.
     if (ABSL_PREDICT_FALSE(c > 0x10ffff)) {
@@ -53,30 +53,30 @@ class Char final {
     return from_u32_unchecked(c);
   }
 
-  constexpr Char(const Char&) = default;
-  constexpr Char& operator=(const Char&) = default;
-  constexpr Char(Char&&) = default;
-  constexpr Char& operator=(Char&&) = default;
-  ~Char() = default;
+  constexpr rs_char(const rs_char&) = default;
+  constexpr rs_char& operator=(const rs_char&) = default;
+  constexpr rs_char(rs_char&&) = default;
+  constexpr rs_char& operator=(rs_char&&) = default;
+  ~rs_char() = default;
 
   explicit constexpr operator std::uint32_t() const { return value_; }
 
-  constexpr bool operator==(const Char& other) const {
+  constexpr bool operator==(const rs_char& other) const {
     return value_ == other.value_;
   }
-  constexpr bool operator!=(const Char& other) const {
+  constexpr bool operator!=(const rs_char& other) const {
     return value_ != other.value_;
   }
-  constexpr bool operator<=(const Char& other) const {
+  constexpr bool operator<=(const rs_char& other) const {
     return value_ <= other.value_;
   }
-  constexpr bool operator<(const Char& other) const {
+  constexpr bool operator<(const rs_char& other) const {
     return value_ < other.value_;
   }
-  constexpr bool operator>=(const Char& other) const {
+  constexpr bool operator>=(const rs_char& other) const {
     return value_ >= other.value_;
   }
-  constexpr bool operator>(const Char& other) const {
+  constexpr bool operator>(const rs_char& other) const {
     return value_ > other.value_;
   }
 
@@ -84,7 +84,7 @@ class Char final {
   //
   // This constant mimics Rust's `char::MAX`:
   // https://doc.rust-lang.org/std/primitive.char.html#associatedconstant.MAX
-  static const Char MAX;
+  static const rs_char MAX;
 
  private:
   // This function mimics Rust's `char::from_u32_unchecked`:
@@ -92,23 +92,23 @@ class Char final {
   //
   // TODO(b/254095482): Figure out how to annotate/expose unsafe functions in
   // C++ and then make this method public.
-  static constexpr Char from_u32_unchecked(std::uint32_t value) {
-    return Char(value);
+  static constexpr rs_char from_u32_unchecked(std::uint32_t value) {
+    return rs_char(value);
   }
 
   // Private constructor - intended to only be used from `from_u32_unchecked`.
-  explicit constexpr Char(std::uint32_t value) : value_(value) {}
+  explicit constexpr rs_char(std::uint32_t value) : value_(value) {}
 
   // See "layout tests" comments in `char_test.cc` for explanation why
   // `char32_t` is not used.
   std::uint32_t value_ = '\0';
 };
 
-// Definition of `Char::MAX` - it can't be defined and declared within the
-// `class` definition, because before `Char` is fully defined the compiler
+// Definition of `rs_char::MAX` - it can't be defined and declared within the
+// `class` definition, because before `rs_char` is fully defined the compiler
 // complains that `constexpr` variable cannot have non-literal type
-// 'const Char'.
-constexpr Char Char::MAX = Char::from_u32_unchecked(0x10ffff);
+// 'const rs_char'.
+constexpr rs_char rs_char::MAX = rs_char::from_u32_unchecked(0x10ffff);
 
 }  // namespace rs_std
 
