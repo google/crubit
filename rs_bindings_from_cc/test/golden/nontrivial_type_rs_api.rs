@@ -203,8 +203,48 @@ impl ::ctor::PinnedDrop for Nontrivial {
 impl Nontrivial {
     /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=28
     #[inline(always)]
-    pub fn MemberFunction<'a>(self: ::std::pin::Pin<&'a mut Self>) {
-        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial14MemberFunctionEv(self) }
+    pub fn Unqualified<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZN10Nontrivial11UnqualifiedEv(self) }
+    }
+}
+
+impl Nontrivial {
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=29
+    #[inline(always)]
+    pub fn ConstQualified<'a>(&'a self) {
+        unsafe { crate::detail::__rust_thunk___ZNK10Nontrivial14ConstQualifiedEv(self) }
+    }
+}
+
+impl Nontrivial {
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=30
+    #[inline(always)]
+    pub fn LvalueRefQualified<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv(self) }
+    }
+}
+
+impl Nontrivial {
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=31
+    #[inline(always)]
+    pub fn ConstLvalueRefQualified<'a>(&'a self) {
+        unsafe { crate::detail::__rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv(self) }
+    }
+}
+
+impl Nontrivial {
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=32
+    #[inline(always)]
+    pub fn RvalueRefQualified<'a>(self: ::std::pin::Pin<&'a mut Self>) {
+        unsafe { crate::detail::__rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv(self) }
+    }
+}
+
+impl Nontrivial {
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=33
+    #[inline(always)]
+    pub fn ConstRvalueRefQualified<'a>(&'a self) {
+        unsafe { crate::detail::__rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv(self) }
     }
 }
 
@@ -213,7 +253,7 @@ impl Nontrivial {
 /// This makes it nontrivial for calls (so not trivially relocatable), as well
 /// as specifically giving it a nontrivial move constructor and destructor.
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=42
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct NontrivialInline {
@@ -225,7 +265,7 @@ forward_declare::unsafe_define!(
     crate::NontrivialInline
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=38
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=43
 impl ::ctor::CtorNew<()> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -241,7 +281,7 @@ impl ::ctor::CtorNew<()> for NontrivialInline {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=39
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=44
 impl ::ctor::CtorNew<i32> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -266,7 +306,7 @@ impl ::ctor::CtorNew<(i32,)> for NontrivialInline {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=40
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=45
 impl ::ctor::CtorNew<(i32, i32)> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -284,7 +324,7 @@ impl ::ctor::CtorNew<(i32, i32)> for NontrivialInline {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=46
 impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -309,7 +349,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialInline {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=42
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=47
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialInline {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -334,7 +374,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialInl
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=43
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=48
 impl<'b> ::ctor::Assign<&'b Self> for NontrivialInline {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -344,7 +384,7 @@ impl<'b> ::ctor::Assign<&'b Self> for NontrivialInline {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=44
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=49
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialInline {
     #[inline(always)]
     fn assign<'a>(
@@ -357,7 +397,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialInline 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=45
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=50
 impl ::ctor::Assign<i32> for NontrivialInline {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: i32) {
@@ -367,7 +407,7 @@ impl ::ctor::Assign<i32> for NontrivialInline {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=46
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=51
 impl ::ctor::PinnedDrop for NontrivialInline {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -376,7 +416,7 @@ impl ::ctor::PinnedDrop for NontrivialInline {
 }
 
 impl NontrivialInline {
-    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=48
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=53
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN16NontrivialInline14MemberFunctionEv(self) }
@@ -389,7 +429,7 @@ impl NontrivialInline {
 /// the destructor for NontrivialMembers, it just calls the destructors for
 /// each field.
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct NontrivialMembers {
@@ -400,7 +440,7 @@ forward_declare::unsafe_define!(
     crate::NontrivialMembers
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 impl ::ctor::CtorNew<()> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -416,7 +456,7 @@ impl ::ctor::CtorNew<()> for NontrivialMembers {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -441,7 +481,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialMembers {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialMembers {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -466,7 +506,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialMem
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 impl ::ctor::PinnedDrop for NontrivialMembers {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -474,7 +514,7 @@ impl ::ctor::PinnedDrop for NontrivialMembers {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 impl<'b> ::ctor::Assign<&'b Self> for NontrivialMembers {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -484,7 +524,7 @@ impl<'b> ::ctor::Assign<&'b Self> for NontrivialMembers {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialMembers {
     #[inline(always)]
     fn assign<'a>(
@@ -499,7 +539,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialMembers
 
 /// Nontrivial, but trivially relocatable and final (and therefore Unpin).
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=63
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=68
 #[repr(C)]
 pub struct NontrivialUnpin {
     __non_field_data: [::std::mem::MaybeUninit<u8>; 0],
@@ -510,7 +550,7 @@ forward_declare::unsafe_define!(
     crate::NontrivialUnpin
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=64
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=69
 impl Default for NontrivialUnpin {
     #[inline(always)]
     fn default() -> Self {
@@ -522,15 +562,15 @@ impl Default for NontrivialUnpin {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=65
+// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=70
 // Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
 // Not yet supported type of constructor parameter
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=66
+// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=71
 // Error while generating bindings for item 'NontrivialUnpin::NontrivialUnpin':
 // More than 1 constructor parameter is not supported yet
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=67
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=72
 impl Clone for NontrivialUnpin {
     #[inline(always)]
     fn clone<'b>(&'b self) -> Self {
@@ -542,7 +582,7 @@ impl Clone for NontrivialUnpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=68
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=73
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -554,7 +594,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=74
 impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpin {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, crate::Nontrivial>) -> Self {
@@ -566,7 +606,7 @@ impl<'b> From<::ctor::RvalueReference<'b, crate::Nontrivial>> for NontrivialUnpi
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=70
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=75
 impl<'b> ::ctor::UnpinAssign<&'b Self> for NontrivialUnpin {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -576,7 +616,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for NontrivialUnpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=71
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=76
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NontrivialUnpin {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -586,7 +626,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for NontrivialUn
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=72
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=77
 impl ::ctor::UnpinAssign<i32> for NontrivialUnpin {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: i32) {
@@ -596,7 +636,7 @@ impl ::ctor::UnpinAssign<i32> for NontrivialUnpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=73
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=78
 impl Drop for NontrivialUnpin {
     #[inline(always)]
     fn drop<'a>(&'a mut self) {
@@ -605,66 +645,54 @@ impl Drop for NontrivialUnpin {
 }
 
 impl NontrivialUnpin {
-    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=75
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=80
     #[inline(always)]
     pub fn MemberFunction<'a>(&'a mut self) {
         unsafe { crate::detail::__rust_thunk___ZN15NontrivialUnpin14MemberFunctionEv(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=80
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=85
 #[inline(always)]
-pub fn TakesByValue(nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial>) {
-    unsafe {
-        crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
-            ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
-        )
-    }
-}
-
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=81
-#[inline(always)]
-pub fn TakesByValueInline(nontrivial: impl ::ctor::Ctor<Output = crate::NontrivialInline>) {
-    unsafe {
-        crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
-            ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
-        )
-    }
-}
-
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=82
-#[inline(always)]
-pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) {
-    unsafe { crate::detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(nontrivial) }
-}
-
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=84
-#[inline(always)]
-pub fn ReturnsByValue() -> impl ::ctor::Ctor<Output = crate::Nontrivial> {
+pub fn TakesByValue(
+    nontrivial: impl ::ctor::Ctor<Output = crate::Nontrivial>,
+) -> impl ::ctor::Ctor<Output = crate::Nontrivial> {
     unsafe {
         ::ctor::FnCtor::new(
             move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::Nontrivial>>| {
-                crate::detail::__rust_thunk___Z14ReturnsByValuev(
+                crate::detail::__rust_thunk___Z12TakesByValue10Nontrivial(
                     ::std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
                 );
             },
         )
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=85
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=86
 #[inline(always)]
-pub fn ReturnsByValueUnpin() -> crate::NontrivialUnpin {
-    unsafe { crate::detail::__rust_thunk___Z19ReturnsByValueUnpinv() }
+pub fn TakesByValueInline(
+    nontrivial: impl ::ctor::Ctor<Output = crate::NontrivialInline>,
+) -> impl ::ctor::Ctor<Output = crate::NontrivialInline> {
+    unsafe {
+        ::ctor::FnCtor::new(
+            move |dest: ::std::pin::Pin<&mut ::std::mem::MaybeUninit<crate::NontrivialInline>>| {
+                crate::detail::__rust_thunk___Z18TakesByValueInline16NontrivialInline(
+                    ::std::pin::Pin::into_inner_unchecked(dest),
+                    ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(nontrivial)),
+                );
+            },
+        )
+    }
 }
 
 /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=87
 #[inline(always)]
-pub fn TakesByConstReference<'a>(nontrivial: &'a crate::Nontrivial) -> &'a crate::Nontrivial {
-    unsafe { crate::detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
+pub fn TakesByValueUnpin(nontrivial: crate::NontrivialUnpin) -> crate::NontrivialUnpin {
+    unsafe { crate::detail::__rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(nontrivial) }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=88
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=89
 #[inline(always)]
 pub fn TakesByReference<'a>(
     nontrivial: ::std::pin::Pin<&'a mut crate::Nontrivial>,
@@ -674,25 +702,71 @@ pub fn TakesByReference<'a>(
 
 /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=90
 #[inline(always)]
-pub fn TakesByConstReferenceUnpin<'a>(
+pub fn TakesUnpinByReference<'a>(
+    nontrivial: &'a mut crate::NontrivialUnpin,
+) -> &'a mut crate::NontrivialUnpin {
+    unsafe { crate::detail::__rust_thunk___Z21TakesUnpinByReferenceR15NontrivialUnpin(nontrivial) }
+}
+
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=93
+#[inline(always)]
+pub fn TakesByConstReference<'a>(nontrivial: &'a crate::Nontrivial) -> &'a crate::Nontrivial {
+    unsafe { crate::detail::__rust_thunk___Z21TakesByConstReferenceRK10Nontrivial(nontrivial) }
+}
+
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=94
+#[inline(always)]
+pub fn TakesUnpinByConstReference<'a>(
     nontrivial: &'a crate::NontrivialUnpin,
 ) -> &'a crate::NontrivialUnpin {
     unsafe {
-        crate::detail::__rust_thunk___Z26TakesByConstReferenceUnpinRK15NontrivialUnpin(nontrivial)
+        crate::detail::__rust_thunk___Z26TakesUnpinByConstReferenceRK15NontrivialUnpin(nontrivial)
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=92
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=97
 #[inline(always)]
-pub fn TakesByReferenceUnpin<'a>(
-    nontrivial: &'a mut crate::NontrivialUnpin,
-) -> &'a mut crate::NontrivialUnpin {
-    unsafe { crate::detail::__rust_thunk___Z21TakesByReferenceUnpinR15NontrivialUnpin(nontrivial) }
+pub fn TakesByRvalueReference<'a>(
+    nontrivial: ::ctor::RvalueReference<'a, crate::Nontrivial>,
+) -> ::ctor::RvalueReference<'a, crate::Nontrivial> {
+    unsafe { crate::detail::__rust_thunk___Z22TakesByRvalueReferenceO10Nontrivial(nontrivial) }
+}
+
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=98
+#[inline(always)]
+pub fn TakesUnpinByRvalueReference<'a>(
+    nontrivial: ::ctor::RvalueReference<'a, crate::NontrivialUnpin>,
+) -> ::ctor::RvalueReference<'a, crate::NontrivialUnpin> {
+    unsafe {
+        crate::detail::__rust_thunk___Z27TakesUnpinByRvalueReferenceO15NontrivialUnpin(nontrivial)
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=101
+#[inline(always)]
+pub fn TakesByConstRvalueReference<'a>(
+    nontrivial: ::ctor::ConstRvalueReference<'a, crate::Nontrivial>,
+) -> ::ctor::ConstRvalueReference<'a, crate::Nontrivial> {
+    unsafe {
+        crate::detail::__rust_thunk___Z27TakesByConstRvalueReferenceOK10Nontrivial(nontrivial)
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=102
+#[inline(always)]
+pub fn TakesUnpinByConstRvalueReference<'a>(
+    nontrivial: ::ctor::ConstRvalueReference<'a, crate::NontrivialUnpin>,
+) -> ::ctor::ConstRvalueReference<'a, crate::NontrivialUnpin> {
+    unsafe {
+        crate::detail::__rust_thunk___Z32TakesUnpinByConstRvalueReferenceOK15NontrivialUnpin(
+            nontrivial,
+        )
+    }
 }
 
 /// Finally, testing for strange by-value APIs.
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=106
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct NontrivialByValue {
@@ -703,7 +777,7 @@ forward_declare::unsafe_define!(
     crate::NontrivialByValue
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=96
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=107
 impl<'b> ::ctor::CtorNew<&'b Self> for NontrivialByValue {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -728,7 +802,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for NontrivialByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=97
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=108
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -753,7 +827,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for NontrivialByV
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=98
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=109
 impl<'b> ::ctor::Assign<&'b Self> for NontrivialByValue {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: &'b Self) {
@@ -763,7 +837,7 @@ impl<'b> ::ctor::Assign<&'b Self> for NontrivialByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=110
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialByValue {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, other: ::ctor::RvalueReference<'b, Self>) {
@@ -773,7 +847,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for NontrivialByValue
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=101
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=112
 impl<'other> ::ctor::Assign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     for NontrivialByValue
 {
@@ -796,11 +870,11 @@ impl<'other> ::ctor::Assign<::ctor::RvalueReference<'other, crate::Nontrivial>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=102
+// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=113
 // Error while generating bindings for item 'NontrivialByValue::operator==':
 // operator== where lhs operand is not record nor const reference to record
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=105
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=116
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C)]
 pub struct Nonmovable {
@@ -808,7 +882,7 @@ pub struct Nonmovable {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Nonmovable"), crate::Nonmovable);
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=106
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=117
 impl ::ctor::CtorNew<()> for Nonmovable {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -824,7 +898,7 @@ impl ::ctor::CtorNew<()> for Nonmovable {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=109
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=120
 impl ::ctor::PinnedDrop for Nonmovable {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -833,18 +907,18 @@ impl ::ctor::PinnedDrop for Nonmovable {
 }
 
 impl Nonmovable {
-    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=111
+    /// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=122
     #[inline(always)]
     pub fn MemberFunction<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN10Nonmovable14MemberFunctionEv(self) }
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=114
+// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=125
 // Error while generating bindings for item 'TakesNonmovableByValue':
 // Non-movable, non-trivial_abi type 'crate :: Nonmovable' is not supported by value as parameter #0
 
-/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=115
+/// Generated from: rs_bindings_from_cc/test/golden/nontrivial_type.h;l=126
 #[inline(always)]
 pub fn ReturnsNonmovableByValue() -> impl ::ctor::Ctor<Output = crate::Nonmovable> {
     unsafe {
@@ -913,9 +987,29 @@ mod detail {
         pub(crate) fn __rust_thunk___ZN10NontrivialD1Ev<'a>(
             __this: ::std::pin::Pin<&'a mut crate::Nontrivial>,
         );
-        #[link_name = "_ZN10Nontrivial14MemberFunctionEv"]
-        pub(crate) fn __rust_thunk___ZN10Nontrivial14MemberFunctionEv<'a>(
+        #[link_name = "_ZN10Nontrivial11UnqualifiedEv"]
+        pub(crate) fn __rust_thunk___ZN10Nontrivial11UnqualifiedEv<'a>(
             __this: ::std::pin::Pin<&'a mut crate::Nontrivial>,
+        );
+        #[link_name = "_ZNK10Nontrivial14ConstQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNK10Nontrivial14ConstQualifiedEv<'a>(
+            __this: &'a crate::Nontrivial,
+        );
+        #[link_name = "_ZNR10Nontrivial18LvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNR10Nontrivial18LvalueRefQualifiedEv<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::Nontrivial>,
+        );
+        #[link_name = "_ZNKR10Nontrivial23ConstLvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNKR10Nontrivial23ConstLvalueRefQualifiedEv<'a>(
+            __this: &'a crate::Nontrivial,
+        );
+        #[link_name = "_ZNO10Nontrivial18RvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNO10Nontrivial18RvalueRefQualifiedEv<'a>(
+            __this: ::std::pin::Pin<&'a mut crate::Nontrivial>,
+        );
+        #[link_name = "_ZNKO10Nontrivial23ConstRvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNKO10Nontrivial23ConstRvalueRefQualifiedEv<'a>(
+            __this: &'a crate::Nontrivial,
         );
         pub(crate) fn __rust_thunk___ZN16NontrivialInlineC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
@@ -1020,36 +1114,49 @@ mod detail {
             __this: &'a mut crate::NontrivialUnpin,
         );
         pub(crate) fn __rust_thunk___Z12TakesByValue10Nontrivial(
+            __return: &mut ::std::mem::MaybeUninit<crate::Nontrivial>,
             nontrivial: &mut crate::Nontrivial,
         );
         pub(crate) fn __rust_thunk___Z18TakesByValueInline16NontrivialInline(
+            __return: &mut ::std::mem::MaybeUninit<crate::NontrivialInline>,
             nontrivial: &mut crate::NontrivialInline,
         );
         #[link_name = "_Z17TakesByValueUnpin15NontrivialUnpin"]
         pub(crate) fn __rust_thunk___Z17TakesByValueUnpin15NontrivialUnpin(
             nontrivial: crate::NontrivialUnpin,
-        );
-        pub(crate) fn __rust_thunk___Z14ReturnsByValuev(
-            __return: &mut ::std::mem::MaybeUninit<crate::Nontrivial>,
-        );
-        #[link_name = "_Z19ReturnsByValueUnpinv"]
-        pub(crate) fn __rust_thunk___Z19ReturnsByValueUnpinv() -> crate::NontrivialUnpin;
-        #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]
-        pub(crate) fn __rust_thunk___Z21TakesByConstReferenceRK10Nontrivial<'a>(
-            nontrivial: &'a crate::Nontrivial,
-        ) -> &'a crate::Nontrivial;
+        ) -> crate::NontrivialUnpin;
         #[link_name = "_Z16TakesByReferenceR10Nontrivial"]
         pub(crate) fn __rust_thunk___Z16TakesByReferenceR10Nontrivial<'a>(
             nontrivial: ::std::pin::Pin<&'a mut crate::Nontrivial>,
         ) -> ::std::pin::Pin<&'a mut crate::Nontrivial>;
-        #[link_name = "_Z26TakesByConstReferenceUnpinRK15NontrivialUnpin"]
-        pub(crate) fn __rust_thunk___Z26TakesByConstReferenceUnpinRK15NontrivialUnpin<'a>(
-            nontrivial: &'a crate::NontrivialUnpin,
-        ) -> &'a crate::NontrivialUnpin;
-        #[link_name = "_Z21TakesByReferenceUnpinR15NontrivialUnpin"]
-        pub(crate) fn __rust_thunk___Z21TakesByReferenceUnpinR15NontrivialUnpin<'a>(
+        #[link_name = "_Z21TakesUnpinByReferenceR15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z21TakesUnpinByReferenceR15NontrivialUnpin<'a>(
             nontrivial: &'a mut crate::NontrivialUnpin,
         ) -> &'a mut crate::NontrivialUnpin;
+        #[link_name = "_Z21TakesByConstReferenceRK10Nontrivial"]
+        pub(crate) fn __rust_thunk___Z21TakesByConstReferenceRK10Nontrivial<'a>(
+            nontrivial: &'a crate::Nontrivial,
+        ) -> &'a crate::Nontrivial;
+        #[link_name = "_Z26TakesUnpinByConstReferenceRK15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z26TakesUnpinByConstReferenceRK15NontrivialUnpin<'a>(
+            nontrivial: &'a crate::NontrivialUnpin,
+        ) -> &'a crate::NontrivialUnpin;
+        #[link_name = "_Z22TakesByRvalueReferenceO10Nontrivial"]
+        pub(crate) fn __rust_thunk___Z22TakesByRvalueReferenceO10Nontrivial<'a>(
+            nontrivial: ::ctor::RvalueReference<'a, crate::Nontrivial>,
+        ) -> ::ctor::RvalueReference<'a, crate::Nontrivial>;
+        #[link_name = "_Z27TakesUnpinByRvalueReferenceO15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z27TakesUnpinByRvalueReferenceO15NontrivialUnpin<'a>(
+            nontrivial: ::ctor::RvalueReference<'a, crate::NontrivialUnpin>,
+        ) -> ::ctor::RvalueReference<'a, crate::NontrivialUnpin>;
+        #[link_name = "_Z27TakesByConstRvalueReferenceOK10Nontrivial"]
+        pub(crate) fn __rust_thunk___Z27TakesByConstRvalueReferenceOK10Nontrivial<'a>(
+            nontrivial: ::ctor::ConstRvalueReference<'a, crate::Nontrivial>,
+        ) -> ::ctor::ConstRvalueReference<'a, crate::Nontrivial>;
+        #[link_name = "_Z32TakesUnpinByConstRvalueReferenceOK15NontrivialUnpin"]
+        pub(crate) fn __rust_thunk___Z32TakesUnpinByConstRvalueReferenceOK15NontrivialUnpin<'a>(
+            nontrivial: ::ctor::ConstRvalueReference<'a, crate::NontrivialUnpin>,
+        ) -> ::ctor::ConstRvalueReference<'a, crate::NontrivialUnpin>;
         pub(crate) fn __rust_thunk___ZN17NontrivialByValueC1ERKS_<'a, 'b>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::NontrivialByValue>,
             other: &'b crate::NontrivialByValue,

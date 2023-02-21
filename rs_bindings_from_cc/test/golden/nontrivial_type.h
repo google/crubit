@@ -25,7 +25,12 @@ struct Nontrivial final {
   Nontrivial operator=(float);
   ~Nontrivial();
 
-  void MemberFunction();
+  void Unqualified();
+  void ConstQualified() const;
+  void LvalueRefQualified() &;
+  void ConstLvalueRefQualified() const&;
+  void RvalueRefQualified() &&;
+  void ConstRvalueRefQualified() const&&;
 
   int field;
 };
@@ -77,19 +82,23 @@ struct [[clang::trivial_abi]] NontrivialUnpin final {
   int field;
 };
 
-void TakesByValue(Nontrivial nontrivial);
-void TakesByValueInline(NontrivialInline nontrivial);
-void TakesByValueUnpin(NontrivialUnpin nontrivial);
+Nontrivial TakesByValue(Nontrivial nontrivial);
+NontrivialInline TakesByValueInline(NontrivialInline nontrivial);
+NontrivialUnpin TakesByValueUnpin(NontrivialUnpin nontrivial);
 
-Nontrivial ReturnsByValue();
-NontrivialUnpin ReturnsByValueUnpin();
+Nontrivial& TakesByReference(Nontrivial& nontrivial);
+NontrivialUnpin& TakesUnpinByReference(NontrivialUnpin& nontrivial);
 
 const Nontrivial& TakesByConstReference(const Nontrivial& nontrivial);
-Nontrivial& TakesByReference(Nontrivial& nontrivial);
-
-const NontrivialUnpin& TakesByConstReferenceUnpin(
+const NontrivialUnpin& TakesUnpinByConstReference(
     const NontrivialUnpin& nontrivial);
-NontrivialUnpin& TakesByReferenceUnpin(NontrivialUnpin& nontrivial);
+
+Nontrivial&& TakesByRvalueReference(Nontrivial&& nontrivial);
+NontrivialUnpin&& TakesUnpinByRvalueReference(NontrivialUnpin&& nontrivial);
+
+const Nontrivial&& TakesByConstRvalueReference(const Nontrivial&& nontrivial);
+const NontrivialUnpin&& TakesUnpinByConstRvalueReference(
+    const NontrivialUnpin&& nontrivial);
 
 // Finally, testing for strange by-value APIs.
 struct NontrivialByValue {

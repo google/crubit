@@ -133,10 +133,74 @@ pub mod ns {
         }
     }
 
+    impl TrivialWithDefaulted {
+        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=31
+        #[inline(always)]
+        pub fn Unqualified<'a>(&'a mut self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZN2ns20TrivialWithDefaulted11UnqualifiedEv(self)
+            }
+        }
+    }
+
+    impl TrivialWithDefaulted {
+        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=32
+        #[inline(always)]
+        pub fn ConstQualified<'a>(&'a self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNK2ns20TrivialWithDefaulted14ConstQualifiedEv(self)
+            }
+        }
+    }
+
+    impl TrivialWithDefaulted {
+        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=33
+        #[inline(always)]
+        pub fn LvalueRefQualified<'a>(&'a mut self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNR2ns20TrivialWithDefaulted18LvalueRefQualifiedEv(
+                    self,
+                )
+            }
+        }
+    }
+
+    impl TrivialWithDefaulted {
+        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+        #[inline(always)]
+        pub fn ConstLvalueRefQualified<'a>(&'a self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNKR2ns20TrivialWithDefaulted23ConstLvalueRefQualifiedEv(self)
+            }
+        }
+    }
+
+    impl TrivialWithDefaulted {
+        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=35
+        #[inline(always)]
+        pub fn RvalueRefQualified<'a>(&'a mut self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNO2ns20TrivialWithDefaulted18RvalueRefQualifiedEv(
+                    self,
+                )
+            }
+        }
+    }
+
+    impl TrivialWithDefaulted {
+        /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=36
+        #[inline(always)]
+        pub fn ConstRvalueRefQualified<'a>(&'a self) {
+            unsafe {
+                crate::detail::__rust_thunk___ZNKO2ns20TrivialWithDefaulted23ConstRvalueRefQualifiedEv(self)
+            }
+        }
+    }
+
     /// This struct is trivial, and therefore trivially relocatable etc., but still
     /// not safe to pass by reference as it is not final.
     ///
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     #[::ctor::recursively_pinned]
     #[repr(C)]
     pub struct TrivialNonfinal {
@@ -147,7 +211,7 @@ pub mod ns {
         crate::ns::TrivialNonfinal
     );
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl ::ctor::CtorNew<()> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self>;
         #[inline(always)]
@@ -165,7 +229,7 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::CtorNew<&'b Self> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -192,7 +256,7 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
         #[inline(always)]
@@ -219,7 +283,7 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::Assign<&'b Self> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -229,7 +293,7 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=34
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=41
     impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for TrivialNonfinal {
         #[inline(always)]
         fn assign<'a>(
@@ -242,53 +306,149 @@ pub mod ns {
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=38
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=45
     #[inline(always)]
-    pub fn TakesByValue(trivial: crate::ns::Trivial) {
+    pub fn TakesByValue(trivial: crate::ns::Trivial) -> crate::ns::Trivial {
         unsafe { crate::detail::__rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(trivial) }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=39
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=46
     #[inline(always)]
-    pub fn TakesWithDefaultedByValue(trivial: crate::ns::TrivialWithDefaulted) {
+    pub fn TakesWithDefaultedByValue(
+        trivial: crate::ns::TrivialWithDefaulted,
+    ) -> crate::ns::TrivialWithDefaulted {
         unsafe {
             crate::detail::__rust_thunk___ZN2ns25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE(trivial)
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=40
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=47
     #[inline(always)]
     pub fn TakesTrivialNonfinalByValue(
         trivial: impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal>,
-    ) {
+    ) -> impl ::ctor::Ctor<Output = crate::ns::TrivialNonfinal> {
         unsafe {
-            crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-                ::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(trivial)),
+            ::ctor::FnCtor::new(
+                move |dest: ::std::pin::Pin<
+                    &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
+                >| {
+                    crate::detail::__rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(::std::pin::Pin::into_inner_unchecked(dest),::std::pin::Pin::into_inner_unchecked(::ctor::emplace!(trivial)));
+                },
             )
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=42
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=49
     #[inline(always)]
-    pub fn TakesByReference<'a>(trivial: &'a mut crate::ns::Trivial) {
+    pub fn TakesByReference<'a>(trivial: &'a mut crate::ns::Trivial) -> &'a mut crate::ns::Trivial {
         unsafe { crate::detail::__rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE(trivial) }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=43
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=50
     #[inline(always)]
-    pub fn TakesWithDefaultedByReference<'a>(trivial: &'a mut crate::ns::TrivialWithDefaulted) {
+    pub fn TakesWithDefaultedByReference<'a>(
+        trivial: &'a mut crate::ns::TrivialWithDefaulted,
+    ) -> &'a mut crate::ns::TrivialWithDefaulted {
         unsafe {
             crate::detail::__rust_thunk___ZN2ns29TakesWithDefaultedByReferenceERNS_20TrivialWithDefaultedE(trivial)
         }
     }
 
-    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=44
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=52
     #[inline(always)]
     pub fn TakesTrivialNonfinalByReference<'a>(
         trivial: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
-    ) {
+    ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal> {
         unsafe {
             crate::detail::__rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=54
+    #[inline(always)]
+    pub fn TakesByConstReference<'a>(trivial: &'a crate::ns::Trivial) -> &'a crate::ns::Trivial {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=55
+    #[inline(always)]
+    pub fn TakesWithDefaultedByConstReference<'a>(
+        trivial: &'a crate::ns::TrivialWithDefaulted,
+    ) -> &'a crate::ns::TrivialWithDefaulted {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns34TakesWithDefaultedByConstReferenceERKNS_20TrivialWithDefaultedE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=57
+    #[inline(always)]
+    pub fn TakesTrivialNonfinalByConstReference<'a>(
+        trivial: &'a crate::ns::TrivialNonfinal,
+    ) -> &'a crate::ns::TrivialNonfinal {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns36TakesTrivialNonfinalByConstReferenceERKNS_15TrivialNonfinalE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=60
+    #[inline(always)]
+    pub fn TakesByRvalueReference<'a>(
+        trivial: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
+    ) -> ::ctor::RvalueReference<'a, crate::ns::Trivial> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=61
+    #[inline(always)]
+    pub fn TakesWithDefaultedByRvalueReference<'a>(
+        trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialWithDefaulted>,
+    ) -> ::ctor::RvalueReference<'a, crate::ns::TrivialWithDefaulted> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns35TakesWithDefaultedByRvalueReferenceEONS_20TrivialWithDefaultedE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=63
+    #[inline(always)]
+    pub fn TakesTrivialNonfinalByRvalueReference<'a>(
+        trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal>,
+    ) -> ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns37TakesTrivialNonfinalByRvalueReferenceEONS_15TrivialNonfinalE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=66
+    #[inline(always)]
+    pub fn TakesByConstRvalueReference<'a>(
+        trivial: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
+    ) -> ::ctor::ConstRvalueReference<'a, crate::ns::Trivial> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=67
+    #[inline(always)]
+    pub fn TakesWithDefaultedByConstRvalueReference<'a>(
+        trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialWithDefaulted>,
+    ) -> ::ctor::ConstRvalueReference<'a, crate::ns::TrivialWithDefaulted> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns40TakesWithDefaultedByConstRvalueReferenceEOKNS_20TrivialWithDefaultedE(trivial)
+        }
+    }
+
+    /// Generated from: rs_bindings_from_cc/test/golden/trivial_type.h;l=69
+    #[inline(always)]
+    pub fn TakesTrivialNonfinalByConstRvalueReference<'a>(
+        trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialNonfinal>,
+    ) -> ::ctor::ConstRvalueReference<'a, crate::ns::TrivialNonfinal> {
+        unsafe {
+            crate::detail::__rust_thunk___ZN2ns42TakesTrivialNonfinalByConstRvalueReferenceEOKNS_15TrivialNonfinalE(trivial)
         }
     }
 }
@@ -331,6 +491,30 @@ mod detail {
             __this: &'a mut crate::ns::TrivialWithDefaulted,
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialWithDefaulted>,
         ) -> &'a mut crate::ns::TrivialWithDefaulted;
+        #[link_name = "_ZN2ns20TrivialWithDefaulted11UnqualifiedEv"]
+        pub(crate) fn __rust_thunk___ZN2ns20TrivialWithDefaulted11UnqualifiedEv<'a>(
+            __this: &'a mut crate::ns::TrivialWithDefaulted,
+        );
+        #[link_name = "_ZNK2ns20TrivialWithDefaulted14ConstQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNK2ns20TrivialWithDefaulted14ConstQualifiedEv<'a>(
+            __this: &'a crate::ns::TrivialWithDefaulted,
+        );
+        #[link_name = "_ZNR2ns20TrivialWithDefaulted18LvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNR2ns20TrivialWithDefaulted18LvalueRefQualifiedEv<'a>(
+            __this: &'a mut crate::ns::TrivialWithDefaulted,
+        );
+        #[link_name = "_ZNKR2ns20TrivialWithDefaulted23ConstLvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNKR2ns20TrivialWithDefaulted23ConstLvalueRefQualifiedEv<'a>(
+            __this: &'a crate::ns::TrivialWithDefaulted,
+        );
+        #[link_name = "_ZNO2ns20TrivialWithDefaulted18RvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNO2ns20TrivialWithDefaulted18RvalueRefQualifiedEv<'a>(
+            __this: &'a mut crate::ns::TrivialWithDefaulted,
+        );
+        #[link_name = "_ZNKO2ns20TrivialWithDefaulted23ConstRvalueRefQualifiedEv"]
+        pub(crate) fn __rust_thunk___ZNKO2ns20TrivialWithDefaulted23ConstRvalueRefQualifiedEv<'a>(
+            __this: &'a crate::ns::TrivialWithDefaulted,
+        );
         pub(crate) fn __rust_thunk___ZN2ns15TrivialNonfinalC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
         );
@@ -351,30 +535,81 @@ mod detail {
             __param_0: ::ctor::RvalueReference<'b, crate::ns::TrivialNonfinal>,
         ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
         #[link_name = "_ZN2ns12TakesByValueENS_7TrivialE"]
-        pub(crate) fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(trivial: crate::ns::Trivial);
+        pub(crate) fn __rust_thunk___ZN2ns12TakesByValueENS_7TrivialE(
+            trivial: crate::ns::Trivial,
+        ) -> crate::ns::Trivial;
         #[link_name = "_ZN2ns25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE"]
         pub(crate) fn __rust_thunk___ZN2ns25TakesWithDefaultedByValueENS_20TrivialWithDefaultedE(
             trivial: crate::ns::TrivialWithDefaulted,
-        );
+        ) -> crate::ns::TrivialWithDefaulted;
         pub(crate) fn __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
+            __return: &mut ::std::mem::MaybeUninit<crate::ns::TrivialNonfinal>,
             trivial: &mut crate::ns::TrivialNonfinal,
         );
         #[link_name = "_ZN2ns16TakesByReferenceERNS_7TrivialE"]
         pub(crate) fn __rust_thunk___ZN2ns16TakesByReferenceERNS_7TrivialE<'a>(
             trivial: &'a mut crate::ns::Trivial,
-        );
+        ) -> &'a mut crate::ns::Trivial;
         #[link_name = "_ZN2ns29TakesWithDefaultedByReferenceERNS_20TrivialWithDefaultedE"]
         pub(crate) fn __rust_thunk___ZN2ns29TakesWithDefaultedByReferenceERNS_20TrivialWithDefaultedE<
             'a,
         >(
             trivial: &'a mut crate::ns::TrivialWithDefaulted,
-        );
+        ) -> &'a mut crate::ns::TrivialWithDefaulted;
         #[link_name = "_ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE"]
         pub(crate) fn __rust_thunk___ZN2ns31TakesTrivialNonfinalByReferenceERNS_15TrivialNonfinalE<
             'a,
         >(
             trivial: ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>,
-        );
+        ) -> ::std::pin::Pin<&'a mut crate::ns::TrivialNonfinal>;
+        #[link_name = "_ZN2ns21TakesByConstReferenceERKNS_7TrivialE"]
+        pub(crate) fn __rust_thunk___ZN2ns21TakesByConstReferenceERKNS_7TrivialE<'a>(
+            trivial: &'a crate::ns::Trivial,
+        ) -> &'a crate::ns::Trivial;
+        #[link_name = "_ZN2ns34TakesWithDefaultedByConstReferenceERKNS_20TrivialWithDefaultedE"]
+        pub(crate) fn __rust_thunk___ZN2ns34TakesWithDefaultedByConstReferenceERKNS_20TrivialWithDefaultedE<
+            'a,
+        >(
+            trivial: &'a crate::ns::TrivialWithDefaulted,
+        ) -> &'a crate::ns::TrivialWithDefaulted;
+        #[link_name = "_ZN2ns36TakesTrivialNonfinalByConstReferenceERKNS_15TrivialNonfinalE"]
+        pub(crate) fn __rust_thunk___ZN2ns36TakesTrivialNonfinalByConstReferenceERKNS_15TrivialNonfinalE<
+            'a,
+        >(
+            trivial: &'a crate::ns::TrivialNonfinal,
+        ) -> &'a crate::ns::TrivialNonfinal;
+        #[link_name = "_ZN2ns22TakesByRvalueReferenceEONS_7TrivialE"]
+        pub(crate) fn __rust_thunk___ZN2ns22TakesByRvalueReferenceEONS_7TrivialE<'a>(
+            trivial: ::ctor::RvalueReference<'a, crate::ns::Trivial>,
+        ) -> ::ctor::RvalueReference<'a, crate::ns::Trivial>;
+        #[link_name = "_ZN2ns35TakesWithDefaultedByRvalueReferenceEONS_20TrivialWithDefaultedE"]
+        pub(crate) fn __rust_thunk___ZN2ns35TakesWithDefaultedByRvalueReferenceEONS_20TrivialWithDefaultedE<
+            'a,
+        >(
+            trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialWithDefaulted>,
+        ) -> ::ctor::RvalueReference<'a, crate::ns::TrivialWithDefaulted>;
+        #[link_name = "_ZN2ns37TakesTrivialNonfinalByRvalueReferenceEONS_15TrivialNonfinalE"]
+        pub(crate) fn __rust_thunk___ZN2ns37TakesTrivialNonfinalByRvalueReferenceEONS_15TrivialNonfinalE<
+            'a,
+        >(
+            trivial: ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal>,
+        ) -> ::ctor::RvalueReference<'a, crate::ns::TrivialNonfinal>;
+        #[link_name = "_ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE"]
+        pub(crate) fn __rust_thunk___ZN2ns27TakesByConstRvalueReferenceEOKNS_7TrivialE<'a>(
+            trivial: ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>,
+        ) -> ::ctor::ConstRvalueReference<'a, crate::ns::Trivial>;
+        #[link_name = "_ZN2ns40TakesWithDefaultedByConstRvalueReferenceEOKNS_20TrivialWithDefaultedE"]
+        pub(crate) fn __rust_thunk___ZN2ns40TakesWithDefaultedByConstRvalueReferenceEOKNS_20TrivialWithDefaultedE<
+            'a,
+        >(
+            trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialWithDefaulted>,
+        ) -> ::ctor::ConstRvalueReference<'a, crate::ns::TrivialWithDefaulted>;
+        #[link_name = "_ZN2ns42TakesTrivialNonfinalByConstRvalueReferenceEOKNS_15TrivialNonfinalE"]
+        pub(crate) fn __rust_thunk___ZN2ns42TakesTrivialNonfinalByConstRvalueReferenceEOKNS_15TrivialNonfinalE<
+            'a,
+        >(
+            trivial: ::ctor::ConstRvalueReference<'a, crate::ns::TrivialNonfinal>,
+        ) -> ::ctor::ConstRvalueReference<'a, crate::ns::TrivialNonfinal>;
     }
 }
 

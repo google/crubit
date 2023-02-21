@@ -78,8 +78,8 @@ __rust_thunk___ZN2ns15TrivialNonfinalaSEOS0_(
 }
 extern "C" void
 __rust_thunk___ZN2ns27TakesTrivialNonfinalByValueENS_15TrivialNonfinalE(
-    struct ns::TrivialNonfinal* trivial) {
-  ns::TakesTrivialNonfinalByValue(std::move(*trivial));
+    struct ns::TrivialNonfinal* __return, struct ns::TrivialNonfinal* trivial) {
+  new (__return) auto(ns::TakesTrivialNonfinalByValue(std::move(*trivial)));
 }
 
 static_assert(sizeof(struct ns::Trivial) == 4);

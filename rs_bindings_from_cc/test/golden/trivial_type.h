@@ -27,6 +27,13 @@ struct TrivialWithDefaulted final {
   ~TrivialWithDefaulted() = default;
 
   int trivial_field;
+
+  void Unqualified();
+  void ConstQualified() const;
+  void LvalueRefQualified() &;
+  void ConstLvalueRefQualified() const&;
+  void RvalueRefQualified() &&;
+  void ConstRvalueRefQualified() const&&;
 };
 
 // This struct is trivial, and therefore trivially relocatable etc., but still
@@ -35,13 +42,32 @@ struct TrivialNonfinal {
   int trivial_field;
 };
 
-void TakesByValue(Trivial trivial);
-void TakesWithDefaultedByValue(TrivialWithDefaulted trivial);
-void TakesTrivialNonfinalByValue(TrivialNonfinal trivial);
+Trivial TakesByValue(Trivial trivial);
+TrivialWithDefaulted TakesWithDefaultedByValue(TrivialWithDefaulted trivial);
+TrivialNonfinal TakesTrivialNonfinalByValue(TrivialNonfinal trivial);
 
-void TakesByReference(Trivial& trivial);
-void TakesWithDefaultedByReference(TrivialWithDefaulted& trivial);
-void TakesTrivialNonfinalByReference(TrivialNonfinal& trivial);
+Trivial& TakesByReference(Trivial& trivial);
+TrivialWithDefaulted& TakesWithDefaultedByReference(
+    TrivialWithDefaulted& trivial);
+TrivialNonfinal& TakesTrivialNonfinalByReference(TrivialNonfinal& trivial);
+
+const Trivial& TakesByConstReference(const Trivial& trivial);
+const TrivialWithDefaulted& TakesWithDefaultedByConstReference(
+    const TrivialWithDefaulted& trivial);
+const TrivialNonfinal& TakesTrivialNonfinalByConstReference(
+    const TrivialNonfinal& trivial);
+
+Trivial&& TakesByRvalueReference(Trivial&& trivial);
+TrivialWithDefaulted&& TakesWithDefaultedByRvalueReference(
+    TrivialWithDefaulted&& trivial);
+TrivialNonfinal&& TakesTrivialNonfinalByRvalueReference(
+    TrivialNonfinal&& trivial);
+
+const Trivial&& TakesByConstRvalueReference(const Trivial&& trivial);
+const TrivialWithDefaulted&& TakesWithDefaultedByConstRvalueReference(
+    const TrivialWithDefaulted&& trivial);
+const TrivialNonfinal&& TakesTrivialNonfinalByConstRvalueReference(
+    const TrivialNonfinal&& trivial);
 
 }  // namespace ns
 

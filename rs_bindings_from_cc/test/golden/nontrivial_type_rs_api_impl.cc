@@ -89,15 +89,12 @@ extern "C" struct NontrivialMembers* __rust_thunk___ZN17NontrivialMembersaSEOS_(
   return &__this->operator=(std::move(*__param_0));
 }
 extern "C" void __rust_thunk___Z12TakesByValue10Nontrivial(
-    struct Nontrivial* nontrivial) {
-  TakesByValue(std::move(*nontrivial));
+    struct Nontrivial* __return, struct Nontrivial* nontrivial) {
+  new (__return) auto(TakesByValue(std::move(*nontrivial)));
 }
 extern "C" void __rust_thunk___Z18TakesByValueInline16NontrivialInline(
-    struct NontrivialInline* nontrivial) {
-  TakesByValueInline(std::move(*nontrivial));
-}
-extern "C" void __rust_thunk___Z14ReturnsByValuev(struct Nontrivial* __return) {
-  new (__return) auto(ReturnsByValue());
+    struct NontrivialInline* __return, struct NontrivialInline* nontrivial) {
+  new (__return) auto(TakesByValueInline(std::move(*nontrivial)));
 }
 extern "C" void __rust_thunk___ZN17NontrivialByValueC1ERKS_(
     struct NontrivialByValue* __this, const struct NontrivialByValue* other) {
