@@ -17,6 +17,13 @@ TESTS = [name[:-2] for name in glob(
 )]
 
 # Maps a test to the list of tests it depends on.
+#
+# Valid keys:
+#     basenames of tests (e.g. "types" is a valid key, because we
+#     have rs_bindings_from_cc/test/golden/types.h.
+# Valid values: a list of:
+#     basenames of tests (e.g. "types")
+#     other Bazel targets (e.g. "//foo/bar:baz")
 DEPS = {
     "user_of_unsupported": ["unsupported"],
     "user_of_imported_type": ["trivial_type"],
@@ -29,6 +36,7 @@ DEPS = {
         "unsupported",
     ],
     "source_location_doc_comments": ["source_location_doc_comments_macro_def"],
+    "types": ["//support/rs_std:rs_char"],
 }
 
 TAGS = {}
@@ -37,7 +45,10 @@ TAGS = {}
     name = name + "_cc",
     hdrs = [name + ".h"],
     copts = ["-Wno-google3-inline-namespace"],
-    deps = [d + "_cc" for d in (DEPS[name] if name in DEPS else [])],
+    deps = [
+        ((d + "_cc") if d in TESTS else d)
+        for d in (DEPS[name] if name in DEPS else [])
+    ],
 ) for name in TESTS]
 
 [generate_bindings(

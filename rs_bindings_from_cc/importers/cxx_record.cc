@@ -159,6 +159,16 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
   }
 
+  // The less expensive `getName` comparison is done first, because the
+  // documentation of `NamedDecl::getQualifiedNameAsString` says that "it should
+  // be called only when performance doesn't matter".
+  if (record_decl->getName() == "rs_char" &&
+      record_decl->getQualifiedNameAsString() == "rs_std::rs_char") {
+    return ictx_.ImportUnsupportedItem(
+        record_decl,
+        "Round-tripping of `rs_char` is not supported yet (b/270160530)");
+  }
+
   absl::StatusOr<RecordType> record_type = TranslateRecordType(*record_decl);
   if (!record_type.ok()) {
     return ictx_.ImportUnsupportedItem(

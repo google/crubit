@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct SomeStruct {
@@ -25,7 +25,7 @@ pub struct SomeStruct {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("SomeStruct"), crate::SomeStruct);
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl Default for SomeStruct {
     #[inline(always)]
     fn default() -> Self {
@@ -37,7 +37,7 @@ impl Default for SomeStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -49,7 +49,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -59,7 +59,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for SomeStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=13
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=15
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -71,9 +71,9 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for SomeStruct {
 
 forward_declare::forward_declare!(pub ForwardDeclaredStruct = forward_declare::symbol!("ForwardDeclaredStruct"));
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=19
 #[derive(Clone, Copy)]
-#[repr(C)]
+#[repr(C, align(8))]
 pub struct FieldTypeTestStruct {
     pub bool_field: bool,
     pub char_field: u8,
@@ -118,6 +118,9 @@ pub struct FieldTypeTestStruct {
     pub std_size_t_field: usize,
     pub std_intptr_t_field: isize,
     pub std_uintptr_t_field: usize,
+    /// Reason for representing this field as a blob of bytes:
+    /// Unsupported type 'class rs_std::rs_char': No generated bindings found for 'rs_char'
+    pub(crate) rs_char_field: [::std::mem::MaybeUninit<u8>; 4],
     pub float_field: f32,
     pub double_field: f64,
     pub ptr_field: *mut i32,
@@ -139,7 +142,7 @@ forward_declare::unsafe_define!(
     crate::FieldTypeTestStruct
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=17
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=19
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -151,7 +154,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for FieldTypeTestStruct {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=89
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=93
 #[inline(always)]
 pub fn VoidReturningFunction() {
     unsafe { crate::detail::__rust_thunk___Z21VoidReturningFunctionv() }
@@ -162,14 +165,14 @@ pub fn VoidReturningFunction() {
 /// returning a function. In ML-like syntax:
 /// FunctionPointerReturningFunction : () -> (const int&, int*) -> int&
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=99
 #[inline(always)]
 pub fn FunctionPointerReturningFunction() -> Option<extern "C" fn(*const i32, *mut i32) -> *mut i32>
 {
     unsafe { crate::detail::__rust_thunk___Z32FunctionPointerReturningFunctionv() }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/types.h;l=103
 #[inline(always)]
 pub unsafe fn FunctionWithVoidPointers(
     __param_0: *mut ::std::os::raw::c_void,
@@ -278,6 +281,117 @@ forward_declare::unsafe_define!(
 // Error while generating bindings for item 'std::integral_constant<bool, true>::operator()':
 // TODO(b/248542210,b/248577708): as a temporary workaround for un-instantiable function templates, template functions from the STL cannot be instantiated in user crates
 
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_3pmr21polymorphic_allocatorIDiEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIDiNS_11char_traitsIDiEENS_9allocatorIDiEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_3pmr21polymorphic_allocatorIDsEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIDsNS_11char_traitsIDsEENS_9allocatorIDsEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_3pmr21polymorphic_allocatorIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_3pmr21polymorphic_allocatorIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIwNS_11char_traitsIwEENS_3pmr21polymorphic_allocatorIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIwNS_11char_traitsIwEENS_3pmr21polymorphic_allocatorIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12basic_stringIwNS_11char_traitsIwEENS_9allocatorIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u9basic_iosIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u9basic_iosIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u9basic_iosIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u9basic_iosIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u15basic_streambufIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u15basic_streambufIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u15basic_streambufIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u15basic_streambufIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_istreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_istreamIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_istreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_istreamIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_ostreamIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_ostreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_ostreamIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u14basic_iostreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u14basic_iostreamIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u14basic_iostreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u14basic_iostreamIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u15basic_stringbufIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u15basic_stringbufIcNS_11char_traitsIcEENS_9allocatorIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u15basic_stringbufIwNS_11char_traitsIwEENS_9allocatorIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u15basic_stringbufIwNS_11char_traitsIwEENS_9allocatorIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u19basic_istringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u19basic_istringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u19basic_istringstreamIwNS_11char_traitsIwEENS_9allocatorIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u19basic_istringstreamIwNS_11char_traitsIwEENS_9allocatorIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u19basic_ostringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u19basic_ostringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u19basic_ostringstreamIwNS_11char_traitsIwEENS_9allocatorIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u19basic_ostringstreamIwNS_11char_traitsIwEENS_9allocatorIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u18basic_stringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u18basic_stringstreamIcNS_11char_traitsIcEENS_9allocatorIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u18basic_stringstreamIwNS_11char_traitsIwEENS_9allocatorIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u18basic_stringstreamIwNS_11char_traitsIwEENS_9allocatorIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_filebufIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_filebufIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_filebufIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_filebufIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u14basic_ifstreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u14basic_ifstreamIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u14basic_ifstreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u14basic_ifstreamIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u14basic_ofstreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u14basic_ofstreamIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u14basic_ofstreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u14basic_ofstreamIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_fstreamIcNS_11char_traitsIcEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_fstreamIcNS_11char_traitsIcEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u13basic_fstreamIwNS_11char_traitsIwEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u13basic_fstreamIwNS_11char_traitsIwEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u4fposI11__mbstate_tEE = forward_declare::symbol!("__CcTemplateInstNSt3__u4fposI11__mbstate_tEE"));
+
+/// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
+#[::ctor::recursively_pinned]
+#[repr(C)]
+pub struct __CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE
+{
+    __non_field_data: [::std::mem::MaybeUninit<u8>; 1],
+}
+forward_declare::unsafe_define!(forward_declare::symbol!("std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>"),crate::__CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE);
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
+// Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
+// Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>':
+// Unsafe constructors (e.g. with no elided or explicit lifetimes) are intentionally not supported
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
+// Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::__type_list':
+// Parameter #0 is not supported: Unsupported type '__type_list<__align_type<unsigned char>, __type_list<__align_type<unsigned short>, __type_list<__align_type<unsigned int>, __type_list<__align_type<unsigned long>, __type_list<__align_type<unsigned long long>, __type_list<__align_type<double>, __type_list<__align_type<long double>, __type_list<__align_type<__struct_double>, __type_list<__align_type<__struct_double4>, __type_list<__align_type<int *>, __nat> > > > > > > > > > &&': Unsupported type: && without lifetime
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
+// Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::operator=':
+// `self` has no lifetime. Use lifetime annotations or `#pragma clang lifetime_elision` to create bindings for this function.
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=22
+// Error while generating bindings for item 'std::__type_list<std::__align_type<unsigned char>, std::__type_list<std::__align_type<unsigned short>, std::__type_list<std::__align_type<unsigned int>, std::__type_list<std::__align_type<unsigned long>, std::__type_list<std::__align_type<unsigned long long>, std::__type_list<std::__align_type<double>, std::__type_list<std::__align_type<long double>, std::__type_list<std::__align_type<std::__struct_double>, std::__type_list<std::__align_type<std::__struct_double4>, std::__type_list<std::__align_type<int *>, std::__nat>>>>>>>>>>::operator=':
+// Parameter #0 is not supported: Unsupported type '__type_list<__align_type<unsigned char>, __type_list<__align_type<unsigned short>, __type_list<__align_type<unsigned int>, __type_list<__align_type<unsigned long>, __type_list<__align_type<unsigned long long>, __type_list<__align_type<double>, __type_list<__align_type<long double>, __type_list<__align_type<__struct_double>, __type_list<__align_type<__struct_double4>, __type_list<__align_type<int *>, __nat> > > > > > > > > > &&': Unsupported type: && without lifetime
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=24
+// Error while generating bindings for item '_Head':
+// Typedefs nested in classes are not supported yet
+
+// Generated from: google3/nowhere/llvm/toolchain/include/c++/v1/__type_traits/type_list.h;l=25
+// Error while generating bindings for item '_Tail':
+// Typedefs nested in classes are not supported yet
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u11__type_listINS_12__align_typeItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEE = forward_declare::symbol!("__CcTemplateInstNSt3__u11__type_listINS_12__align_typeItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEE"));
+
+forward_declare::forward_declare!(pub __CcTemplateInstNSt3__u12__align_typeIhEE = forward_declare::symbol!("__CcTemplateInstNSt3__u12__align_typeIhEE"));
+
 mod detail {
     #[allow(unused_imports)]
     use super::*;
@@ -384,7 +498,8 @@ const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, std_size
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, std_intptr_t_field) == 200);
 const _: () =
     assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, std_uintptr_t_field) == 208);
-const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, float_field) == 216);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, rs_char_field) == 216);
+const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, float_field) == 220);
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, double_field) == 224);
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, ptr_field) == 232);
 const _: () = assert!(memoffset::offset_of!(crate::FieldTypeTestStruct, void_ptr_field) == 240);
@@ -434,4 +549,13 @@ const _: () = {
     static_assertions::assert_not_impl_any!(
         crate::__CcTemplateInstNSt3__u17integral_constantIbLb1EEE: Drop
     );
+};
+
+const _:()=assert!(::std::mem::size_of::<crate::__CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE>()==1);
+const _:()=assert!(::std::mem::align_of::<crate::__CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE>()==1);
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE:Copy);
+};
+const _: () = {
+    static_assertions::assert_not_impl_any!(crate::__CcTemplateInstNSt3__u11__type_listINS_12__align_typeIhEENS0_INS1_ItEENS0_INS1_IjEENS0_INS1_ImEENS0_INS1_IyEENS0_INS1_IdEENS0_INS1_IeEENS0_INS1_INS_15__struct_doubleEEENS0_INS1_INS_16__struct_double4EEENS0_INS1_IPiEENS_5__natEEEEEEEEEEEEEEEEEEEEE:Drop);
 };

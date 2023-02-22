@@ -8,6 +8,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "support/rs_std/rs_char.h"
+
 #pragma clang lifetime_elision
 
 struct SomeStruct final {};
@@ -65,6 +67,8 @@ struct FieldTypeTestStruct final {
   std::size_t std_size_t_field;
   std::intptr_t std_intptr_t_field;
   std::uintptr_t std_uintptr_t_field;
+
+  rs_std::rs_char rs_char_field;
 
   float float_field;
   double double_field;

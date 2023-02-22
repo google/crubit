@@ -53,6 +53,53 @@ static_assert(alignof(struct std::integral_constant<bool, false>) == 1);
 static_assert(sizeof(struct std::integral_constant<bool, true>) == 1);
 static_assert(alignof(struct std::integral_constant<bool, true>) == 1);
 
+static_assert(
+    sizeof(struct std::__type_list<
+           std::__align_type<unsigned char>,
+           std::__type_list<
+               std::__align_type<unsigned short>,
+               std::__type_list<
+                   std::__align_type<unsigned int>,
+                   std::__type_list<
+                       std::__align_type<unsigned long>,
+                       std::__type_list<
+                           std::__align_type<unsigned long long>,
+                           std::__type_list<
+                               std::__align_type<double>,
+                               std::__type_list<
+                                   std::__align_type<long double>,
+                                   std::__type_list<
+                                       std::__align_type<std::__struct_double>,
+                                       std::__type_list<
+                                           std::__align_type<
+                                               std::__struct_double4>,
+                                           std::__type_list<
+                                               std::__align_type<int*>,
+                                               std::__nat>>>>>>>>>>) == 1);
+static_assert(
+    alignof(struct std::__type_list<
+            std::__align_type<unsigned char>,
+            std::__type_list<
+                std::__align_type<unsigned short>,
+                std::__type_list<
+                    std::__align_type<unsigned int>,
+                    std::__type_list<
+                        std::__align_type<unsigned long>,
+                        std::__type_list<
+                            std::__align_type<unsigned long long>,
+                            std::__type_list<
+                                std::__align_type<double>,
+                                std::__type_list<
+                                    std::__align_type<long double>,
+                                    std::__type_list<
+                                        std::__align_type<std::__struct_double>,
+                                        std::__type_list<
+                                            std::__align_type<
+                                                std::__struct_double4>,
+                                            std::__type_list<
+                                                std::__align_type<int*>,
+                                                std::__nat>>>>>>>>>>) == 1);
+
 static_assert(sizeof(struct SomeStruct) == 1);
 static_assert(alignof(struct SomeStruct) == 1);
 
@@ -138,7 +185,9 @@ static_assert(CRUBIT_OFFSET_OF(std_intptr_t_field,
                                struct FieldTypeTestStruct) == 200);
 static_assert(CRUBIT_OFFSET_OF(std_uintptr_t_field,
                                struct FieldTypeTestStruct) == 208);
-static_assert(CRUBIT_OFFSET_OF(float_field, struct FieldTypeTestStruct) == 216);
+static_assert(CRUBIT_OFFSET_OF(rs_char_field, struct FieldTypeTestStruct) ==
+              216);
+static_assert(CRUBIT_OFFSET_OF(float_field, struct FieldTypeTestStruct) == 220);
 static_assert(CRUBIT_OFFSET_OF(double_field, struct FieldTypeTestStruct) ==
               224);
 static_assert(CRUBIT_OFFSET_OF(ptr_field, struct FieldTypeTestStruct) == 232);
