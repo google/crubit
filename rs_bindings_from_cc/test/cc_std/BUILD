@@ -8,7 +8,7 @@ rust_test(
     name = "main",
     srcs = ["test.rs"],
     cc_deps = [
-        "//rs_bindings_from_cc:cc_std",
+        "//support/cc_std",
     ],
     deps = ["//support:ctor"],
 )
@@ -17,7 +17,7 @@ rust_test(
     name = "check_cc_std_in_deps",
     srcs = ["test.rs"],
     cc_deps = [
-        "//rs_bindings_from_cc:cc_std",
+        "//support/cc_std",
     ],
     deps = ["//support:ctor"],
 )

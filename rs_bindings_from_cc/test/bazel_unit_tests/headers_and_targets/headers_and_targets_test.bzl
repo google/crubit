@@ -16,7 +16,10 @@ load(
 )
 
 def _is_std(t):
-    return str(t) in ["//rs_bindings_from_cc:cc_std", "//:_builtin_hdrs"]
+    return str(t) in [
+        "//support/cc_std:cc_std",
+        "//:_builtin_hdrs",
+    ]
 
 def _get_targets_and_headers(tut):
     return [
@@ -40,7 +43,7 @@ def _lib_has_toolchain_targets_and_headers_test_impl(ctx):
     asserts.equals(
         env,
         targets_and_headers[0]["t"],
-        "//rs_bindings_from_cc:cc_std",
+        "//support/cc_std:cc_std",
     )
     asserts.equals(
         env,

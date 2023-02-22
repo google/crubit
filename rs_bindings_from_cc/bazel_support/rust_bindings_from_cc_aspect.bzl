@@ -84,7 +84,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
         return []
 
     # We generate bindings for these headers via the
-    # rs_bindings_from_cc:cc_std target.
+    # support/cc_std:cc_std target.
     if target.label == Label("//third_party/stl:stl"):
         return [ctx.attr._std[RustBindingsFromCcInfo]]
 
@@ -199,7 +199,7 @@ rust_bindings_from_cc_aspect = aspect(
     required_aspect_providers = [CcInfo],
     attrs = dict(bindings_attrs.items() + {
         "_std": attr.label(
-            default = "//rs_bindings_from_cc:cc_std",
+            default = "//support/cc_std:cc_std",
         ),
     }.items()),
     toolchains = [
