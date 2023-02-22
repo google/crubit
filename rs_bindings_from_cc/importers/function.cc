@@ -188,12 +188,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           .reference = reference,
           .is_const = method_decl->isConst(),
           .is_virtual = method_decl->isVirtual(),
-          .is_explicit_ctor = false,
       };
-      if (auto* ctor_decl =
-              clang::dyn_cast<clang::CXXConstructorDecl>(function_decl)) {
-        instance_metadata->is_explicit_ctor = ctor_decl->isExplicit();
-      }
     }
 
     member_func_metadata = MemberFuncMetadata{

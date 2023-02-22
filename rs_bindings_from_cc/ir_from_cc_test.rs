@@ -2555,7 +2555,6 @@ fn test_member_function() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: false,
             is_virtual: false,
-            is_explicit_ctor: false,
         }),
     );
 }
@@ -2569,7 +2568,6 @@ fn test_member_function_const() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: true,
             is_virtual: false,
-            is_explicit_ctor: false,
         }),
     );
 }
@@ -2583,7 +2581,6 @@ fn test_member_function_virtual() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: false,
             is_virtual: true,
-            is_explicit_ctor: false,
         }),
     );
 }
@@ -2597,7 +2594,6 @@ fn test_member_function_lvalue() {
             reference: ir::ReferenceQualification::LValue,
             is_const: false,
             is_virtual: false,
-            is_explicit_ctor: false,
         }),
     );
 }
@@ -2611,7 +2607,6 @@ fn test_member_function_rvalue() {
             reference: ir::ReferenceQualification::RValue,
             is_const: false,
             is_virtual: false,
-            is_explicit_ctor: false,
         }),
     );
 }
@@ -2635,33 +2630,31 @@ fn test_member_function_explicit_constructor() {
             reference: ir::ReferenceQualification::Unqualified,
             is_const: false,
             is_virtual: false,
-            is_explicit_ctor: true,
         }),
     );
 }
 
 #[test]
-fn test_member_function_implicit_constructor() {
-    let ir = ir_from_cc(
-        r#"
-        struct SomeStruct {
-          SomeStruct(int i);
-          SomeStruct() = delete;
-          SomeStruct(const SomeStruct&) = delete;
-        }; "#,
-    )
-    .unwrap();
-    assert_member_function_with_predicate_has_instance_method_metadata(
-        &ir,
-        "SomeStruct",
-        |f| f.name == UnqualifiedIdentifier::Constructor,
-        &Some(ir::InstanceMethodMetadata {
-            reference: ir::ReferenceQualification::Unqualified,
-            is_const: false,
-            is_virtual: false,
-            is_explicit_ctor: false,
-        }),
-    );
+fn test_member_function_constructor() {
+    for explicit_prefix in ["", "explicit"] {
+        let ir = ir_from_cc(&format!(
+            r#"
+                struct SomeStruct {{
+                  {explicit_prefix} SomeStruct(int i);
+                }}; "#
+        ))
+        .unwrap();
+        assert_member_function_with_predicate_has_instance_method_metadata(
+            &ir,
+            "SomeStruct",
+            |f| f.name == UnqualifiedIdentifier::Constructor,
+            &Some(ir::InstanceMethodMetadata {
+                reference: ir::ReferenceQualification::Unqualified,
+                is_const: false,
+                is_virtual: false,
+            }),
+        );
+    }
 }
 
 fn get_func_names(definition: &str) -> Vec<ir::UnqualifiedIdentifier> {

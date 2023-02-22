@@ -27,15 +27,13 @@ mod tests {
 
     #[test]
     fn test_explicit_conversion_constructor() {
-        // As discussed in b/214020567 for now we only generate `From::from` bindings
-        // for *implicit* C++ conversion constructors.
-        assert_not_impl_any!(StructWithExplicitConversionConstructor: From<i32>);
+        assert_impl_all!(StructWithExplicitConversionConstructor: From<i32>);
+        let i: StructWithExplicitConversionConstructor = 125.into();
+        assert_eq!(125, i.int_field);
     }
 
     #[test]
     fn test_implicit_conversion_constructor() {
-        // As discussed in b/214020567 we generate `From::from` bindings for
-        // *implicit* C++ conversion constructors.
         assert_impl_all!(StructWithImplicitConversionConstructor: From<i32>);
         let i: StructWithImplicitConversionConstructor = 125.into();
         assert_eq!(125, i.int_field);

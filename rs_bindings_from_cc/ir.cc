@@ -275,7 +275,6 @@ llvm::json::Value MemberFuncMetadata::InstanceMethodMetadata::ToJson() const {
       {"reference", reference_str},
       {"is_const", is_const},
       {"is_virtual", is_virtual},
-      {"is_explicit_ctor", is_explicit_ctor},
   };
 }
 

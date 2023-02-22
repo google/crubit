@@ -1120,7 +1120,7 @@ fn api_func_shape(
                                 )?;
                                 func_name = make_rs_ident("clone");
                             }
-                        } else if !instance_method_metadata.is_explicit_ctor {
+                        } else {
                             let param_type = &param_types[1];
                             impl_kind = ImplKind::new_trait(
                                 TraitName::UnpinConstructor {
@@ -1133,8 +1133,6 @@ fn api_func_shape(
                                 false,
                             )?;
                             func_name = make_rs_ident("from");
-                        } else {
-                            bail!("Not yet supported type of constructor parameter",);
                         }
                     }
                     _ => {
@@ -2848,7 +2846,7 @@ fn format_cc_ident(ident: &str) -> TokenStream {
 
 /// Returns Some(crate_ident) if this is an imported crate.
 fn rs_imported_crate_name(owning_target: &BazelLabel, ir: &IR) -> Option<Ident> {
-    if ir.is_current_target(owning_target){
+    if ir.is_current_target(owning_target) {
         None
     } else {
         let owning_crate_name = owning_target.target_name();
@@ -6543,46 +6541,31 @@ mod tests {
     }
 
     #[test]
-    fn test_impl_from_for_explicit_conversion_constructor() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"#pragma clang lifetime_elision
-            struct SomeStruct final {
-                explicit SomeStruct(int i);
-            };"#,
-        )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        // As discussed in b/214020567 for now we only generate `From::from` bindings
-        // for *implicit* C++ conversion constructors.
-        assert_rs_not_matches!(rs_api, quote! {impl From});
-        Ok(())
-    }
-
-    #[test]
-    fn test_impl_from_for_implicit_conversion_constructor() -> Result<()> {
-        let ir = ir_from_cc(
-            r#"#pragma clang lifetime_elision
-            struct SomeStruct final {
-                SomeStruct(int i);  // implicit - no `explicit` keyword
-            };"#,
-        )?;
-        let rs_api = generate_bindings_tokens(ir)?.rs_api;
-        // As discussed in b/214020567 we generate `From::from` bindings for
-        // *implicit* C++ conversion constructors.
-        assert_rs_matches!(
-            rs_api,
-            quote! {
-                impl From<i32> for SomeStruct {
-                    #[inline(always)]
-                    fn from(i: i32) -> Self {
-                        let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
-                        unsafe {
-                            crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
-                            tmp.assume_init()
+    fn test_impl_from_for_1_arg_constructor() -> Result<()> {
+        for explicit_qualifier in ["", "explicit"] {
+            let ir = ir_from_cc(&format!(
+                r#"#pragma clang lifetime_elision
+                struct SomeStruct final {{
+                    {explicit_qualifier} SomeStruct(int i);  // implicit - no `explicit` keyword
+                }};"#,
+            ))?;
+            let rs_api = generate_bindings_tokens(ir)?.rs_api;
+            assert_rs_matches!(
+                rs_api,
+                quote! {
+                    impl From<i32> for SomeStruct {
+                        #[inline(always)]
+                        fn from(i: i32) -> Self {
+                            let mut tmp = ::std::mem::MaybeUninit::<Self>::zeroed();
+                            unsafe {
+                                crate::detail::__rust_thunk___ZN10SomeStructC1Ei(&mut tmp, i);
+                                tmp.assume_init()
+                            }
                         }
                     }
                 }
-            }
-        );
+            );
+        }
         Ok(())
     }
 
