@@ -44,6 +44,81 @@ pub mod default_repr {
     }
 }
 
+/// Test of ABI classification.
+///
+/// System V ABI can classify function parameter and return types into broad
+/// categories like "integer", "sse2", or "memory".  Classification impacts how
+/// a given value is passed (e.g. by value in `eax` or `xmm0` register, or by
+/// pointer).  ABI classification of C++ structs generated
+/// by `cc_bindings_from_rs` needs to match exactly the classification of the
+/// Rust structs in the input crate (e.g. from this test).  Mismatched ABI
+/// classification will lead to Undefined Behavior.
+///
+/// This is a regression test for b/270454629 - replacing fields with an opaque
+/// blob of bytes (e.g. using `[u8; N]` instead of the actual field type) may
+/// change the ABI classification of a struct.  The fields of structs below are
+/// private (i.e. non-`pub`) to encourage `cc_bindings_from_rs` to treat them as
+/// an opaque blob of bytes.
+///
+/// Optimizing compiler can make the disassembly of the `Create` methods quite
+/// empty (probably because the input argument uses the same register as the
+/// return value.  To make the tests more sensitive to ABI choices, the
+/// `multiply` method is used (to actually operate on the input arguments and to
+/// have to calculate a *new* return value).
+pub mod abi_classification {
+    /// Expected ABI classification: integer.  (For indirect confirmation, see
+    /// the disassembly at https://godbolt.org/z/b7eeGcrGn).
+    pub struct StructInteger(i32);
+
+    /// Expected ABI classification: SSE.  (For indirect confirmation, see the
+    /// disassembly at https://godbolt.org/z/b7eeGcrGn).
+    pub struct StructFloat(f32);
+
+    /// Expected ABI classification: memory.  (For indirect confirmation, see
+    /// the disassembly at https://godbolt.org/z/b7eeGcrGn).
+    #[repr(packed(1))]
+    pub struct StructMemory {
+        _padding: u8,
+        i: i32,
+    }
+
+    impl StructInteger {
+        pub fn create(i: i32) -> Self {
+            Self(i)
+        }
+        pub fn multiply(x: Self, y: Self) -> Self {
+            Self(x.0 + y.0)
+        }
+        pub fn inspect(s: Self) -> i32 {
+            s.0
+        }
+    }
+
+    impl StructFloat {
+        pub fn create(f: f32) -> Self {
+            Self(f)
+        }
+        pub fn multiply(x: Self, y: Self) -> Self {
+            Self(x.0 + y.0)
+        }
+        pub fn inspect(s: Self) -> f32 {
+            s.0
+        }
+    }
+
+    impl StructMemory {
+        pub fn create(i: i32) -> Self {
+            Self { _padding: 0, i }
+        }
+        pub fn multiply(x: Self, y: Self) -> Self {
+            Self::create(x.i + y.i)
+        }
+        pub fn inspect(s: Self) -> i32 {
+            s.i
+        }
+    }
+}
+
 /// This module provides test coverage for reordering the generated bindings in
 /// a way that ensures that C++ structs are defined *before* being referring to
 /// them when (say) declaring a function that returns the struct by value, or

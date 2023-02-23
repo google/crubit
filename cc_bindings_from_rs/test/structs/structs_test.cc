@@ -38,5 +38,34 @@ TEST(StructsTest, FwdDecls) {
   EXPECT_EQ(456, fwd_decls::get_int_from_s1(&s1));
 }
 
+TEST(StructsTest, StructInteger) {
+  namespace test = structs::abi_classification;
+  test::StructInteger x = test::StructInteger::create(123);
+  test::StructInteger y = test::StructInteger::create(456);
+  test::StructInteger sum =
+      test::StructInteger::multiply(std::move(x), std::move(y));
+  EXPECT_EQ(123 + 456, test::StructInteger::inspect(std::move(sum)));
+}
+
+// TODO(b/270454629): Re-enable the test after fixing the bug.
+TEST(StructsTest, DISABLED_StructFloat) {
+  namespace test = structs::abi_classification;
+  test::StructFloat x = test::StructFloat::create(456.0);
+  test::StructFloat y = test::StructFloat::create(789.0);
+  test::StructFloat sum =
+      test::StructFloat::multiply(std::move(x), std::move(y));
+  EXPECT_EQ(456.0 + 789.0, test::StructFloat::inspect(std::move(sum)));
+}
+
+// TODO(b/270454629): Re-enable the test after fixing the bug.
+TEST(StructsTest, DISABLED_StructMemory) {
+  namespace test = structs::abi_classification;
+  test::StructMemory x = test::StructMemory::create(321);
+  test::StructMemory y = test::StructMemory::create(654);
+  test::StructMemory sum =
+      test::StructMemory::multiply(std::move(x), std::move(y));
+  EXPECT_EQ(321 + 654, test::StructMemory::inspect(std::move(sum)));
+}
+
 }  // namespace
 }  // namespace crubit
