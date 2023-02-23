@@ -17,7 +17,7 @@
 // Exceptions. See /LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=10
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableConstMember {
@@ -31,7 +31,7 @@ forward_declare::unsafe_define!(
     crate::AddableConstMember
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=10
 impl Default for AddableConstMember {
     #[inline(always)]
     fn default() -> Self {
@@ -43,7 +43,7 @@ impl Default for AddableConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=10
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -55,7 +55,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=10
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableConstMember {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -65,7 +65,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=10
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableConstMember {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -75,7 +75,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableConst
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=14
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=12
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMember> for &'a crate::AddableConstMember {
     type Output = crate::AddableConstMember;
     #[inline(always)]
@@ -84,7 +84,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMember> for &'a crate::Addab
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=18
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableNonConstMember {
@@ -98,7 +98,7 @@ forward_declare::unsafe_define!(
     crate::AddableNonConstMember
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=18
 impl Default for AddableNonConstMember {
     #[inline(always)]
     fn default() -> Self {
@@ -110,7 +110,7 @@ impl Default for AddableNonConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=18
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -122,7 +122,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=18
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableNonConstMember {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -132,7 +132,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableNonConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=18
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableNonConstMember {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -142,7 +142,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableNonCo
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=22
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=20
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableNonConstMember>
     for &'a mut crate::AddableNonConstMember
 {
@@ -153,7 +153,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableNonConstMember>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=26
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableFriend {
@@ -164,7 +164,7 @@ pub struct AddableFriend {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("AddableFriend"), crate::AddableFriend);
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=26
 impl Default for AddableFriend {
     #[inline(always)]
     fn default() -> Self {
@@ -176,7 +176,7 @@ impl Default for AddableFriend {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=26
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -188,7 +188,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=26
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFriend {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -198,7 +198,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFriend {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=26
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFriend {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -208,7 +208,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFrien
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=28
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFriend {
     type Output = crate::AddableFriend;
     #[inline(always)]
@@ -217,7 +217,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFriend> for &'a crate::AddableFri
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=35
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddableFree {
@@ -225,7 +225,7 @@ pub struct AddableFree {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("AddableFree"), crate::AddableFree);
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=35
 impl Default for AddableFree {
     #[inline(always)]
     fn default() -> Self {
@@ -237,7 +237,7 @@ impl Default for AddableFree {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=35
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFree {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -249,7 +249,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableFree {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=35
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFree {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -259,7 +259,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableFree {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=35
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFree {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -269,7 +269,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableFree 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=38
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=36
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
@@ -278,7 +278,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableFree> for &'a crate::AddableFree 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=39
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=37
 impl<'a, 'b> ::std::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
@@ -287,7 +287,7 @@ impl<'a, 'b> ::std::ops::Add<&'b mut crate::AddableFree> for &'a mut crate::Adda
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=40
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=38
 impl ::std::ops::Add<Self> for AddableFree {
     type Output = crate::AddableFree;
     #[inline(always)]
@@ -296,11 +296,11 @@ impl ::std::ops::Add<Self> for AddableFree {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=41
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=39
 // Error while generating bindings for item 'operator+':
 // Not yet supported for rvalue references (b/219826128)
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=41
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Overloaded {
@@ -308,7 +308,7 @@ pub struct Overloaded {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Overloaded"), crate::Overloaded);
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=41
 impl Default for Overloaded {
     #[inline(always)]
     fn default() -> Self {
@@ -320,7 +320,7 @@ impl Default for Overloaded {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=41
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -332,7 +332,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Overloaded {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=41
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Overloaded {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -342,7 +342,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for Overloaded {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=41
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Overloaded {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -352,16 +352,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Overloaded {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=44
-impl<'a> ::std::ops::Add<i16> for &'a crate::Overloaded {
-    type Output = i32;
-    #[inline(always)]
-    fn add(self, rhs: i16) -> Self::Output {
-        unsafe { crate::detail::__rust_thunk___ZplRK10Overloadeds(self, rhs) }
-    }
-}
-
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=45
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=42
 impl<'a> ::std::ops::Add<i32> for &'a crate::Overloaded {
     type Output = i32;
     #[inline(always)]
@@ -370,7 +361,16 @@ impl<'a> ::std::ops::Add<i32> for &'a crate::Overloaded {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=43
+impl<'a> ::std::ops::Add<u32> for &'a crate::Overloaded {
+    type Output = i32;
+    #[inline(always)]
+    fn add(self, rhs: u32) -> Self::Output {
+        unsafe { crate::detail::__rust_thunk___ZplRK10Overloadedj(self, rhs) }
+    }
+}
+
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=45
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct IncompatibleLHS {
@@ -381,7 +381,7 @@ forward_declare::unsafe_define!(
     crate::IncompatibleLHS
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=45
 impl Default for IncompatibleLHS {
     #[inline(always)]
     fn default() -> Self {
@@ -393,7 +393,7 @@ impl Default for IncompatibleLHS {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=45
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -405,7 +405,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=45
 impl<'b> ::ctor::UnpinAssign<&'b Self> for IncompatibleLHS {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -415,7 +415,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for IncompatibleLHS {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=45
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for IncompatibleLHS {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -425,15 +425,15 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Incompatible
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=48
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=46
 // Error while generating bindings for item 'operator+':
 // Expected first parameter to be a record or reference
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=49
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=47
 // Error while generating bindings for item 'operator+':
 // Expected first parameter referent to be a record
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=49
 #[derive(Clone, Copy)]
 #[repr(C, align(4))]
 pub struct AddableReturnsVoid {
@@ -447,7 +447,7 @@ forward_declare::unsafe_define!(
     crate::AddableReturnsVoid
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=49
 impl Default for AddableReturnsVoid {
     #[inline(always)]
     fn default() -> Self {
@@ -459,7 +459,7 @@ impl Default for AddableReturnsVoid {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=49
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -471,7 +471,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=49
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableReturnsVoid {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -481,7 +481,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddableReturnsVoid {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=49
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableReturnsVoid {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -491,7 +491,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddableRetur
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=53
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=51
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::AddableReturnsVoid {
     type Output = ();
     #[inline(always)]
@@ -500,7 +500,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableReturnsVoid> for &'a crate::Addab
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=57
 #[::ctor::recursively_pinned(PinnedDrop)]
 #[repr(C, align(4))]
 pub struct AddableConstMemberNonunpin {
@@ -514,7 +514,7 @@ forward_declare::unsafe_define!(
     crate::AddableConstMemberNonunpin
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=57
 impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -530,7 +530,7 @@ impl ::ctor::CtorNew<()> for AddableConstMemberNonunpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=57
 impl<'b> ::ctor::CtorNew<&'b Self> for AddableConstMemberNonunpin {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -555,7 +555,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for AddableConstMemberNonunpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=59
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=57
 impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -565,7 +565,7 @@ impl<'b> ::ctor::Assign<&'b Self> for AddableConstMemberNonunpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=61
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=59
 impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMemberNonunpin>
     for &'a crate::AddableConstMemberNonunpin
 {
@@ -590,7 +590,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::AddableConstMemberNonunpin>
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=63
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=61
 impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     #[inline(always)]
     unsafe fn pinned_drop<'a>(self: ::std::pin::Pin<&'a mut Self>) {
@@ -598,7 +598,7 @@ impl ::ctor::PinnedDrop for AddableConstMemberNonunpin {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=67
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignMemberInt {
@@ -609,7 +609,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignMemberInt
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=67
 impl Default for AddAssignMemberInt {
     #[inline(always)]
     fn default() -> Self {
@@ -621,7 +621,7 @@ impl Default for AddAssignMemberInt {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=67
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -633,7 +633,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=67
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberInt {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -643,7 +643,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberInt {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=69
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=67
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMemberInt {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -653,7 +653,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMem
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=70
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=68
 impl ::std::ops::AddAssign<i32> for AddAssignMemberInt {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: i32) {
@@ -663,7 +663,7 @@ impl ::std::ops::AddAssign<i32> for AddAssignMemberInt {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=71
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignMemberByConstRef {
@@ -674,7 +674,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignMemberByConstRef
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=71
 impl Default for AddAssignMemberByConstRef {
     #[inline(always)]
     fn default() -> Self {
@@ -686,7 +686,7 @@ impl Default for AddAssignMemberByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=71
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -698,7 +698,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=71
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -708,7 +708,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignMemberByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=73
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=71
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -718,7 +718,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignMem
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=74
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=72
 impl<'b> ::std::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -728,7 +728,7 @@ impl<'b> ::std::ops::AddAssign<&'b Self> for AddAssignMemberByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=75
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFreeByConstRef {
@@ -739,7 +739,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignFreeByConstRef
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=75
 impl Default for AddAssignFreeByConstRef {
     #[inline(always)]
     fn default() -> Self {
@@ -751,7 +751,7 @@ impl Default for AddAssignFreeByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=75
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -763,7 +763,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=75
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -773,7 +773,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=77
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=75
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -783,11 +783,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=78
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=76
 // Error while generating bindings for item 'operator+=':
 // Not yet supported for pointers with unknown lifetime (b/219826128)
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=79
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFreeByValue {
@@ -798,7 +798,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignFreeByValue
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=79
 impl Default for AddAssignFreeByValue {
     #[inline(always)]
     fn default() -> Self {
@@ -810,7 +810,7 @@ impl Default for AddAssignFreeByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=79
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -822,7 +822,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=79
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByValue {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -832,7 +832,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFreeByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=81
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=79
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFreeByValue {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -842,7 +842,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFre
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=82
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=80
 impl ::std::ops::AddAssign<Self> for AddAssignFreeByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: Self) {
@@ -852,7 +852,7 @@ impl ::std::ops::AddAssign<Self> for AddAssignFreeByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=83
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFriendByConstRef {
@@ -863,7 +863,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignFriendByConstRef
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=83
 impl Default for AddAssignFriendByConstRef {
     #[inline(always)]
     fn default() -> Self {
@@ -875,7 +875,7 @@ impl Default for AddAssignFriendByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=83
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -887,7 +887,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=83
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -897,7 +897,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByConstRef {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=85
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=83
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByConstRef {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -907,7 +907,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=88
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignFriendByValue {
@@ -918,7 +918,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignFriendByValue
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=88
 impl Default for AddAssignFriendByValue {
     #[inline(always)]
     fn default() -> Self {
@@ -930,7 +930,7 @@ impl Default for AddAssignFriendByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=88
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -942,7 +942,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=88
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByValue {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -952,7 +952,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignFriendByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=90
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=88
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFriendByValue {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -962,7 +962,7 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignFri
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=91
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=89
 impl ::std::ops::AddAssign<Self> for AddAssignFriendByValue {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: Self) {
@@ -972,7 +972,7 @@ impl ::std::ops::AddAssign<Self> for AddAssignFriendByValue {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=93
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignProhibitedConstMember {
@@ -983,7 +983,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignProhibitedConstMember
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=93
 impl Default for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn default() -> Self {
@@ -995,7 +995,7 @@ impl Default for AddAssignProhibitedConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=93
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -1009,7 +1009,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMem
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=93
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -1021,7 +1021,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedConstMember {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=95
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=93
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedConstMember {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -1031,11 +1031,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for AddAssignPro
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=96
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=94
 // Error while generating bindings for item 'AddAssignProhibitedConstMember::operator+=':
 // Compound assignment with const left-hand side is not supported
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=97
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct AddAssignProhibitedFriendConstLhs {
@@ -1046,7 +1046,7 @@ forward_declare::unsafe_define!(
     crate::AddAssignProhibitedFriendConstLhs
 );
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=97
 impl Default for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
     fn default() -> Self {
@@ -1058,7 +1058,7 @@ impl Default for AddAssignProhibitedFriendConstLhs {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=97
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -1072,7 +1072,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for AddAssignProhibitedFriendCo
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=97
 impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedFriendConstLhs {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -1084,7 +1084,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for AddAssignProhibitedFriendConstLhs {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=99
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=97
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     for AddAssignProhibitedFriendConstLhs
 {
@@ -1098,11 +1098,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>>
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=100
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=98
 // Error while generating bindings for item 'operator+=':
 // Compound assignment with const left-hand side is not supported
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=101
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct ManyOperators {
@@ -1110,7 +1110,7 @@ pub struct ManyOperators {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("ManyOperators"), crate::ManyOperators);
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=101
 impl Default for ManyOperators {
     #[inline(always)]
     fn default() -> Self {
@@ -1122,7 +1122,7 @@ impl Default for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=101
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -1134,7 +1134,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=101
 impl<'b> ::ctor::UnpinAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -1144,7 +1144,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=101
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ManyOperators {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -1154,11 +1154,11 @@ impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for ManyOperator
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=104
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=102
 // Error while generating bindings for item 'ManyOperators::operator+':
 // Bindings for this kind of operator (operator + with 1 parameter(s)) are not supported
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=105
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=103
 impl<'a> ::std::ops::Neg for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1167,7 +1167,7 @@ impl<'a> ::std::ops::Neg for &'a crate::ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=106
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=104
 impl<'a> ::std::ops::Not for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1176,11 +1176,11 @@ impl<'a> ::std::ops::Not for &'a crate::ManyOperators {
     }
 }
 
-// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=107
+// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=105
 // Error while generating bindings for item 'ManyOperators::operator~':
 // Bindings for this kind of operator (operator ~ with 1 parameter(s)) are not supported
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=109
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=107
 impl<'a, 'b> ::std::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1189,7 +1189,7 @@ impl<'a, 'b> ::std::ops::Add<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=110
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=108
 impl<'a, 'b> ::std::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1198,7 +1198,7 @@ impl<'a, 'b> ::std::ops::Sub<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=111
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=109
 impl<'a, 'b> ::std::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1207,7 +1207,7 @@ impl<'a, 'b> ::std::ops::Mul<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=112
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=110
 impl<'a, 'b> ::std::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1216,7 +1216,7 @@ impl<'a, 'b> ::std::ops::Div<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=113
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=111
 impl<'a, 'b> ::std::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1225,7 +1225,7 @@ impl<'a, 'b> ::std::ops::Rem<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=114
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=112
 impl<'a, 'b> ::std::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1234,7 +1234,7 @@ impl<'a, 'b> ::std::ops::BitAnd<&'b crate::ManyOperators> for &'a crate::ManyOpe
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=115
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=113
 impl<'a, 'b> ::std::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1243,7 +1243,7 @@ impl<'a, 'b> ::std::ops::BitOr<&'b crate::ManyOperators> for &'a crate::ManyOper
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=116
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=114
 impl<'a, 'b> ::std::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1252,7 +1252,7 @@ impl<'a, 'b> ::std::ops::BitXor<&'b crate::ManyOperators> for &'a crate::ManyOpe
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=117
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=115
 impl<'a, 'b> ::std::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1261,7 +1261,7 @@ impl<'a, 'b> ::std::ops::Shl<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=118
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=116
 impl<'a, 'b> ::std::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperators {
     type Output = crate::ManyOperators;
     #[inline(always)]
@@ -1270,7 +1270,7 @@ impl<'a, 'b> ::std::ops::Shr<&'b crate::ManyOperators> for &'a crate::ManyOperat
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=120
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=118
 impl<'b> ::std::ops::AddAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn add_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1280,7 +1280,7 @@ impl<'b> ::std::ops::AddAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=121
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=119
 impl<'b> ::std::ops::SubAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn sub_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1290,7 +1290,7 @@ impl<'b> ::std::ops::SubAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=122
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=120
 impl<'b> ::std::ops::MulAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn mul_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1300,7 +1300,7 @@ impl<'b> ::std::ops::MulAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=123
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=121
 impl<'b> ::std::ops::DivAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn div_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1310,7 +1310,7 @@ impl<'b> ::std::ops::DivAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=124
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=122
 impl<'b> ::std::ops::RemAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn rem_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1320,7 +1320,7 @@ impl<'b> ::std::ops::RemAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=125
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=123
 impl<'b> ::std::ops::BitAndAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn bitand_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1330,7 +1330,7 @@ impl<'b> ::std::ops::BitAndAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=126
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=124
 impl<'b> ::std::ops::BitOrAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn bitor_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1340,7 +1340,7 @@ impl<'b> ::std::ops::BitOrAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=127
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=125
 impl<'b> ::std::ops::BitXorAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn bitxor_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1350,7 +1350,7 @@ impl<'b> ::std::ops::BitXorAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=128
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=126
 impl<'b> ::std::ops::ShlAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn shl_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1360,7 +1360,7 @@ impl<'b> ::std::ops::ShlAssign<&'b Self> for ManyOperators {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=129
+/// Generated from: rs_bindings_from_cc/test/golden/operators.h;l=127
 impl<'b> ::std::ops::ShrAssign<&'b Self> for ManyOperators {
     #[inline(always)]
     fn shr_assign<'a>(&'a mut self, rhs: &'b Self) {
@@ -1481,15 +1481,15 @@ mod detail {
             __this: &'a mut crate::Overloaded,
             __param_0: ::ctor::RvalueReference<'b, crate::Overloaded>,
         ) -> &'a mut crate::Overloaded;
-        #[link_name = "_ZplRK10Overloadeds"]
-        pub(crate) fn __rust_thunk___ZplRK10Overloadeds<'a>(
-            lhs: &'a crate::Overloaded,
-            rhs: i16,
-        ) -> i32;
         #[link_name = "_ZplRK10Overloadedi"]
         pub(crate) fn __rust_thunk___ZplRK10Overloadedi<'a>(
             lhs: &'a crate::Overloaded,
             rhs: i32,
+        ) -> i32;
+        #[link_name = "_ZplRK10Overloadedj"]
+        pub(crate) fn __rust_thunk___ZplRK10Overloadedj<'a>(
+            lhs: &'a crate::Overloaded,
+            rhs: u32,
         ) -> i32;
         pub(crate) fn __rust_thunk___ZN15IncompatibleLHSC1Ev<'a>(
             __this: &'a mut ::std::mem::MaybeUninit<crate::IncompatibleLHS>,

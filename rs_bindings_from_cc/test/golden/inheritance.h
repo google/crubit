@@ -4,7 +4,6 @@
 
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_INHERITANCE_H_
-#include <stdint.h>
 
 #pragma clang lifetime_elision
 
@@ -14,12 +13,12 @@
 
 class Base0 {};
 class Base1 {
-  int64_t b1_1_;  // NOLINT(clang-diagnostic-unused-private-field)
+  long long b1_1_;  // NOLINT(clang-diagnostic-unused-private-field)
   char b1_2_;     // NOLINT(clang-diagnostic-unused-private-field)
 };
 
 class Base2 {
-  int16_t b2_1_;  // NOLINT(clang-diagnostic-unused-private-field)
+  short b2_1_;  // NOLINT(clang-diagnostic-unused-private-field)
 };
 
 struct Derived final : Base0, Base1, Base2 {

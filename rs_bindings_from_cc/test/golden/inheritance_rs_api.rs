@@ -21,7 +21,7 @@
 /// In the Itanium ABI, the tail padding of POD types cannot be reused by other
 /// objects, even if the POD type is potentially-overlapping.
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=14
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct Base0 {
@@ -29,7 +29,7 @@ pub struct Base0 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base0"), crate::Base0);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=14
 impl ::ctor::CtorNew<()> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -45,7 +45,7 @@ impl ::ctor::CtorNew<()> for Base0 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=14
 impl<'b> ::ctor::CtorNew<&'b Self> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -70,7 +70,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base0 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=14
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base0 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -95,7 +95,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base0 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=14
 impl<'b> ::ctor::Assign<&'b Self> for Base0 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -105,7 +105,7 @@ impl<'b> ::ctor::Assign<&'b Self> for Base0 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=14
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base0 {
     #[inline(always)]
     fn assign<'a>(
@@ -118,7 +118,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base0 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct Base1 {
@@ -132,7 +132,7 @@ pub struct Base1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base1"), crate::Base1);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
 impl ::ctor::CtorNew<()> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -148,7 +148,7 @@ impl ::ctor::CtorNew<()> for Base1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
 impl<'b> ::ctor::CtorNew<&'b Self> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -173,7 +173,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -198,7 +198,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
 impl<'b> ::ctor::Assign<&'b Self> for Base1 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -208,7 +208,7 @@ impl<'b> ::ctor::Assign<&'b Self> for Base1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=16
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=15
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base1 {
     #[inline(always)]
     fn assign<'a>(
@@ -221,7 +221,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=20
 #[::ctor::recursively_pinned]
 #[repr(C, align(2))]
 pub struct Base2 {
@@ -232,7 +232,7 @@ pub struct Base2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Base2"), crate::Base2);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=20
 impl ::ctor::CtorNew<()> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -248,7 +248,7 @@ impl ::ctor::CtorNew<()> for Base2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=20
 impl<'b> ::ctor::CtorNew<&'b Self> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -273,7 +273,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for Base2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=20
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for Base2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -298,7 +298,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for Base2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=20
 impl<'b> ::ctor::Assign<&'b Self> for Base2 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -308,7 +308,7 @@ impl<'b> ::ctor::Assign<&'b Self> for Base2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=21
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=20
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base2 {
     #[inline(always)]
     fn assign<'a>(
@@ -321,7 +321,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for Base2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=24
 #[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Derived {
@@ -330,7 +330,7 @@ pub struct Derived {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("Derived"), crate::Derived);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=24
 impl Default for Derived {
     #[inline(always)]
     fn default() -> Self {
@@ -342,7 +342,7 @@ impl Default for Derived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=24
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -354,7 +354,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for Derived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=24
 impl<'b> ::ctor::UnpinAssign<&'b Self> for Derived {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -364,7 +364,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for Derived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=25
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=24
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for Derived {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {
@@ -390,7 +390,7 @@ unsafe impl oops::Inherits<crate::Base2> for crate::Derived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=28
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualBase1 {
@@ -398,7 +398,7 @@ pub struct VirtualBase1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase1"), crate::VirtualBase1);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=28
 impl ::ctor::CtorNew<()> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -414,7 +414,7 @@ impl ::ctor::CtorNew<()> for VirtualBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=28
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -439,7 +439,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=28
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -464,7 +464,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualBase1 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=28
 impl<'b> ::ctor::Assign<&'b Self> for VirtualBase1 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -474,7 +474,7 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=28
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualBase1 {
     #[inline(always)]
     fn assign<'a>(
@@ -493,7 +493,7 @@ unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualBase2 {
@@ -501,7 +501,7 @@ pub struct VirtualBase2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualBase2"), crate::VirtualBase2);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
 impl ::ctor::CtorNew<()> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -517,7 +517,7 @@ impl ::ctor::CtorNew<()> for VirtualBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -542,7 +542,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -567,7 +567,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualBase2 
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
 impl<'b> ::ctor::Assign<&'b Self> for VirtualBase2 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -577,7 +577,7 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=29
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualBase2 {
     #[inline(always)]
     fn assign<'a>(
@@ -596,7 +596,7 @@ unsafe impl oops::Inherits<crate::Base1> for crate::VirtualBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=31
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct VirtualDerived {
@@ -604,7 +604,7 @@ pub struct VirtualDerived {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("VirtualDerived"), crate::VirtualDerived);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=31
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
 impl ::ctor::CtorNew<()> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -620,7 +620,7 @@ impl ::ctor::CtorNew<()> for VirtualDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=31
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
 impl<'b> ::ctor::CtorNew<&'b Self> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -645,7 +645,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for VirtualDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=31
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -670,7 +670,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for VirtualDerive
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=31
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
 impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -680,7 +680,7 @@ impl<'b> ::ctor::Assign<&'b Self> for VirtualDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=31
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=30
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for VirtualDerived {
     #[inline(always)]
     fn assign<'a>(
@@ -709,7 +709,7 @@ unsafe impl oops::Inherits<crate::VirtualBase2> for crate::VirtualDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=34
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=33
 #[::ctor::recursively_pinned]
 #[repr(C, align(8))]
 pub struct MyAbstractClass {
@@ -720,15 +720,15 @@ forward_declare::unsafe_define!(
     crate::MyAbstractClass
 );
 
-// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=34
+// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=33
 // Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
-// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=34
+// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=33
 // Error while generating bindings for item 'MyAbstractClass::MyAbstractClass':
 // Can't directly construct values of type `MyAbstractClass` as it has a non-public or deleted destructor
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=34
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=33
 impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -740,7 +740,7 @@ impl<'b> ::ctor::Assign<&'b Self> for MyAbstractClass {
 
 /// Method inheritance
 ///
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=40
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct MethodBase1 {
@@ -748,7 +748,7 @@ pub struct MethodBase1 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase1"), crate::MethodBase1);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=40
 impl ::ctor::CtorNew<()> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -764,7 +764,7 @@ impl ::ctor::CtorNew<()> for MethodBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=40
 impl<'b> ::ctor::CtorNew<&'b Self> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -789,7 +789,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for MethodBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=40
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -814,7 +814,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for MethodBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=40
 impl<'b> ::ctor::Assign<&'b Self> for MethodBase1 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -824,7 +824,7 @@ impl<'b> ::ctor::Assign<&'b Self> for MethodBase1 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=41
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=40
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
     #[inline(always)]
     fn assign<'a>(
@@ -838,7 +838,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase1 {
 }
 
 impl MethodBase1 {
-    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=43
+    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=42
     #[inline(always)]
     pub fn Public<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase16PublicEv(self) }
@@ -846,7 +846,7 @@ impl MethodBase1 {
 }
 
 impl MethodBase1 {
-    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=44
+    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=43
     #[inline(always)]
     pub fn Colliding1<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding1Ev(self) }
@@ -854,14 +854,14 @@ impl MethodBase1 {
 }
 
 impl MethodBase1 {
-    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=45
+    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=44
     #[inline(always)]
     pub fn Colliding2<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase110Colliding2Ev(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=52
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=51
 #[::ctor::recursively_pinned]
 #[repr(C)]
 pub struct MethodBase2 {
@@ -869,7 +869,7 @@ pub struct MethodBase2 {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodBase2"), crate::MethodBase2);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=52
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=51
 impl ::ctor::CtorNew<()> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self>;
     #[inline(always)]
@@ -885,7 +885,7 @@ impl ::ctor::CtorNew<()> for MethodBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=52
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=51
 impl<'b> ::ctor::CtorNew<&'b Self> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -910,7 +910,7 @@ impl<'b> ::ctor::CtorNew<(&'b Self,)> for MethodBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=52
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=51
 impl<'b> ::ctor::CtorNew<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     type CtorType = impl ::ctor::Ctor<Output = Self> + ::ctor::Captures<'b>;
     #[inline(always)]
@@ -935,7 +935,7 @@ impl<'b> ::ctor::CtorNew<(::ctor::RvalueReference<'b, Self>,)> for MethodBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=52
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=51
 impl<'b> ::ctor::Assign<&'b Self> for MethodBase2 {
     #[inline(always)]
     fn assign<'a>(self: ::std::pin::Pin<&'a mut Self>, __param_0: &'b Self) {
@@ -945,7 +945,7 @@ impl<'b> ::ctor::Assign<&'b Self> for MethodBase2 {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=52
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=51
 impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
     #[inline(always)]
     fn assign<'a>(
@@ -959,7 +959,7 @@ impl<'b> ::ctor::Assign<::ctor::RvalueReference<'b, Self>> for MethodBase2 {
 }
 
 impl MethodBase2 {
-    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=54
+    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=53
     #[inline(always)]
     pub fn Colliding1<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding1Ev(self) }
@@ -967,14 +967,14 @@ impl MethodBase2 {
 }
 
 impl MethodBase2 {
-    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=55
+    /// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=54
     #[inline(always)]
     pub fn Colliding2<'a>(self: ::std::pin::Pin<&'a mut Self>) {
         unsafe { crate::detail::__rust_thunk___ZN11MethodBase210Colliding2Ev(self) }
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=57
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct MethodDerived {
@@ -982,7 +982,7 @@ pub struct MethodDerived {
 }
 forward_declare::unsafe_define!(forward_declare::symbol!("MethodDerived"), crate::MethodDerived);
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=57
 impl Default for MethodDerived {
     #[inline(always)]
     fn default() -> Self {
@@ -994,7 +994,7 @@ impl Default for MethodDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=57
 impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodDerived {
     #[inline(always)]
     fn from(__param_0: ::ctor::RvalueReference<'b, Self>) -> Self {
@@ -1006,7 +1006,7 @@ impl<'b> From<::ctor::RvalueReference<'b, Self>> for MethodDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=57
 impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodDerived {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: &'b Self) {
@@ -1016,7 +1016,7 @@ impl<'b> ::ctor::UnpinAssign<&'b Self> for MethodDerived {
     }
 }
 
-/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=58
+/// Generated from: rs_bindings_from_cc/test/golden/inheritance.h;l=57
 impl<'b> ::ctor::UnpinAssign<::ctor::RvalueReference<'b, Self>> for MethodDerived {
     #[inline(always)]
     fn unpin_assign<'a>(&'a mut self, __param_0: ::ctor::RvalueReference<'b, Self>) {

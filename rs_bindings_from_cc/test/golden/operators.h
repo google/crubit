@@ -5,8 +5,6 @@
 #ifndef CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
 #define CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OPERATORS_H_
 
-#include <cstdint>
-
 #pragma clang lifetime_elision
 
 class AddableConstMember final {
@@ -41,8 +39,8 @@ AddableFree operator+(AddableFree lhs, AddableFree rhs);
 AddableFree operator+(AddableFree&& lhs, AddableFree rhs);
 
 class Overloaded final {};
-int operator+(const Overloaded& lhs, std::int16_t rhs);
-int operator+(const Overloaded& lhs, std::int32_t rhs);
+int operator+(const Overloaded& lhs, int rhs);
+int operator+(const Overloaded& lhs, unsigned int rhs);
 
 class IncompatibleLHS final {};
 IncompatibleLHS operator+(int lhs, const IncompatibleLHS& rhs);
