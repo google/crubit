@@ -5,8 +5,6 @@
 #ifndef THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OVERLOADS_H_
 #define THIRD_PARTY_CRUBIT_RS_BINDINGS_FROM_CC_TEST_GOLDEN_OVERLOADS_H_
 
-#include <type_traits>
-
 void Overload();
 void Overload(int);
 
@@ -18,8 +16,16 @@ inline void UncallableOverload(void* x) {}
 // TODO(b/251045039): delete this overload
 inline void UncallableOverload(int* x) {}
 
+template <typename T>
+struct Sizeof {
+  static constexpr int size = sizeof(T);
+};
+
 // This template is attempting sfinae, but is ill-formed. :(
-template <typename T, std::enable_if_t<sizeof(T) == 1> = 0>
+// Attempts to call UncallableOverload with void* will lead to checking
+// sizeof(void) and a hard error, not SFINAE.
+// For example, see https://godbolt.org/z/xccjez61s
+template <typename T, int = Sizeof<T>::size>
 void UncallableOverload(T* x) {}
 
 inline void AlsoTemplateOverload() {}
