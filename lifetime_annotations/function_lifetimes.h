@@ -198,6 +198,9 @@ struct FunctionAnalysisError {
 using FunctionLifetimesOrError =
     std::variant<FunctionAnalysisError, FunctionLifetimes>;
 
+using FunctionLifetimesMap =
+    llvm::DenseMap<const FunctionDecl*, FunctionLifetimesOrError>;
+
 }  // namespace lifetimes
 }  // namespace tidy
 }  // namespace clang

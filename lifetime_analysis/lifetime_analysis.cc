@@ -102,14 +102,30 @@ class TransferStmtVisitor
   const DiagnosticReporter& diag_reporter_;
 };
 
+void GenerateConstraintsForSingleAssignment(const Object* oldp,
+                                            const Object* newp,
+                                            LifetimeConstraints& constraints) {
+  if (oldp->GetFuncLifetimes().has_value() &&
+      newp->GetFuncLifetimes().has_value()) {
+    // The order of `newp` and `oldp` here may seem surprising. However, this
+    // can be thought of as: "I am assigning `newp` where before I had `oldp`,
+    // therefore `oldp` needs to be able to represent a call to whatever it is
+    // that `newp` represents, hence I need to generate constraints for
+    // replacing `newp` with `oldp`". At least this is why veluca@ thinks this
+    // is the correct order (the opposite order generates incorrect results).
+    constraints.join(LifetimeConstraints::ForCallableSubstitutionFull(
+        *newp->GetFuncLifetimes(), *oldp->GetFuncLifetimes()));
+  }
+  constraints.AddOutlivesConstraint(oldp->GetLifetime(), newp->GetLifetime());
+}
+
 void GenerateConstraintsForAssignmentNonRecursive(
     const ObjectSet& old_pointees, const ObjectSet& new_pointees,
     bool is_in_invariant_context, LifetimeConstraints& constraints) {
   // The new pointees must always outlive the old pointees.
   for (const Object* old : old_pointees) {
     for (const Object* newp : new_pointees) {
-      constraints.AddOutlivesConstraint(old->GetLifetime(),
-                                        newp->GetLifetime());
+      GenerateConstraintsForSingleAssignment(old, newp, constraints);
     }
   }
 
@@ -118,8 +134,7 @@ void GenerateConstraintsForAssignmentNonRecursive(
   if (is_in_invariant_context) {
     for (const Object* old : old_pointees) {
       for (const Object* newp : new_pointees) {
-        constraints.AddOutlivesConstraint(newp->GetLifetime(),
-                                          old->GetLifetime());
+        GenerateConstraintsForSingleAssignment(newp, old, constraints);
       }
     }
   }
@@ -391,8 +406,8 @@ std::optional<std::string> TransferStmtVisitor::VisitDeclRefExpr(
 
 std::optional<std::string> TransferStmtVisitor::VisitStringLiteral(
     const clang::StringLiteral* strlit) {
-  const Object* obj = object_repository_.CreateStaticObject(strlit->getType());
-  points_to_map_.SetExprObjectSet(strlit, {obj});
+  points_to_map_.SetExprObjectSet(
+      strlit, {object_repository_.GetStringLiteralObject()});
   return std::nullopt;
 }
 
@@ -834,17 +849,8 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
   auto add_callee_from_decl =
       [&callees, call,
        this](const clang::FunctionDecl* decl) -> std::optional<std::string> {
-    bool is_builtin = decl->getBuiltinID() != 0;
-
-    FunctionLifetimesOrError builtin_callee_lifetimes_or_error;
-    if (is_builtin) {
-      builtin_callee_lifetimes_or_error = GetBuiltinLifetimes(decl);
-    } else {
-      assert(callee_lifetimes_.count(decl->getCanonicalDecl()));
-    }
     const FunctionLifetimesOrError& callee_lifetimes_or_error =
-        is_builtin ? builtin_callee_lifetimes_or_error
-                   : callee_lifetimes_.lookup(decl->getCanonicalDecl());
+        GetFunctionLifetimes(decl, callee_lifetimes_);
 
     if (!std::holds_alternative<FunctionLifetimes>(callee_lifetimes_or_error)) {
       return "No lifetimes for callee '" + decl->getNameAsString() + "': " +
@@ -871,13 +877,9 @@ std::optional<std::string> TransferStmtVisitor::VisitCallExpr(
   } else {
     const clang::Expr* callee = call->getCallee();
     for (const auto& object : points_to_map_.GetExprObjectSet(callee)) {
-      if (const clang::FunctionDecl* func = object->GetFunc()) {
-        if (auto err = add_callee_from_decl(func); err.has_value()) {
-          return err;
-        }
-      } else if (const std::optional<FunctionLifetimes>& func_lifetimes =
-                     object->GetFuncLifetimes();
-                 func_lifetimes.has_value()) {
+      if (const std::optional<FunctionLifetimes>& func_lifetimes =
+              object->GetFuncLifetimes();
+          func_lifetimes.has_value()) {
         callees.push_back(
             {.is_member_operator = false,
              .lifetimes = *func_lifetimes,

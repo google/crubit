@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/strings/str_cat.h"
+#include "lifetime_analysis/builtin_lifetimes.h"
 #include "lifetime_analysis/object.h"
 #include "lifetime_annotations/function_lifetimes.h"
 #include "lifetime_annotations/lifetime.h"
@@ -30,11 +32,28 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
+FunctionLifetimesOrError GetFunctionLifetimes(
+    const FunctionDecl* decl, const FunctionLifetimesMap& known_lifetimes) {
+  // Note that this cannot be a simple .find() on the map because `decl` might
+  // be a builtin.
+  bool is_builtin = decl->getBuiltinID() != 0;
+  if (is_builtin) {
+    return GetBuiltinLifetimes(decl);
+  }
+  if (!known_lifetimes.count(decl->getCanonicalDecl())) {
+    return FunctionAnalysisError(
+        absl::StrCat("Unknown callee ", decl->getNameAsString()));
+  }
+  return known_lifetimes.lookup(decl->getCanonicalDecl());
+}
+
 class ObjectRepository::VarDeclVisitor
     : public clang::RecursiveASTVisitor<VarDeclVisitor> {
  public:
-  explicit VarDeclVisitor(ObjectRepository& object_repository)
-      : object_repository_(object_repository) {}
+  explicit VarDeclVisitor(ObjectRepository& object_repository,
+                          const FunctionLifetimesMap& callee_lifetimes)
+      : object_repository_(object_repository),
+        callee_lifetimes_(callee_lifetimes) {}
 
   // We need to visit implicitly-defined constructors and assignment operators.
   bool shouldVisitImplicitCode() { return true; }
@@ -127,6 +146,13 @@ class ObjectRepository::VarDeclVisitor
     return true;
   }
 
+  bool VisitStringLiteral(clang::StringLiteral* lit_expr) {
+    object_repository_.string_literal_object_ = object_repository_.CreateObject(
+        lit_expr->getType(), Lifetime::Static(),
+        [](const clang::Expr*) { return Lifetime::Static(); });
+    return true;
+  }
+
   bool VisitCXXConstructExpr(clang::CXXConstructExpr* construct_expr) {
     assert(InitializedObjectWasPropagatedTo(construct_expr));
 
@@ -171,11 +197,9 @@ class ObjectRepository::VarDeclVisitor
     const auto& func_lifetimes =
         object_repository_.call_expr_virtual_lifetimes_[expr];
     auto make_object = [this](const ValueLifetimes& lifetime) {
-      const Object* object = object_repository_.CreateObject(
-          Lifetime::CreateLocal(), lifetime.Type());
-      object_repository_.CreateObjectsWithLifetimes(
-          object, lifetime, object_repository_.initial_points_to_map_);
-      return object;
+      return object_repository_.CreateObject(
+          ObjectLifetimes(Lifetime::CreateLocal(), lifetime),
+          object_repository_.initial_points_to_map_);
     };
     for (size_t i = 0; i < func_lifetimes.GetNumParams(); ++i) {
       object_repository_
@@ -215,10 +239,8 @@ class ObjectRepository::VarDeclVisitor
         break;
     }
 
-    const Object* object =
-        object_repository_.CreateObject(lifetime, var->getType());
-
-    object_repository_.CreateObjects(object, var->getType(), lifetime_factory);
+    const Object* object = object_repository_.CreateObject(
+        var->getType(), lifetime, lifetime_factory);
 
     object_repository_.object_repository_[var] = object;
     if (!var->getType()->isArrayType()) {
@@ -241,18 +263,24 @@ class ObjectRepository::VarDeclVisitor
       return;
     }
 
-    object_repository_.object_repository_[func] =
-        object_repository_.CreateObjectFromFunctionDecl(*func);
+    FunctionLifetimesOrError func_lifetimes =
+        GetFunctionLifetimes(func, callee_lifetimes_);
+    if (std::holds_alternative<FunctionAnalysisError>(func_lifetimes)) {
+      error_ = "No lifetimes for callee '" + func->getNameAsString() +
+               "': " + std::get<FunctionAnalysisError>(func_lifetimes).message;
+    } else {
+      object_repository_.object_repository_[func] =
+          object_repository_.ConstructObject(
+              Lifetime::Static(), func->getType(),
+              std::get<FunctionLifetimes>(func_lifetimes));
+    }
   }
 
   const Object* AddTemporaryObjectForExpression(clang::Expr* expr) {
     clang::QualType type = expr->getType().getCanonicalType();
-    const Object* object =
-        object_repository_.CreateObject(Lifetime::CreateLocal(), type);
-
-    object_repository_.CreateObjects(object, type, [](const clang::Expr*) {
-      return Lifetime::CreateVariable();
-    });
+    const Object* object = object_repository_.CreateObject(
+        type, Lifetime::CreateLocal(),
+        [](const clang::Expr*) { return Lifetime::CreateVariable(); });
 
     if (type->isRecordType()) {
       PropagateInitializedObject(expr, object);
@@ -424,38 +452,45 @@ class ObjectRepository::VarDeclVisitor
   }
 
   ObjectRepository& object_repository_;
+  const FunctionLifetimesMap& callee_lifetimes_;
+  std::optional<std::string> error_;
 };
 
-ObjectRepository::ObjectRepository(const clang::FunctionDecl* func) {
+llvm::Expected<ObjectRepository> ObjectRepository::Create(
+    const clang::FunctionDecl* func,
+    const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
+        callee_lifetimes) {
+  ObjectRepository object_repository;
   const auto* method_decl = clang::dyn_cast<clang::CXXMethodDecl>(func);
 
   const auto* definition = func->getDefinition();
   assert(definition || (method_decl && method_decl->isPure()));
   if (definition) func = definition;
-  func_ = func;
+  object_repository.func_ = func;
 
-  // For the return value, we only need to create field objects, except if we
-  // use constraint-based analysis.
-  return_object_ =
-      CreateObject(Lifetime::CreateVariable(), func->getReturnType());
-  CreateObjects(return_object_, func->getReturnType(),
-                [](const clang::Expr*) { return Lifetime::CreateVariable(); });
+  object_repository.return_object_ = object_repository.CreateObject(
+      func->getReturnType(), Lifetime::CreateVariable(),
+      [](const clang::Expr*) { return Lifetime::CreateVariable(); });
 
   if (method_decl) {
     if (!method_decl->isStatic()) {
-      this_object_ = CreateObject(Lifetime::CreateVariable(),
-                                  method_decl->getThisObjectType());
-      CreateObjects(
-          *this_object_, method_decl->getThisObjectType(),
+      object_repository.this_object_ = object_repository.CreateObject(
+          method_decl->getThisObjectType(), Lifetime::CreateVariable(),
           [](const clang::Expr*) { return Lifetime::CreateVariable(); });
     }
   }
 
-  VarDeclVisitor decl_visitor(*this);
+  VarDeclVisitor decl_visitor(object_repository, callee_lifetimes);
   if (auto* constructor = clang::dyn_cast<clang::CXXConstructorDecl>(func)) {
     decl_visitor.TraverseCXXMemberInitializers(constructor);
   }
   decl_visitor.TraverseFunctionDecl(const_cast<clang::FunctionDecl*>(func));
+
+  if (decl_visitor.error_.has_value()) {
+    return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                   *decl_visitor.error_);
+  }
+  return object_repository;
 }
 
 std::string ObjectRepository::DebugString() const {
@@ -494,16 +529,6 @@ std::string ObjectRepository::DebugString() const {
   os << "Return " << return_object_->DebugString() << "\n";
   os.flush();
   return result;
-}
-
-const Object* ObjectRepository::CreateObject(Lifetime lifetime,
-                                             clang::QualType type) {
-  return new (object_allocator_.Allocate()) Object(lifetime, type);
-}
-
-const Object* ObjectRepository::CreateObjectFromFunctionDecl(
-    const clang::FunctionDecl& func) {
-  return new (object_allocator_.Allocate()) Object(func);
 }
 
 const Object* ObjectRepository::GetDeclObject(
@@ -713,30 +738,6 @@ ObjectSet ObjectRepository::GetBaseClassObject(const ObjectSet& struct_objects,
   return ret;
 }
 
-const Object* ObjectRepository::CreateStaticObject(clang::QualType type) {
-  auto iter = static_objects_.find(type);
-  if (iter != static_objects_.end()) {
-    return iter->second;
-  }
-
-  const Object* object = CreateObject(Lifetime::Static(), type);
-  static_objects_[type] = object;
-
-  CreateObjects(object, type,
-                [](const clang::Expr*) { return Lifetime::Static(); });
-
-  return object;
-}
-
-const Object* ObjectRepository::CreateObjectsRecursively(
-    const ObjectLifetimes& object_lifetimes, PointsToMap& points_to_map) {
-  const auto* obj =
-      CreateObject(object_lifetimes.GetLifetime(), object_lifetimes.Type());
-  CreateObjectsWithLifetimes(obj, object_lifetimes.GetValueLifetimes(),
-                             points_to_map);
-  return obj;
-}
-
 namespace {
 
 llvm::SmallVector<std::string> GetFieldLifetimeArguments(
@@ -801,72 +802,67 @@ struct ObjectRepository::ObjectCreator {
   ObjectCreator(ObjectRepository& object_repository, PointsToMap& points_to_map)
       : object_repository_(object_repository), points_to_map_(points_to_map) {}
 
-  void CreateChildrenForObjectWithValue(const Object* object,
-                                        const ValueLifetimes& value_lifetimes) {
-    ObjectLifetimes object_lifetimes(object->GetLifetime(), value_lifetimes);
-    object_repository_.initial_object_lifetimes_[object] = object_lifetimes;
-
-    const clang::QualType type = value_lifetimes.Type();
-
-    if (type->isIncompleteType()) {
-      // Nothing we can do.
-      return;
-    }
-
-    // Pointer type.
-    if (!PointeeType(type).isNull()) {
-      points_to_map_.ExtendPointerPointsToSet(
-          object,
-          {CreateObjectsRecursively(value_lifetimes.GetPointeeLifetimes())});
-      return;
-    }
-
-    // Record type.
-    if (type->getAs<clang::RecordType>()) {
-      ForEachFieldAndBase(
-          type, object_lifetimes,
-          [this, object](const ObjectLifetimes& field_lifetimes,
-                         const clang::FieldDecl* f) {
-            const Object* field = CreateObjectsRecursively(field_lifetimes);
-            object_repository_.field_object_map_[std::make_pair(object, f)] =
-                field;
-          },
-          [this, object](const ObjectLifetimes& base_lifetimes,
-                         const clang::Type* base_type) {
-            const Object* base_obj = CreateObjectsRecursively(base_lifetimes);
-            object_repository_
-                .base_object_map_[std::make_pair(object, base_type)] = base_obj;
-          }
-
-      );
-    }
-
-    if (type->getAs<clang::FunctionType>()) {
-      assert(object->GetFunc() == nullptr);
-      // All objects must be allocated in the arena of this ObjectRepository, so
-      // this cast does not introduce UB due to mutating an object in a const
-      // location.
-      const_cast<Object*>(object)->SetFuncLifetimes(
-          value_lifetimes.GetFuncLifetimes());
-    }
-  }
-
- private:
   const Object* CreateObjectsRecursively(
       const ObjectLifetimes& object_lifetimes) {
     if (auto it = object_cache_.find(object_lifetimes);
         it != object_cache_.end()) {
       return it->second;
     }
-    const Object* obj = object_repository_.CreateObject(
-        object_lifetimes.GetLifetime(), object_lifetimes.Type());
+
+    const clang::QualType type = object_lifetimes.Type();
+    const ValueLifetimes& value_lifetimes =
+        object_lifetimes.GetValueLifetimes();
+
+    std::optional<FunctionLifetimes> function_lifetimes;
+
+    if (type->getAs<clang::FunctionType>()) {
+      function_lifetimes = value_lifetimes.GetFuncLifetimes();
+    }
+
+    const Object* obj = object_repository_.ConstructObject(
+        object_lifetimes.GetLifetime(), object_lifetimes.Type(),
+        function_lifetimes);
     object_cache_[object_lifetimes] = obj;
 
-    CreateChildrenForObjectWithValue(obj, object_lifetimes.GetValueLifetimes());
+    object_repository_.initial_object_lifetimes_[obj] = object_lifetimes;
+
+    if (type->isIncompleteType()) {
+      // Nothing we can do.
+      return obj;
+    }
+
+    // Pointer type.
+    if (!PointeeType(type).isNull()) {
+      points_to_map_.ExtendPointerPointsToSet(
+          obj,
+          {CreateObjectsRecursively(value_lifetimes.GetPointeeLifetimes())});
+      return obj;
+    }
+
+    // Record type.
+    if (type->getAs<clang::RecordType>()) {
+      ForEachFieldAndBase(
+          type, object_lifetimes,
+          [this, obj](const ObjectLifetimes& field_lifetimes,
+                      const clang::FieldDecl* f) {
+            const Object* field = CreateObjectsRecursively(field_lifetimes);
+            object_repository_.field_object_map_[std::make_pair(obj, f)] =
+                field;
+          },
+          [this, obj](const ObjectLifetimes& base_lifetimes,
+                      const clang::Type* base_type) {
+            const Object* base_obj = CreateObjectsRecursively(base_lifetimes);
+            object_repository_
+                .base_object_map_[std::make_pair(obj, base_type)] = base_obj;
+          }
+
+      );
+    }
 
     return obj;
   }
 
+ private:
   ObjectRepository& object_repository_;
   PointsToMap& points_to_map_;
   // We re-use the same Object for all the sub-objects with the same type and
@@ -874,19 +870,24 @@ struct ObjectRepository::ObjectCreator {
   llvm::DenseMap<ObjectLifetimes, const Object*> object_cache_;
 };
 
-void ObjectRepository::CreateObjectsWithLifetimes(
-    const Object* root_object, const ValueLifetimes& value_lifetimes,
-    PointsToMap& points_to_map) {
+const Object* ObjectRepository::CreateObject(
+    const ObjectLifetimes& object_lifetimes, PointsToMap& points_to_map) {
   ObjectCreator object_creator(*this, points_to_map);
-  object_creator.CreateChildrenForObjectWithValue(root_object, value_lifetimes);
+  return object_creator.CreateObjectsRecursively(object_lifetimes);
 }
 
-void ObjectRepository::CreateObjects(const Object* root_object,
-                                     clang::QualType type,
-                                     LifetimeFactory lifetime_factory) {
-  CreateObjectsWithLifetimes(
-      root_object, ValueLifetimes::Create(type, lifetime_factory).get(),
+const Object* ObjectRepository::CreateObject(clang::QualType type,
+                                             Lifetime root_object_lifetime,
+                                             LifetimeFactory lifetime_factory) {
+  return CreateObject(
+      ObjectLifetimes(root_object_lifetime,
+                      ValueLifetimes::Create(type, lifetime_factory).get()),
       initial_points_to_map_);
+}
+
+template <typename... Args>
+const Object* ObjectRepository::ConstructObject(Args&&... args) {
+  return new (object_allocator_.Allocate()) Object(args...);
 }
 
 // Clones an object and its base classes and fields, if any.
@@ -896,7 +897,8 @@ const Object* ObjectRepository::CloneObject(const Object* object) {
     const Object* new_object;
   };
   auto clone = [this](const Object* obj) {
-    auto new_obj = CreateObject(obj->GetLifetime(), obj->Type());
+    auto new_obj = ConstructObject(obj->GetLifetime(), obj->Type(),
+                                   obj->GetFuncLifetimes());
     initial_points_to_map_.SetPointerPointsToSet(
         new_obj, initial_points_to_map_.GetPointerPointsToSet(obj));
     return new_obj;

@@ -199,6 +199,10 @@ void AddConstraint(LifetimeRequirement req, Lifetime obj, Lifetime replacement,
 void CollectLifetimeConstraints(const ValueLifetimes&, const ValueLifetimes&,
                                 LifetimeRequirement, LifetimeConstraints&);
 
+void CollectLifetimeConstraints(const FunctionLifetimes&,
+                                const FunctionLifetimes&, LifetimeRequirement,
+                                LifetimeConstraints&);
+
 // Collects all the constraints that are required to use `replacement` as a
 // replacement for `obj`, taking into account the requirements due to their
 // positions (i.e. covariant/contravariant/invariant).
@@ -256,25 +260,32 @@ void CollectLifetimeConstraints(const ValueLifetimes& obj,
                     replacement.GetLifetimeParameter(lftm_param), constraints);
     }
   }
-  // TODO(veluca): function types.
+  if (clang::isa<clang::FunctionProtoType>(obj.Type())) {
+    CollectLifetimeConstraints(obj.GetFuncLifetimes(),
+                               replacement.GetFuncLifetimes(), requirement,
+                               constraints);
+  }
 }
 
 void CollectLifetimeConstraints(const FunctionLifetimes& callable,
                                 const FunctionLifetimes& replacement_callable,
+                                LifetimeRequirement requirement,
                                 LifetimeConstraints& constraints) {
   for (size_t i = 0; i < callable.GetNumParams(); i++) {
-    CollectLifetimeConstraints(callable.GetParamLifetimes(i),
-                               replacement_callable.GetParamLifetimes(i),
-                               LifetimeRequirement::kReplacementIsGe,
-                               constraints);
+    CollectLifetimeConstraints(
+        callable.GetParamLifetimes(i),
+        replacement_callable.GetParamLifetimes(i),
+        Compose(LifetimeRequirement::kReplacementIsGe, requirement),
+        constraints);
   }
   CollectLifetimeConstraints(
       callable.GetReturnLifetimes(), replacement_callable.GetReturnLifetimes(),
-      LifetimeRequirement::kReplacementIsLe, constraints);
+      Compose(LifetimeRequirement::kReplacementIsLe, requirement), constraints);
   if (callable.IsNonStaticMethod()) {
     CollectLifetimeConstraints(
         callable.GetThisLifetimes(), replacement_callable.GetThisLifetimes(),
-        LifetimeRequirement::kReplacementIsGe, constraints);
+        Compose(LifetimeRequirement::kReplacementIsGe, requirement),
+        constraints);
   }
 }
 
@@ -307,7 +318,9 @@ LifetimeConstraints LifetimeConstraints::ForCallableSubstitutionFull(
     const FunctionLifetimes& callable,
     const FunctionLifetimes& replacement_callable) {
   LifetimeConstraints constraints;
-  CollectLifetimeConstraints(callable, replacement_callable, constraints);
+  CollectLifetimeConstraints(callable, replacement_callable,
+                             LifetimeRequirement::kReplacementIsLe,
+                             constraints);
   return constraints;
 }
 

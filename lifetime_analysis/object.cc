@@ -15,18 +15,19 @@ namespace clang {
 namespace tidy {
 namespace lifetimes {
 
-Object::Object(Lifetime lifetime, clang::QualType type)
-    : lifetime_(lifetime), type_(type), func_(nullptr) {
+Object::Object(Lifetime lifetime, clang::QualType type,
+               std::optional<FunctionLifetimes> func_lifetimes)
+    : lifetime_(lifetime),
+      type_(type),
+      func_lifetimes_(std::move(func_lifetimes)) {
   assert(!type.isNull());
-}
-
-Object::Object(const clang::FunctionDecl& func)
-    : Object(Lifetime::Static(), func.getType()) {
-  func_ = &func;
 }
 
 std::string Object::DebugString() const {
   std::string result = absl::StrFormat("p%p %s", this, lifetime_.DebugString());
+  if (func_lifetimes_.has_value()) {
+    absl::StrAppend(&result, " (fn: ", func_lifetimes_->DebugString(), ")");
+  }
   if (!type_.isNull()) {
     absl::StrAppend(&result, " (", type_.getAsString(), ")");
   }

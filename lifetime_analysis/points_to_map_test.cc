@@ -32,9 +32,9 @@ TEST(PointsToMapTest, Equality) {
       "int* p = return_int_ptr();",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object p1(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p2(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p3(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object p1(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p2(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p3(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
         const clang::CallExpr* expr = getFirstCallExpr(ast_context);
 
         {
@@ -64,9 +64,9 @@ TEST(PointsToMapTest, Union) {
       "int* p = return_int_ptr();",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object p1(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p2(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p3(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object p1(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p2(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p3(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
         const clang::CallExpr* expr = getFirstCallExpr(ast_context);
 
         PointsToMap map1, map2;
@@ -89,10 +89,10 @@ TEST(PointsToMapTest, GetPointerPointsToSet) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object p1(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p2(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p3(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p4(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object p1(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p2(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p3(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p4(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
 
         PointsToMap map;
 
@@ -112,9 +112,9 @@ TEST(PointsToMapTest, ExtendPointerPointsToSet) {
       "",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object p1(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p2(Lifetime::CreateLocal(), ast_context.IntTy);
-        Object p3(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object p1(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p2(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
+        Object p3(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
 
         PointsToMap map;
 
@@ -137,7 +137,7 @@ TEST(PointsToMapTest, GetExprObjectSet) {
       "int* p = return_int_ptr();",
       [](const clang::ASTContext& ast_context,
          const LifetimeAnnotationContext&) {
-        Object p1(Lifetime::CreateLocal(), ast_context.IntTy);
+        Object p1(Lifetime::CreateLocal(), ast_context.IntTy, std::nullopt);
         const clang::CallExpr* expr = getFirstCallExpr(ast_context);
 
         PointsToMap map;

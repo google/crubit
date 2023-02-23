@@ -178,9 +178,11 @@ cc_library(
     srcs = ["object_repository.cc"],
     hdrs = ["object_repository.h"],
     deps = [
+        ":builtin_lifetimes",
         ":object",
         ":object_set",
         ":points_to_map",
+        "@absl//absl/strings",
         "//lifetime_annotations:lifetime",
         "//lifetime_annotations:pointee_type",
         "//lifetime_annotations:type_lifetimes",

@@ -35,6 +35,41 @@ TEST_F(LifetimeAnalysisTest, SimpleReturningCallback) {
               LifetimesAre({{"target", "a, ((a -> b), c) -> b"}}));
 }
 
+TEST_F(LifetimeAnalysisTest, CallWithCallback) {
+  EXPECT_THAT(GetLifetimes(R"(
+    int* fun(int* a) {
+      return a;
+    }
+
+    int* with_cb(int* a, int* (*f)(int*)) {
+      return f(a);
+    }
+
+    int* target(int* a) {
+      return with_cb(a, fun);
+    }
+  )"),
+              LifetimesContain({{"target", "a -> a"}}));
+}
+
+TEST_F(LifetimeAnalysisTest, CallWithCallbackReturningStatic) {
+  EXPECT_THAT(GetLifetimes(R"(
+    int* fun(int*) {
+      static int a;
+      return &a;
+    }
+
+    int* with_cb(int* a, int* (*f)(int*)) {
+      return f(a);
+    }
+
+    int* target(int* a) {
+      return with_cb(a, fun);
+    }
+  )"),
+              LifetimesContain({{"target", "a -> b"}}));
+}
+
 }  // namespace
 }  // namespace lifetimes
 }  // namespace tidy

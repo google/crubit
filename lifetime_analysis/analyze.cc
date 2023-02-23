@@ -435,11 +435,10 @@ llvm::Error TransferDefaultConstructor(
   // Moreover, since we don't run dataflow, we create the objects on the fly.
   clang::QualType this_type = default_ctor->getThisType();
   // "object" for the `this` pointer itself.
-  const Object* placeholder_this_ptr_object =
-      object_repository.CreateObjectsRecursively(
-          ObjectLifetimes(Lifetime::CreateVariable(),
-                          ctor_lifetimes.GetThisLifetimes()),
-          points_to_map);
+  const Object* placeholder_this_ptr_object = object_repository.CreateObject(
+      ObjectLifetimes(Lifetime::CreateVariable(),
+                      ctor_lifetimes.GetThisLifetimes()),
+      points_to_map);
   HandlePointsToSetExtension({placeholder_this_ptr_object}, {this_object},
                              this_type, object_repository, points_to_map,
                              constraints);
@@ -605,10 +604,14 @@ llvm::Error AnalyzeFunctionBody(
 
 llvm::Expected<FunctionAnalysis> AnalyzeSingleFunction(
     const clang::FunctionDecl* func,
-    const llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
-        callee_lifetimes,
+    const FunctionLifetimesMap& callee_lifetimes,
     const DiagnosticReporter& diag_reporter, FunctionDebugInfoMap* debug_info) {
-  FunctionAnalysis analysis{.object_repository = ObjectRepository(func)};
+  llvm::Expected<ObjectRepository> object_repository =
+      ObjectRepository::Create(func, callee_lifetimes);
+  if (auto err = object_repository.takeError()) {
+    return err;
+  }
+  FunctionAnalysis analysis{.object_repository = std::move(*object_repository)};
 
   const auto* cxxmethod = clang::dyn_cast<clang::CXXMethodDecl>(func);
   if (cxxmethod && cxxmethod->isPure()) {
@@ -995,22 +998,18 @@ llvm::Error UpdateFunctionLifetimesWithOverrides(
 }
 
 llvm::Error AnalyzeRecursiveFunctions(
-    llvm::ArrayRef<VisitedCallStackEntry> funcs,
-    llvm::DenseMap<const clang::FunctionDecl*, FunctionLifetimesOrError>&
-        analyzed,
+    llvm::ArrayRef<VisitedCallStackEntry> funcs, FunctionLifetimesMap& analyzed,
     const DiagnosticReporter& diag_reporter, FunctionDebugInfoMap* debug_info) {
   for (const auto [func, in_cycle, _] : funcs) {
     assert(in_cycle);
 
-    // Grab the initial FunctionLifetimes for each function in the cycle,
+    // Construct an initial FunctionLifetimes for each function in the cycle,
     // without doing a dataflow analysis, which would need other functions
     // in the cycle to already be analyzed.
-    auto func_lifetimes_result = ConstructFunctionLifetimes(
-        func,
-        FunctionAnalysis{
-            .object_repository = ObjectRepository(func),
-        },
-        diag_reporter);
+    auto func_lifetimes_result = FunctionLifetimes::CreateForDecl(
+        func, FunctionLifetimeFactorySingleCallback([](const clang::Expr*) {
+          return Lifetime::CreateVariable();
+        }));
     if (!func_lifetimes_result) {
       return func_lifetimes_result.takeError();
     }

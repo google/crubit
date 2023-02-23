@@ -35,6 +35,13 @@ inline bool IsInitExprInitializingARecordObject(const clang::Expr* expr) {
   return expr->getType()->isRecordType() && expr->isPRValue();
 }
 
+// Returns the lifetimes of the given FunctionDecl, or an error if they are
+// unknown or analysis failed on that FunctionDecl.
+FunctionLifetimesOrError GetFunctionLifetimes(
+    const FunctionDecl* decl,
+    const llvm::DenseMap<const FunctionDecl*, FunctionLifetimesOrError>&
+        known_lifetimes);
+
 // A repository for the objects used in the lifetime analysis of a single
 // function.
 // This class establishes a relationship between AST nodes (e.g. variable
@@ -68,9 +75,15 @@ class ObjectRepository {
   using const_iterator = MapType::const_iterator;
   using value_type = MapType::value_type;
 
-  // Initializes the map with objects for all variables that are declared or
-  // referenced in `func`.
-  explicit ObjectRepository(const clang::FunctionDecl* func);
+  // Creates an ObjectRepository with all relevant objects for the analysis
+  // of `func`. This includes:
+  // - Variables that are declared or referenced in `func`.
+  // - Functions that have their address taken in `func`.
+  // - String literals.
+  static llvm::Expected<ObjectRepository> Create(
+      const clang::FunctionDecl* func,
+      const llvm::DenseMap<const clang::FunctionDecl*,
+                           FunctionLifetimesOrError>& callee_lifetimes);
 
   // Move-only.
   ObjectRepository(ObjectRepository&&) = default;
@@ -81,14 +94,6 @@ class ObjectRepository {
 
   const_iterator begin() const { return object_repository_.begin(); }
   const_iterator end() const { return object_repository_.end(); }
-
-  // Creates an object with the given lifetime and type.
-  // The returned object will live as long as this `ObjectRepository`.
-  const Object* CreateObject(Lifetime lifetime, clang::QualType type);
-
-  // Creates an object representing a declared function.
-  // The returned object will live as long as this `ObjectRepository`.
-  const Object* CreateObjectFromFunctionDecl(const clang::FunctionDecl& func);
 
   // Returns the object associated with a variable or function.
   const Object* GetDeclObject(const clang::ValueDecl* decl) const;
@@ -157,6 +162,11 @@ class ObjectRepository {
   // because it allows us to treat return values the same way as other values.
   const Object* GetReturnObject() const { return return_object_; }
 
+  // Returns an object that represents (the lifetimes of) any string literal.
+  const Object* GetStringLiteralObject() const {
+    return string_literal_object_;
+  }
+
   // Returns the object associated with a given field in the struct
   // represented by `struct_object`.
   const Object* GetFieldObject(const Object* struct_object,
@@ -203,37 +213,37 @@ class ObjectRepository {
     return initial_single_valued_objects_;
   }
 
-  // Creates and returns an object with static lifetime of the given type.
-  // Also creates any transitive objects if required.
-  // When called multiple times with the same `type`, this function always
-  // returns the same object. This is to guarantee that the number of objects
-  // used in the analysis is bounded and that therefore the lattice is finite
-  // and the analysis terminates.
-  const Object* CreateStaticObject(clang::QualType type);
-
-  // Creates an object and its pointees with the given lifetimes.
+  // Creates an object (and its related objects, such as objects for its fields,
+  // bases or pointees) with the given lifetimes. Points-to relations will be
+  // added to the given points_to_map.
   // The returned Object will live as long as this ObjectRepository.
-  const Object* CreateObjectsRecursively(
-      const ObjectLifetimes& object_lifetimes, PointsToMap& points_to_map);
+  // TODO(veluca): this is currently public just because of
+  // TransferDefaultConstructor in analyze.cc; in principle such objects
+  // could/should be created in advance.
+  const Object* CreateObject(const ObjectLifetimes& object_lifetimes,
+                             PointsToMap& points_to_map);
 
  private:
-  // Creates objects for a given `type`, marking the given `root_object` as
-  // pointing to them; lifetimes of created objects are defined by the given
-  // `lifetime_factory`.
-  void CreateObjects(const Object* root_object, clang::QualType type,
-                     LifetimeFactory lifetime_factory);
-  // Same as `CreateObjects`, except the lifetimes are not created but taken
-  // from `value_lifetimes`. Points-to information is saved in the given
-  // `points_to_map`.
-  void CreateObjectsWithLifetimes(const Object* root_object,
-                                  const ValueLifetimes& value_lifetimes,
-                                  PointsToMap& points_to_map);
+  ObjectRepository() = default;
+
+  // Creates an object (and related objects) for a given `type`; lifetimes of
+  // created objects are defined by the given
+  // `lifetime_factory`/`root_object_lifetime`, and the
+  // resulting points-to relations are stored in the ObjectRepository's
+  // initial_points_to_map_.
+  const Object* CreateObject(clang::QualType type,
+                             Lifetime root_object_lifetime,
+                             LifetimeFactory lifetime_factory);
+
+  template <typename... Args>
+  const Object* ConstructObject(Args&&... args);
 
   const Object* CloneObject(const Object* object);
 
   std::optional<const Object*> GetFieldObjectInternal(
       const Object* struct_object, const clang::FieldDecl* field) const;
 
+  // Owns all the `const Object*` members of the object repository.
   llvm::SpecificBumpPtrAllocator<Object> object_allocator_;
 
   // Map from each variable declaration to the object which it declares.
@@ -277,9 +287,9 @@ class ObjectRepository {
   llvm::DenseMap<const clang::Expr*, FunctionLifetimes>
       call_expr_virtual_lifetimes_;
 
-  llvm::DenseMap<clang::QualType, const Object*> static_objects_;
+  const Object* string_literal_object_ = nullptr;
 
-  const clang::FunctionDecl* func_;
+  const clang::FunctionDecl* func_ = nullptr;
 
   llvm::DenseMap<const Object*, ObjectLifetimes> initial_object_lifetimes_;
 
