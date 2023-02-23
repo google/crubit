@@ -6,13 +6,22 @@
 mod tests {
     use abi_class::*;
 
-    #[ignore] // TODO(b/270454629): Re-enable the test after fixing the bug.
+    #[ignore = "TODO(b/270454629): Re-enable the test after fixing the bug."]
     #[test]
     fn test_struct_float() {
         let x = StructFloat::Create(123.0);
         let y = StructFloat::Create(456.0);
         let sum = StructFloat::Add(x, y);
         assert_eq!(123.0 + 456.0, StructFloat::Inspect(sum));
+    }
+
+    #[ignore = "TODO(b/270454629): Re-enable the test after fixing the bug."]
+    #[test]
+    fn test_struct_memory() {
+        let x = StructMemory::Create(456);
+        let y = StructMemory::Create(321);
+        let sum = StructMemory::Add(x, y);
+        assert_eq!(456 + 321, StructMemory::Inspect(sum));
     }
 
     #[test]

@@ -69,6 +69,54 @@ struct StructFloat final {
   };
 };
 
+// Expected System V ABI classification of this struct: memory:
+//     > If the size of an object is larger than eight eightbytes, or it
+//     > contains unaligned fields, it has class MEMORY
+//     ...
+//     > If the class is MEMORY, pass the argument on the stack at an address
+//     > respecting the arguments alignment (which might be more than its
+//     > natural alignement)
+//     ...
+//     > If the type has class MEMORY, then the caller provides space for the
+//     > return value and passes the address of this storage in %rdi as if it
+//     > were the first argument to the function. In effect, this address
+//     > becomes a “hidden” first argument. This storage must not overlap any
+//     > data visible to the callee through other names than this argument.  On
+//     > return %rax will contain the address that has been passed in by the
+//     > caller in %rdi.
+//     (from "System V Application Binary Interface AMD64 Architecture Processor
+//     Supplement (With LP64 and ILP32 Programming Models) Version 1.0")
+//
+// See also: https://godbolt.org/z/a1aK8Yxdx
+//
+// This is a regression test for b/270454629.  Before this bug was fixed the
+// `test_struct_memory` test would trigger undefined beahvior and would usually
+// crash with segmentation fault.
+struct StructMemory final {
+ public:
+  static inline StructMemory Create(int i) {
+    StructMemory s;
+    s.int_var = i;
+    return s;
+  }
+
+  static inline StructMemory Add(StructMemory x, StructMemory y) {
+    StructMemory s;
+    s.int_var = x.int_var + y.int_var;
+    return s;
+  }
+
+  static inline int Inspect(StructMemory s) { return s.int_var; }
+
+ private:
+  // Using `char` and `packed` to misalign `int_var` - this is needed to
+  // ensure that the ABI classification of the whole struct is: "memory".
+  struct {
+    char char_var;
+    __attribute__((packed)) int int_var;
+  };
+};
+
 // Expected System V ABI classification of this struct: integer.
 // The return value is expected to be put into the `rax` register:
 // https://godbolt.org/z/a1aK8Yxdx
