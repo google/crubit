@@ -60,7 +60,7 @@ pub mod default_repr {
 /// private (i.e. non-`pub`) to encourage `cc_bindings_from_rs` to treat them as
 /// an opaque blob of bytes.
 ///
-/// Optimizing compiler can make the disassembly of the `Create` methods quite
+/// Optimizing compiler can make the disassembly of the `create` methods quite
 /// empty (probably because the input argument uses the same register as the
 /// return value.  To make the tests more sensitive to ABI choices, the
 /// `multiply` method is used (to actually operate on the input arguments and to
@@ -87,7 +87,7 @@ pub mod abi_classification {
             Self(i)
         }
         pub fn multiply(x: Self, y: Self) -> Self {
-            Self(x.0 + y.0)
+            Self(x.0 * y.0)
         }
         pub fn inspect(s: Self) -> i32 {
             s.0
@@ -99,7 +99,7 @@ pub mod abi_classification {
             Self(f)
         }
         pub fn multiply(x: Self, y: Self) -> Self {
-            Self(x.0 + y.0)
+            Self(x.0 * y.0)
         }
         pub fn inspect(s: Self) -> f32 {
             s.0
@@ -111,7 +111,7 @@ pub mod abi_classification {
             Self { _padding: 0, i }
         }
         pub fn multiply(x: Self, y: Self) -> Self {
-            Self::create(x.i + y.i)
+            Self::create(x.i * y.i)
         }
         pub fn inspect(s: Self) -> i32 {
             s.i
