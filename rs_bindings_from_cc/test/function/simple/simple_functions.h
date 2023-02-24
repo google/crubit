@@ -16,6 +16,7 @@ const int* forward_pointer(const int* i);
 const int& forward_reference(const int& i);
 int multiply(int x, int y);
 int multiply_with_unnamed_parameters(int, int);
+int multiply_with_keyword_named_parameters(int self, int crate, int super);
 
 // https://cdecl.org/?q=int+%28*get_multiply_function%28%29%29%28int%2C+int%29:
 // declare foo as function returning pointer to function (int, int) returning

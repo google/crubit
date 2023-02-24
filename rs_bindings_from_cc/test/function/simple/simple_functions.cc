@@ -32,5 +32,9 @@ int multiply(int x, int y) { return x * y; }
 
 int multiply_with_unnamed_parameters(int x, int y) { return x * y; }
 
+int multiply_with_keyword_named_parameters(int self, int crate, int super) {
+  return self * crate * super;
+}
+
 int (*get_pointer_to_multiply_function())(int, int) { return multiply; }
 int (&get_reference_to_multiply_function())(int, int) { return multiply; }

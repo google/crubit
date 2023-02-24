@@ -69,6 +69,14 @@ mod tests {
     }
 
     #[test]
+    fn test_multiply_with_keyword_named_parameters() {
+        assert_eq!(
+            42 * 123 * 456,
+            simple_functions::multiply_with_keyword_named_parameters(42, 123, 456)
+        );
+    }
+
+    #[test]
     fn test_function_pointer() {
         let maybe_mul_fn = simple_functions::get_pointer_to_multiply_function();
         let mul_fn = maybe_mul_fn.expect("Expecting non-null / non-None function pointer");

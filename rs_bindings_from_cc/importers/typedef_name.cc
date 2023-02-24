@@ -41,9 +41,13 @@ std::optional<IR::Item> crubit::TypedefNameDeclImporter::Import(
     return std::nullopt;
   }
 
-  std::optional<Identifier> identifier =
+  absl::StatusOr<Identifier> identifier =
       ictx_.GetTranslatedIdentifier(typedef_name_decl);
-  CHECK(identifier.has_value());  // This must always hold.
+  if (!identifier.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        typedef_name_decl, absl::StrCat("Type alias name is not supported: ",
+                                        identifier.status().message()));
+  }
 
   std::optional<clang::tidy::lifetimes::ValueLifetimes> no_lifetimes;
   absl::StatusOr<MappedType> underlying_type = ictx_.ConvertQualType(

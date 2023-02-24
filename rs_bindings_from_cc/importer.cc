@@ -1017,35 +1017,24 @@ std::string Importer::GetNameForSourceOrder(const clang::Decl* decl) const {
   }
 }
 
-std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
+absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
     const clang::NamedDecl* named_decl) const {
   switch (named_decl->getDeclName().getNameKind()) {
     case clang::DeclarationName::Identifier: {
       auto name = std::string(named_decl->getName());
-      if (const clang::ParmVarDecl* param_decl =
-              clang::dyn_cast<clang::ParmVarDecl>(named_decl)) {
-        int param_pos = param_decl->getFunctionScopeIndex();
-        if (name.empty()) {
-          return {Identifier(absl::StrCat("__param_", param_pos))};
-        }
-        if (auto* sttpt = param_decl->getType()
-                              ->getAs<clang::SubstTemplateTypeParmType>();
-            sttpt && sttpt->getReplacedParameter()->isParameterPack()) {
-          // Avoid giving the same name to all parameters expanded from a pack.
-          return {Identifier(absl::StrCat("__", name, "_", param_pos))};
-        }
-      }
       if (name.empty()) {
-        if (auto* tag_type = llvm::dyn_cast<clang::TagDecl>(named_decl)) {
-          if (auto* typedef_decl = tag_type->getTypedefNameForAnonDecl()) {
-            std::optional<Identifier> identifier =
-                GetTranslatedIdentifier(typedef_decl);
-            CHECK(identifier.has_value());  // This must always hold.
-            return {*std::move(identifier)};
-          }
-        }
-        return std::nullopt;
+        return absl::InvalidArgumentError("Missing identifier");
       }
+
+      // `r#foo` syntax in Rust can't be used to escape `crate`, `self`,
+      // `super`, not `Self` identifiers - see
+      // https://doc.rust-lang.org/reference/identifiers.html#identifiers
+      if (name == "crate" || name == "self" || name == "super" ||
+          name == "Self") {
+        return absl::InvalidArgumentError(
+            absl::StrCat("Unescapable identifier: ", name));
+      }
+
       return {Identifier(std::move(name))};
     }
     case clang::DeclarationName::CXXConstructorName:
@@ -1056,10 +1045,8 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
       switch (named_decl->getDeclName().getCXXOverloadedOperator()) {
         case clang::OO_None:
           LOG(FATAL) << "No OO_None expected under CXXOperatorName branch";
-          return std::nullopt;
         case clang::NUM_OVERLOADED_OPERATORS:
           LOG(FATAL) << "No NUM_OVERLOADED_OPERATORS expected at runtime";
-          return std::nullopt;
           // clang-format off
         #define OVERLOADED_OPERATOR(name, spelling, ...)  \
         case clang::OO_##name: {                          \
@@ -1070,13 +1057,12 @@ std::optional<UnqualifiedIdentifier> Importer::GetTranslatedName(
           // clang-format on
       }
       LOG(FATAL) << "The `switch` above should handle all cases";
-      return std::nullopt;
     default:
       // To be implemented later: CXXConversionFunctionName.
       // There are also e.g. literal operators, deduction guides, etc., but
       // we might not need to implement them at all. Full list at:
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
-      return std::nullopt;
+      return absl::UnimplementedError("Unsupported name kind");
   }
 }
 

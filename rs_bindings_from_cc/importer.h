@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "absl/log/die_if_null.h"
+#include "common/status_macros.h"
 #include "rs_bindings_from_cc/decl_importer.h"
 #include "rs_bindings_from_cc/importers/class_template.h"
 #include "rs_bindings_from_cc/importers/cxx_record.h"
@@ -66,15 +67,15 @@ class Importer final : public ImportContext {
   std::string GetMangledName(const clang::NamedDecl* named_decl) const override;
   BazelLabel GetOwningTarget(const clang::Decl* decl) const override;
   bool IsFromCurrentTarget(const clang::Decl* decl) const override;
-  std::optional<UnqualifiedIdentifier> GetTranslatedName(
+  absl::StatusOr<UnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const override;
-  std::optional<Identifier> GetTranslatedIdentifier(
+  absl::StatusOr<Identifier> GetTranslatedIdentifier(
       const clang::NamedDecl* named_decl) const override {
-    if (std::optional<UnqualifiedIdentifier> name =
-            GetTranslatedName(named_decl)) {
-      return std::move(*std::get_if<Identifier>(&*name));
-    }
-    return std::nullopt;
+    CRUBIT_ASSIGN_OR_RETURN(UnqualifiedIdentifier unqualified,
+                            GetTranslatedName(named_decl));
+    Identifier* identifier = std::get_if<Identifier>(&unqualified);
+    CHECK(identifier) << "Incorrectly called with a special name";
+    return *identifier;
   }
   std::optional<std::string> GetComment(const clang::Decl* decl) const override;
   std::string ConvertSourceLocation(clang::SourceLocation loc) const override;

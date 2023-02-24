@@ -110,6 +110,140 @@ fn test_function_with_unnamed_parameters() {
 }
 
 #[test]
+fn test_unescapable_rust_keywords_in_function_parameters() {
+    let ir = ir_from_cc("int f(int self, int crate, int super);").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            Func {
+                name: "f", ...
+                params: [
+                    FuncParam {
+                        ... identifier: "__param_0", ...
+                    },
+                    FuncParam {
+                        ... identifier: "__param_1", ...
+                    },
+                    FuncParam {
+                        ... identifier: "__param_2", ...
+                    },
+                ], ...
+            }
+        }
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_struct_name() {
+    let ir = ir_from_cc("struct Self{ int field; };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "Self", ...
+          message: "Record name is not supported: Unescapable identifier: Self"
+          ...
+        }}
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_enum_name() {
+    let ir = ir_from_cc("enum Self{ kFoo = 1 };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "Self", ...
+          message: "Enum name is not supported: Unescapable identifier: Self"
+          ...
+        }}
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_enumerator_name() {
+    let ir = ir_from_cc("enum SomeEnum { self = 1 };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "SomeEnum", ...
+          message: "Enumerator name is not supported: Unescapable identifier: self"
+          ...
+        }}
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_anonymous_struct_type_alias() {
+    let ir = ir_from_cc("typedef struct { int field; } Self;").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "Self", ...
+          message: "Record name is not supported: Unescapable identifier: Self"
+          ...
+        }}
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_field_name() {
+    let ir = ir_from_cc("struct SomeStruct { int self; };").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+           Record {
+               rs_name: "SomeStruct",
+               cc_name: "SomeStruct",
+               ...
+               fields: [Field {
+                   identifier: Some("__field_0"), ...
+               }],
+               ...
+           }
+        }
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_namespace_name() {
+    let ir = ir_from_cc("namespace self { void foo(); }").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "self", ...
+          message: "Namespace name is not supported: Unescapable identifier: self"
+          ...
+        }}
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_function_name() {
+    let ir = ir_from_cc("void self();").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "self", ...
+          message: "Function name is not supported: Unescapable identifier: self"
+          ...
+        }}
+    );
+}
+
+#[test]
+fn test_unescapable_rust_keywords_in_type_alias_name() {
+    let ir = ir_from_cc("using Self = int;").unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "Self", ...
+          message: "Type alias name is not supported: Unescapable identifier: Self"
+          ...
+        }}
+    );
+}
+
+#[test]
 fn test_function_with_custom_calling_convention() {
     let ir = ir_from_cc("int f_vectorcall(int, int) [[clang::vectorcall]];").unwrap();
     assert_ir_matches!(

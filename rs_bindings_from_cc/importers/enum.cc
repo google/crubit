@@ -7,15 +7,20 @@
 namespace crubit {
 
 std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
-  std::optional<Identifier> enum_name =
-      ictx_.GetTranslatedIdentifier(enum_decl);
-  if (!enum_name.has_value()) {
+  if (enum_decl->getName().empty()) {
     // TODO(b/208945197): This corresponds to an unnamed enum declaration like
     // `enum { kFoo = 1 }`, which only exists to provide constants into the
     // surrounding scope and doesn't actually introduce an enum namespace. It
     // seems like it should probably be handled with other constants.
     return ictx_.ImportUnsupportedItem(enum_decl,
                                        "Unnamed enums are not supported yet");
+  }
+  absl::StatusOr<Identifier> enum_name =
+      ictx_.GetTranslatedIdentifier(enum_decl);
+  if (!enum_name.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        enum_decl, absl::StrCat("Enum name is not supported: ",
+                                enum_name.status().message()));
   }
 
   clang::QualType cc_type = enum_decl->getIntegerType();
@@ -40,12 +45,13 @@ std::optional<IR::Item> EnumDeclImporter::Import(clang::EnumDecl* enum_decl) {
   enumerators.reserve(std::distance(enum_decl->enumerators().begin(),
                                     enum_decl->enumerators().end()));
   for (clang::EnumConstantDecl* enumerator : enum_decl->enumerators()) {
-    std::optional<Identifier> enumerator_name =
+    absl::StatusOr<Identifier> enumerator_name =
         ictx_.GetTranslatedIdentifier(enumerator);
-    if (!enumerator_name.has_value()) {
+    if (!enumerator_name.ok()) {
       // It's not clear that this case is possible
       return ictx_.ImportUnsupportedItem(
-          enum_decl, "importing enum failed: missing enumerator name");
+          enum_decl, absl::StrCat("Enumerator name is not supported: ",
+                                  enumerator_name.status().message()));
     }
 
     enumerators.push_back(Enumerator{

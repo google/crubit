@@ -18,6 +18,8 @@ class CXXRecordDeclImporter : public DeclImporterBase<clang::CXXRecordDecl> {
   std::vector<Field> ImportFields(clang::CXXRecordDecl*);
   std::vector<BaseClass> GetUnambiguousPublicBases(
       const clang::CXXRecordDecl& record_decl) const;
+  std::optional<Identifier> GetTranslatedFieldName(
+      const clang::FieldDecl* field);
 };
 
 }  // namespace crubit

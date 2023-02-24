@@ -11,15 +11,20 @@ namespace crubit {
 
 std::optional<IR::Item> NamespaceDeclImporter::Import(
     clang::NamespaceDecl* namespace_decl) {
-
   if (namespace_decl->isAnonymousNamespace()) {
     return ictx_.ImportUnsupportedItem(
         namespace_decl, "Anonymous namespaces are not supported yet");
   }
 
+  absl::StatusOr<Identifier> identifier =
+      ictx_.GetTranslatedIdentifier(namespace_decl);
+  if (!identifier.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        namespace_decl, absl::StrCat("Namespace name is not supported: ",
+                                     identifier.status().message()));
+  }
+
   ictx_.ImportDeclsFromDeclContext(namespace_decl);
-  auto identifier = ictx_.GetTranslatedIdentifier(namespace_decl);
-  CHECK(identifier.has_value());
   auto item_ids = ictx_.GetItemIdsInSourceOrder(namespace_decl);
   return Namespace{
       .name = *identifier,

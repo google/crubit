@@ -12,6 +12,7 @@
 #include "llvm/ADT/StringRef.h"
 
 namespace crubit {
+
 static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
   const clang::DeclContext* context = decl->getDeclContext();
   while (context) {
@@ -21,6 +22,22 @@ static bool IsInStdNamespace(const clang::FunctionDecl* decl) {
     context = context->getParent();
   }
   return false;
+}
+
+Identifier FunctionDeclImporter::GetTranslatedParamName(
+    const clang::ParmVarDecl* param_decl) {
+  int param_pos = param_decl->getFunctionScopeIndex();
+  absl::StatusOr<Identifier> name = ictx_.GetTranslatedIdentifier(param_decl);
+  if (!name.ok()) {
+    return {Identifier(absl::StrCat("__param_", param_pos))};
+  }
+  if (auto* sttpt =
+          param_decl->getType()->getAs<clang::SubstTemplateTypeParmType>();
+      sttpt && sttpt->getReplacedParameter()->isParameterPack()) {
+    // Avoid giving the same name to all parameters expanded from a pack.
+    return {Identifier(absl::StrCat("__", name->Ident(), "_", param_pos))};
+  }
+  return *name;
 }
 
 std::optional<IR::Item> FunctionDeclImporter::Import(
@@ -76,6 +93,14 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
           function_decl, *ictx_.invocation_.lifetime_context_,
           &lifetime_symbol_table));
 
+  absl::StatusOr<UnqualifiedIdentifier> translated_name =
+      ictx_.GetTranslatedName(function_decl);
+  if (!translated_name.ok()) {
+    return ictx_.ImportUnsupportedItem(
+        function_decl, absl::StrCat("Function name is not supported: ",
+                                    translated_name.status().message()));
+  }
+
   std::vector<FuncParam> params;
   std::set<std::string> errors;
   auto add_error = [&errors](std::string msg) {
@@ -124,7 +149,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       continue;
     }
 
-    std::optional<Identifier> param_name = ictx_.GetTranslatedIdentifier(param);
+    std::optional<Identifier> param_name = GetTranslatedParamName(param);
     CHECK(param_name.has_value());  // No known failure cases.
     params.push_back({*param_type, *std::move(param_name)});
   }
@@ -205,8 +230,6 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
       clang::CC_C;
   bool is_member_or_descendant_of_class_template =
       IsFullClassTemplateSpecializationOrChild(function_decl);
-  std::optional<UnqualifiedIdentifier> translated_name =
-      ictx_.GetTranslatedName(function_decl);
 
   std::optional<std::string> doc_comment = ictx_.GetComment(function_decl);
   if (!doc_comment.has_value() && is_member_or_descendant_of_class_template) {
@@ -233,26 +256,23 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // `!return_type.ok()` and returning early if `!errors.empty()`.
   CHECK(return_type.ok());
 
-  if (translated_name.has_value()) {
-    return Func{
-        .name = *translated_name,
-        .owning_target = ictx_.GetOwningTarget(function_decl),
-        .doc_comment = std::move(doc_comment),
-        .mangled_name = std::move(mangled_name),
-        .return_type = *return_type,
-        .params = std::move(params),
-        .lifetime_params = std::move(lifetime_params),
-        .is_inline = function_decl->isInlined(),
-        .member_func_metadata = std::move(member_func_metadata),
-        .has_c_calling_convention = has_c_calling_convention,
-        .is_member_or_descendant_of_class_template =
-            is_member_or_descendant_of_class_template,
-        .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
-        .id = GenerateItemId(function_decl),
-        .enclosing_namespace_id = GetEnclosingNamespaceId(function_decl),
-    };
-  }
-  return std::nullopt;
+  return Func{
+      .name = *translated_name,
+      .owning_target = ictx_.GetOwningTarget(function_decl),
+      .doc_comment = std::move(doc_comment),
+      .mangled_name = std::move(mangled_name),
+      .return_type = *return_type,
+      .params = std::move(params),
+      .lifetime_params = std::move(lifetime_params),
+      .is_inline = function_decl->isInlined(),
+      .member_func_metadata = std::move(member_func_metadata),
+      .has_c_calling_convention = has_c_calling_convention,
+      .is_member_or_descendant_of_class_template =
+          is_member_or_descendant_of_class_template,
+      .source_loc = ictx_.ConvertSourceLocation(function_decl->getBeginLoc()),
+      .id = GenerateItemId(function_decl),
+      .enclosing_namespace_id = GetEnclosingNamespaceId(function_decl),
+  };
 }
 
 }  // namespace crubit

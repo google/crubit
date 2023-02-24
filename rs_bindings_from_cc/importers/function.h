@@ -14,6 +14,9 @@ class FunctionDeclImporter : public DeclImporterBase<clang::FunctionDecl> {
  public:
   FunctionDeclImporter(ImportContext& context) : DeclImporterBase(context) {}
   std::optional<IR::Item> Import(clang::FunctionDecl*);
+
+ private:
+  Identifier GetTranslatedParamName(const clang::ParmVarDecl* param_decl);
 };
 
 }  // namespace crubit

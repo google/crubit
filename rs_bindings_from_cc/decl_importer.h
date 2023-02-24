@@ -116,12 +116,13 @@ class ImportContext {
   // If the decl is a special member function or operator overload, this returns
   // a SpecialName.
   //
-  // If the translated name is not yet implemented, this returns null.
-  virtual std::optional<UnqualifiedIdentifier> GetTranslatedName(
+  // If the name can't be translated (or is empty), this returns an error.
+  virtual absl::StatusOr<UnqualifiedIdentifier> GetTranslatedName(
       const clang::NamedDecl* named_decl) const = 0;
 
   // GetTranslatedName, but only for identifier names. This is the common case.
-  virtual std::optional<Identifier> GetTranslatedIdentifier(
+  // If the name can't be translated (or is empty), this returns an error.
+  virtual absl::StatusOr<Identifier> GetTranslatedIdentifier(
       const clang::NamedDecl* named_decl) const = 0;
 
   // Gets the doc comment of the declaration.

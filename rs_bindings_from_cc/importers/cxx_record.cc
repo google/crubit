@@ -106,6 +106,27 @@ absl::StatusOr<RecordType> TranslateRecordType(
 
 }  // namespace
 
+std::optional<Identifier> CXXRecordDeclImporter::GetTranslatedFieldName(
+    const clang::FieldDecl* field_decl) {
+  if (field_decl->getName().empty()) {
+    CHECK(!field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
+          "Unnamed fields can't be annotated with [[no_unique_address]]");
+    // We don't just conjure an artificial name for an unnamed field, because
+    // in the future such fields may be elided entirely - see unnamed members
+    // in:
+    // - https://en.cppreference.com/w/c/language/struct
+    // - https://rust-lang.github.io/rfcs/2102-unnamed-fields.html
+    return std::nullopt;
+  }
+
+  absl::StatusOr<Identifier> name = ictx_.GetTranslatedIdentifier(field_decl);
+  if (!name.ok()) {
+    unsigned field_pos = field_decl->getFieldIndex();
+    return {Identifier(absl::StrCat("__field_", field_pos))};
+  }
+  return *name;
+}
+
 std::optional<IR::Item> CXXRecordDeclImporter::Import(
     clang::CXXRecordDecl* record_decl) {
   const clang::DeclContext* decl_context = record_decl->getDeclContext();
@@ -200,14 +221,28 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
     }
     source_loc = specialization_decl->getBeginLoc();
   } else {
-    std::optional<Identifier> record_name =
-        ictx_.GetTranslatedIdentifier(record_decl);
-    if (!record_name.has_value()) {
-      return std::nullopt;
+    const clang::NamedDecl* named_decl = record_decl;
+    if (record_decl->getName().empty()) {
+      if (auto* typedef_decl = record_decl->getTypedefNameForAnonDecl()) {
+        named_decl = typedef_decl;
+      } else {
+        // Skip anonymous structs that don't get a name via typedecl.
+        return std::nullopt;
+      }
     }
-    rs_name = cc_name = record_name->Ident();
-    doc_comment = ictx_.GetComment(record_decl);
-    source_loc = record_decl->getBeginLoc();
+    CHECK(!named_decl->getName().empty());
+
+    absl::StatusOr<Identifier> record_name =
+        ictx_.GetTranslatedIdentifier(named_decl);
+    if (record_name.ok()) {
+      rs_name = cc_name = record_name->Ident();
+      doc_comment = ictx_.GetComment(record_decl);
+      source_loc = record_decl->getBeginLoc();
+    } else {
+      return ictx_.ImportUnsupportedItem(
+          record_decl, absl::StrCat("Record name is not supported: ",
+                                    record_name.status().message()));
+    }
   }
 
   if (clang::CXXRecordDecl* complete = record_decl->getDefinition()) {
@@ -360,14 +395,8 @@ std::vector<Field> CXXRecordDeclImporter::ImportFields(
       }
     }
 
-    std::optional<Identifier> field_name =
-        ictx_.GetTranslatedIdentifier(field_decl);
-    CHECK(field_name ||
-          !field_decl->hasAttr<clang::NoUniqueAddressAttr>() &&
-              "Unnamed fields can't be annotated with [[no_unique_address]]");
     fields.push_back(
-        {.identifier = field_name ? *std::move(field_name)
-                                  : std::optional<Identifier>(std::nullopt),
+        {.identifier = GetTranslatedFieldName(field_decl),
          .doc_comment = ictx_.GetComment(field_decl),
          .type = std::move(type),
          .access = TranslateAccessSpecifier(access),
