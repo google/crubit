@@ -1054,11 +1054,6 @@ fn api_func_shape(
                 .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             let record = maybe_record
                 .ok_or_else(|| anyhow!("Constructors must be associated with a record."))?;
-            let instance_method_metadata =
-                member_func_metadata
-                    .instance_method_metadata
-                    .as_ref()
-                    .ok_or_else(|| anyhow!("Constructors must be instance methods."))?;
             if has_pointer_params {
                 // TODO(b/216648347): Allow this outside of traits (e.g. after supporting
                 // translating C++ constructors into static methods in Rust).
