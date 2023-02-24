@@ -1048,10 +1048,6 @@ fn api_func_shape(
             }
         }
         UnqualifiedIdentifier::Constructor => {
-            let member_func_metadata = func
-                .member_func_metadata
-                .as_ref()
-                .ok_or_else(|| anyhow!("Constructors must be member functions."))?;
             let record = maybe_record
                 .ok_or_else(|| anyhow!("Constructors must be associated with a record."))?;
             if has_pointer_params {
