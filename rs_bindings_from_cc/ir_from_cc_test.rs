@@ -3052,6 +3052,27 @@ fn test_unnamed_enum_unsupported() {
 }
 
 #[test]
+fn test_literal_operator_unsupported() {
+    let ir = ir_from_cc(
+        r#"
+        // clang::DeclarationName::NameKind::CXXLiteralOperatorName
+        unsigned operator ""_foobar(const char*);
+    "#,
+    )
+    .unwrap();
+    assert_ir_matches!(
+        ir,
+        quote! {
+            UnsupportedItem {
+                name: "operator\"\"_foobar",
+                message: "Function name is not supported: Unsupported name: operator\"\"_foobar"
+                ...
+            }
+        }
+    );
+}
+
+#[test]
 fn test_unsupported_item_has_item_id() {
     let ir = ir_from_cc("struct SomeStruct { struct NestedStruct {}; };").unwrap();
     let unsupported =
@@ -3144,6 +3165,9 @@ fn test_record_items() {
           int bar();
           struct Nested {};
           int baz();
+
+          // clang::DeclarationName::NameKind::CXXConversionFunctionName
+          explicit operator int() const { return 123; }
         };"#,
     )
     .unwrap();
@@ -3189,6 +3213,13 @@ fn test_record_items() {
             quote! {
               ...Func {
                 ... name: "baz" ...
+              }
+            },
+            quote! {
+              ... UnsupportedItem {
+                  name: "TopLevelStruct::operator int",
+                  message: "Function name is not supported: Unsupported name: operator int",
+                  ...
               }
             },
         ]

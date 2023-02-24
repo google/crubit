@@ -1062,7 +1062,8 @@ absl::StatusOr<UnqualifiedIdentifier> Importer::GetTranslatedName(
       // There are also e.g. literal operators, deduction guides, etc., but
       // we might not need to implement them at all. Full list at:
       // https://clang.llvm.org/doxygen/classclang_1_1DeclarationName.html#a9ab322d434446b43379d39e41af5cbe3
-      return absl::UnimplementedError("Unsupported name kind");
+      return absl::UnimplementedError(
+          absl::StrCat("Unsupported name: ", named_decl->getNameAsString()));
   }
 }
 
