@@ -10,7 +10,6 @@ use code_gen_utils::{
 use itertools::Itertools;
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote};
-use rustc_hir::definitions::{DefPathData, DisambiguatedDefPathData};
 use rustc_hir::{AssocItemKind, ImplItemKind, ImplicitSelfKind, Item, ItemKind, Node, Unsafety};
 use rustc_middle::dep_graph::DepContext;
 use rustc_middle::mir::Mutability;
@@ -207,60 +206,51 @@ struct FullyQualifiedName {
     mod_path: NamespaceQualifier,
 
     /// Name of the item.
-    /// For example, this would be `Ordering` for `std::cmp::Ordering`.
-    name: Symbol,
+    /// For example, this would be:
+    /// * `Some("Ordering")` for `std::cmp::Ordering`.
+    /// * `None` for `ItemKind::Use` - e.g.: `use submodule::*`
+    name: Option<Symbol>,
 }
 
 impl FullyQualifiedName {
     /// Computes a `FullyQualifiedName` for `def_id`.
     ///
-    /// May panic if `def_id` is an invalid id, or identifies an unnamed item.
-    /// Examples of supported items:
-    /// - `Node::Item` with `ItemKind::Fn`
-    /// - `Node::Item` with `ItemKind::Struct`
-    /// - Any `Node::ImplItem` (e.g. `ImplItemKind::Fn`)
-    /// Examples of unsupported items:
-    /// - `Node::Item` with `ItemKind::Impl` (the `impl` block itself doesn't
-    ///   have a name)
+    /// May panic if `def_id` is an invalid id.
     // TODO(b/259724276): This function's results should be memoized.
     fn new(tcx: TyCtxt, def_id: DefId) -> Self {
-        fn get_symbol(path_component: DisambiguatedDefPathData) -> Option<Symbol> {
-            match path_component.data {
-                DefPathData::TypeNs(symbol) | DefPathData::ValueNs(symbol) => Some(symbol),
-
-                // `Impl` and `ImplTrait` variants can appear in `full_path` of
-                // a method - e.g. (pseudocode): `module1::module2::impl::method`.
-                // Return `None` to skip these when calculating the `mod_path`.
-                DefPathData::Impl | DefPathData::ImplTrait => None,
-
-                other_data => panic!("Unexpected `path_component`: {other_data:?}"),
-            }
-        }
-
         let krate = tcx.crate_name(def_id.krate);
 
         let mut full_path = tcx.def_path(def_id).data; // mod_path + name
         let name = full_path.pop().expect("At least the item's name should be present");
-        let name = get_symbol(name).expect("Caller should ensure `def_id` maps to a named item");
+        let name = name.data.get_opt_name();
 
         let mod_path = NamespaceQualifier::new(
-            full_path.into_iter().filter_map(get_symbol).map(|s| Rc::<str>::from(s.as_str())),
+            full_path
+                .into_iter()
+                .filter_map(|p| p.data.get_opt_name())
+                .map(|s| Rc::<str>::from(s.as_str())),
         );
 
         Self { krate, mod_path, name }
     }
 
     fn format_for_cc(&self) -> Result<TokenStream> {
+        let name =
+            self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds");
+
         let top_level_ns = format_cc_ident(self.krate.as_str())?;
         let ns_path = self.mod_path.format_for_cc()?;
-        let name = format_cc_ident(self.name.as_str())?;
+        let name = format_cc_ident(name.as_str())?;
         Ok(quote! { :: #top_level_ns :: #ns_path #name })
     }
 
     fn format_for_rs(&self) -> TokenStream {
+        let name =
+            self.name.as_ref().expect("`format_for_cc` can't be called on name-less item kinds");
+
         let krate = make_rs_ident(self.krate.as_str());
         let mod_path = self.mod_path.format_for_rs();
-        let name = make_rs_ident(self.name.as_str());
+        let name = make_rs_ident(name.as_str());
         quote! { :: #krate :: #mod_path #name }
     }
 }
@@ -592,6 +582,7 @@ fn format_fn(input: &Input, local_def_id: LocalDefId) -> Result<Vec<(SnippetKey,
     };
 
     let FullyQualifiedName { krate, mod_path, name, .. } = FullyQualifiedName::new(tcx, def_id);
+    let name = name.expect("Functions are assumed to always have a name");
 
     let mut prereqs = CcPrerequisites::default();
     let cc_ret_type = format_ret_ty_for_cc(input, sig.output())
@@ -1922,6 +1913,53 @@ pub mod tests {
                 }
             );
         })
+    }
+
+    #[test]
+    fn test_generated_bindings_reimports() {
+        let test_src = r#"
+                #![allow(dead_code)]
+                #![allow(unused_imports)]
+                mod private_submodule1 {
+                    pub fn subfunction1() {}
+                    pub fn subfunction2() {}
+                    pub fn subfunction3() {}
+                }
+                mod private_submodule2 {
+                    pub fn subfunction8() {}
+                    pub fn subfunction9() {}
+                }
+
+                // Public re-import.
+                pub use private_submodule1::subfunction1;
+
+                // Private re-import.
+                use private_submodule1::subfunction2;
+
+                // Re-import that renames.
+                pub use private_submodule1::subfunction3 as public_function3;
+
+                // Re-import of multiple items via glob.
+                pub use private_submodule2::*;
+            "#;
+        test_generated_bindings(test_src, |bindings| {
+            let bindings = bindings.unwrap();
+
+            let failures = vec![(1, 15), (3, 21), (4, 24)];
+            for (use_number, line_number) in failures.into_iter() {
+                let expected_comment_txt = format!(
+                    "Error generating bindings for `{{use#{use_number}}}` defined at \
+                     <crubit_unittests.rs>;l={line_number}: \
+                     Unsupported rustc_hir::hir::ItemKind: `use` import"
+                );
+                assert_cc_matches!(
+                    bindings.h_body,
+                    quote! {
+                        __COMMENT__ #expected_comment_txt
+                    }
+                );
+            }
+        });
     }
 
     #[test]
