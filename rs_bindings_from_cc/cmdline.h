@@ -6,6 +6,7 @@
 #define CRUBIT_RS_BINDINGS_FROM_CC_CMDLINE_H_
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
@@ -30,8 +31,7 @@ class Cmdline {
       std::string crubit_support_path, std::string clang_format_exe_path,
       std::string rustfmt_exe_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
-      std::string targets_and_headers_str,
-      std::vector<std::string> extra_rs_sources,
+      std::string target_args_str, std::vector<std::string> extra_rs_sources,
       std::vector<std::string> srcs_to_scan_for_instantiations,
       std::string instantiations_out, std::string error_report_out) {
     return CreateFromArgs(
@@ -39,7 +39,7 @@ class Cmdline {
         std::move(ir_out), std::move(namespaces_out),
         std::move(crubit_support_path), std::move(clang_format_exe_path),
         std::move(rustfmt_exe_path), std::move(rustfmt_config_path), do_nothing,
-        std::move(public_headers), std::move(targets_and_headers_str),
+        std::move(public_headers), std::move(target_args_str),
         std::move(extra_rs_sources), std::move(srcs_to_scan_for_instantiations),
         std::move(instantiations_out), std::move(error_report_out));
   }
@@ -91,8 +91,7 @@ class Cmdline {
       std::string crubit_support_path, std::string clang_format_exe_path,
       std::string rustfmt_exe_path, std::string rustfmt_config_path,
       bool do_nothing, std::vector<std::string> public_headers,
-      std::string targets_and_headers_str,
-      std::vector<std::string> extra_rs_sources,
+      std::string target_args_str, std::vector<std::string> extra_rs_sources,
       std::vector<std::string> srcs_to_scan_for_instantiations,
       std::string instantiations_out, std::string error_report_out);
 

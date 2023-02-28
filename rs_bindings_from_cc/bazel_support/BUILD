@@ -19,6 +19,7 @@ bzl_library(
         "//:__subpackages__",
     ],
     deps = [
+        ":crubit_feature_hint_bzl",
         ":providers_bzl",
         ":rust_bindings_from_cc_utils_bzl",
     ],
@@ -86,6 +87,11 @@ bzl_library(
 bzl_library(
     name = "compile_cc_bzl",
     srcs = ["compile_cc.bzl"],
+)
+
+bzl_library(
+    name = "crubit_feature_hint_bzl",
+    srcs = ["crubit_feature_hint.bzl"],
 )
 
 bzl_library(

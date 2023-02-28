@@ -22,6 +22,10 @@ load(
     "bindings_attrs",
     "generate_and_compile_bindings",
 )
+load(
+    "//rs_bindings_from_cc/bazel_support:crubit_feature_hint.bzl",
+    "find_crubit_features",
+)
 
 # <internal link>/127#naming-header-files-h-and-inc recommends declaring textual headers either in the
 # `textual_hdrs` attribute of the Bazel C++ rules, or using the `.inc` file extension. Therefore
@@ -142,15 +146,24 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
     # 1. we use a library for parsing command line flags that allows repeated flags.
     # 2. instead of json string, we use a struct that will be expanded to flags at execution time.
     #    This requires changes to Bazel.
-    targets_and_headers = depset(
-        direct = [
-            json.encode({
-                "t": str(ctx.label),
-                "h": [h.path for h in all_standalone_hdrs],
-            }),
-        ] if all_standalone_hdrs else [],
+    # TODO(b/266727458): rename targets_and_headers to target_args
+    direct_target_args = {}
+    features = find_crubit_features(target, ctx)
+    if all_standalone_hdrs:
+        direct_target_args["h"] = [h.path for h in all_standalone_hdrs]
+    if features:
+        direct_target_args["f"] = features
+
+    if direct_target_args:
+        direct_target_args["t"] = str(ctx.label)
+        direct = [json.encode(direct_target_args)]
+    else:
+        direct = []
+
+    target_args = depset(
+        direct = direct,
         transitive = [
-            t[RustBindingsFromCcInfo].targets_and_headers
+            t[RustBindingsFromCcInfo].target_args
             for t in all_deps
             if RustBindingsFromCcInfo in t
         ],
@@ -173,7 +186,7 @@ def _rust_bindings_from_cc_aspect_impl(target, ctx):
                 ctx.attr._std[RustToolchainHeadersInfo].headers,
             ],
         ),
-        targets_and_headers = targets_and_headers,
+        target_args = target_args,
         extra_rs_srcs = [],
         deps_for_cc_file = [target[CcInfo]] + [
             dep[RustBindingsFromCcInfo].cc_info

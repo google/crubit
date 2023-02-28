@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -45,16 +46,24 @@ ABSL_FLAG(std::vector<std::string>, public_headers, std::vector<std::string>(),
           "for, in a format suitable for usage in google3-relative quote "
           "include (#include \"\").");
 ABSL_FLAG(std::string, target, "", "The target to generate bindings for.");
-ABSL_FLAG(std::string, targets_and_headers, std::string(),
-          "Information about which headers belong to which targets, encoded as "
-          "a JSON array. For example: "
+ABSL_FLAG(std::string, target_args, "",
+          "Per-target Crubit arguments, encoded as a JSON array. This contains "
+          "both the list of headers assigned to the target (h), and the set of "
+          "enabled features (f). For example:"
           "[\n"
           "  {\n"
           "     \"t\": \"//foo/bar:baz\",\n"
-          "     \"h\": [\"foo/bar/header1.h\", \"foo/bar/header2.h\"]\n"
+          "     \"h\": [\"foo/bar/header1.h\", \"foo/bar/header2.h\"],\n"
+          "     \"f\": [\"supported\"]\n"
           "  },\n"
           "...\n"
           "]");
+// Deprecated alias just for migration purposes.
+ABSL_FLAG(std::string, targets_and_headers, "", "DEPRECATED, use target_args")
+    .OnUpdate([] {
+      absl::SetFlag(&FLAGS_target_args,
+                    absl::GetFlag(FLAGS_targets_and_headers));
+    });
 ABSL_FLAG(std::vector<std::string>, extra_rs_srcs, std::vector<std::string>(),
           "Additional Rust source files to include into the crate.");
 ABSL_FLAG(std::vector<std::string>, srcs_to_scan_for_instantiations,
@@ -75,15 +84,16 @@ namespace crubit {
 
 namespace {
 
-struct TargetAndHeaders {
+struct TargetArgs {
   std::string target;
   std::vector<std::string> headers;
 };
 
-bool fromJSON(const llvm::json::Value& json, TargetAndHeaders& out,
+bool fromJSON(const llvm::json::Value& json, TargetArgs& out,
               llvm::json::Path path) {
   llvm::json::ObjectMapper mapper(json, path);
-  return mapper && mapper.map("t", out.target) && mapper.map("h", out.headers);
+  return mapper && mapper.map("t", out.target) &&
+         mapper.mapOptional("h", out.headers);
 }
 
 }  // namespace
@@ -97,8 +107,7 @@ absl::StatusOr<Cmdline> Cmdline::Create() {
       absl::GetFlag(FLAGS_clang_format_exe_path),
       absl::GetFlag(FLAGS_rustfmt_exe_path),
       absl::GetFlag(FLAGS_rustfmt_config_path), absl::GetFlag(FLAGS_do_nothing),
-      absl::GetFlag(FLAGS_public_headers),
-      absl::GetFlag(FLAGS_targets_and_headers),
+      absl::GetFlag(FLAGS_public_headers), absl::GetFlag(FLAGS_target_args),
       absl::GetFlag(FLAGS_extra_rs_srcs),
       absl::GetFlag(FLAGS_srcs_to_scan_for_instantiations),
       absl::GetFlag(FLAGS_instantiations_out),
@@ -111,7 +120,7 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
     std::string crubit_support_path, std::string clang_format_exe_path,
     std::string rustfmt_exe_path, std::string rustfmt_config_path,
     bool do_nothing, std::vector<std::string> public_headers,
-    std::string targets_and_headers_str, std::vector<std::string> extra_rs_srcs,
+    std::string target_args_str, std::vector<std::string> extra_rs_srcs,
     std::vector<std::string> srcs_to_scan_for_instantiations,
     std::string instantiations_out, std::string error_report_out) {
   Cmdline cmdline;
@@ -171,35 +180,33 @@ absl::StatusOr<Cmdline> Cmdline::CreateFromArgs(
       std::move(srcs_to_scan_for_instantiations);
   cmdline.error_report_out_ = std::move(error_report_out);
 
-  if (targets_and_headers_str.empty()) {
-    return absl::InvalidArgumentError("please specify --targets_and_headers");
+  if (target_args_str.empty()) {
+    return absl::InvalidArgumentError("please specify --target_args");
   }
-  auto targets_and_headers = llvm::json::parse<std::vector<TargetAndHeaders>>(
-      std::move(targets_and_headers_str));
-  if (auto err = targets_and_headers.takeError()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Malformed `--targets_and_headers` argument: ",
-                     toString(std::move(err))));
+  auto target_args =
+      llvm::json::parse<std::vector<TargetArgs>>(std::move(target_args_str));
+  if (auto err = target_args.takeError()) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Malformed `--target_args` argument: ", toString(std::move(err))));
   }
-  for (const TargetAndHeaders& it : *targets_and_headers) {
+  for (const TargetArgs& it : *target_args) {
     const std::string& target = it.target;
     if (target.empty()) {
       return absl::InvalidArgumentError(
-          "Expected `t` fields of `--targets_and_headers` to be a non-empty "
+          "Expected `t` fields of `--target_args` to be a non-empty "
           "string");
     }
     for (const std::string& header : it.headers) {
       if (header.empty()) {
         return absl::InvalidArgumentError(
-            "Expected `h` fields of `--targets_and_headers` to be an array of "
-            "non-empty strings");
+            "Expected `h` (header) fields of `--target_args` to be an "
+            "array of non-empty strings");
       }
       BazelLabel target_label(target);
       auto [it, inserted] = cmdline.headers_to_targets_.try_emplace(
           HeaderName(header), std::move(target_label));
       if (!inserted) {
-        LOG(WARNING) << "The `--targets_and_headers` cmdline argument assigns "
-                        "`"
+        LOG(WARNING) << "The `--target_args` cmdline argument assigns `"
                      << header << "` header to two conflicting targets: `"
                      << target << "` vs `" << it->second.value() << "`";
         // Assign the one that comes first alphabetically, to get a consistent
@@ -223,7 +230,7 @@ absl::StatusOr<BazelLabel> Cmdline::FindHeader(const HeaderName& header) const {
   if (it == headers_to_targets_.end()) {
     return absl::InvalidArgumentError(absl::Substitute(
         "Couldn't find header '$0' in the `headers_to_target` map "
-        "derived from the --targets_and_headers cmdline argument",
+        "derived from the --target_args cmdline argument",
         header.IncludePath()));
   }
   return it->second;

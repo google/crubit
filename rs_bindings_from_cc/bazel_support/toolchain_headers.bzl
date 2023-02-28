@@ -48,11 +48,12 @@ def _bindings_for_toolchain_headers_impl(ctx):
         ctx.attr.public_libcxx_hdrs,
     )
 
-    targets_and_headers = depset(
+    target_args = depset(
         direct = [
             json.encode({
                 "t": str(ctx.label),
                 "h": [hdr.path for hdr in std_files + builtin_libcxx_files],
+                "f": ["supported"],
             }),
             json.encode({
                 "t": "//:_nothing_should_depend_on_private_builtin_hdrs",
@@ -76,7 +77,7 @@ def _bindings_for_toolchain_headers_impl(ctx):
         public_hdrs = public_libc_files + public_libcxx_files,
         header_includes = header_includes,
         action_inputs = std_and_builtin_files,
-        targets_and_headers = targets_and_headers,
+        target_args = target_args,
         extra_rs_srcs = ctx.files.extra_rs_srcs,
         deps_for_cc_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_cc_file,
         deps_for_rs_file = ctx.attr._deps_for_bindings[DepsForBindingsInfo].deps_for_rs_file,

@@ -1,18 +1,18 @@
 """Disclaimer: This project is experimental, under heavy development, and should not
 be used yet."""
 
-load(":headers_and_targets_test.bzl", "headers_and_targets_test")
+load(":target_args_test.bzl", "target_args_test")
 load("@bazel_skylib//:bzl_library.bzl", "bzl_library")
 
 package(default_applicable_licenses = ["//third_party/crubit:license"])
 
 licenses(["notice"])
 
-headers_and_targets_test(name = "headers_and_targets_test")
+target_args_test(name = "target_args_test")
 
 bzl_library(
-    name = "headers_and_targets_test_bzl",
-    srcs = ["headers_and_targets_test.bzl"],
+    name = "target_args_test_bzl",
+    srcs = ["target_args_test.bzl"],
     parse_tests = False,
     visibility = ["//visibility:private"],
     deps = [

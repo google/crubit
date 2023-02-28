@@ -81,8 +81,8 @@ function test::cmd_line_api() {
       --clang_format_exe_path=\"${DEFAULT_CLANG_FORMAT_EXE_PATH}\" \
       --rustfmt_exe_path=\"${DEFAULT_RUSTFMT_EXE_PATH}\" \
       --public_headers=\"${hdr}\" 2>&1 | \
-      grep 'please specify --targets_and_headers' > /dev/null" \
-    "generator should show help message for --targets_and_headers"
+      grep 'please specify --target_args' > /dev/null" \
+    "generator should show help message for --target_args"
 
   local json
   json="$(cat <<-EOT

@@ -25,14 +25,13 @@ namespace {
 
 absl::StatusOr<Cmdline> TestCmdline(std::string target,
                                     std::vector<std::string> public_headers,
-                                    std::string targets_and_headers) {
+                                    std::string target_args) {
   return Cmdline::CreateForTesting(
       std::move(target), "cc_out", "rs_out", "ir_out", "namespaces_out",
       "crubit_support_path", "clang_format_exe_path", "rustfmt_exe_path",
       "rustfmt_config_path",
 
-      /*do_nothing=*/false, std::move(public_headers),
-      std::move(targets_and_headers),
+      /*do_nothing=*/false, std::move(public_headers), std::move(target_args),
       /* extra_rs_srcs= */ {},
       /* srcs_to_scan_for_instantiations= */ {},
       /* instantiations_out= */ "",
@@ -40,9 +39,9 @@ absl::StatusOr<Cmdline> TestCmdline(std::string target,
 }
 
 absl::StatusOr<Cmdline> TestCmdline(std::vector<std::string> public_headers,
-                                    std::string targets_and_headers) {
+                                    std::string target_args) {
   return TestCmdline("//:target", std::move(public_headers),
-                     std::move(targets_and_headers));
+                     std::move(target_args));
 }
 
 }  // namespace
@@ -80,90 +79,80 @@ TEST(CmdlineTest, BasicCorrectInput) {
                            Pair(HeaderName("h2"), BazelLabel("//:t1"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersEmpty) {
+TEST(CmdlineTest, TargetArgsEmpty) {
   ASSERT_THAT(TestCmdline({"h1"}, ""),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("please specify --targets_and_headers")));
+                       HasSubstr("please specify --target_args")));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersInvalidJson) {
-  ASSERT_THAT(TestCmdline({"h1"}, "#!$%"),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("Invalid JSON"))));
-}
-
-TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfTopLevelArray) {
+TEST(CmdlineTest, TargetArgsInvalidJson) {
   ASSERT_THAT(
-      TestCmdline({"h1"}, "123"),
+      TestCmdline({"h1"}, "#!$%"),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               AllOf(HasSubstr("--targets_and_headers"), HasSubstr("array"))));
+               AllOf(HasSubstr("--target_args"), HasSubstr("Invalid JSON"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersIntInTopLevelArray) {
+TEST(CmdlineTest, TargetArgsIntInsteadOfTopLevelArray) {
+  ASSERT_THAT(TestCmdline({"h1"}, "123"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       AllOf(HasSubstr("--target_args"), HasSubstr("array"))));
+}
+
+TEST(CmdlineTest, TargetArgsIntInTopLevelArray) {
   ASSERT_THAT(TestCmdline({"h1"}, "[123, 456]"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"))));
+                       AllOf(HasSubstr("--target_args"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeadersArray) {
+TEST(CmdlineTest, TargetArgsIntInsteadOfHeadersArray) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "//:t1", "h": 123}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr(".h"), HasSubstr("array"))));
+                       AllOf(HasSubstr("--target_args"), HasSubstr(".h"),
+                             HasSubstr("array"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersMissingTarget) {
+TEST(CmdlineTest, TargetArgsMissingTarget) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"h": ["h1", "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr(".t"), HasSubstr("missing"))));
+                       AllOf(HasSubstr("--target_args"), HasSubstr(".t"),
+                             HasSubstr("missing"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersMissingHeader) {
+TEST(CmdlineTest, TargetArgsMissingHeader) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "//:t1"}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr(".h"), HasSubstr("missing"))));
+                       AllOf(HasSubstr("--target_args"),
+                             HasSubstr("Couldn't find header"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersEmptyHeader) {
-  ASSERT_THAT(
-      TestCmdline({"//:t1", "h1"}, R"([{"t": "//:t1", "h": ["", "h2"]}])"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               AllOf(HasSubstr("--targets_and_headers"), HasSubstr("`h`"),
-                     HasSubstr("empty string"))));
+TEST(CmdlineTest, TargetArgsEmptyHeader) {
+  ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "t1", "h": ["", "h2"]}])"),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       AllOf(HasSubstr("--target_args"), HasSubstr("`h`"),
+                             HasSubstr("empty string"))));
 }
-
-TEST(CmdlineTest, TargetsAndHeadersEmptyCurrentTarget) {
-  ASSERT_THAT(
-      TestCmdline("", {"//:t1", "h1"}, R"([{"t": "//:t1", "h": ["h1"]}])"),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               AllOf(HasSubstr("please specify --target"))));
-}
-
-TEST(CmdlineTest, TargetsAndHeadersEmptyTarget) {
+TEST(CmdlineTest, TargetArgsEmptyTarget) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "", "h": ["h1", "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr("`t`"), HasSubstr("empty string"))));
+                       AllOf(HasSubstr("--target_args"), HasSubstr("`t`"),
+                             HasSubstr("empty string"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfTarget) {
+TEST(CmdlineTest, TargetArgsIntInsteadOfTarget) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": 123, "h": ["h1", "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr(".t"), HasSubstr("string"))));
+                       AllOf(HasSubstr("--target_args"), HasSubstr(".t"),
+                             HasSubstr("string"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersIntInsteadOfHeader) {
+TEST(CmdlineTest, TargetArgsIntInsteadOfHeader) {
   ASSERT_THAT(TestCmdline({"h1"}, R"([{"t": "//:t1", "h": [123, "h2"]}])"),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       AllOf(HasSubstr("--targets_and_headers"),
-                             HasSubstr(".h"), HasSubstr("string"))));
+                       AllOf(HasSubstr("--target_args"), HasSubstr(".h"),
+                             HasSubstr("string"))));
 }
 
-TEST(CmdlineTest, TargetsAndHeadersDuplicateHeader) {
+TEST(CmdlineTest, TargetArgsDuplicateHeader) {
   for (const char* target : {"//:t1", "//:t2"}) {
     ASSERT_OK_AND_ASSIGN(Cmdline cmdline, TestCmdline(target, {"h1"}, R"([
         {"t": "//:t1", "h": ["h1"]},

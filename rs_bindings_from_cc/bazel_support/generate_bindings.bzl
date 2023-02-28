@@ -26,7 +26,7 @@ def generate_bindings(
         public_hdrs,
         header_includes,
         action_inputs,
-        targets_and_headers,
+        target_args,
         extra_rs_srcs):
     """Runs the bindings generator.
 
@@ -39,8 +39,8 @@ def generate_bindings(
       public_hdrs: A list of headers to be passed to the tool via the "--public_headers" flag.
       header_includes: A list of flags to be passed to the command line with "-include".
       action_inputs: A depset of inputs to the bindings generating action.
-      targets_and_headers: A depset of strings, each one representing mapping of target to " +
-                          "its headers in json format.
+      target_args: A depset of strings, each one representing mapping of target to
+                        its per-target arguments (headers, features) in json format.
       extra_rs_srcs: A list of extra source files to add.
 
     Returns:
@@ -101,7 +101,7 @@ def generate_bindings(
         variables_extension = {
             "rs_bindings_from_cc_tool": ctx.executable._generator.path,
             "rs_bindings_from_cc_flags": rs_bindings_from_cc_flags + _get_hdrs_command_line(public_hdrs) + _get_extra_rs_srcs_command_line(extra_rs_srcs),
-            "targets_and_headers": targets_and_headers,
+            "targets_and_headers": target_args,
         },
     )
 
