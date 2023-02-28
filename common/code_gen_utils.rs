@@ -24,6 +24,16 @@ pub fn format_cc_ident(ident: &str) -> Result<TokenStream> {
         ident
     );
 
+    // https://en.cppreference.com/w/cpp/language/identifiers says that "A valid identifier must
+    // begin with a non-digit character (Latin letter, underscore, or Unicode
+    // character of class XID_Start)".  One motivation for this check is to
+    // explicitly catch names of tuple fields (e.g. `some_tuple.0`).
+    let first_char = ident.chars().next().expect("!is_empty checked above");
+    ensure!(
+        unicode_ident::is_xid_start(first_char) || first_char == '_',
+        "The following character can't be used as a start of a C++ identifier: {first_char}",
+    );
+
     ident.parse().map_err(
         // Explicitly mapping the error via `anyhow!`, because `LexError` is not `Sync`
         // (required for `anyhow::Error` to implement `From<LexError>`) and
@@ -349,6 +359,16 @@ pub mod tests {
     }
 
     #[test]
+    fn test_format_cc_ident_exotic_xid_start() {
+        assert_cc_matches!(format_cc_ident("Łukasz").unwrap(), quote! { Łukasz });
+    }
+
+    #[test]
+    fn test_format_cc_ident_underscore() {
+        assert_cc_matches!(format_cc_ident("_").unwrap(), quote! { _ });
+    }
+
+    #[test]
     fn test_format_cc_ident_reserved_rust_keyword() {
         assert_cc_matches!(
             format_cc_ident("impl").unwrap(),
@@ -365,11 +385,10 @@ pub mod tests {
     }
 
     #[test]
-    fn test_format_cc_ident_unfinished_group() {
-        let err = format_cc_ident("(foo") // No closing `)`.
-            .unwrap_err();
+    fn test_format_cc_ident_unparseable_identifier() {
+        let err = format_cc_ident("foo)").unwrap_err();
         let msg = err.to_string();
-        assert!(msg.contains("Can't format `(foo` as a C++ identifier"));
+        assert!(msg.contains("Can't format `foo)` as a C++ identifier"));
         assert!(msg.contains("cannot parse"));
     }
 
@@ -393,23 +412,6 @@ pub mod tests {
             format_cc_ident("MyTemplate<int>").unwrap(),
             quote! { MyTemplate<int> }
         );
-
-        // These forms of unqualified identifiers are not used by Crubit in practice,
-        assert_cc_matches!(
-            format_cc_ident("~MyClass").unwrap(),
-            quote! { ~MyClass }
-        );
-        assert_cc_matches!(
-            format_cc_ident(r#" operator "" _km "#).unwrap(),
-            quote! { operator "" _km }
-        );
-    }
-
-    #[test]
-    fn test_format_cc_ident_empty() {
-        let err = format_cc_ident("").unwrap_err();
-        let msg = err.to_string();
-        assert_eq!(msg, "Empty string is not a valid C++ identifier");
     }
 
     #[test]
@@ -421,6 +423,41 @@ pub mod tests {
             format_cc_ident("std::vector<int>").unwrap(),
             quote! { std::vector<int> }
         );
+    }
+
+    #[test]
+    fn test_format_cc_ident_empty() {
+        let err = format_cc_ident("").unwrap_err();
+        let msg = err.to_string();
+        assert_eq!(msg, "Empty string is not a valid C++ identifier");
+    }
+
+    #[test]
+    fn test_format_cc_ident_invalid_first_char() {
+        let tests = vec![
+            // `0` and `1 are field names in `struct RustStruct(i32, u16)`.
+            "0",
+            // `~MyClass` is a valid unqualified identifier in C++, but it is okay if
+            // `format_cc_ident` rejects it, because `format_cc_ident` is not used to format
+            // destructor names.
+            "~MyClass",
+            // We used to trim leading and/or trailing whitespace, but stricter validation
+            // of leading whitespace seems desirable.
+            r#" operator "" _km "#,
+            " foo",
+            // Other tests
+            "(foo",
+            "(foo)",
+        ];
+        for test in tests.into_iter() {
+            let err = format_cc_ident(test).unwrap_err();
+            let actual_msg = err.to_string();
+            let c = test.chars().next().unwrap();
+            let expected_msg = format!(
+                "The following character can't be used as a start of a C++ identifier: {c}"
+            );
+            assert_eq!(actual_msg, expected_msg);
+        }
     }
 
     #[test]
