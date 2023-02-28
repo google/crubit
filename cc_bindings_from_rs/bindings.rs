@@ -369,12 +369,7 @@ fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
         ty::TyKind::Adt(adt, substs) => {
             ensure!(substs.len() == 0, "Generic types are not supported yet (b/259749095)");
 
-            // Verify if definition of `ty` can be succesfully imported and bail otherwise.
             let def_id = adt.did();
-            format_adt_core(input.tcx, def_id)
-                .with_context(|| format!(
-                        "Failed to generate bindings for the definition of `{ty}`"))?;
-
             let mut prereqs = CcPrerequisites::default();
             if def_id.krate == LOCAL_CRATE {
                 prereqs.defs.insert(def_id.expect_local());
@@ -382,6 +377,11 @@ fn format_ty_for_cc(input: &Input, ty: Ty) -> Result<CcSnippet> {
                 // TODO(b/258261328): Add `#include` of other crate's `..._cc_api.h`.
                 bail!("Cross-crate dependencies are not supported yet (b/258261328)");
             };
+
+            // Verify if definition of `ty` can be succesfully imported and bail otherwise.
+            format_adt_core(input.tcx, def_id)
+                .with_context(|| format!(
+                        "Failed to generate bindings for the definition of `{ty}`"))?;
 
             CcSnippet {
                 tokens: FullyQualifiedName::new(input.tcx, def_id).format_for_cc()?,
@@ -827,6 +827,13 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
         bail!("`Drop` trait and \"drop glue\" are not supported yet (b/258251148)");
     }
 
+    let adt_def = ty.ty_adt_def().expect("`def_id` needs to identify an ADT");
+    let keyword = match adt_def.adt_kind() {
+        ty::AdtKind::Struct => quote! { struct },
+        ty::AdtKind::Union => quote! { union },
+        ty::AdtKind::Enum => bail!("`enum`s are not supported (b/259984090 and b/262737383)"),
+    };
+
     let rs_name = format_ty_for_rs(tcx, ty)?;
     let cc_name = {
         let item_name = tcx.item_name(def_id);
@@ -915,7 +922,7 @@ fn format_adt_core(tcx: TyCtxt, def_id: DefId) -> Result<AdtCoreBindings> {
     };
     Ok(AdtCoreBindings {
         def_id,
-        keyword: quote! { struct },
+        keyword,
         cc_name,
         rs_name,
         core,
@@ -3248,7 +3255,7 @@ pub mod tests {
     /// (and doesn't have `EnumItemTuple` or `EnumItemStruct` items).  See
     /// also https://doc.rust-lang.org/reference/items/enumerations.html
     #[test]
-    fn test_format_item_enum_with_only_discriminant_items() {
+    fn test_format_item_unsupported_enum_with_only_discriminant_items() {
         let test_src = r#"
                 pub enum SomeEnum {
                     Red,
@@ -3260,58 +3267,15 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<SomeEnum>() == 1);
             "#;
         test_format_item(test_src, "SomeEnum", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
-            assert!(main_api.prereqs.is_empty());
-            assert_cc_matches!(
-                main_api.tokens,
-                quote! {
-                    ...
-                    struct alignas(1) SomeEnum final {
-                        public:
-                            // In this test there is no `Default` implementation.
-                            SomeEnum() = delete;
-
-                            // In this test there is no `Copy` implementation / derive.
-                            SomeEnum(const SomeEnum&) = delete;
-
-                            // All Rust types are trivially-movable.
-                            SomeEnum(SomeEnum&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            SomeEnum& operator=(const SomeEnum&) = delete;
-                            SomeEnum& operator=(SomeEnum&&) = delete;
-
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~SomeEnum() = default;
-                        private:
-                            unsigned char opaque_blob_of_bytes[1];
-                    };
-                }
-            );
-            assert_cc_matches!(
-                impl_details.cc.tokens,
-                quote! {
-                    static_assert(sizeof(SomeEnum) == 1, ...);
-                    static_assert(alignof(SomeEnum) == 1, ...);
-                }
-            );
-            assert_rs_matches!(
-                impl_details.rs,
-                quote! {
-                    const _: () = assert!(::std::mem::size_of::<::rust_out::SomeEnum>() == 1);
-                    const _: () = assert!(::std::mem::align_of::<::rust_out::SomeEnum>() == 1);
-                }
-            );
+            let err = result.unwrap_err();
+            assert_eq!(err, "`enum`s are not supported (b/259984090 and b/262737383)");
         });
     }
 
     /// This is a test for an enum that has `EnumItemTuple` and `EnumItemStruct`
     /// items. See also https://doc.rust-lang.org/reference/items/enumerations.html
     #[test]
-    fn test_format_item_enum_with_tuple_and_struct_items() {
+    fn test_format_item_unsupported_enum_with_tuple_and_struct_items() {
         let test_src = r#"
                 pub enum Point {
                     Cartesian(f32, f32),
@@ -3322,51 +3286,8 @@ pub mod tests {
                 const _: () = assert!(std::mem::align_of::<Point>() == 4);
             "#;
         test_format_item(test_src, "Point", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let impl_details = get_impl_details_snippet(&result);
-            assert!(main_api.prereqs.is_empty());
-            assert_cc_matches!(
-                main_api.tokens,
-                quote! {
-                    ...
-                    struct alignas(4) Point final {
-                        public:
-                            // In this test there is no `Default` implementation.
-                            Point() = delete;
-
-                            // In this test there is no `Copy` implementation / derive.
-                            Point(const Point&) = delete;
-
-                            // All Rust types are trivially-movable.
-                            Point(Point&&) = default;
-
-                            // Assignment operators are disabled for now.
-                            Point& operator=(const Point&) = delete;
-                            Point& operator=(Point&&) = delete;
-
-                            // In this test there is no custom `Drop`, so C++ can also
-                            // just use the `default` destructor.
-                            ~Point() = default;
-                        private:
-                            unsigned char opaque_blob_of_bytes[12];
-                    };
-                }
-            );
-            assert_cc_matches!(
-                impl_details.cc.tokens,
-                quote! {
-                    static_assert(sizeof(Point) == 12, ...);
-                    static_assert(alignof(Point) == 4, ...);
-                }
-            );
-            assert_rs_matches!(
-                impl_details.rs,
-                quote! {
-                    const _: () = assert!(::std::mem::size_of::<::rust_out::Point>() == 12);
-                    const _: () = assert!(::std::mem::align_of::<::rust_out::Point>() == 4);
-                }
-            );
+            let err = result.unwrap_err();
+            assert_eq!(err, "`enum`s are not supported (b/259984090 and b/262737383)");
         });
     }
 
@@ -3379,7 +3300,7 @@ pub mod tests {
             "#;
         test_format_item(test_src, "ZeroVariantEnum", |result| {
             let err = result.unwrap_err();
-            assert_eq!(err, "Zero-sized types (ZSTs) are not supported (b/258259459)");
+            assert_eq!(err, "`enum`s are not supported (b/259984090 and b/262737383)");
         });
     }
 
@@ -3405,7 +3326,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     ...
-                    struct alignas(8) SomeUnion final {
+                    union alignas(8) SomeUnion final {
                         public:
                             // In this test there is no `Default` implementation.
                             SomeUnion() = delete;
@@ -3464,7 +3385,7 @@ pub mod tests {
                 main_api.tokens,
                 quote! {
                     __COMMENT__ #comment
-                    struct ... SomeUnionWithDocs final {
+                    union ... SomeUnionWithDocs final {
                         ...
                     }
                     ...
@@ -3478,24 +3399,17 @@ pub mod tests {
         let test_src = r#"
             /** Doc for some enum. */
             pub enum SomeEnumWithDocs {
-                Kind1(i32),
+                /** Doc for first discriminator. */
+                Discriminator1,
+                /** Doc for second discriminator. */
+                Discriminator2,
+                /** Doc for third discriminator. */
+                Discriminator3,
             }
         "#;
         test_format_item(test_src, "SomeEnumWithDocs", |result| {
-            let result = result.unwrap();
-            let main_api = get_main_api_snippet(&result);
-            let comment = " Doc for some enum. \n\n\
-                            Generated from: <crubit_unittests.rs>;l=3";
-            assert_cc_matches!(
-                main_api.tokens,
-                quote! {
-                    __COMMENT__ #comment
-                    struct ... SomeEnumWithDocs final {
-                        ...
-                    }
-                    ...
-                }
-            );
+            let err = result.unwrap_err();
+            assert_eq!(err, "`enum`s are not supported (b/259984090 and b/262737383)");
         });
     }
 
@@ -3505,6 +3419,7 @@ pub mod tests {
             #![allow(dead_code)]
             #[doc = "Doc for some struct."]
             pub struct SomeStructWithDocs {
+                #[doc = "Doc for first field."]
                 some_field : i32,
             }
         "#;
@@ -3726,7 +3641,6 @@ pub mod tests {
             ("usize", ("std::uintptr_t", "<cstdint>", "", "")),
             ("char", ("rs_std::rs_char", "\"crubit/support/for/tests/rs_std/rs_char.h\"", "", "")),
             ("SomeStruct", ("::rust_out::SomeStruct", "", "SomeStruct", "")),
-            ("SomeEnum", ("::rust_out::SomeEnum", "", "SomeEnum", "")),
             ("SomeUnion", ("::rust_out::SomeUnion", "", "SomeUnion", "")),
             ("*const i32", ("const std::int32_t*", "<cstdint>", "", "")),
             ("*mut i32", ("std::int32_t*", "<cstdint>", "", "")),
@@ -3743,10 +3657,6 @@ pub mod tests {
             pub struct SomeStruct {
                 pub x: i32,
                 pub y: i32,
-            }
-            pub enum SomeEnum {
-                Cartesian{x: f64, y: f64},
-                Polar{angle: f64, dist: f64},
             }
             pub union SomeUnion {
                 pub x: i32,
@@ -3866,6 +3776,11 @@ pub mod tests {
             ("i128", "C++ doesn't have a standard equivalent of `i128` (b/254094650)"),
             ("u128", "C++ doesn't have a standard equivalent of `u128` (b/254094650)"),
             (
+                "SomeEnum",
+                "Failed to generate bindings for the definition of `SomeEnum`: \
+                 `enum`s are not supported (b/259984090 and b/262737383)",
+            ),
+            (
                 "StructWithCustomDrop",
                 "Failed to generate bindings for the definition of `StructWithCustomDrop`: \
                  `Drop` trait and \"drop glue\" are not supported yet (b/258251148)"
@@ -3900,6 +3815,11 @@ pub mod tests {
         ];
         let preamble = quote! {
             #![feature(never_type)]
+
+            pub enum SomeEnum {
+                Cartesian{x: f64, y: f64},
+                Polar{angle: f64, dist: f64},
+            }
 
             pub struct StructWithCustomDrop {
                 pub x: i32,
