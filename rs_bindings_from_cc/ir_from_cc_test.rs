@@ -431,6 +431,50 @@ fn test_bitfields() {
     );
 }
 
+/// This is a regression test for b/270748945.
+#[test]
+fn test_struct_with_packed_attribute() {
+    let ir = ir_from_cc(
+        r#"
+        struct __attribute__((packed)) PackedStruct {
+          char char_var;
+          int int_var;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "PackedStruct", ...
+          message: "Records with packed layout are not supported"
+          ...
+        }}
+    );
+}
+
+/// This is a regression test for b/270748945.
+#[test]
+fn test_struct_with_packed_field() {
+    let ir = ir_from_cc(
+        r#"
+        struct PackedStruct {
+          char char_var;
+          __attribute__((packed)) int int_var;
+        };"#,
+    )
+    .unwrap();
+
+    assert_ir_matches!(
+        ir,
+        quote! { UnsupportedItem {
+          name: "PackedStruct", ...
+          message: "Records with packed layout are not supported"
+          ...
+        }}
+    );
+}
+
 #[test]
 fn test_struct_with_unnamed_bitfield_member() {
     // This test input causes `field_decl->getName()` to return an empty string.

@@ -27,6 +27,12 @@ struct NontrivialCustomType final {
   int i;
 };
 
+// Structs with packed layout are unsupported.
+struct PackedLayout final {
+  char char_var;
+  __attribute__((packed)) int int_var;
+};
+
 // This function can't have bindings because of both its return type and its
 // parameter type.
 //

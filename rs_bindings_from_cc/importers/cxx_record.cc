@@ -196,6 +196,15 @@ std::optional<IR::Item> CXXRecordDeclImporter::Import(
         record_decl, std::string(record_type.status().message()));
   }
 
+  if (record_decl->hasAttr<clang::PackedAttr>() ||
+      std::any_of(record_decl->field_begin(), record_decl->field_end(),
+                  [](const clang::FieldDecl* field_decl) {
+                    return field_decl->hasAttr<clang::PackedAttr>();
+                  })) {
+    return ictx_.ImportUnsupportedItem(
+        record_decl, "Records with packed layout are not supported");
+  }
+
   std::string rs_name, cc_name, preferred_cc_name;
   clang::SourceLocation source_loc;
   std::optional<std::string> doc_comment;
