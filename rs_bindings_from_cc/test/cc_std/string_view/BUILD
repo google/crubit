@@ -16,5 +16,6 @@ rust_test(
     srcs = ["test.rs"],
     cc_deps = [
         ":string_view_apis",
+        "//support/cc_std",
     ],
 )

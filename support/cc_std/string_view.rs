@@ -57,8 +57,8 @@ impl TryFrom<string_view> for &'static str {
 // has lifetime annotations.
 impl From<&'static [u8]> for string_view {
     fn from(s: &'static [u8]) -> Self {
-        let ptr = s.as_ptr();
         let size = s.len();
+        let ptr = if size == 0 { 0 as *const _ } else { s.as_ptr() };
 
         // TODO(jeanpierreda): We can't access the constructors at the moment.
         // This little maneuver's gonna cost us 51 years of annoying build breakages
