@@ -26,7 +26,7 @@ def _find_action_by_mnemonic(env, expected_mnemonic):
                          (see https://bazel.build/rules/lib/Action#mnemonic)
 
     Returns:
-      Action  - the path of `f` with `extension` removed
+      Action  - The action with the given mnemonic.
     """
     matching_actions = [
         a
@@ -47,17 +47,73 @@ def _remove_ext(f):
     """
     f.path.removesuffix(f.extension)
 
+def _has_arg_with_suffix(cmdline, suffix):
+    """Returns True if there is an arugment on the command line that ends with `suffix`.
+
+    Args:
+      cmdline - List[String]
+      suffix - String
+
+    Returns:
+      bool - Whether `suffix` appears on the command line as a suffix.
+    """
+    for arg in cmdline:
+        if arg.endswith(suffix):
+            return True
+    return False
+
+def _has_arg_with_prefix(cmdline, prefix):
+    """Returns True if there is an arugment on the command line that starts with `prefix`.
+
+    Args:
+      cmdline - List[String]
+      prefix - String
+
+    Returns:
+      bool - Whether `prefix` appears on the command line as a prefix.
+    """
+    for arg in cmdline:
+        if arg.startswith(prefix):
+            return True
+    return False
+
+def _has_file_with_name_prefix(files, basename_prefix):
+    """Returns true if `files` contains an element that starts with `basename_prefix`.
+
+    Args:
+      files - List[File]: https://bazel.build/rules/lib/File
+      basename_prefix - String
+
+    Returns:
+      bool - Whether a file with the given basename prefix is found.
+    """
+    matching_files = [f for f in files if f.basename.startswith(basename_prefix)]
+    return len(matching_files) > 0
+
 def _header_generation_test_impl(ctx):
     env = analysistest.begin(ctx)
 
     # Verify that `CcBindingsFromRust` propagates inputs and rustc flags from the
     # target create.
     generate_action = _find_action_by_mnemonic(env, "CcBindingsFromRust")
-    asserts.true(env, "rusty_lib_crate_root.rs" in [i.basename for i in generate_action.inputs.to_list()])
-    generate_cmdline = " ".join(generate_action.argv)
-    asserts.true(env, "rusty_lib_crate_root.rs" in generate_cmdline)
-    asserts.true(env, "--crate-type rlib" in generate_cmdline)
-    asserts.true(env, "--codegen panic=abort" in generate_cmdline)
+    generate_action_inputs = generate_action.inputs.to_list()
+    asserts.true(
+        env,
+        "rusty_lib_crate_root.rs" in [i.basename for i in generate_action_inputs],
+        "Expected to find `rusty_lib_crate_root.rs` in the action inputs, got {}.".format(
+            generate_action_inputs,
+        ),
+    )
+
+    # ":emptylib" is a dependency of the crate for which we are generating bindings.
+    # Similarly to how it's output libemptylib-{hash}.{rlib|rmeta} is an input to the `Rustc`
+    # compile action, it should also be an input to the `CcBindingsFromRust` bindings generating
+    # action.
+    asserts.true(
+        env,
+        _has_file_with_name_prefix(generate_action_inputs, "libemptylib-"),
+        "Expected to find `libemptylib-HASH` in the action inputs, got {}.".format(generate_action_inputs),
+    )
 
     # Verify that `CcBindingsFromRust` generates:
     # 1) `generated_header` ("..._cc_api.h")
@@ -103,11 +159,52 @@ def _header_generation_test_impl(ctx):
 
 header_generation_test = analysistest.make(_header_generation_test_impl)
 
+def _cmdline_flags_test_impl(ctx):
+    env = analysistest.begin(ctx)
+
+    bindings_action = _find_action_by_mnemonic(env, "CcBindingsFromRust")
+    cmdline = bindings_action.argv
+
+    asserts.true(
+        env,
+        _has_arg_with_suffix(cmdline, "rusty_lib_crate_root.rs"),
+        "Expected to find `rusty_lib_crate_root.rs` on the command line, got {}.".format(cmdline),
+    )
+    asserts.true(
+        env,
+        "--crate-type=rlib" in cmdline,
+        "Expected to find `--crate-type=rlib` on the command line, got {}.".format(cmdline),
+    )
+    asserts.true(
+        env,
+        "-Cpanic=abort" in cmdline,
+        "Expected to find `-Cpanic=abort` on the command line, got {}.".format(cmdline),
+    )
+
+    # ":emptylib" is a dependency of the crate for which we are generating bindings.
+    # Similarly to how we pass `--extern=emptylib` to the command line for the `Rustc`
+    # compile action, we should also pass it to the `CcBindingsFromRust` bindings generating action.
+    asserts.true(
+        env,
+        _has_arg_with_prefix(cmdline, "--extern=emptylib"),
+        "Expected to find `--extern=emptylib` on the command line, got {}.".format(cmdline),
+    )
+
+    return analysistest.end(env)
+
+cmdline_flags_test = analysistest.make(_cmdline_flags_test_impl)
+
 def _tests():
     rust_library(
         name = "rusty_lib",
         srcs = ["rusty_lib_crate_root.rs"],
+        deps = [":emptylib"],
         tags = ["manual"],
+    )
+
+    rust_library(
+        name = "emptylib",
+        srcs = ["empty.rs"],
     )
 
     cc_bindings_from_rust(
@@ -118,6 +215,11 @@ def _tests():
 
     header_generation_test(
         name = "header_generation_test",
+        target_under_test = ":rusty_lib_bindings",
+    )
+
+    cmdline_flags_test(
+        name = "cmdline_flags_test",
         target_under_test = ":rusty_lib_bindings",
     )
 
@@ -132,5 +234,6 @@ def generating_files_test(name):
         name = name,
         tests = [
             ":header_generation_test",
+            ":cmdline_flags_test",
         ],
     )
