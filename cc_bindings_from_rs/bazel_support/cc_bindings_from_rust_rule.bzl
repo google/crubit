@@ -72,7 +72,7 @@ def _generate_bindings(ctx, basename, inputs, rustc_args):
         mnemonic = "CcBindingsFromRust",
         progress_message = "Generating C++ bindings from Rust: %s" % h_out_file,
         # TODO(lukasza): Figure out why we need a '-Cpanic=abort' here.
-        arguments = [crubit_args, "--", rustc_args, "-Cpanic=abort"],
+        arguments = [crubit_args, "--", rustc_args, "-Cpanic=abort", "-Awarnings"],
     )
 
     return (h_out_file, rs_out_file)
