@@ -32,7 +32,6 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/RawCommentList.h"
 #include "llvm/ADT/APSInt.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/JSON.h"
 

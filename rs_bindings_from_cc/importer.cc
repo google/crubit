@@ -49,7 +49,6 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Sema/Sema.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/FormatVariadic.h"
@@ -586,7 +585,7 @@ BazelLabel Importer::GetOwningTarget(const clang::Decl* decl) const {
       source_location = source_manager.getExpansionLoc(source_location);
     }
     auto id = source_manager.getFileID(source_location);
-    llvm::Optional<llvm::StringRef> filename =
+    std::optional<llvm::StringRef> filename =
         source_manager.getNonBuiltinFilenameForID(id);
     if (!filename) {
       return BazelLabel("//:_nothing_should_depend_on_private_builtin_hdrs");

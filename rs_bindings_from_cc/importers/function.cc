@@ -88,7 +88,7 @@ std::optional<IR::Item> FunctionDeclImporter::Import(
   // annotations found.  This will allow avoiding the call to
   // `expectedToOptional` which can sometimes indicate design problems.
   clang::tidy::lifetimes::LifetimeSymbolTable lifetime_symbol_table;
-  llvm::Optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
+  std::optional<clang::tidy::lifetimes::FunctionLifetimes> lifetimes =
       expectedToOptional(clang::tidy::lifetimes::GetLifetimeAnnotations(
           function_decl, *ictx_.invocation_.lifetime_context_,
           &lifetime_symbol_table));
