@@ -36,13 +36,6 @@ class PointerNullabilityAnalysis
   void transfer(const CFGElement& Elt, PointerNullabilityLattice& Lattice,
                 dataflow::Environment& Env);
 
-  // TODO(yitzhakm): remove once https://reviews.llvm.org/D143920 is committed
-  // and integrated downstream.
-  void transfer(const CFGElement* elt, PointerNullabilityLattice& lattice,
-                dataflow::Environment& env) {
-    transfer(*elt, lattice, env);
-  }
-
   bool merge(QualType Type, const dataflow::Value& Val1,
              const dataflow::Environment& Env1, const dataflow::Value& Val2,
              const dataflow::Environment& Env2, dataflow::Value& MergedVal,

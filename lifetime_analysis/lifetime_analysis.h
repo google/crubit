@@ -81,13 +81,6 @@ class LifetimeAnalysis
   void transfer(const clang::CFGElement& elt, LifetimeLattice& state,
                 clang::dataflow::Environment& environment);
 
-  // TODO(yitzhakm): remove once https://reviews.llvm.org/D143920 is committed
-  // and integrated downstream.
-  void transfer(const clang::CFGElement* elt, LifetimeLattice& lattice,
-                clang::dataflow::Environment& env) {
-    transfer(*elt, lattice, env);
-  }
-
  private:
   const clang::FunctionDecl* func_;
   ObjectRepository& object_repository_;
